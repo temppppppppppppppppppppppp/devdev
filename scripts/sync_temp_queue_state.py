@@ -247,6 +247,7 @@ def load_execution_meta_block(path: Path, expected_topic: str | None = None) -> 
 
 def validate_dependency_graph(items: list[dict[str, object]]) -> None:
     dependency_map: dict[str, list[str]] = {}
+    roadmap_ranks: dict[str, int] = {}
 
     for item in items:
         topic = item.get("topic")
@@ -269,12 +270,23 @@ def validate_dependency_graph(items: list[dict[str, object]]) -> None:
             raise ValueError(f"queue item {topic} cannot depend on itself")
 
         dependency_map[topic] = normalized_depends_on
+        roadmap_rank = item.get("roadmap_rank")
+        if isinstance(roadmap_rank, int):
+            roadmap_ranks[topic] = roadmap_rank
 
     known_topics = set(dependency_map)
     for topic, depends_on in dependency_map.items():
         for dep in depends_on:
             if dep not in known_topics:
                 raise ValueError(f"queue item {topic} depends_on unknown topic {dep}")
+            dep_rank = roadmap_ranks.get(dep)
+            item_rank = roadmap_ranks.get(topic)
+            if dep_rank is not None and item_rank is not None and dep_rank >= item_rank:
+                raise ValueError(
+                    "queue dependency rank inversion: "
+                    f"{dep} -> {topic} requires {dep}.roadmap_rank < {topic}.roadmap_rank, "
+                    f"got {dep_rank} >= {item_rank}"
+                )
 
     visit_state: dict[str, str] = {}
     stack: list[str] = []

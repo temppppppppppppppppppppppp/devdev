@@ -336,7 +336,13 @@ def validate_queue_state(exec_docs: list[Path], roadmap_path: Path | None, resul
         else:
             normalized_depends_on = [dep.strip() for dep in raw_depends_on]
             item_dependencies[topic] = normalized_depends_on
-            dependency_items.append({"topic": topic, "depends_on": normalized_depends_on})
+            dependency_items.append(
+                {
+                    "topic": topic,
+                    "depends_on": normalized_depends_on,
+                    "roadmap_rank": roadmap_rank,
+                }
+            )
 
         if roadmap_path is not None:
             expected_context = roadmap_context.get(topic)

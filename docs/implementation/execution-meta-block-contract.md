@@ -109,6 +109,7 @@ Recommended guardrails:
 - if the block is absent, current tooling may fall back to legacy prose-based inference during migration
 - phase 1 queue tooling should treat `depends_on` and tranche identity as the primary block-backed fields
 - phase 1 queue tooling should keep `status`, `queue_role`, and `roadmap_rank` under legacy authority unless a later migration explicitly upgrades them
+- phase 2 guard may reject a `depends_on` edge when the legacy roadmap ranks are both present and invert the dependency order
 
 ## 8. Migration Strategy
 
@@ -119,8 +120,9 @@ Preferred rollout:
 3. phase 1 pilot the block in a small set of modern live queue docs
 4. update `sync_temp_queue_state.py` to read `depends_on` and tranche identity from the block when present
 5. update `ops_validator.py` to validate the phase 1 block-backed fields
-6. later, decide whether block presence should become mandatory
-7. only after that, evaluate whether `status`, `queue_role`, and `roadmap_rank` should migrate into block authority
+6. add a narrow phase 2 guard that fails fast when `depends_on` contradicts legacy roadmap rank ordering
+7. later, decide whether block presence should become mandatory
+8. only after that, evaluate whether `status`, `queue_role`, and `roadmap_rank` should migrate into block authority
 
 ## 9. Guardrails
 
