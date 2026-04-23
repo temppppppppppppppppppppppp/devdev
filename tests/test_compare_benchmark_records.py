@@ -451,6 +451,8 @@ def test_compare_benchmark_records_cli_supports_json_output(tmp_path):
         "remediation_hint_count": 0,
         "highest_priority_surface": "",
         "surfaces_by_priority": [],
+        "ci_gate": "pass",
+        "gate_basis": "clean",
     }
 
 
@@ -563,6 +565,9 @@ def test_compare_benchmark_records_surfaces_note_and_proof_digest_watchpoints(tm
         "side": "right",
         "message": "right stage4 post_pass_contract_signal_count is 1",
     } in watchpoints
+    assert diff["delta"]["operator_summary"]["status"] == "clean"
+    assert diff["delta"]["operator_summary"]["ci_gate"] == "warn"
+    assert diff["delta"]["operator_summary"]["gate_basis"] == "warn_watchpoints"
 
 
 def test_compare_benchmark_records_surfaces_stage4_runtime_watchpoints(tmp_path):
@@ -1079,6 +1084,8 @@ def test_compare_benchmark_records_surfaces_missing_target_hygiene_with_remediat
             "post_run_evidence_json",
             "supporting_context_md",
         ],
+        "ci_gate": "warn",
+        "gate_basis": "remediation_hints",
     }
     assert "remediation_hints" in diff["delta"]["changed_sections"]
     assert {
