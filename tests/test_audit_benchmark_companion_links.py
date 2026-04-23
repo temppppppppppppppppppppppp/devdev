@@ -219,6 +219,10 @@ def test_audit_benchmark_companion_links_reports_stale_rows_and_link_states(tmp_
         "records_with_sidecar": 1,
         "records_with_missing_targets": 0,
     }
+    assert audit["strict"] == {
+        "status": "pass",
+        "failure_reasons": [],
+    }
     record_map = {item["run_id"]: item for item in audit["records"]}
     assert record_map[run_a]["companion_state"] == "linked"
     assert record_map[run_a]["linked_surfaces"] == ["supporting_context_md"]
@@ -229,6 +233,7 @@ def test_audit_benchmark_companion_links_reports_stale_rows_and_link_states(tmp_
     assert stale_map[run_c]["live_record_present"] is False
     text = module.format_audit_text(audit)
     assert "stale_index_rows=2" in text
+    assert "Strict: pass" in text
     assert f"{run_a} [operational_failure] index=ok companion=linked linked=supporting_context_md missing=-" in text
 
 
@@ -252,6 +257,10 @@ def test_audit_benchmark_companion_links_reports_missing_targets(tmp_path):
     )
 
     assert audit["summary"]["records_with_missing_targets"] == 1
+    assert audit["strict"] == {
+        "status": "fail",
+        "failure_reasons": ["records_with_missing_targets=1"],
+    }
     record = audit["records"][0]
     assert record["companion_state"] == "missing_target"
     assert record["missing_surfaces"] == ["post_run_evidence_json", "supporting_context_md"]
@@ -290,3 +299,37 @@ def test_audit_benchmark_companion_links_cli_supports_json_output(tmp_path):
     payload = json.loads(result.stdout)
     assert payload["summary"]["live_records"] == 1
     assert payload["records"][0]["linked_surfaces"] == ["supporting_context_md"]
+
+
+def test_audit_benchmark_companion_links_cli_strict_fails_on_missing_targets(tmp_path):
+    run_id = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    record_root = _write_record(tmp_path, run_id=run_id, status="completed")
+    _write_sidecar(
+        record_root,
+        {
+            "schema_version": "benchmark-companion-links-v1",
+            "post_run_evidence_json": "docs/2026-04-23/missing-evidence.json",
+            "post_run_merge_audit_md": "",
+            "supporting_context_md": "",
+        },
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/audit_benchmark_companion_links.py",
+            "--workspace-root",
+            str(tmp_path),
+            "--benchmark-root",
+            "benchmarks",
+            "--strict",
+        ],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "Strict: fail" in result.stdout
+    assert "records_with_missing_targets=1" in result.stdout
