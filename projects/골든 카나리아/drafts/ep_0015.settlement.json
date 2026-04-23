@@ -1,0 +1,479 @@
+{
+  "arc_no": 4,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0015.txt",
+    "settlement_packet_path": "drafts/ep_0015.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 15,
+  "ep_num": 15,
+  "manuscript": {
+    "char_count": 5447,
+    "content_hash": "fd93b17748b5166fe2b7ec3f1e331a1aedb4ad4d386d6e27174b7ff36aa8d389",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0015.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "open_review": "특이사항 없음. Blueprint의 의도대로 지루한 횡보장 속에서 박성호의 심리적 압박과 한시우의 통제력이 잘 대비되어 표현되었습니다. 서브프라임 모기지라는 거대한 뇌관을 자연스럽게 끌어온 점도 훌륭합니다. 도입부 수정 지시도 깔끔하게 반영되었습니다.",
+      "repair_scope": "inplace",
+      "score": 90,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 10,
+        "quality_engagement": 20
+      },
+      "selection_reason": "이전 화 엔딩과의 중복 서술을 제거하라는 수정 지시가 완벽하게 반영되었으며, 시간의 흐름에 따른 박성호의 심리적 붕괴와 한시우의 냉철한 통제력이 훌륭하게 대비되어 몰입감을 높입니다. 서브프라임 모기지라는 거대한 복선도 자연스럽게 제시되었습니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 1,
+          "pattern": "입을 열었다"
+        }
+      ],
+      "ai_slop_score": 1.0,
+      "burstiness": 26.59,
+      "ced_score": 0.0,
+      "complexity": 64.17,
+      "compression_ratio": 0.4599,
+      "signal_summary": {
+        "ai_slop_total_hits": 1,
+        "burstiness": 26.59,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 64.17,
+        "compression_ratio": 0.4599,
+        "sentence_count": 118
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "한시우",
+            "꺼진",
+            "모니터에",
+            "비친",
+            "자신"
+          ],
+          "source": "ending_hook",
+          "text": "한시우는 꺼진 모니터에 비친 자신의 얼굴을 보며 나직이 읊조렸다. '폭풍은, 가장 고요한 바다에서 시작되는 법이니까.'"
+        }
+      ],
+      "capital": 250000000,
+      "connections": "박성호 (한시우의 비범한 통찰력과 냉철한 압박, 그리고 서브프라임 모기지 사태에 대한 예언에 완전히 굴복하여, 맹목적인 경외심과 공포가 뒤섞인 감정으로 그의 지시를 맹목적으로 따르는 충성스러운 조력자이자 부속품으로 더욱 심화됨). 한미증권 리스크관리팀 (VIP 특별 예외 계좌 승인에도 불구하고 금 선물 포지션의 장기 횡보로 인해 다시 압박을 가하기 시작했으나, 한시우는 이에 굴하지 않고 자신의 지배력을 유지하고 있다).",
+      "current_objective": "WTI 원유 선물 포지션을 유지하고, 금 선물 포지션의 지루한 횡보를 인내하며 미국 서브프라임 모기지 사태가 촉발할 전 세계 금융 위기 속에서 금이 안전 자산으로 폭발적으로 상승할 때까지 기다린다. 한미증권의 'VIP 특별 예외 계좌'를 활용하여 시스템의 제약 없이 자산을 운용하며, 다가올 파국 속에서 유동성을 거머쥐는 것을 목표로 한다.",
+      "equipment": [
+        "모니터",
+        "전용 보안 스마트폰"
+      ],
+      "inventory_counts": {
+        "모니터": 1,
+        "전용 보안 스마트폰": 1
+      },
+      "market_insight": "시장의 비관적 컨센서스에도 불구하고 금 선물에 투자한 배경으로 '미국 서브프라임 모기지 연체율 상승'이 전 세계 금융 시스템의 거대한 기만과 거짓의 탑에 뚫린 첫 번째 구멍임을 정확히 꿰뚫어 보았다. 신용의 환상이 무너지고 자본이 안전 자산으로 도피할 때 금 가격이 폭발적으로 상승할 것이라는 독보적인 통찰력을 입증했다. 서브프라임 사태를 다음 거시 경제 변동의 핵심 트리거로 지목하고 있다.",
+      "reputation": "시장의 단기적 소음과 비관적 컨센서스에 흔들리지 않는 강철 같은 의지와 압도적인 통찰력을 재차 입증했다. 박성호의 맹목적인 복종을 더욱 심화시켰으며, 한미증권 리스크관리팀의 압박에도 굴하지 않는 지배력을 과시했다.",
+      "status": "WTI 원유 선물 포지션은 유지 중이며, 금 선물 포지션은 두 달째 620달러 선에서 횡보하며 시장의 비관적 컨센서스가 심화되고 있다. 박성호의 절규와 리스크관리팀의 압박에도 불구하고, 한시우는 서브프라임 모기지 사태를 금융 위기의 전조로 정확히 파악하고 흔들림 없는 인내심으로 폭발적인 상승의 시점을 기다리고 있다. 강남 개인 오피스에서 다음 파국을 준비 중이다.",
+      "stocks": [
+        {
+          "asset": "CME WTI 원유 선물",
+          "current_status": "유지",
+          "target_price": "80달러",
+          "value": 1250000000
+        },
+        {
+          "asset": "금 선물",
+          "current_status": "횡보장 유지, 시장의 비관적 컨센서스 심화, 서브프라임 모기지 사태를 통한 폭발적 상승 대기",
+          "value": 1500000000
+        }
+      ],
+      "total_assets": 3000000000,
+      "wealth": 3000000000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "한시우",
+            "꺼진",
+            "모니터에",
+            "비친",
+            "자신"
+          ],
+          "source": "ending_hook",
+          "text": "한시우는 꺼진 모니터에 비친 자신의 얼굴을 보며 나직이 읊조렸다. '폭풍은, 가장 고요한 바다에서 시작되는 법이니까.'"
+        }
+      ],
+      "causal_links": [
+        "한시우의 금 선물 투자 및 두 달간의 횡보장 -> 박성호의 극심한 스트레스, 절규, 이성 상실 직전의 상태 유발",
+        "월가의 주요 투자은행들의 금 투자 의견 하향 조정 및 달러 강세 지속 -> 시장의 금에 대한 비관적 컨센서스 심화",
+        "미국 서브프라임 모기지 연체율 기록적 상승 단신 기사 -> 한시우가 박성호에게 금융 위기의 전조임을 설명하는 계기 제공",
+        "한시우의 서브프라임 모기지 사태에 대한 통찰력 있는 설명 -> 박성호의 혼란, 두려움, 그리고 한시우의 예언적 능력에 대한 경외심 심화",
+        "시장의 금에 대한 무관심과 횡보 -> 한시우가 '폭발적인 에너지가 응축되는 시점'이자 '가장 고요한 바다'로 인식"
+      ],
+      "inventory_count_deltas": [],
+      "inventory_counts": {
+        "모니터": 1,
+        "전용 보안 스마트폰": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 10,
+          "target": "박성호",
+          "value": 0
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [
+          "월가의 주요 투자은행들 (금에 대한 투자 의견을 하향 조정하며 서브프라임 사태의 심각성을 간과함)",
+          "월가의 분석가들 (시장의 소음에 흔들리며 금의 잠재력을 오판함)"
+        ],
+        "new_witnesses": [
+          "박성호 (미국 서브프라임 모기지 연체율 상승이 금융 위기의 전조라는 한시우의 통찰력을 직접 들음)"
+        ]
+      },
+      "lost_items": [],
+      "new_items": [],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호 (미국 서브프라임 모기지 연체율 상승이 금융 위기의 전조라는 한시우의 통찰력을 직접 들음)",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "월가의 주요 투자은행들 (금에 대한 투자 의견을 하향 조정하며 서브프라임 사태의 심각성을 간과함)",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "월가의 분석가들 (시장의 소음에 흔들리며 금의 잠재력을 오판함)",
+          "to": "오해 대상"
+        }
+      ],
+      "reveals": [],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "한시우",
+              "꺼진",
+              "모니터에",
+              "비친",
+              "자신"
+            ],
+            "source": "ending_hook",
+            "text": "한시우는 꺼진 모니터에 비친 자신의 얼굴을 보며 나직이 읊조렸다. '폭풍은, 가장 고요한 바다에서 시작되는 법이니까.'"
+          }
+        ],
+        "capital": 250000000,
+        "connections": "박성호 (한시우의 비범한 통찰력과 냉철한 압박, 그리고 서브프라임 모기지 사태에 대한 예언에 완전히 굴복하여, 맹목적인 경외심과 공포가 뒤섞인 감정으로 그의 지시를 맹목적으로 따르는 충성스러운 조력자이자 부속품으로 더욱 심화됨). 한미증권 리스크관리팀 (VIP 특별 예외 계좌 승인에도 불구하고 금 선물 포지션의 장기 횡보로 인해 다시 압박을 가하기 시작했으나, 한시우는 이에 굴하지 않고 자신의 지배력을 유지하고 있다).",
+        "current_objective": "WTI 원유 선물 포지션을 유지하고, 금 선물 포지션의 지루한 횡보를 인내하며 미국 서브프라임 모기지 사태가 촉발할 전 세계 금융 위기 속에서 금이 안전 자산으로 폭발적으로 상승할 때까지 기다린다. 한미증권의 'VIP 특별 예외 계좌'를 활용하여 시스템의 제약 없이 자산을 운용하며, 다가올 파국 속에서 유동성을 거머쥐는 것을 목표로 한다.",
+        "equipment": [
+          "모니터",
+          "전용 보안 스마트폰"
+        ],
+        "inventory_counts": {
+          "모니터": 1,
+          "전용 보안 스마트폰": 1
+        },
+        "market_insight": "시장의 비관적 컨센서스에도 불구하고 금 선물에 투자한 배경으로 '미국 서브프라임 모기지 연체율 상승'이 전 세계 금융 시스템의 거대한 기만과 거짓의 탑에 뚫린 첫 번째 구멍임을 정확히 꿰뚫어 보았다. 신용의 환상이 무너지고 자본이 안전 자산으로 도피할 때 금 가격이 폭발적으로 상승할 것이라는 독보적인 통찰력을 입증했다. 서브프라임 사태를 다음 거시 경제 변동의 핵심 트리거로 지목하고 있다.",
+        "reputation": "시장의 단기적 소음과 비관적 컨센서스에 흔들리지 않는 강철 같은 의지와 압도적인 통찰력을 재차 입증했다. 박성호의 맹목적인 복종을 더욱 심화시켰으며, 한미증권 리스크관리팀의 압박에도 굴하지 않는 지배력을 과시했다.",
+        "status": "WTI 원유 선물 포지션은 유지 중이며, 금 선물 포지션은 두 달째 620달러 선에서 횡보하며 시장의 비관적 컨센서스가 심화되고 있다. 박성호의 절규와 리스크관리팀의 압박에도 불구하고, 한시우는 서브프라임 모기지 사태를 금융 위기의 전조로 정확히 파악하고 흔들림 없는 인내심으로 폭발적인 상승의 시점을 기다리고 있다. 강남 개인 오피스에서 다음 파국을 준비 중이다.",
+        "stocks": [
+          {
+            "asset": "CME WTI 원유 선물",
+            "current_status": "유지",
+            "target_price": "80달러",
+            "value": 1250000000
+          },
+          {
+            "asset": "금 선물",
+            "current_status": "횡보장 유지, 시장의 비관적 컨센서스 심화, 서브프라임 모기지 사태를 통한 폭발적 상승 대기",
+            "value": 1500000000
+          }
+        ],
+        "total_assets": 3000000000,
+        "wealth": 3000000000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "location",
+              "protagonist_status",
+              "timeline"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ],
+            "transport_authority_mode": "fact_ledger_overlap",
+            "transport_contract_version": "cross_stage_authority_packet.v1",
+            "transport_fields": [
+              "capital",
+              "total_assets"
+            ],
+            "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "15억 원 (금 선물 매수 상태)",
+      "director_score": 90,
+      "location": "강남 소규모 오피스",
+      "protagonist_status": "금 가격 횡보를 두 달간 인내하며, 서브프라임 모기지 사태의 징조를 포착하고 다음 단계를 준비하는 상태",
+      "timeline": "2006년 7월 말"
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "location",
+            "protagonist_status",
+            "timeline"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ],
+          "transport_authority_mode": "fact_ledger_overlap",
+          "transport_contract_version": "cross_stage_authority_packet.v1",
+          "transport_fields": [
+            "capital",
+            "total_assets"
+          ],
+          "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 2개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "last_score": 100,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "repair_scope": "none",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "repair_scope": "none",
+      "widened": false
+    }
+  },
+  "title": "제15화"
+}

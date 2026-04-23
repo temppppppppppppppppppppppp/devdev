@@ -1,0 +1,530 @@
+{
+  "arc_no": 4,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0014.txt",
+    "settlement_packet_path": "drafts/ep_0014.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 14,
+  "ep_num": 14,
+  "manuscript": {
+    "char_count": 4578,
+    "content_hash": "d37ec253823d75e30670c9ffa5ef453690587947b778e5180694bef2ed93e6ed",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0014.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "open_review": "특이사항 없음. Blueprint의 의도를 정확히 파악하여 박성호의 합리적 저항과 이를 억누르는 한시우의 절대적 권위를 훌륭하게 대비시켰습니다. NPC 역할 서술도 자연스럽게 교정되었습니다.",
+      "repair_scope": "inplace",
+      "score": 90,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 10,
+        "quality_engagement": 20
+      },
+      "selection_reason": "Blueprint의 요구사항을 완벽하게 반영하였으며, 이전 화와의 연속성(자본금 17.5억 중 15억 매수, 예외 계좌 승인서 활용 등)을 정확히 유지했습니다. 박성호의 합리적 저항과 한시우의 절대적 권위가 훌륭하게 대비되어 긴장감을 높였습니다. 이전 피드백이었던 NPC 역할/관계 서술 문장도 자연스럽게 교정되었습니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [],
+      "ai_slop_score": 0.0,
+      "burstiness": 20.16,
+      "ced_score": 0.0,
+      "complexity": 51.64,
+      "compression_ratio": 0.4506,
+      "signal_summary": {
+        "ai_slop_total_hits": 0,
+        "burstiness": 20.16,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 51.64,
+        "compression_ratio": 0.4506,
+        "sentence_count": 114
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "주문",
+            "체결",
+            "망연자실한",
+            "박성호",
+            "달리"
+          ],
+          "source": "ending_hook",
+          "text": "주문 체결 후 망연자실한 박성호와 달리, 한시우는 미동 없는 금 시세창을 보며 나직이 읊조린다. '이제... 침묵이 깨지길 기다리면 됩니다.'"
+        },
+        {
+          "cue_terms": [
+            "박성호",
+            "예외",
+            "계좌",
+            "권한에",
+            "굴복하여"
+          ],
+          "source": "expected_ending",
+          "text": "박성호가 '예외 계좌' 권한에 굴복하여 주문을 실행하고, 한시우의 절대적 권위를 재확인한다."
+        }
+      ],
+      "capital": 250000000,
+      "connections": "박성호 (한시우의 비범한 통찰력과 압도적인 존재감에 완전히 굴복하여, 한시우만을 위한 충성스러운 조력자이자 부속품. 이제는 맹목적인 경외심과 공포가 뒤섞인 감정으로 그의 지시를 맹목적으로 따름). 한미증권 리스크관리팀 (한시우의 능력에 완전히 굴복하여 'VIP 특별 예외 계좌'를 승인하고, 최우선 주문 체결 및 전용 파생상품 데스크 직통 라인 등 모든 유동성 지원을 약속하며 시스템을 한시우의 통제 아래 두게 됨. 이번 금 선물 매수 지시를 통해 그 권한을 실질적으로 행사했다).",
+      "current_objective": "WTI 원유 선물 잔여 포지션을 80달러 목표가까지 유지하여 최대 수익을 실현하고, 회수한 가용 현금 중 15억 원을 금 선물에 투자하여 다음 거시 경제 변동에 대비한다. 한미증권의 'VIP 특별 예외 계좌'를 활용하여 시스템의 제약 없이 자산을 운용하며, 7월 중동 사태를 다음 투자 기회로 삼는다. 금 선물 투자를 통해 시장의 침묵이 깨지기를 기다린다.",
+      "equipment": [
+        "모니터",
+        "전용 보안 스마트폰"
+      ],
+      "inventory_counts": {
+        "모니터": 1,
+        "전용 보안 스마트폰": 1
+      },
+      "market_insight": "에콰도르 사태로 인한 유가 폭등을 정확히 예측하고 거시 경제의 연쇄 반응을 꿰뚫는 지배적인 통찰력을 입증했다. WTI 원유 선물 포지션의 목표가를 80달러로 설정하며 시장의 과열을 넘어선 폭발적 상승을 예견하고 있으며, 회수한 자본을 금 선물에 투입하여 화폐 가치 하락에 대비하는 등 다음 거시 경제 변동을 선제적으로 활용할 계획이다. 시장의 비관적인 컨센서스에도 불구하고 금 선물에 15억 원을 투자하며, '침묵이 깨지길 기다리는' 독보적인 통찰력을 다시 한번 증명했다. 7월 중동 사태를 다음 폭발의 진원지로 지목하고 있다.",
+      "reputation": "시장의 흐름을 꿰뚫는 압도적인 통찰력과 강철 같은 의지로 막대한 수익을 창출하며 독립적인 지배자로서의 위용을 확고히 했다. 특히 박성호의 맹목적인 복종을 이끌어냈으며, 한미증권 리스크관리팀마저 그의 능력 앞에 굴복시켜 시스템을 자신의 발밑으로 끌어들여 'VIP 특별 예외 계좌'를 승인받고 이를 활용하여 시장의 컨센서스를 거스르는 과감한 투자를 실행했다.",
+      "status": "WTI 원유 선물 포지션에서 막대한 수익을 성공적으로 창출하여 현재 가용 현금 2억 5천만 원, 총자산 30억 원을 보유하게 되었다. 박성호를 완전히 장악하고 전용 베이스캠프(강남 개인 오피스)를 확보했다. 한미증권 리스크관리팀마저 그의 능력 앞에 완전히 굴복하여 'VIP 특별 예외 계좌'를 승인하고 시스템을 자신의 발밑으로 끌어들였다. WTI 잔여 포지션의 80달러 목표가 유지를 선언했으며, 회수한 자본 중 15억 원을 금 선물에 투자하여 다음 거시 경제 변동에 선제적으로 대응했다. 이제 시장의 반응을 기다리며 다음 단계를 준비 중이다.",
+      "stocks": [
+        {
+          "asset": "CME WTI 원유 선물",
+          "current_status": "유지",
+          "target_price": "80달러",
+          "value": 1250000000
+        },
+        {
+          "asset": "금 선물",
+          "current_status": "매수 완료",
+          "value": 1500000000
+        }
+      ],
+      "total_assets": 3000000000,
+      "wealth": 3000000000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "주문",
+            "체결",
+            "망연자실한",
+            "박성호",
+            "달리"
+          ],
+          "source": "ending_hook",
+          "text": "주문 체결 후 망연자실한 박성호와 달리, 한시우는 미동 없는 금 시세창을 보며 나직이 읊조린다. '이제... 침묵이 깨지길 기다리면 됩니다.'"
+        },
+        {
+          "cue_terms": [
+            "박성호",
+            "예외",
+            "계좌",
+            "권한에",
+            "굴복하여"
+          ],
+          "source": "expected_ending",
+          "text": "박성호가 '예외 계좌' 권한에 굴복하여 주문을 실행하고, 한시우의 절대적 권위를 재확인한다."
+        }
+      ],
+      "causal_links": [
+        "한시우의 금 선물 15억 매수 지시 -> 박성호의 시장 컨센서스 기반 반대 의견 제시 -> 한시우의 'VIP 특별 예외 계좌' 권한 행사 및 절대적 명령 재확인 -> 박성호의 전문성 포기 및 금 선물 매수 주문 강제 실행 -> 한시우의 시장 침묵을 기다리는 다음 단계 진입"
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "노트북",
+          "to": 0
+        },
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "모니터",
+          "to": 1
+        }
+      ],
+      "inventory_counts": {
+        "모니터": 1,
+        "전용 보안 스마트폰": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 80,
+          "target": "박성호",
+          "value": 90
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [],
+        "new_witnesses": []
+      },
+      "lost_items": [
+        "노트북"
+      ],
+      "new_items": [
+        "모니터"
+      ],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "집착80/오해90"
+        }
+      ],
+      "reveals": [],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "주문",
+              "체결",
+              "망연자실한",
+              "박성호",
+              "달리"
+            ],
+            "source": "ending_hook",
+            "text": "주문 체결 후 망연자실한 박성호와 달리, 한시우는 미동 없는 금 시세창을 보며 나직이 읊조린다. '이제... 침묵이 깨지길 기다리면 됩니다.'"
+          },
+          {
+            "cue_terms": [
+              "박성호",
+              "예외",
+              "계좌",
+              "권한에",
+              "굴복하여"
+            ],
+            "source": "expected_ending",
+            "text": "박성호가 '예외 계좌' 권한에 굴복하여 주문을 실행하고, 한시우의 절대적 권위를 재확인한다."
+          }
+        ],
+        "capital": 250000000,
+        "connections": "박성호 (한시우의 비범한 통찰력과 압도적인 존재감에 완전히 굴복하여, 한시우만을 위한 충성스러운 조력자이자 부속품. 이제는 맹목적인 경외심과 공포가 뒤섞인 감정으로 그의 지시를 맹목적으로 따름). 한미증권 리스크관리팀 (한시우의 능력에 완전히 굴복하여 'VIP 특별 예외 계좌'를 승인하고, 최우선 주문 체결 및 전용 파생상품 데스크 직통 라인 등 모든 유동성 지원을 약속하며 시스템을 한시우의 통제 아래 두게 됨. 이번 금 선물 매수 지시를 통해 그 권한을 실질적으로 행사했다).",
+        "current_objective": "WTI 원유 선물 잔여 포지션을 80달러 목표가까지 유지하여 최대 수익을 실현하고, 회수한 가용 현금 중 15억 원을 금 선물에 투자하여 다음 거시 경제 변동에 대비한다. 한미증권의 'VIP 특별 예외 계좌'를 활용하여 시스템의 제약 없이 자산을 운용하며, 7월 중동 사태를 다음 투자 기회로 삼는다. 금 선물 투자를 통해 시장의 침묵이 깨지기를 기다린다.",
+        "equipment": [
+          "모니터",
+          "전용 보안 스마트폰"
+        ],
+        "inventory_counts": {
+          "모니터": 1,
+          "전용 보안 스마트폰": 1
+        },
+        "market_insight": "에콰도르 사태로 인한 유가 폭등을 정확히 예측하고 거시 경제의 연쇄 반응을 꿰뚫는 지배적인 통찰력을 입증했다. WTI 원유 선물 포지션의 목표가를 80달러로 설정하며 시장의 과열을 넘어선 폭발적 상승을 예견하고 있으며, 회수한 자본을 금 선물에 투입하여 화폐 가치 하락에 대비하는 등 다음 거시 경제 변동을 선제적으로 활용할 계획이다. 시장의 비관적인 컨센서스에도 불구하고 금 선물에 15억 원을 투자하며, '침묵이 깨지길 기다리는' 독보적인 통찰력을 다시 한번 증명했다. 7월 중동 사태를 다음 폭발의 진원지로 지목하고 있다.",
+        "reputation": "시장의 흐름을 꿰뚫는 압도적인 통찰력과 강철 같은 의지로 막대한 수익을 창출하며 독립적인 지배자로서의 위용을 확고히 했다. 특히 박성호의 맹목적인 복종을 이끌어냈으며, 한미증권 리스크관리팀마저 그의 능력 앞에 굴복시켜 시스템을 자신의 발밑으로 끌어들여 'VIP 특별 예외 계좌'를 승인받고 이를 활용하여 시장의 컨센서스를 거스르는 과감한 투자를 실행했다.",
+        "status": "WTI 원유 선물 포지션에서 막대한 수익을 성공적으로 창출하여 현재 가용 현금 2억 5천만 원, 총자산 30억 원을 보유하게 되었다. 박성호를 완전히 장악하고 전용 베이스캠프(강남 개인 오피스)를 확보했다. 한미증권 리스크관리팀마저 그의 능력 앞에 완전히 굴복하여 'VIP 특별 예외 계좌'를 승인하고 시스템을 자신의 발밑으로 끌어들였다. WTI 잔여 포지션의 80달러 목표가 유지를 선언했으며, 회수한 자본 중 15억 원을 금 선물에 투자하여 다음 거시 경제 변동에 선제적으로 대응했다. 이제 시장의 반응을 기다리며 다음 단계를 준비 중이다.",
+        "stocks": [
+          {
+            "asset": "CME WTI 원유 선물",
+            "current_status": "유지",
+            "target_price": "80달러",
+            "value": 1250000000
+          },
+          {
+            "asset": "금 선물",
+            "current_status": "매수 완료",
+            "value": 1500000000
+          }
+        ],
+        "total_assets": 3000000000,
+        "wealth": 3000000000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "available_cash",
+              "capital",
+              "director_score",
+              "location",
+              "position",
+              "positions",
+              "relationship_changes",
+              "time",
+              "total_assets"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "promoted_fields": [
+              "capital"
+            ],
+            "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+            "promotion_sources": {
+              "capital": "actual_truth"
+            },
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ],
+            "transport_authority_mode": "fact_ledger_overlap",
+            "transport_contract_version": "cross_stage_authority_packet.v1",
+            "transport_fields": [
+              "capital",
+              "total_assets"
+            ],
+            "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "available_cash": "2억 5천만 원",
+      "capital": "30억 원",
+      "director_score": 90,
+      "location": "강남 소규모 오피스",
+      "position": "WTI 원유 선물 12.5억 유지, 금 선물 15억 매수 진입",
+      "positions": [
+        "WTI 원유 선물 12억 5천만 원 (목표가 80달러)",
+        "금 선물 15억 원 (시장가 매수)"
+      ],
+      "relationship_changes": [
+        {
+          "from_state": "경외하지만, 전문가로서 조언하려는 의지가 남은 대리인",
+          "target": "박성호",
+          "to_state": "한시우의 판단을 이해할 수 없지만, 무조건적으로 복종해야 하는 완전한 하수인"
+        }
+      ],
+      "time": "2006년 5월 말 새벽",
+      "total_assets": "30억 원"
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "available_cash",
+            "capital",
+            "director_score",
+            "location",
+            "position",
+            "positions",
+            "relationship_changes",
+            "time",
+            "total_assets"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "promoted_fields": [
+            "capital"
+          ],
+          "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+          "promotion_sources": {
+            "capital": "actual_truth"
+          },
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ],
+          "transport_authority_mode": "fact_ledger_overlap",
+          "transport_contract_version": "cross_stage_authority_packet.v1",
+          "transport_fields": [
+            "capital",
+            "total_assets"
+          ],
+          "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 100,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "title": "제14화"
+}

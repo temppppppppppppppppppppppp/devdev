@@ -538,6 +538,99 @@ class TestAdvisoryEscalationHappyPathRegression:
         assert result["final_verdict"] == "REJECT"
         assert result["gate_basis"] == "strong_advisory_escalation_non_local_fix"
 
+    def test_placeholder_scene_model_fix_pack_backfills_to_generic_local_contract(self):
+        """Empty scene_model placeholders may be narrowed into a bounded generic local contract."""
+        ir = _make_ir(advisory_summary={"npc_drift": 1})
+        result = ir._normalize_director_gate_semantics(
+            _base_pass_result(
+                authoritative_fix_scope="inplace",
+                fix_scope="inplace",
+                fix_pack={
+                    "patch_targets": [],
+                    "must_fix": [],
+                    "do_not_regress": [],
+                    "success_condition": "",
+                    "target_kind": "scene_model",
+                },
+            )
+        )
+
+        assert result["final_verdict"] == "PASS_WITH_FIX"
+        assert result["fix_pack"]["target_kind"] == "local_phrase"
+        assert result["fix_pack"]["patch_targets"] == ["NPC 역할/관계 서술 문장"]
+        assert result["fix_pack"]["must_fix"] == ["NPC 역할 또는 관계 표현을 canonical truth에 맞게 국소 수정"]
+        assert result["strong_advisory_escalation"]["local_fix_contract_backfilled"] is True
+        assert result["strong_advisory_escalation"]["placeholder_scene_model_fix_contract_overridden"] is True
+        assert result["fix_pack"]["provenance"] == "runtime_backfilled"
+        assert result["fix_pack"]["provenance_sources"] == ["npc_drift"]
+
+    def test_runtime_scene_model_sentinel_is_replaced_with_local_fix_contract(self):
+        """The retry sentinel may be replaced when advisory metadata proves a bounded local contract."""
+        ir = _make_ir(advisory_summary={"npc_drift": 1})
+        ir._last_advisory_metadata = {
+            "npc_drift": [
+                {
+                    "npc": "NpcA",
+                    "field": "relation_to_protag",
+                    "expected": "ally100/misread-80",
+                    "expected_truth": "ally100/misread-80",
+                    "found_in_ms": "NpcA treats the protagonist like a trusted ally with no suspicion.",
+                    "subtype": "relation_tag_semantic",
+                    "target_kind": "local_phrase",
+                    "expected_relation_axes": ["ally100", "misread-80"],
+                    "_cand_idx": 0,
+                }
+            ]
+        }
+        result = ir._normalize_director_gate_semantics(
+            _base_pass_result(
+                selected="A",
+                authoritative_fix_scope="inplace",
+                fix_scope="inplace",
+                fix_pack={
+                    "patch_targets": ["scene-model rewrite boundary"],
+                    "must_fix": ["Resolve the advisory at scene-model scope before retrying this manuscript."],
+                    "do_not_regress": ["Do not reinterpret this broader rewrite requirement as a bounded local patch."],
+                    "success_condition": "The retry lane keeps an explicit non-local fix contract instead of missing fix-pack metadata.",
+                    "target_kind": "scene_model",
+                    "provenance": "runtime_synthesized",
+                    "provenance_sources": ["strong_advisory_non_local_fix", "npc_drift"],
+                },
+            )
+        )
+
+        assert result["final_verdict"] == "PASS_WITH_FIX"
+        assert result["fix_pack"]["target_kind"] == "local_phrase"
+        assert result["strong_advisory_escalation"]["local_fix_contract_backfilled"] is True
+        assert result["strong_advisory_escalation"]["inherited_non_local_fix_contract_overridden"] is True
+        assert result["strong_advisory_escalation"]["backfilled_from"] == ["npc_drift_relation_tag_semantic"]
+        assert result["fix_pack"]["provenance"] == "runtime_synthesized"
+        assert result["fix_pack"]["provenance_sources"] == ["npc_drift_relation_tag_semantic"]
+
+    def test_generic_local_backfill_completes_missing_guard_and_success_fields(self):
+        """Already-local targets should not fail solely because generic contract fields were left blank."""
+        ir = _make_ir(advisory_summary={"npc_drift": 1})
+        result = ir._normalize_director_gate_semantics(
+            _base_pass_result(
+                authoritative_fix_scope="inplace",
+                fix_scope="inplace",
+                fix_pack={
+                    "patch_targets": ["NPC relation sentence"],
+                    "must_fix": ["Correct NPC relation framing"],
+                    "do_not_regress": [],
+                    "success_condition": "",
+                    "target_kind": "local_phrase",
+                },
+            )
+        )
+
+        assert result["final_verdict"] == "PASS_WITH_FIX"
+        assert result["fix_pack"]["do_not_regress"]
+        assert "Preserve surrounding scene semantics" in result["fix_pack"]["do_not_regress"][0]
+        assert result["fix_pack"]["success_condition"].startswith(
+            "Triggered strong-advisory warnings clear after bounded local correction:"
+        )
+
     def test_plain_pass_without_advisory_unaffected(self):
         """Plain PASS with no advisory must stay PASS."""
         ir = _make_ir(advisory_summary={})
