@@ -11,6 +11,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 DEFAULT_GH_PATH = Path(r"C:\Program Files\GitHub CLI\gh.exe")
+DEFAULT_ISSUE_5_REPO = "temppppppppppppppppppppppp/devdev"
+DEFAULT_ISSUE_5_NUMBER = 5
 
 from scripts.render_benchmark_operator_comment_md import render_benchmark_operator_comment_markdown
 from scripts.report_benchmark_operator_lines import build_benchmark_operator_line_report
@@ -63,6 +65,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--gh-path",
         default="",
         help="optional explicit path to the GitHub CLI executable",
+    )
+    parser.add_argument(
+        "--issue-5-defaults",
+        action="store_true",
+        help="default --repo and --issue-number to the repo-local issue #5 target when omitted",
     )
     parser.add_argument(
         "--post",
@@ -127,8 +134,18 @@ def post_issue_comment(
     return result.stdout.strip()
 
 
+def apply_issue_5_defaults(args: argparse.Namespace) -> argparse.Namespace:
+    if not bool(getattr(args, "issue_5_defaults", False)):
+        return args
+    if not str(getattr(args, "repo", "") or "").strip():
+        args.repo = DEFAULT_ISSUE_5_REPO
+    if int(getattr(args, "issue_number", 0) or 0) <= 0:
+        args.issue_number = DEFAULT_ISSUE_5_NUMBER
+    return args
+
+
 def main(argv: list[str] | None = None) -> int:
-    args = parse_args(argv)
+    args = apply_issue_5_defaults(parse_args(argv))
     markdown = build_comment_markdown(
         title=args.title,
         workspace_root=args.workspace_root,

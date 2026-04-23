@@ -84,6 +84,34 @@ def test_post_issue_comment_invokes_gh_with_stdin(monkeypatch):
     assert response == "https://github.com/example/repo/issues/5#issuecomment-1"
 
 
+def test_apply_issue_5_defaults_fills_repo_and_issue_when_requested():
+    module = _load_post_module()
+    args = module.argparse.Namespace(
+        repo="",
+        issue_number=0,
+        issue_5_defaults=True,
+    )
+
+    resolved = module.apply_issue_5_defaults(args)
+
+    assert resolved.repo == "temppppppppppppppppppppppp/devdev"
+    assert resolved.issue_number == 5
+
+
+def test_apply_issue_5_defaults_preserves_explicit_repo_and_issue():
+    module = _load_post_module()
+    args = module.argparse.Namespace(
+        repo="owner/custom",
+        issue_number=9,
+        issue_5_defaults=True,
+    )
+
+    resolved = module.apply_issue_5_defaults(args)
+
+    assert resolved.repo == "owner/custom"
+    assert resolved.issue_number == 9
+
+
 def test_post_benchmark_operator_comment_cli_preview_outputs_markdown(tmp_path):
     helper = _load_report_test_helpers()
     run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
@@ -136,3 +164,66 @@ def test_build_comment_markdown_supports_latest_live_pair(tmp_path):
         f"- {run_a} -> {run_b}: status=clean; ci_gate=pass; gate_basis=clean; "
         "headline=no remediation needed; verdict=better; changed_sections=run_meta,stage_metrics,watchpoints"
     ) in markdown
+
+
+def test_post_benchmark_operator_comment_cli_issue_5_defaults_posts_without_repo_args(tmp_path):
+    helper = _load_report_test_helpers()
+    run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
+    run_b = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    helper._write_record(tmp_path, run_id=run_a, status="interrupted")
+    helper._write_record(tmp_path, run_id=run_b, status="completed")
+    fake_gh = tmp_path / "gh.cmd"
+    log_path = tmp_path / "gh-args.txt"
+    fake_gh.write_text(
+        "\n".join(
+            [
+                "@echo off",
+                "setlocal EnableDelayedExpansion",
+                f"set LOG={log_path}",
+                "break>\"%LOG%\"",
+                ":loop",
+                "if \"%~1\"==\"\" goto afterargs",
+                ">>\"%LOG%\" echo %~1",
+                "shift",
+                "goto loop",
+                ":afterargs",
+                "set /p BODY=",
+                ">>\"%LOG%\" echo __BODY__!BODY!",
+                "echo https://github.com/example/repo/issues/5#issuecomment-1",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/post_benchmark_operator_comment.py",
+            "--workspace-root",
+            str(tmp_path),
+            "--benchmark-root",
+            "benchmarks",
+            "--latest-live-pair",
+            "--issue-5-defaults",
+            "--post",
+            "--gh-path",
+            str(fake_gh),
+        ],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    log_lines = log_path.read_text(encoding="utf-8").splitlines()
+    assert result.stdout.strip() == "https://github.com/example/repo/issues/5#issuecomment-1"
+    assert log_lines[:6] == [
+        "issue",
+        "comment",
+        "5",
+        "--repo",
+        "temppppppppppppppppppppppp/devdev",
+        "--body-file",
+    ]
+    assert log_lines[6] == "-"
+    assert any(line.startswith("__BODY__## Issue #5 Benchmark Operator Snapshot") for line in log_lines)
