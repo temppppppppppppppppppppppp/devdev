@@ -13,6 +13,7 @@ try:
         QUEUE_ROLE_FRONT_ACTIVE,
         QUEUE_ROLE_HISTORICAL_BACKING,
         QUEUE_ROLE_PARKED_FUTURE_WAVE,
+        compute_topological_order,
         extract_roadmap_item_context,
         infer_item_status,
         infer_queue_role,
@@ -25,6 +26,7 @@ except ModuleNotFoundError:  # pragma: no cover - import path depends on invocat
         QUEUE_ROLE_FRONT_ACTIVE,
         QUEUE_ROLE_HISTORICAL_BACKING,
         QUEUE_ROLE_PARKED_FUTURE_WAVE,
+        compute_topological_order,
         extract_roadmap_item_context,
         infer_item_status,
         infer_queue_role,
@@ -189,7 +191,13 @@ def validate_mirror_document(temp_path: Path, result: ValidationResult) -> None:
                 result.info(f"{actual_temp_rel}: execution metadata block parsed successfully")
 
 
-def validate_queue_state(exec_docs: list[Path], roadmap_path: Path | None, result: ValidationResult) -> None:
+def validate_queue_state(
+    exec_docs: list[Path],
+    roadmap_path: Path | None,
+    result: ValidationResult,
+    *,
+    toposort_dry_run: bool = False,
+) -> None:
     queue_state_path = TEMP / QUEUE_STATE_NAME
     if not queue_state_path.exists():
         return
@@ -391,6 +399,19 @@ def validate_queue_state(exec_docs: list[Path], roadmap_path: Path | None, resul
             validate_dependency_graph(dependency_items)
         except ValueError as exc:
             result.fail(f"docs/temp/{QUEUE_STATE_NAME}: {exc}")
+        else:
+            if toposort_dry_run:
+                current_order = [str(item["topic"]).strip() for item in dependency_items]
+                computed_order = compute_topological_order(dependency_items)
+                if current_order == computed_order:
+                    result.info(
+                        f"docs/temp/{QUEUE_STATE_NAME}: topological order matches current queue order"
+                    )
+                else:
+                    result.warn(
+                        f"docs/temp/{QUEUE_STATE_NAME}: topological order differs from current queue order; "
+                        f"current={current_order}; computed={computed_order}"
+                    )
 
 
 def emit_result(result: ValidationResult, strict: bool) -> int:
@@ -412,7 +433,7 @@ def emit_result(result: ValidationResult, strict: bool) -> int:
     return 0
 
 
-def run_validation(strict: bool) -> int:
+def run_validation(strict: bool, toposort_dry_run: bool = False) -> int:
     result = ValidationResult()
 
     if not TEMP.exists():
@@ -437,7 +458,12 @@ def run_validation(strict: bool) -> int:
     if roadmap_present:
         validate_mirror_document(roadmap_path, result)
 
-    validate_queue_state(exec_docs, roadmap_path if roadmap_present else None, result)
+    validate_queue_state(
+        exec_docs,
+        roadmap_path if roadmap_present else None,
+        result,
+        toposort_dry_run=toposort_dry_run,
+    )
 
     if not exec_docs:
         result.info("docs/temp: no active execution SSOT mirrors found")
@@ -454,8 +480,13 @@ def main() -> int:
         action="store_true",
         help="Treat warnings as failures.",
     )
+    parser.add_argument(
+        "--toposort-dry-run",
+        action="store_true",
+        help="Report the computed dependency-respecting order without rewriting roadmap ranks.",
+    )
     args = parser.parse_args()
-    return run_validation(strict=args.strict)
+    return run_validation(strict=args.strict, toposort_dry_run=args.toposort_dry_run)
 
 
 if __name__ == "__main__":

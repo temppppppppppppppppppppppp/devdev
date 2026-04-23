@@ -779,3 +779,139 @@ def test_validator_flags_queue_state_rank_inversion(tmp_path, monkeypatch, capsy
 
     assert run_validation(strict=True) == 1
     assert "rank inversion" in capsys.readouterr().out
+
+
+def test_validator_toposort_dry_run_reports_matching_order(tmp_path, monkeypatch, capsys):
+    root = tmp_path
+    docs = root / "docs"
+    temp = docs / "temp"
+    dated = docs / "2026-04-23"
+    temp.mkdir(parents=True)
+    dated.mkdir(parents=True)
+    (temp / "README.md").write_text("temp\n", encoding="utf-8")
+
+    canonical_alpha = dated / "alpha-execution-ssot.md"
+    temp_alpha = temp / "alpha-execution-ssot.md"
+    alpha_body = "\n".join(
+        [
+            "# Alpha Execution SSOT",
+            "Status: execution-ready",
+            "Canonical Path: `docs/2026-04-23/alpha-execution-ssot.md`",
+            "Temp Mirror Path: `docs/temp/alpha-execution-ssot.md`",
+            "Source Survey Docs:",
+            "- `docs/2026-04-23/example.md`",
+            "",
+            "## 0. Execution Metadata Block",
+            "",
+            "```yaml",
+            "execution_meta:",
+            "  schema_version: execution-meta-block-v1",
+            "  topic: alpha",
+            "  depends_on: []",
+            "  tranches:",
+            "    - id: first",
+            "      title: First tranche",
+            "```",
+            "",
+            "## 1. Intent",
+            "- body",
+        ]
+    )
+    canonical_alpha.write_text(alpha_body, encoding="utf-8")
+    temp_alpha.write_text(alpha_body, encoding="utf-8")
+
+    canonical_beta = dated / "beta-execution-ssot.md"
+    temp_beta = temp / "beta-execution-ssot.md"
+    beta_body = "\n".join(
+        [
+            "# Beta Execution SSOT",
+            "Status: execution-ready",
+            "Canonical Path: `docs/2026-04-23/beta-execution-ssot.md`",
+            "Temp Mirror Path: `docs/temp/beta-execution-ssot.md`",
+            "Source Survey Docs:",
+            "- `docs/2026-04-23/example.md`",
+            "",
+            "## 0. Execution Metadata Block",
+            "",
+            "```yaml",
+            "execution_meta:",
+            "  schema_version: execution-meta-block-v1",
+            "  topic: beta",
+            "  depends_on:",
+            "    - alpha",
+            "  tranches:",
+            "    - id: first",
+            "      title: First tranche",
+            "```",
+            "",
+            "## 1. Intent",
+            "- body",
+        ]
+    )
+    canonical_beta.write_text(beta_body, encoding="utf-8")
+    temp_beta.write_text(beta_body, encoding="utf-8")
+
+    roadmap_body = "\n".join(
+        [
+            "# Active Temp Execution Roadmap",
+            "Status: active",
+            "Canonical Path: `docs/2026-04-23/active-temp-execution-roadmap.md`",
+            "Temp Mirror Path: `docs/temp/execution-roadmap.md`",
+            "",
+            "Working order:",
+            "1. `alpha` (parked future wave)",
+            "2. `beta` (parked future wave)",
+        ]
+    )
+    (dated / "active-temp-execution-roadmap.md").write_text(roadmap_body, encoding="utf-8")
+    (temp / "execution-roadmap.md").write_text(roadmap_body, encoding="utf-8")
+    (temp / "queue-state.json").write_text(
+        """{
+  "version": "temp-queue-state-v1",
+  "generated_at": "2026-04-23T00:00:00+00:00",
+  "queue_mode": "aggregate",
+  "active_item_count": 2,
+  "roadmap": {
+    "temp_path": "docs/temp/execution-roadmap.md",
+    "canonical_path": "docs/2026-04-23/active-temp-execution-roadmap.md",
+    "status": "active"
+  },
+  "items": [
+    {
+      "topic": "alpha",
+      "temp_path": "docs/temp/alpha-execution-ssot.md",
+      "canonical_path": "docs/2026-04-23/alpha-execution-ssot.md",
+      "status": "pending",
+      "queue_role": "parked_future_wave",
+      "roadmap_rank": 1,
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "beta",
+      "temp_path": "docs/temp/beta-execution-ssot.md",
+      "canonical_path": "docs/2026-04-23/beta-execution-ssot.md",
+      "status": "pending",
+      "queue_role": "parked_future_wave",
+      "roadmap_rank": 2,
+      "depends_on": [
+        "alpha"
+      ],
+      "mirror_present": true,
+      "canonical_present": true
+    }
+  ]
+}
+""",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr("scripts.ops_validator.ROOT", root)
+    monkeypatch.setattr("scripts.ops_validator.DOCS", docs)
+    monkeypatch.setattr("scripts.ops_validator.TEMP", temp)
+    monkeypatch.setattr("scripts.sync_temp_queue_state.ROOT", root)
+    monkeypatch.setattr("scripts.sync_temp_queue_state.TEMP", temp)
+
+    assert run_validation(strict=True, toposort_dry_run=True) == 0
+    assert "topological order matches current queue order" in capsys.readouterr().out

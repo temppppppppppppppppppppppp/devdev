@@ -4,6 +4,7 @@ import pytest
 
 from scripts.sync_temp_queue_state import (
     build_item_payload,
+    compute_topological_order,
     load_execution_meta_block,
     validate_dependency_graph,
 )
@@ -268,3 +269,34 @@ def test_validate_dependency_graph_allows_missing_rank_on_either_side(alpha_rank
     ]
 
     validate_dependency_graph(items)
+
+
+def test_compute_topological_order_reorders_dependencies_before_dependents():
+    items = [
+        {"topic": "beta", "depends_on": ["alpha"], "roadmap_rank": None},
+        {"topic": "alpha", "depends_on": [], "roadmap_rank": None},
+        {"topic": "gamma", "depends_on": ["beta"], "roadmap_rank": None},
+    ]
+
+    assert compute_topological_order(items) == ["alpha", "beta", "gamma"]
+
+
+def test_compute_topological_order_uses_rank_then_current_order_for_ties():
+    items = [
+        {"topic": "gamma", "depends_on": [], "roadmap_rank": 3},
+        {"topic": "alpha", "depends_on": [], "roadmap_rank": 1},
+        {"topic": "beta", "depends_on": [], "roadmap_rank": 2},
+        {"topic": "delta", "depends_on": [], "roadmap_rank": None},
+        {"topic": "epsilon", "depends_on": [], "roadmap_rank": None},
+    ]
+
+    assert compute_topological_order(items) == ["alpha", "beta", "gamma", "delta", "epsilon"]
+
+
+def test_compute_topological_order_repairs_rank_inversion_from_dependencies():
+    items = [
+        {"topic": "beta", "depends_on": ["alpha"], "roadmap_rank": 1},
+        {"topic": "alpha", "depends_on": [], "roadmap_rank": 2},
+    ]
+
+    assert compute_topological_order(items) == ["alpha", "beta"]
