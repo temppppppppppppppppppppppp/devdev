@@ -273,6 +273,17 @@ def test_audit_benchmark_companion_links_reports_missing_targets(tmp_path):
             "supporting_context_md",
         ],
     }
+    assert audit["operator_summary"] == {
+        "status": "needs_remediation",
+        "needs_remediation": True,
+        "headline": "repair post_run_evidence_json first",
+        "remediation_hint_count": 2,
+        "highest_priority_surface": "post_run_evidence_json",
+        "surfaces_by_priority": [
+            "post_run_evidence_json",
+            "supporting_context_md",
+        ],
+    }
     record = audit["records"][0]
     assert record["companion_state"] == "missing_target"
     assert record["missing_surfaces"] == ["post_run_evidence_json", "supporting_context_md"]
@@ -352,6 +363,14 @@ def test_audit_benchmark_companion_links_cli_supports_json_output(tmp_path):
     payload = json.loads(result.stdout)
     assert payload["summary"]["live_records"] == 1
     assert payload["records"][0]["linked_surfaces"] == ["supporting_context_md"]
+    assert payload["operator_summary"] == {
+        "status": "clean",
+        "needs_remediation": False,
+        "headline": "no remediation needed",
+        "remediation_hint_count": 0,
+        "highest_priority_surface": "",
+        "surfaces_by_priority": [],
+    }
 
 
 def test_audit_benchmark_companion_links_cli_strict_fails_on_missing_targets(tmp_path):

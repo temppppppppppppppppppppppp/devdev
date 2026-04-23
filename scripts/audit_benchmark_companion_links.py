@@ -13,6 +13,7 @@ if str(ROOT) not in sys.path:
 
 from scripts.compare_benchmark_records import (
     REMEDIATION_SURFACE_PRIORITY,
+    _build_operator_summary,
     _coerce_record_root,
     _display_relative_path,
     _resolve_benchmark_root,
@@ -136,11 +137,13 @@ def audit_benchmark_companion_links(
     remediation_summary = _build_remediation_summary(
         [hint for record in records for hint in record.get("remediation_hints", [])]
     )
+    operator_summary = _build_operator_summary(remediation_summary)
     strict_failure_reasons = _collect_strict_failure_reasons(summary)
     return {
         "benchmark_root": _display_relative_path(workspace, benchmark_dir),
         "summary": summary,
         "remediation_summary": remediation_summary,
+        "operator_summary": operator_summary,
         "strict": {
             "status": "fail" if strict_failure_reasons else "pass",
             "failure_reasons": strict_failure_reasons,

@@ -289,6 +289,7 @@ def build_benchmark_record_diff(left_record: dict[str, Any], right_record: dict[
     )
     remediation_hints = _collect_delta_remediation_hints(left_record=left_record, right_record=right_record)
     remediation_summary = _build_remediation_summary(remediation_hints)
+    operator_summary = _build_operator_summary(remediation_summary)
     watchpoints = _build_watchpoints(
         left_record=left_record,
         right_record=right_record,
@@ -316,6 +317,7 @@ def build_benchmark_record_diff(left_record: dict[str, Any], right_record: dict[
             "verdict": verdict,
             "remediation_hints": remediation_hints,
             "remediation_summary": remediation_summary,
+            "operator_summary": operator_summary,
             "watchpoints": watchpoints,
             "changed_sections": changed_sections,
         },
@@ -694,6 +696,31 @@ def _build_remediation_summary(remediation_hints: list[dict[str, str]]) -> dict[
         "hint_count": len(remediation_hints),
         "count_by_surface": count_by_surface,
         "highest_priority_surface": surfaces_by_priority[0] if surfaces_by_priority else "",
+        "surfaces_by_priority": surfaces_by_priority,
+    }
+
+
+def _build_operator_summary(remediation_summary: dict[str, Any]) -> dict[str, Any]:
+    hint_count = int(remediation_summary.get("hint_count", 0) or 0)
+    highest_priority_surface = str(remediation_summary.get("highest_priority_surface", "") or "")
+    surfaces_by_priority = [
+        str(surface)
+        for surface in remediation_summary.get("surfaces_by_priority", [])
+        if str(surface or "")
+    ]
+    needs_remediation = hint_count > 0
+    if highest_priority_surface:
+        headline = f"repair {highest_priority_surface} first"
+    elif needs_remediation:
+        headline = "review remediation hints"
+    else:
+        headline = "no remediation needed"
+    return {
+        "status": "needs_remediation" if needs_remediation else "clean",
+        "needs_remediation": needs_remediation,
+        "headline": headline,
+        "remediation_hint_count": hint_count,
+        "highest_priority_surface": highest_priority_surface,
         "surfaces_by_priority": surfaces_by_priority,
     }
 
