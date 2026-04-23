@@ -55,6 +55,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="explicit benchmark pair to compare and include in the markdown snapshot",
     )
     parser.add_argument(
+        "--latest-live-pair",
+        action="store_true",
+        help="append a comparison for the latest two live benchmark records by run_id",
+    )
+    parser.add_argument(
         "--gh-path",
         default="",
         help="optional explicit path to the GitHub CLI executable",
@@ -73,11 +78,13 @@ def build_comment_markdown(
     workspace_root: str | Path = ROOT,
     benchmark_root: str | Path = "benchmarks",
     pairs: list[tuple[str, str]] | None = None,
+    latest_live_pair: bool = False,
 ) -> str:
     payload = build_benchmark_operator_line_report(
         workspace_root=workspace_root,
         benchmark_root=benchmark_root,
         pairs=pairs,
+        latest_live_pair=latest_live_pair,
     )
     return render_benchmark_operator_comment_markdown(payload, title=title)
 
@@ -127,6 +134,7 @@ def main(argv: list[str] | None = None) -> int:
         workspace_root=args.workspace_root,
         benchmark_root=args.benchmark_root,
         pairs=[(str(left), str(right)) for left, right in (args.pairs or [])],
+        latest_live_pair=bool(args.latest_live_pair),
     )
     if not args.post:
         print(markdown, end="")

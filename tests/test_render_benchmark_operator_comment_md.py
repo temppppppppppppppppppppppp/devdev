@@ -135,3 +135,33 @@ def test_render_benchmark_operator_comment_md_cli_supports_title_and_pair(tmp_pa
         f"- {left_root} -> {right_root}: status=clean; ci_gate=pass; gate_basis=clean; "
         "headline=no remediation needed; verdict=better; changed_sections=run_meta,stage_metrics,watchpoints"
     ) in result.stdout
+
+
+def test_render_benchmark_operator_comment_md_cli_supports_latest_live_pair(tmp_path):
+    helper = _load_report_test_helpers()
+    run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
+    run_b = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    helper._write_record(tmp_path, run_id=run_a, status="interrupted")
+    helper._write_record(tmp_path, run_id=run_b, status="completed")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/render_benchmark_operator_comment_md.py",
+            "--workspace-root",
+            str(tmp_path),
+            "--benchmark-root",
+            "benchmarks",
+            "--latest-live-pair",
+        ],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    assert "### Explicit Comparisons" in result.stdout
+    assert (
+        f"- {run_a} -> {run_b}: status=clean; ci_gate=pass; gate_basis=clean; "
+        "headline=no remediation needed; verdict=better; changed_sections=run_meta,stage_metrics,watchpoints"
+    ) in result.stdout

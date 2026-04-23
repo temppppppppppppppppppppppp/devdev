@@ -38,6 +38,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         metavar=("LEFT", "RIGHT"),
         help="explicit benchmark pair to compare and include in the markdown snapshot",
     )
+    parser.add_argument(
+        "--latest-live-pair",
+        action="store_true",
+        help="append a comparison for the latest two live benchmark records by run_id",
+    )
     return parser.parse_args(argv)
 
 
@@ -93,6 +98,7 @@ def main(argv: list[str] | None = None) -> int:
         workspace_root=args.workspace_root,
         benchmark_root=args.benchmark_root,
         pairs=[(str(left), str(right)) for left, right in (args.pairs or [])],
+        latest_live_pair=bool(args.latest_live_pair),
     )
     print(render_benchmark_operator_comment_markdown(payload, title=args.title), end="")
     return 0
