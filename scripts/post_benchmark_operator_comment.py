@@ -72,6 +72,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="default --repo and --issue-number to the repo-local issue #5 target when omitted",
     )
     parser.add_argument(
+        "--issue-5-snapshot",
+        action="store_true",
+        help="convenience preset for the common issue-5 snapshot path; enables --issue-5-defaults and --latest-live-pair",
+    )
+    parser.add_argument(
         "--post",
         action="store_true",
         help="actually post the rendered markdown to the GitHub issue instead of printing a preview",
@@ -144,8 +149,15 @@ def apply_issue_5_defaults(args: argparse.Namespace) -> argparse.Namespace:
     return args
 
 
+def apply_issue_5_snapshot_defaults(args: argparse.Namespace) -> argparse.Namespace:
+    if bool(getattr(args, "issue_5_snapshot", False)):
+        args.issue_5_defaults = True
+        args.latest_live_pair = True
+    return args
+
+
 def main(argv: list[str] | None = None) -> int:
-    args = apply_issue_5_defaults(parse_args(argv))
+    args = apply_issue_5_defaults(apply_issue_5_snapshot_defaults(parse_args(argv)))
     markdown = build_comment_markdown(
         title=args.title,
         workspace_root=args.workspace_root,

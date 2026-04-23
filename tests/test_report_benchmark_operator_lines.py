@@ -284,6 +284,18 @@ def test_build_benchmark_operator_line_report_can_append_latest_live_pair(tmp_pa
     ]
 
 
+def test_apply_issue_5_snapshot_defaults_enables_latest_live_pair_for_report():
+    module = _load_report_module()
+    args = module.argparse.Namespace(
+        latest_live_pair=False,
+        issue_5_snapshot=True,
+    )
+
+    resolved = module.apply_issue_5_snapshot_defaults(args)
+
+    assert resolved.latest_live_pair is True
+
+
 def test_report_benchmark_operator_lines_cli_supports_json_output(tmp_path):
     run_id = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
     record_root = _write_record(tmp_path, run_id=run_id, status="completed")
@@ -376,6 +388,36 @@ def test_report_benchmark_operator_lines_cli_supports_latest_live_pair(tmp_path)
             "--benchmark-root",
             "benchmarks",
             "--latest-live-pair",
+        ],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    assert "Comparisons:" in result.stdout
+    assert (
+        f"{run_a} -> {run_b} | "
+        "status=clean; ci_gate=pass; gate_basis=clean; headline=no remediation needed | "
+        "verdict=better | changed_sections=run_meta,stage_metrics,watchpoints"
+    ) in result.stdout
+
+
+def test_report_benchmark_operator_lines_cli_supports_issue_5_snapshot(tmp_path):
+    run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
+    run_b = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    _write_record(tmp_path, run_id=run_a, status="interrupted")
+    _write_record(tmp_path, run_id=run_b, status="completed")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/report_benchmark_operator_lines.py",
+            "--workspace-root",
+            str(tmp_path),
+            "--benchmark-root",
+            "benchmarks",
+            "--issue-5-snapshot",
         ],
         cwd=Path(__file__).resolve().parents[1],
         capture_output=True,

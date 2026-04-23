@@ -43,7 +43,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="append a comparison for the latest two live benchmark records by run_id",
     )
+    parser.add_argument(
+        "--issue-5-snapshot",
+        action="store_true",
+        help="convenience preset for the common issue-5 snapshot path; enables --latest-live-pair",
+    )
     return parser.parse_args(argv)
+
+
+def apply_issue_5_snapshot_defaults(args: argparse.Namespace) -> argparse.Namespace:
+    if bool(getattr(args, "issue_5_snapshot", False)):
+        args.latest_live_pair = True
+    return args
 
 
 def render_benchmark_operator_comment_markdown(payload: dict[str, object], *, title: str) -> str:
@@ -93,7 +104,7 @@ def render_benchmark_operator_comment_markdown(payload: dict[str, object], *, ti
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = parse_args(argv)
+    args = apply_issue_5_snapshot_defaults(parse_args(argv))
     payload = build_benchmark_operator_line_report(
         workspace_root=args.workspace_root,
         benchmark_root=args.benchmark_root,

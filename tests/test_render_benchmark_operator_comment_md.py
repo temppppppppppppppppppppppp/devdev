@@ -165,3 +165,45 @@ def test_render_benchmark_operator_comment_md_cli_supports_latest_live_pair(tmp_
         f"- {run_a} -> {run_b}: status=clean; ci_gate=pass; gate_basis=clean; "
         "headline=no remediation needed; verdict=better; changed_sections=run_meta,stage_metrics,watchpoints"
     ) in result.stdout
+
+
+def test_apply_issue_5_snapshot_defaults_enables_latest_live_pair_for_render():
+    module = _load_render_module()
+    args = module.argparse.Namespace(
+        latest_live_pair=False,
+        issue_5_snapshot=True,
+    )
+
+    resolved = module.apply_issue_5_snapshot_defaults(args)
+
+    assert resolved.latest_live_pair is True
+
+
+def test_render_benchmark_operator_comment_md_cli_supports_issue_5_snapshot(tmp_path):
+    helper = _load_report_test_helpers()
+    run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
+    run_b = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    helper._write_record(tmp_path, run_id=run_a, status="interrupted")
+    helper._write_record(tmp_path, run_id=run_b, status="completed")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/render_benchmark_operator_comment_md.py",
+            "--workspace-root",
+            str(tmp_path),
+            "--benchmark-root",
+            "benchmarks",
+            "--issue-5-snapshot",
+        ],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    assert result.stdout.startswith("## Issue #5 Benchmark Operator Snapshot\n")
+    assert (
+        f"- {run_a} -> {run_b}: status=clean; ci_gate=pass; gate_basis=clean; "
+        "headline=no remediation needed; verdict=better; changed_sections=run_meta,stage_metrics,watchpoints"
+    ) in result.stdout
