@@ -48,6 +48,7 @@ def _write_record(
     notes: str = "",
     proof_digest_status: str | None = None,
     runtime_audit_summary_payload: dict | None = None,
+    guarded_summary_payload: dict | None = None,
 ) -> Path:
     record_root = workspace / "benchmarks" / "golden-canary" / run_id
     record_root.mkdir(parents=True, exist_ok=True)
@@ -112,7 +113,7 @@ def _write_record(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
-    if runtime_audit_summary_payload is not None or proof_digest_status is not None:
+    if runtime_audit_summary_payload is not None or proof_digest_status is not None or guarded_summary_payload is not None:
         logs_dir = record_root / "logs"
         logs_dir.mkdir(parents=True, exist_ok=True)
         payload = runtime_audit_summary_payload or {
@@ -127,6 +128,11 @@ def _write_record(
             json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
+        if guarded_summary_payload is not None:
+            (logs_dir / "stage4_direct_supervised_guarded_result.json").write_text(
+                json.dumps(guarded_summary_payload, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
     with (record_root / "stage_metrics.csv").open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(
             handle,
@@ -446,7 +452,7 @@ def test_compare_benchmark_records_surfaces_note_and_proof_digest_watchpoints(tm
         "severity": "warn",
         "scope": "notes",
         "side": "left",
-        "message": "left record notes indicate monitor termination (stage4_round_limit_exceeded)",
+        "message": "left record indicates monitor termination (stage4_round_limit_exceeded)",
     } in watchpoints
     assert {
         "id": "stage4_post_pass_contract_signals_recorded",
@@ -564,4 +570,160 @@ def test_compare_benchmark_records_surfaces_stage4_runtime_watchpoints(tmp_path)
         "scope": "stage4",
         "side": "right",
         "message": "right stage4 post_pass_contract_signal_count is 2",
+    } in watchpoints
+
+
+def test_compare_benchmark_records_prefers_current_guarded_summary_for_rerun_watchpoints(tmp_path):
+    module = _load_compare_module()
+    left_run_id = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
+    left_root = _write_record(
+        tmp_path,
+        run_id=left_run_id,
+        stage4_attempts=12,
+        stage4_pass_like=4,
+        stage4_duration_ms=8000,
+        stage4_tokens=12000,
+        stage4_cost_usd=1.5,
+        status="operational_failure",
+        git_head="aaaa1111",
+        notes=(
+            "guarded direct supervised stage4; target_ep=15; before_latest_ep=10; "
+            "after_latest_ep=11; child_exit_code=1; terminated_by_monitor=true; "
+            "termination_reason=stage4_round_limit_exceeded"
+        ),
+        guarded_summary_payload={
+            "target_ep": 15,
+            "latest_written_ep_before": 11,
+            "latest_written_ep_after": 14,
+            "terminated_by_monitor": True,
+            "termination_reason": "stage4_round_limit_exceeded",
+            "child_exit_code": 1,
+            "benchmark_archive": {
+                "run_id": left_run_id,
+            },
+        },
+    )
+    right_root = _write_record(
+        tmp_path,
+        run_id="20260423_130000__stage4-supervised__target-ep15__bbbb2222",
+        stage4_attempts=8,
+        stage4_pass_like=6,
+        stage4_duration_ms=6000,
+        stage4_tokens=9000,
+        stage4_cost_usd=1.1,
+        status="completed",
+        git_head="bbbb2222",
+    )
+
+    diff = module.compare_benchmark_records(
+        str(left_root),
+        str(right_root),
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+    )
+
+    watchpoints = diff["delta"]["watchpoints"]
+    assert {
+        "id": "monitor_termination_recorded",
+        "severity": "warn",
+        "scope": "stage4_guarded_result",
+        "side": "left",
+        "message": "left record indicates monitor termination (stage4_round_limit_exceeded)",
+    } in watchpoints
+    assert {
+        "id": "stage4_child_exit_nonzero",
+        "severity": "warn",
+        "scope": "stage4_guarded_result",
+        "side": "left",
+        "message": "left record child_exit_code is 1",
+    } in watchpoints
+    assert {
+        "id": "stage4_rerun_progress_recorded",
+        "severity": "info",
+        "scope": "stage4_guarded_result",
+        "side": "left",
+        "message": "left record advanced latest_written_ep from 11 to 14",
+    } in watchpoints
+    assert {
+        "id": "stage4_target_gap_remaining",
+        "severity": "warn",
+        "scope": "stage4_guarded_result",
+        "side": "left",
+        "message": "left record stopped at latest_written_ep 14 before target_ep 15",
+    } in watchpoints
+
+
+def test_compare_benchmark_records_flags_stale_guarded_summary_and_falls_back_to_notes(tmp_path):
+    module = _load_compare_module()
+    left_root = _write_record(
+        tmp_path,
+        run_id="20260423_120000__stage4-supervised__target-ep15__aaaa1111",
+        stage4_attempts=12,
+        stage4_pass_like=4,
+        stage4_duration_ms=8000,
+        stage4_tokens=12000,
+        stage4_cost_usd=1.5,
+        status="operational_failure",
+        git_head="aaaa1111",
+        notes=(
+            "guarded direct supervised stage4; target_ep=15; before_latest_ep=11; "
+            "after_latest_ep=14; child_exit_code=1; terminated_by_monitor=true; "
+            "termination_reason=stage4_round_limit_exceeded"
+        ),
+        guarded_summary_payload={
+            "target_ep": 15,
+            "latest_written_ep_before": 10,
+            "latest_written_ep_after": 11,
+            "terminated_by_monitor": True,
+            "termination_reason": "stage4_round_limit_exceeded",
+            "child_exit_code": 1,
+            "benchmark_archive": {
+                "run_id": "20260423_110000__stage4-supervised__target-ep15__old11111",
+            },
+        },
+    )
+    right_root = _write_record(
+        tmp_path,
+        run_id="20260423_130000__stage4-supervised__target-ep15__bbbb2222",
+        stage4_attempts=8,
+        stage4_pass_like=6,
+        stage4_duration_ms=6000,
+        stage4_tokens=9000,
+        stage4_cost_usd=1.1,
+        status="completed",
+        git_head="bbbb2222",
+    )
+
+    diff = module.compare_benchmark_records(
+        str(left_root),
+        str(right_root),
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+    )
+
+    watchpoints = diff["delta"]["watchpoints"]
+    assert {
+        "id": "stage4_guarded_summary_stale_reference",
+        "severity": "warn",
+        "scope": "stage4_guarded_result",
+        "side": "left",
+        "message": (
+            "left archived guarded summary points at benchmark run "
+            "20260423_110000__stage4-supervised__target-ep15__old11111, "
+            "not 20260423_120000__stage4-supervised__target-ep15__aaaa1111"
+        ),
+    } in watchpoints
+    assert {
+        "id": "stage4_rerun_progress_recorded",
+        "severity": "info",
+        "scope": "notes",
+        "side": "left",
+        "message": "left record advanced latest_written_ep from 11 to 14",
+    } in watchpoints
+    assert {
+        "id": "stage4_target_gap_remaining",
+        "severity": "warn",
+        "scope": "notes",
+        "side": "left",
+        "message": "left record stopped at latest_written_ep 14 before target_ep 15",
     } in watchpoints
