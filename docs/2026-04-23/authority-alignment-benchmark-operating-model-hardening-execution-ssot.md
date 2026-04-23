@@ -200,6 +200,7 @@ Excluded:
    - current surface also includes `scripts/render_benchmark_operator_comment_md.py` and `scripts/post_benchmark_operator_comment.py` so the same benchmark operator payload can be previewed, rendered as markdown, or posted to GitHub issue comments without redefining truth or gate semantics
    - default snapshot cadence is bounded and manual: refresh the operator snapshot after a landed comparator/watchpoint/helper tranche, after live benchmark companion-link population changes, or immediately before posting a new `#5` issue snapshot
    - operator order stays fixed as `report_benchmark_operator_lines.py` -> `render_benchmark_operator_comment_md.py` -> optional `post_benchmark_operator_comment.py --post`
+   - explicit helper ergonomics now also include `--latest-live-pair` on the report/render/post wrappers for the common "latest two live benchmark records" snapshot path without changing default behavior
    - make first-owner and regression readouts easier to inspect without elevating telemetry to truth
 5. Downstream proof gate alignment
    - wire the lane so `#3`, `#4`, and `#7` can reference the same benchmark and authority proof standard
