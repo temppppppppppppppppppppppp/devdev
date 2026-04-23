@@ -89,6 +89,7 @@ def audit_benchmark_companion_links(
         )
         remediation_hints = _build_remediation_hints(
             run_id=run_id,
+            record_root=str(record.get("record_root", "") or ""),
             companion_links=companion_links,
             missing_surfaces=missing_surfaces,
         )
@@ -271,6 +272,7 @@ def _collect_strict_failure_reasons(summary: dict[str, Any]) -> list[str]:
 def _build_remediation_hints(
     *,
     run_id: str,
+    record_root: str,
     companion_links: object,
     missing_surfaces: list[str],
 ) -> list[dict[str, str]]:
@@ -295,6 +297,9 @@ def _build_remediation_hints(
             continue
         hints.append(
             {
+                "side": "record",
+                "run_id": run_id,
+                "record_root": record_root,
                 "surface": surface,
                 "current_value": raw_value,
                 "suggested_flag": flag,
