@@ -112,6 +112,20 @@ def test_apply_issue_5_defaults_preserves_explicit_repo_and_issue():
     assert resolved.issue_number == 9
 
 
+def test_apply_issue_5_snapshot_defaults_enables_issue_5_defaults_and_latest_pair():
+    module = _load_post_module()
+    args = module.argparse.Namespace(
+        issue_5_defaults=False,
+        latest_live_pair=False,
+        issue_5_snapshot=True,
+    )
+
+    resolved = module.apply_issue_5_snapshot_defaults(args)
+
+    assert resolved.issue_5_defaults is True
+    assert resolved.latest_live_pair is True
+
+
 def test_post_benchmark_operator_comment_cli_preview_outputs_markdown(tmp_path):
     helper = _load_report_test_helpers()
     run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
@@ -227,3 +241,63 @@ def test_post_benchmark_operator_comment_cli_issue_5_defaults_posts_without_repo
     ]
     assert log_lines[6] == "-"
     assert any(line.startswith("__BODY__## Issue #5 Benchmark Operator Snapshot") for line in log_lines)
+
+
+def test_post_benchmark_operator_comment_cli_issue_5_snapshot_posts_with_shortcut(tmp_path):
+    helper = _load_report_test_helpers()
+    run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
+    run_b = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    helper._write_record(tmp_path, run_id=run_a, status="interrupted")
+    helper._write_record(tmp_path, run_id=run_b, status="completed")
+    fake_gh = tmp_path / "gh.cmd"
+    log_path = tmp_path / "gh-args.txt"
+    fake_gh.write_text(
+        "\n".join(
+            [
+                "@echo off",
+                "setlocal EnableDelayedExpansion",
+                f"set LOG={log_path}",
+                "break>\"%LOG%\"",
+                ":loop",
+                "if \"%~1\"==\"\" goto afterargs",
+                ">>\"%LOG%\" echo %~1",
+                "shift",
+                "goto loop",
+                ":afterargs",
+                "set /p BODY=",
+                ">>\"%LOG%\" echo __BODY__!BODY!",
+                "echo https://github.com/example/repo/issues/5#issuecomment-2",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/post_benchmark_operator_comment.py",
+            "--workspace-root",
+            str(tmp_path),
+            "--benchmark-root",
+            "benchmarks",
+            "--issue-5-snapshot",
+            "--post",
+            "--gh-path",
+            str(fake_gh),
+        ],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    log_lines = log_path.read_text(encoding="utf-8").splitlines()
+    assert result.stdout.strip() == "https://github.com/example/repo/issues/5#issuecomment-2"
+    assert log_lines[:6] == [
+        "issue",
+        "comment",
+        "5",
+        "--repo",
+        "temppppppppppppppppppppppp/devdev",
+        "--body-file",
+    ]
