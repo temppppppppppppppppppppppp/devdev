@@ -593,6 +593,55 @@ def _load_companion_evidence(
     }
 
 
+def _classify_missing_companion_surfaces(companion_links: object) -> list[str]:
+    if not isinstance(companion_links, dict):
+        return []
+    missing_surfaces: list[str] = []
+    for field in ("post_run_evidence_json", "post_run_merge_audit_md", "supporting_context_md"):
+        if bool(companion_links.get(f"{field}_missing")):
+            missing_surfaces.append(field)
+    return missing_surfaces
+
+
+def _build_companion_link_remediation_hints(
+    *,
+    run_id: str,
+    companion_links: object,
+    missing_surfaces: list[str],
+) -> list[dict[str, str]]:
+    if not isinstance(companion_links, dict):
+        return []
+    hints: list[dict[str, str]] = []
+    flag_by_surface = {
+        "post_run_evidence_json": "--post-run-evidence-json",
+        "post_run_merge_audit_md": "--post-run-merge-audit-md",
+        "supporting_context_md": "--supporting-context-md",
+    }
+    placeholder_by_surface = {
+        "post_run_evidence_json": "<valid-json-path>",
+        "post_run_merge_audit_md": "<valid-markdown-path>",
+        "supporting_context_md": "<valid-markdown-path>",
+    }
+    for surface in missing_surfaces:
+        flag = flag_by_surface.get(surface, "")
+        if not flag:
+            continue
+        raw_value = str(companion_links.get(surface, "") or "")
+        replacement = raw_value or placeholder_by_surface.get(surface, "<valid-path>")
+        hints.append(
+            {
+                "surface": surface,
+                "current_value": raw_value,
+                "suggested_flag": flag,
+                "suggested_command": (
+                    f"python scripts/link_benchmark_companions.py {run_id} "
+                    f"{flag} {replacement}"
+                ),
+            }
+        )
+    return hints
+
+
 def _extract_note_markers(notes: object) -> dict[str, Any]:
     text = str(notes or "").strip()
     markers = {
@@ -828,6 +877,38 @@ def _build_watchpoints(
         companion_evidence = record.get("companion_evidence", {})
         companion_links = record.get("companion_links", {})
         if isinstance(companion_links, dict) and companion_links.get("available"):
+            missing_surfaces = _classify_missing_companion_surfaces(companion_links)
+            remediation_hints = _build_companion_link_remediation_hints(
+                run_id=str(record.get("run_id", "") or ""),
+                companion_links=companion_links,
+                missing_surfaces=missing_surfaces,
+            )
+            if missing_surfaces:
+                watchpoints.append(
+                    _watchpoint(
+                        "benchmark_companion_missing_target",
+                        severity="warn",
+                        scope="benchmark_companion_links",
+                        side=side,
+                        message=(
+                            f"{side} benchmark companion state is missing_target "
+                            f"for {','.join(missing_surfaces)}"
+                        ),
+                    )
+                )
+                for hint in remediation_hints:
+                    watchpoints.append(
+                        _watchpoint(
+                            "benchmark_companion_remediation_hint",
+                            severity="info",
+                            scope="benchmark_companion_links",
+                            side=side,
+                            message=(
+                                f"{side} remediation {hint.get('surface')}: "
+                                f"{hint.get('suggested_command')}"
+                            ),
+                        )
+                    )
             if bool(companion_links.get("post_run_evidence_json_missing")):
                 watchpoints.append(
                     _watchpoint(

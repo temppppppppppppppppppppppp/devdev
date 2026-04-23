@@ -972,3 +972,86 @@ def test_compare_benchmark_records_cli_supports_companion_evidence_json(tmp_path
         "side": "right",
         "message": "right companion evidence reports hard_gates.status=fail",
     } in payload["delta"]["watchpoints"]
+
+
+def test_compare_benchmark_records_surfaces_missing_target_hygiene_with_remediation_hints(tmp_path):
+    module = _load_compare_module()
+    left_root = _write_record(
+        tmp_path,
+        run_id="20260423_120000__stage4-supervised__target-ep15__aaaa1111",
+        stage4_attempts=12,
+        stage4_pass_like=4,
+        stage4_duration_ms=8000,
+        stage4_tokens=12000,
+        stage4_cost_usd=1.5,
+        status="snapshot",
+        git_head="aaaa1111",
+    )
+    right_root = _write_record(
+        tmp_path,
+        run_id="20260423_130000__stage4-supervised__target-ep15__bbbb2222",
+        stage4_attempts=8,
+        stage4_pass_like=6,
+        stage4_duration_ms=6000,
+        stage4_tokens=9000,
+        stage4_cost_usd=1.1,
+        status="completed",
+        git_head="bbbb2222",
+    )
+    (right_root / "benchmark_companion_links.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "benchmark-companion-links-v1",
+                "post_run_evidence_json": "docs/2026-04-23/missing-evidence.json",
+                "post_run_merge_audit_md": "",
+                "supporting_context_md": "docs/2026-04-23/missing-context.md",
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    diff = module.compare_benchmark_records(
+        str(left_root),
+        str(right_root),
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+    )
+
+    watchpoints = diff["delta"]["watchpoints"]
+    assert {
+        "id": "benchmark_companion_missing_target",
+        "severity": "warn",
+        "scope": "benchmark_companion_links",
+        "side": "right",
+        "message": (
+            "right benchmark companion state is missing_target "
+            "for post_run_evidence_json,supporting_context_md"
+        ),
+    } in watchpoints
+    assert {
+        "id": "benchmark_companion_remediation_hint",
+        "severity": "info",
+        "scope": "benchmark_companion_links",
+        "side": "right",
+        "message": (
+            "right remediation post_run_evidence_json: "
+            "python scripts/link_benchmark_companions.py "
+            "20260423_130000__stage4-supervised__target-ep15__bbbb2222 "
+            "--post-run-evidence-json docs/2026-04-23/missing-evidence.json"
+        ),
+    } in watchpoints
+    assert {
+        "id": "benchmark_companion_remediation_hint",
+        "severity": "info",
+        "scope": "benchmark_companion_links",
+        "side": "right",
+        "message": (
+            "right remediation supporting_context_md: "
+            "python scripts/link_benchmark_companions.py "
+            "20260423_130000__stage4-supervised__target-ep15__bbbb2222 "
+            "--supporting-context-md docs/2026-04-23/missing-context.md"
+        ),
+    } in watchpoints
