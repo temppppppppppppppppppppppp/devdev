@@ -282,6 +282,7 @@ def build_benchmark_record_diff(left_record: dict[str, Any], right_record: dict[
         improvements=improvement_signals,
         regressions=regression_signals,
     )
+    remediation_hints = _collect_delta_remediation_hints(left_record=left_record, right_record=right_record)
     watchpoints = _build_watchpoints(
         left_record=left_record,
         right_record=right_record,
@@ -292,6 +293,7 @@ def build_benchmark_record_diff(left_record: dict[str, Any], right_record: dict[
         for section, changed in (
             ("run_meta", bool(run_meta_delta)),
             ("stage_metrics", bool(stage_metrics_delta)),
+            ("remediation_hints", bool(remediation_hints)),
             ("watchpoints", bool(watchpoints)),
         )
         if changed
@@ -306,6 +308,7 @@ def build_benchmark_record_diff(left_record: dict[str, Any], right_record: dict[
             "improvement_signals": improvement_signals,
             "regression_signals": regression_signals,
             "verdict": verdict,
+            "remediation_hints": remediation_hints,
             "watchpoints": watchpoints,
             "changed_sections": changed_sections,
         },
@@ -639,6 +642,32 @@ def _build_companion_link_remediation_hints(
                 ),
             }
         )
+    return hints
+
+
+def _collect_delta_remediation_hints(
+    *,
+    left_record: dict[str, Any],
+    right_record: dict[str, Any],
+) -> list[dict[str, str]]:
+    hints: list[dict[str, str]] = []
+    for side, record in (("left", left_record), ("right", right_record)):
+        companion_links = record.get("companion_links", {})
+        missing_surfaces = _classify_missing_companion_surfaces(companion_links)
+        for hint in _build_companion_link_remediation_hints(
+            run_id=str(record.get("run_id", "") or ""),
+            companion_links=companion_links,
+            missing_surfaces=missing_surfaces,
+        ):
+            hints.append(
+                {
+                    "side": side,
+                    "surface": str(hint.get("surface", "") or ""),
+                    "current_value": str(hint.get("current_value", "") or ""),
+                    "suggested_flag": str(hint.get("suggested_flag", "") or ""),
+                    "suggested_command": str(hint.get("suggested_command", "") or ""),
+                }
+            )
     return hints
 
 
@@ -1281,6 +1310,12 @@ def _render_text(diff: dict[str, Any], *, left_label: str, right_label: str) -> 
             for item in delta["watchpoints"]
         ]
         lines.append("Watchpoints: " + ", ".join(watchpoint_bits))
+    if delta["remediation_hints"]:
+        remediation_bits = [
+            f"{item['side']}:{item['surface']} -> {item['suggested_command']}"
+            for item in delta["remediation_hints"]
+        ]
+        lines.append("Remediation hints: " + " | ".join(remediation_bits))
     lines.append(f"Improvement signals: {delta['improvement_signals']}")
     lines.append(f"Regression signals: {delta['regression_signals']}")
     return "\n".join(lines)

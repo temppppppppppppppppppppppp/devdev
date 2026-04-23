@@ -1021,6 +1021,31 @@ def test_compare_benchmark_records_surfaces_missing_target_hygiene_with_remediat
     )
 
     watchpoints = diff["delta"]["watchpoints"]
+    assert diff["delta"]["remediation_hints"] == [
+        {
+            "side": "right",
+            "surface": "post_run_evidence_json",
+            "current_value": "docs/2026-04-23/missing-evidence.json",
+            "suggested_flag": "--post-run-evidence-json",
+            "suggested_command": (
+                "python scripts/link_benchmark_companions.py "
+                "20260423_130000__stage4-supervised__target-ep15__bbbb2222 "
+                "--post-run-evidence-json docs/2026-04-23/missing-evidence.json"
+            ),
+        },
+        {
+            "side": "right",
+            "surface": "supporting_context_md",
+            "current_value": "docs/2026-04-23/missing-context.md",
+            "suggested_flag": "--supporting-context-md",
+            "suggested_command": (
+                "python scripts/link_benchmark_companions.py "
+                "20260423_130000__stage4-supervised__target-ep15__bbbb2222 "
+                "--supporting-context-md docs/2026-04-23/missing-context.md"
+            ),
+        },
+    ]
+    assert "remediation_hints" in diff["delta"]["changed_sections"]
     assert {
         "id": "benchmark_companion_missing_target",
         "severity": "warn",
