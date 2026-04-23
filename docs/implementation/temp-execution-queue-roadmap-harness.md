@@ -105,6 +105,7 @@ Create or refresh an aggregate roadmap when:
 - Refresh it whenever queue membership or status changes.
 - If a `depends_on` edge and recorded `roadmap_rank` disagree, treat the queue-state as invalid and fix the roadmap or dependency before mirroring to external tools.
 - Preferred command: `python scripts/sync_temp_queue_state.py`
+- When the queue needs dependency-respecting rank normalization, use `python scripts/build_execution_roadmap.py --rewrite-roadmap-ranks` to rewrite queue-state ranks and rebuild the roadmap together.
 - Remove it when the queue becomes empty.
 
 ## 5B. ClickUp Reflection Rule

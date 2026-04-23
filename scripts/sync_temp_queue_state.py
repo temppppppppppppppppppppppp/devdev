@@ -58,6 +58,11 @@ def describe_path(path: Path) -> str:
         return path.as_posix()
 
 
+def write_utf8_lf(path: Path, text: str) -> None:
+    with path.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(text)
+
+
 def parse_metadata(path: Path, line_limit: int = 40) -> dict[str, str]:
     metadata: dict[str, str] = {}
     for line in path.read_text(encoding="utf-8").splitlines()[:line_limit]:
@@ -245,7 +250,7 @@ def load_execution_meta_block(path: Path, expected_topic: str | None = None) -> 
     return normalized_meta
 
 
-def validate_dependency_graph(items: list[dict[str, object]]) -> None:
+def validate_dependency_graph(items: list[dict[str, object]], *, enforce_rank_order: bool = True) -> None:
     dependency_map: dict[str, list[str]] = {}
     roadmap_ranks: dict[str, int] = {}
 
@@ -279,14 +284,15 @@ def validate_dependency_graph(items: list[dict[str, object]]) -> None:
         for dep in depends_on:
             if dep not in known_topics:
                 raise ValueError(f"queue item {topic} depends_on unknown topic {dep}")
-            dep_rank = roadmap_ranks.get(dep)
-            item_rank = roadmap_ranks.get(topic)
-            if dep_rank is not None and item_rank is not None and dep_rank >= item_rank:
-                raise ValueError(
-                    "queue dependency rank inversion: "
-                    f"{dep} -> {topic} requires {dep}.roadmap_rank < {topic}.roadmap_rank, "
-                    f"got {dep_rank} >= {item_rank}"
-                )
+            if enforce_rank_order:
+                dep_rank = roadmap_ranks.get(dep)
+                item_rank = roadmap_ranks.get(topic)
+                if dep_rank is not None and item_rank is not None and dep_rank >= item_rank:
+                    raise ValueError(
+                        "queue dependency rank inversion: "
+                        f"{dep} -> {topic} requires {dep}.roadmap_rank < {topic}.roadmap_rank, "
+                        f"got {dep_rank} >= {item_rank}"
+                    )
 
     visit_state: dict[str, str] = {}
     stack: list[str] = []
@@ -313,6 +319,54 @@ def validate_dependency_graph(items: list[dict[str, object]]) -> None:
 
     for topic in sorted(dependency_map):
         visit(topic)
+
+
+def compute_topological_order(items: list[dict[str, object]]) -> list[str]:
+    validate_dependency_graph(items, enforce_rank_order=False)
+
+    dependency_map: dict[str, list[str]] = {}
+    dependent_map: dict[str, list[str]] = {}
+    indegree: dict[str, int] = {}
+    stable_keys: dict[str, tuple[bool, int, int, str]] = {}
+
+    for index, item in enumerate(items):
+        topic = str(item["topic"]).strip()
+        depends_on = [str(dep).strip() for dep in item.get("depends_on", [])]
+        roadmap_rank = item.get("roadmap_rank")
+        rank_value = roadmap_rank if isinstance(roadmap_rank, int) else 10**9
+        dependency_map[topic] = depends_on
+        dependent_map[topic] = []
+        indegree[topic] = 0
+        # Keep dependency-respecting order deterministic while preserving legacy rank/current order bias.
+        stable_keys[topic] = (not isinstance(roadmap_rank, int), rank_value, index, topic)
+
+    for topic, depends_on in dependency_map.items():
+        indegree[topic] = len(depends_on)
+        for dep in depends_on:
+            dependent_map[dep].append(topic)
+
+    ready = sorted(
+        [topic for topic, degree in indegree.items() if degree == 0],
+        key=lambda topic: stable_keys[topic],
+    )
+    ordered_topics: list[str] = []
+
+    while ready:
+        topic = ready.pop(0)
+        ordered_topics.append(topic)
+        released: list[str] = []
+        for dependent in dependent_map[topic]:
+            indegree[dependent] -= 1
+            if indegree[dependent] == 0:
+                released.append(dependent)
+        if released:
+            ready.extend(released)
+            ready.sort(key=lambda candidate: stable_keys[candidate])
+
+    if len(ordered_topics) != len(dependency_map):
+        raise ValueError("queue dependency cycle detected during topological order computation")
+
+    return ordered_topics
 
 
 def infer_item_status(raw_status: str | None) -> str:
@@ -475,7 +529,7 @@ def main() -> int:
         }
 
     target = TEMP / "queue-state.json"
-    target.write_text(json.dumps(payload, ensure_ascii=True, indent=2) + "\n", encoding="utf-8")
+    write_utf8_lf(target, json.dumps(payload, ensure_ascii=True, indent=2) + "\n")
     print(f"WROTE: {target.relative_to(ROOT).as_posix()}")
     print(f"ITEMS: {payload['active_item_count']}")
     print(f"MODE: {payload['queue_mode']}")

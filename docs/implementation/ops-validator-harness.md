@@ -39,10 +39,17 @@ Strict run:
 python scripts/ops_validator.py --strict
 ```
 
+Optional dependency-order dry run:
+
+```powershell
+python scripts/ops_validator.py --toposort-dry-run
+```
+
 ## 5. Output Semantics
 - `PASS`: validation rule satisfied
 - `WARN`: recoverable drift or missing metadata; fix when practical
 - `FAIL`: canonical or queue integrity problem; do not close the queue yet
+- `--toposort-dry-run`: additionally reports the computed dependency-respecting order without rewriting roadmap ranks
 
 Default exit codes:
 - `0`: no failures
