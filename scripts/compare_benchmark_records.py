@@ -8,6 +8,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+COMPANION_LINKS_FILENAME = "benchmark_companion_links.json"
 STAGE_ORDER = ("stage2", "stage3", "stage4")
 STAGE_INT_FIELDS = (
     "attempt_count",
@@ -138,7 +139,13 @@ def load_benchmark_record(
     manifest = _load_json(record_root / "manifest.json")
     stage_metrics = _load_stage_metrics(record_root, manifest=manifest)
     runtime_audit_summary = _load_runtime_audit_summary(record_root)
-    companion_evidence = _load_companion_evidence(companion_evidence_json, workspace_root=workspace)
+    companion_links = _load_companion_links(record_root, workspace_root=workspace)
+    effective_evidence_path = companion_evidence_json
+    if effective_evidence_path in (None, ""):
+        linked_evidence_path = str(companion_links.get("post_run_evidence_json_resolved", "") or "")
+        if linked_evidence_path:
+            effective_evidence_path = linked_evidence_path
+    companion_evidence = _load_companion_evidence(effective_evidence_path, workspace_root=workspace)
 
     runtime_summary = manifest.get("runtime_summary", {}) if isinstance(manifest, dict) else {}
     workspace_git = manifest.get("workspace_git", {}) if isinstance(manifest, dict) else {}
@@ -205,6 +212,7 @@ def load_benchmark_record(
             index_row.get("notes"),
         ),
         "runtime_audit_summary": runtime_audit_summary,
+        "companion_links": companion_links,
         "companion_evidence": companion_evidence,
         "guarded_runner_summary": _load_stage4_guarded_result(record_root),
         "note_markers": _extract_note_markers(
@@ -488,6 +496,42 @@ def _load_stage4_guarded_result(record_root: Path) -> dict[str, Any]:
     }
 
 
+def _load_companion_links(record_root: Path, *, workspace_root: Path) -> dict[str, Any]:
+    links_path = record_root / COMPANION_LINKS_FILENAME
+    if not links_path.exists():
+        return {
+            "available": False,
+            "source_path": "",
+            "schema_version": "",
+            "post_run_evidence_json": "",
+            "post_run_evidence_json_resolved": "",
+            "post_run_evidence_json_missing": False,
+            "post_run_merge_audit_md": "",
+            "post_run_merge_audit_md_resolved": "",
+            "post_run_merge_audit_md_missing": False,
+        }
+    payload = _load_json(links_path)
+    evidence_raw = str(payload.get("post_run_evidence_json", "") or "") if isinstance(payload, dict) else ""
+    merge_audit_raw = str(payload.get("post_run_merge_audit_md", "") or "") if isinstance(payload, dict) else ""
+    evidence_path = _resolve_existing_path(evidence_raw, workspace_root=workspace_root) if evidence_raw else None
+    merge_audit_path = _resolve_existing_path(merge_audit_raw, workspace_root=workspace_root) if merge_audit_raw else None
+    return {
+        "available": True,
+        "source_path": _display_relative_path(workspace_root, links_path),
+        "schema_version": str(payload.get("schema_version", "") or "") if isinstance(payload, dict) else "",
+        "post_run_evidence_json": evidence_raw,
+        "post_run_evidence_json_resolved": (
+            _display_relative_path(workspace_root, evidence_path) if evidence_path is not None else ""
+        ),
+        "post_run_evidence_json_missing": bool(evidence_raw and evidence_path is None),
+        "post_run_merge_audit_md": merge_audit_raw,
+        "post_run_merge_audit_md_resolved": (
+            _display_relative_path(workspace_root, merge_audit_path) if merge_audit_path is not None else ""
+        ),
+        "post_run_merge_audit_md_missing": bool(merge_audit_raw and merge_audit_path is None),
+    }
+
+
 def _load_companion_evidence(
     evidence_json: str | Path | None,
     *,
@@ -759,6 +803,47 @@ def _build_watchpoints(
                     )
                 )
         companion_evidence = record.get("companion_evidence", {})
+        companion_links = record.get("companion_links", {})
+        if isinstance(companion_links, dict) and companion_links.get("available"):
+            if bool(companion_links.get("post_run_evidence_json_missing")):
+                watchpoints.append(
+                    _watchpoint(
+                        "post_run_evidence_link_missing",
+                        severity="warn",
+                        scope="benchmark_companion_links",
+                        side=side,
+                        message=(
+                            f"{side} companion links reference missing post_run_evidence_json "
+                            f"{companion_links.get('post_run_evidence_json')}"
+                        ),
+                    )
+                )
+            if bool(companion_links.get("post_run_merge_audit_md_missing")):
+                watchpoints.append(
+                    _watchpoint(
+                        "post_run_merge_audit_link_missing",
+                        severity="warn",
+                        scope="benchmark_companion_links",
+                        side=side,
+                        message=(
+                            f"{side} companion links reference missing post_run_merge_audit_md "
+                            f"{companion_links.get('post_run_merge_audit_md')}"
+                        ),
+                    )
+                )
+            elif str(companion_links.get("post_run_merge_audit_md_resolved", "") or ""):
+                watchpoints.append(
+                    _watchpoint(
+                        "post_run_merge_audit_linked",
+                        severity="info",
+                        scope="benchmark_companion_links",
+                        side=side,
+                        message=(
+                            f"{side} companion links include post_run_merge_audit_md "
+                            f"{companion_links.get('post_run_merge_audit_md_resolved')}"
+                        ),
+                    )
+                )
         if isinstance(companion_evidence, dict) and companion_evidence.get("available"):
             hard_gates_status = str(companion_evidence.get("hard_gates_status", "") or "")
             if hard_gates_status == "fail":
