@@ -181,6 +181,7 @@ def load_benchmark_record(
             index_row.get("notes"),
         ),
         "runtime_audit_summary": runtime_audit_summary,
+        "guarded_runner_summary": _load_stage4_guarded_result(record_root),
         "note_markers": _extract_note_markers(
             _pick_first_nonempty(
                 manifest.get("notes") if isinstance(manifest, dict) else None,
@@ -427,22 +428,77 @@ def _normalize_stage_metric_row(stage: str, row: object) -> dict[str, Any]:
     return normalized
 
 
+def _load_stage4_guarded_result(record_root: Path) -> dict[str, Any]:
+    summary_path = record_root / "logs" / "stage4_direct_supervised_guarded_result.json"
+    if not summary_path.exists():
+        return {
+            "available": False,
+            "benchmark_archive_run_id": "",
+            "target_ep": None,
+            "latest_written_ep_before": None,
+            "latest_written_ep_after": None,
+            "terminated_by_monitor": False,
+            "termination_reason": "",
+            "child_exit_code": None,
+        }
+    payload = _load_json(summary_path)
+    benchmark_archive = payload.get("benchmark_archive", {}) if isinstance(payload, dict) else {}
+    return {
+        "available": True,
+        "benchmark_archive_run_id": (
+            str(benchmark_archive.get("run_id", "") or "") if isinstance(benchmark_archive, dict) else ""
+        ),
+        "target_ep": _coerce_optional_int(payload.get("target_ep")) if isinstance(payload, dict) else None,
+        "latest_written_ep_before": (
+            _coerce_optional_int(payload.get("latest_written_ep_before")) if isinstance(payload, dict) else None
+        ),
+        "latest_written_ep_after": (
+            _coerce_optional_int(payload.get("latest_written_ep_after")) if isinstance(payload, dict) else None
+        ),
+        "terminated_by_monitor": (
+            _coerce_bool(payload.get("terminated_by_monitor")) if isinstance(payload, dict) else False
+        ),
+        "termination_reason": str(payload.get("termination_reason", "") or "") if isinstance(payload, dict) else "",
+        "child_exit_code": _coerce_optional_int(payload.get("child_exit_code")) if isinstance(payload, dict) else None,
+    }
+
+
 def _extract_note_markers(notes: object) -> dict[str, Any]:
     text = str(notes or "").strip()
     markers = {
         "terminated_by_monitor": False,
         "termination_reason": "",
+        "target_ep": None,
+        "max_attempts": None,
+        "before_latest_ep": None,
+        "after_latest_ep": None,
+        "runtime_audit_tag": "",
+        "child_exit_code": None,
+        "terminated_ep": None,
+        "terminated_attempt_num": None,
     }
     if not text:
         return markers
+    kv_map: dict[str, str] = {}
+    for segment in text.split(";"):
+        chunk = segment.strip()
+        if not chunk or "=" not in chunk:
+            continue
+        key, raw_value = chunk.split("=", 1)
+        kv_map[key.strip().lower()] = raw_value.strip()
     lowered = text.lower()
-    markers["terminated_by_monitor"] = "terminated_by_monitor=true" in lowered
-    termination_tag = "termination_reason="
-    if termination_tag in lowered:
-        start = lowered.index(termination_tag) + len(termination_tag)
-        end = lowered.find(";", start)
-        raw_reason = text[start:] if end == -1 else text[start:end]
-        markers["termination_reason"] = raw_reason.strip()
+    markers["terminated_by_monitor"] = _coerce_bool(kv_map.get("terminated_by_monitor")) or (
+        "terminated_by_monitor=true" in lowered
+    )
+    markers["termination_reason"] = kv_map.get("termination_reason", "")
+    markers["target_ep"] = _coerce_optional_int(kv_map.get("target_ep"))
+    markers["max_attempts"] = _coerce_optional_int(kv_map.get("max_attempts"))
+    markers["before_latest_ep"] = _coerce_optional_int(kv_map.get("before_latest_ep"))
+    markers["after_latest_ep"] = _coerce_optional_int(kv_map.get("after_latest_ep"))
+    markers["runtime_audit_tag"] = kv_map.get("runtime_audit_tag", "")
+    markers["child_exit_code"] = _coerce_optional_int(kv_map.get("child_exit_code"))
+    markers["terminated_ep"] = _coerce_optional_int(kv_map.get("terminated_ep"))
+    markers["terminated_attempt_num"] = _coerce_optional_int(kv_map.get("terminated_attempt_num"))
     return markers
 
 
@@ -639,21 +695,101 @@ def _build_watchpoints(
                         message=f"{side} stage4 post_pass_contract_signal_count is {contract_signal_count}",
                     )
                 )
-        note_markers = record.get("note_markers", {})
-        if isinstance(note_markers, dict):
-            termination_reason = str(note_markers.get("termination_reason", "") or "")
-            terminated_by_monitor = bool(note_markers.get("terminated_by_monitor"))
-            if terminated_by_monitor or termination_reason:
-                reason_tail = f" ({termination_reason})" if termination_reason else ""
+        note_markers = record.get("note_markers", {}) if isinstance(record.get("note_markers", {}), dict) else {}
+        guarded_runner_summary = (
+            record.get("guarded_runner_summary", {})
+            if isinstance(record.get("guarded_runner_summary", {}), dict)
+            else {}
+        )
+        use_guarded_summary = False
+        if guarded_runner_summary:
+            guarded_run_id = str(guarded_runner_summary.get("benchmark_archive_run_id", "") or "")
+            if guarded_run_id and guarded_run_id != str(record.get("run_id", "") or ""):
                 watchpoints.append(
                     _watchpoint(
-                        "monitor_termination_recorded",
+                        "stage4_guarded_summary_stale_reference",
                         severity="warn",
-                        scope="notes",
+                        scope="stage4_guarded_result",
                         side=side,
-                        message=f"{side} record notes indicate monitor termination{reason_tail}",
+                        message=(
+                            f"{side} archived guarded summary points at benchmark run {guarded_run_id}, "
+                            f"not {record.get('run_id')}"
+                        ),
                     )
                 )
+            elif guarded_runner_summary.get("available"):
+                use_guarded_summary = True
+
+        structured_termination_reason = ""
+        structured_terminated_by_monitor = False
+        structured_target_ep: int | None = None
+        structured_before_ep: int | None = None
+        structured_after_ep: int | None = None
+        structured_child_exit_code: int | None = None
+        structured_scope = "notes"
+        if use_guarded_summary:
+            structured_scope = "stage4_guarded_result"
+            structured_termination_reason = str(guarded_runner_summary.get("termination_reason", "") or "")
+            structured_terminated_by_monitor = bool(guarded_runner_summary.get("terminated_by_monitor"))
+            structured_target_ep = _coerce_optional_int(guarded_runner_summary.get("target_ep"))
+            structured_before_ep = _coerce_optional_int(guarded_runner_summary.get("latest_written_ep_before"))
+            structured_after_ep = _coerce_optional_int(guarded_runner_summary.get("latest_written_ep_after"))
+            structured_child_exit_code = _coerce_optional_int(guarded_runner_summary.get("child_exit_code"))
+        elif note_markers:
+            structured_termination_reason = str(note_markers.get("termination_reason", "") or "")
+            structured_terminated_by_monitor = bool(note_markers.get("terminated_by_monitor"))
+            structured_target_ep = _coerce_optional_int(note_markers.get("target_ep"))
+            structured_before_ep = _coerce_optional_int(note_markers.get("before_latest_ep"))
+            structured_after_ep = _coerce_optional_int(note_markers.get("after_latest_ep"))
+            structured_child_exit_code = _coerce_optional_int(note_markers.get("child_exit_code"))
+
+        if structured_terminated_by_monitor or structured_termination_reason:
+            reason_tail = f" ({structured_termination_reason})" if structured_termination_reason else ""
+            watchpoints.append(
+                _watchpoint(
+                    "monitor_termination_recorded",
+                    severity="warn",
+                    scope=structured_scope,
+                    side=side,
+                    message=f"{side} record indicates monitor termination{reason_tail}",
+                )
+            )
+        if structured_child_exit_code not in (None, 0):
+            watchpoints.append(
+                _watchpoint(
+                    "stage4_child_exit_nonzero",
+                    severity="warn",
+                    scope=structured_scope,
+                    side=side,
+                    message=f"{side} record child_exit_code is {structured_child_exit_code}",
+                )
+            )
+        if structured_before_ep is not None and structured_after_ep is not None and structured_after_ep > structured_before_ep:
+            watchpoints.append(
+                _watchpoint(
+                    "stage4_rerun_progress_recorded",
+                    severity="info",
+                    scope=structured_scope,
+                    side=side,
+                    message=(
+                        f"{side} record advanced latest_written_ep from "
+                        f"{structured_before_ep} to {structured_after_ep}"
+                    ),
+                )
+            )
+        if structured_target_ep is not None and structured_after_ep is not None and structured_after_ep < structured_target_ep:
+            watchpoints.append(
+                _watchpoint(
+                    "stage4_target_gap_remaining",
+                    severity="warn",
+                    scope=structured_scope,
+                    side=side,
+                    message=(
+                        f"{side} record stopped at latest_written_ep {structured_after_ep} "
+                        f"before target_ep {structured_target_ep}"
+                    ),
+                )
+            )
 
     stage4_delta = stage_metrics_delta.get("stage4", {})
     if stage4_delta:
