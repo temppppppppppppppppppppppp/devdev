@@ -11,6 +11,7 @@ Related Documents:
 - `docs/implementation/execution-closure-harness.md`
 - `docs/implementation/ops-validator-harness.md`
 - `docs/implementation/process-health-scorecard-harness.md`
+- `docs/implementation/execution-meta-block-contract.md`
 - `docs/implementation/temp-queue-state-contract-v1.json`
 - `docs/implementation/temp-queue-state-template.json`
 
@@ -94,6 +95,7 @@ Create or refresh an aggregate roadmap when:
 - If a new execution SSOT is created during ongoing realization, refresh the roadmap before continuing.
 - A single-item queue may proceed without an aggregate roadmap, but it still remains a queue item until realized and cleaned up.
 - Use `docs/implementation/queue-priority-rubric.md` when the ordering is not trivially obvious.
+- During migration, if a canonical execution SSOT contains an `Execution Metadata Block`, future queue tooling should prefer that block over prose inference for `depends_on`, tranche identity, and queue metadata that the block explicitly carries.
 - Before any code modification starts, re-audit the governing canonical execution SSOT or canonical roadmap with the document 3-pass harness and confirm at least 95% confidence against the current workspace state.
 
 ## 5A. Optional Queue State File

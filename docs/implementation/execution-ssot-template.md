@@ -23,6 +23,25 @@ Evidence Artifacts:
 - `docs/YYYY-MM-DD/<topic>-side-effects.txt`
 Side-Effect Coverage: covered | partial | not-applicable
 
+## 0. Execution Metadata Block
+Optional during migration. When the execution-meta-block contract is adopted for this doc, place the first machine-readable block here.
+
+```yaml
+execution_meta:
+  schema_version: execution-meta-block-v1
+  topic: <topic>
+  github_issue: <issue number or omit>
+  status: pending
+  queue_role: parked_future_wave
+  roadmap_rank: <positive integer>
+  depends_on: []
+  tranches:
+    - id: <stable-tranche-id>
+      title: <short tranche title>
+  verification_commands:
+    - <command>
+```
+
 ## 1. Intent
 - What this execution document is trying to realize.
 - Why this is being executed now.
