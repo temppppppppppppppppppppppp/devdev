@@ -1,7 +1,7 @@
 # Authority Alignment Benchmark Operating Model Hardening Execution SSOT
 
 Date: 2026-04-23
-Status: execution-ready (3-pass audited; parked future wave; upstream proof and benchmark governor lane; read-only benchmark comparator plus first watchpoint seed landed on 2026-04-23; note-backed rerun, guarded-summary staleness, and explicit evidence-json companion watchpoints landed later the same day)
+Status: execution-ready (3-pass audited; parked future wave; upstream proof and benchmark governor lane; read-only benchmark comparator plus first watchpoint seed landed on 2026-04-23; note-backed rerun, guarded-summary staleness, explicit evidence-json companion watchpoints, and benchmark companion-link sidecars landed later the same day)
 Canonical Path: `docs/2026-04-23/authority-alignment-benchmark-operating-model-hardening-execution-ssot.md`
 Temp Mirror Path: `docs/temp/authority-alignment-benchmark-operating-model-hardening-execution-ssot.md`
 Commit State:
@@ -79,7 +79,7 @@ execution_meta:
 - The comparison layer is incomplete:
   - canary-summary diff exists
   - a first read-only benchmark-to-benchmark comparator now exists over `benchmark_index.csv`, `manifest.json`, and `stage_metrics.csv`
-  - a first comparator-backed watchpoint vocabulary now exists for coarse status, tag, proof-digest, Stage4 regression signals, note-backed rerun progression, guarded-summary staleness attention, and explicit evidence-json companion summaries
+  - a first comparator-backed watchpoint vocabulary now exists for coarse status, tag, proof-digest, Stage4 regression signals, note-backed rerun progression, guarded-summary staleness attention, explicit evidence-json companion summaries, and sidecar-linked companion loading
   - full markdown post-run merge-audit mapping is still missing
 - Current queue posture has now been refreshed to match that reality:
   - `authority-alignment-benchmark-operating-model-hardening` is the visible rank-1 parked proof lane
@@ -113,8 +113,8 @@ Excluded:
   - rerun proof and post-run merge audit are still document-backed
 - Current watchpoint posture is partial:
   - generic regression tiers exist
-  - the benchmark comparator now emits a small first watchpoint vocabulary plus note-backed rerun, stale-summary attention, and explicit evidence-json companion summaries
-  - full rerun and markdown post-run merge-audit linkage is still not normalized into comparator outputs
+  - the benchmark comparator now emits a small first watchpoint vocabulary plus note-backed rerun, stale-summary attention, explicit evidence-json companion summaries, and auto-follow for explicit companion-link sidecars
+  - full rerun and markdown post-run merge-audit linkage is still not normalized into comparator outputs, and live record-level link population is still manual
 
 ## 5. Pass 2. Semantic Classification
 
@@ -181,10 +181,11 @@ Excluded:
 2. Benchmark-record comparison surface
    - first seed landed as `scripts/compare_benchmark_records.py`
    - current surface compares `benchmark_index.csv`, `manifest.json`, and `stage_metrics.csv` in read-only mode
-   - current surface also emits a first watchpoint vocabulary for coarse status/tag shifts plus Stage4 attempt, pass-like, cost, proof-digest attention, note-backed rerun progression, guarded-summary staleness attention, and explicit evidence-json companion summaries
+   - current surface also emits a first watchpoint vocabulary for coarse status/tag shifts plus Stage4 attempt, pass-like, cost, proof-digest attention, note-backed rerun progression, guarded-summary staleness attention, explicit evidence-json companion summaries, and sidecar-linked companion loading
+   - explicit companion sidecars can now be written next to archived benchmark records without mutating benchmark/index truth
    - next step is to normalize markdown post-run merge-audit mapping on top of this comparator-backed rerun/watchpoint surface
 3. Rerun diff and watchpoint contract
-   - extend the first watchpoint vocabulary beyond coarse comparator-backed signals, shallow rerun markers, and explicit evidence-json companions
+   - extend the first watchpoint vocabulary beyond coarse comparator-backed signals, shallow rerun markers, explicit evidence-json companions, and sidecar link metadata
    - normalize markdown post-run merge audit linkage
 4. Operator-facing benchmark hardening surface
    - make first-owner and regression readouts easier to inspect without elevating telemetry to truth
