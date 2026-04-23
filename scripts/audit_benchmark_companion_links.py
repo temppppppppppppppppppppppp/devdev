@@ -24,6 +24,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         description="Audit archived benchmark companion-link coverage read-only."
     )
     parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="exit non-zero when live records reference missing companion targets",
+    )
+    parser.add_argument(
         "--format",
         choices=("text", "json"),
         default="text",
@@ -120,9 +125,14 @@ def audit_benchmark_companion_links(
         "records_with_sidecar": sum(1 for record in records if record["companion_state"] != "no_sidecar"),
         "records_with_missing_targets": sum(1 for record in records if record["companion_state"] == "missing_target"),
     }
+    strict_failure_reasons = _collect_strict_failure_reasons(summary)
     return {
         "benchmark_root": _display_relative_path(workspace, benchmark_dir),
         "summary": summary,
+        "strict": {
+            "status": "fail" if strict_failure_reasons else "pass",
+            "failure_reasons": strict_failure_reasons,
+        },
         "records": records,
         "stale_index_rows": stale_index_rows,
     }
@@ -143,6 +153,12 @@ def format_audit_text(payload: dict[str, Any]) -> str:
             f"records_with_missing_targets={summary.get('records_with_missing_targets', 0)}"
         ),
     ]
+    strict = payload.get("strict", {})
+    strict_status = str(strict.get("status", "pass") or "pass") if isinstance(strict, dict) else "pass"
+    lines.append(f"Strict: {strict_status}")
+    strict_failures = strict.get("failure_reasons", []) if isinstance(strict, dict) else []
+    if isinstance(strict_failures, list) and strict_failures:
+        lines.append("Strict failures: " + ", ".join(str(item) for item in strict_failures))
     stale_rows = payload.get("stale_index_rows", [])
     if isinstance(stale_rows, list) and stale_rows:
         lines.append("Stale index rows:")
@@ -231,6 +247,14 @@ def _classify_companion_state(
     return "empty_sidecar"
 
 
+def _collect_strict_failure_reasons(summary: dict[str, Any]) -> list[str]:
+    failures: list[str] = []
+    missing_target_count = int(summary.get("records_with_missing_targets", 0) or 0)
+    if missing_target_count > 0:
+        failures.append(f"records_with_missing_targets={missing_target_count}")
+    return failures
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     payload = audit_benchmark_companion_links(
@@ -241,6 +265,9 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
     else:
         print(format_audit_text(payload))
+    strict = payload.get("strict", {})
+    if args.strict and isinstance(strict, dict) and strict.get("status") != "pass":
+        return 1
     return 0
 
 
