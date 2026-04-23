@@ -266,6 +266,9 @@ def test_audit_benchmark_companion_links_reports_missing_targets(tmp_path):
     assert record["missing_surfaces"] == ["post_run_evidence_json", "supporting_context_md"]
     assert record["remediation_hints"] == [
         {
+            "side": "record",
+            "run_id": run_id,
+            "record_root": f"benchmarks/golden-canary/{run_id}",
             "surface": "post_run_evidence_json",
             "current_value": "docs/2026-04-23/missing-evidence.json",
             "suggested_flag": "--post-run-evidence-json",
@@ -275,6 +278,9 @@ def test_audit_benchmark_companion_links_reports_missing_targets(tmp_path):
             ),
         },
         {
+            "side": "record",
+            "run_id": run_id,
+            "record_root": f"benchmarks/golden-canary/{run_id}",
             "surface": "supporting_context_md",
             "current_value": "docs/2026-04-23/missing-context.md",
             "suggested_flag": "--supporting-context-md",

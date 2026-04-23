@@ -608,7 +608,9 @@ def _classify_missing_companion_surfaces(companion_links: object) -> list[str]:
 
 def _build_companion_link_remediation_hints(
     *,
+    side: str,
     run_id: str,
+    record_root: str,
     companion_links: object,
     missing_surfaces: list[str],
 ) -> list[dict[str, str]]:
@@ -633,6 +635,9 @@ def _build_companion_link_remediation_hints(
         replacement = raw_value or placeholder_by_surface.get(surface, "<valid-path>")
         hints.append(
             {
+                "side": side,
+                "run_id": run_id,
+                "record_root": record_root,
                 "surface": surface,
                 "current_value": raw_value,
                 "suggested_flag": flag,
@@ -654,20 +659,15 @@ def _collect_delta_remediation_hints(
     for side, record in (("left", left_record), ("right", right_record)):
         companion_links = record.get("companion_links", {})
         missing_surfaces = _classify_missing_companion_surfaces(companion_links)
-        for hint in _build_companion_link_remediation_hints(
-            run_id=str(record.get("run_id", "") or ""),
-            companion_links=companion_links,
-            missing_surfaces=missing_surfaces,
-        ):
-            hints.append(
-                {
-                    "side": side,
-                    "surface": str(hint.get("surface", "") or ""),
-                    "current_value": str(hint.get("current_value", "") or ""),
-                    "suggested_flag": str(hint.get("suggested_flag", "") or ""),
-                    "suggested_command": str(hint.get("suggested_command", "") or ""),
-                }
+        hints.extend(
+            _build_companion_link_remediation_hints(
+                side=side,
+                run_id=str(record.get("run_id", "") or ""),
+                record_root=str(record.get("record_root", "") or ""),
+                companion_links=companion_links,
+                missing_surfaces=missing_surfaces,
             )
+        )
     return hints
 
 
@@ -908,7 +908,9 @@ def _build_watchpoints(
         if isinstance(companion_links, dict) and companion_links.get("available"):
             missing_surfaces = _classify_missing_companion_surfaces(companion_links)
             remediation_hints = _build_companion_link_remediation_hints(
+                side=side,
                 run_id=str(record.get("run_id", "") or ""),
+                record_root=str(record.get("record_root", "") or ""),
                 companion_links=companion_links,
                 missing_surfaces=missing_surfaces,
             )
