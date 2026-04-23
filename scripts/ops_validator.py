@@ -16,6 +16,8 @@ try:
         extract_roadmap_item_context,
         infer_item_status,
         infer_queue_role,
+        load_execution_meta_block,
+        validate_dependency_graph,
     )
 except ModuleNotFoundError:  # pragma: no cover - import path depends on invocation style
     from scripts.sync_temp_queue_state import (
@@ -26,6 +28,8 @@ except ModuleNotFoundError:  # pragma: no cover - import path depends on invocat
         extract_roadmap_item_context,
         infer_item_status,
         infer_queue_role,
+        load_execution_meta_block,
+        validate_dependency_graph,
     )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -174,6 +178,16 @@ def validate_mirror_document(temp_path: Path, result: ValidationResult) -> None:
     if temp_path.name.endswith("-execution-ssot.md") and "source_survey_docs" not in metadata:
         result.warn(f"{actual_temp_rel}: missing Source Survey Docs metadata")
 
+    if temp_path.name.endswith("-execution-ssot.md"):
+        expected_topic = temp_path.name.removesuffix("-execution-ssot.md")
+        try:
+            execution_meta = load_execution_meta_block(temp_path, expected_topic=expected_topic)
+        except ValueError as exc:
+            result.fail(str(exc))
+        else:
+            if execution_meta is not None:
+                result.info(f"{actual_temp_rel}: execution metadata block parsed successfully")
+
 
 def validate_queue_state(exec_docs: list[Path], roadmap_path: Path | None, result: ValidationResult) -> None:
     queue_state_path = TEMP / QUEUE_STATE_NAME
@@ -235,6 +249,8 @@ def validate_queue_state(exec_docs: list[Path], roadmap_path: Path | None, resul
     roadmap_context = extract_roadmap_item_context(roadmap_path) if roadmap_path is not None else {}
     reported_topics: set[str] = set()
     reported_ranks: set[int] = set()
+    item_dependencies: dict[str, list[str]] = {}
+    dependency_items: list[dict[str, object]] = []
 
     for index, item in enumerate(items, start=1):
         item_fields = {
@@ -297,8 +313,31 @@ def validate_queue_state(exec_docs: list[Path], roadmap_path: Path | None, resul
                 f"docs/temp/{QUEUE_STATE_NAME}: item {index} canonical_present does not match file existence for {canonical_rel}"
             )
 
-        topic = str(item["topic"])
+        if not isinstance(item["topic"], str) or not item["topic"].strip():
+            result.fail(
+                f"docs/temp/{QUEUE_STATE_NAME}: item {index} topic must be a non-empty string"
+            )
+            continue
+
+        topic = item["topic"].strip()
+        if topic in reported_topics:
+            result.fail(f"docs/temp/{QUEUE_STATE_NAME}: topic {topic} is duplicated")
+            continue
         reported_topics.add(topic)
+
+        raw_depends_on = item["depends_on"]
+        if not isinstance(raw_depends_on, list) or any(
+            not isinstance(dep, str) or not dep.strip() for dep in raw_depends_on
+        ):
+            result.fail(
+                f"docs/temp/{QUEUE_STATE_NAME}: item {index} depends_on must be a list of non-empty strings"
+            )
+            normalized_depends_on: list[str] = []
+        else:
+            normalized_depends_on = [dep.strip() for dep in raw_depends_on]
+            item_dependencies[topic] = normalized_depends_on
+            dependency_items.append({"topic": topic, "depends_on": normalized_depends_on})
+
         if roadmap_path is not None:
             expected_context = roadmap_context.get(topic)
             if expected_context is None:
@@ -317,6 +356,21 @@ def validate_queue_state(exec_docs: list[Path], roadmap_path: Path | None, resul
                         f"docs/temp/{QUEUE_STATE_NAME}: item {index} queue_role={item['queue_role']} does not match roadmap role {expected_role} for {topic}"
                     )
 
+        temp_meta_path = ROOT / temp_rel if temp_rel is not None else None
+        if temp_meta_path is not None and temp_meta_path.exists():
+            expected_topic = temp_meta_path.name.removesuffix("-execution-ssot.md")
+            try:
+                execution_meta = load_execution_meta_block(temp_meta_path, expected_topic=expected_topic)
+            except ValueError as exc:
+                result.fail(str(exc))
+            else:
+                if execution_meta is not None:
+                    expected_depends_on = list(execution_meta.get("depends_on", []))
+                    if normalized_depends_on != expected_depends_on:
+                        result.fail(
+                            f"docs/temp/{QUEUE_STATE_NAME}: item {index} depends_on={item['depends_on']} does not match execution metadata block for {topic}"
+                        )
+
     if reported_temp_paths != expected_temp_paths:
         result.fail(
             f"docs/temp/{QUEUE_STATE_NAME}: item temp_path set does not match active temp execution docs"
@@ -325,6 +379,12 @@ def validate_queue_state(exec_docs: list[Path], roadmap_path: Path | None, resul
         result.fail(
             f"docs/temp/{QUEUE_STATE_NAME}: item topic set does not match roadmap execution-order topic set"
         )
+
+    if dependency_items:
+        try:
+            validate_dependency_graph(dependency_items)
+        except ValueError as exc:
+            result.fail(f"docs/temp/{QUEUE_STATE_NAME}: {exc}")
 
 
 def emit_result(result: ValidationResult, strict: bool) -> int:
