@@ -140,6 +140,7 @@ def test_write_benchmark_companion_links_creates_sidecar(tmp_path):
         "schema_version": "benchmark-companion-links-v1",
         "post_run_evidence_json": "docs/2026-04-23/right-post-run-evidence.json",
         "post_run_merge_audit_md": "docs/2026-04-23/right-post-run-merge-audit.md",
+        "supporting_context_md": "",
     }
 
 
@@ -177,6 +178,7 @@ def test_write_benchmark_companion_links_falls_back_from_stale_index_record_path
     assert links_path.exists()
     payload = json.loads(links_path.read_text(encoding="utf-8"))
     assert payload["post_run_merge_audit_md"] == "docs/2026-04-23/right-post-run-merge-audit.md"
+    assert payload["supporting_context_md"] == ""
 
 
 def test_compare_benchmark_records_auto_loads_sidecar_companion_links(tmp_path):
@@ -196,12 +198,14 @@ def test_compare_benchmark_records_auto_loads_sidecar_companion_links(tmp_path):
         },
     )
     audit = _write_markdown(tmp_path, "docs/2026-04-23/right-post-run-merge-audit.md", "# audit\n")
+    context = _write_markdown(tmp_path, "docs/2026-04-23/right-supporting-context.md", "# context\n")
     link_module.write_benchmark_companion_links(
         str(right_root),
         workspace_root=tmp_path,
         benchmark_root="benchmarks",
         post_run_evidence_json=evidence,
         post_run_merge_audit_md=audit,
+        supporting_context_md=context,
     )
 
     diff = compare_module.compare_benchmark_records(
@@ -240,6 +244,13 @@ def test_compare_benchmark_records_auto_loads_sidecar_companion_links(tmp_path):
         "side": "right",
         "message": "right companion links include post_run_merge_audit_md docs/2026-04-23/right-post-run-merge-audit.md",
     } in watchpoints
+    assert {
+        "id": "supporting_context_linked",
+        "severity": "info",
+        "scope": "benchmark_companion_links",
+        "side": "right",
+        "message": "right companion links include supporting_context_md docs/2026-04-23/right-supporting-context.md",
+    } in watchpoints
 
 
 def test_compare_benchmark_records_surfaces_missing_link_targets(tmp_path):
@@ -255,6 +266,7 @@ def test_compare_benchmark_records_surfaces_missing_link_targets(tmp_path):
                 "schema_version": "benchmark-companion-links-v1",
                 "post_run_evidence_json": "docs/2026-04-23/missing-evidence.json",
                 "post_run_merge_audit_md": "docs/2026-04-23/missing-audit.md",
+                "supporting_context_md": "docs/2026-04-23/missing-context.md",
             },
             ensure_ascii=False,
             indent=2,
@@ -290,6 +302,31 @@ def test_compare_benchmark_records_surfaces_missing_link_targets(tmp_path):
         "side": "right",
         "message": "right companion links reference missing post_run_merge_audit_md docs/2026-04-23/missing-audit.md",
     } in watchpoints
+    assert {
+        "id": "supporting_context_link_missing",
+        "severity": "warn",
+        "scope": "benchmark_companion_links",
+        "side": "right",
+        "message": "right companion links reference missing supporting_context_md docs/2026-04-23/missing-context.md",
+    } in watchpoints
+
+
+def test_write_benchmark_companion_links_supports_supporting_context_md(tmp_path):
+    module = _load_link_module()
+    run_id = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    _write_record(tmp_path, run_id=run_id, status="completed")
+    context = _write_markdown(tmp_path, "docs/2026-04-23/right-supporting-context.md", "# context\n")
+
+    result = module.write_benchmark_companion_links(
+        run_id,
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+        supporting_context_md=context,
+    )
+
+    links_path = tmp_path / result["links_path"]
+    payload = json.loads(links_path.read_text(encoding="utf-8"))
+    assert payload["supporting_context_md"] == "docs/2026-04-23/right-supporting-context.md"
 
 
 def test_link_benchmark_companions_cli_writes_sidecar(tmp_path):
@@ -315,6 +352,8 @@ def test_link_benchmark_companions_cli_writes_sidecar(tmp_path):
             str(evidence),
             "--post-run-merge-audit-md",
             str(audit),
+            "--supporting-context-md",
+            str(audit),
         ],
         cwd=Path(__file__).resolve().parents[1],
         capture_output=True,
@@ -324,3 +363,5 @@ def test_link_benchmark_companions_cli_writes_sidecar(tmp_path):
     payload = json.loads(result.stdout)
     links_path = tmp_path / payload["links_path"]
     assert links_path.exists()
+    written = json.loads(links_path.read_text(encoding="utf-8"))
+    assert written["supporting_context_md"] == "docs/2026-04-23/right-post-run-merge-audit.md"

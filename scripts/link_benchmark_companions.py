@@ -32,6 +32,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="optional markdown post-run merge audit path to link",
     )
     parser.add_argument(
+        "--supporting-context-md",
+        default="",
+        help="optional markdown supporting context path for closure/history docs",
+    )
+    parser.add_argument(
         "--benchmark-root",
         default="benchmarks",
         help="benchmark archive root. Relative paths resolve from the workspace root.",
@@ -51,6 +56,7 @@ def write_benchmark_companion_links(
     benchmark_root: str | Path = "benchmarks",
     post_run_evidence_json: str | Path | None = None,
     post_run_merge_audit_md: str | Path | None = None,
+    supporting_context_md: str | Path | None = None,
 ) -> dict[str, str]:
     workspace = Path(workspace_root).resolve()
     benchmark_dir = _resolve_benchmark_root(workspace, benchmark_root)
@@ -63,6 +69,7 @@ def write_benchmark_companion_links(
         "schema_version": "benchmark-companion-links-v1",
         "post_run_evidence_json": _normalize_link_value(post_run_evidence_json, workspace_root=workspace),
         "post_run_merge_audit_md": _normalize_link_value(post_run_merge_audit_md, workspace_root=workspace),
+        "supporting_context_md": _normalize_link_value(supporting_context_md, workspace_root=workspace),
     }
     links_path = record_root / COMPANION_LINKS_FILENAME
     links_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -89,6 +96,7 @@ def main(argv: list[str] | None = None) -> int:
         benchmark_root=args.benchmark_root,
         post_run_evidence_json=args.post_run_evidence_json,
         post_run_merge_audit_md=args.post_run_merge_audit_md,
+        supporting_context_md=args.supporting_context_md,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
