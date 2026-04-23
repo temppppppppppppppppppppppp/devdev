@@ -164,6 +164,13 @@ def _write_index(workspace: Path, rows: list[dict[str, str]]) -> None:
         writer.writerows(rows)
 
 
+def _write_companion_evidence(workspace: Path, relative_path: str, payload: dict) -> Path:
+    target = workspace / relative_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return target
+
+
 def test_build_benchmark_record_diff_reports_better_result(tmp_path):
     module = _load_compare_module()
     left_root = _write_record(
@@ -727,3 +734,154 @@ def test_compare_benchmark_records_flags_stale_guarded_summary_and_falls_back_to
         "side": "left",
         "message": "left record stopped at latest_written_ep 14 before target_ep 15",
     } in watchpoints
+
+
+def test_compare_benchmark_records_surfaces_companion_post_run_evidence_watchpoints(tmp_path):
+    module = _load_compare_module()
+    left_root = _write_record(
+        tmp_path,
+        run_id="20260423_120000__stage4-supervised__target-ep15__aaaa1111",
+        stage4_attempts=12,
+        stage4_pass_like=4,
+        stage4_duration_ms=8000,
+        stage4_tokens=12000,
+        stage4_cost_usd=1.5,
+        status="snapshot",
+        git_head="aaaa1111",
+    )
+    right_root = _write_record(
+        tmp_path,
+        run_id="20260423_130000__stage4-supervised__target-ep15__bbbb2222",
+        stage4_attempts=8,
+        stage4_pass_like=6,
+        stage4_duration_ms=6000,
+        stage4_tokens=9000,
+        stage4_cost_usd=1.1,
+        status="completed",
+        git_head="bbbb2222",
+    )
+    right_evidence = _write_companion_evidence(
+        tmp_path,
+        "docs/2026-04-23/right-post-run-evidence.json",
+        {
+            "runtime_terminal_state": {
+                "runtime_audit_tag": "stage4_complete",
+            },
+            "hard_gates": {
+                "status": "fail",
+            },
+            "current_session_sink_alignment_summary": {
+                "status": "warn",
+            },
+            "final_authority_contract_summary": {
+                "status": "missing",
+            },
+            "gate_repair_surface_summary": {
+                "status": "missing",
+            },
+        },
+    )
+
+    diff = module.compare_benchmark_records(
+        str(left_root),
+        str(right_root),
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+        right_evidence_json=right_evidence,
+    )
+
+    watchpoints = diff["delta"]["watchpoints"]
+    assert {
+        "id": "post_run_hard_gates_failed",
+        "severity": "warn",
+        "scope": "post_run_evidence_json",
+        "side": "right",
+        "message": "right companion evidence reports hard_gates.status=fail",
+    } in watchpoints
+    assert {
+        "id": "post_run_sink_alignment_attention",
+        "severity": "warn",
+        "scope": "post_run_evidence_json",
+        "side": "right",
+        "message": "right companion evidence reports sink alignment status warn",
+    } in watchpoints
+    assert {
+        "id": "post_run_final_authority_attention",
+        "severity": "warn",
+        "scope": "post_run_evidence_json",
+        "side": "right",
+        "message": "right companion evidence reports final authority status missing",
+    } in watchpoints
+    assert {
+        "id": "post_run_gate_repair_attention",
+        "severity": "warn",
+        "scope": "post_run_evidence_json",
+        "side": "right",
+        "message": "right companion evidence reports gate repair status missing",
+    } in watchpoints
+
+
+def test_compare_benchmark_records_cli_supports_companion_evidence_json(tmp_path):
+    left_root = _write_record(
+        tmp_path,
+        run_id="20260423_120000__stage4-supervised__target-ep15__aaaa1111",
+        stage4_attempts=12,
+        stage4_pass_like=4,
+        stage4_duration_ms=8000,
+        stage4_tokens=12000,
+        stage4_cost_usd=1.5,
+        status="snapshot",
+        git_head="aaaa1111",
+    )
+    right_root = _write_record(
+        tmp_path,
+        run_id="20260423_130000__stage4-supervised__target-ep15__bbbb2222",
+        stage4_attempts=8,
+        stage4_pass_like=6,
+        stage4_duration_ms=6000,
+        stage4_tokens=9000,
+        stage4_cost_usd=1.1,
+        status="completed",
+        git_head="bbbb2222",
+    )
+    right_evidence = _write_companion_evidence(
+        tmp_path,
+        "docs/2026-04-23/right-post-run-evidence.json",
+        {
+            "hard_gates": {
+                "status": "fail",
+            },
+        },
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/compare_benchmark_records.py",
+            str(left_root),
+            str(right_root),
+            "--workspace-root",
+            str(tmp_path),
+            "--benchmark-root",
+            "benchmarks",
+            "--right-evidence-json",
+            str(right_evidence),
+            "--format",
+            "json",
+        ],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    payload = json.loads(result.stdout)
+
+    assert payload["delta"]["verdict"] == "better"
+    assert "watchpoints" in payload["delta"]["changed_sections"]
+    assert {
+        "id": "post_run_hard_gates_failed",
+        "severity": "warn",
+        "scope": "post_run_evidence_json",
+        "side": "right",
+        "message": "right companion evidence reports hard_gates.status=fail",
+    } in payload["delta"]["watchpoints"]

@@ -71,6 +71,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("left", help="baseline benchmark record path or run_id")
     parser.add_argument("right", help="comparison benchmark record path or run_id")
     parser.add_argument(
+        "--left-evidence-json",
+        default="",
+        help="optional structured post-run evidence JSON companion for the baseline side",
+    )
+    parser.add_argument(
+        "--right-evidence-json",
+        default="",
+        help="optional structured post-run evidence JSON companion for the comparison side",
+    )
+    parser.add_argument(
         "--format",
         choices=("text", "json"),
         default="text",
@@ -95,11 +105,23 @@ def compare_benchmark_records(
     *,
     workspace_root: str | Path = ROOT,
     benchmark_root: str | Path = "benchmarks",
+    left_evidence_json: str | Path | None = None,
+    right_evidence_json: str | Path | None = None,
 ) -> dict[str, Any]:
     workspace = Path(workspace_root).resolve()
     benchmark_dir = _resolve_benchmark_root(workspace, benchmark_root)
-    left = load_benchmark_record(left_identifier, workspace_root=workspace, benchmark_root=benchmark_dir)
-    right = load_benchmark_record(right_identifier, workspace_root=workspace, benchmark_root=benchmark_dir)
+    left = load_benchmark_record(
+        left_identifier,
+        workspace_root=workspace,
+        benchmark_root=benchmark_dir,
+        companion_evidence_json=left_evidence_json,
+    )
+    right = load_benchmark_record(
+        right_identifier,
+        workspace_root=workspace,
+        benchmark_root=benchmark_dir,
+        companion_evidence_json=right_evidence_json,
+    )
     return build_benchmark_record_diff(left, right)
 
 
@@ -108,6 +130,7 @@ def load_benchmark_record(
     *,
     workspace_root: str | Path = ROOT,
     benchmark_root: str | Path = "benchmarks",
+    companion_evidence_json: str | Path | None = None,
 ) -> dict[str, Any]:
     workspace = Path(workspace_root).resolve()
     benchmark_dir = _resolve_benchmark_root(workspace, benchmark_root)
@@ -115,6 +138,7 @@ def load_benchmark_record(
     manifest = _load_json(record_root / "manifest.json")
     stage_metrics = _load_stage_metrics(record_root, manifest=manifest)
     runtime_audit_summary = _load_runtime_audit_summary(record_root)
+    companion_evidence = _load_companion_evidence(companion_evidence_json, workspace_root=workspace)
 
     runtime_summary = manifest.get("runtime_summary", {}) if isinstance(manifest, dict) else {}
     workspace_git = manifest.get("workspace_git", {}) if isinstance(manifest, dict) else {}
@@ -181,6 +205,7 @@ def load_benchmark_record(
             index_row.get("notes"),
         ),
         "runtime_audit_summary": runtime_audit_summary,
+        "companion_evidence": companion_evidence,
         "guarded_runner_summary": _load_stage4_guarded_result(record_root),
         "note_markers": _extract_note_markers(
             _pick_first_nonempty(
@@ -463,6 +488,44 @@ def _load_stage4_guarded_result(record_root: Path) -> dict[str, Any]:
     }
 
 
+def _load_companion_evidence(
+    evidence_json: str | Path | None,
+    *,
+    workspace_root: Path,
+) -> dict[str, Any]:
+    if evidence_json in (None, ""):
+        return {
+            "available": False,
+            "source_path": "",
+            "hard_gates_status": "",
+            "sink_alignment_status": "",
+            "final_authority_status": "",
+            "gate_repair_status": "",
+        }
+    candidate = _resolve_existing_path(str(evidence_json), workspace_root=workspace_root)
+    if candidate is None:
+        raise FileNotFoundError(f"companion evidence JSON not found: {evidence_json}")
+    payload = _load_json(candidate)
+    hard_gates = payload.get("hard_gates", {}) if isinstance(payload, dict) else {}
+    sink_alignment = payload.get("current_session_sink_alignment_summary", {}) if isinstance(payload, dict) else {}
+    final_authority = payload.get("final_authority_contract_summary", {}) if isinstance(payload, dict) else {}
+    gate_repair = payload.get("gate_repair_surface_summary", {}) if isinstance(payload, dict) else {}
+    return {
+        "available": True,
+        "source_path": _display_relative_path(workspace_root, candidate),
+        "hard_gates_status": str(hard_gates.get("status", "") or "") if isinstance(hard_gates, dict) else "",
+        "sink_alignment_status": (
+            str(sink_alignment.get("status", "") or "") if isinstance(sink_alignment, dict) else ""
+        ),
+        "final_authority_status": (
+            str(final_authority.get("status", "") or "") if isinstance(final_authority, dict) else ""
+        ),
+        "gate_repair_status": (
+            str(gate_repair.get("status", "") or "") if isinstance(gate_repair, dict) else ""
+        ),
+    }
+
+
 def _extract_note_markers(notes: object) -> dict[str, Any]:
     text = str(notes or "").strip()
     markers = {
@@ -693,6 +756,52 @@ def _build_watchpoints(
                         scope="stage4",
                         side=side,
                         message=f"{side} stage4 post_pass_contract_signal_count is {contract_signal_count}",
+                    )
+                )
+        companion_evidence = record.get("companion_evidence", {})
+        if isinstance(companion_evidence, dict) and companion_evidence.get("available"):
+            hard_gates_status = str(companion_evidence.get("hard_gates_status", "") or "")
+            if hard_gates_status == "fail":
+                watchpoints.append(
+                    _watchpoint(
+                        "post_run_hard_gates_failed",
+                        severity="warn",
+                        scope="post_run_evidence_json",
+                        side=side,
+                        message=f"{side} companion evidence reports hard_gates.status=fail",
+                    )
+                )
+            sink_alignment_status = str(companion_evidence.get("sink_alignment_status", "") or "")
+            if sink_alignment_status and sink_alignment_status != "ok":
+                watchpoints.append(
+                    _watchpoint(
+                        "post_run_sink_alignment_attention",
+                        severity="warn",
+                        scope="post_run_evidence_json",
+                        side=side,
+                        message=f"{side} companion evidence reports sink alignment status {sink_alignment_status}",
+                    )
+                )
+            final_authority_status = str(companion_evidence.get("final_authority_status", "") or "")
+            if final_authority_status and final_authority_status != "ok":
+                watchpoints.append(
+                    _watchpoint(
+                        "post_run_final_authority_attention",
+                        severity="warn",
+                        scope="post_run_evidence_json",
+                        side=side,
+                        message=f"{side} companion evidence reports final authority status {final_authority_status}",
+                    )
+                )
+            gate_repair_status = str(companion_evidence.get("gate_repair_status", "") or "")
+            if gate_repair_status and gate_repair_status != "ok":
+                watchpoints.append(
+                    _watchpoint(
+                        "post_run_gate_repair_attention",
+                        severity="warn",
+                        scope="post_run_evidence_json",
+                        side=side,
+                        message=f"{side} companion evidence reports gate repair status {gate_repair_status}",
                     )
                 )
         note_markers = record.get("note_markers", {}) if isinstance(record.get("note_markers", {}), dict) else {}
@@ -969,6 +1078,8 @@ def main(argv: list[str] | None = None) -> int:
         args.right,
         workspace_root=args.workspace_root,
         benchmark_root=args.benchmark_root,
+        left_evidence_json=args.left_evidence_json,
+        right_evidence_json=args.right_evidence_json,
     )
     if args.format == "json":
         print(json.dumps(diff, ensure_ascii=False, indent=2))
