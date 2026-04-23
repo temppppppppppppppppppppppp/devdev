@@ -132,10 +132,14 @@ def audit_benchmark_companion_links(
         "records_with_sidecar": sum(1 for record in records if record["companion_state"] != "no_sidecar"),
         "records_with_missing_targets": sum(1 for record in records if record["companion_state"] == "missing_target"),
     }
+    remediation_summary = _build_remediation_summary(
+        [hint for record in records for hint in record.get("remediation_hints", [])]
+    )
     strict_failure_reasons = _collect_strict_failure_reasons(summary)
     return {
         "benchmark_root": _display_relative_path(workspace, benchmark_dir),
         "summary": summary,
+        "remediation_summary": remediation_summary,
         "strict": {
             "status": "fail" if strict_failure_reasons else "pass",
             "failure_reasons": strict_failure_reasons,
@@ -166,6 +170,20 @@ def format_audit_text(payload: dict[str, Any]) -> str:
     strict_failures = strict.get("failure_reasons", []) if isinstance(strict, dict) else []
     if isinstance(strict_failures, list) and strict_failures:
         lines.append("Strict failures: " + ", ".join(str(item) for item in strict_failures))
+    remediation_summary = payload.get("remediation_summary", {})
+    if isinstance(remediation_summary, dict):
+        hint_count = int(remediation_summary.get("hint_count", 0) or 0)
+        count_by_surface = remediation_summary.get("count_by_surface", {})
+        if hint_count > 0:
+            surface_bits = [
+                f"{surface}={count}"
+                for surface, count in sorted(count_by_surface.items())
+            ] if isinstance(count_by_surface, dict) else []
+            lines.append(
+                "Remediation summary: "
+                f"hint_count={hint_count}"
+                + (f"; count_by_surface={', '.join(surface_bits)}" if surface_bits else "")
+            )
     stale_rows = payload.get("stale_index_rows", [])
     if isinstance(stale_rows, list) and stale_rows:
         lines.append("Stale index rows:")
@@ -267,6 +285,19 @@ def _collect_strict_failure_reasons(summary: dict[str, Any]) -> list[str]:
     if missing_target_count > 0:
         failures.append(f"records_with_missing_targets={missing_target_count}")
     return failures
+
+
+def _build_remediation_summary(remediation_hints: list[dict[str, str]]) -> dict[str, Any]:
+    count_by_surface: dict[str, int] = {}
+    for hint in remediation_hints:
+        surface = str(hint.get("surface", "") or "")
+        if not surface:
+            continue
+        count_by_surface[surface] = count_by_surface.get(surface, 0) + 1
+    return {
+        "hint_count": len(remediation_hints),
+        "count_by_surface": count_by_surface,
+    }
 
 
 def _build_remediation_hints(

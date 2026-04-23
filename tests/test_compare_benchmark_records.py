@@ -1049,6 +1049,13 @@ def test_compare_benchmark_records_surfaces_missing_target_hygiene_with_remediat
             ),
         },
     ]
+    assert diff["delta"]["remediation_summary"] == {
+        "hint_count": 2,
+        "count_by_surface": {
+            "post_run_evidence_json": 1,
+            "supporting_context_md": 1,
+        },
+    }
     assert "remediation_hints" in diff["delta"]["changed_sections"]
     assert {
         "id": "benchmark_companion_missing_target",

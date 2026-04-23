@@ -283,6 +283,7 @@ def build_benchmark_record_diff(left_record: dict[str, Any], right_record: dict[
         regressions=regression_signals,
     )
     remediation_hints = _collect_delta_remediation_hints(left_record=left_record, right_record=right_record)
+    remediation_summary = _build_remediation_summary(remediation_hints)
     watchpoints = _build_watchpoints(
         left_record=left_record,
         right_record=right_record,
@@ -309,6 +310,7 @@ def build_benchmark_record_diff(left_record: dict[str, Any], right_record: dict[
             "regression_signals": regression_signals,
             "verdict": verdict,
             "remediation_hints": remediation_hints,
+            "remediation_summary": remediation_summary,
             "watchpoints": watchpoints,
             "changed_sections": changed_sections,
         },
@@ -669,6 +671,19 @@ def _collect_delta_remediation_hints(
             )
         )
     return hints
+
+
+def _build_remediation_summary(remediation_hints: list[dict[str, str]]) -> dict[str, Any]:
+    count_by_surface: dict[str, int] = {}
+    for hint in remediation_hints:
+        surface = str(hint.get("surface", "") or "")
+        if not surface:
+            continue
+        count_by_surface[surface] = count_by_surface.get(surface, 0) + 1
+    return {
+        "hint_count": len(remediation_hints),
+        "count_by_surface": count_by_surface,
+    }
 
 
 def _extract_note_markers(notes: object) -> dict[str, Any]:
@@ -1318,6 +1333,17 @@ def _render_text(diff: dict[str, Any], *, left_label: str, right_label: str) -> 
             for item in delta["remediation_hints"]
         ]
         lines.append("Remediation hints: " + " | ".join(remediation_bits))
+    remediation_summary = delta.get("remediation_summary", {})
+    if isinstance(remediation_summary, dict) and int(remediation_summary.get("hint_count", 0) or 0) > 0:
+        surface_bits = [
+            f"{surface}={count}"
+            for surface, count in sorted(remediation_summary.get("count_by_surface", {}).items())
+        ]
+        lines.append(
+            "Remediation summary: "
+            f"hint_count={remediation_summary.get('hint_count', 0)}"
+            + (f"; count_by_surface={', '.join(surface_bits)}" if surface_bits else "")
+        )
     lines.append(f"Improvement signals: {delta['improvement_signals']}")
     lines.append(f"Regression signals: {delta['regression_signals']}")
     return "\n".join(lines)
