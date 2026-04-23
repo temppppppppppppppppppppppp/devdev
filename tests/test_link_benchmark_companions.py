@@ -143,6 +143,42 @@ def test_write_benchmark_companion_links_creates_sidecar(tmp_path):
     }
 
 
+def test_write_benchmark_companion_links_falls_back_from_stale_index_record_path(tmp_path):
+    module = _load_link_module()
+    run_id = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    record_root = _write_record(tmp_path, run_id=run_id, status="completed")
+    index_path = tmp_path / "benchmarks" / "benchmark_index.csv"
+    index_path.parent.mkdir(parents=True, exist_ok=True)
+    index_path.write_text(
+        "\n".join(
+            [
+                "run_id,recorded_at,project_name,project_locator,lane,target_ep,status,runtime_audit_tag,latest_session_id,git_branch,git_head,git_dirty,record_path,notes",
+                (
+                    f"{run_id},2026-04-23T13:00:00+09:00,golden-canary,projects/golden-canary,"
+                    "stage4-supervised,15,completed,stage4_complete,20260423_130000,main,aaaa1111,"
+                    f"false,benchmarks/stale-lane/{run_id},"
+                ),
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    audit = _write_markdown(tmp_path, "docs/2026-04-23/right-post-run-merge-audit.md", "# audit\n")
+
+    result = module.write_benchmark_companion_links(
+        run_id,
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+        post_run_merge_audit_md=audit,
+    )
+
+    assert result["record_root"] == record_root.relative_to(tmp_path).as_posix()
+    links_path = record_root / "benchmark_companion_links.json"
+    assert links_path.exists()
+    payload = json.loads(links_path.read_text(encoding="utf-8"))
+    assert payload["post_run_merge_audit_md"] == "docs/2026-04-23/right-post-run-merge-audit.md"
+
+
 def test_compare_benchmark_records_auto_loads_sidecar_companion_links(tmp_path):
     link_module = _load_link_module()
     compare_module = _load_compare_module()

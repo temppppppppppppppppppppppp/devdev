@@ -310,6 +310,93 @@ def test_compare_benchmark_records_resolves_run_ids_from_index(tmp_path):
     ]
 
 
+def test_load_benchmark_record_falls_back_from_stale_index_record_path(tmp_path):
+    module = _load_compare_module()
+    run_id = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    record_root = _write_record(
+        tmp_path,
+        run_id=run_id,
+        stage4_attempts=11,
+        stage4_pass_like=5,
+        stage4_duration_ms=7200,
+        stage4_tokens=10100,
+        stage4_cost_usd=1.32,
+        status="completed",
+        git_head="bbbb2222",
+    )
+    _write_index(
+        tmp_path,
+        rows=[
+            {
+                "run_id": run_id,
+                "recorded_at": "2026-04-23T13:00:00+09:00",
+                "project_name": "golden-canary",
+                "project_locator": "projects/golden-canary",
+                "lane": "stage4-supervised",
+                "target_ep": "15",
+                "status": "completed",
+                "runtime_audit_tag": "stage4_complete",
+                "latest_session_id": "20260423_130000",
+                "git_branch": "main",
+                "git_head": "bbbb2222",
+                "git_dirty": "false",
+                "record_path": f"benchmarks/stale-lane/{run_id}",
+                "notes": "",
+            },
+        ],
+    )
+
+    record = module.load_benchmark_record(
+        run_id,
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+    )
+
+    assert record["run_id"] == run_id
+    assert record["record_root"] == record_root.relative_to(tmp_path).as_posix()
+
+
+def test_load_benchmark_record_raises_clear_error_for_stale_index_without_live_record(tmp_path):
+    module = _load_compare_module()
+    run_id = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    _write_index(
+        tmp_path,
+        rows=[
+            {
+                "run_id": run_id,
+                "recorded_at": "2026-04-23T13:00:00+09:00",
+                "project_name": "golden-canary",
+                "project_locator": "projects/golden-canary",
+                "lane": "stage4-supervised",
+                "target_ep": "15",
+                "status": "completed",
+                "runtime_audit_tag": "stage4_complete",
+                "latest_session_id": "20260423_130000",
+                "git_branch": "main",
+                "git_head": "bbbb2222",
+                "git_dirty": "false",
+                "record_path": f"benchmarks/stale-lane/{run_id}",
+                "notes": "",
+            },
+        ],
+    )
+
+    try:
+        module.load_benchmark_record(
+            run_id,
+            workspace_root=tmp_path,
+            benchmark_root="benchmarks",
+        )
+    except FileNotFoundError as exc:
+        assert str(exc) == (
+            "stale benchmark_index.csv record_path for run_id "
+            f"{run_id}: missing manifest.json under "
+            f"{(tmp_path / 'benchmarks' / 'stale-lane' / run_id).resolve()}"
+        )
+    else:
+        raise AssertionError("expected FileNotFoundError for stale benchmark index row")
+
+
 def test_compare_benchmark_records_cli_supports_json_output(tmp_path):
     left_root = _write_record(
         tmp_path,

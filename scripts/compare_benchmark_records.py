@@ -323,18 +323,27 @@ def _resolve_record_root(
         return _coerce_record_root(direct_path), {}
 
     index_row = _find_index_row(benchmark_root / "benchmark_index.csv", run_id=identifier)
+    stale_index_path = ""
     if index_row:
         record_path = Path(index_row.get("record_path", ""))
         if record_path and not record_path.is_absolute():
             record_path = (workspace_root / record_path).resolve()
         if record_path:
-            return _coerce_record_root(record_path), index_row
+            try:
+                return _coerce_record_root(record_path), index_row
+            except FileNotFoundError:
+                stale_index_path = str(record_path)
 
     glob_matches = list(benchmark_root.glob(f"*/{identifier}/manifest.json"))
     if len(glob_matches) == 1:
-        return glob_matches[0].parent.resolve(), {}
+        return glob_matches[0].parent.resolve(), index_row
     if len(glob_matches) > 1:
         raise ValueError(f"run_id is ambiguous under benchmark root: {identifier}")
+    if stale_index_path:
+        raise FileNotFoundError(
+            f"stale benchmark_index.csv record_path for run_id {identifier}: "
+            f"missing manifest.json under {stale_index_path}"
+        )
 
     raise FileNotFoundError(f"benchmark record not found: {identifier}")
 
