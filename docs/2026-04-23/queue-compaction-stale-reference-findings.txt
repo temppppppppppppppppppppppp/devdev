@@ -1,0 +1,35 @@
+docs/2026-03-27/frontier-lag-soak-canary-wave1-execution-ssot.md:11
+  stale resume drift still framed the lane through the retired npc-martial blocker posture
+  fixed in 2026-04-23 sweep
+
+docs/2026-03-27/frontier-lag-soak-canary-wave1-execution-ssot.md:28
+  stale current-state text still claimed the lane had been promoted to the active lane
+  fixed in 2026-04-23 sweep
+
+docs/2026-03-27/frontier-lag-soak-canary-wave1-execution-ssot.md:35-39
+  stale baseline facts still claimed soak overrides were missing
+  fixed in 2026-04-23 sweep
+
+docs/2026-03-27/frontier-lag-soak-canary-wave1-execution-ssot.md:83-87
+  stale inventory still claimed no model-tier override / no manuscript-length override / no heavy-path toggle set
+  fixed in 2026-04-23 sweep
+
+docs/2026-03-27/frontier-lag-soak-canary-wave1-execution-ssot.md:168-169
+  stale queue constraint still described this lane as the active queue item
+  fixed in 2026-04-23 sweep
+
+docs/2026-03-27/frontier-lag-soak-canary-wave1-execution-ssot.md:206-210
+  stale temp status and nonexistent roadmap dependency path remained in the active SSOT
+  fixed in 2026-04-23 sweep
+
+docs/2026-04-07/0_0-stage4-interview-round-owner-surface-reduction-remediation-execution-ssot.md:11
+  stale resume drift still used the older 166 / 2 / 5 recount
+  fixed in 2026-04-23 sweep
+
+docs/2026-04-07/0_0-stage4-interview-round-owner-surface-reduction-remediation-execution-ssot.md:224-226
+  stale pass-2 recount still used the older 166 / 2 / 5 live numbers
+  fixed in 2026-04-23 sweep
+
+Post-fix verification:
+  active temp mirrors no longer contain current-claim references to retired queue items
+  remaining mentions of retired lanes are limited to explicit historical backing sections in roadmap/compaction docs

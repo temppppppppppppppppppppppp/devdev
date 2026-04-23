@@ -1,14 +1,14 @@
 # Frontier Lag Soak Canary Wave1 Execution SSOT
 
 Date: 2026-03-27
-Status: parked (2026-04-19 reactivation refresh; the bounded soak-harness and state-audit design remains real, but the honest queue reading is now parked low-priority reference-validation debt rather than active implementation progress)
+Status: closed historical backing (2026-04-23 user-directed deactivation; the remaining durability-surface audit block is low ROI for the current board, so this lane is removed from the visible queue and preserved canonically only)
 Canonical Path: `docs/2026-03-27/frontier-lag-soak-canary-wave1-execution-ssot.md`
-Temp Mirror Path: `docs/temp/frontier-lag-soak-canary-wave1-execution-ssot.md`
+Temp Mirror Path: `retired on 2026-04-23 (former path: docs/temp/frontier-lag-soak-canary-wave1-execution-ssot.md)`
 Commit State:
 - Baseline Commit: `155906f3adb1c2f4a3810ce359f6b59124d8556a`
 - Baseline Dirty Summary: `dirty: tracked npc-martial docs/code/tests, docs/temp/queue-state.json, canary DB artifact; untracked soak survey/benchmark docs, temp npc mirror, canary directories`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `opened after 3-lane corroborated merge audit; promoted on 2026-03-28 after Director reorder because npc-martial remained blocked off the active lane and no live wuxia canary thread remained`
+- Resume Drift Summary: `2026-04-23 live compaction plus operator-directed deactivation retires this lane from the visible queue; soak-profile overrides and heavy-path controls are landed and test-backed, while the remaining post-run durability-surface audit block is preserved as historical backing only`
 Source Survey Docs:
 - `docs/2026-03-27/frontier-lag-soak-canary-compact-survey.md`
 - `docs/2026-04-19/frontier-lag-soak-canary-wave1-reactivation-refresh.md`
@@ -24,23 +24,24 @@ Why now:
 
 - the compact survey is final and 3-pass audited
 - runner/control, lightweight config, and observability seams were independently corroborated
-- the next concrete step is no longer survey; it is bounded harness realization
-- the aggregate temp queue has now promoted this item to the active lane after `npc-martial-state-substrate-wave1` was parked off the critical path
+- soak-profile override work has already landed
+- the remaining honest next step is the bounded post-run durability-surface audit block
 
 ## 2. Baseline Facts
 
 - `scripts/run_auto_frontier_lag_harness.py` is the correct base harness
 - `scripts/run_stage34_canary.py` remains the smaller reference seam for bounded Stage 3 -> 4 frontier closure
 - the real repeat engine already exists in `main_a.py` through `_one_stop_pipeline_frontier_lag()`
-- the currently missing soak-specific controls are:
-  - model-tier override
-  - manuscript-length override
-  - heavy-path toggle set
+- soak-profile controls now exist in the harness:
+  - named soak-profile selection
+  - Stage2 / Stage4 all-flash model overrides
+  - manuscript min/target length overrides
+  - heavy-path toggle controls
 - current auto-harness observability proves liveness and sink alignment, but not long-memory state continuity, because it does not yet audit:
   - `episode_bibles`
   - `state_logs`
   - `world_state`
-- the aggregate temp queue still contains the parked npc-martial follow-up item, but it no longer blocks this bounded soak lane
+- the current compacted queue retires this lane from the visible board and preserves it canonically as historical backing only
 
 ## 3. Scope
 
@@ -82,10 +83,10 @@ Excluded:
   - `state_logs`
   - `world_state`
 - current gap inventory:
-  - no harness-level model-tier override
-  - no harness-level manuscript-length override
-  - no harness-level heavy-path toggle set
-  - no post-run state audit block for the three durability surfaces
+  - soak-profile override contract is landed
+  - heavy-path toggle support is landed
+  - bounded tests for the override layer are landed
+  - no post-run state audit block yet exists for the three durability surfaces
 
 ## 5. Pass 2. Semantic Classification
 
@@ -154,8 +155,8 @@ If a category is not applicable, say so explicitly:
     - `state_logs`
     - `world_state`
 - queue constraint:
-  - the aggregate roadmap now marks this item as the active queue item
-  - this promotion turn does not itself realize code; a fresh bounded implementation turn should start on the soak harness seam
+  - the 2026-04-23 compacted roadmap retires this item from the visible queue as low-ROI residue
+  - this lane should not be treated as active realization unless a fresh bounded reactivation decision is made
 
 ## 8. Execution Tranches
 
@@ -195,7 +196,7 @@ If a category is not applicable, say so explicitly:
 - do not mutate non-disposable project targets
 - do not broaden the item into benchmark implementation
 - do not change global production model defaults as a shortcut for harness-local override behavior
-- do not bypass queue-roadmap order once this mirror enters `docs/temp/`
+- do not recreate a temp mirror or reopen this lane without a fresh bounded queue decision
 - keep authority distinctions explicit:
   - `pass_rate_monitor.json` is companion cache only
   - `runtime_audit_summary` is snapshot only
@@ -203,11 +204,12 @@ If a category is not applicable, say so explicitly:
 
 ## 12. Temp Queue Notes
 
-- temp status: in_progress
+- temp status: retired historical backing
 - cleanup condition:
-  - remove `docs/temp/frontier-lag-soak-canary-wave1-execution-ssot.md` only after the item is realized and closed
+  - keep no temp mirror while this lane remains historical only
+  - recreate a temp mirror only after an explicit bounded reactivation decision
 - roadmap dependency:
-  - governed by `docs/2026-03-27/npc-martial-and-soak-canary-execution-roadmap.md`
+  - governed historically by `docs/2026-04-23/active-temp-execution-roadmap.md`
 
 ## 13. Validation and Closure Hooks
 
@@ -241,11 +243,11 @@ Estimated confidence: `96%`
 
 ## 15. Director Promotion 2026-03-28
 
-Promotion Verdict: `in_progress`
+Promotion Verdict: `historical promotion note`
 
 Why promoted now:
 
-- queue authority refresh established `npc-martial-state-substrate-wave1` as a parked blocked item rather than a live blocker
+- queue authority refresh at that historical point established the soak lane as the next candidate after the older npc-martial queue posture changed
 - live process inspection showed no active wuxia canary `python` process in the workspace at decision time
 - this soak item remains the highest-ROI bounded next step on already-corroborated survey evidence
 
@@ -273,10 +275,16 @@ Current reading:
 - the bounded soak-harness and post-run state-audit work is still real
 - the lane is not stale, but it is also not active progress anymore
 
-Queue consequence:
+Queue consequence at the time:
 
 - keep this lane visible
 - keep the temp mirror
 - treat it as parked low-priority reference-validation debt rather than active implementation progress
+
+2026-04-23 superseding note:
+
+- the later compaction wave retired this lane from the visible queue
+- the temp mirror was removed
+- the canonical SSOT remains only as historical backing
 
 Promotion confidence: `97%`

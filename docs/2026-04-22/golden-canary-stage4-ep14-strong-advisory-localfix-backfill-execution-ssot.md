@@ -1,14 +1,14 @@
 # Golden Canary Stage4 ep14 Strong Advisory Localfix Backfill Execution SSOT
 
 Date: 2026-04-22
-Status: active
+Status: closed (closure-refreshed; runtime frontier advanced through ep15, so the bounded ep14 seam remains only as historical backing)
 Canonical Path: `docs/2026-04-22/golden-canary-stage4-ep14-strong-advisory-localfix-backfill-execution-ssot.md`
 Temp Mirror Path: `docs/temp/golden-canary-stage4-ep14-strong-advisory-localfix-backfill-execution-ssot.md`
 Commit State:
 - Baseline Commit: `4a8f03a9370ba06eacdb3075389147c74056bc8c`
 - Baseline Dirty Summary: `dirty: tracked runtime artifacts in benchmarks and projects/골든 카나리아 logs/db; untracked drafts and stage4 artifacts for ep_0011-ep_0014`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Drift Summary: `2026-04-23 live workspace recheck shows persisted drafts and DB manuscripts through ep15; the original ep14-blocker framing is no longer current queue truth`
 Source Survey Docs:
 - `docs/2026-04-22/golden-canary-stage4-current-context-and-rerun-readiness.md`
 - `docs/2026-04-22/golden-canary-stage4-ep14-strong-advisory-localfix-backfill-3pass-audit.md`
@@ -24,19 +24,24 @@ Side-Effect Coverage: covered
 
 ## 1. Intent
 
-- Unblock the `ep14` rerun loop by repairing the strong-advisory backfill seam in one bounded place.
-- Cover both observed invalid-contract shapes:
+- Original bounded intent:
+  - unblock the `ep14` rerun loop by repairing the strong-advisory backfill seam in one bounded place
+  - cover both observed invalid-contract shapes:
   - inherited runtime `scene_model` sentinel that should be replaceable by a bounded local contract
   - already-local fix-pack that still fails because guard and success fields remain blank
+- Current closure refresh intent:
+  - keep this SSOT as the canonical historical record of that bounded seam
+  - remove it from the active temp queue because the live runtime frontier has already advanced beyond `ep14`
 
 ## 2. Baseline Facts
 
-- The rerun persisted `ep11`, `ep12`, and `ep13`; no final `ep14` draft exists.
-- `ep14` failed five times with `gate_basis=strong_advisory_escalation_non_local_fix`.
-- The failure loop contains two contract shapes:
-  - attempts with inherited `scene_model` sentinel
-  - an attempt with `local_phrase` target but missing `do_not_regress` and `success_condition`
-- The bug owner remains `_backfill_strong_advisory_fix_pack()` in `modules/core/stage4_interview_round.py`.
+- On the current 2026-04-23 workspace, `projects/골든 카나리아/drafts/` contains persisted `ep_0014.*` and `ep_0015.*`.
+- The current `project_data.db` manuscript frontier is `max_ep = 15`, `count = 15`.
+- `projects/골든 카나리아/logs/episode_production.jsonl` contains a settled `ep15` `final_verdict = PASS` row.
+- The bounded `ep14` seam is therefore no longer an active blocker queue item on the current workspace.
+- The execution value of this document is now historical:
+  - it records the bounded seam that used to govern the queue
+  - it does not claim that `ep14` is still the live frontier
 
 ## 3. Scope
 
@@ -119,9 +124,9 @@ Excluded:
 
 ## 12. Temp Queue Notes
 
-- temp status: `in_progress`
-- cleanup condition: keep this mirror until the bounded patch is validated and the follow-up rerun decision is resolved
-- roadmap dependency: first item in the refreshed active temp roadmap
+- temp status: `closed`
+- cleanup condition: remove the temp mirror after the canonical closure refresh, roadmap refresh, queue-state refresh, and validator pass
+- roadmap dependency: no longer an active queue item; retain only the canonical doc as historical backing
 
 ## 13. Validation and Closure Hooks
 
@@ -129,3 +134,24 @@ Excluded:
 - closure harness: `docs/implementation/execution-closure-harness.md`
 - optional queue state entry: `docs/temp/queue-state.json`
 - execution-start rule: re-audit confirmed in the same batch with confidence above 95%
+
+## 14. Closure Refresh (2026-04-23)
+
+Verification evidence used for closure refresh:
+
+- `projects/골든 카나리아/drafts/ep_0014.txt`
+- `projects/골든 카나리아/drafts/ep_0015.txt`
+- `projects/골든 카나리아/project_data.db` -> `manuscripts max_ep = 15`
+- `projects/골든 카나리아/logs/artifacts/stage4/ep_0015/attempt_01/`
+- `projects/골든 카나리아/logs/episode_production.jsonl` -> `ep 15`, `final_verdict = PASS`
+
+Closure call:
+
+- the active queue no longer needs this item as a front blocker
+- the temp mirror should be removed from `docs/temp/`
+- the canonical SSOT stays as the historical record of the bounded ep14 seam and its remediation target
+
+Residual risk:
+
+- nearby 2026-04-22 docs that still describe `ep14` as the active blocker are stale if treated as current queue truth
+- those docs remain valid only as historical evidence unless re-audited against the current workspace

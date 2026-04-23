@@ -1,7 +1,7 @@
 # 0_0 Stage2-Stage3 Stage4-Readiness Remediation Execution SSOT
 
 Date: 2026-04-01
-Status: blocked — Stage2/3 structural improvement is runtime-visible, but Stage4 remains blocked by unresolved finalization seams (ep3 strong-advisory fix-pack + ep4 post-select continuity); Stage4 still paused, and the 2026-04-19 reactivation refresh confirms this lane remains honest `blocked holding` rather than stale blocked debt
+Status: closed historical backing — 2026-04-23 live compaction re-audit found that the original `projects/0_0` proof anchor is gone and only disposable canary residue remains, so this old run-specific blocked lane is preserved as history rather than kept visible
 Canonical Path: `docs/2026-04-01/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md`
 Commit State:

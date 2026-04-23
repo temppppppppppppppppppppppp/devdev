@@ -1,57 +1,22 @@
 {
   "version": "clickup-queue-sync-v1",
-  "updated_at": "2026-04-20T10:26:56.370162+00:00",
+  "updated_at": "2026-04-23T07:30:00.096959+00:00",
   "list_id": "901817292518",
   "queue_state_path": "docs/temp/queue-state.json",
   "tasks": {
-    "0_0-stage4-interview-round-owner-surface-reduction-remediation": {
-      "task_id": "86ex7684j",
-      "name": "0_0-stage4-interview-round-owner-surface-reduction-remediation",
+    "stage234-session-memory-max-utilization": {
+      "task_id": "86exbr9hy",
+      "name": "stage234-session-memory-max-utilization",
       "desired_status": "Parked",
       "resolved_status": "parked",
-      "synced_at": "2026-04-20T10:26:51.359238+00:00"
-    },
-    "audit-report-candidate-revalidation-remediation": {
-      "task_id": "86exaj9nh",
-      "name": "audit-report-candidate-revalidation-remediation",
-      "desired_status": "Parked",
-      "resolved_status": "parked",
-      "synced_at": "2026-04-20T10:26:52.169147+00:00"
-    },
-    "stage0-treatment-enrich-retirement-remediation": {
-      "task_id": "86ex7684n",
-      "name": "stage0-treatment-enrich-retirement-remediation",
-      "desired_status": "Parked",
-      "resolved_status": "parked",
-      "synced_at": "2026-04-20T10:26:52.829202+00:00"
+      "synced_at": "2026-04-23T07:29:59.373185+00:00"
     },
     "stage0-bi-tr-production-harness-normalization-remediation": {
       "task_id": "86ex7684v",
       "name": "stage0-bi-tr-production-harness-normalization-remediation",
       "desired_status": "Parked",
       "resolved_status": "parked",
-      "synced_at": "2026-04-20T10:26:53.729133+00:00"
-    },
-    "0_0-stage2-stage3-stage4-readiness-remediation": {
-      "task_id": "86ex7684x",
-      "name": "0_0-stage2-stage3-stage4-readiness-remediation",
-      "desired_status": "Blocked",
-      "resolved_status": "blocked",
-      "synced_at": "2026-04-20T10:26:54.528763+00:00"
-    },
-    "frontier-lag-soak-canary-wave1": {
-      "task_id": "86ex7684y",
-      "name": "frontier-lag-soak-canary-wave1",
-      "desired_status": "Parked",
-      "resolved_status": "parked",
-      "synced_at": "2026-04-20T10:26:55.613437+00:00"
-    },
-    "npc-martial-state-substrate-wave1": {
-      "task_id": "86ex7684z",
-      "name": "npc-martial-state-substrate-wave1",
-      "desired_status": "Blocked",
-      "resolved_status": "blocked",
-      "synced_at": "2026-04-20T10:26:56.370162+00:00"
+      "synced_at": "2026-04-23T07:30:00.096959+00:00"
     }
   }
 }

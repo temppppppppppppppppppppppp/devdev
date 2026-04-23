@@ -7,13 +7,26 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from sync_temp_queue_state import (
-    QUEUE_ROLE_BLOCKED_HOLDING,
-    QUEUE_ROLE_FRONT_ACTIVE,
-    QUEUE_ROLE_HISTORICAL_BACKING,
-    QUEUE_ROLE_PARKED_FUTURE_WAVE,
-    extract_roadmap_item_context,
-)
+try:
+    from sync_temp_queue_state import (
+        QUEUE_ROLE_BLOCKED_HOLDING,
+        QUEUE_ROLE_FRONT_ACTIVE,
+        QUEUE_ROLE_HISTORICAL_BACKING,
+        QUEUE_ROLE_PARKED_FUTURE_WAVE,
+        extract_roadmap_item_context,
+        infer_item_status,
+        infer_queue_role,
+    )
+except ModuleNotFoundError:  # pragma: no cover - import path depends on invocation style
+    from scripts.sync_temp_queue_state import (
+        QUEUE_ROLE_BLOCKED_HOLDING,
+        QUEUE_ROLE_FRONT_ACTIVE,
+        QUEUE_ROLE_HISTORICAL_BACKING,
+        QUEUE_ROLE_PARKED_FUTURE_WAVE,
+        extract_roadmap_item_context,
+        infer_item_status,
+        infer_queue_role,
+    )
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
@@ -89,6 +102,16 @@ def compare_contents(left: Path, right: Path) -> bool:
     return left.read_text(encoding="utf-8") == right.read_text(encoding="utf-8")
 
 
+def historical_backing_reason_from_canonical(canonical_path: Path) -> str | None:
+    metadata = parse_metadata(canonical_path)
+    raw_status = metadata.get("status")
+    status = infer_item_status(raw_status)
+    queue_role = infer_queue_role(raw_status)
+    if status == "completed" or queue_role == QUEUE_ROLE_HISTORICAL_BACKING:
+        return raw_status or "completed/historical_backing"
+    return None
+
+
 def validate_mirror_document(temp_path: Path, result: ValidationResult) -> None:
     metadata = parse_metadata(temp_path)
     actual_temp_rel = temp_path.relative_to(ROOT).as_posix()
@@ -140,6 +163,13 @@ def validate_mirror_document(temp_path: Path, result: ValidationResult) -> None:
         result.fail(f"{actual_temp_rel}: mirror content differs from canonical {canonical_rel}")
     else:
         result.info(f"{actual_temp_rel}: mirror content matches canonical {canonical_rel}")
+
+    if temp_path.name.endswith("-execution-ssot.md"):
+        historical_reason = historical_backing_reason_from_canonical(canonical_path)
+        if historical_reason is not None:
+            result.fail(
+                f"{actual_temp_rel}: canonical {canonical_rel} is historical/closed ({historical_reason}), so it must not remain in docs/temp"
+            )
 
     if temp_path.name.endswith("-execution-ssot.md") and "source_survey_docs" not in metadata:
         result.warn(f"{actual_temp_rel}: missing Source Survey Docs metadata")

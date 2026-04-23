@@ -1,7 +1,7 @@
 ﻿# NPC Martial State Substrate Wave1 Execution SSOT
 
 Date: 2026-03-27
-Status: blocked (2026-04-19 reactivation refresh; partially landed storage substrate remains preserved, but the remaining Stage 4 / STV seam still requires fresh bounded evidence before reopen, so the honest queue reading remains blocked holding)
+Status: closed historical backing (2026-04-23 live compaction re-audit; the wave1 storage substrate is now code-visible and test-backed across schema, Stage2 preservation, Stage4 world-only bridging, WorldState replay, and rollback, so the old blocked queue item is preserved as landed history)
 Canonical Path: `docs/2026-03-27/npc-martial-state-substrate-wave1-execution-ssot.md`
 Temp Mirror Path: `docs/temp/npc-martial-state-substrate-wave1-execution-ssot.md`
 Commit State:

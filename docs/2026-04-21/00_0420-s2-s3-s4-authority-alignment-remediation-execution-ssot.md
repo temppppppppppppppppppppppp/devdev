@@ -1,14 +1,14 @@
 # 00_0420 S2-S3-S4 Authority Alignment Remediation Execution SSOT
 
 Date: 2026-04-21
-Status: active (3-pass audited; formal authority survey completed; tranche A/B implementation authorized in the same turn)
+Status: closed historical backing (2026-04-23 live compaction re-audit; the original `projects/00_0420` anchor is absent, only manual backups remain, and `projects/00_260421` is not a trustworthy one-to-one successor lane)
 Canonical Path: `docs/2026-04-21/00_0420-s2-s3-s4-authority-alignment-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/00_0420-s2-s3-s4-authority-alignment-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `e9b45933c1e0ba1b61528f466e6b7415494a698b`
 - Baseline Dirty Summary: `dirty workspace with existing canary/manual-backup/runtime/docs-temp drift; Stage4 rerun frozen before this SSOT; no unrelated cleanup performed`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `same HEAD with canonical audit + execution SSOT creation in this lane; no temp roadmap rewrite because this was a user-directed immediate remediation lane`
+- Resume Drift Summary: `2026-04-23 stale refresh found that projects/00_0420 is no longer present as a live project tree; backups and a successor-looking 00_260421 tree exist, but they do not yet provide a clean one-to-one proof anchor for this original lane`
 Source Survey Docs:
 - `docs/2026-04-21/00_0420-s2-s3-s4-authority-alignment-3pass-audit.md`
 - `docs/2026-04-21/stage3-authority-alignment-post-run-merge-audit.md`
@@ -19,6 +19,10 @@ Evidence Artifacts:
 - `projects/00_0420/logs/session/decisions.jsonl`
 - `projects/00_0420/logs/session/llm_io.jsonl`
 - `projects/00_0420/logs/session_20260421_070730.log`
+- `projects/_manual_backup/00_0420_stage3_resume_20260421_031725/`
+- `projects/00_260421/project_data.db`
+- `projects/00_260421/logs/episode_production.jsonl`
+- `docs/2026-04-21/00_0420-company-pc-handoff.md`
 - `modules/domain/agents/unified_blueprint_validator.py`
 - `modules/core/stage4_context_builder.py`
 - `modules/core/stage4_postselect_runtime.py`
@@ -38,6 +42,12 @@ This wave is not:
 - a full Stage2 redesign
 - a manual artifact rewrite-only band-aid
 - a whole-project rerun before code changes land
+
+Current 2026-04-23 refresh note:
+
+- this document still records the bounded authority-alignment wave correctly as historical implementation intent
+- but it can no longer stay `front active` because the original `projects/00_0420` live anchor is not present on the current workspace
+- until that anchor is restored or a successor lane is formally re-surveyed, this item is blocked rather than actively realizing
 
 ## 2. Baseline Facts
 
@@ -200,10 +210,12 @@ Post-patch live gate:
 
 ## 12. Temp Queue Notes
 
-- temp queue status: redirected sibling lane; no parked temp execution artifact was realized in this turn
-- this SSOT is an immediate user-directed lane and should not be blocked on the parked roadmap
+- temp queue status: `blocked holding`
+- current queue consequence:
+  - this item should not remain `front active`
+  - the live workspace must first re-establish a trustworthy project anchor before fresh proof is attempted
 - temp mirror removal condition:
-  - after code patch + verification + closure audit + rerun proof
+  - keep the mirror only until the lane is either re-surveyed around a restored anchor or formally closed as historical backing
 
 ## 13. Execution-Start Rule
 
@@ -213,3 +225,22 @@ Because implementation begins immediately in the same turn, the effective confir
 
 - use this SSOT as the bounded patch contract for tranche A/B only
 - if scope expands beyond those owners, rerun the 3-pass audit first
+
+## 14. 2026-04-23 Stale-Refresh Note
+
+Current workspace evidence:
+
+- `projects/00_0420` is absent on the current workspace
+- historical backups for the original lane still exist under `projects/_manual_backup/00_0420_*`
+- `projects/00_260421` exists, but its current signals are not a clean one-to-one continuation of the original `ep4` proof lane:
+  - `drafts/` currently persist only `ep_0001` and `ep_0002`
+  - `project_data.db` shows `manuscripts max_ep = 2`
+  - recent `stage3` attempt rows reach much later episodes, while recent `stage4` rows remain only at `ep1` and `ep2`
+
+Queue consequence:
+
+- this item can no longer honestly remain a `front active` sibling lane
+- the honest posture is `blocked holding`
+- reactivation requires one of:
+  - restore the original `projects/00_0420` live anchor
+  - open a successor execution SSOT around `projects/00_260421` after a fresh survey

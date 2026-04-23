@@ -68,7 +68,7 @@ WorkGuard companion contract:
   - `Codex`를 primary technical authority로 사용
   - `Claude`를 junior helper lane으로 제한
   - `n8n`을 `dispatcher + reporter`로만 사용
-  - `ClickUp`을 human-facing summary surface로만 사용
+  - `ClickUp`을 human-facing summary surface로만 사용하며, 기본 운영에서는 sync하지 않고 사용자가 명시적으로 요청할 때만 반영
 - 사용자가 더 구체적인 issue/branch/runbook 지시를 주면 그 지시를 우선한다.
 
 ## Meta Lead Shortcut (System Track Only)
