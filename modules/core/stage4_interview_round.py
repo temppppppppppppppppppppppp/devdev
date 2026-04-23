@@ -2944,6 +2944,30 @@ class Stage4InterviewRound:
         flashback_fix_pack = (
             self._build_flashback_continuity_fix_pack(director_result) if "flashback" in triggered else {}
         )
+        patch_targets = {
+            str(item).strip().lower() for item in list(fix_pack.get("patch_targets") or []) if str(item).strip()
+        }
+        provenance_sources = {
+            str(item).strip().lower() for item in list(fix_pack.get("provenance_sources") or []) if str(item).strip()
+        }
+        scene_model_placeholder_contract = (
+            target_kind == "scene_model"
+            and not patch_targets
+            and not list(fix_pack.get("must_fix") or [])
+            and not list(fix_pack.get("do_not_regress") or [])
+            and not str(fix_pack.get("success_condition", "") or "").strip()
+        )
+        has_local_backfill = bool(semantic_fix_pack or relation_field_fix_pack or flashback_fix_pack)
+        runtime_scene_model_sentinel = target_kind == "scene_model" and has_local_backfill and (
+            "scene-model rewrite boundary" in patch_targets or "strong_advisory_non_local_fix" in provenance_sources
+        )
+        if runtime_scene_model_sentinel or scene_model_placeholder_contract:
+            escalation["inherited_non_local_fix_contract_overridden"] = True
+            escalation["overridden_fix_pack_target_kind"] = "scene_model"
+            if scene_model_placeholder_contract:
+                escalation["placeholder_scene_model_fix_contract_overridden"] = True
+            fix_pack = {}
+            target_kind = ""
         if not fix_pack and semantic_fix_pack:
             escalation["local_fix_contract_backfilled"] = True
             escalation["backfilled_from"] = ["npc_drift_relation_tag_semantic"]
@@ -2971,6 +2995,14 @@ class Stage4InterviewRound:
                 provenance="runtime_synthesized",
                 provenance_sources=["flashback_continuity_localfix"],
             )
+        if not fix_pack and scene_model_placeholder_contract and triggered:
+            target_kind = (
+                "local_sentence"
+                if any(key in {"flashback", "truth_gate"} for key in triggered)
+                and not any(key in {"npc_drift", "rel_drift", "info_paradox"} for key in triggered)
+                else "local_phrase"
+            )
+            fix_pack = {"target_kind": target_kind}
         if not fix_pack:
             return {}
         if target_kind == "scene_model":
@@ -3106,6 +3138,30 @@ class Stage4InterviewRound:
                     must_fix.append(instruction)
             if must_fix:
                 fix_pack["must_fix"] = must_fix[:4]
+                changed = True
+        if not fix_pack.get("do_not_regress"):
+            do_not_regress: list[str] = []
+            for key in triggered:
+                label = str(templates.get(key, ("", ""))[0] or "").strip()
+                if not label:
+                    continue
+                guard_line = f"Preserve surrounding scene semantics while correcting {label}"
+                if guard_line not in do_not_regress:
+                    do_not_regress.append(guard_line)
+            if do_not_regress:
+                fix_pack["do_not_regress"] = do_not_regress[:4]
+                changed = True
+        if not fix_pack.get("success_condition"):
+            label_summary: list[str] = []
+            for key in triggered:
+                label = str(templates.get(key, ("", ""))[0] or "").strip()
+                if label and label not in label_summary:
+                    label_summary.append(label)
+            if label_summary:
+                fix_pack["success_condition"] = (
+                    "Triggered strong-advisory warnings clear after bounded local correction: "
+                    + ", ".join(label_summary[:2])
+                )
                 changed = True
         if changed:
             evidence_marker = f"runtime strong advisory backfill: {', '.join(triggered)}"
