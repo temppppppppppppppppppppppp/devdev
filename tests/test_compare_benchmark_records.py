@@ -1055,6 +1055,11 @@ def test_compare_benchmark_records_surfaces_missing_target_hygiene_with_remediat
             "post_run_evidence_json": 1,
             "supporting_context_md": 1,
         },
+        "highest_priority_surface": "post_run_evidence_json",
+        "surfaces_by_priority": [
+            "post_run_evidence_json",
+            "supporting_context_md",
+        ],
     }
     assert "remediation_hints" in diff["delta"]["changed_sections"]
     assert {

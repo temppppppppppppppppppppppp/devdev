@@ -267,6 +267,11 @@ def test_audit_benchmark_companion_links_reports_missing_targets(tmp_path):
             "post_run_evidence_json": 1,
             "supporting_context_md": 1,
         },
+        "highest_priority_surface": "post_run_evidence_json",
+        "surfaces_by_priority": [
+            "post_run_evidence_json",
+            "supporting_context_md",
+        ],
     }
     record = audit["records"][0]
     assert record["companion_state"] == "missing_target"
@@ -309,7 +314,7 @@ def test_audit_benchmark_companion_links_reports_missing_targets(tmp_path):
         "--supporting-context-md docs/2026-04-23/missing-context.md"
     ) in text
     assert (
-        "Remediation summary: hint_count=2; "
+        "Remediation summary: hint_count=2; highest_priority_surface=post_run_evidence_json; "
         "count_by_surface=post_run_evidence_json=1, supporting_context_md=1"
     ) in text
 

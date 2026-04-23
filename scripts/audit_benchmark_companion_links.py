@@ -12,6 +12,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.compare_benchmark_records import (
+    REMEDIATION_SURFACE_PRIORITY,
     _coerce_record_root,
     _display_relative_path,
     _resolve_benchmark_root,
@@ -174,6 +175,7 @@ def format_audit_text(payload: dict[str, Any]) -> str:
     if isinstance(remediation_summary, dict):
         hint_count = int(remediation_summary.get("hint_count", 0) or 0)
         count_by_surface = remediation_summary.get("count_by_surface", {})
+        highest_priority_surface = str(remediation_summary.get("highest_priority_surface", "") or "")
         if hint_count > 0:
             surface_bits = [
                 f"{surface}={count}"
@@ -182,6 +184,7 @@ def format_audit_text(payload: dict[str, Any]) -> str:
             lines.append(
                 "Remediation summary: "
                 f"hint_count={hint_count}"
+                + (f"; highest_priority_surface={highest_priority_surface}" if highest_priority_surface else "")
                 + (f"; count_by_surface={', '.join(surface_bits)}" if surface_bits else "")
             )
     stale_rows = payload.get("stale_index_rows", [])
@@ -294,9 +297,16 @@ def _build_remediation_summary(remediation_hints: list[dict[str, str]]) -> dict[
         if not surface:
             continue
         count_by_surface[surface] = count_by_surface.get(surface, 0) + 1
+    surfaces_by_priority = [
+        surface
+        for surface in REMEDIATION_SURFACE_PRIORITY
+        if count_by_surface.get(surface, 0) > 0
+    ]
     return {
         "hint_count": len(remediation_hints),
         "count_by_surface": count_by_surface,
+        "highest_priority_surface": surfaces_by_priority[0] if surfaces_by_priority else "",
+        "surfaces_by_priority": surfaces_by_priority,
     }
 
 
