@@ -261,6 +261,13 @@ def test_audit_benchmark_companion_links_reports_missing_targets(tmp_path):
         "status": "fail",
         "failure_reasons": ["records_with_missing_targets=1"],
     }
+    assert audit["remediation_summary"] == {
+        "hint_count": 2,
+        "count_by_surface": {
+            "post_run_evidence_json": 1,
+            "supporting_context_md": 1,
+        },
+    }
     record = audit["records"][0]
     assert record["companion_state"] == "missing_target"
     assert record["missing_surfaces"] == ["post_run_evidence_json", "supporting_context_md"]
@@ -300,6 +307,10 @@ def test_audit_benchmark_companion_links_reports_missing_targets(tmp_path):
         "remediation: supporting_context_md -> "
         f"python scripts/link_benchmark_companions.py {run_id} "
         "--supporting-context-md docs/2026-04-23/missing-context.md"
+    ) in text
+    assert (
+        "Remediation summary: hint_count=2; "
+        "count_by_surface=post_run_evidence_json=1, supporting_context_md=1"
     ) in text
 
 
