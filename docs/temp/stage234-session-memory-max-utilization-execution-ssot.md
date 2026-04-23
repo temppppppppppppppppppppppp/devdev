@@ -30,6 +30,30 @@ Evidence Artifacts:
 - `tests/test_stage4_interview_round.py`
 Side-Effect Coverage: covered
 
+## 0. Execution Metadata Block
+
+```yaml
+execution_meta:
+  schema_version: execution-meta-block-v1
+  topic: stage234-session-memory-max-utilization
+  depends_on:
+    - authority-alignment-benchmark-operating-model-hardening
+  tranches:
+    - id: cache-path-proof-producer-lanes
+      title: Cache-path proof on current producer lanes
+    - id: internal-session-memory-envelope-contract
+      title: Internal session-memory envelope contract
+    - id: stage4-first-runtime-hardening
+      title: Stage4-first runtime hardening
+    - id: stage3-budget-retrieval-hardening
+      title: Stage3 budget and retrieval hardening
+    - id: stage2-retry-memory-hardening
+      title: Stage2 retry-memory hardening
+    - id: optional-provider-native-sidecars
+      title: Optional provider-native sidecars
+  github_issue: 3
+```
+
 ## 1. Intent
 
 - Convert the 2026-04-23 survey into one execution-ready SSOT for the `S2-S3-S4` session-memory lane.

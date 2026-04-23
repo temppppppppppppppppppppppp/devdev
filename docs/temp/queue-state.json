@@ -1,6 +1,6 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-23T08:04:38.752402+00:00",
+  "generated_at": "2026-04-23T09:11:34.987047+00:00",
   "queue_mode": "aggregate",
   "active_item_count": 3,
   "roadmap": {
@@ -27,7 +27,9 @@
       "status": "pending",
       "queue_role": "parked_future_wave",
       "roadmap_rank": 2,
-      "depends_on": [],
+      "depends_on": [
+        "authority-alignment-benchmark-operating-model-hardening"
+      ],
       "mirror_present": true,
       "canonical_present": true
     },

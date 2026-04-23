@@ -36,6 +36,27 @@ Evidence Artifacts:
 - `tests/test_stage4_post_processor.py`
 Side-Effect Coverage: covered
 
+## 0. Execution Metadata Block
+
+```yaml
+execution_meta:
+  schema_version: execution-meta-block-v1
+  topic: authority-alignment-benchmark-operating-model-hardening
+  depends_on: []
+  tranches:
+    - id: authority-benchmark-proof-contract-freeze
+      title: Authority and benchmark proof contract freeze
+    - id: benchmark-record-comparison
+      title: Benchmark-record comparison surface
+    - id: rerun-diff-watchpoint-contract
+      title: Rerun diff and watchpoint contract
+    - id: operator-facing-benchmark-hardening
+      title: Operator-facing benchmark hardening surface
+    - id: downstream-proof-gate-alignment
+      title: Downstream proof gate alignment
+  github_issue: 5
+```
+
 ## 1. Intent
 
 - Convert GitHub issue `#5` into one execution-ready SSOT that governs authority alignment proof, benchmark archive comparison, rerun diff normalization, and regression watchpoint hardening.
