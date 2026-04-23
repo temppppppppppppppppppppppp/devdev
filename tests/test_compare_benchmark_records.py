@@ -444,6 +444,14 @@ def test_compare_benchmark_records_cli_supports_json_output(tmp_path):
     assert payload["delta"]["verdict"] == "better"
     assert payload["delta"]["changed_sections"] == ["run_meta", "stage_metrics", "watchpoints"]
     assert payload["delta"]["stage_metrics"]["stage4"]["pass_like_count"] == 2
+    assert payload["delta"]["operator_summary"] == {
+        "status": "clean",
+        "needs_remediation": False,
+        "headline": "no remediation needed",
+        "remediation_hint_count": 0,
+        "highest_priority_surface": "",
+        "surfaces_by_priority": [],
+    }
 
 
 def test_compare_benchmark_records_surfaces_note_and_proof_digest_watchpoints(tmp_path):
@@ -1055,6 +1063,17 @@ def test_compare_benchmark_records_surfaces_missing_target_hygiene_with_remediat
             "post_run_evidence_json": 1,
             "supporting_context_md": 1,
         },
+        "highest_priority_surface": "post_run_evidence_json",
+        "surfaces_by_priority": [
+            "post_run_evidence_json",
+            "supporting_context_md",
+        ],
+    }
+    assert diff["delta"]["operator_summary"] == {
+        "status": "needs_remediation",
+        "needs_remediation": True,
+        "headline": "repair post_run_evidence_json first",
+        "remediation_hint_count": 2,
         "highest_priority_surface": "post_run_evidence_json",
         "surfaces_by_priority": [
             "post_run_evidence_json",
