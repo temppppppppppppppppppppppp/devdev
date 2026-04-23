@@ -87,7 +87,7 @@ execution_meta:
   - a first read-only benchmark-to-benchmark comparator now exists over `benchmark_index.csv`, `manifest.json`, and `stage_metrics.csv`
   - a first comparator-backed watchpoint vocabulary now exists for coarse status, tag, proof-digest, Stage4 regression signals, note-backed rerun progression, guarded-summary staleness attention, explicit evidence-json companion summaries, and sidecar-linked companion loading
   - read-only operator-facing wrappers now exist for batch report lines, GitHub-comment-ready markdown rendering, and optional issue comment posting over the same benchmark surfaces
-  - full markdown post-run merge-audit mapping is still missing
+  - a first shallow markdown post-run merge-audit mapping now exists for linked audit status, severity, remaining-watchpoint, and residual-marker attention, but full normalization is still incomplete
 - Current queue posture has now been refreshed to match that reality:
   - `authority-alignment-benchmark-operating-model-hardening` is the visible rank-1 parked proof lane
   - `stage234-session-memory-max-utilization` remains visible as the downstream rank-2 rollout lane
@@ -120,9 +120,9 @@ Excluded:
   - rerun proof and post-run merge audit are still document-backed
 - Current watchpoint posture is partial:
   - generic regression tiers exist
-  - the benchmark comparator now emits a small first watchpoint vocabulary plus note-backed rerun, stale-summary attention, explicit evidence-json companion summaries, and auto-follow for explicit companion-link sidecars
+  - the benchmark comparator now emits a small first watchpoint vocabulary plus note-backed rerun, stale-summary attention, explicit evidence-json companion summaries, shallow markdown merge-audit summaries, and auto-follow for explicit companion-link sidecars
   - operator-facing wrappers now expose the same surface as one-line report payloads, issue-comment-ready markdown, and optional `gh issue comment` posting helpers without changing comparator or audit semantics
-  - full rerun and markdown post-run merge-audit linkage is still not normalized into comparator outputs, and live record-level link population is still manual
+  - full rerun and deeper markdown post-run merge-audit linkage is still not normalized into comparator outputs, and live record-level link population is still manual
 
 ## 5. Pass 2. Semantic Classification
 
@@ -189,12 +189,12 @@ Excluded:
 2. Benchmark-record comparison surface
    - first seed landed as `scripts/compare_benchmark_records.py`
    - current surface compares `benchmark_index.csv`, `manifest.json`, and `stage_metrics.csv` in read-only mode
-   - current surface also emits a first watchpoint vocabulary for coarse status/tag shifts plus Stage4 attempt, pass-like, cost, proof-digest attention, note-backed rerun progression, guarded-summary staleness attention, explicit evidence-json companion summaries, and sidecar-linked companion loading
+   - current surface also emits a first watchpoint vocabulary for coarse status/tag shifts plus Stage4 attempt, pass-like, cost, proof-digest attention, note-backed rerun progression, guarded-summary staleness attention, explicit evidence-json companion summaries, shallow linked markdown merge-audit summaries, and sidecar-linked companion loading
    - explicit companion sidecars can now be written next to archived benchmark records without mutating benchmark/index truth
-   - next step is to normalize markdown post-run merge-audit mapping on top of this comparator-backed rerun/watchpoint surface
+   - next step is to deepen markdown post-run merge-audit normalization beyond the current shallow status/severity/remaining-watchpoint parser
 3. Rerun diff and watchpoint contract
-   - extend the first watchpoint vocabulary beyond coarse comparator-backed signals, shallow rerun markers, explicit evidence-json companions, and sidecar link metadata
-   - normalize markdown post-run merge audit linkage
+   - extend the first watchpoint vocabulary beyond coarse comparator-backed signals, shallow rerun markers, explicit evidence-json companions, shallow markdown merge-audit parsing, and sidecar link metadata
+   - normalize deeper markdown post-run merge audit linkage
 4. Operator-facing benchmark hardening surface
    - first seed landed as `scripts/report_benchmark_operator_lines.py`
    - current surface also includes `scripts/render_benchmark_operator_comment_md.py` and `scripts/post_benchmark_operator_comment.py` so the same benchmark operator payload can be previewed, rendered as markdown, or posted to GitHub issue comments without redefining truth or gate semantics

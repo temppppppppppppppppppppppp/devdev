@@ -171,6 +171,13 @@ def _write_companion_evidence(workspace: Path, relative_path: str, payload: dict
     return target
 
 
+def _write_companion_markdown(workspace: Path, relative_path: str, body: str) -> Path:
+    target = workspace / relative_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(body, encoding="utf-8")
+    return target
+
+
 def test_build_benchmark_record_diff_reports_better_result(tmp_path):
     module = _load_compare_module()
     left_root = _write_record(
@@ -925,6 +932,211 @@ def test_compare_benchmark_records_surfaces_companion_post_run_evidence_watchpoi
         "side": "right",
         "message": "right companion evidence reports gate repair status missing",
     } in watchpoints
+
+
+def test_compare_benchmark_records_surfaces_companion_merge_audit_watchpoints(tmp_path):
+    module = _load_compare_module()
+    left_root = _write_record(
+        tmp_path,
+        run_id="20260423_120000__stage4-supervised__target-ep15__aaaa1111",
+        stage4_attempts=12,
+        stage4_pass_like=4,
+        stage4_duration_ms=8000,
+        stage4_tokens=12000,
+        stage4_cost_usd=1.5,
+        status="snapshot",
+        git_head="aaaa1111",
+    )
+    right_root = _write_record(
+        tmp_path,
+        run_id="20260423_130000__stage4-supervised__target-ep15__bbbb2222",
+        stage4_attempts=8,
+        stage4_pass_like=6,
+        stage4_duration_ms=6000,
+        stage4_tokens=9000,
+        stage4_cost_usd=1.1,
+        status="completed",
+        git_head="bbbb2222",
+    )
+    left_merge_audit = _write_companion_markdown(
+        tmp_path,
+        "docs/2026-04-23/left-post-run-merge-audit.md",
+        "\n".join(
+            [
+                "# Left Merge Audit",
+                "",
+                "Status: final",
+                "Confidence: `96%`",
+                "",
+                "### Finding 1.",
+                "",
+                "Severity: medium",
+                "",
+                "## Remaining Watchpoints",
+                "",
+                "1. residual carryover seam remains",
+                "2. source blocker still open",
+                "",
+                "This lane is partially realized and not resolved yet.",
+                "",
+            ]
+        ),
+    )
+    (left_root / "benchmark_companion_links.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "benchmark-companion-links-v1",
+                "post_run_evidence_json": "",
+                "post_run_merge_audit_md": left_merge_audit.relative_to(tmp_path).as_posix(),
+                "supporting_context_md": "",
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    diff = module.compare_benchmark_records(
+        str(left_root),
+        str(right_root),
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+    )
+
+    assert diff["left"]["companion_merge_audit"] == {
+        "available": True,
+        "source_path": "docs/2026-04-23/left-post-run-merge-audit.md",
+        "title": "Left Merge Audit",
+        "status": "final",
+        "confidence_percent": 96,
+        "finding_count": 1,
+        "max_severity": "medium",
+        "remaining_watchpoint_count": 2,
+        "residual_markers": [
+            "partially_realized",
+            "not_resolved",
+            "blocker",
+            "remaining_watchpoints",
+        ],
+    }
+    watchpoints = diff["delta"]["watchpoints"]
+    assert {
+        "id": "post_run_merge_audit_summary_recorded",
+        "severity": "info",
+        "scope": "post_run_merge_audit_md",
+        "side": "left",
+        "message": "left merge audit summary: status=final, max_severity=medium, finding_count=1",
+    } in watchpoints
+    assert {
+        "id": "post_run_merge_audit_severity_attention",
+        "severity": "warn",
+        "scope": "post_run_merge_audit_md",
+        "side": "left",
+        "message": "left merge audit max_severity is medium",
+    } in watchpoints
+    assert {
+        "id": "post_run_merge_audit_remaining_watchpoints",
+        "severity": "warn",
+        "scope": "post_run_merge_audit_md",
+        "side": "left",
+        "message": "left merge audit records 2 remaining watchpoints",
+    } in watchpoints
+    assert {
+        "id": "post_run_merge_audit_residual_attention",
+        "severity": "warn",
+        "scope": "post_run_merge_audit_md",
+        "side": "left",
+        "message": (
+            "left merge audit residual markers: "
+            "partially_realized,not_resolved,blocker,remaining_watchpoints"
+        ),
+    } in watchpoints
+
+
+def test_compare_benchmark_records_companion_merge_audit_clean_summary_is_info_only(tmp_path):
+    module = _load_compare_module()
+    left_root = _write_record(
+        tmp_path,
+        run_id="20260423_120000__stage4-supervised__target-ep15__aaaa1111",
+        stage4_attempts=12,
+        stage4_pass_like=4,
+        stage4_duration_ms=8000,
+        stage4_tokens=12000,
+        stage4_cost_usd=1.5,
+        status="snapshot",
+        git_head="aaaa1111",
+    )
+    right_root = _write_record(
+        tmp_path,
+        run_id="20260423_130000__stage4-supervised__target-ep15__bbbb2222",
+        stage4_attempts=8,
+        stage4_pass_like=6,
+        stage4_duration_ms=6000,
+        stage4_tokens=9000,
+        stage4_cost_usd=1.1,
+        status="completed",
+        git_head="bbbb2222",
+    )
+    right_merge_audit = _write_companion_markdown(
+        tmp_path,
+        "docs/2026-04-23/right-post-run-merge-audit.md",
+        "\n".join(
+            [
+                "# Right Merge Audit",
+                "",
+                "Status: final",
+                "Confidence: `97%`",
+                "",
+                "## Final Conclusion",
+                "",
+                "- bounded proof captured cleanly",
+                "",
+            ]
+        ),
+    )
+    (right_root / "benchmark_companion_links.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "benchmark-companion-links-v1",
+                "post_run_evidence_json": "",
+                "post_run_merge_audit_md": right_merge_audit.relative_to(tmp_path).as_posix(),
+                "supporting_context_md": "",
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    diff = module.compare_benchmark_records(
+        str(left_root),
+        str(right_root),
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+    )
+
+    watchpoints = diff["delta"]["watchpoints"]
+    assert {
+        "id": "post_run_merge_audit_summary_recorded",
+        "severity": "info",
+        "scope": "post_run_merge_audit_md",
+        "side": "right",
+        "message": "right merge audit summary: status=final",
+    } in watchpoints
+    assert not any(
+        item["id"] == "post_run_merge_audit_severity_attention" and item.get("side") == "right"
+        for item in watchpoints
+    )
+    assert not any(
+        item["id"] == "post_run_merge_audit_remaining_watchpoints" and item.get("side") == "right"
+        for item in watchpoints
+    )
+    assert not any(
+        item["id"] == "post_run_merge_audit_residual_attention" and item.get("side") == "right"
+        for item in watchpoints
+    )
 
 
 def test_compare_benchmark_records_cli_supports_companion_evidence_json(tmp_path):
