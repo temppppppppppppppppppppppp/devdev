@@ -47,6 +47,7 @@ def _write_record(
     git_head: str,
     notes: str = "",
     proof_digest_status: str | None = None,
+    runtime_audit_summary_payload: dict | None = None,
 ) -> Path:
     record_root = workspace / "benchmarks" / "golden-canary" / run_id
     record_root.mkdir(parents=True, exist_ok=True)
@@ -111,23 +112,19 @@ def _write_record(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
-    if proof_digest_status is not None:
+    if runtime_audit_summary_payload is not None or proof_digest_status is not None:
         logs_dir = record_root / "logs"
         logs_dir.mkdir(parents=True, exist_ok=True)
+        payload = runtime_audit_summary_payload or {
+            "tag": manifest["runtime_summary"]["runtime_audit_tag"],
+            "summary_role": "runtime_heartbeat_with_proof_digest",
+            "latest_event_type": "stage4_complete" if status == "completed" else "stage3_complete",
+            "proof_digest": {
+                "status": proof_digest_status,
+            },
+        }
         (logs_dir / "runtime_audit_summary.json").write_text(
-            json.dumps(
-                {
-                    "tag": manifest["runtime_summary"]["runtime_audit_tag"],
-                    "summary_role": "runtime_heartbeat_with_proof_digest",
-                    "latest_event_type": "stage4_complete" if status == "completed" else "stage3_complete",
-                    "proof_digest": {
-                        "status": proof_digest_status,
-                    },
-                },
-                ensure_ascii=False,
-                indent=2,
-            )
-            + "\n",
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
     with (record_root / "stage_metrics.csv").open("w", encoding="utf-8", newline="") as handle:
@@ -362,7 +359,26 @@ def test_compare_benchmark_records_surfaces_note_and_proof_digest_watchpoints(tm
         status="operational_failure",
         git_head="aaaa1111",
         notes="terminated_by_monitor=true; termination_reason=stage4_round_limit_exceeded",
-        proof_digest_status="warn",
+        runtime_audit_summary_payload={
+            "tag": "stage3_complete",
+            "summary_role": "runtime_heartbeat_with_proof_digest",
+            "latest_event_type": "stage3_complete",
+            "proof_digest": {
+                "status": "warn",
+                "operational_metadata": {
+                    "status": "missing_session",
+                    "latest_session_id": "20260423_120000",
+                    "stage4_live_session": {
+                        "status": "absent",
+                        "retry_exercised": False,
+                        "patch_exercised": False,
+                        "target_ep_reached": False,
+                        "stage4_complete_emitted": False,
+                        "post_pass_contract_signal_count": 0,
+                    },
+                },
+            },
+        },
     )
     right_root = _write_record(
         tmp_path,
@@ -374,7 +390,26 @@ def test_compare_benchmark_records_surfaces_note_and_proof_digest_watchpoints(tm
         stage4_cost_usd=1.45,
         status="completed",
         git_head="bbbb2222",
-        proof_digest_status="ok",
+        runtime_audit_summary_payload={
+            "tag": "stage4_complete",
+            "summary_role": "runtime_heartbeat_with_proof_digest",
+            "latest_event_type": "stage4_complete",
+            "proof_digest": {
+                "status": "ok",
+                "operational_metadata": {
+                    "status": "ok",
+                    "latest_session_id": "20260423_120000",
+                    "stage4_live_session": {
+                        "status": "ok",
+                        "retry_exercised": False,
+                        "patch_exercised": False,
+                        "target_ep_reached": True,
+                        "stage4_complete_emitted": True,
+                        "post_pass_contract_signal_count": 1,
+                    },
+                },
+            },
+        },
     )
 
     diff = module.compare_benchmark_records(
@@ -393,9 +428,140 @@ def test_compare_benchmark_records_surfaces_note_and_proof_digest_watchpoints(tm
         "message": "left proof_digest.status is warn",
     } in watchpoints
     assert {
+        "id": "runtime_operational_status_attention",
+        "severity": "warn",
+        "scope": "runtime_audit_summary",
+        "side": "left",
+        "message": "left operational_metadata.status is missing_session",
+    } in watchpoints
+    assert {
+        "id": "stage4_live_session_attention",
+        "severity": "warn",
+        "scope": "stage4",
+        "side": "left",
+        "message": "left stage4_live_session.status is absent",
+    } in watchpoints
+    assert {
         "id": "monitor_termination_recorded",
         "severity": "warn",
         "scope": "notes",
         "side": "left",
         "message": "left record notes indicate monitor termination (stage4_round_limit_exceeded)",
+    } in watchpoints
+    assert {
+        "id": "stage4_post_pass_contract_signals_recorded",
+        "severity": "info",
+        "scope": "stage4",
+        "side": "right",
+        "message": "right stage4 post_pass_contract_signal_count is 1",
+    } in watchpoints
+
+
+def test_compare_benchmark_records_surfaces_stage4_runtime_watchpoints(tmp_path):
+    module = _load_compare_module()
+    left_root = _write_record(
+        tmp_path,
+        run_id="20260423_120000__stage4-supervised__target-ep15__aaaa1111",
+        stage4_attempts=12,
+        stage4_pass_like=4,
+        stage4_duration_ms=8000,
+        stage4_tokens=12000,
+        stage4_cost_usd=1.5,
+        status="snapshot",
+        git_head="aaaa1111",
+        runtime_audit_summary_payload={
+            "tag": "stage4_snapshot",
+            "summary_role": "runtime_heartbeat_with_proof_digest",
+            "latest_event_type": "stage4_runtime_advisory",
+            "proof_digest": {
+                "status": "ok",
+                "operational_metadata": {
+                    "status": "ok",
+                    "latest_session_id": "20260423_120000",
+                    "stage4_live_session": {
+                        "status": "ok",
+                        "retry_exercised": False,
+                        "patch_exercised": False,
+                        "target_ep_reached": False,
+                        "stage4_complete_emitted": False,
+                        "post_pass_contract_signal_count": 0,
+                    },
+                },
+            },
+        },
+    )
+    right_root = _write_record(
+        tmp_path,
+        run_id="20260423_130000__stage4-supervised__target-ep15__bbbb2222",
+        stage4_attempts=8,
+        stage4_pass_like=6,
+        stage4_duration_ms=6000,
+        stage4_tokens=9000,
+        stage4_cost_usd=1.1,
+        status="completed",
+        git_head="bbbb2222",
+        runtime_audit_summary_payload={
+            "tag": "stage4_complete",
+            "summary_role": "runtime_heartbeat_with_proof_digest",
+            "latest_event_type": "stage4_complete",
+            "proof_digest": {
+                "status": "ok",
+                "operational_metadata": {
+                    "status": "ok",
+                    "latest_session_id": "20260423_130000",
+                    "stage4_live_session": {
+                        "status": "ok",
+                        "retry_exercised": True,
+                        "patch_exercised": True,
+                        "target_ep_reached": True,
+                        "stage4_complete_emitted": True,
+                        "post_pass_contract_signal_count": 2,
+                    },
+                },
+            },
+        },
+    )
+
+    diff = module.compare_benchmark_records(
+        str(left_root),
+        str(right_root),
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+    )
+
+    watchpoints = diff["delta"]["watchpoints"]
+    assert {
+        "id": "stage4_target_ep_not_reached",
+        "severity": "warn",
+        "scope": "stage4",
+        "side": "left",
+        "message": "left stage4 live session did not emit target_ep_reached",
+    } in watchpoints
+    assert {
+        "id": "stage4_complete_signal_missing",
+        "severity": "warn",
+        "scope": "stage4",
+        "side": "left",
+        "message": "left stage4 live session did not emit stage4_complete",
+    } in watchpoints
+    assert {
+        "id": "stage4_retry_exercised",
+        "severity": "info",
+        "scope": "stage4",
+        "side": "right",
+        "message": "right stage4_live_session exercised retry",
+    } in watchpoints
+    assert {
+        "id": "stage4_patch_exercised",
+        "severity": "info",
+        "scope": "stage4",
+        "side": "right",
+        "message": "right stage4_live_session exercised patch",
+    } in watchpoints
+    assert {
+        "id": "stage4_post_pass_contract_signals_recorded",
+        "severity": "info",
+        "scope": "stage4",
+        "side": "right",
+        "message": "right stage4 post_pass_contract_signal_count is 2",
     } in watchpoints

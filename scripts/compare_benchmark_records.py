@@ -363,14 +363,54 @@ def _load_runtime_audit_summary(record_root: Path) -> dict[str, Any]:
             "summary_role": "",
             "latest_event_type": "",
             "proof_digest_status": "",
+            "operational_status": "",
+            "operational_latest_session_id": "",
+            "stage4_live_session_status": "",
+            "stage4_retry_exercised": False,
+            "stage4_patch_exercised": False,
+            "stage4_target_ep_reached": False,
+            "stage4_complete_emitted": False,
+            "stage4_post_pass_contract_signal_count": 0,
         }
     payload = _load_json(summary_path)
     proof_digest = payload.get("proof_digest", {}) if isinstance(payload, dict) else {}
+    operational_metadata = proof_digest.get("operational_metadata", {}) if isinstance(proof_digest, dict) else {}
+    stage4_live_session = operational_metadata.get("stage4_live_session", {}) if isinstance(operational_metadata, dict) else {}
     return {
         "available": True,
         "summary_role": str(payload.get("summary_role", "") or ""),
         "latest_event_type": str(payload.get("latest_event_type", "") or ""),
         "proof_digest_status": str(proof_digest.get("status", "") or "") if isinstance(proof_digest, dict) else "",
+        "operational_status": (
+            str(operational_metadata.get("status", "") or "") if isinstance(operational_metadata, dict) else ""
+        ),
+        "operational_latest_session_id": (
+            str(operational_metadata.get("latest_session_id", "") or "")
+            if isinstance(operational_metadata, dict)
+            else ""
+        ),
+        "stage4_live_session_status": (
+            str(stage4_live_session.get("status", "") or "") if isinstance(stage4_live_session, dict) else ""
+        ),
+        "stage4_retry_exercised": (
+            _coerce_bool(stage4_live_session.get("retry_exercised")) if isinstance(stage4_live_session, dict) else False
+        ),
+        "stage4_patch_exercised": (
+            _coerce_bool(stage4_live_session.get("patch_exercised")) if isinstance(stage4_live_session, dict) else False
+        ),
+        "stage4_target_ep_reached": (
+            _coerce_bool(stage4_live_session.get("target_ep_reached")) if isinstance(stage4_live_session, dict) else False
+        ),
+        "stage4_complete_emitted": (
+            _coerce_bool(stage4_live_session.get("stage4_complete_emitted"))
+            if isinstance(stage4_live_session, dict)
+            else False
+        ),
+        "stage4_post_pass_contract_signal_count": (
+            _coerce_int(stage4_live_session.get("post_pass_contract_signal_count"))
+            if isinstance(stage4_live_session, dict)
+            else 0
+        ),
     }
 
 
@@ -505,6 +545,98 @@ def _build_watchpoints(
                         scope="runtime_audit_summary",
                         side=side,
                         message=f"{side} proof_digest.status is {proof_digest_status}",
+                    )
+                )
+            operational_status = str(runtime_audit_summary.get("operational_status", "") or "")
+            if operational_status and operational_status != "ok":
+                watchpoints.append(
+                    _watchpoint(
+                        "runtime_operational_status_attention",
+                        severity="warn",
+                        scope="runtime_audit_summary",
+                        side=side,
+                        message=f"{side} operational_metadata.status is {operational_status}",
+                    )
+                )
+            stage4_live_session_status = str(runtime_audit_summary.get("stage4_live_session_status", "") or "")
+            if stage4_live_session_status and stage4_live_session_status != "ok":
+                watchpoints.append(
+                    _watchpoint(
+                        "stage4_live_session_attention",
+                        severity="warn",
+                        scope="stage4",
+                        side=side,
+                        message=f"{side} stage4_live_session.status is {stage4_live_session_status}",
+                    )
+                )
+            operational_latest_session_id = str(runtime_audit_summary.get("operational_latest_session_id", "") or "")
+            record_latest_session_id = str(record.get("latest_session_id", "") or "")
+            if (
+                operational_latest_session_id
+                and record_latest_session_id
+                and operational_latest_session_id != record_latest_session_id
+            ):
+                watchpoints.append(
+                    _watchpoint(
+                        "runtime_latest_session_id_mismatch",
+                        severity="warn",
+                        scope="runtime_audit_summary",
+                        side=side,
+                        message=(
+                            f"{side} operational latest_session_id {operational_latest_session_id} "
+                            f"does not match record latest_session_id {record_latest_session_id}"
+                        ),
+                    )
+                )
+            if bool(runtime_audit_summary.get("stage4_retry_exercised")):
+                watchpoints.append(
+                    _watchpoint(
+                        "stage4_retry_exercised",
+                        severity="info",
+                        scope="stage4",
+                        side=side,
+                        message=f"{side} stage4_live_session exercised retry",
+                    )
+                )
+            if bool(runtime_audit_summary.get("stage4_patch_exercised")):
+                watchpoints.append(
+                    _watchpoint(
+                        "stage4_patch_exercised",
+                        severity="info",
+                        scope="stage4",
+                        side=side,
+                        message=f"{side} stage4_live_session exercised patch",
+                    )
+                )
+            if stage4_live_session_status == "ok" and not bool(runtime_audit_summary.get("stage4_target_ep_reached")):
+                watchpoints.append(
+                    _watchpoint(
+                        "stage4_target_ep_not_reached",
+                        severity="warn",
+                        scope="stage4",
+                        side=side,
+                        message=f"{side} stage4 live session did not emit target_ep_reached",
+                    )
+                )
+            if stage4_live_session_status == "ok" and not bool(runtime_audit_summary.get("stage4_complete_emitted")):
+                watchpoints.append(
+                    _watchpoint(
+                        "stage4_complete_signal_missing",
+                        severity="warn",
+                        scope="stage4",
+                        side=side,
+                        message=f"{side} stage4 live session did not emit stage4_complete",
+                    )
+                )
+            contract_signal_count = _coerce_int(runtime_audit_summary.get("stage4_post_pass_contract_signal_count"))
+            if contract_signal_count > 0:
+                watchpoints.append(
+                    _watchpoint(
+                        "stage4_post_pass_contract_signals_recorded",
+                        severity="info",
+                        scope="stage4",
+                        side=side,
+                        message=f"{side} stage4 post_pass_contract_signal_count is {contract_signal_count}",
                     )
                 )
         note_markers = record.get("note_markers", {})
