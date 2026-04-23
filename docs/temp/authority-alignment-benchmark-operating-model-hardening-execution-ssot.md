@@ -1,7 +1,7 @@
 # Authority Alignment Benchmark Operating Model Hardening Execution SSOT
 
 Date: 2026-04-23
-Status: execution-ready (3-pass audited; parked future wave; upstream proof and benchmark governor lane)
+Status: execution-ready (3-pass audited; parked future wave; upstream proof and benchmark governor lane; read-only benchmark comparator seed landed on 2026-04-23)
 Canonical Path: `docs/2026-04-23/authority-alignment-benchmark-operating-model-hardening-execution-ssot.md`
 Temp Mirror Path: `docs/temp/authority-alignment-benchmark-operating-model-hardening-execution-ssot.md`
 Commit State:
@@ -24,11 +24,13 @@ Evidence Artifacts:
 - `modules/core/stage4_post_pass_runtime.py`
 - `scripts/archive_benchmark_record.py`
 - `scripts/benchmark_archive_runtime.py`
+- `scripts/compare_benchmark_records.py`
 - `scripts/diff_canary_summaries.py`
 - `scripts/regression_validation_tiers.py`
 - `benchmarks/README.md`
 - `benchmarks/benchmark_index.csv`
 - `tests/test_archive_benchmark_record.py`
+- `tests/test_compare_benchmark_records.py`
 - `tests/test_diff_canary_summaries.py`
 - `tests/test_regression_validation_tier_contract.py`
 - `tests/test_stage2_finalizer.py`
@@ -76,7 +78,7 @@ execution_meta:
   - `benchmark_index.csv` exists as the current quick comparison surface
 - The comparison layer is incomplete:
   - canary-summary diff exists
-  - benchmark-to-benchmark structured comparison does not yet exist
+  - a first read-only benchmark-to-benchmark comparator now exists over `benchmark_index.csv`, `manifest.json`, and `stage_metrics.csv`
   - explicit benchmark-hardening watchpoint normalization is still missing
 - Current queue posture has now been refreshed to match that reality:
   - `authority-alignment-benchmark-operating-model-hardening` is the visible rank-1 parked proof lane
@@ -106,8 +108,8 @@ Excluded:
 - Benchmark archive substrate already spans scripts, archive records, and auto-archive runner wiring.
 - Current comparison is split:
   - canary summary diff is code-backed
-  - rerun proof and post-run merge audit are document-backed
-  - benchmark-record comparison is missing
+  - benchmark-record comparison now has a first read-only comparator seed
+  - rerun proof and post-run merge audit are still document-backed
 - Current watchpoint posture is partial:
   - generic regression tiers exist
   - issue-specific benchmark watchpoints do not yet
@@ -125,6 +127,7 @@ Excluded:
   - benchmark corpus and index
 - Class C: comparison and watchpoint surfaces
   - canary diff
+  - benchmark-record comparator
   - rerun proof linkage
   - regression-tier metadata
 - Class D: downstream dependency governance
@@ -174,7 +177,9 @@ Excluded:
 1. Authority and benchmark proof contract freeze
    - document current owner surfaces and benchmark archive shape under one narrow lane
 2. Benchmark-record comparison surface
-   - add or normalize comparator support over `benchmark_index.csv`, `manifest.json`, and `stage_metrics.csv`
+   - first seed landed as `scripts/compare_benchmark_records.py`
+   - current surface compares `benchmark_index.csv`, `manifest.json`, and `stage_metrics.csv` in read-only mode
+   - next step is to normalize watchpoint vocabulary and rerun/post-run merge-audit mapping on top of this comparator
 3. Rerun diff and watchpoint contract
    - define explicit watchpoint vocabulary and normalize rerun/post-run merge audit linkage
 4. Operator-facing benchmark hardening surface
