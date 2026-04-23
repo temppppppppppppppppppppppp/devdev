@@ -134,11 +134,12 @@ def audit_benchmark_companion_links(
         "records_with_sidecar": sum(1 for record in records if record["companion_state"] != "no_sidecar"),
         "records_with_missing_targets": sum(1 for record in records if record["companion_state"] == "missing_target"),
     }
+    strict_failure_reasons = _collect_strict_failure_reasons(summary)
     remediation_summary = _build_remediation_summary(
         [hint for record in records for hint in record.get("remediation_hints", [])]
     )
     operator_summary = _build_operator_summary(remediation_summary)
-    strict_failure_reasons = _collect_strict_failure_reasons(summary)
+    operator_summary = _with_audit_ci_gate(operator_summary, strict_failure_reasons=strict_failure_reasons)
     return {
         "benchmark_root": _display_relative_path(workspace, benchmark_dir),
         "summary": summary,
@@ -174,6 +175,20 @@ def format_audit_text(payload: dict[str, Any]) -> str:
     strict_failures = strict.get("failure_reasons", []) if isinstance(strict, dict) else []
     if isinstance(strict_failures, list) and strict_failures:
         lines.append("Strict failures: " + ", ".join(str(item) for item in strict_failures))
+    operator_summary = payload.get("operator_summary", {})
+    if isinstance(operator_summary, dict):
+        status = str(operator_summary.get("status", "") or "")
+        ci_gate = str(operator_summary.get("ci_gate", "") or "")
+        gate_basis = str(operator_summary.get("gate_basis", "") or "")
+        headline = str(operator_summary.get("headline", "") or "")
+        if status or ci_gate or gate_basis:
+            lines.append(
+                "Operator summary: "
+                + (f"status={status}; " if status else "")
+                + (f"ci_gate={ci_gate}; " if ci_gate else "")
+                + (f"gate_basis={gate_basis}" if gate_basis else "").rstrip("; ")
+                + (f"; headline={headline}" if headline else "")
+            )
     remediation_summary = payload.get("remediation_summary", {})
     if isinstance(remediation_summary, dict):
         hint_count = int(remediation_summary.get("hint_count", 0) or 0)
@@ -311,6 +326,25 @@ def _build_remediation_summary(remediation_hints: list[dict[str, str]]) -> dict[
         "highest_priority_surface": surfaces_by_priority[0] if surfaces_by_priority else "",
         "surfaces_by_priority": surfaces_by_priority,
     }
+
+
+def _with_audit_ci_gate(
+    operator_summary: dict[str, Any],
+    *,
+    strict_failure_reasons: list[str],
+) -> dict[str, Any]:
+    summary = dict(operator_summary)
+    if strict_failure_reasons:
+        summary["ci_gate"] = "fail"
+        summary["gate_basis"] = "strict_failure"
+        return summary
+    if summary.get("needs_remediation"):
+        summary["ci_gate"] = "warn"
+        summary["gate_basis"] = "remediation_hints"
+        return summary
+    summary["ci_gate"] = "pass"
+    summary["gate_basis"] = "clean"
+    return summary
 
 
 def _build_remediation_hints(

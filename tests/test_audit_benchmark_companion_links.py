@@ -223,6 +223,16 @@ def test_audit_benchmark_companion_links_reports_stale_rows_and_link_states(tmp_
         "status": "pass",
         "failure_reasons": [],
     }
+    assert audit["operator_summary"] == {
+        "status": "clean",
+        "needs_remediation": False,
+        "headline": "no remediation needed",
+        "remediation_hint_count": 0,
+        "highest_priority_surface": "",
+        "surfaces_by_priority": [],
+        "ci_gate": "pass",
+        "gate_basis": "clean",
+    }
     record_map = {item["run_id"]: item for item in audit["records"]}
     assert record_map[run_a]["companion_state"] == "linked"
     assert record_map[run_a]["linked_surfaces"] == ["supporting_context_md"]
@@ -234,6 +244,7 @@ def test_audit_benchmark_companion_links_reports_stale_rows_and_link_states(tmp_
     text = module.format_audit_text(audit)
     assert "stale_index_rows=2" in text
     assert "Strict: pass" in text
+    assert "Operator summary: status=clean; ci_gate=pass; gate_basis=clean; headline=no remediation needed" in text
     assert f"{run_a} [operational_failure] index=ok companion=linked linked=supporting_context_md missing=-" in text
 
 
@@ -283,6 +294,8 @@ def test_audit_benchmark_companion_links_reports_missing_targets(tmp_path):
             "post_run_evidence_json",
             "supporting_context_md",
         ],
+        "ci_gate": "fail",
+        "gate_basis": "strict_failure",
     }
     record = audit["records"][0]
     assert record["companion_state"] == "missing_target"
@@ -370,6 +383,8 @@ def test_audit_benchmark_companion_links_cli_supports_json_output(tmp_path):
         "remediation_hint_count": 0,
         "highest_priority_surface": "",
         "surfaces_by_priority": [],
+        "ci_gate": "pass",
+        "gate_basis": "clean",
     }
 
 

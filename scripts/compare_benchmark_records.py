@@ -289,12 +289,13 @@ def build_benchmark_record_diff(left_record: dict[str, Any], right_record: dict[
     )
     remediation_hints = _collect_delta_remediation_hints(left_record=left_record, right_record=right_record)
     remediation_summary = _build_remediation_summary(remediation_hints)
-    operator_summary = _build_operator_summary(remediation_summary)
     watchpoints = _build_watchpoints(
         left_record=left_record,
         right_record=right_record,
         stage_metrics_delta=stage_metrics_delta,
     )
+    operator_summary = _build_operator_summary(remediation_summary)
+    operator_summary = _with_comparator_ci_gate(operator_summary, watchpoints=watchpoints)
     changed_sections = [
         section
         for section, changed in (
@@ -722,7 +723,29 @@ def _build_operator_summary(remediation_summary: dict[str, Any]) -> dict[str, An
         "remediation_hint_count": hint_count,
         "highest_priority_surface": highest_priority_surface,
         "surfaces_by_priority": surfaces_by_priority,
+        "ci_gate": "pass" if not needs_remediation else "warn",
+        "gate_basis": "clean" if not needs_remediation else "remediation_hints",
     }
+
+
+def _with_comparator_ci_gate(
+    operator_summary: dict[str, Any],
+    *,
+    watchpoints: list[dict[str, str]],
+) -> dict[str, Any]:
+    summary = dict(operator_summary)
+    if summary.get("needs_remediation"):
+        summary["ci_gate"] = "warn"
+        summary["gate_basis"] = "remediation_hints"
+        return summary
+    has_warn_watchpoint = any(str(item.get("severity", "") or "") == "warn" for item in watchpoints)
+    if has_warn_watchpoint:
+        summary["ci_gate"] = "warn"
+        summary["gate_basis"] = "warn_watchpoints"
+        return summary
+    summary["ci_gate"] = "pass"
+    summary["gate_basis"] = "clean"
+    return summary
 
 
 def _extract_note_markers(notes: object) -> dict[str, Any]:
@@ -1372,6 +1395,20 @@ def _render_text(diff: dict[str, Any], *, left_label: str, right_label: str) -> 
             for item in delta["remediation_hints"]
         ]
         lines.append("Remediation hints: " + " | ".join(remediation_bits))
+    operator_summary = delta.get("operator_summary", {})
+    if isinstance(operator_summary, dict):
+        status = str(operator_summary.get("status", "") or "")
+        ci_gate = str(operator_summary.get("ci_gate", "") or "")
+        gate_basis = str(operator_summary.get("gate_basis", "") or "")
+        headline = str(operator_summary.get("headline", "") or "")
+        if status or ci_gate or gate_basis:
+            lines.append(
+                "Operator summary: "
+                + (f"status={status}; " if status else "")
+                + (f"ci_gate={ci_gate}; " if ci_gate else "")
+                + (f"gate_basis={gate_basis}" if gate_basis else "").rstrip("; ")
+                + (f"; headline={headline}" if headline else "")
+            )
     remediation_summary = delta.get("remediation_summary", {})
     if isinstance(remediation_summary, dict) and int(remediation_summary.get("hint_count", 0) or 0) > 0:
         surface_bits = [
