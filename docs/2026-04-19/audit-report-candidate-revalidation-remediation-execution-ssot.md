@@ -1,7 +1,7 @@
 # Audit-Report Candidate Revalidation Remediation Execution SSOT
 
 Date: 2026-04-19
-Status: parked (2026-04-19 candidate-only parking refresh; this document records bounded future remediation options, keeps only the revalidated subset of the audit report on the queue, and does not authorize implementation)
+Status: closed historical backing (2026-04-23 live compaction re-audit; this remains a useful audited candidate memo, but it is not a bounded current execution order and no longer belongs on the visible temp queue)
 Canonical Path: `docs/2026-04-19/audit-report-candidate-revalidation-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/audit-report-candidate-revalidation-remediation-execution-ssot.md`
 Commit State:

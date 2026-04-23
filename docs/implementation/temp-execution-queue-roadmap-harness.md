@@ -110,7 +110,11 @@ Create or refresh an aggregate roadmap when:
   - temp mirrors in `docs/temp/`
   - `docs/temp/queue-state.json`
   - ClickUp mirror
-- When any of the following materially changes, refresh ClickUp after the repo-side queue artifacts are aligned:
+- Default rule:
+  - do not sync ClickUp during routine queue maintenance
+  - sync ClickUp only when the user explicitly asks for a human-facing mirror refresh
+  - the rationale is operational latency: ClickUp is slower than repo-side queue updates and should not tax normal execution flow
+- When the user explicitly asks for ClickUp reflection after one of the following materially changes, refresh ClickUp only after the repo-side queue artifacts are aligned:
   - execution SSOT status
   - roadmap ordering or roadmap rank
   - queue membership
@@ -120,7 +124,7 @@ Create or refresh an aggregate roadmap when:
   2. refresh the matching `docs/temp/` mirror
   3. refresh `docs/temp/queue-state.json`
   4. run `python scripts/ops_validator.py --strict`
-  5. if validation passes and ClickUp sync is configured, run `python -X utf8 scripts/sync_clickup_queue.py`
+  5. if the user explicitly asked for ClickUp sync and validation passes, run `python -X utf8 scripts/sync_clickup_queue.py`
 - Do not update ClickUp from stale roadmap text, a stale temp mirror, or mid-edit queue assumptions.
 
 ## 6. Cleanup Rules

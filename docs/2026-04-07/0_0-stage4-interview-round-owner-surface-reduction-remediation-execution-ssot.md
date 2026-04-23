@@ -1,14 +1,14 @@
 ﻿# 0_0 Stage4 Interview-Round Owner-Surface Reduction Remediation Execution SSOT
 
 Date: 2026-04-07
-Status: parked (2026-04-19 reactivation refresh; the first bounded post-select boundary extraction landed on 2026-04-07, later contract/session/episode/retry/raw-evidence helper work also landed, the current recount still leaves this as a structure-first owner-pressure lane with dominant debt in `Stage4InterviewRound`, and the honest queue reading is now parked architecture debt rather than active implementation progress)
+Status: closed historical backing (2026-04-23 ROI compaction; the current AST recount still leaves `Stage4InterviewRound` at 170 methods with 6 methods at 120+ LOC and 3 methods at 180+ LOC, but the remaining work is pure architecture debt without active consumer pressure, so this lane is removed from the visible queue and preserved canonically only)
 Canonical Path: `docs/2026-04-07/0_0-stage4-interview-round-owner-surface-reduction-remediation-execution-ssot.md`
-Temp Mirror Path: `docs/temp/0_0-stage4-interview-round-owner-surface-reduction-remediation-execution-ssot.md`
+Temp Mirror Path: `retired on 2026-04-23 (former path: docs/temp/0_0-stage4-interview-round-owner-surface-reduction-remediation-execution-ssot.md)`
 Commit State:
 - Baseline Commit: `eac3386ce3b19f720e6e12548721df5abe2ee755`
 - Baseline Dirty Summary: `dirty: prior Stage3 opening-transition tranche plus docs/temp mirrors already modified in worktree`
 - Resume Commit: `029df1a74af89a7b5387c449f4723a5df0d000d4`
-- Resume Drift Summary: `current HEAD@029df1a7 is authoritative for queue refresh; the first module-boundary extraction and later helper-heavy contract/raw-evidence work remain landed, the current live recount still leaves `Stage4InterviewRound` at 166 direct methods / 2 180+ / 5 120+, and after the Stage4 consumer/repair sibling closures this lane now reads as honest parked architecture debt rather than active progress`
+- Resume Drift Summary: `2026-04-23 ROI compaction retires this lane from the visible queue; the first module-boundary extraction and later helper-heavy contract/raw-evidence work remain landed, and the current live recount still leaves Stage4InterviewRound at 170 methods / 3 180+ / 6 120+`
 Source Survey Docs:
 - `docs/2026-04-07/0_0-stage4-interview-round-owner-surface-reduction-bounded-survey.md`
 - `docs/2026-04-19/stage4-interview-round-owner-surface-reactivation-refresh.md`
@@ -21,12 +21,12 @@ Side-Effect Coverage: covered
 Promote a structure-only pending lane that reduces `Stage4InterviewRound` owner pressure through module-boundary extraction after the current functional queue clears enough to justify it.
 
 This lane is not a hidden runtime blocker.
-It exists so the workspace can keep a real owner-surface debt item explicit in the formal queue instead of rediscovering it later during unrelated Stage4 changes.
+It exists so the workspace can keep a real owner-surface debt item explicit in canonical history instead of rediscovering it later during unrelated Stage4 changes.
 
 ## 2. Baseline Facts
 
 - historical pre-tranche recount moved from `160 -> 159` direct methods with `3 -> 2` `180+ LOC` and `6 -> 5` `120+ LOC` hotspots when the first post-select extraction landed
-- current live recount is now `166` direct methods with `2` `180+ LOC` and `5` `120+ LOC` hotspots, so the lane remains open and the older `159` recount should be treated as a historical tranche anchor rather than current truth
+- current live recount is now `170` direct methods with `3` `180+ LOC` and `6` `120+ LOC` hotspots, so the lane remains real debt and the older `159` recount should be treated as a historical tranche anchor rather than current truth
 - Existing extracted siblings already exist, and this tranche adds:
   - `Stage4DirectorRuntime`
   - `Stage4PostSelectRuntime`
@@ -141,10 +141,10 @@ Implementation rule:
 
 - no new `180+ LOC` function is introduced
 - at least one current `180+ LOC` hotspot is reduced below `180 LOC` or moved out of `Stage4InterviewRound`
-- later closure should demonstrate a real reduction from the current live `166` direct-method reality rather than citing only the historical `160 -> 159` tranche anchor
+- later closure should demonstrate a real reduction from the current live `170` direct-method reality rather than citing only the historical `160 -> 159` tranche anchor
 - extracted families have explicit owner boundaries rather than same-file helper sprawl
 - targeted Stage4 regressions pass without semantic drift
-- current live complexity recount is recorded (`166` direct methods / `2` `180+ LOC` / `5` `120+ LOC`), while the earlier `159 / 2 / 5` remains a historical first-tranche anchor only
+- current live complexity recount is recorded (`170` direct methods / `3` `180+ LOC` / `6` `120+ LOC`), while the earlier `159 / 2 / 5` remains a historical first-tranche anchor only
 
 ## 9. Verification Plan
 
@@ -168,13 +168,12 @@ Implementation rule:
 
 ## 11. Temp Queue Notes
 
-- temp status: `parked_future_wave`
+- temp status: `retired historical backing`
 - cleanup condition:
-  - keep the mirror while this remains the next visible parked Stage4 architecture candidate
-  - remove only on explicit closure, deactivation, or replacement
+  - keep no temp mirror while this lane remains historical only
+  - recreate a temp mirror only after an explicit bounded reactivation decision
 - roadmap dependency:
-  - below all closed Stage2 / Stage3 / Stage4 functional sibling lanes as historical backing
-  - above later parked Stage0 hygiene lanes and soak-only reference lanes
+  - preserved canonically below the still-live parked substrate lanes
 
 ## 12. Validation and Closure Hooks
 
@@ -188,21 +187,21 @@ Implementation rule:
 
 Pass 1, structure and scope:
 
-- execution SSOT type is correct for an active partial structure lane
+- execution SSOT type is correct for a still-live parked structure lane
 - the first bounded tranche stays limited to the post-select family and one new boundary module
 
 Pass 2, evidence and consistency:
 
 - historical pre-tranche recount confirmed `160` direct methods / `3` `180+ LOC` / `6` `120+ LOC`
 - historical first-tranche recount confirmed `159` direct methods / `2` `180+ LOC` / `5` `120+ LOC`
-- current live recount is `166` direct methods / `2` `180+ LOC` / `5` `120+ LOC`, so later closure should cite current proof-first reality rather than the older historical tranche count alone
+- current live recount is `170` methods / `3` `180+ LOC` / `6` `120+ LOC`, so later closure should cite the 2026-04-23 compaction re-audit rather than the older partial-tranche count alone
 - focused regression shards preserved post-select downgrade and positive-verdict transition behavior
 
 Pass 3, execution and readability:
 
 - boundary-first extraction landed without broad Stage4 logic rewrite
 - the remaining gate/attempt families stay explicit rather than getting hidden behind same-file helper growth
-- because this lane is no longer unopened, the next unopened code lane now moves to `stage0-treatment-enrich-retirement-remediation`
+- because this lane is retired from the visible queue, future continuation is governed by the current aggregate roadmap rather than by this historical note
 
 Confidence: `97%`
 
@@ -218,8 +217,14 @@ Current reading:
 - the current live recount still leaves real owner pressure in `Stage4InterviewRound`
 - the honest board meaning is `parked architecture candidate`, not `active in-progress implementation`
 
-Queue consequence:
+Queue consequence at the time:
 
 - keep this lane visible
 - keep the temp mirror
 - treat it as the next parked candidate rather than a front-active or closure-ready lane
+
+2026-04-23 superseding note:
+
+- the later ROI compaction retired this lane from the visible queue
+- the temp mirror was removed
+- the canonical SSOT remains only as historical backing

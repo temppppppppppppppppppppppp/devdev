@@ -1,7 +1,7 @@
 Date: 2026-04-02
-Status: parked (2026-04-19 reactivation refresh; first bounded authority-demotion tranche landed on 2026-04-07, the enrich path still carries real later retirement/quarantine debt, and the honest queue reading is now parked hygiene debt rather than active implementation progress)
+Status: closed historical backing (2026-04-23 ROI compaction; the enrich path is already explicit opt-in non-canonical utility behavior with separate `*_enriched.json` output, so the remaining retirement/quarantine work no longer deserves visible queue authority)
 Canonical Path: `docs/2026-04-02/stage0-treatment-enrich-retirement-remediation-execution-ssot.md`
-Temp Mirror Path: `docs/temp/stage0-treatment-enrich-retirement-remediation-execution-ssot.md`
+Temp Mirror Path: `retired on 2026-04-23 (former path: docs/temp/stage0-treatment-enrich-retirement-remediation-execution-ssot.md)`
 Baseline Commit: `eac3386ce3b19f720e6e12548721df5abe2ee755`
 Baseline Dirty Summary: `dirty: prior Stage3/Stage4 bounded tranches and queue docs already in flight during Stage0 enrich re-audit`
 Source Survey Docs:
@@ -24,7 +24,7 @@ Side-Effect Coverage:
 - legacy/manual Stage0 path에서 optional prompt로만 켜진다.
 - 켜면 block `title`, `content`, `joint_docs`, `status_shadow`를 다시 쓸 수 있다.
 
-따라서 이 lane은 `active blocker`가 아니라 `partially realized hygiene lane`으로 유지한다.
+따라서 이 lane은 visible queue에서는 retire하고 canonical `historical backing`으로만 남긴다.
 
 # 2. Why This Exists
 
@@ -125,23 +125,20 @@ retirement or quarantine
 
 # 9. Queue Placement
 
-이 lane은 `partially realized hygiene lane`이다.
+이 lane은 이제 `historical backing`으로만 보존한다.
 
-- active Stage4 remediation보다 아래
-- `Stage3 contract tightening`, `Stage2 contract normalization` 같은 pending lane보다도 아래
-- 이유:
-  - direct runtime blocker가 아님
-  - operator가 지금 당장 이 기능을 쓰지 않아도 주요 pair 운영은 가능함
+- direct runtime blocker가 아니다
+- legacy/manual Stage0 path에서만 opt-in utility로 남아 있다
+- operator가 지금 당장 이 기능을 쓰지 않아도 주요 pair 운영은 가능하다
 
 # 10. Next Action
 
-이번 턴에서 broad retirement는 하지 않는다.
+현재 visible queue next action은 없다.
 
-다음 bounded 선택지만 남긴다.
+이 lane은 아래 조건이 충족될 때만 다시 연다.
 
-- `Tranche 2: default-off hardening`
-- `Tranche 3: retirement or quarantine`
-- strict next-unopened semantics만 따르면 다음 lane은 `stage0-bi-tr-production-harness-normalization-remediation`
+- `Tranche 2: default-off hardening`을 실제로 열겠다는 명시적 operator 결정
+- `Tranche 3: retirement or quarantine`을 bounded utility-removal wave로 열겠다는 명시적 operator 결정
 
 # 11. 3-Pass Audit
 
@@ -173,10 +170,16 @@ Current reading:
 - the remaining enrich retirement/quarantine work is still real
 - the lane is not stale, but it is also not active progress anymore
 
-Queue consequence:
+Queue consequence at the time:
 
 - keep this lane visible
 - keep the temp mirror
 - treat it as parked hygiene debt rather than active implementation progress
+
+2026-04-23 superseding note:
+
+- the later ROI compaction retired this lane from the visible queue
+- the temp mirror was removed
+- the canonical SSOT remains only as historical backing
 
 Confidence: 97%

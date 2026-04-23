@@ -34,7 +34,7 @@ The operating direction is:
 2. `Codex` is the primary technical authority.
 3. `Claude` is explicitly downgraded to a junior helper lane.
 4. `n8n` is not the team lead; it is a dispatcher and reporter.
-5. `ClickUp` remains a human-facing summary surface only.
+5. `ClickUp` remains a human-facing summary surface only, and it is synced only on explicit human request.
 6. Automation rollout is phased: document first, then manual run, then low-risk read-mostly automation, then guarded intake automation.
 
 This is intentionally not a full autonomous org chart. It is a minimal operating system for a small AI development team that can run today without collapsing into coordination overhead.
@@ -57,7 +57,7 @@ For this AI development lane, operating authority is:
 This document does not override the workspace-wide queue rule that repo-side canonical docs and temp mirrors outrank ClickUp. It extends that same philosophy into the AI dev-team lane:
 
 - repo and GitHub stay authoritative
-- ClickUp mirrors outcomes for humans
+- ClickUp mirrors outcomes for humans only when a human explicitly asks for that mirror
 - automation reflects state; it does not invent authority
 
 ## 3. Team Topology
@@ -142,7 +142,8 @@ Allowed:
 
 - receive GitHub events
 - trigger approved workflows
-- copy summarized status into GitHub comments or ClickUp
+- copy summarized status into GitHub comments
+- copy summarized status into ClickUp only when a human explicitly asks for the slower human-facing mirror
 - notify on timeout, failure, or canary completion
 
 Not allowed:
@@ -162,7 +163,7 @@ Not allowed:
 4. `Codex Lead` reviews, integrates, and resolves overlap
 5. `Codex Lead` runs `L0` then `L1` canary on the integration branch
 6. `Human Approver` merges after review and evidence check
-7. `n8n` mirrors summaries and outcomes to human-facing surfaces
+7. `n8n` mirrors summaries and outcomes to human-facing surfaces only where the surface is explicitly requested
 
 ### 5.2 Why this flow is preferred
 
@@ -265,7 +266,7 @@ That means:
 - event fan-out
 - low-risk workflow triggering
 - result posting
-- ClickUp sync
+- explicit-request ClickUp sync
 
 ### 9.2 Rejected positioning
 
@@ -287,6 +288,12 @@ Use it for:
 - executive visibility
 - operator dashboards
 - non-authoritative reminders
+
+Default operating rule:
+
+- do not sync ClickUp during routine GitHub- or repo-side issue work
+- sync ClickUp only when a human explicitly asks for the mirror
+- prefer GitHub issues and repo docs for everyday agent-facing flow because ClickUp sync latency is not worth paying on every queue update
 
 Do not use it for:
 
