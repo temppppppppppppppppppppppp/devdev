@@ -113,3 +113,26 @@ def test_post_benchmark_operator_comment_cli_preview_outputs_markdown(tmp_path):
 
     assert result.stdout.startswith("## CLI Preview\n")
     assert "### Explicit Comparisons" in result.stdout
+
+
+def test_build_comment_markdown_supports_latest_live_pair(tmp_path):
+    module = _load_post_module()
+    helper = _load_report_test_helpers()
+
+    run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
+    run_b = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    helper._write_record(tmp_path, run_id=run_a, status="interrupted")
+    helper._write_record(tmp_path, run_id=run_b, status="completed")
+
+    markdown = module.build_comment_markdown(
+        title="Preview Snapshot",
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+        latest_live_pair=True,
+    )
+
+    assert "### Explicit Comparisons" in markdown
+    assert (
+        f"- {run_a} -> {run_b}: status=clean; ci_gate=pass; gate_basis=clean; "
+        "headline=no remediation needed; verdict=better; changed_sections=run_meta,stage_metrics,watchpoints"
+    ) in markdown

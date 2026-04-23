@@ -42,6 +42,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         metavar=("LEFT", "RIGHT"),
         help="explicit benchmark pair to compare and render as a one-line operator surface",
     )
+    parser.add_argument(
+        "--latest-live-pair",
+        action="store_true",
+        help="append a comparison for the latest two live benchmark records by run_id",
+    )
     return parser.parse_args(argv)
 
 
@@ -50,6 +55,7 @@ def build_benchmark_operator_line_report(
     workspace_root: str | Path = ROOT,
     benchmark_root: str | Path = "benchmarks",
     pairs: list[tuple[str, str]] | None = None,
+    latest_live_pair: bool = False,
 ) -> dict[str, Any]:
     payload = audit_benchmark_companion_links(
         workspace_root=workspace_root,
@@ -64,6 +70,9 @@ def build_benchmark_operator_line_report(
         for record in payload.get("records", [])
         if isinstance(record, dict)
     ]
+    compare_pairs = list(pairs or [])
+    if latest_live_pair:
+        compare_pairs = _append_latest_live_pair(compare_pairs, payload.get("records", []))
     compare_report_lines = [
         _build_compare_report_entry(
             left=left,
@@ -71,7 +80,7 @@ def build_benchmark_operator_line_report(
             workspace_root=workspace_root,
             benchmark_root=benchmark_root,
         )
-        for left, right in (pairs or [])
+        for left, right in compare_pairs
     ]
     return {
         "benchmark_root": payload.get("benchmark_root", ""),
@@ -94,6 +103,25 @@ def _build_record_operator_report_line(record: dict[str, Any]) -> str:
         f"missing={missing}",
     ]
     return "; ".join(bits)
+
+
+def _append_latest_live_pair(
+    existing_pairs: list[tuple[str, str]],
+    records: object,
+) -> list[tuple[str, str]]:
+    if not isinstance(records, list):
+        raise ValueError("latest live pair requested but audit payload does not contain record rows")
+    live_run_ids = [
+        str(record.get("run_id", "") or "")
+        for record in records
+        if isinstance(record, dict) and str(record.get("run_id", "") or "")
+    ]
+    if len(live_run_ids) < 2:
+        raise ValueError("latest live pair requested but fewer than two live benchmark records are available")
+    latest_pair = (live_run_ids[-2], live_run_ids[-1])
+    if latest_pair in existing_pairs:
+        return existing_pairs
+    return existing_pairs + [latest_pair]
 
 
 def _build_compare_report_entry(
@@ -163,6 +191,7 @@ def main(argv: list[str] | None = None) -> int:
         workspace_root=args.workspace_root,
         benchmark_root=args.benchmark_root,
         pairs=[(str(left), str(right)) for left, right in (args.pairs or [])],
+        latest_live_pair=bool(args.latest_live_pair),
     )
     if args.format == "json":
         print(json.dumps(payload, ensure_ascii=False, indent=2))

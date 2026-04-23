@@ -257,6 +257,33 @@ def test_build_benchmark_operator_line_report_includes_explicit_compare_pairs(tm
     ) in text
 
 
+def test_build_benchmark_operator_line_report_can_append_latest_live_pair(tmp_path):
+    module = _load_report_module()
+    run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
+    run_b = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    _write_record(tmp_path, run_id=run_a, status="interrupted")
+    _write_record(tmp_path, run_id=run_b, status="completed")
+
+    payload = module.build_benchmark_operator_line_report(
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+        latest_live_pair=True,
+    )
+
+    assert payload["compare_report_lines"] == [
+        {
+            "label": f"{run_a} -> {run_b}",
+            "left_run_id": run_a,
+            "right_run_id": run_b,
+            "verdict": "better",
+            "changed_sections": ["run_meta", "stage_metrics", "watchpoints"],
+            "operator_report_line": (
+                "status=clean; ci_gate=pass; gate_basis=clean; headline=no remediation needed"
+            ),
+        }
+    ]
+
+
 def test_report_benchmark_operator_lines_cli_supports_json_output(tmp_path):
     run_id = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
     record_root = _write_record(tmp_path, run_id=run_id, status="completed")
@@ -329,6 +356,36 @@ def test_report_benchmark_operator_lines_cli_supports_text_compare_rows(tmp_path
     assert "Comparisons:" in result.stdout
     assert (
         f"{left_root} -> {right_root} | "
+        "status=clean; ci_gate=pass; gate_basis=clean; headline=no remediation needed | "
+        "verdict=better | changed_sections=run_meta,stage_metrics,watchpoints"
+    ) in result.stdout
+
+
+def test_report_benchmark_operator_lines_cli_supports_latest_live_pair(tmp_path):
+    run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
+    run_b = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    _write_record(tmp_path, run_id=run_a, status="interrupted")
+    _write_record(tmp_path, run_id=run_b, status="completed")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/report_benchmark_operator_lines.py",
+            "--workspace-root",
+            str(tmp_path),
+            "--benchmark-root",
+            "benchmarks",
+            "--latest-live-pair",
+        ],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    assert "Comparisons:" in result.stdout
+    assert (
+        f"{run_a} -> {run_b} | "
         "status=clean; ci_gate=pass; gate_basis=clean; headline=no remediation needed | "
         "verdict=better | changed_sections=run_meta,stage_metrics,watchpoints"
     ) in result.stdout
