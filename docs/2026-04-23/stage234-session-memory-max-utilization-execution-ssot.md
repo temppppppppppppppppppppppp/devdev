@@ -67,6 +67,7 @@ execution_meta:
 - `BaseAgent` already contains a live context-cache substrate, but local gating still requires `cache.min_content_chars = 50000`.
 - Stage3 already carries a bounded history window of `24 recent + 6 anchor` with a `36` item cache cap.
 - Stage4 has the richest retry-memory substrate today, including persisted attempts and operator-facing summary surfaces, but no general runtime resume hydrator was found on current `main`.
+- A bounded read-only cache proof harness now exists at `scripts/audit_stage34_cache_proof.py`; it reads archived benchmark DB snapshots and surfaces Stage3/Stage4 producer cached-token evidence without changing runtime authority.
 - Issue posture remains aligned with the survey:
   - `#3` remains the direct rollout lane
   - `#5` is now a separate upstream proof and benchmark governor lane with its own execution SSOT
@@ -174,6 +175,7 @@ Excluded:
 1. Cache-path proof on current producer lanes
    - consume the upstream `#5` proof substrate for cache hit, cached-token, retry-count, continuity, and cost deltas
    - verify real cache reuse on Stage4 and Stage3 heavy shared-context paths
+   - use `scripts/audit_stage34_cache_proof.py` as the first bounded proof surface before any gate relaxation or provider-session rollout
    - benchmark the local `50000`-char gate instead of assuming it is correct
 2. Internal session-memory envelope contract
    - define one provider-neutral substrate for retries, resumes, and stage handoff
@@ -206,6 +208,7 @@ Excluded:
 - `pytest tests/test_chief_writer.py -q`
 - `pytest tests/test_stage2_optimizer.py -q`
 - `pytest tests/test_stage4_interview_round.py -q`
+- `pytest tests/test_audit_stage34_cache_proof.py -q`
 - sequential low-memory shards only; no `xdist` or parallel pytest
 - `python scripts/sync_temp_queue_state.py`
 - `python scripts/ops_validator.py --strict`
