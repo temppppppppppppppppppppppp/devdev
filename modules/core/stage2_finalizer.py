@@ -8,12 +8,7 @@ import logging
 import re
 import time
 from copy import deepcopy
-from typing import Any, Literal, TypedDict
-
-try:
-    from typing import NotRequired
-except ImportError:  # pragma: no cover - Python 3.10 compatibility
-    from typing_extensions import NotRequired
+from typing import Any, Literal, NotRequired, TypedDict
 
 from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
 from modules.core.constants import VolumeSettings
