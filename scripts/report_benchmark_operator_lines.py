@@ -167,6 +167,13 @@ def _build_compare_report_entry(
 
 
 def _build_compare_proof_signal_summary(diff: dict[str, Any]) -> str:
+    merge_audit_summary = _build_compare_merge_audit_proof_signal_summary(diff)
+    if merge_audit_summary:
+        return merge_audit_summary
+    return _build_compare_native_proof_signal_summary(diff)
+
+
+def _build_compare_merge_audit_proof_signal_summary(diff: dict[str, Any]) -> str:
     side_bits: list[str] = []
     for side in ("left", "right"):
         side_record = diff.get(side, {})
@@ -207,6 +214,63 @@ def _build_compare_proof_signal_summary(diff: dict[str, Any]) -> str:
     return "; ".join(side_bits)
 
 
+def _build_compare_native_proof_signal_summary(diff: dict[str, Any]) -> str:
+    side_bits: list[str] = []
+    for side in ("left", "right"):
+        side_record = diff.get(side, {})
+        if not isinstance(side_record, dict):
+            continue
+
+        fragments: list[str] = []
+        runtime_audit_summary = side_record.get("runtime_audit_summary", {})
+        if isinstance(runtime_audit_summary, dict):
+            proof_digest_status = str(runtime_audit_summary.get("proof_digest_status", "") or "")
+            if proof_digest_status and proof_digest_status != "ok":
+                fragments.append(f"digest={proof_digest_status}")
+            operational_status = str(runtime_audit_summary.get("operational_status", "") or "")
+            if operational_status and operational_status != "ok":
+                fragments.append(f"operational={operational_status}")
+            stage4_live_session_status = str(runtime_audit_summary.get("stage4_live_session_status", "") or "")
+            if stage4_live_session_status and stage4_live_session_status != "ok":
+                fragments.append(f"live={stage4_live_session_status}")
+            contract_signal_count = _coerce_positive_int(
+                runtime_audit_summary.get("stage4_post_pass_contract_signal_count")
+            )
+            if contract_signal_count > 0:
+                fragments.append(f"contracts={contract_signal_count}")
+
+        progress_signals = _select_native_progress_signal_source(side_record)
+        if isinstance(progress_signals, dict):
+            termination_reason = str(progress_signals.get("termination_reason", "") or "").strip()
+            terminated_by_monitor = bool(progress_signals.get("terminated_by_monitor"))
+            if terminated_by_monitor or termination_reason:
+                fragments.append(f"monitor={termination_reason or 'true'}")
+
+            child_exit_code = _coerce_positive_int(progress_signals.get("child_exit_code"))
+            if child_exit_code > 0:
+                fragments.append(f"exit={child_exit_code}")
+
+            before_ep = _coerce_positive_int(
+                progress_signals.get("latest_written_ep_before", progress_signals.get("before_latest_ep"))
+            )
+            after_ep = _coerce_positive_int(
+                progress_signals.get("latest_written_ep_after", progress_signals.get("after_latest_ep"))
+            )
+            target_ep = _coerce_positive_int(progress_signals.get("target_ep"))
+            if after_ep > before_ep > 0:
+                fragments.append(f"advance=+{after_ep - before_ep}")
+            elif after_ep > before_ep and after_ep > 0:
+                fragments.append(f"advance=+{after_ep - before_ep}")
+
+            effective_latest_ep = after_ep if after_ep > 0 else before_ep
+            if target_ep > 0 and effective_latest_ep > 0 and effective_latest_ep < target_ep:
+                fragments.append(f"gap={target_ep - effective_latest_ep}")
+
+        if fragments:
+            side_bits.append(f"{side}:{','.join(fragments)}")
+    return "; ".join(side_bits)
+
+
 def _coerce_positive_int(value: object) -> int:
     try:
         result = int(value)
@@ -221,7 +285,7 @@ def _build_compare_proof_highlights(diff: dict[str, Any]) -> list[str]:
     if not isinstance(watchpoints, list):
         return []
 
-    priority = {
+    merge_audit_priority = {
         "post_run_merge_audit_remaining_blocker_attention": 0,
         "post_run_merge_audit_live_verification_failure": 1,
         "post_run_merge_audit_live_verification_mixed": 2,
@@ -230,6 +294,38 @@ def _build_compare_proof_highlights(diff: dict[str, Any]) -> list[str]:
         "post_run_merge_audit_open_follow_up_attention": 5,
         "post_run_merge_audit_remaining_watchpoints": 6,
     }
+    merge_audit_highlights = _collect_highlights(
+        watchpoints=watchpoints,
+        priority=merge_audit_priority,
+        summarizer=_summarize_proof_highlight,
+    )
+    if merge_audit_highlights:
+        return merge_audit_highlights
+
+    native_priority = {
+        "monitor_termination_recorded": 0,
+        "stage4_child_exit_nonzero": 1,
+        "stage4_target_gap_remaining": 2,
+        "stage4_guarded_summary_stale_reference": 3,
+        "stage4_live_session_attention": 4,
+        "runtime_operational_status_attention": 5,
+        "proof_digest_attention": 6,
+        "stage4_target_ep_not_reached": 7,
+        "stage4_complete_signal_missing": 8,
+    }
+    return _collect_highlights(
+        watchpoints=watchpoints,
+        priority=native_priority,
+        summarizer=_summarize_native_proof_highlight,
+    )
+
+
+def _collect_highlights(
+    *,
+    watchpoints: list[Any],
+    priority: dict[str, int],
+    summarizer: Any,
+) -> list[str]:
     selected = []
     for item in watchpoints:
         if not isinstance(item, dict):
@@ -242,7 +338,7 @@ def _build_compare_proof_highlights(diff: dict[str, Any]) -> list[str]:
 
     highlights: list[str] = []
     for _, item in selected:
-        highlight = _summarize_proof_highlight(item)
+        highlight = str(summarizer(item) or "").strip()
         if highlight and highlight not in highlights:
             highlights.append(highlight)
         if len(highlights) >= 2:
@@ -272,6 +368,54 @@ def _summarize_proof_highlight(watchpoint: dict[str, Any]) -> str:
     if watchpoint_id == "post_run_merge_audit_remaining_watchpoints":
         return f"{side_prefix}remaining watchpoints".strip()
     return ""
+
+
+def _summarize_native_proof_highlight(watchpoint: dict[str, Any]) -> str:
+    watchpoint_id = str(watchpoint.get("id", "") or "")
+    side = str(watchpoint.get("side", "") or "").strip()
+    message = str(watchpoint.get("message", "") or "").strip()
+    side_prefix = f"{side} " if side else ""
+
+    if watchpoint_id == "monitor_termination_recorded":
+        return f"{side_prefix}monitor termination".strip()
+    if watchpoint_id == "stage4_child_exit_nonzero":
+        child_exit_code = message.split()[-1] if message else ""
+        suffix = f" child exit {child_exit_code}".rstrip()
+        return f"{side_prefix}{suffix.strip()}".strip()
+    if watchpoint_id == "stage4_target_gap_remaining":
+        return f"{side_prefix}target gap remaining".strip()
+    if watchpoint_id == "stage4_guarded_summary_stale_reference":
+        return f"{side_prefix}guarded summary stale".strip()
+    if watchpoint_id == "stage4_live_session_attention":
+        status = message.split()[-1] if message else ""
+        suffix = f"live session {status}".strip()
+        return f"{side_prefix}{suffix}".strip()
+    if watchpoint_id == "runtime_operational_status_attention":
+        status = message.split()[-1] if message else ""
+        suffix = f"operational status {status}".strip()
+        return f"{side_prefix}{suffix}".strip()
+    if watchpoint_id == "proof_digest_attention":
+        status = message.split()[-1] if message else ""
+        suffix = f"proof digest {status}".strip()
+        return f"{side_prefix}{suffix}".strip()
+    if watchpoint_id == "stage4_target_ep_not_reached":
+        return f"{side_prefix}target_ep not reached".strip()
+    if watchpoint_id == "stage4_complete_signal_missing":
+        return f"{side_prefix}stage4_complete missing".strip()
+    return ""
+
+
+def _select_native_progress_signal_source(side_record: dict[str, Any]) -> dict[str, Any]:
+    guarded_runner_summary = side_record.get("guarded_runner_summary", {})
+    run_id = str(side_record.get("run_id", "") or "")
+    if isinstance(guarded_runner_summary, dict) and guarded_runner_summary.get("available"):
+        guarded_run_id = str(guarded_runner_summary.get("benchmark_archive_run_id", "") or "")
+        if not guarded_run_id or guarded_run_id == run_id:
+            return guarded_runner_summary
+    note_markers = side_record.get("note_markers", {})
+    if isinstance(note_markers, dict):
+        return note_markers
+    return {}
 
 
 def format_report_text(payload: dict[str, Any]) -> str:

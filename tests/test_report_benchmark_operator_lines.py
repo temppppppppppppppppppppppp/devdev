@@ -129,6 +129,15 @@ def _write_sidecar(record_root: Path, payload: dict) -> None:
     )
 
 
+def _write_guarded_result(record_root: Path, payload: dict) -> None:
+    logs_dir = record_root / "logs"
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    (logs_dir / "stage4_direct_supervised_guarded_result.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
 def _write_markdown(workspace: Path, relative_path: str, body: str) -> Path:
     target = workspace / relative_path
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -363,6 +372,63 @@ def test_build_benchmark_operator_line_report_surfaces_proof_signal_summary(tmp_
     text = module.format_report_text(payload)
     assert "proof_signals=right:live=mixed,open=3,blocker,addendum=4" in text
     assert "proof_highlights=right remaining blocker || right live verification mixed" in text
+
+
+def test_build_benchmark_operator_line_report_falls_back_to_native_proof_signals(tmp_path):
+    module = _load_report_module()
+    run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
+    run_b = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    left_root = _write_record(tmp_path, run_id=run_a, status="operational_failure")
+    right_root = _write_record(tmp_path, run_id=run_b, status="operational_failure")
+    _write_guarded_result(
+        left_root,
+        {
+            "target_ep": 15,
+            "latest_written_ep_before": 10,
+            "latest_written_ep_after": 10,
+            "terminated_by_monitor": False,
+            "termination_reason": "",
+            "child_exit_code": 120,
+            "benchmark_archive": {
+                "run_id": run_a,
+            },
+        },
+    )
+    _write_guarded_result(
+        right_root,
+        {
+            "target_ep": 15,
+            "latest_written_ep_before": 10,
+            "latest_written_ep_after": 11,
+            "terminated_by_monitor": True,
+            "termination_reason": "stage4_round_limit_exceeded",
+            "child_exit_code": 1,
+            "benchmark_archive": {
+                "run_id": run_b,
+            },
+        },
+    )
+
+    payload = module.build_benchmark_operator_line_report(
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+        pairs=[(str(left_root), str(right_root))],
+    )
+
+    compare_entry = payload["compare_report_lines"][0]
+    assert compare_entry["proof_signal_summary"] == (
+        "left:exit=120,gap=5; right:monitor=stage4_round_limit_exceeded,exit=1,advance=+1,gap=4"
+    )
+    assert compare_entry["proof_highlights"] == [
+        "right monitor termination",
+        "left child exit 120",
+    ]
+    text = module.format_report_text(payload)
+    assert (
+        "proof_signals=left:exit=120,gap=5; "
+        "right:monitor=stage4_round_limit_exceeded,exit=1,advance=+1,gap=4"
+    ) in text
+    assert "proof_highlights=right monitor termination || left child exit 120" in text
 
 
 def test_apply_issue_5_snapshot_defaults_enables_latest_live_pair_for_report():
