@@ -2200,6 +2200,19 @@ class BaseAgent:
     def _sanitize_context_cache_token(value: object) -> str:
         return re.sub(r"[^0-9A-Za-z_.-]+", "_", str(value or "")).strip("_.")
 
+    @staticmethod
+    def _classify_context_cache_error_reason(error: Exception | str) -> str:
+        normalized = str(error or "").lower()
+        if "429" in normalized or "resource_exhausted" in normalized or "quota" in normalized:
+            return "cache_create_failed_quota"
+        if "timed out" in normalized or "timeout" in normalized:
+            return "cache_create_failed_timeout"
+        if "server disconnected" in normalized or "remoteprotocolerror" in normalized:
+            return "cache_create_failed_disconnect"
+        if "404" in normalized or "not found" in normalized:
+            return "cache_create_failed_not_found"
+        return "cache_create_failed_unknown"
+
     def _context_cache_project_namespace(self, *scope_parts: object) -> str:
         current_project = getattr(self.context, "current_project", None) if self.context else None
         project_token = (
@@ -2336,6 +2349,7 @@ class BaseAgent:
         except Exception as e:
             # 캐싱 실패해도 진행 (폴백: 캐싱 없이 직접 사용)
             error_str = str(e).lower()
+            cache_reason = self._classify_context_cache_error_reason(e)
             # [V61.9] 캐싱 중 429/quota → 현재 작업은 캐시 없이 진행, 다음 작업에서 키 전환
             if "429" in error_str or "resource_exhausted" in error_str or "quota" in error_str:
                 logging.warning(" [V61.9] 캐싱 중 API 제한 감지 → 키 전환 예약 (현재 작업은 캐시 없이 진행)")
@@ -2350,10 +2364,16 @@ class BaseAgent:
                 ttl_seconds=ttl_seconds,
                 content_hash=content_hash,
                 cache_outcome="error",
-                cache_reason="cache_create_failed",
+                cache_reason=cache_reason,
                 error_msg=str(e)[:100],
             )
-            return {"cache_name": None, "cached": False, "content_hash": content_hash, "error": str(e)[:100]}
+            return {
+                "cache_name": None,
+                "cached": False,
+                "content_hash": content_hash,
+                "error": str(e)[:100],
+                "reason": cache_reason,
+            }
 
     def _ask_with_cached_context(
         self,

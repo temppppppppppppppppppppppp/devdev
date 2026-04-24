@@ -882,6 +882,24 @@ class TestContextCacheEviction:
         assert kwargs["stage"] == 4
         assert kwargs["ep_num"] == 21
 
+    def test_context_cache_error_logs_specific_reason(self, agent):
+        db = MagicMock()
+        db.save_context_cache_attempt = MagicMock()
+        agent.context = SimpleNamespace(current_project=SimpleNamespace(db=db), current_stage=4, current_ep=16)
+        agent.client = SimpleNamespace(caches=SimpleNamespace(create=MagicMock(side_effect=Exception("404 Not Found"))))
+        content = "A" * max(10, agent._MIN_CACHE_CONTENT)
+
+        result = agent._get_or_create_context_cache("manuscript", content, ttl_seconds=1800, project_name="gc_ep16")
+
+        assert result["cache_name"] is None
+        assert result["reason"] == "cache_create_failed_not_found"
+        db.save_context_cache_attempt.assert_called_once()
+        kwargs = db.save_context_cache_attempt.call_args.kwargs
+        assert kwargs["cache_outcome"] == "error"
+        assert kwargs["cache_reason"] == "cache_create_failed_not_found"
+        assert kwargs["stage"] == 4
+        assert kwargs["ep_num"] == 16
+
 
 class TestMetricsUsageTracking:
     def test_ask_resets_stale_usage_before_failure_metrics(self, agent, monkeypatch):

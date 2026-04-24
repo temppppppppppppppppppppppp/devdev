@@ -181,6 +181,7 @@ def _load_stage_direct_cache_attempt_summary(
                 """,
                 (cache_gate_chars, cache_gate_chars, *agents),
             ).fetchone()
+            error_reason_counts = _load_stage_cache_error_reason_counts(cur, agents=agents)
             payload["stages"][stage] = {
                 "attempt_count": int(row[0] or 0),
                 "attempts_meeting_gate": int(row[1] or 0),
@@ -191,13 +192,67 @@ def _load_stage_direct_cache_attempt_summary(
                 "error_count": int(row[6] or 0),
                 "max_content_chars": int(row[7] or 0),
                 "min_content_chars": int(row[8] or 0),
+                "error_reason_counts": error_reason_counts,
+                "top_error_reason": _pick_top_reason(error_reason_counts),
             }
     finally:
         conn.close()
     return payload
 
 
-def _empty_stage_direct_cache_attempt_summary() -> dict[str, int]:
+def _load_stage_cache_error_reason_counts(
+    cur: sqlite3.Cursor,
+    *,
+    agents: list[str],
+) -> dict[str, int]:
+    placeholders = ",".join("?" for _ in agents)
+    rows = cur.execute(
+        f"""
+        SELECT cache_reason, error_msg
+        FROM context_cache_attempts
+        WHERE agent_name IN ({placeholders}) AND cache_outcome = 'error'
+        """,
+        (*agents,),
+    ).fetchall()
+    counts: dict[str, int] = {}
+    for cache_reason, error_msg in rows:
+        normalized_reason = _normalize_cache_error_reason(cache_reason, error_msg)
+        counts[normalized_reason] = counts.get(normalized_reason, 0) + 1
+    return counts
+
+
+def _normalize_cache_error_reason(cache_reason: object, error_msg: object) -> str:
+    reason = str(cache_reason or "").strip()
+    if reason and reason != "cache_create_failed":
+        return reason
+
+    normalized_error = str(error_msg or "").lower()
+    if "429" in normalized_error or "resource_exhausted" in normalized_error or "quota" in normalized_error:
+        return "cache_create_failed_quota"
+    if "timed out" in normalized_error or "timeout" in normalized_error:
+        return "cache_create_failed_timeout"
+    if "server disconnected" in normalized_error or "remoteprotocolerror" in normalized_error:
+        return "cache_create_failed_disconnect"
+    if "404" in normalized_error or "not found" in normalized_error:
+        return "cache_create_failed_not_found"
+    return reason or "cache_create_failed_unknown"
+
+
+def _pick_top_reason(reason_counts: dict[str, int] | None) -> str:
+    if not isinstance(reason_counts, dict):
+        return ""
+    ranked = [
+        (int(count or 0), str(reason or "").strip())
+        for reason, count in reason_counts.items()
+        if str(reason or "").strip() and int(count or 0) > 0
+    ]
+    if not ranked:
+        return ""
+    ranked.sort(key=lambda item: (-item[0], item[1]))
+    return ranked[0][1]
+
+
+def _empty_stage_direct_cache_attempt_summary() -> dict[str, Any]:
     return {
         "attempt_count": 0,
         "attempts_meeting_gate": 0,
@@ -208,6 +263,8 @@ def _empty_stage_direct_cache_attempt_summary() -> dict[str, int]:
         "error_count": 0,
         "max_content_chars": 0,
         "min_content_chars": 0,
+        "error_reason_counts": {},
+        "top_error_reason": "",
     }
 
 
@@ -348,6 +405,8 @@ def _build_record_row(
                 if use_direct
                 else int(prompt_stats.get("min_prompt_chars", 0) or 0)
             ),
+            "error_reason_counts": dict(direct_stats.get("error_reason_counts", {}) or {}) if use_direct else {},
+            "top_error_reason": str(direct_stats.get("top_error_reason", "") or "") if use_direct else "",
         }
     return {
         "run_id": str(record.get("run_id", "") or ""),
@@ -388,6 +447,8 @@ def _build_stage_summary(
             "error_count": 0,
             "max_content_chars": 0,
             "min_content_chars": 0,
+            "error_reason_counts": {},
+            "top_error_reason": "",
         }
 
     direct_rows = [row for row in rows if str(row.get("evidence_source", "")) == "context_cache_attempts"]
@@ -404,6 +465,14 @@ def _build_stage_summary(
         for row in rows
         if int(row.get("min_content_chars", 0) or 0) > 0
     ]
+    error_reason_counts: dict[str, int] = {}
+    for row in rows:
+        for reason, count in dict(row.get("error_reason_counts", {}) or {}).items():
+            normalized_reason = str(reason or "").strip()
+            normalized_count = int(count or 0)
+            if not normalized_reason or normalized_count <= 0:
+                continue
+            error_reason_counts[normalized_reason] = error_reason_counts.get(normalized_reason, 0) + normalized_count
     return {
         "evidence_source": evidence_source,
         "records_with_attempts": len(rows),
@@ -422,6 +491,8 @@ def _build_stage_summary(
         "error_count": sum(int(row.get("error_count", 0) or 0) for row in rows),
         "max_content_chars": max(int(row.get("max_content_chars", 0) or 0) for row in rows),
         "min_content_chars": min(nonzero_mins) if nonzero_mins else 0,
+        "error_reason_counts": error_reason_counts,
+        "top_error_reason": _pick_top_reason(error_reason_counts),
     }
 
 
@@ -452,9 +523,17 @@ def _build_operator_summary(
             label = "proxy"
         else:
             label = source
-        spotlight_bits.append(
-            f"{stage} {label}-gate-records={gate_records}/{records_with_attempts} cache-success-records={cache_success_records}/{records_with_attempts}"
+        spotlight = (
+            f"{stage} {label}-gate-records={gate_records}/{records_with_attempts} "
+            f"cache-success-records={cache_success_records}/{records_with_attempts}"
         )
+        error_count = int(summary.get("error_count", 0) or 0)
+        top_error_reason = str(summary.get("top_error_reason", "") or "")
+        if error_count > 0:
+            spotlight += f" cache-errors={error_count}"
+            if top_error_reason:
+                spotlight += f"({top_error_reason})"
+        spotlight_bits.append(spotlight)
 
     headline = (
         f"current {gate_chars}-char cache gate compared against archived producer prompt_chars across {live_record_count} live benchmark records"
@@ -488,6 +567,12 @@ def _build_operator_report_line(
         bits.append(
             f"{stage}_cache_success={int(summary.get('cache_success_count', 0) or 0)}"
         )
+        error_count = int(summary.get("error_count", 0) or 0)
+        if error_count > 0:
+            bits.append(f"{stage}_cache_errors={error_count}")
+            top_error_reason = str(summary.get("top_error_reason", "") or "")
+            if top_error_reason:
+                bits.append(f"{stage}_top_error_reason={top_error_reason}")
     return " | ".join(bits)
 
 
@@ -521,6 +606,7 @@ def _render_text(payload: dict[str, Any]) -> str:
                 f"cache_success={stage_summary.get('cache_success_count', 0)}; "
                 f"skipped_short={stage_summary.get('skipped_short_count', 0)}; "
                 f"errors={stage_summary.get('error_count', 0)}; "
+                f"top_error_reason={stage_summary.get('top_error_reason', '')}; "
                 f"max_content_chars={stage_summary.get('max_content_chars', 0)}; "
                 f"min_content_chars={stage_summary.get('min_content_chars', 0)}"
             )
@@ -535,7 +621,7 @@ def _render_text(payload: dict[str, Any]) -> str:
                 if int(stage_row.get("attempt_count", 0) or 0) <= 0:
                     continue
                 stage_bits.append(
-                    f"{stage}[proof={stage_row.get('proof_status', '')}; source={stage_row.get('evidence_source', '')}; gate={stage_row.get('gate_signal_count', 0)}/{stage_row.get('signal_count', 0)}; cache_success={stage_row.get('cache_success_count', 0)}; skipped_short={stage_row.get('skipped_short_count', 0)}; max_content_chars={stage_row.get('max_content_chars', 0)}]"
+                    f"{stage}[proof={stage_row.get('proof_status', '')}; source={stage_row.get('evidence_source', '')}; gate={stage_row.get('gate_signal_count', 0)}/{stage_row.get('signal_count', 0)}; cache_success={stage_row.get('cache_success_count', 0)}; skipped_short={stage_row.get('skipped_short_count', 0)}; errors={stage_row.get('error_count', 0)}; top_error_reason={stage_row.get('top_error_reason', '')}; max_content_chars={stage_row.get('max_content_chars', 0)}]"
                 )
             lines.append(
                 f"- run_id={record.get('run_id', '')}; status={record.get('status', '')}; " + "; ".join(stage_bits)
