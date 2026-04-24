@@ -5,7 +5,7 @@ Operator-facing utility scripts. Not imported by production runtime.
 ## Categories
 
 - **ops governance**: `ops_validator.py`, `sync_temp_queue_state.py`, `build_execution_roadmap.py`, `populate_process_health_scorecard.py`, `generate_evidence_manifest.py`, `validate_deep_global_survey_bundle.py`, `run_stale_reference_sweep.py`, `validate_material_ssot.py`, `validate_claude_local_paths.py`
-- **external visibility sync**: `sync_clickup_queue.py`
+- **external visibility sync**: `sync_github_issues.py`, `sync_clickup_queue.py`
 - **material-side ClickUp sync**: `build_material_queue_state.py`, `sync_material_clickup_queue.py`
 - **ClickUp view setup**: `setup_clickup_views.py`, `setup_material_clickup_views.py`
 - **material readiness validation**: `material_readiness_validator.py`
@@ -41,6 +41,7 @@ Operator-facing utility scripts. Not imported by production runtime.
 | Generate prompt files and one-line launch orders in batch across canon/intake/synthesis | `python -X utf8 scripts/material_benchmark_batch_generator.py [--path <dir>] [--promotion-intent auto|none|canon|phase0]` |
 | Validate `.claude` local-path portability for active GSD docs | `python -X utf8 scripts/validate_claude_local_paths.py` |
 | Materialize temp queue state | `python scripts/sync_temp_queue_state.py` |
+| Mirror the current repo-side queue into GitHub Issues | `python scripts/sync_github_issues.py [--apply] [--update-existing]` |
 | Mirror the current repo-side queue into a ClickUp List | `python -X utf8 scripts/sync_clickup_queue.py --list-id <clickup-list-id> [--dry-run]` |
 | Build the material-side production queue snapshot for ClickUp mirroring | `python -X utf8 scripts/build_material_queue_state.py [--output docs/temp/material-queue-state.json] [--active-only]` |
 | Mirror the material-side production queue into a ClickUp List | `python -X utf8 scripts/sync_material_clickup_queue.py --list-id <clickup-list-id> [--dry-run] [--active-only]` |

@@ -1,9 +1,9 @@
 # Authority Alignment Benchmark Operating Model Hardening Execution SSOT
 
 Date: 2026-04-23
-Status: execution-ready (3-pass audited; parked future wave; upstream proof and benchmark governor lane; read-only benchmark comparator plus watchpoint seed landed on 2026-04-23; note-backed rerun, guarded-summary staleness, explicit evidence-json companion watchpoints, benchmark companion-link sidecars, deeper merge-audit normalization, and operator-facing proof signal/highlight surfaces landed later the same day)
+Status: closed (completed 2026-04-24; upstream proof and benchmark governor lane satisfied; GitHub issue #5 closed as completed after Stage3/Stage4 cache-proof pass and clean operator snapshot)
 Canonical Path: `docs/2026-04-23/authority-alignment-benchmark-operating-model-hardening-execution-ssot.md`
-Temp Mirror Path: `docs/temp/authority-alignment-benchmark-operating-model-hardening-execution-ssot.md`
+Temp Mirror Path: removed after closure; canonical retained at this path
 Commit State:
 - Baseline Commit: `30b9436fc3a5c3fcc3f6397bf23bfe45d24af918`
 - Baseline Dirty Summary: `dirty: prior queue and governance doc updates plus untracked docs/2026-04-23/; no unrelated project-data cleanup performed`
@@ -267,3 +267,30 @@ Excluded:
   - re-run the 3-pass audit on the source survey and this SSOT
   - confirm at least 95% confidence against current `main`
   - then refresh `Resume Commit` and `Resume Drift Summary` before patching code from this document
+
+## 14. Closure Note
+
+Closure Date: 2026-04-24
+Closure Status: closed
+GitHub Issue: `#5` closed as completed
+Operator Snapshot: `https://github.com/temppppppppppppppppppppppp/devdev/issues/5#issuecomment-4311323566`
+Closure Record: `20260424_153535__stage4-supervised__target-ep18__143cee26`
+
+Verified behavior:
+
+- `python -X utf8 scripts/backfill_benchmark_native_post_run_evidence.py 20260424_153535__stage4-supervised__target-ep18__143cee26` wrote native post-run evidence and companion links for the closing proof record.
+- `python -X utf8 scripts/audit_stage34_cache_gate_corpus.py --format text` included the closing run as a completed Stage4 record with direct `context_cache_attempts` cache-success evidence.
+- `python -X utf8 scripts/audit_stage34_cache_proof.py 20260424_153535__stage4-supervised__target-ep18__143cee26 --format text` returned `cache-proof pass`; Stage4 was `proved` with `cached_tokens=106358`, and Stage3 was `proved` with `cached_tokens=10976`.
+- `python -X utf8 scripts/post_benchmark_operator_comment.py --issue-5-snapshot` returned `status=clean` and `strict=pass`; the snapshot was then posted to GitHub before closing issue `#5`.
+- `python -X utf8 scripts/sync_temp_queue_state.py` and `python -X utf8 scripts/ops_validator.py --strict` passed before closure.
+
+Residual risks:
+
+- This closure proves the upstream benchmark/cache proof governor, not the full `#3` session-memory rollout.
+- Stage3 and Stage4 still have older failed cache-attempt records in the benchmark corpus; the closing run supplies the first clean downstream proof baseline rather than rewriting history.
+- Provider-native hidden memory remains out of scope and is not promoted above DB, fact-ledger, world-state, anchors, or explicit carryover packets.
+
+Follow-up:
+
+- `stage234-session-memory-max-utilization` is now the next visible memory/cache rollout lane and may use this closure as its upstream proof gate.
+- The temp mirror for this closed SSOT is removed so the active temp queue no longer carries #5 as pending work.
