@@ -102,6 +102,74 @@ def test_render_benchmark_operator_comment_markdown_includes_sections(tmp_path):
     ) in markdown
 
 
+def test_render_benchmark_operator_comment_markdown_includes_proof_signal_summary(tmp_path):
+    render_module = _load_render_module()
+    helper = _load_report_test_helpers()
+
+    run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
+    run_b = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    left_root = helper._write_record(tmp_path, run_id=run_a, status="interrupted")
+    right_root = helper._write_record(tmp_path, run_id=run_b, status="completed")
+    merge_audit = helper._write_markdown(
+        tmp_path,
+        "docs/2026-04-23/right-post-run-merge-audit.md",
+        "\n".join(
+            [
+                "# Right Merge Audit",
+                "",
+                "Status: final",
+                "",
+                "## Validation",
+                "",
+                "Live verification:",
+                "",
+                "- fresh rerun `20260421_002444` -> `ep1 PASS 95`, `ep2 PASS_WITH_WARNING 95`",
+                "- fresh rerun `20260421_003616` -> `ep1 PASS 95`, `ep2 FAILED`",
+                "",
+                "Merged addendum findings:",
+                "",
+                "1. first follow-up",
+                "2. second follow-up",
+                "3. third follow-up",
+                "4. fourth follow-up",
+                "",
+                "Current authoritative consequence:",
+                "",
+                "- resolved in bounded scope",
+                "- remaining blocker still exists",
+                "",
+                "What remains open:",
+                "",
+                "- nondeterministic frontier remains",
+                "- later rerun regressed",
+                "- mixed fresh-proof stability remains",
+                "",
+            ]
+        ),
+    )
+    helper._write_sidecar(
+        right_root,
+        {
+            "schema_version": "benchmark-companion-links-v1",
+            "post_run_evidence_json": "",
+            "post_run_merge_audit_md": merge_audit.relative_to(tmp_path).as_posix(),
+            "supporting_context_md": "",
+        },
+    )
+
+    payload = helper._load_report_module().build_benchmark_operator_line_report(
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+        pairs=[(str(left_root), str(right_root))],
+    )
+    markdown = render_module.render_benchmark_operator_comment_markdown(
+        payload,
+        title="Issue #5 Benchmark Operator Snapshot",
+    )
+
+    assert "proof_signals=right:live=mixed,open=3,blocker,addendum=4" in markdown
+
+
 def test_render_benchmark_operator_comment_md_cli_supports_title_and_pair(tmp_path):
     helper = _load_report_test_helpers()
     run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"

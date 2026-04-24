@@ -284,6 +284,82 @@ def test_build_benchmark_operator_line_report_can_append_latest_live_pair(tmp_pa
     ]
 
 
+def test_build_benchmark_operator_line_report_surfaces_proof_signal_summary(tmp_path):
+    module = _load_report_module()
+    run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
+    run_b = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    left_root = _write_record(tmp_path, run_id=run_a, status="interrupted")
+    right_root = _write_record(tmp_path, run_id=run_b, status="completed")
+    merge_audit = _write_markdown(
+        tmp_path,
+        "docs/2026-04-23/right-post-run-merge-audit.md",
+        "\n".join(
+            [
+                "# Right Merge Audit",
+                "",
+                "Status: final",
+                "",
+                "## Validation",
+                "",
+                "Live verification:",
+                "",
+                "- fresh rerun `20260421_002444` -> `ep1 PASS 95`, `ep2 PASS_WITH_WARNING 95`",
+                "- fresh rerun `20260421_003616` -> `ep1 PASS 95`, `ep2 FAILED`",
+                "",
+                "Merged addendum findings:",
+                "",
+                "1. first follow-up",
+                "2. second follow-up",
+                "3. third follow-up",
+                "4. fourth follow-up",
+                "",
+                "Current authoritative consequence:",
+                "",
+                "- resolved in bounded scope",
+                "- remaining blocker still exists",
+                "",
+                "What remains open:",
+                "",
+                "- nondeterministic frontier remains",
+                "- later rerun regressed",
+                "- mixed fresh-proof stability remains",
+                "",
+            ]
+        ),
+    )
+    _write_sidecar(
+        right_root,
+        {
+            "schema_version": "benchmark-companion-links-v1",
+            "post_run_evidence_json": "",
+            "post_run_merge_audit_md": merge_audit.relative_to(tmp_path).as_posix(),
+            "supporting_context_md": "",
+        },
+    )
+
+    payload = module.build_benchmark_operator_line_report(
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+        pairs=[(str(left_root), str(right_root))],
+    )
+
+    assert payload["compare_report_lines"] == [
+        {
+            "label": f"{left_root} -> {right_root}",
+            "left_run_id": run_a,
+            "right_run_id": run_b,
+            "verdict": "better",
+            "changed_sections": ["run_meta", "stage_metrics", "watchpoints"],
+            "operator_report_line": (
+                "status=clean; ci_gate=warn; gate_basis=warn_watchpoints; headline=no remediation needed"
+            ),
+            "proof_signal_summary": "right:live=mixed,open=3,blocker,addendum=4",
+        }
+    ]
+    text = module.format_report_text(payload)
+    assert "proof_signals=right:live=mixed,open=3,blocker,addendum=4" in text
+
+
 def test_apply_issue_5_snapshot_defaults_enables_latest_live_pair_for_report():
     module = _load_report_module()
     args = module.argparse.Namespace(

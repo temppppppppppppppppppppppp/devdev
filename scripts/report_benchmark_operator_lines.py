@@ -149,7 +149,7 @@ def _build_compare_report_entry(
         benchmark_root=benchmark_root,
     )
     delta = diff.get("delta", {})
-    return {
+    payload = {
         "label": f"{left} -> {right}",
         "left_run_id": str(diff.get("left", {}).get("run_id", "") or ""),
         "right_run_id": str(diff.get("right", {}).get("run_id", "") or ""),
@@ -157,6 +157,59 @@ def _build_compare_report_entry(
         "changed_sections": list(delta.get("changed_sections", [])),
         "operator_report_line": str(delta.get("operator_report_line", "") or ""),
     }
+    proof_signal_summary = _build_compare_proof_signal_summary(diff)
+    if proof_signal_summary:
+        payload["proof_signal_summary"] = proof_signal_summary
+    return payload
+
+
+def _build_compare_proof_signal_summary(diff: dict[str, Any]) -> str:
+    side_bits: list[str] = []
+    for side in ("left", "right"):
+        side_record = diff.get(side, {})
+        if not isinstance(side_record, dict):
+            continue
+        companion_merge_audit = side_record.get("companion_merge_audit", {})
+        if not isinstance(companion_merge_audit, dict) or not companion_merge_audit.get("available"):
+            continue
+        fragments: list[str] = []
+        validation = companion_merge_audit.get("validation", {})
+        if isinstance(validation, dict):
+            live_status = str(validation.get("live_rerun_status", "") or "")
+            if live_status:
+                fragments.append(f"live={live_status}")
+            replay_probe_count = _coerce_positive_int(validation.get("replay_probe_count"))
+            if replay_probe_count > 0:
+                fragments.append(f"replay={replay_probe_count}")
+            result_signal_count = _coerce_positive_int(validation.get("result_signal_count"))
+            if result_signal_count > 0:
+                fragments.append(f"signals={result_signal_count}")
+        follow_up = companion_merge_audit.get("follow_up", {})
+        if isinstance(follow_up, dict):
+            open_item_count = _coerce_positive_int(follow_up.get("open_item_count"))
+            if open_item_count > 0:
+                fragments.append(f"open={open_item_count}")
+            consequence_markers = {
+                str(item)
+                for item in follow_up.get("consequence_markers", [])
+                if str(item or "")
+            }
+            if "remaining_blocker" in consequence_markers:
+                fragments.append("blocker")
+            addendum_finding_count = _coerce_positive_int(follow_up.get("addendum_finding_count"))
+            if addendum_finding_count > 0:
+                fragments.append(f"addendum={addendum_finding_count}")
+        if fragments:
+            side_bits.append(f"{side}:{','.join(fragments)}")
+    return "; ".join(side_bits)
+
+
+def _coerce_positive_int(value: object) -> int:
+    try:
+        result = int(value)
+    except (TypeError, ValueError):
+        return 0
+    return result if result > 0 else 0
 
 
 def format_report_text(payload: dict[str, Any]) -> str:
@@ -192,6 +245,9 @@ def format_report_text(payload: dict[str, Any]) -> str:
                     f"verdict={item.get('verdict', '')}",
                     "changed_sections=" + ",".join(str(section) for section in item.get("changed_sections", [])),
                 ]
+                proof_signal_summary = str(item.get("proof_signal_summary", "") or "")
+                if proof_signal_summary:
+                    bits.append(f"proof_signals={proof_signal_summary}")
                 lines.append("- " + " | ".join(bit for bit in bits if bit))
     return "\n".join(lines)
 
