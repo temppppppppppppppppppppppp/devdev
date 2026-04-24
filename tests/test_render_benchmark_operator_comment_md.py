@@ -168,6 +168,7 @@ def test_render_benchmark_operator_comment_markdown_includes_proof_signal_summar
     )
 
     assert "proof_signals=right:live=mixed,open=3,blocker,addendum=4" in markdown
+    assert "proof_highlights=right remaining blocker || right live verification mixed" in markdown
 
 
 def test_render_benchmark_operator_comment_md_cli_supports_title_and_pair(tmp_path):
