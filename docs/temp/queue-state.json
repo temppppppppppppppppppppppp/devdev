@@ -1,35 +1,22 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-24T02:39:20.345287+00:00",
+  "generated_at": "2026-04-24T07:14:50.100869+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 3,
+  "active_item_count": 4,
   "roadmap": {
     "temp_path": "docs/temp/execution-roadmap.md",
-    "canonical_path": "docs/2026-04-23/active-temp-execution-roadmap.md",
+    "canonical_path": "docs/2026-04-24/active-temp-execution-roadmap.md",
     "status": "active"
   },
   "items": [
-    {
-      "topic": "authority-alignment-benchmark-operating-model-hardening",
-      "temp_path": "docs/temp/authority-alignment-benchmark-operating-model-hardening-execution-ssot.md",
-      "canonical_path": "docs/2026-04-23/authority-alignment-benchmark-operating-model-hardening-execution-ssot.md",
-      "status": "pending",
-      "queue_role": "parked_future_wave",
-      "roadmap_rank": 1,
-      "depends_on": [],
-      "mirror_present": true,
-      "canonical_present": true
-    },
     {
       "topic": "stage234-session-memory-max-utilization",
       "temp_path": "docs/temp/stage234-session-memory-max-utilization-execution-ssot.md",
       "canonical_path": "docs/2026-04-23/stage234-session-memory-max-utilization-execution-ssot.md",
       "status": "pending",
       "queue_role": "parked_future_wave",
-      "roadmap_rank": 2,
-      "depends_on": [
-        "authority-alignment-benchmark-operating-model-hardening"
-      ],
+      "roadmap_rank": 1,
+      "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
     },
@@ -39,8 +26,32 @@
       "canonical_path": "docs/2026-04-02/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md",
       "status": "pending",
       "queue_role": "parked_future_wave",
+      "roadmap_rank": 2,
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "canary-root-isolation",
+      "temp_path": "docs/temp/canary-root-isolation-execution-ssot.md",
+      "canonical_path": "docs/2026-04-24/canary-root-isolation-execution-ssot.md",
+      "status": "pending",
+      "queue_role": "parked_future_wave",
       "roadmap_rank": 3,
       "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "repo-trashbox-cleanup",
+      "temp_path": "docs/temp/repo-trashbox-cleanup-execution-ssot.md",
+      "canonical_path": "docs/2026-04-24/repo-trashbox-cleanup-execution-ssot.md",
+      "status": "pending",
+      "queue_role": "parked_future_wave",
+      "roadmap_rank": 4,
+      "depends_on": [
+        "canary-root-isolation"
+      ],
       "mirror_present": true,
       "canonical_present": true
     }

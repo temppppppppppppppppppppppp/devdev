@@ -1,14 +1,14 @@
 # Stage234 Session Memory Max-Utilization Execution SSOT
 
 Date: 2026-04-23
-Status: execution-ready (3-pass audited; parked future wave; downstream rollout lane gated by independent #5 proof lane)
+Status: execution-ready (3-pass audited; parked future wave; upstream #5 proof gate closed on 2026-04-24; next visible memory/cache rollout lane)
 Canonical Path: `docs/2026-04-23/stage234-session-memory-max-utilization-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage234-session-memory-max-utilization-execution-ssot.md`
 Commit State:
 - Baseline Commit: `30b9436fc3a5c3fcc3f6397bf23bfe45d24af918`
 - Baseline Dirty Summary: `dirty: modified docs/temp/queue-state.json from prior queue sync; untracked docs/2026-04-23/`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `2026-04-23 issue-5 formalization re-audit split the upstream proof governor into its own execution lane and moved this item to rank 2 with an explicit dependency`
+- Resume Drift Summary: `2026-04-24 issue-5 closure moved the upstream proof governor to historical backing; this item is now the first visible memory/cache rollout lane`
 Source Survey Docs:
 - `docs/2026-04-23/stage234-session-memory-max-utilization-deep-dive-adversarial-3pass-audit.md`
 - `docs/2026-04-23/authority-alignment-benchmark-operating-model-hardening-3pass-audit.md`
@@ -36,8 +36,7 @@ Side-Effect Coverage: covered
 execution_meta:
   schema_version: execution-meta-block-v1
   topic: stage234-session-memory-max-utilization
-  depends_on:
-    - authority-alignment-benchmark-operating-model-hardening
+  depends_on: []
   tranches:
     - id: cache-path-proof-producer-lanes
       title: Cache-path proof on current producer lanes
@@ -69,8 +68,8 @@ execution_meta:
 - Stage4 has the richest retry-memory substrate today, including persisted attempts and operator-facing summary surfaces, but no general runtime resume hydrator was found on current `main`.
 - A bounded read-only cache proof harness now exists at `scripts/audit_stage34_cache_proof.py`; it reads archived benchmark DB snapshots and surfaces Stage3/Stage4 producer cached-token evidence without changing runtime authority.
 - Issue posture remains aligned with the survey:
-  - `#3` remains the direct rollout lane
-  - `#5` is now a separate upstream proof and benchmark governor lane with its own execution SSOT
+- `#3` remains the direct rollout lane
+- `#5` is now closed historical backing for the upstream proof and benchmark governor lane
   - `#6` keeps this work coupled to authority and donor structure rather than isolated
 
 ## 3. Scope
@@ -228,8 +227,8 @@ Excluded:
   - keep the mirror while this lane remains a visible queued substrate program
   - remove or replace it only after closure or superseding narrower tranche SSOTs
 - roadmap dependency:
-  - ranked second behind `authority-alignment-benchmark-operating-model-hardening`
-  - may not promote to front-active until the upstream `#5` proof lane is satisfied enough to make memory deltas measurable
+  - now ranked first among visible parked rollout items after `authority-alignment-benchmark-operating-model-hardening` closure
+  - upstream `#5` proof lane is satisfied enough to begin bounded `#3` rollout planning, subject to fresh execution-start re-audit
 
 ## 13. Validation and Closure Hooks
 
