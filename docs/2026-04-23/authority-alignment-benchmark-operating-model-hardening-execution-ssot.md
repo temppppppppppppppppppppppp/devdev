@@ -7,8 +7,8 @@ Temp Mirror Path: `docs/temp/authority-alignment-benchmark-operating-model-harde
 Commit State:
 - Baseline Commit: `30b9436fc3a5c3fcc3f6397bf23bfe45d24af918`
 - Baseline Dirty Summary: `dirty: prior queue and governance doc updates plus untracked docs/2026-04-23/; no unrelated project-data cleanup performed`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `2026-04-23 issue-5 formalization re-audit promoted the proof governor into its own parked execution lane ahead of #3`
+- Resume Commit: `95081593da1a7017d3a28ea38f77b6556ed6fec1`
+- Resume Drift Summary: `re-audited on feat/execution-meta-block-impl after the issue-5 queue promotion landed; the immediate bounded tranche remains deeper compare_benchmark_records normalization for post-run merge-audit markdown signals`
 Source Survey Docs:
 - `docs/2026-04-23/authority-alignment-benchmark-operating-model-hardening-3pass-audit.md`
 - `docs/2026-04-23/stage234-session-memory-max-utilization-deep-dive-adversarial-3pass-audit.md`

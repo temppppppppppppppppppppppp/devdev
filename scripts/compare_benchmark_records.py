@@ -644,12 +644,38 @@ def _load_companion_merge_audit(
             "max_severity": "",
             "remaining_watchpoint_count": 0,
             "residual_markers": [],
+            "findings": [],
+            "finding_severity_counts": {},
+            "rerun_posture": {
+                "patch_status": "",
+                "local_validation": "",
+                "next_operator_step_before_rerun": "",
+            },
+            "validation": {
+                "available": False,
+                "static_pass_total": 0,
+                "result_count": 0,
+                "live_rerun_count": 0,
+                "live_rerun_status": "",
+                "live_reruns": [],
+                "replay_probe_count": 0,
+                "result_signal_count": 0,
+                "replay_probes": [],
+            },
+            "follow_up": {
+                "available": False,
+                "open_item_count": 0,
+                "open_markers": [],
+                "addendum_finding_count": 0,
+                "consequence_markers": [],
+            },
         }
     candidate = _resolve_existing_path(str(merge_audit_md), workspace_root=workspace_root)
     if candidate is None:
         raise FileNotFoundError(f"companion merge audit markdown not found: {merge_audit_md}")
     text = candidate.read_text(encoding="utf-8")
     lines = text.splitlines()
+    findings = _extract_markdown_findings(lines)
     severity_values = [
         match.group(1).strip().lower()
         for line in lines
@@ -667,10 +693,31 @@ def _load_companion_merge_audit(
         "title": _extract_markdown_title(lines),
         "status": _extract_markdown_labeled_value(lines, "Status"),
         "confidence_percent": _extract_markdown_confidence_percent(lines),
-        "finding_count": sum(1 for line in lines if re.match(r"^###\s+Finding\b", line)),
+        "finding_count": len(findings),
         "max_severity": max_severity,
         "remaining_watchpoint_count": _count_markdown_list_items_under_heading(lines, "Remaining Watchpoints"),
         "residual_markers": _detect_merge_audit_residual_markers(text),
+        "findings": findings,
+        "finding_severity_counts": _count_merge_audit_findings_by_severity(findings),
+        "rerun_posture": {
+            "patch_status": _extract_markdown_bulleted_value_under_heading(
+                lines,
+                "Current Rerun Posture",
+                "patch status",
+            ),
+            "local_validation": _extract_markdown_bulleted_value_under_heading(
+                lines,
+                "Current Rerun Posture",
+                "local validation",
+            ),
+            "next_operator_step_before_rerun": _extract_markdown_bulleted_value_under_heading(
+                lines,
+                "Current Rerun Posture",
+                "next operator step before rerun",
+            ),
+        },
+        "validation": _extract_merge_audit_validation(lines),
+        "follow_up": _extract_merge_audit_follow_up(lines),
     }
 
 
@@ -922,6 +969,239 @@ def _detect_merge_audit_residual_markers(text: str) -> list[str]:
     return markers
 
 
+def _normalize_markdown_heading(text: str) -> str:
+    normalized = str(text or "").strip().lower()
+    return re.sub(r"^\d+\.\s*", "", normalized)
+
+
+def _extract_markdown_bulleted_value_under_heading(
+    lines: list[str],
+    heading: str,
+    label: str,
+) -> str:
+    active = False
+    target_heading = _normalize_markdown_heading(heading)
+    pattern = re.compile(rf"^(?:[-*]|\d+\.)\s+{re.escape(label)}:\s*(.+?)\s*$", re.IGNORECASE)
+    for line in lines:
+        stripped = line.strip()
+        heading_match = re.match(r"^##\s+(.+?)\s*$", stripped)
+        if heading_match:
+            active = _normalize_markdown_heading(heading_match.group(1)) == target_heading
+            continue
+        if not active:
+            continue
+        match = pattern.match(stripped)
+        if match:
+            return match.group(1).strip().strip("`")
+    return ""
+
+
+def _extract_markdown_section_lines(lines: list[str], heading: str) -> list[str]:
+    active = False
+    target_heading = _normalize_markdown_heading(heading)
+    section_lines: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        heading_match = re.match(r"^##\s+(.+?)\s*$", stripped)
+        if heading_match:
+            active = _normalize_markdown_heading(heading_match.group(1)) == target_heading
+            continue
+        if active:
+            section_lines.append(line)
+    return section_lines
+
+
+def _extract_markdown_list_items_after_label(lines: list[str], label: str) -> list[str]:
+    active = False
+    target = str(label or "").strip().lower().rstrip(":")
+    items: list[str] = []
+    for raw_line in lines:
+        stripped = raw_line.strip()
+        if not active:
+            if stripped and stripped.lower().rstrip(":") == target:
+                active = True
+            continue
+        if re.match(r"^##\s+", stripped) or re.match(r"^###\s+", stripped):
+            break
+        if not stripped:
+            continue
+        item_match = re.match(r"^(?:[-*]|\d+\.)\s+(.+?)\s*$", stripped)
+        if item_match and not raw_line.startswith((" ", "\t")):
+            items.append(item_match.group(1).strip().replace("`", ""))
+            continue
+        if items and not raw_line.startswith((" ", "\t")):
+            break
+    return items
+
+
+def _extract_markdown_findings(lines: list[str]) -> list[dict[str, str]]:
+    findings: list[dict[str, str]] = []
+    current_finding: dict[str, str] | None = None
+    for line in lines:
+        stripped = line.strip()
+        finding_match = re.match(r"^###\s+Finding\s+\d+\.\s*(.+?)\s*$", stripped)
+        if finding_match:
+            current_finding = {
+                "title": finding_match.group(1).strip(),
+                "severity": "",
+            }
+            findings.append(current_finding)
+            continue
+        if current_finding is None:
+            continue
+        severity_match = re.match(r"^\s*Severity:\s*([A-Za-z_ -]+)\s*$", stripped)
+        if severity_match:
+            current_finding["severity"] = severity_match.group(1).strip().lower()
+            continue
+        if re.match(r"^##\s+", stripped) or re.match(r"^###\s+", stripped):
+            current_finding = None
+    return findings
+
+
+def _extract_merge_audit_validation(lines: list[str]) -> dict[str, Any]:
+    validation_lines = _extract_markdown_section_lines(lines, "Validation")
+    nonempty_lines = [line.strip() for line in validation_lines if line.strip()]
+    if not nonempty_lines:
+        return {
+            "available": False,
+            "static_pass_total": 0,
+            "result_count": 0,
+            "live_rerun_count": 0,
+            "live_rerun_status": "",
+            "live_reruns": [],
+            "replay_probe_count": 0,
+            "result_signal_count": 0,
+            "replay_probes": [],
+        }
+
+    static_pass_total = 0
+    result_count = 0
+    live_reruns: list[dict[str, Any]] = []
+    replay_probes: list[dict[str, Any]] = []
+    replay_probe_count = 0
+    result_signal_count = 0
+    rerun_pattern = re.compile(r"^(?:[-*]|\d+\.)\s+fresh rerun\s+`?([^`]+)`?\s*->\s*(.+?)\s*$", re.IGNORECASE)
+    replay_pattern = re.compile(r"^(?:[-*]|\d+\.)\s+replayed\s+(.+?)\s*$", re.IGNORECASE)
+    current_replay_probe: dict[str, Any] | None = None
+    collecting_result_signals = False
+
+    for raw_line in validation_lines:
+        stripped = raw_line.strip()
+        if not stripped:
+            continue
+        static_pass_total += sum(int(match.group(1)) for match in re.finditer(r"(\d+)\s+passed\b", stripped))
+        if "->" in stripped or re.search(r"\bresult(?:\s+now\s+emits)?\s*:", stripped, re.IGNORECASE):
+            result_count += 1
+        if collecting_result_signals:
+            nested_signal_match = re.match(r"^\s{2,}(?:[-*]|\d+\.)\s+(.+?)\s*$", raw_line)
+            if nested_signal_match:
+                signal_text = nested_signal_match.group(1).strip().replace("`", "")
+                result_signal_count += 1
+                if current_replay_probe is not None:
+                    current_replay_probe.setdefault("signals", []).append(signal_text)
+                continue
+            if re.match(r"^\s*(?:[-*]|\d+\.)\s+", raw_line):
+                collecting_result_signals = False
+        rerun_match = rerun_pattern.match(stripped)
+        if rerun_match:
+            result_text = rerun_match.group(2).strip().replace("`", "")
+            live_reruns.append(
+                {
+                    "run_id": rerun_match.group(1).strip().strip("`"),
+                    "result": result_text,
+                    "has_pass_like": bool(re.search(r"\bPASS(?:_WITH_[A-Z]+)?\b", result_text)),
+                    "has_failure": bool(re.search(r"\b(FAILED|FAIL|REJECT)\b", result_text)),
+                }
+            )
+            current_replay_probe = None
+            collecting_result_signals = False
+            continue
+        replay_match = replay_pattern.match(stripped)
+        if replay_match:
+            replay_probe_count += 1
+            current_replay_probe = {
+                "description": replay_match.group(1).strip().replace("`", ""),
+                "signals": [],
+            }
+            replay_probes.append(current_replay_probe)
+            collecting_result_signals = False
+            continue
+        if current_replay_probe is not None:
+            result_now_emits_match = re.match(r"^(?:[-*]|\d+\.)\s+result\s+now\s+emits\s*:\s*$", stripped, re.IGNORECASE)
+            if result_now_emits_match:
+                collecting_result_signals = True
+                continue
+            result_match = re.match(r"^(?:[-*]|\d+\.)\s+result\s*:\s*(.+?)\s*$", stripped, re.IGNORECASE)
+            if result_match:
+                current_replay_probe["result"] = result_match.group(1).strip().replace("`", "")
+                collecting_result_signals = False
+
+    has_pass_like = any(bool(item.get("has_pass_like")) for item in live_reruns)
+    has_failure = any(bool(item.get("has_failure")) for item in live_reruns)
+    if has_pass_like and has_failure:
+        live_rerun_status = "mixed"
+    elif has_failure:
+        live_rerun_status = "failure"
+    elif has_pass_like:
+        live_rerun_status = "pass_like"
+    else:
+        live_rerun_status = ""
+
+    return {
+        "available": True,
+        "static_pass_total": static_pass_total,
+        "result_count": result_count,
+        "live_rerun_count": len(live_reruns),
+        "live_rerun_status": live_rerun_status,
+        "live_reruns": live_reruns,
+        "replay_probe_count": replay_probe_count,
+        "result_signal_count": result_signal_count,
+        "replay_probes": replay_probes,
+    }
+
+
+def _extract_merge_audit_follow_up(lines: list[str]) -> dict[str, Any]:
+    open_items = _extract_markdown_list_items_after_label(lines, "What remains open")
+    addendum_findings = _extract_markdown_list_items_after_label(lines, "Merged addendum findings")
+    consequence_items = _extract_markdown_list_items_after_label(lines, "Current authoritative consequence")
+
+    open_markers: list[str] = []
+    consequence_markers: list[str] = []
+
+    lowered_open_items = [item.lower() for item in open_items]
+    if any("nondeterministic" in item for item in lowered_open_items):
+        open_markers.append("nondeterministic")
+    if any("regressed" in item for item in lowered_open_items):
+        open_markers.append("regressed")
+    if any("mixed fresh-proof stability" in item for item in lowered_open_items):
+        open_markers.append("mixed_fresh_proof_stability")
+
+    lowered_consequence_items = [item.lower() for item in consequence_items]
+    if any("resolved in bounded scope" in item for item in lowered_consequence_items):
+        consequence_markers.append("resolved_in_bounded_scope")
+    if any("remaining blocker" in item for item in lowered_consequence_items):
+        consequence_markers.append("remaining_blocker")
+
+    available = bool(open_items or addendum_findings or consequence_items)
+    return {
+        "available": available,
+        "open_item_count": len(open_items),
+        "open_markers": open_markers,
+        "addendum_finding_count": len(addendum_findings),
+        "consequence_markers": consequence_markers,
+    }
+
+
+def _count_merge_audit_findings_by_severity(findings: list[dict[str, str]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for finding in findings:
+        severity = str(finding.get("severity", "") or "")
+        if not severity:
+            continue
+        counts[severity] = counts.get(severity, 0) + 1
+    return counts
+
+
 def _classify_metric_signal(
     *,
     stage: str,
@@ -966,6 +1246,281 @@ def _build_verdict(
     if regressions:
         return "worse"
     return "unchanged"
+
+
+def _build_companion_merge_audit_watchpoints(
+    *,
+    companion_merge_audit: dict[str, Any],
+    side: str,
+) -> list[dict[str, str]]:
+    watchpoints: list[dict[str, str]] = []
+    merge_audit_status = str(companion_merge_audit.get("status", "") or "")
+    merge_audit_max_severity = str(companion_merge_audit.get("max_severity", "") or "")
+    merge_audit_finding_count = _coerce_int(companion_merge_audit.get("finding_count"))
+    merge_audit_summary_bits = []
+    if merge_audit_status:
+        merge_audit_summary_bits.append(f"status={merge_audit_status}")
+    if merge_audit_max_severity:
+        merge_audit_summary_bits.append(f"max_severity={merge_audit_max_severity}")
+    if merge_audit_finding_count > 0:
+        merge_audit_summary_bits.append(f"finding_count={merge_audit_finding_count}")
+    if merge_audit_summary_bits:
+        watchpoints.append(
+            _watchpoint(
+                "post_run_merge_audit_summary_recorded",
+                severity="info",
+                scope="post_run_merge_audit_md",
+                side=side,
+                message=f"{side} merge audit summary: " + ", ".join(merge_audit_summary_bits),
+            )
+        )
+
+    if MERGE_AUDIT_SEVERITY_RANK.get(merge_audit_max_severity, -1) >= MERGE_AUDIT_SEVERITY_RANK["medium"]:
+        watchpoints.append(
+            _watchpoint(
+                "post_run_merge_audit_severity_attention",
+                severity="warn",
+                scope="post_run_merge_audit_md",
+                side=side,
+                message=f"{side} merge audit max_severity is {merge_audit_max_severity}",
+            )
+        )
+
+    remaining_watchpoint_count = _coerce_int(companion_merge_audit.get("remaining_watchpoint_count"))
+    if remaining_watchpoint_count > 0:
+        watchpoints.append(
+            _watchpoint(
+                "post_run_merge_audit_remaining_watchpoints",
+                severity="warn",
+                scope="post_run_merge_audit_md",
+                side=side,
+                message=(
+                    f"{side} merge audit records {remaining_watchpoint_count} "
+                    "remaining watchpoints"
+                ),
+            )
+        )
+
+    residual_markers = [
+        str(item)
+        for item in companion_merge_audit.get("residual_markers", [])
+        if str(item or "")
+    ]
+    if residual_markers:
+        watchpoints.append(
+            _watchpoint(
+                "post_run_merge_audit_residual_attention",
+                severity="warn",
+                scope="post_run_merge_audit_md",
+                side=side,
+                message=(
+                    f"{side} merge audit residual markers: "
+                    + ",".join(residual_markers)
+                ),
+            )
+        )
+
+    finding_severity_counts = companion_merge_audit.get("finding_severity_counts", {})
+    if isinstance(finding_severity_counts, dict) and finding_severity_counts:
+        breakdown = ", ".join(
+            f"{severity}={_coerce_int(count)}"
+            for severity, count in sorted(
+                finding_severity_counts.items(),
+                key=lambda item: (
+                    MERGE_AUDIT_SEVERITY_RANK.get(str(item[0] or ""), -1),
+                    str(item[0] or ""),
+                ),
+            )
+        )
+        watchpoints.append(
+            _watchpoint(
+                "post_run_merge_audit_finding_breakdown",
+                severity="info",
+                scope="post_run_merge_audit_md",
+                side=side,
+                message=f"{side} merge audit finding breakdown: {breakdown}",
+            )
+        )
+
+    findings = companion_merge_audit.get("findings", [])
+    if isinstance(findings, list):
+        top_finding = max(
+            (
+                finding
+                for finding in findings
+                if isinstance(finding, dict) and str(finding.get("severity", "") or "")
+            ),
+            key=lambda item: MERGE_AUDIT_SEVERITY_RANK.get(str(item.get("severity", "") or ""), -1),
+            default=None,
+        )
+        if isinstance(top_finding, dict):
+            top_finding_severity = str(top_finding.get("severity", "") or "")
+            top_finding_title = str(top_finding.get("title", "") or "")
+            if (
+                top_finding_title
+                and MERGE_AUDIT_SEVERITY_RANK.get(top_finding_severity, -1)
+                >= MERGE_AUDIT_SEVERITY_RANK["medium"]
+            ):
+                watchpoints.append(
+                    _watchpoint(
+                        "post_run_merge_audit_top_finding_attention",
+                        severity="warn",
+                        scope="post_run_merge_audit_md",
+                        side=side,
+                        message=(
+                            f"{side} merge audit top finding [{top_finding_severity}]: "
+                            f"{top_finding_title}"
+                        ),
+                    )
+                )
+
+    rerun_posture = companion_merge_audit.get("rerun_posture", {})
+    if isinstance(rerun_posture, dict):
+        posture_bits = []
+        patch_status = str(rerun_posture.get("patch_status", "") or "")
+        if patch_status:
+            posture_bits.append(f"patch_status={patch_status}")
+        local_validation = str(rerun_posture.get("local_validation", "") or "")
+        if local_validation:
+            posture_bits.append(f"local_validation={local_validation}")
+        next_operator_step = str(rerun_posture.get("next_operator_step_before_rerun", "") or "")
+        if next_operator_step:
+            posture_bits.append(f"next_operator_step_before_rerun={next_operator_step}")
+        if posture_bits:
+            watchpoints.append(
+                _watchpoint(
+                    "post_run_merge_audit_rerun_posture_recorded",
+                    severity="info",
+                    scope="post_run_merge_audit_md",
+                    side=side,
+                    message=f"{side} rerun posture: " + ", ".join(posture_bits),
+                )
+            )
+
+    validation = companion_merge_audit.get("validation", {})
+    if isinstance(validation, dict) and validation.get("available"):
+        summary_bits = []
+        static_pass_total = _coerce_int(validation.get("static_pass_total"))
+        if static_pass_total > 0:
+            summary_bits.append(f"static_pass_total={static_pass_total}")
+        result_count = _coerce_int(validation.get("result_count"))
+        if result_count > 0:
+            summary_bits.append(f"result_count={result_count}")
+        live_rerun_count = _coerce_int(validation.get("live_rerun_count"))
+        if live_rerun_count > 0:
+            summary_bits.append(f"live_reruns={live_rerun_count}")
+        live_rerun_status = str(validation.get("live_rerun_status", "") or "")
+        if live_rerun_status:
+            summary_bits.append(f"live_status={live_rerun_status}")
+        replay_probe_count = _coerce_int(validation.get("replay_probe_count"))
+        if replay_probe_count > 0:
+            summary_bits.append(f"replay_probes={replay_probe_count}")
+        result_signal_count = _coerce_int(validation.get("result_signal_count"))
+        if result_signal_count > 0:
+            summary_bits.append(f"result_signals={result_signal_count}")
+        if summary_bits:
+            watchpoints.append(
+                _watchpoint(
+                    "post_run_merge_audit_validation_summary_recorded",
+                    severity="info",
+                    scope="post_run_merge_audit_md",
+                    side=side,
+                    message=f"{side} merge audit validation summary: " + ", ".join(summary_bits),
+                )
+            )
+        if live_rerun_count > 0 and live_rerun_status == "mixed":
+            watchpoints.append(
+                _watchpoint(
+                    "post_run_merge_audit_live_verification_mixed",
+                    severity="warn",
+                    scope="post_run_merge_audit_md",
+                    side=side,
+                    message=f"{side} merge audit live verification is mixed across {live_rerun_count} reruns",
+                )
+            )
+        elif live_rerun_count > 0 and live_rerun_status == "failure":
+            watchpoints.append(
+                _watchpoint(
+                    "post_run_merge_audit_live_verification_failure",
+                    severity="warn",
+                    scope="post_run_merge_audit_md",
+                    side=side,
+                    message=f"{side} merge audit live verification records failure across {live_rerun_count} reruns",
+                )
+            )
+
+    follow_up = companion_merge_audit.get("follow_up", {})
+    if isinstance(follow_up, dict) and follow_up.get("available"):
+        summary_bits = []
+        open_item_count = _coerce_int(follow_up.get("open_item_count"))
+        if open_item_count > 0:
+            summary_bits.append(f"open_items={open_item_count}")
+        addendum_finding_count = _coerce_int(follow_up.get("addendum_finding_count"))
+        if addendum_finding_count > 0:
+            summary_bits.append(f"addendum_findings={addendum_finding_count}")
+        consequence_markers = [
+            str(item)
+            for item in follow_up.get("consequence_markers", [])
+            if str(item or "")
+        ]
+        if consequence_markers:
+            summary_bits.append(f"consequence_markers={len(consequence_markers)}")
+        if summary_bits:
+            watchpoints.append(
+                _watchpoint(
+                    "post_run_merge_audit_follow_up_summary_recorded",
+                    severity="info",
+                    scope="post_run_merge_audit_md",
+                    side=side,
+                    message=f"{side} merge audit follow-up summary: " + ", ".join(summary_bits),
+                )
+            )
+
+        open_markers = [
+            str(item)
+            for item in follow_up.get("open_markers", [])
+            if str(item or "")
+        ]
+        if open_item_count > 0:
+            marker_suffix = f" ({','.join(open_markers)})" if open_markers else ""
+            watchpoints.append(
+                _watchpoint(
+                    "post_run_merge_audit_open_follow_up_attention",
+                    severity="warn",
+                    scope="post_run_merge_audit_md",
+                    side=side,
+                    message=(
+                        f"{side} merge audit follow-up still lists {open_item_count} open items"
+                        f"{marker_suffix}"
+                    ),
+                )
+            )
+
+        if consequence_markers:
+            watchpoints.append(
+                _watchpoint(
+                    "post_run_merge_audit_consequence_markers_recorded",
+                    severity="info",
+                    scope="post_run_merge_audit_md",
+                    side=side,
+                    message=(
+                        f"{side} merge audit consequence markers: "
+                        + ",".join(consequence_markers)
+                    ),
+                )
+            )
+        if "remaining_blocker" in consequence_markers:
+            watchpoints.append(
+                _watchpoint(
+                    "post_run_merge_audit_remaining_blocker_attention",
+                    severity="warn",
+                    scope="post_run_merge_audit_md",
+                    side=side,
+                    message=f"{side} merge audit authoritative consequence still records a remaining blocker",
+                )
+            )
+
+    return watchpoints
 
 
 def _build_watchpoints(
@@ -1264,68 +1819,12 @@ def _build_watchpoints(
                 )
         companion_merge_audit = record.get("companion_merge_audit", {})
         if isinstance(companion_merge_audit, dict) and companion_merge_audit.get("available"):
-            merge_audit_status = str(companion_merge_audit.get("status", "") or "")
-            merge_audit_max_severity = str(companion_merge_audit.get("max_severity", "") or "")
-            merge_audit_finding_count = _coerce_int(companion_merge_audit.get("finding_count"))
-            merge_audit_summary_bits = []
-            if merge_audit_status:
-                merge_audit_summary_bits.append(f"status={merge_audit_status}")
-            if merge_audit_max_severity:
-                merge_audit_summary_bits.append(f"max_severity={merge_audit_max_severity}")
-            if merge_audit_finding_count > 0:
-                merge_audit_summary_bits.append(f"finding_count={merge_audit_finding_count}")
-            if merge_audit_summary_bits:
-                watchpoints.append(
-                    _watchpoint(
-                        "post_run_merge_audit_summary_recorded",
-                        severity="info",
-                        scope="post_run_merge_audit_md",
-                        side=side,
-                        message=f"{side} merge audit summary: " + ", ".join(merge_audit_summary_bits),
-                    )
+            watchpoints.extend(
+                _build_companion_merge_audit_watchpoints(
+                    companion_merge_audit=companion_merge_audit,
+                    side=side,
                 )
-            if MERGE_AUDIT_SEVERITY_RANK.get(merge_audit_max_severity, -1) >= MERGE_AUDIT_SEVERITY_RANK["medium"]:
-                watchpoints.append(
-                    _watchpoint(
-                        "post_run_merge_audit_severity_attention",
-                        severity="warn",
-                        scope="post_run_merge_audit_md",
-                        side=side,
-                        message=f"{side} merge audit max_severity is {merge_audit_max_severity}",
-                    )
-                )
-            remaining_watchpoint_count = _coerce_int(companion_merge_audit.get("remaining_watchpoint_count"))
-            if remaining_watchpoint_count > 0:
-                watchpoints.append(
-                    _watchpoint(
-                        "post_run_merge_audit_remaining_watchpoints",
-                        severity="warn",
-                        scope="post_run_merge_audit_md",
-                        side=side,
-                        message=(
-                            f"{side} merge audit records {remaining_watchpoint_count} "
-                            "remaining watchpoints"
-                        ),
-                    )
-                )
-            residual_markers = [
-                str(item)
-                for item in companion_merge_audit.get("residual_markers", [])
-                if str(item or "")
-            ]
-            if residual_markers:
-                watchpoints.append(
-                    _watchpoint(
-                        "post_run_merge_audit_residual_attention",
-                        severity="warn",
-                        scope="post_run_merge_audit_md",
-                        side=side,
-                        message=(
-                            f"{side} merge audit residual markers: "
-                            + ",".join(residual_markers)
-                        ),
-                    )
-                )
+            )
         note_markers = record.get("note_markers", {}) if isinstance(record.get("note_markers", {}), dict) else {}
         guarded_runner_summary = (
             record.get("guarded_runner_summary", {})
