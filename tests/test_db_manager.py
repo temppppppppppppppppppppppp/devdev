@@ -190,6 +190,7 @@ def test_create_selection_and_logging_tables_delegates_to_family_helpers():
     runtime = DBBootstrapRuntime.__new__(DBBootstrapRuntime)
     runtime._create_adjunct_retention_tables = MagicMock()
     runtime._create_llm_call_tables = MagicMock()
+    runtime._create_context_cache_attempt_tables = MagicMock()
     runtime._create_stage_attempt_tables = MagicMock()
     runtime._create_ui_event_tables = MagicMock()
     runtime._create_cost_log_tables = MagicMock()
@@ -198,6 +199,7 @@ def test_create_selection_and_logging_tables_delegates_to_family_helpers():
 
     runtime._create_adjunct_retention_tables.assert_called_once_with()
     runtime._create_llm_call_tables.assert_called_once_with()
+    runtime._create_context_cache_attempt_tables.assert_called_once_with()
     runtime._create_stage_attempt_tables.assert_called_once_with()
     runtime._create_ui_event_tables.assert_called_once_with()
     runtime._create_cost_log_tables.assert_called_once_with()
@@ -317,6 +319,46 @@ def test_save_llm_call_persists_timing_decomposition_fields(db):
     assert row["api_elapsed_ms"] == 8000
     assert row["retry_count"] == 2
     assert row["continuation_count"] == 1
+
+
+def test_save_context_cache_attempt_persists_runtime_fields(db):
+    db.save_context_cache_attempt(
+        agent_name="chief_writer",
+        model="vertexai:gemini-2.5-pro",
+        cache_type="manuscript",
+        project_name="golden_canary_ep_15",
+        content_chars=42000,
+        min_content_chars=50000,
+        ttl_seconds=1800,
+        cache_outcome="skipped",
+        cache_reason="content_too_short",
+        cache_name=None,
+        content_hash="hash1234",
+        error_msg="",
+        stage=4,
+        ep_num=15,
+    )
+
+    row = db.cursor.execute(
+        """
+        SELECT agent_name, model, cache_type, project_name, content_chars, min_content_chars,
+               ttl_seconds, cache_outcome, cache_reason, content_hash, stage, ep_num
+        FROM context_cache_attempts
+        WHERE agent_name = 'chief_writer'
+        """
+    ).fetchone()
+
+    assert row["model"] == "vertexai:gemini-2.5-pro"
+    assert row["cache_type"] == "manuscript"
+    assert row["project_name"] == "golden_canary_ep_15"
+    assert row["content_chars"] == 42000
+    assert row["min_content_chars"] == 50000
+    assert row["ttl_seconds"] == 1800
+    assert row["cache_outcome"] == "skipped"
+    assert row["cache_reason"] == "content_too_short"
+    assert row["content_hash"] == "hash1234"
+    assert row["stage"] == 4
+    assert row["ep_num"] == 15
 
 
 def test_save_llm_call_timing_decomposition_defaults_to_null(db):

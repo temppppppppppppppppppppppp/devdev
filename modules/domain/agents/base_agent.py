@@ -681,6 +681,51 @@ class BaseAgent:
         except Exception as _e:
             logging.debug("[llm_call_log] save failed: %s", _e)
 
+    def _log_context_cache_attempt_to_db(
+        self,
+        *,
+        cache_type: str,
+        project_name: str,
+        content_chars: int,
+        ttl_seconds: int,
+        content_hash: str,
+        cache_outcome: str,
+        cache_reason: str | None = None,
+        cache_name: str | None = None,
+        error_msg: str | None = None,
+        stage: int | None = None,
+        ep_num: int | None = None,
+    ) -> None:
+        """Non-blocking DB write for one context-cache attempt."""
+        try:
+            _db = self._resolve_logging_db()
+            if not (_db and hasattr(_db, "save_context_cache_attempt")):
+                return
+
+            if stage is None:
+                stage = self._resolve_stage_number()
+            if ep_num is None:
+                ep_num = self._resolve_episode_number()
+
+            _db.save_context_cache_attempt(
+                agent_name=_to_snake_case(self.__class__.__name__),
+                model=self.primary_model or "",
+                cache_type=cache_type,
+                project_name=project_name,
+                content_chars=max(0, int(content_chars or 0)),
+                min_content_chars=max(0, int(self._MIN_CACHE_CONTENT or 0)),
+                ttl_seconds=max(0, int(ttl_seconds or 0)),
+                cache_outcome=cache_outcome,
+                cache_reason=cache_reason,
+                cache_name=cache_name,
+                content_hash=content_hash,
+                error_msg=error_msg,
+                stage=stage,
+                ep_num=ep_num,
+            )
+        except Exception as _e:
+            logging.debug("[context_cache_attempt_log] save failed: %s", _e)
+
     def ask(self, prompt, temperature=0.5, response_schema=None, thinking_level=None):
         """Submit a JSON-only prompt to the configured LLM stack."""
         prompt_state = self._prepare_ask_prompt(prompt=prompt)
@@ -2203,6 +2248,7 @@ class BaseAgent:
         # 콘텐츠 해시 생성
         content_hash = hashlib.md5(content.encode("utf-8"), usedforsecurity=False).hexdigest()[:16]
         cache_key = f"{cache_type}_{project_name}_{content_hash}"
+        content_chars = len(content or "")
 
         current_time = time.time()
 
@@ -2213,6 +2259,15 @@ class BaseAgent:
             if cached_info:
                 if current_time - cached_info["created_at"] < ttl_seconds:
                     logging.info(f" [CTX-CACHE] HIT: {cache_type} (TTL 내 재사용)")
+                    self._log_context_cache_attempt_to_db(
+                        cache_type=cache_type,
+                        project_name=project_name,
+                        content_chars=content_chars,
+                        ttl_seconds=ttl_seconds,
+                        content_hash=content_hash,
+                        cache_outcome="hit",
+                        cache_name=cached_info.get("name"),
+                    )
                     return {"cache_name": cached_info.get("name"), "cached": True, "content_hash": content_hash}
                 else:
                     # 만료된 캐시 삭제 [I-20] KeyError 방지
@@ -2221,13 +2276,23 @@ class BaseAgent:
         # Gemini Context Caching API 호출 시도
         try:
             # 콘텐츠가 너무 짧으면 캐싱 스킵 (32k 토큰 이하)
-            if len(content) < self._MIN_CACHE_CONTENT:
-                return {
+            if content_chars < self._MIN_CACHE_CONTENT:
+                result = {
                     "cache_name": None,
                     "cached": False,
                     "content_hash": content_hash,
                     "reason": "content_too_short",
                 }
+                self._log_context_cache_attempt_to_db(
+                    cache_type=cache_type,
+                    project_name=project_name,
+                    content_chars=content_chars,
+                    ttl_seconds=ttl_seconds,
+                    content_hash=content_hash,
+                    cache_outcome="skipped",
+                    cache_reason="content_too_short",
+                )
+                return result
 
             # [V69.1] Gemini API 시그니처 변경 대응: config 파라미터 사용
             cache = self.client.caches.create(
@@ -2254,7 +2319,17 @@ class BaseAgent:
                     for old_key, _ in snapshot[: len(snapshot) - self._CONTEXT_CACHE_MAX]:
                         self._context_caches.pop(old_key, None)
 
-            logging.info(f" [V61.5] 컨텍스트 캐시 생성: {cache_type} ({len(content)}자)")
+            logging.info(f" [V61.5] 컨텍스트 캐시 생성: {cache_type} ({content_chars}자)")
+
+            self._log_context_cache_attempt_to_db(
+                cache_type=cache_type,
+                project_name=project_name,
+                content_chars=content_chars,
+                ttl_seconds=ttl_seconds,
+                content_hash=content_hash,
+                cache_outcome="created",
+                cache_name=cache.name,
+            )
 
             return {"cache_name": cache.name, "cached": False, "content_hash": content_hash}
 
@@ -2268,6 +2343,16 @@ class BaseAgent:
                     BaseAgent._key_rotation_pending = True
             else:
                 logging.warning(f" [V61.5] 컨텍스트 캐싱 실패 (계속 진행): {str(e)[:50]}")
+            self._log_context_cache_attempt_to_db(
+                cache_type=cache_type,
+                project_name=project_name,
+                content_chars=content_chars,
+                ttl_seconds=ttl_seconds,
+                content_hash=content_hash,
+                cache_outcome="error",
+                cache_reason="cache_create_failed",
+                error_msg=str(e)[:100],
+            )
             return {"cache_name": None, "cached": False, "content_hash": content_hash, "error": str(e)[:100]}
 
     def _ask_with_cached_context(

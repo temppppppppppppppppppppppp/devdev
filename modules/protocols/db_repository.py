@@ -67,6 +67,24 @@ class DBRepositoryProtocol(Protocol):
     def save_anchor(self, key: str, data: Any) -> bool: ...
     def load_anchor(self, key: str, default: Any = None) -> Any: ...
     def load_all_anchors(self) -> dict: ...
+    def save_context_cache_attempt(
+        self,
+        *,
+        agent_name: str,
+        model: str,
+        cache_type: str,
+        project_name: str = "",
+        content_chars: int,
+        min_content_chars: int,
+        ttl_seconds: int,
+        cache_outcome: str,
+        cache_reason: str | None = None,
+        cache_name: str | None = None,
+        content_hash: str | None = None,
+        error_msg: str | None = None,
+        stage: int | None = None,
+        ep_num: int | None = None,
+    ) -> None: ...
 
     # --- 블루프린트 (db_manager.py:726-732) ---
 
