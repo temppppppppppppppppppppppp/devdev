@@ -16,7 +16,12 @@ import asyncio
 import logging
 import os
 from pathlib import Path
-from typing import Any, Literal, NotRequired, TypedDict
+from typing import Any, Literal, TypedDict
+
+try:
+    from typing import NotRequired
+except ImportError:  # pragma: no cover - Python 3.10 compatibility
+    from typing_extensions import NotRequired
 
 from modules.core.constants import VolumeSettings, smart_truncate
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
