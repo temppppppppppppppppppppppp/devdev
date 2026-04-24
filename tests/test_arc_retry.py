@@ -103,11 +103,11 @@ def test_finalizer_returns_retry_on_director_reject() -> None:
 
 def test_orchestrator_next_action_does_not_break_loop() -> None:
     source = Path("modules/core/stage2_orchestrator.py").read_text(encoding="utf-8")
-    marker = 'elif transition["action"] == "next":'
+    marker = 'if attempt_result["action"] == "break":'
     idx = source.find(marker)
     assert idx != -1
 
-    window = source[idx : idx + 180]
-    assert "attempt += 1" in window
-    assert "continue" in window
-    assert "break" not in window.split("continue", 1)[0]
+    window = source[idx : idx + 120]
+    assert "passed = True" in window
+    assert "break" in window
+    assert 'attempt_result["action"] == "next"' not in window

@@ -33,16 +33,16 @@ Example:
 execution_meta:
   schema_version: execution-meta-block-v1
   topic: authority-alignment-benchmark-operating-model-hardening
-  github_issue: 5
-  status: pending
-  queue_role: parked_future_wave
-  roadmap_rank: 1
   depends_on: []
   tranches:
     - id: authority-benchmark-proof-contract-freeze
       title: Authority and benchmark proof contract freeze
     - id: benchmark-record-comparison
       title: Benchmark-record comparison surface
+  github_issue: 5
+  status: pending
+  queue_role: parked_future_wave
+  roadmap_rank: 1
   verification_commands:
     - pytest tests/test_archive_benchmark_record.py -q
     - pytest tests/test_diff_canary_summaries.py -q
@@ -56,22 +56,6 @@ execution_meta:
 - `topic`
   - string
   - must match the execution SSOT topic slug
-- `status`
-  - string
-  - allowed initial values:
-    - `pending`
-    - `in_progress`
-    - `completed`
-    - `blocked`
-- `queue_role`
-  - string
-  - allowed values:
-    - `front_active`
-    - `blocked_holding`
-    - `parked_future_wave`
-    - `historical_backing`
-- `roadmap_rank`
-  - positive integer
 - `depends_on`
   - list of topic slugs
   - may be empty
@@ -82,6 +66,22 @@ execution_meta:
 
 - `github_issue`
   - integer
+- `status`
+  - string
+  - allowed values when present:
+    - `pending`
+    - `in_progress`
+    - `completed`
+    - `blocked`
+- `queue_role`
+  - string
+  - allowed values when present:
+    - `front_active`
+    - `blocked_holding`
+    - `parked_future_wave`
+    - `historical_backing`
+- `roadmap_rank`
+  - positive integer when present
 - `verification_commands`
   - list of strings
 
@@ -107,6 +107,9 @@ Recommended guardrails:
 - do not scrape tranche identity from `## 8. Execution Tranches`
 - do not infer `depends_on` from prose once the block is present
 - if the block is absent, current tooling may fall back to legacy prose-based inference during migration
+- phase 1 queue tooling should treat `depends_on` and tranche identity as the primary block-backed fields
+- phase 1 queue tooling should keep `status`, `queue_role`, and `roadmap_rank` under legacy authority unless a later migration explicitly upgrades them
+- phase 2 guard may reject a `depends_on` edge when the legacy roadmap ranks are both present and invert the dependency order
 
 ## 8. Migration Strategy
 
@@ -114,10 +117,12 @@ Preferred rollout:
 
 1. add this contract
 2. add the example block to the execution SSOT template
-3. pilot the block in a small set of live queue docs
-4. update `sync_temp_queue_state.py` to prefer the block when present
-5. update `ops_validator.py` to validate the block-backed fields
-6. later, decide whether block presence should become mandatory
+3. phase 1 pilot the block in a small set of modern live queue docs
+4. update `sync_temp_queue_state.py` to read `depends_on` and tranche identity from the block when present
+5. update `ops_validator.py` to validate the phase 1 block-backed fields
+6. add a narrow phase 2 guard that fails fast when `depends_on` contradicts legacy roadmap rank ordering
+7. later, decide whether block presence should become mandatory
+8. only after that, evaluate whether `status`, `queue_role`, and `roadmap_rank` should migrate into block authority
 
 ## 9. Guardrails
 

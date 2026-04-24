@@ -1,14 +1,14 @@
 # Authority Alignment Benchmark Operating Model Hardening Execution SSOT
 
 Date: 2026-04-23
-Status: execution-ready (3-pass audited; parked future wave; upstream proof and benchmark governor lane)
+Status: closed (completed 2026-04-24; upstream proof and benchmark governor lane satisfied; GitHub issue #5 closed as completed after Stage3/Stage4 cache-proof pass and clean operator snapshot)
 Canonical Path: `docs/2026-04-23/authority-alignment-benchmark-operating-model-hardening-execution-ssot.md`
-Temp Mirror Path: `docs/temp/authority-alignment-benchmark-operating-model-hardening-execution-ssot.md`
+Temp Mirror Path: removed after closure; canonical retained at this path
 Commit State:
 - Baseline Commit: `30b9436fc3a5c3fcc3f6397bf23bfe45d24af918`
 - Baseline Dirty Summary: `dirty: prior queue and governance doc updates plus untracked docs/2026-04-23/; no unrelated project-data cleanup performed`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `2026-04-23 issue-5 formalization re-audit promoted the proof governor into its own parked execution lane ahead of #3`
+- Resume Commit: `6f4e4fab4d1fa31ac210dbc9cf96f5762bd674f6`
+- Resume Drift Summary: `re-audited on feat/execution-meta-block-impl after c14a4c4a, 75c81729, and 6f4e4fab landed; comparator normalization now covers linked merge-audit findings, validation/replay/result signals, addendum blockers, and operator proof signal/highlight surfacing; the immediate follow-up is closure validation and issue-5 snapshot preview, not missing first-class proof surfacing`
 Source Survey Docs:
 - `docs/2026-04-23/authority-alignment-benchmark-operating-model-hardening-3pass-audit.md`
 - `docs/2026-04-23/stage234-session-memory-max-utilization-deep-dive-adversarial-3pass-audit.md`
@@ -24,17 +24,48 @@ Evidence Artifacts:
 - `modules/core/stage4_post_pass_runtime.py`
 - `scripts/archive_benchmark_record.py`
 - `scripts/benchmark_archive_runtime.py`
+- `scripts/compare_benchmark_records.py`
+- `scripts/link_benchmark_companions.py`
+- `scripts/report_benchmark_operator_lines.py`
+- `scripts/render_benchmark_operator_comment_md.py`
+- `scripts/post_benchmark_operator_comment.py`
 - `scripts/diff_canary_summaries.py`
 - `scripts/regression_validation_tiers.py`
 - `benchmarks/README.md`
 - `benchmarks/benchmark_index.csv`
 - `tests/test_archive_benchmark_record.py`
+- `tests/test_compare_benchmark_records.py`
+- `tests/test_link_benchmark_companions.py`
+- `tests/test_report_benchmark_operator_lines.py`
+- `tests/test_render_benchmark_operator_comment_md.py`
+- `tests/test_post_benchmark_operator_comment.py`
 - `tests/test_diff_canary_summaries.py`
 - `tests/test_regression_validation_tier_contract.py`
 - `tests/test_stage2_finalizer.py`
 - `tests/test_stage3_npc_capital_carryforward_guardrail.py`
 - `tests/test_stage4_post_processor.py`
 Side-Effect Coverage: covered
+
+## 0. Execution Metadata Block
+
+```yaml
+execution_meta:
+  schema_version: execution-meta-block-v1
+  topic: authority-alignment-benchmark-operating-model-hardening
+  depends_on: []
+  tranches:
+    - id: authority-benchmark-proof-contract-freeze
+      title: Authority and benchmark proof contract freeze
+    - id: benchmark-record-comparison
+      title: Benchmark-record comparison surface
+    - id: rerun-diff-watchpoint-contract
+      title: Rerun diff and watchpoint contract
+    - id: operator-facing-benchmark-hardening
+      title: Operator-facing benchmark hardening surface
+    - id: downstream-proof-gate-alignment
+      title: Downstream proof gate alignment
+  github_issue: 5
+```
 
 ## 1. Intent
 
@@ -55,8 +86,10 @@ Side-Effect Coverage: covered
   - `benchmark_index.csv` exists as the current quick comparison surface
 - The comparison layer is incomplete:
   - canary-summary diff exists
-  - benchmark-to-benchmark structured comparison does not yet exist
-  - explicit benchmark-hardening watchpoint normalization is still missing
+  - a first read-only benchmark-to-benchmark comparator now exists over `benchmark_index.csv`, `manifest.json`, and `stage_metrics.csv`
+  - comparator-backed watchpoints now exist for coarse status, tag, proof-digest, Stage4 regression signals, note-backed rerun progression, guarded-summary staleness attention, explicit evidence-json companion summaries, linked merge-audit findings, validation replay/result counts, addendum blockers, and sidecar-linked companion loading
+  - read-only operator-facing wrappers now exist for batch report lines, GitHub-comment-ready markdown rendering, optional issue comment posting, and compact `proof_signal_summary` / `proof_highlights` surfacing over the same benchmark surfaces
+  - remaining incompleteness is live record-level companion-link population and broader non-companion proof normalization, not the absence of comparator-backed operator surfacing
 - Current queue posture has now been refreshed to match that reality:
   - `authority-alignment-benchmark-operating-model-hardening` is the visible rank-1 parked proof lane
   - `stage234-session-memory-max-utilization` remains visible as the downstream rank-2 rollout lane
@@ -85,11 +118,13 @@ Excluded:
 - Benchmark archive substrate already spans scripts, archive records, and auto-archive runner wiring.
 - Current comparison is split:
   - canary summary diff is code-backed
-  - rerun proof and post-run merge audit are document-backed
-  - benchmark-record comparison is missing
+  - benchmark-record comparison now has a first read-only comparator seed
+  - linked merge-audit normalization is now comparator-backed, but broader rerun proof ingestion still depends on explicit companion artifacts
 - Current watchpoint posture is partial:
   - generic regression tiers exist
-  - issue-specific benchmark watchpoints do not yet
+  - the benchmark comparator now emits a first watchpoint vocabulary plus note-backed rerun, stale-summary attention, explicit evidence-json companion summaries, linked markdown merge-audit finding/validation/addendum summaries, and auto-follow for explicit companion-link sidecars
+  - operator-facing wrappers now expose the same surface as one-line report payloads, issue-comment-ready markdown, optional `gh issue comment` posting helpers, compact `proof_signal_summary`, and targeted `proof_highlights` without changing comparator or audit semantics
+  - live record-level link population is still manual, and broader archive-native proof normalization remains future work
 
 ## 5. Pass 2. Semantic Classification
 
@@ -104,6 +139,7 @@ Excluded:
   - benchmark corpus and index
 - Class C: comparison and watchpoint surfaces
   - canary diff
+  - benchmark-record comparator
   - rerun proof linkage
   - regression-tier metadata
 - Class D: downstream dependency governance
@@ -145,7 +181,7 @@ Excluded:
   - `episode_state_packet`
   - `state_truth_owner_contract`
 - Compare benchmark records directly, not only canary summary JSONs.
-- Normalize rerun and post-run merge audit outputs back into benchmark records or an equivalent comparison surface.
+- Normalize rerun and post-run merge audit outputs back into benchmark records or an equivalent comparison surface; the current companion-linked markdown path is the bounded first realization, not the final endpoint.
 - Expose this lane as an upstream dependency for `#3` without promoting it to front-active implementation authority by default.
 
 ## 8. Execution Tranches
@@ -153,10 +189,24 @@ Excluded:
 1. Authority and benchmark proof contract freeze
    - document current owner surfaces and benchmark archive shape under one narrow lane
 2. Benchmark-record comparison surface
-   - add or normalize comparator support over `benchmark_index.csv`, `manifest.json`, and `stage_metrics.csv`
+   - first seed landed as `scripts/compare_benchmark_records.py`
+   - current surface compares `benchmark_index.csv`, `manifest.json`, and `stage_metrics.csv` in read-only mode
+   - current surface also emits a first watchpoint vocabulary for coarse status/tag shifts plus Stage4 attempt, pass-like, cost, proof-digest attention, note-backed rerun progression, guarded-summary staleness attention, explicit evidence-json companion summaries, linked markdown merge-audit finding/validation/addendum summaries, and sidecar-linked companion loading
+   - explicit companion sidecars can now be written next to archived benchmark records without mutating benchmark/index truth
+   - deeper merge-audit normalization now covers finding titles, severity posture, rerun posture, validation replay/result signals, addendum findings, authoritative consequences, open items, and blocker markers
+   - next step is to expand normalization beyond explicitly linked companion docs and reduce manual live record-link population
 3. Rerun diff and watchpoint contract
-   - define explicit watchpoint vocabulary and normalize rerun/post-run merge audit linkage
+   - current comparator/readout surfaces now lift `replay_probe_count`, `result_signal_count`, `open_items`, `addendum_findings`, `consequence_markers`, and `remaining_blocker` into watchpoint and summary payloads
+   - remaining work is broader archive-native proof ingestion and downstream adoption rather than missing first-signal coverage
 4. Operator-facing benchmark hardening surface
+   - first seed landed as `scripts/report_benchmark_operator_lines.py`
+   - current surface also includes `scripts/render_benchmark_operator_comment_md.py` and `scripts/post_benchmark_operator_comment.py` so the same benchmark operator payload can be previewed, rendered as markdown, or posted to GitHub issue comments without redefining truth or gate semantics
+   - compare rows now surface compact `proof_signal_summary` and targeted `proof_highlights` so snapshots can show why a pair is risky without reopening the raw merge-audit markdown
+   - default snapshot cadence is bounded and manual: refresh the operator snapshot after a landed comparator/watchpoint/helper tranche, after live benchmark companion-link population changes, or immediately before posting a new `#5` issue snapshot
+   - operator order stays fixed as `report_benchmark_operator_lines.py` -> `render_benchmark_operator_comment_md.py` -> optional `post_benchmark_operator_comment.py --post`
+   - explicit helper ergonomics now also include `--latest-live-pair` on the report/render/post wrappers for the common "latest two live benchmark records" snapshot path without changing default behavior
+   - `post_benchmark_operator_comment.py` also now supports `--issue-5-defaults` to fill the repo-local `#5` target when omitted, while still requiring explicit `--post` before any GitHub write occurs
+   - the common issue-5 snapshot preset is now `--issue-5-snapshot`: on report/render it enables the latest-live-pair path, and on post it enables both the repo-local `#5` target defaults and latest-live-pair while still keeping GitHub writes behind explicit `--post`
    - make first-owner and regression readouts easier to inspect without elevating telemetry to truth
 5. Downstream proof gate alignment
    - wire the lane so `#3`, `#4`, and `#7` can reference the same benchmark and authority proof standard
@@ -165,6 +215,7 @@ Excluded:
 
 - Benchmark records become structurally comparable beyond canary-summary-only diff.
 - Rerun and post-run merge audit outcomes map back into an explicit benchmark-comparison surface.
+- Operator-facing report and markdown snapshots surface comparator proof signals and proof highlights without redefining truth ownership.
 - Authority owner surfaces are documented and grouped as one operating model rather than scattered historical fragments.
 - The active roadmap and queue expose this lane ahead of `stage234-session-memory-max-utilization`.
 - No provider-native hidden state or telemetry surface is promoted above explicit truth-owner contracts.
@@ -172,8 +223,13 @@ Excluded:
 ## 10. Verification Plan
 
 - `pytest tests/test_archive_benchmark_record.py -q`
+- `pytest tests/test_compare_benchmark_records.py -q`
 - `pytest tests/test_diff_canary_summaries.py -q`
+- `pytest tests/test_link_benchmark_companions.py -q`
 - `pytest tests/test_regression_validation_tier_contract.py -q`
+- `pytest tests/test_report_benchmark_operator_lines.py -q`
+- `pytest tests/test_render_benchmark_operator_comment_md.py -q`
+- `pytest tests/test_post_benchmark_operator_comment.py -q`
 - `pytest tests/test_stage2_finalizer.py -k "cross_stage_authority_packet" -q`
 - `pytest tests/test_stage3_npc_capital_carryforward_guardrail.py -k "cross_stage_authority_packet or capital_truth" -q`
 - `pytest tests/test_stage4_post_processor.py -k "state_truth_owner_contract or numeric_carryover" -q`
@@ -205,7 +261,36 @@ Excluded:
 - validator command: `python scripts/ops_validator.py --strict`
 - closure harness: `docs/implementation/execution-closure-harness.md`
 - optional queue state entry: `docs/temp/queue-state.json`
+- preview snapshot before any GitHub write: `python scripts/post_benchmark_operator_comment.py --issue-5-snapshot`
+- GitHub comment posting remains opt-in and requires explicit `--post`
 - execution-start rule:
   - re-run the 3-pass audit on the source survey and this SSOT
   - confirm at least 95% confidence against current `main`
   - then refresh `Resume Commit` and `Resume Drift Summary` before patching code from this document
+
+## 14. Closure Note
+
+Closure Date: 2026-04-24
+Closure Status: closed
+GitHub Issue: `#5` closed as completed
+Operator Snapshot: `https://github.com/temppppppppppppppppppppppp/devdev/issues/5#issuecomment-4311323566`
+Closure Record: `20260424_153535__stage4-supervised__target-ep18__143cee26`
+
+Verified behavior:
+
+- `python -X utf8 scripts/backfill_benchmark_native_post_run_evidence.py 20260424_153535__stage4-supervised__target-ep18__143cee26` wrote native post-run evidence and companion links for the closing proof record.
+- `python -X utf8 scripts/audit_stage34_cache_gate_corpus.py --format text` included the closing run as a completed Stage4 record with direct `context_cache_attempts` cache-success evidence.
+- `python -X utf8 scripts/audit_stage34_cache_proof.py 20260424_153535__stage4-supervised__target-ep18__143cee26 --format text` returned `cache-proof pass`; Stage4 was `proved` with `cached_tokens=106358`, and Stage3 was `proved` with `cached_tokens=10976`.
+- `python -X utf8 scripts/post_benchmark_operator_comment.py --issue-5-snapshot` returned `status=clean` and `strict=pass`; the snapshot was then posted to GitHub before closing issue `#5`.
+- `python -X utf8 scripts/sync_temp_queue_state.py` and `python -X utf8 scripts/ops_validator.py --strict` passed before closure.
+
+Residual risks:
+
+- This closure proves the upstream benchmark/cache proof governor, not the full `#3` session-memory rollout.
+- Stage3 and Stage4 still have older failed cache-attempt records in the benchmark corpus; the closing run supplies the first clean downstream proof baseline rather than rewriting history.
+- Provider-native hidden memory remains out of scope and is not promoted above DB, fact-ledger, world-state, anchors, or explicit carryover packets.
+
+Follow-up:
+
+- `stage234-session-memory-max-utilization` is now the next visible memory/cache rollout lane and may use this closure as its upstream proof gate.
+- The temp mirror for this closed SSOT is removed so the active temp queue no longer carries #5 as pending work.

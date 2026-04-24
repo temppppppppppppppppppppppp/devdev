@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+# utf8-hygiene: allow-file -- legacy corpus extraction regex patterns use Hangul-adjacent optional tokens.
+
 import hashlib
 import json
 import posixpath
@@ -9,7 +11,9 @@ import unicodedata
 import zipfile
 from bisect import bisect_right
 from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = timezone.utc
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any

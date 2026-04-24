@@ -1,101 +1,302 @@
+from __future__ import annotations
+
 import pytest
 
-from pathlib import Path
-
-from scripts.ops_support import queue_items_from_state
 from scripts.sync_temp_queue_state import (
-    extract_roadmap_item_context,
-    infer_item_status,
-    infer_roadmap_status,
+    build_item_payload,
+    compute_topological_order,
+    load_execution_meta_block,
+    validate_dependency_graph,
 )
+
+
+def test_load_execution_meta_block_returns_none_when_absent(tmp_path):
+    path = tmp_path / "sample-execution-ssot.md"
+    path.write_text(
+        "# Sample Execution SSOT\n\nStatus: execution-ready\n\n## 1. Intent\n- no block here\n",
+        encoding="utf-8",
+    )
+
+    assert load_execution_meta_block(path, expected_topic="sample") is None
+
+
+def test_load_execution_meta_block_reads_first_yaml_block_under_metadata_heading(tmp_path):
+    path = tmp_path / "sample-execution-ssot.md"
+    path.write_text(
+        "\n".join(
+            [
+                "# Sample Execution SSOT",
+                "",
+                "## 0. Execution Metadata Block",
+                "",
+                "```yaml",
+                "execution_meta:",
+                "  schema_version: execution-meta-block-v1",
+                "  topic: sample",
+                "  depends_on:",
+                "    - alpha",
+                "  tranches:",
+                "    - id: first",
+                "      title: First tranche",
+                "```",
+                "",
+                "## 1. Intent",
+                "- body",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    block = load_execution_meta_block(path, expected_topic="sample")
+
+    assert block is not None
+    assert block["topic"] == "sample"
+    assert block["depends_on"] == ["alpha"]
+    assert block["tranches"] == [{"id": "first", "title": "First tranche"}]
+
+
+def test_load_execution_meta_block_ignores_yaml_outside_metadata_heading(tmp_path):
+    path = tmp_path / "sample-execution-ssot.md"
+    path.write_text(
+        "\n".join(
+            [
+                "# Sample Execution SSOT",
+                "",
+                "```yaml",
+                "execution_meta:",
+                "  schema_version: execution-meta-block-v1",
+                "  topic: sample",
+                "  depends_on: []",
+                "  tranches:",
+                "    - id: stray",
+                "      title: Stray",
+                "```",
+                "",
+                "## 1. Intent",
+                "- body",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    assert load_execution_meta_block(path, expected_topic="sample") is None
+
+
+def test_build_item_payload_prefers_execution_meta_depends_on_when_present(tmp_path, monkeypatch):
+    root = tmp_path
+    temp_dir = root / "docs" / "temp"
+    temp_dir.mkdir(parents=True)
+    temp_doc = temp_dir / "sample-execution-ssot.md"
+    canonical = root / "docs" / "2026-04-23" / "sample-execution-ssot.md"
+    canonical.parent.mkdir(parents=True)
+    canonical.write_text("# canonical\n", encoding="utf-8")
+    temp_doc.write_text(
+        "\n".join(
+            [
+                "# Sample Execution SSOT",
+                "Canonical Path: `docs/2026-04-23/sample-execution-ssot.md`",
+                "Status: execution-ready",
+                "",
+                "## 0. Execution Metadata Block",
+                "",
+                "```yaml",
+                "execution_meta:",
+                "  schema_version: execution-meta-block-v1",
+                "  topic: sample",
+                "  depends_on:",
+                "    - alpha",
+                "    - beta",
+                "  tranches:",
+                "    - id: first",
+                "      title: First tranche",
+                "```",
+                "",
+                "## 1. Intent",
+                "- body",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr("scripts.sync_temp_queue_state.ROOT", root)
+    payload = build_item_payload(
+        temp_doc,
+        roadmap_item_context={"sample": {"roadmap_rank": 2, "queue_role": "parked_future_wave"}},
+    )
+
+    assert payload["depends_on"] == ["alpha", "beta"]
+    assert payload["queue_role"] == "parked_future_wave"
+    assert payload["roadmap_rank"] == 2
+
+
+def test_build_item_payload_falls_back_to_legacy_metadata_when_block_absent(tmp_path, monkeypatch):
+    root = tmp_path
+    temp_dir = root / "docs" / "temp"
+    temp_dir.mkdir(parents=True)
+    temp_doc = temp_dir / "sample-execution-ssot.md"
+    canonical = root / "docs" / "2026-04-23" / "sample-execution-ssot.md"
+    canonical.parent.mkdir(parents=True)
+    canonical.write_text("# canonical\n", encoding="utf-8")
+    temp_doc.write_text(
+        "\n".join(
+            [
+                "# Sample Execution SSOT",
+                "Canonical Path: `docs/2026-04-23/sample-execution-ssot.md`",
+                "Status: parked future wave",
+                "",
+                "## 1. Intent",
+                "- body",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr("scripts.sync_temp_queue_state.ROOT", root)
+    payload = build_item_payload(
+        temp_doc,
+        roadmap_item_context={"sample": {"roadmap_rank": 4, "queue_role": "parked_future_wave"}},
+    )
+
+    assert payload["depends_on"] == []
+    assert payload["status"] == "pending"
+    assert payload["queue_role"] == "parked_future_wave"
+    assert payload["roadmap_rank"] == 4
+
+
+def test_load_execution_meta_block_rejects_malformed_depends_on(tmp_path):
+    path = tmp_path / "sample-execution-ssot.md"
+    path.write_text(
+        "\n".join(
+            [
+                "# Sample Execution SSOT",
+                "",
+                "## 0. Execution Metadata Block",
+                "",
+                "```yaml",
+                "execution_meta:",
+                "  schema_version: execution-meta-block-v1",
+                "  topic: sample",
+                "  depends_on: alpha",
+                "  tranches:",
+                "    - id: first",
+                "      title: First tranche",
+                "```",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="depends_on"):
+        load_execution_meta_block(path, expected_topic="sample")
+
+
+def test_load_execution_meta_block_rejects_duplicate_depends_on(tmp_path):
+    path = tmp_path / "sample-execution-ssot.md"
+    path.write_text(
+        "\n".join(
+            [
+                "# Sample Execution SSOT",
+                "",
+                "## 0. Execution Metadata Block",
+                "",
+                "```yaml",
+                "execution_meta:",
+                "  schema_version: execution-meta-block-v1",
+                "  topic: sample",
+                "  depends_on:",
+                "    - alpha",
+                "    - alpha",
+                "  tranches:",
+                "    - id: first",
+                "      title: First tranche",
+                "```",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="duplicate"):
+        load_execution_meta_block(path, expected_topic="sample")
+
+
+def test_validate_dependency_graph_rejects_cycles():
+    items = [
+        {"topic": "alpha", "depends_on": ["beta"]},
+        {"topic": "beta", "depends_on": ["alpha"]},
+    ]
+
+    with pytest.raises(ValueError, match="cycle detected"):
+        validate_dependency_graph(items)
+
+
+def test_validate_dependency_graph_rejects_non_list_depends_on():
+    items = [{"topic": "alpha", "depends_on": "beta"}]
+
+    with pytest.raises(ValueError, match="depends_on must be a list"):
+        validate_dependency_graph(items)
+
+
+def test_validate_dependency_graph_allows_rank_aligned_dependencies():
+    items = [
+        {"topic": "alpha", "depends_on": [], "roadmap_rank": 1},
+        {"topic": "beta", "depends_on": ["alpha"], "roadmap_rank": 2},
+    ]
+
+    validate_dependency_graph(items)
+
+
+def test_validate_dependency_graph_rejects_rank_inversion():
+    items = [
+        {"topic": "alpha", "depends_on": [], "roadmap_rank": 2},
+        {"topic": "beta", "depends_on": ["alpha"], "roadmap_rank": 1},
+    ]
+
+    with pytest.raises(ValueError, match="rank inversion"):
+        validate_dependency_graph(items)
 
 
 @pytest.mark.parametrize(
-    ("raw_status", "expected"),
+    ("alpha_rank", "beta_rank"),
     [
-        ("parked (survey-backed future wave; not active while active Stage4 seams remain)", "pending"),
-        ("partially_realized (code landed, static validation closed; runtime closure pending)", "in_progress"),
-        ("blocked — Stage4 still paused behind remaining seams", "blocked"),
-        ("completed (runtime proof captured; no longer fronts the queue)", "completed"),
+        (None, 2),
+        (1, None),
     ],
 )
-def test_infer_item_status_uses_leading_status_instead_of_substring_false_positives(raw_status, expected):
-    assert infer_item_status(raw_status) == expected
+def test_validate_dependency_graph_allows_missing_rank_on_either_side(alpha_rank, beta_rank):
+    items = [
+        {"topic": "alpha", "depends_on": [], "roadmap_rank": alpha_rank},
+        {"topic": "beta", "depends_on": ["alpha"], "roadmap_rank": beta_rank},
+    ]
+
+    validate_dependency_graph(items)
 
 
-def test_extract_roadmap_item_context_captures_rank_and_role_from_working_order(tmp_path):
-    roadmap = tmp_path / "execution-roadmap.md"
-    roadmap.write_text(
-        "# Example Roadmap\n\n"
-        "Working order:\n\n"
-        "1. `stage4-consumer` (aggregate Stage4 wave; PASS proof captured, residual seam narrowed)\n"
-        "2. `stage4-repair` (shared repair-contract grammar lane; next open Stage4 substrate after the child-lane closures)\n"
-        "3. `readiness-parent` (blocked parent lane; do not reopen S2/S3 while Stage4 front seams remain)\n"
-        "4. `stage3-tightening` (parked future wave; explicit canary proof pending)\n"
-        "5. `flashback-child` (completed runtime-positive substrate; historical backing only)\n",
-        encoding="utf-8",
-    )
+def test_compute_topological_order_reorders_dependencies_before_dependents():
+    items = [
+        {"topic": "beta", "depends_on": ["alpha"], "roadmap_rank": None},
+        {"topic": "alpha", "depends_on": [], "roadmap_rank": None},
+        {"topic": "gamma", "depends_on": ["beta"], "roadmap_rank": None},
+    ]
 
-    context = extract_roadmap_item_context(roadmap)
-
-    assert context["stage4-consumer"] == {"roadmap_rank": 1, "queue_role": "front_active"}
-    assert context["stage4-repair"] == {"roadmap_rank": 2, "queue_role": "front_active"}
-    assert context["readiness-parent"] == {"roadmap_rank": 3, "queue_role": "blocked_holding"}
-    assert context["stage3-tightening"] == {"roadmap_rank": 4, "queue_role": "parked_future_wave"}
-    assert context["flashback-child"] == {"roadmap_rank": 5, "queue_role": "historical_backing"}
+    assert compute_topological_order(items) == ["alpha", "beta", "gamma"]
 
 
-def test_queue_items_from_state_sorts_by_roadmap_rank():
-    state = {
-        "items": [
-            {
-                "topic": "later",
-                "temp_path": "docs/temp/later-execution-ssot.md",
-                "canonical_path": "docs/2026-04-06/later-execution-ssot.md",
-                "status": "pending",
-                "queue_role": "parked_future_wave",
-                "roadmap_rank": 4,
-                "depends_on": [],
-                "mirror_present": True,
-                "canonical_present": True,
-            },
-            {
-                "topic": "front",
-                "temp_path": "docs/temp/front-execution-ssot.md",
-                "canonical_path": "docs/2026-04-06/front-execution-ssot.md",
-                "status": "in_progress",
-                "queue_role": "front_active",
-                "roadmap_rank": 1,
-                "depends_on": [],
-                "mirror_present": True,
-                "canonical_present": True,
-            },
-            {
-                "topic": "unranked",
-                "temp_path": "docs/temp/unranked-execution-ssot.md",
-                "canonical_path": "docs/2026-04-06/unranked-execution-ssot.md",
-                "status": "completed",
-                "queue_role": "historical_backing",
-                "roadmap_rank": None,
-                "depends_on": [],
-                "mirror_present": True,
-                "canonical_present": True,
-            },
-        ]
-    }
+def test_compute_topological_order_uses_rank_then_current_order_for_ties():
+    items = [
+        {"topic": "gamma", "depends_on": [], "roadmap_rank": 3},
+        {"topic": "alpha", "depends_on": [], "roadmap_rank": 1},
+        {"topic": "beta", "depends_on": [], "roadmap_rank": 2},
+        {"topic": "delta", "depends_on": [], "roadmap_rank": None},
+        {"topic": "epsilon", "depends_on": [], "roadmap_rank": None},
+    ]
 
-    items = queue_items_from_state(state)
-
-    assert [item.topic for item in items] == ["front", "later", "unranked"]
+    assert compute_topological_order(items) == ["alpha", "beta", "gamma", "delta", "epsilon"]
 
 
-def test_infer_roadmap_status_prefers_active_prefix_before_closure_note(tmp_path):
-    roadmap = tmp_path / "execution-roadmap.md"
-    roadmap.write_text(
-        "# Example Roadmap\n\n"
-        "Date: 2026-03-27\n"
-        "Status: active (queue reduced; canary wave closed)\n",
-        encoding="utf-8",
-    )
+def test_compute_topological_order_repairs_rank_inversion_from_dependencies():
+    items = [
+        {"topic": "beta", "depends_on": ["alpha"], "roadmap_rank": 1},
+        {"topic": "alpha", "depends_on": [], "roadmap_rank": 2},
+    ]
 
-    assert infer_roadmap_status(roadmap) == "active"
+    assert compute_topological_order(items) == ["alpha", "beta"]

@@ -17,6 +17,26 @@ Side-Effect Coverage:
 - `modules/core/stage2_orchestrator.py` downstream consume path
 - `modules/core/stage2_preflight.py` downstream readiness path
 
+## 0. Execution Metadata Block
+
+```yaml
+execution_meta:
+  schema_version: execution-meta-block-v1
+  topic: stage0-bi-tr-production-harness-normalization-remediation
+  github_issue: 10
+  depends_on: []
+  status: pending
+  queue_role: parked_future_wave
+  roadmap_rank: 3
+  tranches:
+    - id: source-of-truth-declaration
+      title: Stage0 source-of-truth declaration
+    - id: runtime-handoff-normalization
+      title: Runtime handoff normalization
+    - id: production-harness-normalization
+      title: BI/TR production harness normalization
+```
+
 # 1. Answer First
 
 This lane is no longer unopened.

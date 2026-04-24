@@ -159,6 +159,22 @@ class TestDirectorCaching:
         result = caching_manager.create_manuscript_cache(db, current_ep=1)
         assert result is None
 
+    def test_create_manuscript_cache_skips_vertex_api_key_mode(self, caching_manager):
+        db = MagicMock()
+        db.get_manuscript = MagicMock(
+            side_effect=[
+                {"content": "A" * 2000, "title": "제1화"},
+                {"content": "B" * 2000, "title": "제2화"},
+            ]
+        )
+        caching_manager.client._geuldobi_provider_mode = "vertex_ai"
+        caching_manager.client._geuldobi_vertex_auth_mode = "api_key"
+
+        result = caching_manager.create_manuscript_cache(db, current_ep=3)
+
+        assert result is None
+        caching_manager.client.caches.create.assert_not_called()
+
 
 # ═══════════════════════════════════════════════════════════════
 # 2. DirectorGrading Tests

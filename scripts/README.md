@@ -5,7 +5,7 @@ Operator-facing utility scripts. Not imported by production runtime.
 ## Categories
 
 - **ops governance**: `ops_validator.py`, `sync_temp_queue_state.py`, `build_execution_roadmap.py`, `populate_process_health_scorecard.py`, `generate_evidence_manifest.py`, `validate_deep_global_survey_bundle.py`, `run_stale_reference_sweep.py`, `validate_material_ssot.py`, `validate_claude_local_paths.py`
-- **external visibility sync**: `sync_clickup_queue.py`
+- **external visibility sync**: `sync_github_issues.py`, `sync_clickup_queue.py`
 - **material-side ClickUp sync**: `build_material_queue_state.py`, `sync_material_clickup_queue.py`
 - **ClickUp view setup**: `setup_clickup_views.py`, `setup_material_clickup_views.py`
 - **material readiness validation**: `material_readiness_validator.py`
@@ -41,6 +41,7 @@ Operator-facing utility scripts. Not imported by production runtime.
 | Generate prompt files and one-line launch orders in batch across canon/intake/synthesis | `python -X utf8 scripts/material_benchmark_batch_generator.py [--path <dir>] [--promotion-intent auto|none|canon|phase0]` |
 | Validate `.claude` local-path portability for active GSD docs | `python -X utf8 scripts/validate_claude_local_paths.py` |
 | Materialize temp queue state | `python scripts/sync_temp_queue_state.py` |
+| Mirror the current repo-side queue into GitHub Issues | `python scripts/sync_github_issues.py [--apply] [--update-existing]` |
 | Mirror the current repo-side queue into a ClickUp List | `python -X utf8 scripts/sync_clickup_queue.py --list-id <clickup-list-id> [--dry-run]` |
 | Build the material-side production queue snapshot for ClickUp mirroring | `python -X utf8 scripts/build_material_queue_state.py [--output docs/temp/material-queue-state.json] [--active-only]` |
 | Mirror the material-side production queue into a ClickUp List | `python -X utf8 scripts/sync_material_clickup_queue.py --list-id <clickup-list-id> [--dry-run] [--active-only]` |
@@ -69,7 +70,17 @@ ClickUp sync notes:
   - `Updated At`
 | Check UTF-8 hygiene | `python scripts/check_utf8_hygiene.py <files>` |
 | Run `WG-V1` shape validation on a draft or publishable `work_guard` | `python -X utf8 scripts/run_work_guard_v1.py --path <yaml>` |
-| Build execution roadmap | `python scripts/build_execution_roadmap.py` |
+| Build execution roadmap, optionally rewriting queue-state ranks to dependency-respecting order first | `python scripts/build_execution_roadmap.py [--rewrite-roadmap-ranks]` |
+| Check whether the active temp queue is locally ready for GitHub issue-driven workflow | `python scripts/github_issue_readiness.py` |
+| Compare two archived benchmark records by record path or run_id | `python scripts/compare_benchmark_records.py <left> <right> [--format text|json]` |
+| Audit one archived benchmark record for Stage3/Stage4 producer cache proof using the archived DB snapshot and current local cache gate | `python scripts/audit_stage34_cache_proof.py <record-or-run-id> [--format text|json]` |
+| Audit the live Stage3/Stage4 benchmark corpus for producer `prompt_chars` pressure against the current local cache gate | `python scripts/audit_stage34_cache_gate_corpus.py [<record-or-run-id> ...] [--format text|json]` |
+| Write explicit post-run evidence / merge-audit companion links next to a benchmark record | `python scripts/link_benchmark_companions.py <record-or-run-id> [--post-run-evidence-json <json>] [--post-run-merge-audit-md <md>] [--supporting-context-md <md>]` |
+| Audit live benchmark companion-link coverage and stale index rows read-only, with strict missing-target failure and remediation hints | `python scripts/audit_benchmark_companion_links.py [--format text|json] [--strict]` |
+| Render one-line operator report surfaces across live benchmark records and optional explicit compare pairs read-only | `python scripts/report_benchmark_operator_lines.py [--format text|json] [--pair <left> <right>] [--latest-live-pair] [--issue-5-snapshot]` |
+| Render a GitHub-comment-ready markdown snapshot from the benchmark operator report surface | `python scripts/render_benchmark_operator_comment_md.py [--title <heading>] [--pair <left> <right>] [--latest-live-pair] [--issue-5-snapshot]` |
+| Preview or post the benchmark operator markdown snapshot directly to a GitHub issue comment | `python scripts/post_benchmark_operator_comment.py [--repo <owner/name> --issue-number <n> --post] [--pair <left> <right>] [--latest-live-pair] [--issue-5-defaults] [--issue-5-snapshot]` |
+| Run the dedicated issue-5 snapshot wrapper: default markdown preview, `--report` for the operator report surface, `--post` for direct issue-5 posting | `python scripts/issue_5_benchmark_snapshot.py [--report --format text|json] [--post]` |
 | Create a `narrative_ssot` project scaffold | `python -X utf8 scripts/create_narrative_project_scaffold.py --work-id <work_id>` |
 | Build Stage0 preprocess drafts from selected reference cards and optional title/profile/opening overrides | `python -X utf8 scripts/build_stage0_from_reference_selection.py --work-id <work_id>` |
 | Build a Phase0 planning seed from Stage0 authority | `python -X utf8 scripts/build_phase0_seed_from_stage0.py --work-id <work_id>` |
