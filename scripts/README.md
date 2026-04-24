@@ -72,6 +72,7 @@ ClickUp sync notes:
 | Build execution roadmap, optionally rewriting queue-state ranks to dependency-respecting order first | `python scripts/build_execution_roadmap.py [--rewrite-roadmap-ranks]` |
 | Check whether the active temp queue is locally ready for GitHub issue-driven workflow | `python scripts/github_issue_readiness.py` |
 | Compare two archived benchmark records by record path or run_id | `python scripts/compare_benchmark_records.py <left> <right> [--format text|json]` |
+| Audit one archived benchmark record for Stage3/Stage4 producer cache proof using the archived DB snapshot and current local cache gate | `python scripts/audit_stage34_cache_proof.py <record-or-run-id> [--format text|json]` |
 | Write explicit post-run evidence / merge-audit companion links next to a benchmark record | `python scripts/link_benchmark_companions.py <record-or-run-id> [--post-run-evidence-json <json>] [--post-run-merge-audit-md <md>] [--supporting-context-md <md>]` |
 | Audit live benchmark companion-link coverage and stale index rows read-only, with strict missing-target failure and remediation hints | `python scripts/audit_benchmark_companion_links.py [--format text|json] [--strict]` |
 | Render one-line operator report surfaces across live benchmark records and optional explicit compare pairs read-only | `python scripts/report_benchmark_operator_lines.py [--format text|json] [--pair <left> <right>] [--latest-live-pair] [--issue-5-snapshot]` |
