@@ -2109,7 +2109,6 @@ class BaseAgent:
             _MAX_VISITS = 100  # JSON 노드 방문 상한 (무한루프 방지)
 
             def process_node(node, depth=0) -> None:
-                nonlocal final_dict
                 # [TF-C11] 전체 방문 횟수 상한 — 이론적 무한루프 차단
                 _visit_count[0] += 1
                 if _visit_count[0] > _MAX_VISITS:

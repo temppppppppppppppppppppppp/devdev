@@ -115,6 +115,8 @@ def test_finalize_stage2_pass_persistence_and_tail_shell_delegates_to_post_commi
         "current_feedback": "keep",
         "director_feedback_for_fourphase": "director-note",
         "st_snapshot": None,
+        "score": 92,
+        "fix_scope": "",
     }
     finalizer._persist_stage2_pass_arc_commit.assert_awaited_once()
     finalizer._update_stage2_pass_constraint_db.assert_called_once()

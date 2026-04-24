@@ -804,13 +804,19 @@ class ContinuityArcValidator:
 
         all_existing_items = prev_inventory_items + list(usage_items)
         logging.info(f" [V60.54 DEBUG] Arc {current_arc_no} \uc911\ubcf5 \uac80\uc0ac \uc2dc\uc791")
-        logging.info(f"- \ud604\uc7ac \ud68d\ub4dd \ud6c4\ubcf4: {current_acquisitions[:5] if current_acquisitions else '\uc5c6\uc74c'}")
-        logging.info(f"- \uc774\uc804 \uc18c\uc9c0\ud488: {prev_inventory_items[:3] if prev_inventory_items else '\uc5c6\uc74c'}")
-        logging.info(f"- \ud604\uc7ac \uc18c\uc9c0\ud488: {current_inventory_items[:3] if current_inventory_items else '\uc5c6\uc74c'}")
-        logging.info(f"- \uc774\uc804 Arc \ud68d\ub4dd \uae30\ub85d: {list(acquired_items.keys())[:5] if acquired_items else '\uc5c6\uc74c'}")
+        no_items = "\uc5c6\uc74c"
+        current_acquisitions_preview = current_acquisitions[:5] if current_acquisitions else no_items
+        prev_inventory_preview = prev_inventory_items[:3] if prev_inventory_items else no_items
+        current_inventory_preview = current_inventory_items[:3] if current_inventory_items else no_items
+        acquired_items_preview = list(acquired_items.keys())[:5] if acquired_items else no_items
+        logging.info(f"- \ud604\uc7ac \ud68d\ub4dd \ud6c4\ubcf4: {current_acquisitions_preview}")
+        logging.info(f"- \uc774\uc804 \uc18c\uc9c0\ud488: {prev_inventory_preview}")
+        logging.info(f"- \ud604\uc7ac \uc18c\uc9c0\ud488: {current_inventory_preview}")
+        logging.info(f"- \uc774\uc804 Arc \ud68d\ub4dd \uae30\ub85d: {acquired_items_preview}")
 
         current_acquisitions = self._arc_precheck_filter_owned_candidates(current_acquisitions, all_existing_items)
-        logging.info(f"- \ud544\ud130\ub9c1 \ud6c4 \ud68d\ub4dd \ud6c4\ubcf4: {current_acquisitions if current_acquisitions else '\uc5c6\uc74c'}")
+        filtered_acquisitions_preview = current_acquisitions if current_acquisitions else no_items
+        logging.info(f"- \ud544\ud130\ub9c1 \ud6c4 \ud68d\ub4dd \ud6c4\ubcf4: {filtered_acquisitions_preview}")
 
         critical_violations = self._arc_precheck_duplicate_violations(current_acquisitions, acquired_items, current_arc_no)
         if not critical_violations:
