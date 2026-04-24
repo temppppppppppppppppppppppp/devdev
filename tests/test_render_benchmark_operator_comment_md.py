@@ -171,6 +171,60 @@ def test_render_benchmark_operator_comment_markdown_includes_proof_signal_summar
     assert "proof_highlights=right remaining blocker || right live verification mixed" in markdown
 
 
+def test_render_benchmark_operator_comment_markdown_falls_back_to_native_proof_signals(tmp_path):
+    render_module = _load_render_module()
+    helper = _load_report_test_helpers()
+
+    run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
+    run_b = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
+    left_root = helper._write_record(tmp_path, run_id=run_a, status="operational_failure")
+    right_root = helper._write_record(tmp_path, run_id=run_b, status="operational_failure")
+    helper._write_guarded_result(
+        left_root,
+        {
+            "target_ep": 15,
+            "latest_written_ep_before": 10,
+            "latest_written_ep_after": 10,
+            "terminated_by_monitor": False,
+            "termination_reason": "",
+            "child_exit_code": 120,
+            "benchmark_archive": {
+                "run_id": run_a,
+            },
+        },
+    )
+    helper._write_guarded_result(
+        right_root,
+        {
+            "target_ep": 15,
+            "latest_written_ep_before": 10,
+            "latest_written_ep_after": 11,
+            "terminated_by_monitor": True,
+            "termination_reason": "stage4_round_limit_exceeded",
+            "child_exit_code": 1,
+            "benchmark_archive": {
+                "run_id": run_b,
+            },
+        },
+    )
+
+    payload = helper._load_report_module().build_benchmark_operator_line_report(
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+        pairs=[(str(left_root), str(right_root))],
+    )
+    markdown = render_module.render_benchmark_operator_comment_markdown(
+        payload,
+        title="Issue #5 Benchmark Operator Snapshot",
+    )
+
+    assert (
+        "proof_signals=left:exit=120,gap=5; "
+        "right:monitor=stage4_round_limit_exceeded,exit=1,advance=+1,gap=4"
+    ) in markdown
+    assert "proof_highlights=right monitor termination || left child exit 120" in markdown
+
+
 def test_render_benchmark_operator_comment_md_cli_supports_title_and_pair(tmp_path):
     helper = _load_report_test_helpers()
     run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
