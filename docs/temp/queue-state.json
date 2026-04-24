@@ -1,6 +1,6 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-24T07:14:50.100869+00:00",
+  "generated_at": "2026-04-24T09:35:47.863546+00:00",
   "queue_mode": "aggregate",
   "active_item_count": 4,
   "roadmap": {
@@ -13,8 +13,8 @@
       "topic": "stage234-session-memory-max-utilization",
       "temp_path": "docs/temp/stage234-session-memory-max-utilization-execution-ssot.md",
       "canonical_path": "docs/2026-04-23/stage234-session-memory-max-utilization-execution-ssot.md",
-      "status": "pending",
-      "queue_role": "parked_future_wave",
+      "status": "in_progress",
+      "queue_role": "front_active",
       "roadmap_rank": 1,
       "depends_on": [],
       "mirror_present": true,
