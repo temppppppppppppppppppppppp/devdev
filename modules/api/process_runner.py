@@ -27,7 +27,9 @@ import sys
 import time
 from collections import deque
 from collections.abc import Awaitable, Callable
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = timezone.utc
 from pathlib import Path
 
 from modules.api.control_plane_contract import (

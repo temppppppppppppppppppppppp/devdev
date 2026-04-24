@@ -5,7 +5,9 @@ import json
 import re
 from collections import Counter
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = timezone.utc
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any

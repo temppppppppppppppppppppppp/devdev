@@ -15,7 +15,9 @@ from __future__ import annotations
 
 import json
 import shutil
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = timezone.utc
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
