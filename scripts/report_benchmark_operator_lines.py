@@ -160,6 +160,9 @@ def _build_compare_report_entry(
     proof_signal_summary = _build_compare_proof_signal_summary(diff)
     if proof_signal_summary:
         payload["proof_signal_summary"] = proof_signal_summary
+    proof_highlights = _build_compare_proof_highlights(diff)
+    if proof_highlights:
+        payload["proof_highlights"] = proof_highlights
     return payload
 
 
@@ -212,6 +215,65 @@ def _coerce_positive_int(value: object) -> int:
     return result if result > 0 else 0
 
 
+def _build_compare_proof_highlights(diff: dict[str, Any]) -> list[str]:
+    delta = diff.get("delta", {})
+    watchpoints = delta.get("watchpoints", [])
+    if not isinstance(watchpoints, list):
+        return []
+
+    priority = {
+        "post_run_merge_audit_remaining_blocker_attention": 0,
+        "post_run_merge_audit_live_verification_failure": 1,
+        "post_run_merge_audit_live_verification_mixed": 2,
+        "post_run_merge_audit_top_finding_attention": 3,
+        "post_run_merge_audit_severity_attention": 4,
+        "post_run_merge_audit_open_follow_up_attention": 5,
+        "post_run_merge_audit_remaining_watchpoints": 6,
+    }
+    selected = []
+    for item in watchpoints:
+        if not isinstance(item, dict):
+            continue
+        watchpoint_id = str(item.get("id", "") or "")
+        if watchpoint_id not in priority:
+            continue
+        selected.append((priority[watchpoint_id], item))
+    selected.sort(key=lambda pair: pair[0])
+
+    highlights: list[str] = []
+    for _, item in selected:
+        highlight = _summarize_proof_highlight(item)
+        if highlight and highlight not in highlights:
+            highlights.append(highlight)
+        if len(highlights) >= 2:
+            break
+    return highlights
+
+
+def _summarize_proof_highlight(watchpoint: dict[str, Any]) -> str:
+    watchpoint_id = str(watchpoint.get("id", "") or "")
+    side = str(watchpoint.get("side", "") or "").strip()
+    message = str(watchpoint.get("message", "") or "").strip()
+    side_prefix = f"{side} " if side else ""
+
+    if watchpoint_id == "post_run_merge_audit_remaining_blocker_attention":
+        return f"{side_prefix}remaining blocker".strip()
+    if watchpoint_id == "post_run_merge_audit_live_verification_failure":
+        return f"{side_prefix}live verification failure".strip()
+    if watchpoint_id == "post_run_merge_audit_live_verification_mixed":
+        return f"{side_prefix}live verification mixed".strip()
+    if watchpoint_id == "post_run_merge_audit_top_finding_attention":
+        title = message.split(": ", 1)[1].strip() if ": " in message else message
+        return f"{side_prefix}top finding {title}".strip()
+    if watchpoint_id == "post_run_merge_audit_severity_attention":
+        return f"{side_prefix}{message}".strip()
+    if watchpoint_id == "post_run_merge_audit_open_follow_up_attention":
+        return f"{side_prefix}open follow-up items".strip()
+    if watchpoint_id == "post_run_merge_audit_remaining_watchpoints":
+        return f"{side_prefix}remaining watchpoints".strip()
+    return ""
+
+
 def format_report_text(payload: dict[str, Any]) -> str:
     lines = ["Benchmark Operator Report Lines"]
     audit_operator_report_line = str(payload.get("audit_operator_report_line", "") or "")
@@ -248,6 +310,9 @@ def format_report_text(payload: dict[str, Any]) -> str:
                 proof_signal_summary = str(item.get("proof_signal_summary", "") or "")
                 if proof_signal_summary:
                     bits.append(f"proof_signals={proof_signal_summary}")
+                proof_highlights = item.get("proof_highlights", [])
+                if isinstance(proof_highlights, list) and proof_highlights:
+                    bits.append("proof_highlights=" + " || ".join(str(part) for part in proof_highlights))
                 lines.append("- " + " | ".join(bit for bit in bits if bit))
     return "\n".join(lines)
 

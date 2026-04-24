@@ -354,10 +354,15 @@ def test_build_benchmark_operator_line_report_surfaces_proof_signal_summary(tmp_
                 "status=clean; ci_gate=warn; gate_basis=warn_watchpoints; headline=no remediation needed"
             ),
             "proof_signal_summary": "right:live=mixed,open=3,blocker,addendum=4",
+            "proof_highlights": [
+                "right remaining blocker",
+                "right live verification mixed",
+            ],
         }
     ]
     text = module.format_report_text(payload)
     assert "proof_signals=right:live=mixed,open=3,blocker,addendum=4" in text
+    assert "proof_highlights=right remaining blocker || right live verification mixed" in text
 
 
 def test_apply_issue_5_snapshot_defaults_enables_latest_live_pair_for_report():

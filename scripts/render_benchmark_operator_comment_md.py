@@ -93,6 +93,7 @@ def render_benchmark_operator_comment_markdown(payload: dict[str, object], *, ti
             verdict = str(item.get("verdict", "") or "")
             changed_sections = ",".join(str(section) for section in item.get("changed_sections", []))
             proof_signal_summary = str(item.get("proof_signal_summary", "") or "")
+            proof_highlights = item.get("proof_highlights", [])
             tail = []
             if verdict:
                 tail.append(f"verdict={verdict}")
@@ -100,6 +101,8 @@ def render_benchmark_operator_comment_markdown(payload: dict[str, object], *, ti
                 tail.append(f"changed_sections={changed_sections}")
             if proof_signal_summary:
                 tail.append(f"proof_signals={proof_signal_summary}")
+            if isinstance(proof_highlights, list) and proof_highlights:
+                tail.append("proof_highlights=" + " || ".join(str(part) for part in proof_highlights))
             suffix = f"; {'; '.join(tail)}" if tail else ""
             lines.append(f"- {label}: {operator_report_line}{suffix}")
 
