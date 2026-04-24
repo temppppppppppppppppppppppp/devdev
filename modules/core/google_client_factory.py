@@ -100,7 +100,9 @@ def build_google_genai_client(*, api_key: str | None = None, provider_mode: str 
             resolved_api_key = str(api_key or os.getenv(api_key_env) or "").strip()
             if not resolved_api_key:
                 raise RuntimeError(f"Vertex AI auth_mode=api_key requires {api_key_env}.")
-            return genai.Client(vertexai=True, api_key=resolved_api_key)
+            client = genai.Client(vertexai=True, api_key=resolved_api_key)
+            _attach_google_client_runtime_metadata(client, provider_mode=mode, vertex_auth_mode=auth_mode)
+            return client
 
         if auth_mode != "project_credentials":
             raise RuntimeError(f"Unsupported GEULDOBI vertex auth mode: {auth_mode}")
@@ -120,7 +122,19 @@ def build_google_genai_client(*, api_key: str | None = None, provider_mode: str 
         credentials = _load_credentials_from_env(credentials_env)
         if credentials is not None:
             client_kwargs["credentials"] = credentials
-        return genai.Client(**client_kwargs)
+        client = genai.Client(**client_kwargs)
+        _attach_google_client_runtime_metadata(client, provider_mode=mode, vertex_auth_mode=auth_mode)
+        return client
 
     resolved_api_key = str(api_key or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
-    return genai.Client(api_key=resolved_api_key or None)
+    client = genai.Client(api_key=resolved_api_key or None)
+    _attach_google_client_runtime_metadata(client, provider_mode=mode, vertex_auth_mode="")
+    return client
+
+
+def _attach_google_client_runtime_metadata(client, *, provider_mode: str, vertex_auth_mode: str) -> None:
+    try:
+        setattr(client, "_geuldobi_provider_mode", str(provider_mode or ""))
+        setattr(client, "_geuldobi_vertex_auth_mode", str(vertex_auth_mode or ""))
+    except Exception:
+        return

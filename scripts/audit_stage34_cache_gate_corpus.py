@@ -181,6 +181,7 @@ def _load_stage_direct_cache_attempt_summary(
                 """,
                 (cache_gate_chars, cache_gate_chars, *agents),
             ).fetchone()
+            skip_reason_counts = _load_stage_cache_skip_reason_counts(cur, agents=agents)
             error_reason_counts = _load_stage_cache_error_reason_counts(cur, agents=agents)
             payload["stages"][stage] = {
                 "attempt_count": int(row[0] or 0),
@@ -192,12 +193,38 @@ def _load_stage_direct_cache_attempt_summary(
                 "error_count": int(row[6] or 0),
                 "max_content_chars": int(row[7] or 0),
                 "min_content_chars": int(row[8] or 0),
+                "skip_reason_counts": skip_reason_counts,
+                "skip_count": sum(skip_reason_counts.values()),
+                "top_skip_reason": _pick_top_reason(skip_reason_counts),
                 "error_reason_counts": error_reason_counts,
                 "top_error_reason": _pick_top_reason(error_reason_counts),
             }
     finally:
         conn.close()
     return payload
+
+
+def _load_stage_cache_skip_reason_counts(
+    cur: sqlite3.Cursor,
+    *,
+    agents: list[str],
+) -> dict[str, int]:
+    placeholders = ",".join("?" for _ in agents)
+    rows = cur.execute(
+        f"""
+        SELECT COALESCE(NULLIF(cache_reason, ''), 'skipped_unknown') AS cache_reason, COUNT(*) AS reason_count
+        FROM context_cache_attempts
+        WHERE agent_name IN ({placeholders}) AND cache_outcome = 'skipped'
+        GROUP BY COALESCE(NULLIF(cache_reason, ''), 'skipped_unknown')
+        ORDER BY reason_count DESC, cache_reason ASC
+        """,
+        (*agents,),
+    ).fetchall()
+    return {
+        str(reason or "skipped_unknown"): int(count or 0)
+        for reason, count in rows
+        if int(count or 0) > 0
+    }
 
 
 def _load_stage_cache_error_reason_counts(
@@ -263,6 +290,9 @@ def _empty_stage_direct_cache_attempt_summary() -> dict[str, Any]:
         "error_count": 0,
         "max_content_chars": 0,
         "min_content_chars": 0,
+        "skip_reason_counts": {},
+        "skip_count": 0,
+        "top_skip_reason": "",
         "error_reason_counts": {},
         "top_error_reason": "",
     }
@@ -394,6 +424,9 @@ def _build_record_row(
                 else int(prompt_stats.get("cached_calls_meeting_gate", 0) or 0)
             ),
             "skipped_short_count": int(direct_stats.get("skipped_short_count", 0) or 0) if use_direct else 0,
+            "skip_reason_counts": dict(direct_stats.get("skip_reason_counts", {}) or {}) if use_direct else {},
+            "skip_count": int(direct_stats.get("skip_count", 0) or 0) if use_direct else 0,
+            "top_skip_reason": str(direct_stats.get("top_skip_reason", "") or "") if use_direct else "",
             "error_count": int(direct_stats.get("error_count", 0) or 0) if use_direct else 0,
             "max_content_chars": (
                 int(direct_stats.get("max_content_chars", 0) or 0)
@@ -447,6 +480,9 @@ def _build_stage_summary(
             "error_count": 0,
             "max_content_chars": 0,
             "min_content_chars": 0,
+            "skip_reason_counts": {},
+            "skip_count": 0,
+            "top_skip_reason": "",
             "error_reason_counts": {},
             "top_error_reason": "",
         }
@@ -466,7 +502,14 @@ def _build_stage_summary(
         if int(row.get("min_content_chars", 0) or 0) > 0
     ]
     error_reason_counts: dict[str, int] = {}
+    skip_reason_counts: dict[str, int] = {}
     for row in rows:
+        for reason, count in dict(row.get("skip_reason_counts", {}) or {}).items():
+            normalized_reason = str(reason or "").strip()
+            normalized_count = int(count or 0)
+            if not normalized_reason or normalized_count <= 0:
+                continue
+            skip_reason_counts[normalized_reason] = skip_reason_counts.get(normalized_reason, 0) + normalized_count
         for reason, count in dict(row.get("error_reason_counts", {}) or {}).items():
             normalized_reason = str(reason or "").strip()
             normalized_count = int(count or 0)
@@ -488,6 +531,9 @@ def _build_stage_summary(
         "below_gate_signal_count": sum(int(row.get("below_gate_signal_count", 0) or 0) for row in rows),
         "cache_success_count": sum(int(row.get("cache_success_count", 0) or 0) for row in rows),
         "skipped_short_count": sum(int(row.get("skipped_short_count", 0) or 0) for row in rows),
+        "skip_reason_counts": skip_reason_counts,
+        "skip_count": sum(int(row.get("skip_count", 0) or 0) for row in rows),
+        "top_skip_reason": _pick_top_reason(skip_reason_counts),
         "error_count": sum(int(row.get("error_count", 0) or 0) for row in rows),
         "max_content_chars": max(int(row.get("max_content_chars", 0) or 0) for row in rows),
         "min_content_chars": min(nonzero_mins) if nonzero_mins else 0,
@@ -527,6 +573,12 @@ def _build_operator_summary(
             f"{stage} {label}-gate-records={gate_records}/{records_with_attempts} "
             f"cache-success-records={cache_success_records}/{records_with_attempts}"
         )
+        skip_count = int(summary.get("skip_count", 0) or 0)
+        top_skip_reason = str(summary.get("top_skip_reason", "") or "")
+        if skip_count > 0:
+            spotlight += f" cache-skips={skip_count}"
+            if top_skip_reason:
+                spotlight += f"({top_skip_reason})"
         error_count = int(summary.get("error_count", 0) or 0)
         top_error_reason = str(summary.get("top_error_reason", "") or "")
         if error_count > 0:
@@ -567,6 +619,12 @@ def _build_operator_report_line(
         bits.append(
             f"{stage}_cache_success={int(summary.get('cache_success_count', 0) or 0)}"
         )
+        skip_count = int(summary.get("skip_count", 0) or 0)
+        if skip_count > 0:
+            bits.append(f"{stage}_cache_skips={skip_count}")
+            top_skip_reason = str(summary.get("top_skip_reason", "") or "")
+            if top_skip_reason:
+                bits.append(f"{stage}_top_skip_reason={top_skip_reason}")
         error_count = int(summary.get("error_count", 0) or 0)
         if error_count > 0:
             bits.append(f"{stage}_cache_errors={error_count}")
@@ -605,6 +663,8 @@ def _render_text(payload: dict[str, Any]) -> str:
                 f"signals={stage_summary.get('gate_signal_count', 0)}/{stage_summary.get('signal_count', 0)}; "
                 f"cache_success={stage_summary.get('cache_success_count', 0)}; "
                 f"skipped_short={stage_summary.get('skipped_short_count', 0)}; "
+                f"skips={stage_summary.get('skip_count', 0)}; "
+                f"top_skip_reason={stage_summary.get('top_skip_reason', '')}; "
                 f"errors={stage_summary.get('error_count', 0)}; "
                 f"top_error_reason={stage_summary.get('top_error_reason', '')}; "
                 f"max_content_chars={stage_summary.get('max_content_chars', 0)}; "
@@ -621,7 +681,7 @@ def _render_text(payload: dict[str, Any]) -> str:
                 if int(stage_row.get("attempt_count", 0) or 0) <= 0:
                     continue
                 stage_bits.append(
-                    f"{stage}[proof={stage_row.get('proof_status', '')}; source={stage_row.get('evidence_source', '')}; gate={stage_row.get('gate_signal_count', 0)}/{stage_row.get('signal_count', 0)}; cache_success={stage_row.get('cache_success_count', 0)}; skipped_short={stage_row.get('skipped_short_count', 0)}; errors={stage_row.get('error_count', 0)}; top_error_reason={stage_row.get('top_error_reason', '')}; max_content_chars={stage_row.get('max_content_chars', 0)}]"
+                    f"{stage}[proof={stage_row.get('proof_status', '')}; source={stage_row.get('evidence_source', '')}; gate={stage_row.get('gate_signal_count', 0)}/{stage_row.get('signal_count', 0)}; cache_success={stage_row.get('cache_success_count', 0)}; skipped_short={stage_row.get('skipped_short_count', 0)}; skips={stage_row.get('skip_count', 0)}; top_skip_reason={stage_row.get('top_skip_reason', '')}; errors={stage_row.get('error_count', 0)}; top_error_reason={stage_row.get('top_error_reason', '')}; max_content_chars={stage_row.get('max_content_chars', 0)}]"
                 )
             lines.append(
                 f"- run_id={record.get('run_id', '')}; status={record.get('status', '')}; " + "; ".join(stage_bits)

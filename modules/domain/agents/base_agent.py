@@ -22,7 +22,7 @@ from modules.core.models_config import (
 from modules.core.models_config import (
     DEFAULT_MODEL_FALLBACK_CHAIN as _MODELS_CONFIG_FALLBACK_CHAIN,
 )
-from modules.core.provider_mode import strip_vertex_prefix
+from modules.core.provider_mode import VERTEX_AI_MODE, strip_vertex_prefix
 from modules.validation.threshold_helper import _threshold
 
 # [V44] 에스케이프 유틸리티 임포트
@@ -2201,6 +2201,14 @@ class BaseAgent:
         return re.sub(r"[^0-9A-Za-z_.-]+", "_", str(value or "")).strip("_.")
 
     @staticmethod
+    def _resolve_context_cache_client_skip_reason(client: object | None) -> str:
+        provider_mode = str(getattr(client, "_geuldobi_provider_mode", "") or "").strip().lower()
+        vertex_auth_mode = str(getattr(client, "_geuldobi_vertex_auth_mode", "") or "").strip().lower()
+        if provider_mode == VERTEX_AI_MODE and vertex_auth_mode == "api_key":
+            return "vertex_api_key_explicit_cache_unsupported"
+        return ""
+
+    @staticmethod
     def _classify_context_cache_error_reason(error: Exception | str) -> str:
         normalized = str(error or "").lower()
         if "429" in normalized or "resource_exhausted" in normalized or "quota" in normalized:
@@ -2306,6 +2314,24 @@ class BaseAgent:
                     cache_reason="content_too_short",
                 )
                 return result
+
+            client_skip_reason = self._resolve_context_cache_client_skip_reason(self.client)
+            if client_skip_reason:
+                self._log_context_cache_attempt_to_db(
+                    cache_type=cache_type,
+                    project_name=project_name,
+                    content_chars=content_chars,
+                    ttl_seconds=ttl_seconds,
+                    content_hash=content_hash,
+                    cache_outcome="skipped",
+                    cache_reason=client_skip_reason,
+                )
+                return {
+                    "cache_name": None,
+                    "cached": False,
+                    "content_hash": content_hash,
+                    "reason": client_skip_reason,
+                }
 
             # [V69.1] Gemini API 시그니처 변경 대응: config 파라미터 사용
             cache = self.client.caches.create(
