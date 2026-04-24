@@ -25,6 +25,52 @@ def _load_report_test_helpers():
     return module
 
 
+def _write_fake_gh(tmp_path: Path, *, log_path: Path, stdout_url: str) -> Path:
+    if sys.platform == "win32":
+        fake_gh = tmp_path / "gh.cmd"
+        fake_gh.write_text(
+            "\n".join(
+                [
+                    "@echo off",
+                    "setlocal EnableDelayedExpansion",
+                    f"set LOG={log_path}",
+                    "break>\"%LOG%\"",
+                    ":loop",
+                    "if \"%~1\"==\"\" goto afterargs",
+                    ">>\"%LOG%\" echo %~1",
+                    "shift",
+                    "goto loop",
+                    ":afterargs",
+                    "set /p BODY=",
+                    ">>\"%LOG%\" echo __BODY__!BODY!",
+                    f"echo {stdout_url}",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        return fake_gh
+
+    fake_gh = tmp_path / "gh"
+    fake_gh.write_text(
+        "\n".join(
+            [
+                "#!/usr/bin/env sh",
+                f"LOG={log_path}",
+                ": > \"$LOG\"",
+                "for arg in \"$@\"; do",
+                "  printf '%s\\n' \"$arg\" >> \"$LOG\"",
+                "done",
+                "body=$(cat)",
+                "printf '__BODY__%s\\n' \"$body\" >> \"$LOG\"",
+                f"printf '%s\\n' '{stdout_url}'",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    fake_gh.chmod(0o755)
+    return fake_gh
+
+
 def test_build_issue_5_snapshot_payload_uses_latest_live_pair(tmp_path):
     module = _load_issue_5_snapshot_module()
     helper = _load_report_test_helpers()
@@ -127,27 +173,11 @@ def test_issue_5_benchmark_snapshot_cli_posts_to_issue_5_shortcut(tmp_path):
     run_b = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
     helper._write_record(tmp_path, run_id=run_a, status="interrupted")
     helper._write_record(tmp_path, run_id=run_b, status="completed")
-    fake_gh = tmp_path / "gh.cmd"
     log_path = tmp_path / "gh-args.txt"
-    fake_gh.write_text(
-        "\n".join(
-            [
-                "@echo off",
-                "setlocal EnableDelayedExpansion",
-                f"set LOG={log_path}",
-                "break>\"%LOG%\"",
-                ":loop",
-                "if \"%~1\"==\"\" goto afterargs",
-                ">>\"%LOG%\" echo %~1",
-                "shift",
-                "goto loop",
-                ":afterargs",
-                "set /p BODY=",
-                ">>\"%LOG%\" echo __BODY__!BODY!",
-                "echo https://github.com/example/repo/issues/5#issuecomment-3",
-            ]
-        ),
-        encoding="utf-8",
+    fake_gh = _write_fake_gh(
+        tmp_path,
+        log_path=log_path,
+        stdout_url="https://github.com/example/repo/issues/5#issuecomment-3",
     )
 
     result = subprocess.run(
