@@ -1,17 +1,19 @@
 # Stage234 Session Memory Max-Utilization Execution SSOT
 
 Date: 2026-04-23
-Status: execution-ready (3-pass audited; parked future wave; upstream #5 proof gate closed on 2026-04-24; next visible memory/cache rollout lane)
+Status: in_progress (3-pass audited; fresh re-audit PASS on 2026-04-24; upstream #5 proof gate closed; opened for bounded memory/cache rollout)
 Canonical Path: `docs/2026-04-23/stage234-session-memory-max-utilization-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage234-session-memory-max-utilization-execution-ssot.md`
 Commit State:
 - Baseline Commit: `30b9436fc3a5c3fcc3f6397bf23bfe45d24af918`
 - Baseline Dirty Summary: `dirty: modified docs/temp/queue-state.json from prior queue sync; untracked docs/2026-04-23/`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `2026-04-24 issue-5 closure moved the upstream proof governor to historical backing; this item is now the first visible memory/cache rollout lane`
+- Resume Commit: `fabf78127cbcdfb724c35a38f314a25b94ec9ce5`
+- Resume Dirty Summary: `clean at branch open; post-reaudit working tree carries bounded Stage4 test-contract patch plus fresh audit/SSOT metadata docs`
+- Resume Drift Summary: `PR #11 merged the #5 proof-governor closure into main; fresh re-audit PASS is recorded in docs/2026-04-24/stage234-session-memory-fresh-reaudit-3pass-audit.md; next execution unit is provider-neutral session-memory envelope plus Stage4-facing runtime hardening`
 Source Survey Docs:
 - `docs/2026-04-23/stage234-session-memory-max-utilization-deep-dive-adversarial-3pass-audit.md`
 - `docs/2026-04-23/authority-alignment-benchmark-operating-model-hardening-3pass-audit.md`
+- `docs/2026-04-24/stage234-session-memory-fresh-reaudit-3pass-audit.md`
 Evidence Artifacts:
 - `config/models.yaml`
 - `modules/core/providers/vertex_provider.py`
@@ -222,13 +224,13 @@ Excluded:
 
 ## 12. Temp Queue Notes
 
-- temp status: `parked future wave`
+- temp status: `opened current lane`
 - cleanup condition:
   - keep the mirror while this lane remains a visible queued substrate program
   - remove or replace it only after closure or superseding narrower tranche SSOTs
 - roadmap dependency:
-  - now ranked first among visible parked rollout items after `authority-alignment-benchmark-operating-model-hardening` closure
-  - upstream `#5` proof lane is satisfied enough to begin bounded `#3` rollout planning, subject to fresh execution-start re-audit
+  - now ranked first among visible rollout items after `authority-alignment-benchmark-operating-model-hardening` closure
+  - upstream `#5` proof lane is satisfied and the 2026-04-24 fresh execution-start re-audit passed
 
 ## 13. Validation and Closure Hooks
 
@@ -239,3 +241,25 @@ Excluded:
   - re-run the 3-pass audit on the source survey and this SSOT
   - confirm at least 95% confidence against current `main`
   - then refresh `Resume Commit` and `Resume Drift Summary` before patching code from this document
+
+## 14. 2026-04-24 First Implementation Unit
+
+Status: bounded Stage4 session-memory envelope seed completed.
+
+Implemented scope:
+- Added `modules/core/session_memory_envelope.py` as a provider-neutral JSON-safe envelope builder.
+- Attached `session_memory_envelope` to Stage4 attempt telemetry through `advisory_flags`.
+- Projected the envelope into pass-rate payloads and persisted it into DB advisory payloads.
+- Preserved provider-native cache/session features as optional sidecars; no provider API path was promoted to authority.
+- Preserved existing DB schema; the envelope rides the existing `advisory_flags` JSON surface.
+
+Tranche impact:
+- Tranche 2, internal session-memory envelope contract: Stage4 seed completed.
+- Tranche 3, Stage4-first runtime hardening: telemetry-facing envelope subset completed.
+- Persisted-attempt resume hydration remains pending.
+- Stage3 and Stage2 consumption remain pending.
+
+Validation:
+- `py -3.12 -m pytest tests/test_session_memory_envelope.py tests/test_stage4_interview_round.py -q` -> 318 passed.
+- `python scripts/check_utf8_hygiene.py ...` -> passed for touched code, tests, SSOT, roadmap, queue state, and fresh audit doc.
+- Complexity recount: touched production functions remain below 120 LOC; largest touched function is `_build_stage4_db_attempt_payload` at 101 LOC.

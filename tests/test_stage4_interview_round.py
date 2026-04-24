@@ -11,6 +11,7 @@ from unittest.mock import ANY, MagicMock, mock_open, patch
 
 from modules.core import stage4_episode_logging as s4_episode_logging
 from modules.core.context_advisor import RetrievalPlan, RetrievalSlot, RetrievalSources
+from modules.core.session_memory_envelope import SESSION_MEMORY_ENVELOPE_KEY
 from modules.core.session_logger import SessionLogger
 from modules.core.stage4_context import Stage4Context
 from modules.core.stage4_director_runtime import _DirectorInputPackResult
@@ -2723,7 +2724,10 @@ class TestRecordS4Attempt:
         )
 
         assert payload["model"] == "gemini-2.5-pro"
-        assert payload["advisory_flags"] == {"continuity": ["keep timeline"]}
+        assert payload["advisory_flags"]["continuity"] == ["keep timeline"]
+        assert payload["advisory_flags"][SESSION_MEMORY_ENVELOPE_KEY]["attempt_key"] == (
+            "s4:ep2:arc1:a2:sess-stage4"
+        )
         assert payload["attempt_key"] == "s4:ep2:arc1:a2:sess-stage4"
         assert payload["selection_reason"] == "best candidate"
         assert payload["artifact_path"] == "logs/final.txt"
@@ -3021,9 +3025,16 @@ class TestRecordS4Attempt:
         assert pass_rate_payload["scope_authority"]["authoritative_fix_scope"] == "inplace"
         assert pass_rate_payload["retry_budget_axes"] == {"repair": "patch_revision"}
         assert pass_rate_payload["primary_failure_layer"] == "quality_floor"
+        assert pass_rate_payload[SESSION_MEMORY_ENVELOPE_KEY]["attempt_key"] == "s4:ep2:arc1:a2:sess-stage4"
+        assert pass_rate_payload[SESSION_MEMORY_ENVELOPE_KEY]["retry_surface"]["retry_budget_axes"] == {
+            "repair": "patch_revision"
+        }
         assert db_payload["advisory_flags"]["repair_contract"]["subtype"] == "movement"
         assert db_payload["advisory_flags"]["scope_authority"]["authoritative_fix_scope"] == "inplace"
         assert db_payload["advisory_flags"]["retry_budget_axes"] == {"repair": "patch_revision"}
+        assert db_payload["advisory_flags"][SESSION_MEMORY_ENVELOPE_KEY]["retry_surface"]["retry_directives"] == (
+            "change ending"
+        )
         assert db_payload["primary_failure_layer"] == "quality_floor"
 
     def test_build_final_selection_advisory_payload_reuses_contract_packet(self):
@@ -3946,6 +3957,7 @@ class TestRecordS4Attempt:
             is_patch=True,
             patch_fallback=True,
             patch_strategy="",
+            advisory_flags=None,
             candidate_key="A|balanced",
             artifact_kind="final_manuscript",
             artifact_payload=None,

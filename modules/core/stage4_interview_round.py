@@ -26,6 +26,11 @@ from modules.core.partial_fix_contract import (
     normalize_patch_target_records,
     normalize_repair_trace_entries,
 )
+from modules.core.session_memory_envelope import (
+    SESSION_MEMORY_ENVELOPE_KEY,
+    attach_session_memory_envelope,
+    build_stage4_session_memory_envelope,
+)
 from modules.core.soft_failure import resolve_project_log_dir
 from modules.core.stage4_director_runtime import Stage4DirectorRuntime
 from modules.core.stage4_postselect_runtime import (
@@ -448,6 +453,9 @@ def _build_stage4_attempt_contract_projection(
         strong_advisory = contract_packet.gate_semantics.get("strong_advisory_escalation")
         if isinstance(strong_advisory, dict):
             projection["strong_advisory_escalation"] = strong_advisory
+    session_memory_envelope = contract_packet.advisory_flags.get(SESSION_MEMORY_ENVELOPE_KEY)
+    if isinstance(session_memory_envelope, dict):
+        projection[SESSION_MEMORY_ENVELOPE_KEY] = session_memory_envelope
     return projection
 
 
@@ -7821,6 +7829,60 @@ class Stage4InterviewRound:
             verdict_layers=verdict_layers,
         )
 
+    def _with_stage4_session_memory_envelope(
+        self,
+        advisory_flags: dict | None,
+        *,
+        episode: int,
+        round_num: int,
+        arc: int,
+        success: bool,
+        score: int,
+        verdict: str | None,
+        reject_reason: str,
+        fix_scope: str | None,
+        session_id: str | None,
+        attempt_key: str,
+        artifact_meta: dict[str, str],
+        selection_reason: str = "",
+        verdict_reason: str = "",
+        open_review: str = "",
+        fix_scope_reasoning: str = "",
+        runtime_advisory: str = "",
+        retry_directives: str = "",
+        failure_category: str = "",
+        initial_verdict: str = "",
+        is_patch: bool = False,
+        is_patch_fallback: bool = False,
+        patch_strategy: str = "",
+    ) -> dict[str, object]:
+        envelope = build_stage4_session_memory_envelope(
+            episode=episode,
+            round_num=round_num,
+            arc=arc,
+            success=success,
+            score=score,
+            verdict=verdict,
+            reject_reason=reject_reason,
+            fix_scope=fix_scope,
+            advisory_flags=advisory_flags,
+            session_id=session_id,
+            attempt_key=attempt_key,
+            artifact_meta=artifact_meta,
+            selection_reason=selection_reason,
+            verdict_reason=verdict_reason,
+            open_review=open_review,
+            fix_scope_reasoning=fix_scope_reasoning,
+            runtime_advisory=runtime_advisory,
+            retry_directives=retry_directives,
+            failure_category=failure_category,
+            initial_verdict=initial_verdict,
+            is_patch=is_patch,
+            is_patch_fallback=is_patch_fallback,
+            patch_strategy=patch_strategy,
+        )
+        return attach_session_memory_envelope(advisory_flags, envelope)
+
     def _resolve_stage4_db_attempt_advisory_flags(
         self,
         advisory_flags: dict | None,
@@ -7964,6 +8026,24 @@ class Stage4InterviewRound:
         score_breakdown: dict | None,
         artifact_meta: dict[str, str],
     ) -> dict:
+        advisory_flags = self._with_stage4_session_memory_envelope(
+            advisory_flags,
+            episode=episode,
+            round_num=round_num,
+            arc=arc,
+            success=success,
+            score=score,
+            verdict=verdict,
+            reject_reason=reject_reason,
+            fix_scope=None,
+            session_id=None,
+            attempt_key=attempt_key,
+            artifact_meta=artifact_meta,
+            failure_category=error_category,
+            is_patch=is_patch,
+            is_patch_fallback=patch_fallback,
+            patch_strategy=patch_strategy,
+        )
         contract_packet = self._build_stage4_attempt_contract_packet(
             advisory_flags,
             resolve_db_fallbacks=False,
@@ -8028,6 +8108,32 @@ class Stage4InterviewRound:
         is_patch_fallback: bool = False,
         patch_strategy: str = "",
     ) -> dict:
+        advisory_flags = self._resolve_stage4_db_attempt_advisory_flags(advisory_flags)
+        advisory_flags = self._with_stage4_session_memory_envelope(
+            advisory_flags,
+            episode=episode,
+            round_num=round_num,
+            arc=arc,
+            success=success,
+            score=score,
+            verdict=verdict,
+            reject_reason=reject_reason,
+            fix_scope=fix_scope,
+            session_id=session_id,
+            attempt_key=attempt_key,
+            artifact_meta=artifact_meta,
+            selection_reason=selection_reason,
+            verdict_reason=verdict_reason,
+            open_review=open_review,
+            fix_scope_reasoning=fix_scope_reasoning,
+            runtime_advisory=runtime_advisory,
+            retry_directives=retry_directives,
+            failure_category=failure_category,
+            initial_verdict=initial_verdict,
+            is_patch=is_patch,
+            is_patch_fallback=is_patch_fallback,
+            patch_strategy=patch_strategy,
+        )
         contract_packet = self._build_stage4_attempt_contract_packet(
             advisory_flags,
             resolve_db_fallbacks=True,
