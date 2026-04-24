@@ -968,7 +968,7 @@ def test_compare_benchmark_records_surfaces_companion_merge_audit_watchpoints(tm
                 "Status: final",
                 "Confidence: `96%`",
                 "",
-                "### Finding 1.",
+                "### Finding 1. residual carryover seam remains",
                 "",
                 "Severity: medium",
                 "",
@@ -978,6 +978,24 @@ def test_compare_benchmark_records_surfaces_companion_merge_audit_watchpoints(tm
                 "2. source blocker still open",
                 "",
                 "This lane is partially realized and not resolved yet.",
+                "",
+                "## 6. Validation",
+                "",
+                "Static verification:",
+                "",
+                "- `pytest tests/test_unified_blueprint_validator_lane_c.py -q` -> `42 passed`",
+                "- `pytest tests/test_stage3_orchestrator.py -q` -> `103 passed`",
+                "",
+                "Live verification:",
+                "",
+                "- fresh rerun `20260421_002444` -> `ep1 PASS 95`, `ep2 PASS_WITH_WARNING 95`",
+                "- fresh rerun `20260421_003616` -> `ep1 PASS 95`, `ep2 FAILED`",
+                "",
+                "## 7. Current Rerun Posture",
+                "",
+                "- patch status: `ready`",
+                "- local validation: `clean`",
+                "- next operator step before rerun: rerun against refreshed watchlist",
                 "",
             ]
         ),
@@ -1019,6 +1037,51 @@ def test_compare_benchmark_records_surfaces_companion_merge_audit_watchpoints(tm
             "blocker",
             "remaining_watchpoints",
         ],
+        "findings": [
+            {
+                "title": "residual carryover seam remains",
+                "severity": "medium",
+            }
+        ],
+        "finding_severity_counts": {
+            "medium": 1,
+        },
+        "rerun_posture": {
+            "patch_status": "ready",
+            "local_validation": "clean",
+            "next_operator_step_before_rerun": "rerun against refreshed watchlist",
+        },
+        "validation": {
+            "available": True,
+            "static_pass_total": 145,
+            "result_count": 4,
+            "live_rerun_count": 2,
+            "live_rerun_status": "mixed",
+            "live_reruns": [
+                {
+                    "run_id": "20260421_002444",
+                    "result": "ep1 PASS 95, ep2 PASS_WITH_WARNING 95",
+                    "has_pass_like": True,
+                    "has_failure": False,
+                },
+                {
+                    "run_id": "20260421_003616",
+                    "result": "ep1 PASS 95, ep2 FAILED",
+                    "has_pass_like": True,
+                    "has_failure": True,
+                },
+            ],
+            "replay_probe_count": 0,
+            "result_signal_count": 0,
+            "replay_probes": [],
+        },
+        "follow_up": {
+            "available": False,
+            "open_item_count": 0,
+            "open_markers": [],
+            "addendum_finding_count": 0,
+            "consequence_markers": [],
+        },
     }
     watchpoints = diff["delta"]["watchpoints"]
     assert {
@@ -1051,6 +1114,274 @@ def test_compare_benchmark_records_surfaces_companion_merge_audit_watchpoints(tm
             "left merge audit residual markers: "
             "partially_realized,not_resolved,blocker,remaining_watchpoints"
         ),
+    } in watchpoints
+    assert {
+        "id": "post_run_merge_audit_finding_breakdown",
+        "severity": "info",
+        "scope": "post_run_merge_audit_md",
+        "side": "left",
+        "message": "left merge audit finding breakdown: medium=1",
+    } in watchpoints
+    assert {
+        "id": "post_run_merge_audit_top_finding_attention",
+        "severity": "warn",
+        "scope": "post_run_merge_audit_md",
+        "side": "left",
+        "message": "left merge audit top finding [medium]: residual carryover seam remains",
+    } in watchpoints
+    assert {
+        "id": "post_run_merge_audit_rerun_posture_recorded",
+        "severity": "info",
+        "scope": "post_run_merge_audit_md",
+        "side": "left",
+        "message": (
+            "left rerun posture: patch_status=ready, local_validation=clean, "
+            "next_operator_step_before_rerun=rerun against refreshed watchlist"
+        ),
+    } in watchpoints
+    assert {
+        "id": "post_run_merge_audit_validation_summary_recorded",
+        "severity": "info",
+        "scope": "post_run_merge_audit_md",
+        "side": "left",
+        "message": "left merge audit validation summary: static_pass_total=145, result_count=4, live_reruns=2, live_status=mixed",
+    } in watchpoints
+    assert {
+        "id": "post_run_merge_audit_live_verification_mixed",
+        "severity": "warn",
+        "scope": "post_run_merge_audit_md",
+        "side": "left",
+        "message": "left merge audit live verification is mixed across 2 reruns",
+    } in watchpoints
+
+
+def test_compare_benchmark_records_extracts_numbered_validation_probe_signals(tmp_path):
+    module = _load_compare_module()
+    left_root = _write_record(
+        tmp_path,
+        run_id="20260423_120000__stage4-supervised__target-ep15__aaaa1111",
+        stage4_attempts=12,
+        stage4_pass_like=4,
+        stage4_duration_ms=8000,
+        stage4_tokens=12000,
+        stage4_cost_usd=1.5,
+        status="snapshot",
+        git_head="aaaa1111",
+    )
+    right_root = _write_record(
+        tmp_path,
+        run_id="20260423_130000__stage4-supervised__target-ep15__bbbb2222",
+        stage4_attempts=8,
+        stage4_pass_like=6,
+        stage4_duration_ms=6000,
+        stage4_tokens=9000,
+        stage4_cost_usd=1.1,
+        status="completed",
+        git_head="bbbb2222",
+    )
+    right_merge_audit = _write_companion_markdown(
+        tmp_path,
+        "docs/2026-04-23/right-post-run-merge-audit.md",
+        "\n".join(
+            [
+                "# Right Merge Audit",
+                "",
+                "Status: final",
+                "",
+                "## Validation",
+                "",
+                "1. targeted pytest",
+                "   - `python -m pytest tests/test_unified_blueprint_validator_lane_c.py tests/test_blueprint_ensemble_generate_ensemble.py -q`",
+                "   - result: `108 passed`",
+                "",
+                "2. adjacent carryover shard",
+                "   - `python -m pytest tests/test_stage3_npc_capital_carryforward_guardrail.py -q`",
+                "   - result: `49 passed`",
+                "",
+                "3. real-case replay",
+                "   - replayed the accepted `ep10` Stage3 blueprint through `_python_pre_validate`",
+                "   - result now emits:",
+                "     - `CRITICAL / opening_transition`",
+                "     - `carryover active character re-entry`",
+                "",
+            ]
+        ),
+    )
+    (right_root / "benchmark_companion_links.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "benchmark-companion-links-v1",
+                "post_run_evidence_json": "",
+                "post_run_merge_audit_md": right_merge_audit.relative_to(tmp_path).as_posix(),
+                "supporting_context_md": "",
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    diff = module.compare_benchmark_records(
+        str(left_root),
+        str(right_root),
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+    )
+
+    assert diff["right"]["companion_merge_audit"]["validation"] == {
+        "available": True,
+        "static_pass_total": 157,
+        "result_count": 3,
+        "live_rerun_count": 0,
+        "live_rerun_status": "",
+        "live_reruns": [],
+        "replay_probe_count": 1,
+        "result_signal_count": 2,
+        "replay_probes": [
+            {
+                "description": "the accepted ep10 Stage3 blueprint through _python_pre_validate",
+                "signals": [
+                    "CRITICAL / opening_transition",
+                    "carryover active character re-entry",
+                ],
+            }
+        ],
+    }
+    watchpoints = diff["delta"]["watchpoints"]
+    assert {
+        "id": "post_run_merge_audit_validation_summary_recorded",
+        "severity": "info",
+        "scope": "post_run_merge_audit_md",
+        "side": "right",
+        "message": (
+            "right merge audit validation summary: static_pass_total=157, result_count=3, "
+            "replay_probes=1, result_signals=2"
+        ),
+    } in watchpoints
+
+
+def test_compare_benchmark_records_extracts_addendum_and_follow_up_markers(tmp_path):
+    module = _load_compare_module()
+    left_root = _write_record(
+        tmp_path,
+        run_id="20260423_120000__stage4-supervised__target-ep15__aaaa1111",
+        stage4_attempts=12,
+        stage4_pass_like=4,
+        stage4_duration_ms=8000,
+        stage4_tokens=12000,
+        stage4_cost_usd=1.5,
+        status="snapshot",
+        git_head="aaaa1111",
+    )
+    right_root = _write_record(
+        tmp_path,
+        run_id="20260423_130000__stage4-supervised__target-ep15__bbbb2222",
+        stage4_attempts=8,
+        stage4_pass_like=6,
+        stage4_duration_ms=6000,
+        stage4_tokens=9000,
+        stage4_cost_usd=1.1,
+        status="completed",
+        git_head="bbbb2222",
+    )
+    right_merge_audit = _write_companion_markdown(
+        tmp_path,
+        "docs/2026-04-23/right-post-run-merge-audit.md",
+        "\n".join(
+            [
+                "# Right Merge Audit",
+                "",
+                "Status: final",
+                "",
+                "Merged addendum findings:",
+                "",
+                "1. The first packet-side follow-up was necessary but not sufficient.",
+                "2. The real root cause was the immutable previous-opening [FACT-LOCK] block.",
+                "3. The bounded compiler fix now suppresses those previous-opening immutable anchors.",
+                "4. The fresh exact-lineage Stage3 rerun now passes in bounded scope.",
+                "",
+                "Current authoritative consequence:",
+                "",
+                "- the previously assigned Stage3 arc_timeline residual is resolved in bounded scope on the exact failed lineage",
+                "- the remaining blocker for closure-grade downstream replay is the Stage34 single-episode demo utility source-contract gap",
+                "",
+                "What remains open:",
+                "",
+                "- the Episode 2 frontier is still nondeterministic under fresh reruns",
+                "- one fresh rerun cleared the narrative path and one later rerun regressed",
+                "- therefore this lane should be read as bounded authority-alignment improvement landed with mixed fresh-proof stability",
+                "",
+            ]
+        ),
+    )
+    (right_root / "benchmark_companion_links.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "benchmark-companion-links-v1",
+                "post_run_evidence_json": "",
+                "post_run_merge_audit_md": right_merge_audit.relative_to(tmp_path).as_posix(),
+                "supporting_context_md": "",
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    diff = module.compare_benchmark_records(
+        str(left_root),
+        str(right_root),
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+    )
+
+    assert diff["right"]["companion_merge_audit"]["follow_up"] == {
+        "available": True,
+        "open_item_count": 3,
+        "open_markers": [
+            "nondeterministic",
+            "regressed",
+            "mixed_fresh_proof_stability",
+        ],
+        "addendum_finding_count": 4,
+        "consequence_markers": [
+            "resolved_in_bounded_scope",
+            "remaining_blocker",
+        ],
+    }
+    watchpoints = diff["delta"]["watchpoints"]
+    assert {
+        "id": "post_run_merge_audit_follow_up_summary_recorded",
+        "severity": "info",
+        "scope": "post_run_merge_audit_md",
+        "side": "right",
+        "message": "right merge audit follow-up summary: open_items=3, addendum_findings=4, consequence_markers=2",
+    } in watchpoints
+    assert {
+        "id": "post_run_merge_audit_open_follow_up_attention",
+        "severity": "warn",
+        "scope": "post_run_merge_audit_md",
+        "side": "right",
+        "message": (
+            "right merge audit follow-up still lists 3 open items "
+            "(nondeterministic,regressed,mixed_fresh_proof_stability)"
+        ),
+    } in watchpoints
+    assert {
+        "id": "post_run_merge_audit_consequence_markers_recorded",
+        "severity": "info",
+        "scope": "post_run_merge_audit_md",
+        "side": "right",
+        "message": "right merge audit consequence markers: resolved_in_bounded_scope,remaining_blocker",
+    } in watchpoints
+    assert {
+        "id": "post_run_merge_audit_remaining_blocker_attention",
+        "severity": "warn",
+        "scope": "post_run_merge_audit_md",
+        "side": "right",
+        "message": "right merge audit authoritative consequence still records a remaining blocker",
     } in watchpoints
 
 

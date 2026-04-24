@@ -8,8 +8,8 @@ Canonical Path: `docs/2026-04-23/authority-alignment-benchmark-operating-model-h
 Commit State:
 - Baseline Commit: `30b9436fc3a5c3fcc3f6397bf23bfe45d24af918`
 - Baseline Dirty Summary: `dirty: prior queue and governance doc updates plus untracked docs/2026-04-23/; no unrelated project-data cleanup performed`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `same dirty surface; fresh issue-5 codebase-centered re-audit with parallel findings merged before execution-doc save`
+- Resume Commit: `95081593da1a7017d3a28ea38f77b6556ed6fec1`
+- Resume Drift Summary: `re-audited on feat/execution-meta-block-impl after the issue-5 queue promotion landed; the next bounded tranche remains deeper benchmark comparator normalization for post-run merge-audit markdown signals`
 Queue Note:
 - this survey exists to decide whether GitHub issue `#5` should remain embedded under `#3` or be promoted into its own execution lane
 Confidence: `98%`
