@@ -307,6 +307,8 @@ def test_legacy_stage2_pass_persistence_tail_delegates_to_existing_helpers(final
         "current_feedback": "feedback",
         "director_feedback_for_fourphase": "director-note",
         "st_snapshot": {"foo": 1},
+        "score": 93,
+        "fix_scope": "",
     }
     finalizer._update_stage2_pass_constraint_db.assert_called_once()
     finalizer._advance_stage2_pass_persistence_state.assert_called_once_with(

@@ -44,10 +44,11 @@ def _build_location_aliases(name: str, aliases: set[str]) -> None:
     if not base:
         return
 
+    compact_base = re.sub(r"\s+", "", base)
     for suffix in location_terms:
         aliases.add(f"{base} {suffix}".strip())
-        aliases.add(f"{re.sub(r'\s+', '', base)} {suffix}".strip())
-        aliases.add(f"{re.sub(r'\s+', '', base)}{suffix}".strip())
+        aliases.add(f"{compact_base} {suffix}".strip())
+        aliases.add(f"{compact_base}{suffix}".strip())
 
 
 def _build_object_aliases(name: str, aliases: set[str]) -> None:
