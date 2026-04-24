@@ -5,12 +5,15 @@ NPC 레지스트리 관리, 사망 추적, 무공/스킬 추적, 관계 변화, 
 
 StateTracker에서 NPC 관련 메서드만 분리.
 모든 공유 상태는 self.tracker를 통해 접근.
+
+utf8-hygiene: allow-file -- legacy Korean regex literals include Hangul-adjacent regex tokens; this patch is type-only.
 """
 
 import json
 import logging
 import re
 import time
+from typing import Any
 
 from modules.core.constants import AIModels  # [TF-9B] 모델 SSOT
 from modules.core.llm_generate import generate_content_via_router
@@ -656,7 +659,7 @@ class StateTrackerNPC:
             "protagonist_items": protagonist_items,
         }
 
-    def merge_npc_registry(self, other: "StateTracker"):
+    def merge_npc_registry(self, other: Any):
         """[V60.94] 다른 StateTracker의 NPC 레지스트리 병합"""
         for name, info in other.npc_registry.items():
             if name not in self.tracker.npc_registry:

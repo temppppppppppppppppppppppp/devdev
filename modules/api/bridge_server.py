@@ -26,7 +26,9 @@ import statistics
 import uuid
 from collections import Counter
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = timezone.utc
 from pathlib import Path
 from typing import Annotated, Any
 

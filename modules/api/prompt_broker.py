@@ -22,7 +22,9 @@ Mode B: 인터랙티브 프롬프트 브로커 (prompt_broker.py)
 import asyncio
 import threading
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = timezone.utc
 from typing import Any
 
 

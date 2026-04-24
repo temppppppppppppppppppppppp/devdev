@@ -2,17 +2,17 @@
 
 Date: 2026-04-23
 Status: final
-Scope: GitHub issue `#5` plus current `main` codebase re-audit for authority alignment, carryover hardening, benchmark archive comparison, and regression watchpoint substrate
+Scope: GitHub issue `#5` plus current `main` codebase re-audit for authority alignment, carryover hardening, benchmark archive comparison, regression watchpoint substrate, and operator proof surfacing
 Mode: survey-only, documentation-only; no production code mutation
 Canonical Path: `docs/2026-04-23/authority-alignment-benchmark-operating-model-hardening-3pass-audit.md`
 Commit State:
 - Baseline Commit: `30b9436fc3a5c3fcc3f6397bf23bfe45d24af918`
 - Baseline Dirty Summary: `dirty: prior queue and governance doc updates plus untracked docs/2026-04-23/; no unrelated project-data cleanup performed`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `same dirty surface; fresh issue-5 codebase-centered re-audit with parallel findings merged before execution-doc save`
+- Resume Commit: `6f4e4fab4d1fa31ac210dbc9cf96f5762bd674f6`
+- Resume Drift Summary: `re-audited on feat/execution-meta-block-impl after c14a4c4a, 75c81729, and 6f4e4fab landed; benchmark comparator normalization now covers linked merge-audit findings, validation/replay/result signals, addendum blockers, and operator proof signal/highlight surfacing`
 Queue Note:
 - this survey exists to decide whether GitHub issue `#5` should remain embedded under `#3` or be promoted into its own execution lane
-Confidence: `98%`
+Confidence: `99%`
 
 ## 1. Intent
 
@@ -34,11 +34,11 @@ Short answer:
 1. Yes, `#5` has enough live substrate to justify a standalone execution SSOT.
 2. The authority half is not hypothetical. Current Stage2, Stage3, and Stage4 already ship and consume explicit authority surfaces such as `cross_stage_authority_packet.v1`, `episode_state_packet`, and `state_truth_owner_contract`.
 3. The benchmark half is also real. The workspace already archives benchmark records under `benchmarks/` with `benchmark_index.csv`, `manifest.json`, and `stage_metrics.csv`, and the direct/canary runners already feed that archive.
-4. The missing center is not archive existence but archive comparison and watchpoint normalization:
-   - `diff_canary_summaries.py` compares canary summary JSONs, not benchmark records
-   - rerun proof and post-run merge audit logic exists, but mapping back into benchmark records is still fragmented
-   - regression watchpoints are still mostly governance posture, not a narrow benchmark-hardening contract
-5. Because the current `stage234-session-memory-max-utilization` lane already treats `#5` as its mandatory proof governor, the honest next step is to promote `#5` into its own upstream parked execution lane rather than leave it hidden inside `#3`.
+4. The missing center is no longer archive existence or first comparator availability. The current remaining gap is broader normalization and adoption:
+   - `compare_benchmark_records.py` now compares benchmark records directly and normalizes linked merge-audit findings, validation/replay/result signals, and addendum blockers into comparator watchpoints
+   - operator wrappers now surface compact `proof_signal_summary` and `proof_highlights` readouts so issue snapshots can expose why a pair is risky without reopening the raw merge-audit markdown
+   - remaining incompleteness is live companion-link population, broader non-companion proof ingestion, and downstream lane adoption of the same proof surface
+5. Because the current `stage234-session-memory-max-utilization` lane already treats `#5` as its mandatory proof governor, the honest next step remains to keep `#5` visible as its own upstream parked execution lane rather than fold it back into `#3`.
 
 ## 3. Source Set
 
@@ -69,6 +69,10 @@ Issue scope explicitly names:
 - `modules/core/stage4_post_pass_runtime.py`
 - `scripts/archive_benchmark_record.py`
 - `scripts/benchmark_archive_runtime.py`
+- `scripts/compare_benchmark_records.py`
+- `scripts/report_benchmark_operator_lines.py`
+- `scripts/render_benchmark_operator_comment_md.py`
+- `scripts/post_benchmark_operator_comment.py`
 - `scripts/diff_canary_summaries.py`
 - `scripts/regression_validation_tiers.py`
 - `benchmarks/README.md`
@@ -77,6 +81,10 @@ Issue scope explicitly names:
 ### 3.3 Tests and prior docs re-audited
 
 - `tests/test_archive_benchmark_record.py`
+- `tests/test_compare_benchmark_records.py`
+- `tests/test_report_benchmark_operator_lines.py`
+- `tests/test_render_benchmark_operator_comment_md.py`
+- `tests/test_post_benchmark_operator_comment.py`
 - `tests/test_diff_canary_summaries.py`
 - `tests/test_regression_validation_tier_contract.py`
 - `tests/test_stage2_finalizer.py`
@@ -109,13 +117,15 @@ Benchmark archiving is already first-class:
 - direct supervised runners and canary runners already auto-archive selected runs
 - the checked-in benchmark corpus already contains real Stage4 supervised records across multiple run outcomes
 
-### 4.3 Current comparison and watchpoint gap
+### 4.3 Current comparison and watchpoint posture
 
-The live comparison surface is weaker than the archive surface:
+The live comparison surface is now materially real, but still bounded:
 
 - `diff_canary_summaries.py` is real and test-backed, but it only compares canary summaries
-- I did not find a dedicated benchmark-to-benchmark comparator over `benchmark_index.csv`, `manifest.json`, or `stage_metrics.csv`
-- `regression_validation_tiers.py` gives generic validation tiers, not a dedicated watchpoint contract for benchmark hardening
+- `compare_benchmark_records.py` now provides a dedicated benchmark-to-benchmark comparator over `benchmark_index.csv`, `manifest.json`, and `stage_metrics.csv`
+- linked merge-audit markdown is now normalized far beyond coarse status: findings, severity posture, validation replay/result counts, addendum findings, consequence markers, open items, and blocker markers can all surface as comparator watchpoints
+- operator wrappers now expose those proof signals in report text and issue-comment markdown without redefining truth-owner semantics
+- the remaining gap is that live record-level companion links are still manual and not every proof artifact is yet normalized through the same comparator surface
 
 ### 4.4 Queue and lineage reality
 
@@ -139,8 +149,9 @@ So the substrate exists, but queue authority is lagging behind the real dependen
   - direct and canary runner wiring
 - Class C: comparison and watchpoint substrate partially present
   - canary-summary diff exists
-  - rerun proof and post-run merge audit docs exist
-  - benchmark-record comparator and explicit watchpoint contract are still missing
+  - benchmark-record comparator now exists
+  - linked merge-audit proof normalization and operator proof surfacing now exist
+  - broader archive-native link population and non-companion normalization are still incomplete
 - Class D: governance mismatch
   - current docs already treat `#5` as upstream proof owner
   - roadmap and queue do not yet expose it as a standalone lane
@@ -167,10 +178,10 @@ It would be unjustified if one of the following were true:
 
 The lane is justified precisely because it is not finished:
 
-- benchmark-record comparison is still missing
-- rerun/post-run merge audit is not normalized back into benchmark records
-- regression watchpoints are still generic rather than benchmark-hardening-specific
-- authority owner surfaces are real, but their operating model is still split across old audits, historical backing docs, and runtime code
+- live record-level companion links are still manual rather than archive-native
+- comparator proof normalization is strongest when explicit companion markdown/evidence artifacts are present and still needs broader ingestion paths
+- downstream rollout lanes still need to consume the same proof surface consistently
+- authority owner surfaces are real, but their operating model is still split across runtime code, historical backing docs, and current execution docs
 
 ## 7. Recommended Execution Posture
 
@@ -194,6 +205,6 @@ Promote `#5` into a standalone execution lane with this posture:
 
 Final recommendation:
 
-- save a canonical execution SSOT for `authority-alignment-benchmark-operating-model-hardening`
-- create the temp mirror
-- refresh roadmap and queue-state so the queue reflects the real dependency graph
+- keep the canonical execution SSOT current with the landed comparator normalization and operator proof surfacing
+- refresh the temp mirror and queue-state so the visible queue matches the current closure posture
+- use preview-first `python scripts/post_benchmark_operator_comment.py --issue-5-snapshot` before any optional GitHub write

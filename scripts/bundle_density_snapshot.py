@@ -3,13 +3,17 @@
 
 from __future__ import annotations
 
+# utf8-hygiene: allow-file -- legacy density regex patterns use Hangul-adjacent optional tokens.
+
 import argparse
 import json
 import math
 import re
 import sys
 from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = timezone.utc
 from pathlib import Path
 from typing import Any
 

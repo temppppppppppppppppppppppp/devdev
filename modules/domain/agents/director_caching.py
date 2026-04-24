@@ -121,6 +121,11 @@ class DirectorCachingManager:
                 logging.warning(f" [V60.88] 원고 분량 부족 ({total_chars}자) - 캐싱 스킵")
                 return None
 
+            client_skip_reason = BaseAgent._resolve_context_cache_client_skip_reason(self.client)
+            if client_skip_reason:
+                logging.info(" [V60.88] 원고 캐시 create 스킵: %s", client_skip_reason)
+                return None
+
             # 4. 기존 캐시가 유효하고 원고 수가 동일하면 재사용
             if self.manuscript_cache_name and self._cached_manuscript_count == len(manuscripts_compiled):
                 logging.warning(f" [V60.88] 기존 캐시 재사용 ({self._cached_manuscript_count}화)")

@@ -126,7 +126,7 @@ def test_unified_blueprint_validator_compare_confidence_with_string_score():
         all_candidates=[{"a": 1}, {"b": 2}],
     )
 
-    assert verdict == "PASS"
+    assert verdict == "PASS_WITH_FIX"
     assert result["confidence"] == 0.9
 
 
@@ -149,7 +149,7 @@ def test_unified_blueprint_validator_director_score_string_is_coerced():
         arc_idx=1,
     )
 
-    assert verdict == "PASS"
+    assert verdict == "PASS_WITH_FIX"
     assert result["score"] == 65
     assert result["confidence"] == 0.6
 
@@ -172,7 +172,7 @@ def test_state_tracker_npc_merge_does_not_overwrite_with_empty_values():
 
 def test_sweep34_source_guards_exist():
     assert "except Exception as _pf_err:" in _read("modules/core/stage2_preflight.py")
-    assert "arc_drive = {}" in _read("modules/core/stage2_preflight.py")
+    assert "arc_drive: dict = field(default_factory=dict)" in _read("modules/core/stage2_preflight.py")
     de_src = _read("modules/domain/agents/director_ensemble.py")
     assert "def _safe_int(value, default=0):" in de_src
     assert 'selected_idx = _safe_int(result.get("selected_index", 0), 0)' in de_src

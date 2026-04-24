@@ -96,13 +96,16 @@ Create or refresh an aggregate roadmap when:
 - A single-item queue may proceed without an aggregate roadmap, but it still remains a queue item until realized and cleaned up.
 - Use `docs/implementation/queue-priority-rubric.md` when the ordering is not trivially obvious.
 - During migration, if a canonical execution SSOT contains an `Execution Metadata Block`, future queue tooling should prefer that block over prose inference for `depends_on`, tranche identity, and queue metadata that the block explicitly carries.
+- During the phase-2 guard rollout, a `depends_on` edge may remain unrated, but if both the dependency item and dependent item have `roadmap_rank`, the dependency rank must be lower than the dependent rank.
 - Before any code modification starts, re-audit the governing canonical execution SSOT or canonical roadmap with the document 3-pass harness and confirm at least 95% confidence against the current workspace state.
 
 ## 5A. Optional Queue State File
 - `docs/temp/queue-state.json` may be used as a machine-readable queue snapshot.
 - If present, it should follow `docs/implementation/temp-queue-state-contract-v1.json`.
 - Refresh it whenever queue membership or status changes.
+- If a `depends_on` edge and recorded `roadmap_rank` disagree, treat the queue-state as invalid and fix the roadmap or dependency before mirroring to external tools.
 - Preferred command: `python scripts/sync_temp_queue_state.py`
+- When the queue needs dependency-respecting rank normalization, use `python scripts/build_execution_roadmap.py --rewrite-roadmap-ranks` to rewrite queue-state ranks and rebuild the roadmap together.
 - Remove it when the queue becomes empty.
 
 ## 5B. ClickUp Reflection Rule

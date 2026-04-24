@@ -1261,8 +1261,6 @@ class ValidationOrchestrator:
         Returns:
             str: Constitution 텍스트
         """
-        global _CONSTITUTION_CACHE
-
         # 캐시 확인
         with _CONSTITUTION_LOCK:
             if genre in _CONSTITUTION_CACHE:
@@ -1692,4 +1690,3 @@ class ValidationOrchestrator:
             logging.info(f"[V59] 임계값 {threshold}점으로 {duration_episodes}화 동안 고정")
         else:
             logging.info(f"[V59] 임계값 {threshold}점으로 고정 (적응형 비활성화)")
-

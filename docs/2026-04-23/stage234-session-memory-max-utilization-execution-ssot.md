@@ -1,14 +1,14 @@
 # Stage234 Session Memory Max-Utilization Execution SSOT
 
 Date: 2026-04-23
-Status: execution-ready (3-pass audited; parked future wave; downstream rollout lane gated by independent #5 proof lane)
+Status: execution-ready (3-pass audited; parked future wave; upstream #5 proof gate closed on 2026-04-24; next visible memory/cache rollout lane)
 Canonical Path: `docs/2026-04-23/stage234-session-memory-max-utilization-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage234-session-memory-max-utilization-execution-ssot.md`
 Commit State:
 - Baseline Commit: `30b9436fc3a5c3fcc3f6397bf23bfe45d24af918`
 - Baseline Dirty Summary: `dirty: modified docs/temp/queue-state.json from prior queue sync; untracked docs/2026-04-23/`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `2026-04-23 issue-5 formalization re-audit split the upstream proof governor into its own execution lane and moved this item to rank 2 with an explicit dependency`
+- Resume Drift Summary: `2026-04-24 issue-5 closure moved the upstream proof governor to historical backing; this item is now the first visible memory/cache rollout lane`
 Source Survey Docs:
 - `docs/2026-04-23/stage234-session-memory-max-utilization-deep-dive-adversarial-3pass-audit.md`
 - `docs/2026-04-23/authority-alignment-benchmark-operating-model-hardening-3pass-audit.md`
@@ -30,6 +30,29 @@ Evidence Artifacts:
 - `tests/test_stage4_interview_round.py`
 Side-Effect Coverage: covered
 
+## 0. Execution Metadata Block
+
+```yaml
+execution_meta:
+  schema_version: execution-meta-block-v1
+  topic: stage234-session-memory-max-utilization
+  depends_on: []
+  tranches:
+    - id: cache-path-proof-producer-lanes
+      title: Cache-path proof on current producer lanes
+    - id: internal-session-memory-envelope-contract
+      title: Internal session-memory envelope contract
+    - id: stage4-first-runtime-hardening
+      title: Stage4-first runtime hardening
+    - id: stage3-budget-retrieval-hardening
+      title: Stage3 budget and retrieval hardening
+    - id: stage2-retry-memory-hardening
+      title: Stage2 retry-memory hardening
+    - id: optional-provider-native-sidecars
+      title: Optional provider-native sidecars
+  github_issue: 3
+```
+
 ## 1. Intent
 
 - Convert the 2026-04-23 survey into one execution-ready SSOT for the `S2-S3-S4` session-memory lane.
@@ -43,9 +66,10 @@ Side-Effect Coverage: covered
 - `BaseAgent` already contains a live context-cache substrate, but local gating still requires `cache.min_content_chars = 50000`.
 - Stage3 already carries a bounded history window of `24 recent + 6 anchor` with a `36` item cache cap.
 - Stage4 has the richest retry-memory substrate today, including persisted attempts and operator-facing summary surfaces, but no general runtime resume hydrator was found on current `main`.
+- A bounded read-only cache proof harness now exists at `scripts/audit_stage34_cache_proof.py`; it reads archived benchmark DB snapshots and surfaces Stage3/Stage4 producer cached-token evidence without changing runtime authority.
 - Issue posture remains aligned with the survey:
-  - `#3` remains the direct rollout lane
-  - `#5` is now a separate upstream proof and benchmark governor lane with its own execution SSOT
+- `#3` remains the direct rollout lane
+- `#5` is now closed historical backing for the upstream proof and benchmark governor lane
   - `#6` keeps this work coupled to authority and donor structure rather than isolated
 
 ## 3. Scope
@@ -150,6 +174,7 @@ Excluded:
 1. Cache-path proof on current producer lanes
    - consume the upstream `#5` proof substrate for cache hit, cached-token, retry-count, continuity, and cost deltas
    - verify real cache reuse on Stage4 and Stage3 heavy shared-context paths
+   - use `scripts/audit_stage34_cache_proof.py` as the first bounded proof surface before any gate relaxation or provider-session rollout
    - benchmark the local `50000`-char gate instead of assuming it is correct
 2. Internal session-memory envelope contract
    - define one provider-neutral substrate for retries, resumes, and stage handoff
@@ -182,6 +207,7 @@ Excluded:
 - `pytest tests/test_chief_writer.py -q`
 - `pytest tests/test_stage2_optimizer.py -q`
 - `pytest tests/test_stage4_interview_round.py -q`
+- `pytest tests/test_audit_stage34_cache_proof.py -q`
 - sequential low-memory shards only; no `xdist` or parallel pytest
 - `python scripts/sync_temp_queue_state.py`
 - `python scripts/ops_validator.py --strict`
@@ -201,8 +227,8 @@ Excluded:
   - keep the mirror while this lane remains a visible queued substrate program
   - remove or replace it only after closure or superseding narrower tranche SSOTs
 - roadmap dependency:
-  - ranked second behind `authority-alignment-benchmark-operating-model-hardening`
-  - may not promote to front-active until the upstream `#5` proof lane is satisfied enough to make memory deltas measurable
+  - now ranked first among visible parked rollout items after `authority-alignment-benchmark-operating-model-hardening` closure
+  - upstream `#5` proof lane is satisfied enough to begin bounded `#3` rollout planning, subject to fresh execution-start re-audit
 
 ## 13. Validation and Closure Hooks
 

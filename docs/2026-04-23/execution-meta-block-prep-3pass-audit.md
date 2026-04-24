@@ -109,19 +109,19 @@ Guardrail:
 
 The block should carry only the fields that queue automation actually needs first.
 
-Required:
+Required for the block itself:
 
 - `schema_version`
 - `topic`
-- `status`
-- `queue_role`
-- `roadmap_rank`
 - `depends_on`
 - `tranches`
 
-Recommended optional fields:
+Optional for later migration waves:
 
 - `github_issue`
+- `status`
+- `queue_role`
+- `roadmap_rank`
 - `verification_commands`
 
 The human prose sections remain authoritative for explanation, scope, and nuance.
@@ -147,13 +147,13 @@ That lets later tooling:
 
 1. add the contract document
 2. add an optional example to the execution SSOT template
-3. pilot the block in the three live parked items:
+3. phase 1 pilot the block in the two modern live parked items:
    - `authority-alignment-benchmark-operating-model-hardening`
    - `stage234-session-memory-max-utilization`
-   - `stage0-bi-tr-production-harness-normalization-remediation`
-4. only then update `sync_temp_queue_state.py`
-5. then extend `ops_validator.py`
-6. then add tests for block presence, bad schema, and dependency cycles or unknown topics
+4. keep `stage0-bi-tr-production-harness-normalization-remediation` for a later migration tranche because it is not template-shaped
+5. only then update `sync_temp_queue_state.py`
+6. then extend `ops_validator.py`
+7. then add tests for block presence, bad schema, and dependency cycles or unknown topics
 
 ## 8. Ready-To-Implement Criteria
 
@@ -163,6 +163,7 @@ Implementation can begin safely once all of the following are true:
 - the template shows the exact placement and example shape
 - rollout order is written down
 - we explicitly choose that parser code reads the block only, not free-form prose
+- we explicitly choose that phase 1 reads `depends_on` and tranche identity first while leaving `status`, `queue_role`, and `roadmap_rank` under legacy authority
 
 Those conditions are satisfied by the prep work in this branch.
 
@@ -174,4 +175,5 @@ The implementation-ready path is:
 
 - keep execution SSOT prose for humans
 - add one small embedded metadata block for machines
-- teach queue tooling to read that block and prefer it over prose inference for dependency and tranche structure
+- teach queue tooling to read that block and prefer it over prose inference for dependency and tranche structure first
+- defer queue authority migration for `status`, `queue_role`, and `roadmap_rank` until a later tranche
