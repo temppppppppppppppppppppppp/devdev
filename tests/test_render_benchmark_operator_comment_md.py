@@ -92,7 +92,7 @@ def test_render_benchmark_operator_comment_markdown_includes_sections(tmp_path):
 
     assert markdown.startswith("## Issue #5 Benchmark Operator Snapshot\n")
     assert "- Audit: status=clean; ci_gate=pass; gate_basis=clean; headline=no remediation needed" in markdown
-    assert "- Summary: live_records=2; records_with_missing_targets=0; stale_index_rows=0" in markdown
+    assert "- Summary: live_records=2; records_with_sidecar=1; records_with_missing_targets=0; stale_index_rows=0" in markdown
     assert "### Live Records" in markdown
     assert f"- run_id={run_a}; status=operational_failure; companion_state=linked; linked=supporting_context_md; missing=-" in markdown
     assert "### Explicit Comparisons" in markdown

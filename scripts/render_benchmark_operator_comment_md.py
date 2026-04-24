@@ -69,6 +69,7 @@ def render_benchmark_operator_comment_markdown(payload: dict[str, object], *, ti
         lines.append(
             "- Summary: "
             f"live_records={summary.get('live_records', 0)}; "
+            f"records_with_sidecar={summary.get('records_with_sidecar', 0)}; "
             f"records_with_missing_targets={summary.get('records_with_missing_targets', 0)}; "
             f"stale_index_rows={summary.get('stale_index_rows', 0)}"
         )
