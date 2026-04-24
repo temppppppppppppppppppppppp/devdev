@@ -92,11 +92,14 @@ def render_benchmark_operator_comment_markdown(payload: dict[str, object], *, ti
             operator_report_line = str(item.get("operator_report_line", "") or "")
             verdict = str(item.get("verdict", "") or "")
             changed_sections = ",".join(str(section) for section in item.get("changed_sections", []))
+            proof_signal_summary = str(item.get("proof_signal_summary", "") or "")
             tail = []
             if verdict:
                 tail.append(f"verdict={verdict}")
             if changed_sections:
                 tail.append(f"changed_sections={changed_sections}")
+            if proof_signal_summary:
+                tail.append(f"proof_signals={proof_signal_summary}")
             suffix = f"; {'; '.join(tail)}" if tail else ""
             lines.append(f"- {label}: {operator_report_line}{suffix}")
 
