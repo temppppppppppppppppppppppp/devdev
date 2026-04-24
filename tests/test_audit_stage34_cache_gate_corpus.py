@@ -442,3 +442,67 @@ def test_audit_stage34_cache_gate_corpus_surfaces_direct_cache_error_reason(tmp_
     }
     assert "stage4_top_error_reason=cache_create_failed_not_found" in payload["operator_report_line"]
     assert payload["record_rows"][0]["stage_rows"]["stage4"]["top_error_reason"] == "cache_create_failed_not_found"
+
+
+def test_audit_stage34_cache_gate_corpus_surfaces_direct_cache_skip_reason(tmp_path):
+    module = _load_module()
+    helpers = _load_audit_helpers()
+    run_id = "20260424_170000__stage4-supervised__target-ep16__ffff6666"
+    record_root = helpers._write_record(
+        tmp_path,
+        run_id=run_id,
+        stage3_attempts=1,
+        stage4_attempts=1,
+        llm_rows=[],
+    )
+    _rewrite_llm_calls_with_prompt_chars(
+        record_root,
+        [
+            {
+                "agent_name": "blueprint_ensemble_generator",
+                "model": "vertexai:gemini-2.5-pro",
+                "context_tag": "s3",
+                "prompt_chars": 34000,
+                "input_tokens": 5000,
+                "output_tokens": 600,
+                "cached_tokens": 0,
+                "total_cost_usd": 0.1,
+            }
+        ],
+    )
+    _write_context_cache_attempts(
+        record_root,
+        [
+            {
+                "stage": 4,
+                "ep_num": 16,
+                "agent_name": "chief_writer",
+                "model": "vertexai:gemini-3.1-pro-preview",
+                "cache_type": "manuscript",
+                "project_name": "golden_canary_ep_16",
+                "content_chars": 157930,
+                "min_content_chars": 50000,
+                "ttl_seconds": 1800,
+                "cache_outcome": "skipped",
+                "cache_reason": "vertex_api_key_explicit_cache_unsupported",
+                "content_hash": "cw125",
+            }
+        ],
+    )
+
+    payload = module.audit_stage34_cache_gate_corpus(
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+    )
+
+    stage4_summary = payload["stage_summaries"]["stage4"]
+    assert stage4_summary["evidence_source"] == "context_cache_attempts"
+    assert stage4_summary["skip_count"] == 1
+    assert stage4_summary["top_skip_reason"] == "vertex_api_key_explicit_cache_unsupported"
+    assert stage4_summary["skip_reason_counts"] == {
+        "vertex_api_key_explicit_cache_unsupported": 1,
+    }
+    assert "stage4_top_skip_reason=vertex_api_key_explicit_cache_unsupported" in payload["operator_report_line"]
+    assert payload["record_rows"][0]["stage_rows"]["stage4"]["top_skip_reason"] == (
+        "vertex_api_key_explicit_cache_unsupported"
+    )

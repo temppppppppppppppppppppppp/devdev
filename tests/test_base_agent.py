@@ -882,6 +882,30 @@ class TestContextCacheEviction:
         assert kwargs["stage"] == 4
         assert kwargs["ep_num"] == 21
 
+    def test_context_cache_skips_vertex_api_key_mode_before_create(self, agent):
+        db = MagicMock()
+        db.save_context_cache_attempt = MagicMock()
+        caches = SimpleNamespace(create=MagicMock())
+        agent.context = SimpleNamespace(current_project=SimpleNamespace(db=db), current_stage=4, current_ep=16)
+        agent.client = SimpleNamespace(
+            caches=caches,
+            _geuldobi_provider_mode="vertex_ai",
+            _geuldobi_vertex_auth_mode="api_key",
+        )
+        content = "A" * max(10, agent._MIN_CACHE_CONTENT)
+
+        result = agent._get_or_create_context_cache("manuscript", content, ttl_seconds=1800, project_name="gc_ep16")
+
+        assert result["cache_name"] is None
+        assert result["reason"] == "vertex_api_key_explicit_cache_unsupported"
+        caches.create.assert_not_called()
+        db.save_context_cache_attempt.assert_called_once()
+        kwargs = db.save_context_cache_attempt.call_args.kwargs
+        assert kwargs["cache_outcome"] == "skipped"
+        assert kwargs["cache_reason"] == "vertex_api_key_explicit_cache_unsupported"
+        assert kwargs["stage"] == 4
+        assert kwargs["ep_num"] == 16
+
     def test_context_cache_error_logs_specific_reason(self, agent):
         db = MagicMock()
         db.save_context_cache_attempt = MagicMock()
