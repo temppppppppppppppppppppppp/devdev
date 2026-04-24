@@ -839,6 +839,49 @@ class TestContextCacheEviction:
                 if k.startswith("evict_"):
                     agent._context_caches.pop(k, None)
 
+    def test_short_context_cache_skip_logs_direct_attempt(self, agent):
+        db = MagicMock()
+        db.save_context_cache_attempt = MagicMock()
+        agent.context = SimpleNamespace(current_project=SimpleNamespace(db=db), current_stage=3, current_ep=15)
+
+        result = agent._get_or_create_context_cache("blueprint", "short content", ttl_seconds=45, project_name="gc_ep15")
+
+        assert result["reason"] == "content_too_short"
+        db.save_context_cache_attempt.assert_called_once()
+        kwargs = db.save_context_cache_attempt.call_args.kwargs
+        assert kwargs["cache_outcome"] == "skipped"
+        assert kwargs["cache_reason"] == "content_too_short"
+        assert kwargs["content_chars"] == len("short content")
+        assert kwargs["min_content_chars"] == agent._MIN_CACHE_CONTENT
+        assert kwargs["stage"] == 3
+        assert kwargs["ep_num"] == 15
+
+    def test_context_cache_hit_logs_direct_attempt(self, agent):
+        import hashlib
+        import time
+
+        db = MagicMock()
+        db.save_context_cache_attempt = MagicMock()
+        agent.context = SimpleNamespace(current_project=SimpleNamespace(db=db), current_stage=4, current_ep=21)
+        content = "A" * max(10, agent._MIN_CACHE_CONTENT)
+        content_hash = hashlib.md5(content.encode("utf-8")).hexdigest()[:16]
+        cache_key = f"manuscript_gc_ep21_{content_hash}"
+        agent._context_caches[cache_key] = {
+            "name": "cache/existing",
+            "created_at": time.time(),
+            "content_hash": content_hash,
+        }
+
+        result = agent._get_or_create_context_cache("manuscript", content, ttl_seconds=1800, project_name="gc_ep21")
+
+        assert result["cached"] is True
+        db.save_context_cache_attempt.assert_called_once()
+        kwargs = db.save_context_cache_attempt.call_args.kwargs
+        assert kwargs["cache_outcome"] == "hit"
+        assert kwargs["cache_name"] == "cache/existing"
+        assert kwargs["stage"] == 4
+        assert kwargs["ep_num"] == 21
+
 
 class TestMetricsUsageTracking:
     def test_ask_resets_stale_usage_before_failure_metrics(self, agent, monkeypatch):

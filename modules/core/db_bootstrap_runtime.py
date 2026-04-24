@@ -405,6 +405,7 @@ class DBBootstrapRuntime:
     def _create_selection_and_logging_tables(self) -> None:
         self._create_adjunct_retention_tables()
         self._create_llm_call_tables()
+        self._create_context_cache_attempt_tables()
         self._create_stage_attempt_tables()
         self._create_ui_event_tables()
         self._create_cost_log_tables()
@@ -463,6 +464,42 @@ class DBBootstrapRuntime:
                 ("continuation_count", "INTEGER"),
             ),
             log_label="llm_calls",
+        )
+
+    def _create_context_cache_attempt_tables(self) -> None:
+        owner = self.owner
+        cursor = owner.cursor
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS context_cache_attempts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ts TEXT NOT NULL,
+                stage INTEGER,
+                ep_num INTEGER,
+                agent_name TEXT NOT NULL,
+                model TEXT NOT NULL,
+                cache_type TEXT NOT NULL,
+                project_name TEXT,
+                content_chars INTEGER,
+                min_content_chars INTEGER,
+                ttl_seconds INTEGER,
+                cache_outcome TEXT NOT NULL,
+                cache_reason TEXT,
+                cache_name TEXT,
+                content_hash TEXT,
+                error_msg TEXT
+            )
+            """
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_context_cache_attempts_agent ON context_cache_attempts(agent_name)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_context_cache_attempts_ep ON context_cache_attempts(ep_num)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_context_cache_attempts_ts ON context_cache_attempts(ts)"
         )
 
     def _create_stage_attempt_tables(self) -> None:

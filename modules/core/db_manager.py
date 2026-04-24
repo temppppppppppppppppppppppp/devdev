@@ -3213,6 +3213,60 @@ class DBManager:
         except Exception as _e:
             logging.debug("[llm_calls] save_llm_call failed (non-blocking): %s", _e)
 
+    def save_context_cache_attempt(
+        self,
+        *,
+        agent_name: str,
+        model: str,
+        cache_type: str,
+        project_name: str = "",
+        content_chars: int,
+        min_content_chars: int,
+        ttl_seconds: int,
+        cache_outcome: str,
+        cache_reason: str | None = None,
+        cache_name: str | None = None,
+        content_hash: str | None = None,
+        error_msg: str | None = None,
+        stage: int | None = None,
+        ep_num: int | None = None,
+    ) -> None:
+        """Persist one context-cache attempt record in non-blocking mode."""
+        try:
+            if not self.accepts_runtime_telemetry_writes:
+                return
+            ts = datetime.now().isoformat(timespec="seconds")
+            with self._lock:
+                if not self.accepts_runtime_telemetry_writes:
+                    return
+                self.cursor.execute(
+                    """INSERT INTO context_cache_attempts
+                       (ts, stage, ep_num, agent_name, model, cache_type, project_name,
+                        content_chars, min_content_chars, ttl_seconds, cache_outcome,
+                        cache_reason, cache_name, content_hash, error_msg)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (
+                        ts,
+                        stage,
+                        ep_num,
+                        agent_name,
+                        model,
+                        cache_type,
+                        project_name or "",
+                        int(content_chars or 0),
+                        int(min_content_chars or 0),
+                        int(ttl_seconds or 0),
+                        cache_outcome,
+                        cache_reason or "",
+                        cache_name,
+                        content_hash,
+                        error_msg or "",
+                    ),
+                )
+                self.conn.commit()
+        except Exception as _e:
+            logging.debug("[context_cache_attempts] save failed (non-blocking): %s", _e)
+
     def save_stage_attempt(
         self,
         stage: int,
