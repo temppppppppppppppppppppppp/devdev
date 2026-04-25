@@ -2866,7 +2866,9 @@ class TestHandleRoundOutcomeRetryPathology:
         orch.outcome_runtime.handle_pass_round_result.assert_not_called()
         orch.outcome_runtime.handle_reject_round_result.assert_called_once()
 
-    def test_finalize_round_outcome_loop_accepts_last_best_when_user_chooses_continue(self, orch_with_ctx):
+    def test_finalize_round_outcome_loop_rejects_last_best_adoption_even_when_user_chooses_continue(
+        self, orch_with_ctx
+    ):
         orch = orch_with_ctx
         orch._ctx.get_int_input = MagicMock(return_value=1)
 
@@ -2885,11 +2887,11 @@ class TestHandleRoundOutcomeRetryPathology:
             rounds_attempted=5,
         )
 
-        assert result.should_return is False
-        assert result.final_manuscript == "best manuscript"
-        assert result.final_title == "제3화"
-        assert result.final_state_updates == {"hp": 10}
-        orch._ctx.get_int_input.assert_called_once()
+        assert result.should_return is True
+        assert result.final_manuscript is None
+        assert result.final_title is None
+        assert result.final_state_updates == {}
+        orch._ctx.get_int_input.assert_not_called()
 
     def test_finalize_round_outcome_loop_requests_human_review_when_no_best(self, orch_with_ctx):
         orch = orch_with_ctx
@@ -2911,7 +2913,7 @@ class TestHandleRoundOutcomeRetryPathology:
         assert result.final_state_updates == {}
         orch._ctx.get_int_input.assert_not_called()
 
-    def test_finalize_round_outcome_loop_uses_policy_default_choice_without_input(self, orch_with_ctx):
+    def test_finalize_round_outcome_loop_ignores_policy_default_choice_for_last_best(self, orch_with_ctx):
         orch = orch_with_ctx
         orch._ctx.get_int_input = None
         orch._get_stage4_exhaustion_default_choice = MagicMock(return_value=1)
@@ -2931,10 +2933,11 @@ class TestHandleRoundOutcomeRetryPathology:
             rounds_attempted=5,
         )
 
-        assert result.should_return is False
-        assert result.final_manuscript == "best manuscript"
-        assert result.final_title == "제3화"
-        assert result.final_state_updates == {"hp": 10}
+        assert result.should_return is True
+        assert result.final_manuscript is None
+        assert result.final_title is None
+        assert result.final_state_updates == {}
+        orch._get_stage4_exhaustion_default_choice.assert_not_called()
 
     def test_emit_stage4_retry_shadow_compare_logs_clip_decision_and_audit(self, orch_with_ctx):
         orch = orch_with_ctx

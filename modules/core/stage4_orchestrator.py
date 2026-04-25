@@ -609,7 +609,7 @@ class Stage4Orchestrator:
         return self.get_stage4_policy_bool("shadow_mode", "log_all_episodes", default=False)
 
     def _allow_stage4_best_manuscript_adoption(self) -> bool:
-        return self.get_stage4_policy_bool("exhaustion", "allow_best_manuscript_adoption", default=True)
+        return False
 
     def _get_stage4_exhaustion_default_choice(self) -> int:
         return self.get_stage4_policy_int("exhaustion", "default_operator_choice", default=2)
@@ -1919,6 +1919,11 @@ JSON으로 출력:
                         should_return=True,
                     )
             else:
+                if last_best:
+                    self.ctx.ui.log(
+                        f"\n⛔ [EP {next_ep}] {max_rounds}회 면담 모두 실패. "
+                        f"마지막 최선 결과물(score={last_score})은 Director 미승인 상태라 진행할 수 없습니다."
+                    )
                 self.ctx.ui.log(f"\n⛔ [EP {next_ep}] {max_rounds}회 면담 모두 실패. 인간 검토 필요.")
                 _emit_shadow("HUMAN_REVIEW", accepted=False)
                 return _RoundOutcome(
@@ -1928,9 +1933,9 @@ JSON으로 출력:
                     should_return=True,
                 )
 
-        used_best_manuscript = bool(final_manuscript and previous_attempt.get("best_manuscript") == final_manuscript)
+        used_best_manuscript = False
         _emit_shadow(
-            "PASS_BEST_ADOPTED" if used_best_manuscript else "PASS",
+            "PASS",
             accepted=bool(final_manuscript),
             used_best_manuscript=used_best_manuscript,
         )
