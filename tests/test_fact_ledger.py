@@ -19,7 +19,7 @@ class _StubDB:
         }
 
     def save_anchor(self, _name, _payload):
-        return None
+        return True
 
 
 def test_get_stats_handles_non_dict_character_entries():
@@ -193,7 +193,7 @@ class _EmptyStubDB:
         return None
 
     def save_anchor(self, _name, _payload):
-        return None
+        return True
 
     def upsert_canonical_fact(self, **_kwargs):
         return None
@@ -204,9 +204,19 @@ class _BrokenSaveDB(_EmptyStubDB):
         raise RuntimeError("write fail")
 
 
+class _FalseSaveDB(_EmptyStubDB):
+    def save_anchor(self, _name, _payload):
+        return False
+
+
 class _BrokenLoadDB(_EmptyStubDB):
     def load_anchor(self, _name):
         raise RuntimeError("load fail")
+
+
+class _CorruptAnchorStatusDB(_EmptyStubDB):
+    def load_anchor_with_status(self, _name, default=None):
+        return {"found": True, "data": default if default is not None else {}, "error": "bad json"}
 
 
 def test_update_number_established_value_set():
@@ -234,6 +244,16 @@ def test_save_sets_degraded_contract_on_failure():
     assert ledger.last_save_error == "write fail"
 
 
+def test_save_sets_degraded_contract_on_false_return():
+    ledger = FactLedger(_FalseSaveDB())
+
+    result = ledger.save()
+
+    assert result is False
+    assert ledger.last_save_ok is False
+    assert ledger.last_save_error == "save_anchor returned False"
+
+
 def test_save_clears_degraded_contract_on_success():
     ledger = FactLedger(_EmptyStubDB())
     ledger.last_save_ok = False
@@ -252,6 +272,17 @@ def test_load_sets_degraded_contract_on_failure():
     assert ledger.last_updated_ep == 0
     assert ledger.degraded is True
     assert ledger.degraded_reason == "load fail"
+
+
+def test_corrupt_anchor_status_refuses_empty_overwrite():
+    ledger = FactLedger(_CorruptAnchorStatusDB())
+
+    assert ledger.degraded is True
+    assert ledger.degraded_reason == "fact_ledger anchor load failed: bad json"
+    assert ledger.save() is False
+    assert (
+        ledger.last_save_error == "refusing to overwrite after degraded load: fact_ledger anchor load failed: bad json"
+    )
 
 
 def test_load_empty_anchor_keeps_non_degraded_contract():

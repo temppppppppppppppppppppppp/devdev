@@ -11,6 +11,7 @@ from unittest.mock import ANY, MagicMock, mock_open, patch
 
 from modules.core import stage4_episode_logging as s4_episode_logging
 from modules.core.context_advisor import RetrievalPlan, RetrievalSlot, RetrievalSources
+from modules.core.pass_rate_monitor import PassRateMonitor
 from modules.core.session_logger import SessionLogger
 from modules.core.session_memory_envelope import SESSION_MEMORY_ENVELOPE_KEY
 from modules.core.stage4_context import Stage4Context
@@ -1277,7 +1278,7 @@ class TestPreDirectorValidation:
 
         warnings = validation_results[0]["warnings"]
         assert "[V63.2] 일관성: [HIGH] canon drift" in warnings
-        assert "[Python검증-CRITICAL] grave issue" in warnings
+        assert "[Python검증-SUSPECTED-CRITICAL] grave issue" in warnings
         assert "[Python검증-ADVISORY] soft warning" in warnings
         assert "[Python검증-ADVISORY] degraded: timeline_link" in warnings
         assert "[V66.1] 연속성: time jump" in warnings
@@ -1287,7 +1288,7 @@ class TestPreDirectorValidation:
         assert validation_results[0]["warning_count"] == len(warnings)
         assert validation_results[0]["focus_points"] == [
             "일관성 위반 1건 (감점 3)",
-            "Python 검증 경고 1건 (Director 판단 필요)",
+            "Python 검증 경고 1건 (LLM Director 최종 판단 필요)",
             "Python 검증 advisory 2건 (Director 참고)",
             "연속성 위반 1건",
         ]
@@ -1421,13 +1422,13 @@ class TestPreDirectorValidation:
 
         warnings = validation_results[0]["warnings"]
         assert warnings == [
-            "[Python검증-CRITICAL] grave issue",
+            "[Python검증-SUSPECTED-CRITICAL] grave issue",
             "[Python검증-ADVISORY] soft warning",
             "[Python검증-ADVISORY] degraded: timeline_link",
         ]
         assert validation_results[0]["warning_count"] == 3
         assert validation_results[0]["focus_points"] == [
-            "Python 검증 경고 1건 (Director 판단 필요)",
+            "Python 검증 경고 1건 (LLM Director 최종 판단 필요)",
             "Python 검증 advisory 2건 (Director 참고)",
         ]
 
@@ -1449,13 +1450,13 @@ class TestPreDirectorValidation:
         )
 
         assert validation_result["warnings"] == [
-            "[Python검증-CRITICAL] grave issue",
+            "[Python검증-SUSPECTED-CRITICAL] grave issue",
             "[Python검증-ADVISORY] soft warning",
             "[Python검증-ADVISORY] degraded: timeline_link",
         ]
         assert validation_result["warning_count"] == 3
         assert validation_result["focus_points"] == [
-            "Python 검증 경고 1건 (Director 판단 필요)",
+            "Python 검증 경고 1건 (LLM Director 최종 판단 필요)",
             "Python 검증 advisory 2건 (Director 참고)",
         ]
         assert any("Python 검증 경고 1건" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
@@ -1474,9 +1475,9 @@ class TestPreDirectorValidation:
             round_num=1,
         )
 
-        assert validation_result["warnings"] == ["[Python검증-CRITICAL] grave issue"]
+        assert validation_result["warnings"] == ["[Python검증-SUSPECTED-CRITICAL] grave issue"]
         assert validation_result["warning_count"] == 1
-        assert validation_result["focus_points"] == ["Python 검증 경고 1건 (Director 판단 필요)"]
+        assert validation_result["focus_points"] == ["Python 검증 경고 1건 (LLM Director 최종 판단 필요)"]
         assert any("Python 검증 경고 1건" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
         assert any("[CRITICAL] grave issue" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
 
@@ -3067,10 +3068,7 @@ class TestRecordS4Attempt:
         assert pass_rate_payload["scope_authority"]["authoritative_fix_scope"] == "inplace"
         assert pass_rate_payload["retry_budget_axes"] == {"repair": "patch_revision"}
         assert pass_rate_payload["primary_failure_layer"] == "quality_floor"
-        assert pass_rate_payload[SESSION_MEMORY_ENVELOPE_KEY]["attempt_key"] == "s4:ep2:arc1:a2:sess-stage4"
-        assert pass_rate_payload[SESSION_MEMORY_ENVELOPE_KEY]["retry_surface"]["retry_budget_axes"] == {
-            "repair": "patch_revision"
-        }
+        assert SESSION_MEMORY_ENVELOPE_KEY not in pass_rate_payload
         assert db_payload["advisory_flags"]["repair_contract"]["subtype"] == "movement"
         assert db_payload["advisory_flags"]["scope_authority"]["authoritative_fix_scope"] == "inplace"
         assert db_payload["advisory_flags"]["retry_budget_axes"] == {"repair": "patch_revision"}
@@ -4123,6 +4121,52 @@ class TestRecordS4Attempt:
         assert kw["attempt_key"] == "s4:ep2:arc1:a2:sess-stage4"
         assert kw["patch_strategy"] == "patch_with_feedback"
         assert kw["artifact_path"] == "logs/final.txt"
+
+    def test_record_stage4_pass_rate_attempt_accepts_session_memory_envelope_contract(self, tmp_path):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = PassRateMonitor(str(tmp_path))
+        ir = Stage4InterviewRound(ctx)
+        prelude = _Stage4AttemptPreludePayload(
+            duration_ms=321,
+            token_cost=0.125,
+            session_id="sess-stage4",
+            attempt_key="s4:ep2:arc1:a2:sess-stage4",
+            normalized_patch_strategy="patch_with_feedback",
+            artifact_meta={
+                "candidate_key": "A|balanced",
+                "content_hash": "hash123",
+                "artifact_path": "logs/final.txt",
+            },
+        )
+
+        ir._record_stage4_pass_rate_attempt(
+            episode=2,
+            round_num=1,
+            score=61,
+            arc=1,
+            success=False,
+            reject_reason="retry needed",
+            is_patch=True,
+            patch_fallback=False,
+            prev_score=55,
+            verdict="REJECT",
+            advisory_flags={
+                "retry_budget_axes": {"repair": "patch_revision"},
+                "gate_semantics": {"director_verdict": "REJECT"},
+            },
+            structural_attempted=True,
+            error_category="LOGIC_ERROR",
+            reject_bucket="post_select_conflict",
+            score_breakdown={"narrative_flow": 9},
+            prelude=prelude,
+        )
+
+        assert len(ctx.pass_rate_monitor.records) == 1
+        record = ctx.pass_rate_monitor.records[0]
+        assert record.attempt_key == "s4:ep2:arc1:a2:sess-stage4"
+        assert record.patch_strategy == "patch_with_feedback"
+        assert record.retry_budget_axes == {"repair": "patch_revision"}
+        assert not hasattr(record, SESSION_MEMORY_ENVELOPE_KEY)
 
     def test_save_stage4_db_attempt_uses_prelude_payload(self):
         ctx = _make_ctx()

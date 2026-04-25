@@ -103,7 +103,9 @@ def test_quality_dashboard_endpoint_combines_result_and_patterns(tmp_path, monke
     (project_dir / "plans" / "blueprints").mkdir(parents=True, exist_ok=True)
     (project_dir / "drafts").mkdir(parents=True, exist_ok=True)
     (project_dir / "config" / "author_directives.txt").write_text("writer intent", encoding="utf-8")
-    (project_dir / "config" / "work_guard.yaml").write_text("work_identity:\n  work_type: enterprise\n", encoding="utf-8")
+    (project_dir / "config" / "work_guard.yaml").write_text(
+        "work_identity:\n  work_type: enterprise\n", encoding="utf-8"
+    )
     (project_dir / "stage0_output" / "style_guide.json").write_text('{"tone":"sharp"}', encoding="utf-8")
     (project_dir / "treatment_generated.json").write_text(
         json.dumps([{"block": 1}, {"block": 2}], ensure_ascii=False),
@@ -245,7 +247,9 @@ def test_quality_dashboard_endpoint_combines_result_and_patterns(tmp_path, monke
     assert data["stage_stats"][0]["stage"] == 4
     assert data["failure_patterns"]["top_types"][0]["type"] == "scene_variety"
     assert data["runtime_health"]["available"] is True
-    assert data["runtime_health"]["top_components"][0]["component"] == "stage4_post_processor.save_episode_quality_signal"
+    assert (
+        data["runtime_health"]["top_components"][0]["component"] == "stage4_post_processor.save_episode_quality_signal"
+    )
     assert data["retrieval_summary"]["available"] is True
     assert data["retrieval_summary"]["stage_rows"][0]["stage"] == "director"
     assert data["artifact_ladder"]["available"] is True
@@ -295,6 +299,19 @@ def test_quality_dashboard_endpoint_surfaces_proof_status_and_sink_alignment(tmp
             content_hash="hash-s3",
             artifact_path=stage3_artifact,
         )
+        db.save_director_selection(
+            ep_num=6,
+            round_num=1,
+            selected_label="B",
+            selected_strategy="balanced",
+            verdict="PASS",
+            score=90,
+            stage=3,
+            attempt_key=attempt_key_s3,
+            candidate_key="balanced",
+            content_hash="hash-s3",
+            artifact_path=stage3_artifact,
+        )
         db.save_stage_attempt(
             stage=4,
             verdict="PASS",
@@ -321,6 +338,19 @@ def test_quality_dashboard_endpoint_surfaces_proof_status_and_sink_alignment(tmp
             content_hash="hash-s4",
             artifact_path=stage4_artifact,
         )
+        for payload_kind in (
+            "selection_contract_snapshot_raw",
+            "selection_surface_raw",
+            "feedback_provenance_raw",
+            "contract_snapshot_raw",
+        ):
+            db.save_attempt_raw_rationale(
+                attempt_key=attempt_key_s4,
+                stage=4,
+                ep_num=6,
+                payload_kind=payload_kind,
+                payload=json.dumps({"_meta": {"surface": payload_kind}}, ensure_ascii=False),
+            )
         (logs_dir / "session" / "decisions.jsonl").write_text(
             "\n".join(
                 [
@@ -725,7 +755,9 @@ def test_quality_dashboard_endpoint_surfaces_patch_effectiveness(tmp_path, monke
     monitor = PassRateMonitor(str(project_dir))
     monitor.record_attempt(stage=4, episode=3, attempt_num=1, success=False, is_patch=False)
     monitor.record_attempt(stage=4, episode=3, attempt_num=2, success=True, is_patch=True, prev_score=82.0)
-    monitor.record_attempt(stage=4, episode=4, attempt_num=1, success=False, is_patch=True, patch_fallback=True, prev_score=70.0)
+    monitor.record_attempt(
+        stage=4, episode=4, attempt_num=1, success=False, is_patch=True, patch_fallback=True, prev_score=70.0
+    )
     monitor.record_attempt(stage=4, episode=5, attempt_num=1, success=True, is_patch=False)
     monitor.save()
 

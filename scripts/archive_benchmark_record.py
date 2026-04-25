@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.canary_path_utils import resolve_workspace_project_dir  # noqa: E402
+from scripts.canary_path_utils import resolve_workspace_project_dir  # noqa: E402, I001
 
 
 PASS_LIKE_VERDICTS = {"PASS", "PASS_WITH_WARNING", "PASS_WITH_FIX"}
@@ -77,7 +77,7 @@ class StageAggregate:
     total_tokens: int = 0
     latest_episode: int = 0
 
-    def finalize(self) -> "StageAggregate":
+    def finalize(self) -> StageAggregate:
         if self.attempt_count > 0:
             self.avg_duration_ms = int(round(self.total_duration_ms / self.attempt_count))
         self.total_cost_usd = round(self.total_cost_usd, 6)
@@ -85,9 +85,7 @@ class StageAggregate:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Archive a completed or interrupted project run into benchmarks/."
-    )
+    parser = argparse.ArgumentParser(description="Archive a completed or interrupted project run into benchmarks/.")
     parser.add_argument("--project", required=True, help="Project name under projects/ or an absolute project path.")
     parser.add_argument("--lane", default="manual", help="Short run label such as stage4-supervised.")
     parser.add_argument("--target-ep", type=int, default=None, help="Optional target episode for this run.")
@@ -169,6 +167,7 @@ def archive_benchmark_record(
     runtime_summary = _load_json(project_root / "logs" / "runtime_audit_summary.json")
     latest_session_id = _extract_latest_session_id(runtime_summary)
     runtime_audit_tag = str(runtime_summary.get("tag", "")) if isinstance(runtime_summary, dict) else ""
+    runtime_summary_window = runtime_summary.get("summary_window", {}) if isinstance(runtime_summary, dict) else {}
 
     copied_files = _copy_snapshot_payload(project_root=project_root, record_root=record_root)
     stage_metrics_path = record_root / "stage_metrics.csv"
@@ -194,6 +193,7 @@ def archive_benchmark_record(
         "runtime_summary": {
             "runtime_audit_tag": runtime_audit_tag,
             "latest_session_id": latest_session_id,
+            "summary_window": runtime_summary_window if isinstance(runtime_summary_window, dict) else {},
         },
         "workspace_git": {
             "branch": git_info["branch"],
