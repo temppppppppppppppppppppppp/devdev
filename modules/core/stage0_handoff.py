@@ -10,7 +10,12 @@ from typing import Any
 RUNTIME_PROTAGONIST_KEYS = ("world_origin", "incarnation_type", "pov", "external_pov_insert_policy")
 STAGE0_CONTRACT_KEY = "_stage0_contract"
 STAGE0_CONTRACT_SCHEMA = "stage0.material.v1"
+STAGE0_RUNTIME_HANDOFF_KEY = "_stage0_runtime_handoff"
+STAGE0_RUNTIME_HANDOFF_SCHEMA = "stage0.runtime_handoff.v1"
 STAGE0_RUNTIME_HANDOFF_OWNER = "db_anchor:bible"
+STAGE0_RUNTIME_HANDOFF_ANCHOR = "bible"
+STAGE0_RUNTIME_HANDOFF_SURFACE = "MasterBible.plot_roadmap"
+STAGE0_RUNTIME_HANDOFF_CONSUMER_MODE = "db_anchor_first"
 STAGE0_TREATMENT_ROLE = "canonical_material_source"
 STAGE0_BIBLE_ROLE = "bi_projection_artifact"
 
@@ -94,8 +99,8 @@ def _build_stage0_contract_base(*, artifact_role: str, artifact_truth: str) -> d
         },
         "runtime_handoff": {
             "owner": STAGE0_RUNTIME_HANDOFF_OWNER,
-            "stage2_surface": "MasterBible.plot_roadmap",
-            "stage2_consumer_mode": "db_anchor_first",
+            "stage2_surface": STAGE0_RUNTIME_HANDOFF_SURFACE,
+            "stage2_consumer_mode": STAGE0_RUNTIME_HANDOFF_CONSUMER_MODE,
         },
         "compatibility_bridges": {
             "ensure_plot_roadmap": "compatibility_bridge",
@@ -135,6 +140,49 @@ def resolve_stage0_bible_contract(bible: Any, *, treatment: Any | None = None) -
         if isinstance(master, dict) and isinstance(master.get(STAGE0_CONTRACT_KEY), dict):
             return deepcopy(master[STAGE0_CONTRACT_KEY])
     return build_stage0_bible_contract(treatment=treatment)
+
+
+def _contract_dict(value: Any) -> dict[str, Any]:
+    return deepcopy(value) if isinstance(value, dict) else {}
+
+
+def _contract_text(value: Any, fallback: str) -> str:
+    text = _as_text(value)
+    return text or fallback
+
+
+def build_stage0_runtime_handoff_summary(bible: Any, *, treatment: Any | None = None) -> dict[str, Any]:
+    contract = resolve_stage0_bible_contract(bible, treatment=treatment)
+    runtime_handoff = _contract_dict(contract.get("runtime_handoff"))
+    field_authority = _contract_dict(contract.get("field_authority"))
+    bridges = _contract_dict(contract.get("compatibility_bridges"))
+    default_bridges = _build_stage0_contract_base(
+        artifact_role=STAGE0_BIBLE_ROLE,
+        artifact_truth="MasterBible",
+    )["compatibility_bridges"]
+
+    return {
+        "schema": STAGE0_RUNTIME_HANDOFF_SCHEMA,
+        "runtime_handoff_owner": _contract_text(runtime_handoff.get("owner"), STAGE0_RUNTIME_HANDOFF_OWNER),
+        "runtime_handoff_anchor": STAGE0_RUNTIME_HANDOFF_ANCHOR,
+        "runtime_handoff_surface": _contract_text(
+            runtime_handoff.get("stage2_surface"),
+            STAGE0_RUNTIME_HANDOFF_SURFACE,
+        ),
+        "stage2_consumer_mode": _contract_text(
+            runtime_handoff.get("stage2_consumer_mode"),
+            STAGE0_RUNTIME_HANDOFF_CONSUMER_MODE,
+        ),
+        "projection_source": _contract_text(contract.get("projection_source"), "treatment.blocks"),
+        "plot_roadmap_authority": _contract_text(
+            field_authority.get("plot_roadmap"),
+            STAGE0_RUNTIME_HANDOFF_SURFACE,
+        ),
+        "persistence_call": f"save_v20_anchor:{STAGE0_RUNTIME_HANDOFF_ANCHOR}",
+        "compatibility_bridges": {
+            name: _contract_text(bridges.get(name), default_state) for name, default_state in default_bridges.items()
+        },
+    }
 
 
 def _normalize_contract_genre(raw_genre: str) -> str:
@@ -572,8 +620,12 @@ def canonicalize_bible_payload(
         if isinstance(master.get(STAGE0_CONTRACT_KEY), dict):
             master.pop(STAGE0_CONTRACT_KEY, None)
             warnings.append("removed MasterBible._stage0_contract sidecar from canonical BI copy")
+        if isinstance(master.get(STAGE0_RUNTIME_HANDOFF_KEY), dict):
+            master.pop(STAGE0_RUNTIME_HANDOFF_KEY, None)
+            warnings.append("removed MasterBible._stage0_runtime_handoff sidecar from canonical BI copy")
 
     payload[STAGE0_CONTRACT_KEY] = build_stage0_bible_contract(treatment=treatment)
+    payload[STAGE0_RUNTIME_HANDOFF_KEY] = build_stage0_runtime_handoff_summary(payload, treatment=treatment)
 
     from modules.core.response_schemas import validate_bible_canonical_structure
 
