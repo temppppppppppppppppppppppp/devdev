@@ -489,6 +489,11 @@ def test_quality_dashboard_endpoint_surfaces_proof_status_and_sink_alignment(tmp
     assert data["runtime_audit_summary"]["contract"]["attempt_truth_authoritative"] is False
     assert "pass_rate_monitor" in data["runtime_audit_summary"]["contract"]["authoritative_attempt_sinks"]
     assert data["runtime_audit_summary"]["proof_digest"]["status"] == "ok"
+    assert data["runtime_audit_summary"]["run_scope"]["status"] == "scoped"
+    assert data["runtime_audit_summary"]["run_scope"]["latest_session_id"] == "sess_demo"
+    assert data["runtime_audit_summary"]["freshness"]["status"] == "scoped"
+    assert data["runtime_audit_summary"]["freshness"]["latest_session_id_present"] is True
+    assert data["runtime_audit_summary"]["freshness"]["operator_guidance_only"] is True
     assert data["runtime_audit_summary"]["proof_digest"]["stages"]["stage4"]["coverage"]["session_decisions"] == 1
 
 
