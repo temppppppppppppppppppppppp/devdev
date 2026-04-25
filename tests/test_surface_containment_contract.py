@@ -54,8 +54,9 @@ def test_manual_only_surfaces_are_marked_and_not_live_entries():
 def test_residue_surfaces_are_removed_or_tracked_separately_from_live_inventory():
     removed_dirs = CONTRACT["residue_surfaces"]["removed_tracked_directories"]
     removed_project_dirs = CONTRACT["residue_surfaces"]["removed_tracked_project_directories"]
+    removed_temp_paths = CONTRACT["residue_surfaces"]["removed_tracked_temp_paths"]
+    preserved_evidence_files = CONTRACT["residue_surfaces"]["preserved_evidence_files"]
     removed_files = CONTRACT["residue_surfaces"]["removed_tracked_files"]
-    residue_globs = CONTRACT["residue_surfaces"]["globs"]
 
     for rel_path in removed_dirs:
         assert not (ROOT / rel_path).exists()
@@ -71,13 +72,24 @@ def test_residue_surfaces_are_removed_or_tracked_separately_from_live_inventory(
     )
     assert tracked_project_residue == ""
 
-    matched = set()
-    for pattern in residue_globs:
-        matched.update(path.name for path in ROOT.glob(pattern))
+    tracked_temp_residue = subprocess.check_output(
+        ["git", "ls-files", "--", *removed_temp_paths],
+        cwd=ROOT,
+        text=True,
+        encoding="utf-8",
+    )
+    assert tracked_temp_residue == ""
 
-    assert matched
-    assert "temp-electron-paths.js" in matched
-    assert "temp-run-packaged.ps1" in matched
+    for rel_path in preserved_evidence_files:
+        assert (ROOT / rel_path).exists()
+
+    tracked_preserved_evidence = subprocess.check_output(
+        ["git", "ls-files", "--", *preserved_evidence_files],
+        cwd=ROOT,
+        text=True,
+        encoding="utf-8",
+    )
+    assert set(tracked_preserved_evidence.splitlines()) == set(preserved_evidence_files)
 
 
 def test_manual_and_residue_surfaces_are_excluded_from_legacy_packaging_scope():
@@ -105,5 +117,7 @@ def test_manual_and_prototype_surfaces_are_excluded_from_broad_ruff_scope():
 def test_future_generated_residue_paths_are_ignored_after_tracked_cleanup():
     ignore_lines = set(_read(".gitignore").splitlines())
     ignored_future_dirs = CONTRACT["residue_surfaces"]["ignored_future_directories"]
+    ignored_future_root_temp_paths = CONTRACT["residue_surfaces"]["ignored_future_root_temp_paths"]
 
     assert {f"{path_name}/" for path_name in ignored_future_dirs}.issubset(ignore_lines)
+    assert set(ignored_future_root_temp_paths).issubset(ignore_lines)
