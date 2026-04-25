@@ -63,6 +63,10 @@
       "rlhf_data/test_project",
       "datasets/test_project"
     ],
+    "removed_tracked_project_directories": [
+      "test_mode/projects",
+      "lite_mode/projects"
+    ],
     "removed_tracked_files": [
       "crash_dump.log",
       "error.log",
@@ -71,7 +75,9 @@
     ],
     "ignored_future_directories": [
       "MagicMock",
-      "tmp_stage2_digest_debug"
+      "tmp_stage2_digest_debug",
+      "test_mode/projects",
+      "lite_mode/projects"
     ],
     "globs": [
       "temp-*"
