@@ -23,8 +23,8 @@ import logging
 import threading
 from functools import partial
 
-from modules.core.soft_failure import report_soft_failure, resolve_db_log_dir, resolve_logs_dir, resolve_project_log_dir
 from modules.core.models_config import DEFAULT_FLASH_MODEL, DEFAULT_PRO_MODEL
+from modules.core.soft_failure import report_soft_failure, resolve_db_log_dir, resolve_logs_dir, resolve_project_log_dir
 
 from .action_scene_evaluator import ActionSceneEvaluator
 from .advisory_validator import AdvisoryValidator
@@ -217,8 +217,7 @@ class ValidationOrchestrator:
             _pov = context.get("pov", "")
             _protagonist_name = context.get("protagonist_name", "")  # [TF-PLV-1]
         self.pre_llm = (
-            PreLLMValidator(genre=genre, pov=_pov, protagonist_name=_protagonist_name)
-            if PRE_LLM_AVAILABLE else None
+            PreLLMValidator(genre=genre, pov=_pov, protagonist_name=_protagonist_name) if PRE_LLM_AVAILABLE else None
         )
         self.use_pre_llm = config.get("use_pre_llm", _threshold("orchestrator.use_pre_llm", True))
 
@@ -619,9 +618,7 @@ class ValidationOrchestrator:
         if ep_num in important_episodes:
             refine_applied = True
             refine_reason = (
-                f"important episode ({ep_num})"
-                if not refine_reason
-                else refine_reason + " + important episode"
+                f"important episode ({ep_num})" if not refine_reason else refine_reason + " + important episode"
             )
 
         if refine_applied:
@@ -1114,8 +1111,21 @@ class ValidationOrchestrator:
 
         return warning_lines
 
+    @staticmethod
+    def _is_suspected_critical_blocking_failure(failure: object) -> bool:
+        if not isinstance(failure, dict):
+            return False
+        return str(failure.get("severity", "") or "").strip().upper() == "CRITICAL"
+
+    @classmethod
+    def _collect_suspected_critical_blocking_failures(cls, failures: object) -> list[dict]:
+        if not isinstance(failures, list):
+            return []
+        return [dict(failure) for failure in failures if cls._is_suspected_critical_blocking_failure(failure)]
+
     def _build_blocking_advisory(self, blocking_result: dict) -> dict | None:
         failures = blocking_result.get("failures", []) or []
+        suspected_critical_failures = self._collect_suspected_critical_blocking_failures(failures)
         warning_lines = self._collect_blocking_warning_lines(blocking_result)
         degraded_checks = [
             str(raw_check).strip()
@@ -1132,6 +1142,9 @@ class ValidationOrchestrator:
             "warnings": warning_lines,
             "degraded_checks": degraded_checks,
             "feedback": self._generate_blocking_feedback(blocking_result),
+            "suspected_critical_failures": suspected_critical_failures,
+            "suspected_critical_blocking": bool(suspected_critical_failures),
+            "evidence_level": "suspected_critical" if suspected_critical_failures else "blocking_failure",
             "severity": "HIGH" if failures else "MEDIUM",
         }
 
@@ -1424,7 +1437,8 @@ class ValidationOrchestrator:
             if self.use_adaptive_threshold:
                 adaptive_threshold = self.calculate_adaptive_threshold_v59(ep_num, validation_context)
                 self.scoring.pass_threshold = adaptive_threshold
-                logging.warning(f"[V59] 적응형 임계값: {adaptive_threshold}점 (기본: {self.threshold_profile['base_threshold']})"
+                logging.warning(
+                    f"[V59] 적응형 임계값: {adaptive_threshold}점 (기본: {self.threshold_profile['base_threshold']})"
                 )
             else:
                 adaptive_threshold = self.current_threshold
@@ -1468,6 +1482,7 @@ class ValidationOrchestrator:
             adaptive_threshold,
             pass_threshold=adaptive_threshold,
         )
+
     def validate_parallel_sync_v59(self, ep_num: int, manuscript: str, validation_context: dict) -> dict:
         """
         [V59] 병렬 검증 동기 래퍼 - 기존 동기 코드에서 호출 가능
@@ -1563,7 +1578,8 @@ class ValidationOrchestrator:
         if final_threshold <= floor:
             self._consecutive_floor_hits += 1
             if self._consecutive_floor_hits >= floor_hit_reset:
-                logging.warning(f"[I-01] 임계값 바닥({floor}) {self._consecutive_floor_hits}회 연속 → consecutive_passes 리셋"
+                logging.warning(
+                    f"[I-01] 임계값 바닥({floor}) {self._consecutive_floor_hits}회 연속 → consecutive_passes 리셋"
                 )
                 self.consecutive_passes = 0
                 self._consecutive_floor_hits = 0
