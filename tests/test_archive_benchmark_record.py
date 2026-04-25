@@ -12,7 +12,11 @@ def _make_project(root: Path) -> Path:
     return project
 
 
-def test_archive_benchmark_record_creates_bundle_and_index(tmp_path):
+def test_archive_benchmark_record_creates_bundle_and_index(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "scripts.archive_benchmark_record._collect_git_info",
+        lambda _workspace: {"branch": "", "head": "", "dirty": False},
+    )
     project = _make_project(tmp_path)
     (project / "project_data.db").write_bytes(b"sqlite-binary")
     (project / "logs" / "pass_rate_monitor.json").write_text(
@@ -158,7 +162,11 @@ def test_archive_benchmark_record_creates_bundle_and_index(tmp_path):
     assert manifest["runtime_summary"]["summary_window"]["event_window_truncated"] is True
 
 
-def test_archive_benchmark_record_overwrite_replaces_existing_index_row(tmp_path):
+def test_archive_benchmark_record_overwrite_replaces_existing_index_row(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "scripts.archive_benchmark_record._collect_git_info",
+        lambda _workspace: {"branch": "", "head": "", "dirty": False},
+    )
     project = _make_project(tmp_path)
     (project / "project_data.db").write_bytes(b"v1")
     (project / "logs" / "pass_rate_monitor.json").write_text('{"records":[]}', encoding="utf-8")
