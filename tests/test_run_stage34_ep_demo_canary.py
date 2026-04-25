@@ -60,6 +60,18 @@ def test_run_stage34_ep_demo_canary_calls_stage3_then_stage4_and_analyzes():
     assert result["multi_stage_proof_scope_summary"]["status"] == "pass"
 
 
+def test_stage34_ep_demo_run_main_returns_nonzero_on_failed_multi_stage_proof():
+    with (
+        patch("sys.argv", ["run_stage34_ep_demo_canary.py", "run", "--project", "demo", "--target-ep", "2"]),
+        patch.object(
+            canary_script,
+            "run_canary",
+            return_value={"multi_stage_proof_scope_summary": {"status": "fail"}},
+        ),
+    ):
+        assert canary_script.main() == 1
+
+
 def test_run_stage34_ep_demo_canary_fails_fast_when_frontier_is_not_single_episode_aligned():
     stage3_orch = MagicMock()
     app = SimpleNamespace(

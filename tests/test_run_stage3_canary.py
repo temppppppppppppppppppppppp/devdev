@@ -248,6 +248,18 @@ def test_parse_args_full():
     assert args.force
 
 
+def test_stage3_run_main_returns_nonzero_on_failed_hard_gates():
+    with (
+        patch("sys.argv", ["run_stage3_canary.py", "run", "--project", "s3", "--target-ep", "4"]),
+        patch.object(
+            canary_script,
+            "run_canary",
+            return_value={"hard_gates": {"status": "fail"}, "benchmark_archive": {"status": "ok"}},
+        ),
+    ):
+        assert canary_script.main() == 1
+
+
 def test_prepare_stage3_canary_project_allows_partial_from_ep(tmp_path):
     from modules.core import stage4_canary_tools
 

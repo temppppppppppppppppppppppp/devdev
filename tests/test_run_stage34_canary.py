@@ -45,3 +45,15 @@ def test_run_stage34_canary_archives_after_analyze():
     analyze.assert_called_once_with("proof_refresh", target_ep=4)
     archive.assert_called_once()
     assert result["benchmark_archive"]["run_id"] == "canary-s34"
+
+
+def test_stage34_run_main_returns_nonzero_on_failed_multi_stage_proof():
+    with (
+        patch("sys.argv", ["run_stage34_canary.py", "run", "--project", "s34", "--target-ep", "4"]),
+        patch.object(
+            canary_script,
+            "run_canary",
+            return_value={"multi_stage_proof_scope_summary": {"status": "fail"}, "benchmark_archive": {"status": "ok"}},
+        ),
+    ):
+        assert canary_script.main() == 1

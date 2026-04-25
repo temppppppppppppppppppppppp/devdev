@@ -27,9 +27,7 @@ import sys
 import time
 from collections import deque
 from collections.abc import Awaitable, Callable
-from datetime import datetime, timezone
-
-UTC = timezone.utc
+from datetime import UTC, datetime
 from pathlib import Path
 
 from modules.api.control_plane_contract import (
@@ -276,6 +274,7 @@ class ProcessRunner:
         self._pid: int | None = None
         self._process: asyncio.subprocess.Process | None = None
         self._read_task: asyncio.Task | None = None
+        self._stderr_task: asyncio.Task | None = None
         self._on_line: OnLineCallback | None = None
         self._on_exit: OnExitCallback | None = None
         self._on_prompt: OnPromptCallback | None = None
@@ -287,6 +286,7 @@ class ProcessRunner:
         self._stdout_tail: deque[str] = deque(maxlen=_RUNTIME_TAIL_LINES)
         self._stderr_tail: deque[str] = deque(maxlen=_RUNTIME_TAIL_LINES)
         self._last_prompt_step: str | None = None
+        self._suppress_on_exit: bool = False
 
     # ──────────────────────────────────────────────────────────────────────────
     # Properties
@@ -348,6 +348,7 @@ class ProcessRunner:
         self._stdout_tail.clear()
         self._stderr_tail.clear()
         self._last_prompt_step = None
+        self._suppress_on_exit = False
 
         stdin_data = self._build_stdin_sequence(key, sub_key, inputs)
         env = self._build_env(inputs)
@@ -405,24 +406,24 @@ class ProcessRunner:
                     pass
 
         # stdout/stderr 읽기 루프 (백그라운드 태스크)
+        self._stderr_task = asyncio.create_task(self._read_stderr_loop())
         if self._mode == "B":
             self._read_task = asyncio.create_task(self._read_loop_mode_b())
         else:
             self._read_task = asyncio.create_task(self._read_loop())
 
-    async def stop(self) -> None:
+    async def stop(self) -> dict:
         """subprocess 종료 (멱등).
 
         graceful terminate → 5초 대기 → force kill.
         """
         if self._state in ("idle", "stopping"):
-            return
+            return self.get_runtime_diagnostics()
 
         prev_state = self._state
         self._state = "stopping"
-        logger.info(
-            "ProcessRunner stopping run_id=%r (was %s)", self._run_id, prev_state
-        )
+        self._suppress_on_exit = True
+        logger.info("ProcessRunner stopping run_id=%r (was %s)", self._run_id, prev_state)
 
         if self._process and self._process.returncode is None:
             try:
@@ -437,25 +438,26 @@ class ProcessRunner:
                     logger.error("kill timeout pid=%d", self._pid or -1)
 
         # 읽기 태스크 정리
-        if self._read_task and not self._read_task.done():
-            self._read_task.cancel()
-            try:
-                await self._read_task
-            except (asyncio.CancelledError, Exception):
-                pass
+        await self._cancel_task(self._read_task)
+        await self._cancel_task(self._stderr_task)
+
+        diagnostics = self.get_runtime_diagnostics()
 
         self._state = "idle"
         self._run_id = None
         self._pid = None
         self._process = None
         self._read_task = None
+        self._stderr_task = None
         self._key = None
         self._sub_key = None
         self._started_at_iso = None
         self._started_monotonic = None
         self._last_prompt_step = None
+        self._suppress_on_exit = False
         self._stdout_tail.clear()
         self._stderr_tail.clear()
+        return diagnostics
 
     async def write_stdin(self, text: str) -> None:
         """Mode B: 사용자 응답을 subprocess stdin에 쓰기.
@@ -526,6 +528,61 @@ class ProcessRunner:
     # Internal
     # ──────────────────────────────────────────────────────────────────────────
 
+    async def _cancel_task(self, task: asyncio.Task | None) -> None:
+        if not task or task.done():
+            return
+        task.cancel()
+        try:
+            await task
+        except (asyncio.CancelledError, Exception):
+            pass
+
+    async def _read_stderr_loop(self) -> None:
+        """Drain stderr concurrently so the child process cannot block on stderr backpressure."""
+        proc = self._process
+        if not proc or not proc.stderr:
+            return
+
+        buffer = ""
+        try:
+            while True:
+                raw = await proc.stderr.read(4096)
+                if not raw:
+                    break
+                buffer += _decode_runtime_stream(raw)
+                lines = buffer.splitlines()
+                if buffer and not buffer.endswith(("\n", "\r")):
+                    buffer = lines.pop() if lines else buffer
+                else:
+                    buffer = ""
+                for line in lines:
+                    self._record_stderr_line(line)
+        except asyncio.CancelledError:
+            return
+        except Exception:
+            logger.exception("_read_stderr_loop error")
+        finally:
+            if buffer.strip():
+                self._record_stderr_line(buffer)
+
+    def _record_stderr_line(self, line: str) -> None:
+        stripped = _strip_ansi(line)
+        if stripped:
+            self._remember_stderr_line(stripped)
+            logger.debug("STDERR: %s", stripped[:500])
+
+    async def _await_stderr_drain(self) -> None:
+        task = self._stderr_task
+        if not task or task.done() or task is asyncio.current_task():
+            return
+        try:
+            await asyncio.wait_for(asyncio.shield(task), timeout=2.0)
+        except TimeoutError:
+            logger.debug("stderr drain task did not finish before timeout")
+            await self._cancel_task(task)
+        except (asyncio.CancelledError, Exception):
+            pass
+
     async def _read_loop(self) -> None:
         """stdout 줄 단위 수집 + ANSI 제거 + on_line 콜백 호출."""
         proc = self._process
@@ -551,19 +608,6 @@ class ProcessRunner:
         except Exception:
             logger.exception("_read_loop error")
         finally:
-            # stderr 수집 (나머지 전량, 디버그 로깅)
-            if proc.stderr:
-                try:
-                    stderr_data = await proc.stderr.read()
-                    if stderr_data:
-                        for line in _decode_runtime_stream(stderr_data).splitlines():
-                            stripped = _strip_ansi(line)
-                            if stripped:
-                                self._remember_stderr_line(stripped)
-                                logger.debug("STDERR: %s", stripped[:500])
-                except Exception:
-                    pass
-
             # 프로세스 종료 대기 (최대 30초)
             try:
                 returncode = await asyncio.wait_for(proc.wait(), timeout=30.0)
@@ -576,6 +620,7 @@ class ProcessRunner:
                     returncode = -9
             except Exception:
                 returncode = -1
+            await self._await_stderr_drain()
 
             logger.info(
                 "ProcessRunner exited pid=%d returncode=%d run_id=%r",
@@ -585,7 +630,7 @@ class ProcessRunner:
             )
 
             # on_exit 콜백
-            if self._on_exit:
+            if self._on_exit and not self._suppress_on_exit:
                 try:
                     await self._on_exit(returncode)
                 except Exception:
@@ -596,6 +641,9 @@ class ProcessRunner:
                 self._state = "idle"
                 self._run_id = None
                 self._pid = None
+                self._process = None
+                self._read_task = None
+                self._stderr_task = None
 
     async def _read_loop_mode_b(self) -> None:
         """Mode B: 청크 기반 읽기 + 프롬프트 감지.
@@ -673,19 +721,6 @@ class ProcessRunner:
                     except Exception:
                         pass
 
-            # stderr 수집
-            if proc.stderr:
-                try:
-                    stderr_data = await proc.stderr.read()
-                    if stderr_data:
-                        for line in _decode_runtime_stream(stderr_data).splitlines():
-                            stripped = _strip_ansi(line)
-                            if stripped:
-                                self._remember_stderr_line(stripped)
-                                logger.debug("STDERR: %s", stripped[:500])
-                except Exception:
-                    pass
-
             # 프로세스 종료 대기 (최대 30초)
             try:
                 returncode = await asyncio.wait_for(proc.wait(), timeout=30.0)
@@ -698,6 +733,7 @@ class ProcessRunner:
                     returncode = -9
             except Exception:
                 returncode = -1
+            await self._await_stderr_drain()
 
             logger.info(
                 "ProcessRunner(B) exited pid=%d returncode=%d run_id=%r",
@@ -706,7 +742,7 @@ class ProcessRunner:
                 self._run_id,
             )
 
-            if self._on_exit:
+            if self._on_exit and not self._suppress_on_exit:
                 try:
                     await self._on_exit(returncode)
                 except Exception:
@@ -716,6 +752,9 @@ class ProcessRunner:
                 self._state = "idle"
                 self._run_id = None
                 self._pid = None
+                self._process = None
+                self._read_task = None
+                self._stderr_task = None
 
     def _build_stdin_sequence(
         self,

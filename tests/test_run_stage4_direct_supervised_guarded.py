@@ -233,3 +233,25 @@ def test_launch_direct_stage4_child_pins_utf8_pipe_io():
     assert popen.call_args.kwargs["encoding"] == "utf-8"
     assert popen.call_args.kwargs["errors"] == "replace"
     assert popen.call_args.kwargs["env"]["PYTHONIOENCODING"] == "utf-8"
+
+
+def test_guarded_stage4_main_returns_nonzero_on_unsuccessful_payload():
+    with (
+        patch(
+            "sys.argv",
+            [
+                "run_stage4_direct_supervised_guarded.py",
+                "run",
+                "--project",
+                "gold",
+                "--target-ep",
+                "10",
+            ],
+        ),
+        patch.object(
+            guarded_script,
+            "run_guarded_stage4",
+            return_value={"success": False, "benchmark_archive": {"status": "ok"}},
+        ),
+    ):
+        assert guarded_script.main() == 1

@@ -3,6 +3,7 @@
 import asyncio
 import json
 import sqlite3
+import sys
 import time
 
 import pytest
@@ -122,7 +123,7 @@ class TestStdinSequence:
         seq = runner._build_stdin_sequence("4", None, inputs)
         lines = seq.strip().split("\n")
         assert lines[0] == "3"  # genre_index default (투자물)
-        assert lines[1] == ""   # [Enter] 프로젝트 이동
+        assert lines[1] == ""  # [Enter] 프로젝트 이동
         assert lines[2] == "1"  # project_index default
         assert lines[3] == "4"  # same genre: confirm 없이 menu key 진입
         # 확인 패딩 5개
@@ -140,7 +141,7 @@ class TestStdinSequence:
         seq = runner._build_stdin_sequence("0", "1", inputs)
         lines = seq.strip().split("\n")
         assert lines[0] == "3"  # genre
-        assert lines[1] == ""   # [Enter]
+        assert lines[1] == ""  # [Enter]
         assert lines[2] == "1"  # project
         assert lines[3] == "y"  # mismatch confirm
         assert lines[4] == "0"  # stage 0
@@ -179,7 +180,7 @@ class TestStdinSequence:
         seq = runner._build_stdin_sequence("4", None, inputs)
         lines = seq.strip().split("\n")
         assert lines[0] == "3"  # genre_index default (투자물)
-        assert lines[1] == ""   # [Enter]
+        assert lines[1] == ""  # [Enter]
         assert lines[2] == "1"  # project_index default
         assert lines[3] == "4"  # stored genre absent: confirm 없이 menu key 진입
         assert len(lines) == 4  # Mode B: 확인 패딩/exit 없음
@@ -353,6 +354,96 @@ class TestPathResolution:
 
 
 class TestRuntimeDiagnostics:
+    def test_start_drains_stderr_concurrently_and_preserves_failure_tail(self, monkeypatch, tmp_path):
+        child = tmp_path / "stderr_writer.py"
+        child.write_text(
+            "\n".join(
+                [
+                    "import sys",
+                    "for i in range(256):",
+                    "    sys.stderr.write(f'stderr {i} ' + 'x' * 4096 + '\\n')",
+                    "    sys.stderr.flush()",
+                    "print('stdout done')",
+                    "sys.exit(7)",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(process_runner, "_resolve_workspace_root", lambda: tmp_path)
+        monkeypatch.setattr(process_runner, "_resolve_launch_command", lambda: [sys.executable, "-u", str(child)])
+
+        async def exercise():
+            runner = ProcessRunner()
+            stdout_lines = []
+            exit_codes = []
+
+            async def on_line(text: str) -> None:
+                stdout_lines.append(text)
+
+            async def on_exit(returncode: int) -> None:
+                exit_codes.append(returncode)
+
+            await runner.start(
+                key="4",
+                run_id="run-stderr",
+                inputs={"stdin_lines": []},
+                on_line=on_line,
+                on_exit=on_exit,
+            )
+            read_task = runner._read_task
+            assert read_task is not None
+            await asyncio.wait_for(read_task, timeout=10)
+            return runner, stdout_lines, exit_codes
+
+        runner, stdout_lines, exit_codes = asyncio.run(exercise())
+        diagnostics = runner.get_runtime_diagnostics()
+
+        assert stdout_lines == ["stdout done"]
+        assert exit_codes == [7]
+        assert diagnostics["failure_phase"] == "stderr"
+        assert any(line.startswith("stderr 255 ") for line in diagnostics["stderr_tail"])
+
+    def test_stop_returns_diagnostics_and_suppresses_exit_callback(self, monkeypatch, tmp_path):
+        child = tmp_path / "sleeping_child.py"
+        child.write_text(
+            "\n".join(
+                [
+                    "import sys, time",
+                    "sys.stderr.write('stop stderr marker\\n')",
+                    "sys.stderr.flush()",
+                    "print('started')",
+                    "time.sleep(30)",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(process_runner, "_resolve_workspace_root", lambda: tmp_path)
+        monkeypatch.setattr(process_runner, "_resolve_launch_command", lambda: [sys.executable, "-u", str(child)])
+
+        async def exercise():
+            runner = ProcessRunner()
+            exit_codes = []
+
+            async def on_exit(returncode: int) -> None:
+                exit_codes.append(returncode)
+
+            await runner.start(
+                key="4",
+                run_id="run-stop",
+                inputs={"stdin_lines": []},
+                on_exit=on_exit,
+            )
+            await asyncio.sleep(0.5)
+            diagnostics = await runner.stop()
+            return runner, diagnostics, exit_codes
+
+        runner, diagnostics, exit_codes = asyncio.run(exercise())
+
+        assert diagnostics["failure_phase"] == "stderr"
+        assert diagnostics["stderr_tail"][-1] == "stop stderr marker"
+        assert exit_codes == []
+        assert runner.state == "idle"
+
     def test_runtime_diagnostics_include_recent_tails(self):
         runner = ProcessRunner()
         runner._key = "4"
@@ -396,10 +487,12 @@ class TestBridgeServerWiring:
     def test_import_bridge_server(self):
         """bridge_server 모듈 import 성공."""
         from modules.api.bridge_server import app
+
         assert app is not None
 
     def test_build_event_structure(self):
         from modules.api.bridge_server import _build_event
+
         ev = _build_event("run-123", "stdout", {"text": "hello"})
         assert ev["event_version"] == "v1"
         assert ev["run_id"] == "run-123"
