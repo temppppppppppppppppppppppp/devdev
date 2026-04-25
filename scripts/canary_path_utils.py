@@ -84,7 +84,7 @@ def resolve_workspace_project_dir(
 
     candidate_path = Path(raw_name)
     if candidate_path.is_absolute():
-        return candidate_path.resolve()
+        raise ValueError("absolute project paths are not allowed for canary project resolution")
 
     explicit_projects_prefix = "projects/"
     explicit_new_canary_prefix = f"{DEFAULT_CANARY_DIR_NAME}/"

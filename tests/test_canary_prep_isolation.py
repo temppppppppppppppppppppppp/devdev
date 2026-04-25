@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from modules.core.db_manager import DBManager
 from modules.core.fact_ledger import FactLedger
 from modules.core.stage4_canary_tools import (
@@ -140,7 +142,7 @@ def _seed_source_project(root: Path) -> None:
 
 def test_prepare_stage4_canary_project_cleans_orphan_truth_store_anchors_from_partial_boundary(tmp_path):
     source = tmp_path / "source_project"
-    target = tmp_path / "target_project"
+    target = tmp_path / "canary" / "target_project"
     _seed_source_project(source)
 
     result = prepare_stage4_canary_project(source, target, from_ep=4)
@@ -179,6 +181,20 @@ def test_prepare_stage4_canary_project_cleans_orphan_truth_store_anchors_from_pa
 
     assert (target / "drafts" / "ep_0003.txt").exists() is True
     assert (target / "drafts" / "ep_0004.txt").exists() is False
+
+
+def test_prepare_stage4_canary_project_refuses_force_delete_outside_canary_boundary(tmp_path):
+    source = tmp_path / "source_project"
+    live_target = tmp_path / "projects" / "live_project"
+    _seed_source_project(source)
+    live_target.mkdir(parents=True)
+    sentinel = live_target / "keep.txt"
+    sentinel.write_text("do not delete", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="canary"):
+        prepare_stage4_canary_project(source, live_target, from_ep=4, force=True)
+
+    assert sentinel.read_text(encoding="utf-8") == "do not delete"
 
 
 def test_reset_stage4_outputs_is_idempotent_for_truth_store_boundary(tmp_path):
