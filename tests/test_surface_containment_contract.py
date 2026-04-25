@@ -50,12 +50,16 @@ def test_manual_only_surfaces_are_marked_and_not_live_entries():
         assert rel_path != CONTRACT["live_surfaces"]["desktop_entry"]["path"]
 
 
-def test_residue_surfaces_are_tracked_separately_from_live_inventory():
-    residue_dirs = CONTRACT["residue_surfaces"]["directories"]
+def test_residue_surfaces_are_removed_or_tracked_separately_from_live_inventory():
+    removed_dirs = CONTRACT["residue_surfaces"]["removed_tracked_directories"]
+    removed_files = CONTRACT["residue_surfaces"]["removed_tracked_files"]
     residue_globs = CONTRACT["residue_surfaces"]["globs"]
 
-    for rel_path in residue_dirs:
-        assert (ROOT / rel_path).exists()
+    for rel_path in removed_dirs:
+        assert not (ROOT / rel_path).exists()
+
+    for rel_path in removed_files:
+        assert not (ROOT / rel_path).exists()
 
     matched = set()
     for pattern in residue_globs:
@@ -90,10 +94,10 @@ def test_manual_and_prototype_surfaces_are_excluded_from_broad_ruff_scope():
 
 def test_future_generated_residue_paths_are_ignored_after_tracked_cleanup():
     ignore_lines = set(_read(".gitignore").splitlines())
+    ignored_future_dirs = CONTRACT["residue_surfaces"]["ignored_future_directories"]
 
     assert {
-        "MagicMock/",
-        "tmp_stage2_digest_debug/",
         "test_mode/projects/",
         "lite_mode/projects/",
+        *(f"{path_name}/" for path_name in ignored_future_dirs),
     }.issubset(ignore_lines)

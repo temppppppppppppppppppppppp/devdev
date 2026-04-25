@@ -1,24 +1,8 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-25T06:35:46.531690+00:00",
-  "queue_mode": "single",
-  "active_item_count": 1,
-  "roadmap": {
-    "temp_path": "docs/temp/execution-roadmap.md",
-    "canonical_path": "docs/2026-04-24/active-temp-execution-roadmap.md",
-    "status": "active"
-  },
-  "items": [
-    {
-      "topic": "repo-trashbox-cleanup",
-      "temp_path": "docs/temp/repo-trashbox-cleanup-execution-ssot.md",
-      "canonical_path": "docs/2026-04-24/repo-trashbox-cleanup-execution-ssot.md",
-      "status": "in_progress",
-      "queue_role": "front_active",
-      "roadmap_rank": 1,
-      "depends_on": [],
-      "mirror_present": true,
-      "canonical_present": true
-    }
-  ]
+  "generated_at": "2026-04-25T07:03:05.258917+00:00",
+  "queue_mode": "empty",
+  "active_item_count": 0,
+  "roadmap": null,
+  "items": []
 }
