@@ -2,7 +2,6 @@
 [B-1-1] Stage4 Post-Processor — PASS 후처리 및 세션 종료 로직 분리
 """
 
-import copy
 import hashlib
 import json
 import logging
@@ -21,7 +20,9 @@ from modules.core.stage4_post_pass_runtime import Stage4PostPassRuntime
 class Stage4PostProcessor:
     """[B-1-1] Stage4 PASS 후처리 전담 모듈"""
 
-    _SCENE_HEADER_LINE_RE = re.compile(r"(?m)^\s*#{1,6}\s*씬\s*\d+\s*[:\-].*$")  # utf8-hygiene: allow-line -- regex uses literal ? token safely for scene-header normalization
+    _SCENE_HEADER_LINE_RE = re.compile(
+        r"(?m)^\s*#{1,6}\s*씬\s*\d+\s*[:\-].*$"  # utf8-hygiene: allow-line -- regex uses literal ? token safely for scene-header normalization
+    )
     _STANDALONE_STAGE_CUE_RE = re.compile(r"(?m)^\s*\[([^\[\]\n]{1,160})\]\s*$")
 
     _PRESSURE_STOPWORDS = {
@@ -133,7 +134,7 @@ class Stage4PostProcessor:
     def _relativize_artifact_path(self, path: Path) -> str:
         project_paths = getattr(getattr(self.ctx, "current_project", None), "paths", None)
         project_root = getattr(project_paths, "root", None)
-        if isinstance(project_root, (str, Path)):
+        if isinstance(project_root, str | Path):
             try:
                 return path.relative_to(Path(project_root)).as_posix()
             except ValueError:
@@ -242,7 +243,9 @@ class Stage4PostProcessor:
             post_pass_payload=post_pass_payload,
             output_dir=output_dir,
         )
-        packet_path.write_text(json.dumps(packet, ensure_ascii=False, indent=2, sort_keys=True, default=str), encoding="utf-8")
+        packet_path.write_text(
+            json.dumps(packet, ensure_ascii=False, indent=2, sort_keys=True, default=str), encoding="utf-8"
+        )
         return packet_path
 
     @staticmethod
@@ -289,7 +292,7 @@ class Stage4PostProcessor:
             inner = re.sub(r"\s+", " ", match.group(1)).strip()
             if not cls._is_stage_cue_line(inner):
                 return match.group(0)
-            if inner.endswith((".", "!", "?", "…", "”", "\"")):
+            if inner.endswith((".", "!", "?", "…", "”", '"')):
                 return inner
             return inner + "."
 
@@ -629,9 +632,13 @@ class Stage4PostProcessor:
     # ------------------------------------------------------------------
     _CAPITAL_PATTERNS = [
         # "잔고 131억", "자본금 80억", "현금 57억"
-        re.compile(r"(?:잔고|자본금?|현금|자산|실탄|예수금)[이가은는:의]?\s*(?:약?\s*)?(\d[\d,.]*)\s*(억|만)"),  # utf8-hygiene: allow-line regex ? quantifier adjacent to Hangul literals
+        re.compile(
+            r"(?:잔고|자본금?|현금|자산|실탄|예수금)[이가은는:의]?\s*(?:약?\s*)?(\d[\d,.]*)\s*(억|만)"  # utf8-hygiene: allow-line regex ? quantifier adjacent to Hangul literals
+        ),
         # "80억의 자본", "130억 원의 잔고"
-        re.compile(r"(\d[\d,.]*)\s*(억|만)\s*(?:원)?[의이가]?\s*(?:잔고|자본|현금|자산|실탄|예수금)"),  # utf8-hygiene: allow-line regex ? quantifier adjacent to Hangul literals
+        re.compile(
+            r"(\d[\d,.]*)\s*(억|만)\s*(?:원)?[의이가]?\s*(?:잔고|자본|현금|자산|실탄|예수금)"  # utf8-hygiene: allow-line regex ? quantifier adjacent to Hangul literals
+        ),
     ]
     # [V73-P0] 복합 금액 패턴 (38억 3,154만 200원) — _extract에서 별도 처리
     _COMPOUND_CAPITAL_RE = re.compile(
@@ -657,11 +664,17 @@ class Stage4PostProcessor:
 
         eok = 0.0
         # 억 부분
-        m_eok = re.search(r"(\d+(?:\.\d+)?)\s*억", s)  # utf8-hygiene: allow-line regex ? quantifier adjacent to Hangul literals
+        m_eok = re.search(
+            r"(\d+(?:\.\d+)?)\s*억",  # utf8-hygiene: allow-line regex ? quantifier adjacent to Hangul literals
+            s,
+        )
         if m_eok:
             eok += float(m_eok.group(1))
         # 만 부분
-        m_man = re.search(r"(\d+(?:\.\d+)?)\s*만", s)  # utf8-hygiene: allow-line regex ? quantifier adjacent to Hangul literals
+        m_man = re.search(
+            r"(\d+(?:\.\d+)?)\s*만",  # utf8-hygiene: allow-line regex ? quantifier adjacent to Hangul literals
+            s,
+        )
         if m_man:
             eok += float(m_man.group(1)) / 10000
         # 억·만 모두 없으면 순수 숫자 → 원 단위로 간주
@@ -753,7 +766,8 @@ class Stage4PostProcessor:
         if diff <= 5:  # 5억 이하 차이는 허용
             return
 
-        logging.warning("[V73] 자본금 불일치 감지 (ep%d): HUD %s=%s(→%.0f억), 원고=%.0f억 → 원고 기준 보정",
+        logging.warning(
+            "[V73] 자본금 불일치 감지 (ep%d): HUD %s=%s(→%.0f억), 원고=%.0f억 → 원고 기준 보정",
             ep_num,
             capital_key,
             current_raw,
@@ -783,8 +797,41 @@ class Stage4PostProcessor:
             key = str(raw_key or "").strip()
             if not key or key.startswith("_"):
                 continue
-            normalized[key] = copy.deepcopy(raw_value)
+            is_safe, safe_value = self._json_safe_hud_value(raw_value)
+            if is_safe:
+                normalized[key] = safe_value
         return normalized
+
+    @classmethod
+    def _copy_hud_snapshot(cls, hud_snapshot) -> dict[str, object] | None:
+        if not isinstance(hud_snapshot, dict):
+            return None
+
+        _, safe_snapshot = cls._json_safe_hud_value(hud_snapshot)
+        return safe_snapshot if isinstance(safe_snapshot, dict) else {}
+
+    @classmethod
+    def _json_safe_hud_value(cls, value) -> tuple[bool, object]:
+        if value is None or isinstance(value, str | int | float | bool):
+            return True, value
+        if isinstance(value, dict):
+            normalized: dict[str, object] = {}
+            for raw_key, raw_value in value.items():
+                key = str(raw_key or "").strip()
+                if not key:
+                    continue
+                is_safe, safe_value = cls._json_safe_hud_value(raw_value)
+                if is_safe:
+                    normalized[key] = safe_value
+            return True, normalized
+        if isinstance(value, list | tuple):
+            normalized_items: list[object] = []
+            for item in value:
+                is_safe, safe_item = cls._json_safe_hud_value(item)
+                if is_safe:
+                    normalized_items.append(safe_item)
+            return True, normalized_items
+        return False, None
 
     def _build_projected_hud_snapshot(self, *, approved_hud_updates: dict | None = None):
         hud_snapshot = None
@@ -796,12 +843,13 @@ class Stage4PostProcessor:
             hud_snapshot = None
 
         normalized_updates = self._normalize_hud_update_payload(approved_hud_updates)
+        safe_snapshot = self._copy_hud_snapshot(hud_snapshot)
         if normalized_updates:
-            projected_snapshot = copy.deepcopy(hud_snapshot) if isinstance(hud_snapshot, dict) else {}
+            projected_snapshot = safe_snapshot or {}
             projected_snapshot.update(normalized_updates)
             return projected_snapshot
 
-        return copy.deepcopy(hud_snapshot) if hud_snapshot is not None else None
+        return safe_snapshot
 
     def _resolve_approved_hud_updates(
         self,
@@ -823,8 +871,7 @@ class Stage4PostProcessor:
             hud = getattr(getattr(self.ctx, "sys", None), "hud", None)
             if hud and hasattr(hud, "snapshot"):
                 snapshot = hud.snapshot()
-                if isinstance(snapshot, dict):
-                    current_hud = copy.deepcopy(snapshot)
+                current_hud = self._copy_hud_snapshot(snapshot) or {}
         except Exception:
             current_hud = {}
 
@@ -1353,7 +1400,7 @@ class Stage4PostProcessor:
                 )
                 if isinstance(_raw_drafts_path, Path):
                     _drafts_path = _raw_drafts_path
-                elif isinstance(_raw_drafts_path, (str, os.PathLike)):
+                elif isinstance(_raw_drafts_path, str | os.PathLike):
                     _drafts_path = Path(_raw_drafts_path)
                 if _drafts_path is None:
                     self.ctx.ui.log("   ⚠️ 벡터 메모리 동기화 스킵 (drafts 경로 없음)")

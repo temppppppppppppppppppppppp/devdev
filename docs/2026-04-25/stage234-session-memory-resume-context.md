@@ -49,6 +49,11 @@ Validated before this handoff:
 - Residual root cause remains `modules/core/stage4_post_processor.py` deepcopying `sqlite3.Connection`.
 - This branch did not modify that path.
 
+Post-handoff update on 2026-04-25:
+
+- This residual was resolved separately on current `main` by `docs/2026-04-25/stage4-hud-snapshot-safe-copy-residual-fix.md`.
+- `python -m pytest tests/test_stage4_orchestrator.py -q` now passes locally with 164 passed after the safe HUD snapshot projection fix.
+
 ### 6. Immediate Next Step
 
 Next bounded tranche:
