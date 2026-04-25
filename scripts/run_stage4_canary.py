@@ -30,13 +30,17 @@ from modules.core.provider_mode import (  # noqa: E402
     VERTEX_AI_MODE,
     normalize_provider_mode,
 )
-from scripts.benchmark_archive_runtime import safe_archive_benchmark_record  # noqa: E402
 from modules.core.stage4_canary_tools import (  # noqa: E402
     build_stage4_branch_inventory,
     build_stage4_canary_summary,
     prepare_stage4_canary_project,
 )
-from scripts.canary_path_utils import project_name_from_path, resolve_workspace_project_dir  # noqa: E402
+from scripts.benchmark_archive_runtime import safe_archive_benchmark_record  # noqa: E402
+from scripts.canary_path_utils import (  # noqa: E402
+    project_name_from_path,
+    resolve_workspace_project_dir,
+    scoped_canary_projects_root,
+)
 from scripts.regression_validation_tiers import FULL_CANARY_PROOF  # noqa: E402
 
 VALIDATION_TIER = FULL_CANARY_PROOF
@@ -172,7 +176,7 @@ def run_canary(project_name: str, *, target_ep: int, provider_mode: str | None =
     if not selected_genre:
         raise RuntimeError(f"genre_info anchor missing or invalid for {runtime_project_name}")
 
-    with _provider_mode_env(provider_mode):
+    with scoped_canary_projects_root(PROJECT_ROOT, project_path=project_root), _provider_mode_env(provider_mode):
         app = _boot_app(runtime_project_name, selected_genre)
         try:
             _ensure_pass_rate_monitor(app, project_root)

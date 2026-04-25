@@ -1,7 +1,7 @@
 # Canary Root Isolation Execution SSOT
 
 Date: 2026-04-24
-Status: execution-ready (3-pass adversarial audited; parked future wave; documentation-only request, no implementation authorized)
+Status: in_progress (2026-04-25 canary root isolation patch added locally and focused tests passed; pending PR/merge validation; no legacy canary data migration authorized)
 Canonical Path: `docs/2026-04-24/canary-root-isolation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/canary-root-isolation-execution-ssot.md`
 Commit State:
@@ -13,6 +13,7 @@ Source Survey Docs:
 - `docs/2026-04-24/canary-root-isolation-plan.md`
 - `docs/2026-04-24/canary-root-isolation-adversarial-3pass-audit.md`
 - `docs/2026-04-24/repo-trashbox-candidate-survey.md`
+- `docs/2026-04-25/canary-root-isolation-fresh-reaudit.md`
 Evidence Artifacts:
 - `scripts/canary_path_utils.py`
 - `scripts/run_stage2_canary.py`
@@ -39,9 +40,9 @@ execution_meta:
   topic: canary-root-isolation
   github_issue: 8
   depends_on: []
-  status: pending
-  queue_role: parked_future_wave
-  roadmap_rank: 4
+  status: in_progress
+  queue_role: front_active
+  roadmap_rank: 1
   tranches:
     - id: helper-contract
       title: Canary path helper contract
@@ -67,7 +68,7 @@ Geuldobi repo
     <generated canary project>
 ```
 
-This SSOT is parked. It is not current implementation authority.
+This SSOT is now the current implementation authority for the bounded canary root isolation tranche opened on `2026-04-25`.
 
 ## 2. Current Problem
 
@@ -130,6 +131,15 @@ Excluded:
    - avoid tracking copied DBs, logs, artifacts, and drafts
    - leave old `projects/_canary` cleanup as a separate decision
 
+Implementation status on 2026-04-25:
+
+- `scripts/canary_path_utils.py` now routes new canary targets to repo-local `canary/<target>`
+- legacy reads still fall back to `projects/_canary/<target>` when `require_exists=True`
+- canary runtime scripts now scope `GEULDOBI_PROJECTS_ROOT` during app boot
+- Stage 2 subprocess execution now receives the scoped canary runtime environment
+- `.gitignore` now ignores generated `canary/` output
+- focused validation passed with `py -3.12 -m pytest tests/test_canary_path_utils.py tests/test_run_stage2_canary.py tests/test_run_stage3_canary.py tests/test_run_stage34_canary.py tests/test_run_stage34_ep_demo_canary.py tests/test_run_stage4_canary.py -q`
+
 ## 5. Side-Effect Map
 
 - file writes / artifacts:
@@ -182,7 +192,7 @@ The optional smoke must not move or create legacy data.
 
 ## 8. Guardrails
 
-- Do not implement from this parked SSOT without a fresh pre-implementation status check.
+- Do not move, delete, or rewrite existing `projects/_canary/` data in this tranche.
 - Do not move `projects/_canary/` as part of the path isolation patch.
 - Do not rewrite dated audit/evidence docs that mention `projects/_canary`.
 - Do not make `canary/` a tracked generated-output tree.
@@ -191,9 +201,9 @@ The optional smoke must not move or create legacy data.
 
 ## 9. Temp Queue Notes
 
-- temp status: `parked future wave`
+- temp status: `front-active`
 - roadmap role:
-  - rank 4
+  - rank 1
   - hygiene/runtime isolation lane
   - not a blocker for current proof or memory rollout lanes
 - cleanup condition:

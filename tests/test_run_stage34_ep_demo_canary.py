@@ -32,6 +32,12 @@ def test_run_stage34_ep_demo_canary_calls_stage3_then_stage4_and_analyzes():
     app.current_project.db.close = MagicMock()
 
     with (
+        patch.object(
+            canary_script,
+            "resolve_workspace_project_dir",
+            return_value=canary_script.PROJECT_ROOT / "canary" / "demo_project",
+        ),
+        patch.object(canary_script, "project_name_from_path", return_value="demo_project"),
         patch.object(canary_script, "_load_demo_prep", return_value={"regen_blueprint_ep": 2, "regen_draft_ep": 2}),
         patch.object(canary_script, "_load_project_genre", return_value={"type": "investment", "name": "investment"}),
         patch.object(canary_script, "_boot_app", return_value=app),
@@ -50,7 +56,7 @@ def test_run_stage34_ep_demo_canary_calls_stage3_then_stage4_and_analyzes():
     app._stage_4_v2_chief_writer.assert_called_once_with(limit_mode=False, target_ep=2, skip_pause=True)
     app.pass_rate_monitor.save.assert_called_once()
     app._flush_audit_buffer.assert_called_once()
-    analyze.assert_called_once_with("_canary/demo_project", target_ep=2)
+    analyze.assert_called_once_with("demo_project", target_ep=2)
     assert result["multi_stage_proof_scope_summary"]["status"] == "pass"
 
 
@@ -89,7 +95,7 @@ def test_run_stage34_ep_demo_canary_fails_fast_when_frontier_is_not_single_episo
 
 def test_prepare_stage34_ep_demo_canary_writes_prep_metadata(tmp_path):
     project_root = tmp_path / "projects"
-    target_root = project_root / "demo_target"
+    target_root = tmp_path / "canary" / "demo_target"
     target_root.mkdir(parents=True, exist_ok=True)
 
     with (
@@ -104,11 +110,11 @@ def test_prepare_stage34_ep_demo_canary_writes_prep_metadata(tmp_path):
 
     prep.assert_called_once_with(
         tmp_path / "projects" / "src_project",
-        tmp_path / "projects" / "_canary" / "demo_target",
+        tmp_path / "canary" / "demo_target",
         from_ep=2,
         force=True,
     )
-    prep_path = tmp_path / "projects" / "_canary" / "demo_target" / "logs" / canary_script.PREP_LOG_NAME
+    prep_path = tmp_path / "canary" / "demo_target" / "logs" / canary_script.PREP_LOG_NAME
     saved = json.loads(prep_path.read_text(encoding="utf-8"))
     assert payload["mode"] == canary_script.MODE_NAME
     assert payload["frozen_authority_ep"] == 1
@@ -118,7 +124,7 @@ def test_prepare_stage34_ep_demo_canary_writes_prep_metadata(tmp_path):
 
 
 def test_analyze_stage34_ep_demo_canary_writes_summary(tmp_path):
-    project_root = tmp_path / "projects" / "demo_project"
+    project_root = tmp_path / "canary" / "demo_project"
     (project_root / "logs").mkdir(parents=True, exist_ok=True)
     prep_payload = {
         "mode": canary_script.MODE_NAME,
@@ -168,7 +174,7 @@ def test_analyze_stage34_ep_demo_canary_writes_summary(tmp_path):
 
 
 def test_analyze_stage34_ep_demo_canary_requests_sparse_target_stage4_summary(tmp_path):
-    project_root = tmp_path / "projects" / "demo_project"
+    project_root = tmp_path / "canary" / "demo_project"
     (project_root / "logs").mkdir(parents=True, exist_ok=True)
     prep_payload = {
         "mode": canary_script.MODE_NAME,

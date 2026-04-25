@@ -27,7 +27,11 @@ from modules.core.stage4_canary_tools import (  # noqa: E402
     prepare_stage3_canary_project,
 )
 from scripts.benchmark_archive_runtime import safe_archive_benchmark_record  # noqa: E402
-from scripts.canary_path_utils import project_name_from_path, resolve_workspace_project_dir  # noqa: E402
+from scripts.canary_path_utils import (  # noqa: E402
+    project_name_from_path,
+    resolve_workspace_project_dir,
+    scoped_canary_projects_root,
+)
 from scripts.regression_validation_tiers import FULL_CANARY_PROOF  # noqa: E402
 
 VALIDATION_TIER = FULL_CANARY_PROOF
@@ -101,18 +105,19 @@ def run_canary(project_name: str, *, target_ep: int) -> dict:
     if not selected_genre:
         raise RuntimeError(f"genre_info anchor missing or invalid for {runtime_project_name}")
 
-    app = _boot_app(runtime_project_name, selected_genre)
-    try:
-        _ensure_pass_rate_monitor(app, project_root)
-        app._get_int_input = lambda *args, **kwargs: kwargs.get("default", 1)
-        with patch("builtins.input", side_effect=_auto_input):
-            _run_stage3_only(app, target_ep=target_ep)
-        if getattr(app, "pass_rate_monitor", None):
-            app.pass_rate_monitor.save()
-        if hasattr(app, "_flush_audit_buffer"):
-            app._flush_audit_buffer()
-    finally:
-        _close_app_handles(app)
+    with scoped_canary_projects_root(PROJECT_ROOT, project_path=project_root):
+        app = _boot_app(runtime_project_name, selected_genre)
+        try:
+            _ensure_pass_rate_monitor(app, project_root)
+            app._get_int_input = lambda *args, **kwargs: kwargs.get("default", 1)
+            with patch("builtins.input", side_effect=_auto_input):
+                _run_stage3_only(app, target_ep=target_ep)
+            if getattr(app, "pass_rate_monitor", None):
+                app.pass_rate_monitor.save()
+            if hasattr(app, "_flush_audit_buffer"):
+                app._flush_audit_buffer()
+        finally:
+            _close_app_handles(app)
 
     payload = analyze_canary(runtime_project_name, target_ep=target_ep)
     payload["benchmark_archive"] = safe_archive_benchmark_record(

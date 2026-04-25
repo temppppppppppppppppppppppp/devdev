@@ -18,6 +18,12 @@ def test_run_stage34_canary_archives_after_analyze():
     app.current_project.db.load_anchor = MagicMock(return_value=[{"ep_end": 4}])
 
     with (
+        patch.object(
+            canary_script,
+            "resolve_workspace_project_dir",
+            return_value=canary_script.PROJECT_ROOT / "canary" / "proof_refresh",
+        ),
+        patch.object(canary_script, "project_name_from_path", return_value="proof_refresh"),
         patch.object(canary_script, "_load_project_genre", return_value={"type": "investment", "name": "investment"}),
         patch.object(canary_script, "_boot_app", return_value=app),
         patch.object(
@@ -36,6 +42,6 @@ def test_run_stage34_canary_archives_after_analyze():
     app._one_stop_pipeline_frontier_lag.assert_called_once()
     app.pass_rate_monitor.save.assert_called_once()
     app._flush_audit_buffer.assert_called_once()
-    analyze.assert_called_once_with("_canary/proof_refresh", target_ep=4)
+    analyze.assert_called_once_with("proof_refresh", target_ep=4)
     archive.assert_called_once()
     assert result["benchmark_archive"]["run_id"] == "canary-s34"

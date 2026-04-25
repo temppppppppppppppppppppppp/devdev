@@ -6,11 +6,11 @@ import scripts.run_stage2_canary as canary_script
 
 
 def test_run_stage2_canary_invokes_headless_runner_and_analyzes():
-    project_root = canary_script.PROJECT_ROOT / "projects" / "_canary" / "s2_canary"
+    project_root = canary_script.PROJECT_ROOT / "canary" / "s2_canary"
 
     with (
         patch.object(canary_script, "resolve_workspace_project_dir", return_value=project_root),
-        patch.object(canary_script, "project_name_from_path", return_value="_canary/s2_canary"),
+        patch.object(canary_script, "project_name_from_path", return_value="s2_canary"),
         patch.object(canary_script.subprocess, "run") as run_subprocess,
         patch.object(canary_script, "analyze_canary", return_value={"hard_gates": {"status": "pass"}}) as analyze,
         patch.object(
@@ -25,13 +25,14 @@ def test_run_stage2_canary_invokes_headless_runner_and_analyzes():
         [
             sys.executable,
             str(canary_script.PROJECT_ROOT / "scripts" / "canary_stage2_headless.py"),
-            "_canary/s2_canary",
+            "s2_canary",
             "2",
         ],
         cwd=canary_script.PROJECT_ROOT,
+        env=canary_script.canary_runtime_env(canary_script.PROJECT_ROOT, project_path=project_root),
         check=True,
     )
-    analyze.assert_called_once_with("_canary/s2_canary", expected_final_arcs=5)
+    analyze.assert_called_once_with("s2_canary", expected_final_arcs=5)
     archive.assert_called_once()
     assert result["hard_gates"]["status"] == "pass"
     assert result["benchmark_archive"]["run_id"] == "canary-s2"
