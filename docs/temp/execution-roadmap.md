@@ -1,13 +1,13 @@
 # Active Temp Execution Roadmap
 
 Date: 2026-04-24
-Status: active (#5 proof-governor lane closed; stage234-session-memory-max-utilization closed on 2026-04-25; three parked future-wave items remain)
+Status: active (#5 proof-governor lane closed; stage234-session-memory-max-utilization closed on 2026-04-25; stage0-bi-tr-production-harness-normalization-remediation Tranche 2 patch added locally and pending PR/merge validation)
 Canonical Path: `docs/2026-04-24/active-temp-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Baseline Commit: `143cee26d879d5de59ef43757f851e89b8d551c7`
 Baseline Dirty Summary: `dirty: local runtime project outputs, benchmark index, .gitignore key ignore, and new 2026-04-24 hygiene docs; no canary code, data migration, or trashbox move performed`
 Resume Commit: `fabf78127cbcdfb724c35a38f314a25b94ec9ce5`
-Resume Drift Summary: `stage234-session-memory-max-utilization was explicitly opened by the user on 2026-04-24, fresh re-audited PASS, and closed on 2026-04-25 after bounded Stage4, Stage3, and Stage2 memory rollout; canary-root-isolation, repo-trashbox-cleanup, and stage0-bi-tr-production-harness-normalization-remediation remain parked unless separately opened`
+Resume Drift Summary: `stage234-session-memory-max-utilization was explicitly opened by the user on 2026-04-24, fresh re-audited PASS, and closed on 2026-04-25 after bounded Stage4, Stage3, and Stage2 memory rollout; stage0-bi-tr-production-harness-normalization-remediation was opened on 2026-04-25 for Tranche 2 runtime handoff normalization; canary-root-isolation and repo-trashbox-cleanup remain parked unless separately opened`
 
 ## 1. Why This Refresh Exists
 
@@ -25,9 +25,9 @@ After the Standard Vertex cache-proof run on 2026-04-24, `authority-alignment-be
 ## 2. Priority Basis
 
 - `stage234-session-memory-max-utilization` is now closed historical backing after its bounded memory/cache rollout landed.
-- `stage0-bi-tr-production-harness-normalization-remediation` remains first among parked future-wave items because Stage0 runtime handoff normalization is still honest but not front-active.
-- `canary-root-isolation` is second among parked future-wave items because it is a repository hygiene/runtime isolation lane, not a blocker for the completed proof or memory rollout lanes.
-- `repo-trashbox-cleanup` is third among parked future-wave items because it should quarantine old residue only after canary policy is not accidentally swept into a broad cleanup.
+- `stage0-bi-tr-production-harness-normalization-remediation` is now front-active because Stage0 runtime handoff normalization is the next honest source-of-truth lane after stage234 closure.
+- `canary-root-isolation` remains second as a parked future-wave item because it is a repository hygiene/runtime isolation lane, not a blocker for the completed proof, memory rollout, or active Stage0 runtime-handoff lane.
+- `repo-trashbox-cleanup` remains third as a parked future-wave item because it should quarantine old residue only after canary policy is not accidentally swept into a broad cleanup.
 
 ## 3. Queue Semantics
 
@@ -35,7 +35,7 @@ After the Standard Vertex cache-proof run on 2026-04-24, `authority-alignment-be
 - `historical backing`: keep canonical SSOTs for audit history, but do not keep them visible as active queue residue.
 
 Working order:
-1. `stage0-bi-tr-production-harness-normalization-remediation` (parked future wave; Stage0 runtime handoff normalization remains open)
+1. `stage0-bi-tr-production-harness-normalization-remediation` (front-active; Tranche 2 runtime handoff normalization patch added locally on 2026-04-25)
 2. `canary-root-isolation` (parked future wave; isolate future canary output from `projects/`, no migration authorized)
 3. `repo-trashbox-cleanup` (parked future wave; quarantine maintenance-only/test/experiment residue after canary policy is settled)
 
@@ -46,7 +46,7 @@ Closed historical backing in this closure pass:
 
 ## 4. Immediate Next Moves
 
-1. keep the three remaining parked items parked unless the user explicitly opens one
+1. finish validation, commit, push, and PR the Stage0 `runtime-handoff-normalization` tranche
 2. do not reopen `stage234-session-memory-max-utilization` without a fresh live anchor or narrower follow-up SSOT
 3. do not implement `canary-root-isolation` or `repo-trashbox-cleanup` from parked SSOTs without fresh approval
 4. do not move or delete `projects/_canary/`

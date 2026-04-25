@@ -3,6 +3,8 @@ from modules.core.response_schemas import (
     validate_treatment_canonical_structure,
 )
 from modules.core.stage0_handoff import (
+    STAGE0_RUNTIME_HANDOFF_KEY,
+    build_stage0_runtime_handoff_summary,
     canonicalize_bible_payload,
     canonicalize_treatment_payload,
     normalize_bible_to_canonical_view,
@@ -194,6 +196,14 @@ def test_canonicalize_bible_payload_repairs_runtime_contract_and_strips_sidecars
     assert payload["_stage0_contract"]["field_authority"]["plot_roadmap"] == "MasterBible.plot_roadmap"
     assert payload["_stage0_contract"]["runtime_handoff"]["owner"] == "db_anchor:bible"
     assert payload["_stage0_contract"]["projection_source"] == "treatment.blocks"
+    handoff = payload[STAGE0_RUNTIME_HANDOFF_KEY]
+    assert handoff["runtime_handoff_owner"] == "db_anchor:bible"
+    assert handoff["runtime_handoff_surface"] == "MasterBible.plot_roadmap"
+    assert handoff["stage2_consumer_mode"] == "db_anchor_first"
+    assert handoff["projection_source"] == "treatment.blocks"
+    assert handoff["plot_roadmap_authority"] == "MasterBible.plot_roadmap"
+    assert handoff["persistence_call"] == "save_v20_anchor:bible"
+    assert handoff["compatibility_bridges"]["force_sync_v25_dna"] == "compatibility_bridge"
     assert any("filled protagonist_config.world_origin='원시인'" in warning for warning in warnings)
 
 
@@ -203,3 +213,24 @@ def test_resolve_stage0_bible_contract_falls_back_to_default_runtime_owner():
     assert contract["artifact_role"] == "bi_projection_artifact"
     assert contract["runtime_handoff"]["owner"] == "db_anchor:bible"
     assert contract["field_authority"]["protagonist_config"] == "MasterBible.protagonist_config"
+
+
+def test_stage0_runtime_handoff_summary_distinguishes_owner_from_projection_source():
+    bible = {
+        "_stage0_contract": {
+            "artifact_role": "bi_projection_artifact",
+            "projection_source": "treatment.blocks",
+            "field_authority": {"plot_roadmap": "MasterBible.plot_roadmap"},
+            "runtime_handoff": {"owner": "db_anchor:bible"},
+        },
+        "MasterBible": {"plot_roadmap": [{"block_no": 1}]},
+    }
+
+    summary = build_stage0_runtime_handoff_summary(bible)
+
+    assert summary["runtime_handoff_owner"] == "db_anchor:bible"
+    assert summary["runtime_handoff_anchor"] == "bible"
+    assert summary["runtime_handoff_surface"] == "MasterBible.plot_roadmap"
+    assert summary["stage2_consumer_mode"] == "db_anchor_first"
+    assert summary["projection_source"] == "treatment.blocks"
+    assert summary["compatibility_bridges"]["force_sync_v25_dna"] == "compatibility_bridge"
