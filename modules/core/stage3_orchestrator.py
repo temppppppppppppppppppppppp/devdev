@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from modules.core.artifact_logging import build_candidate_key, normalize_artifact_meta, snapshot_logged_artifact
 from modules.core.constants import Emojis, ErrorMessages, smart_truncate
 from modules.core.context_advisor import (
+    ContextBudgetTracker,
     RetrievalSources,
     build_context_budget_ledger,
     build_context_observation,
@@ -75,6 +76,74 @@ _STAGE3_UI_OBSERVABILITY_LABELS = {
     "work_focus_present": "work_focus",
 }
 _STAGE3_UI_OBSERVABILITY_HIDDEN_KEYS = {"semantic_ctx_source_counts"}
+_STAGE3_REPEATED_COVERAGE_WARNING_THRESHOLD = 2
+_STAGE3_REPEATED_COVERAGE_WARNING_RECENT_LIMIT = 8
+
+
+def _normalize_stage3_coverage_warnings(raw_warnings) -> list[str]:
+    normalized: list[str] = []
+    for raw in raw_warnings or []:
+        code = str(raw or "").strip()
+        if code and code not in normalized:
+            normalized.append(code)
+    return normalized
+
+
+def _describe_stage3_coverage_warning(code: str) -> str:
+    mapping = {
+        "missing_work_slot_summary": "작품 추적 슬롯 요약이 Stage3 semantic_context에 없다. tracking slot을 Blueprint 비트에 직접 반영할 것.",
+        "work_focus_without_slots": "work_focus가 감지됐지만 retrieval plan에 work_* slot이 없다. 작품 추적 포인트를 직접 회수할 것.",
+        "missing_relation_slice": "관계 의미 질의가 빠졌다. 인물 관계 변화와 호칭 근거를 Blueprint에 명시할 것.",
+        "semantic_ctx_budget_trimmed": "Stage3 semantic_context가 budget에서 잘렸다. 핵심 work focus와 관계 근거를 우선 회수할 것.",
+        "semantic_ctx_budget_overflow": "Stage3 semantic_context가 budget을 초과했다. 장면 목적과 필수 관계 근거를 압축해 유지할 것.",
+    }
+    return mapping.get(str(code or "").strip(), str(code or "").strip())
+
+
+def _select_repeated_stage3_coverage_warnings(
+    app,
+    *,
+    current_warnings: list[str] | None = None,
+    recent_limit: int = _STAGE3_REPEATED_COVERAGE_WARNING_RECENT_LIMIT,
+    threshold: int = _STAGE3_REPEATED_COVERAGE_WARNING_THRESHOLD,
+) -> list[str]:
+    dashboard = getattr(app, "quality_dashboard", None)
+    history = getattr(dashboard, "retrieval_observation_history", None)
+    if not isinstance(history, list):
+        history = []
+
+    counts: dict[str, int] = {}
+    ordered: list[str] = []
+    current = _normalize_stage3_coverage_warnings(current_warnings)
+    for code in current:
+        ordered.append(code)
+        counts[code] = counts.get(code, 0) + 1
+
+    safe_recent_limit = max(1, int(recent_limit or 1))
+    for row in history[-safe_recent_limit:]:
+        if not isinstance(row, dict) or str(row.get("stage") or "") != "stage3":
+            continue
+        for code in _normalize_stage3_coverage_warnings(row.get("coverage_warnings")):
+            if code not in ordered:
+                ordered.append(code)
+            counts[code] = counts.get(code, 0) + 1
+
+    safe_threshold = max(2, int(threshold or 2))
+    return [code for code in ordered if counts.get(code, 0) >= safe_threshold]
+
+
+def _build_stage3_repeated_coverage_warning_advisory(warnings: list[str]) -> str:
+    normalized = _normalize_stage3_coverage_warnings(warnings)
+    if not normalized:
+        return ""
+
+    lines = ["[Stage3 검색 커버리지 경고]"]
+    for code in normalized[:4]:
+        description = _describe_stage3_coverage_warning(code)
+        if description:
+            lines.append(f"- 반복 감지 `{code}`: {description}")
+    lines.append("- 이번 Blueprint는 위 누락 축을 장면 목표, 갈등 전환, 인물 관계 근거에 명시적으로 반영할 것.")
+    return "\n".join(lines)
 
 
 @dataclass(slots=True)
@@ -127,6 +196,7 @@ def _build_stage3_observability_flags(meta: dict | None) -> dict:
         return {}
     source_counts = _normalize_semantic_source_counts(meta.get("source_counts"))
     coverage_warnings = [str(item).strip() for item in (meta.get("coverage_warnings") or []) if str(item or "").strip()]
+    repeated_coverage_warnings = _normalize_stage3_coverage_warnings(meta.get("repeated_coverage_warnings"))
     provenance_ledger = meta.get("provenance_ledger") if isinstance(meta.get("provenance_ledger"), dict) else {}
     budget_ledger = meta.get("budget_ledger") if isinstance(meta.get("budget_ledger"), dict) else {}
     source_anchor_summary = (
@@ -141,6 +211,8 @@ def _build_stage3_observability_flags(meta: dict | None) -> dict:
         "semantic_ctx_sources": sorted(source_counts.keys()),
         "semantic_ctx_source_counts": source_counts,
         "coverage_warnings": coverage_warnings,
+        "repeated_coverage_warnings": repeated_coverage_warnings,
+        "coverage_warning_escalation_included": bool(meta.get("coverage_warning_escalation_included", False)),
         "advisor_path_used": bool(meta.get("advisor_path_used", False)),
         "planned_slots_count": int(meta.get("planned_slots_count") or 0),
         "work_focus_present": bool(meta.get("work_focus_present", False)),
@@ -669,6 +741,131 @@ def _build_style_guide_advisory(project, *, max_chars: int = 600) -> str:
         anti_ai_limit=6,
         forbidden_limit=5,
     )
+
+
+def _smart_trim_stage3_semantic_section(text: str, *, max_chars: int) -> str:
+    text = str(text or "").strip()
+    if not text or max_chars <= 0 or len(text) <= max_chars:
+        return text
+    return smart_truncate(
+        text,
+        max_chars=max_chars,
+        head_chars=max(0, min(int(max_chars * 0.55), max_chars - 80)),
+    )
+
+
+def _apply_stage3_semantic_context_budget(
+    *,
+    sections: list[tuple[str, str]],
+    total_budget_chars: int,
+) -> tuple[str, dict[str, object], dict[str, object], list[str]]:
+    entries = [
+        {"name": str(name or "").strip(), "text": str(text or "").strip()}
+        for name, text in sections
+        if str(name or "").strip() and str(text or "").strip()
+    ]
+    initial_total = sum(len(entry["text"]) for entry in entries)
+    cap = max(0, int(total_budget_chars or 0))
+    work_focus_original = next((entry["text"] for entry in entries if entry["name"] == "work_focus"), "")
+
+    def _joined_text() -> str:
+        return "\n\n".join(entry["text"] for entry in entries if entry["text"])
+
+    def _build_meta() -> dict[str, object]:
+        work_focus_text = next((entry["text"] for entry in entries if entry["name"] == "work_focus"), "")
+        return {
+            "mandatory_context_chars": len(work_focus_text),
+            "protected_summary_survived": bool(work_focus_text),
+            "trimmed_work_slot_summary": bool(work_focus_original and work_focus_text != work_focus_original),
+        }
+
+    if cap <= 0 or not entries:
+        ledger = build_context_budget_ledger(
+            stage="stage3",
+            configured_cap=cap,
+            effective_cap=cap,
+            consumed_chars=initial_total,
+            headroom_chars=max(0, cap - initial_total),
+        )
+        return _joined_text(), ledger, _build_meta(), []
+
+    tracker = ContextBudgetTracker(total_budget_chars=cap)
+    for entry in entries:
+        tracker.register_section(entry["name"], entry["text"])
+    report = tracker.get_usage_report()
+    if report["used_chars"] <= cap:
+        ledger = build_context_budget_ledger(
+            stage="stage3",
+            configured_cap=cap,
+            effective_cap=cap,
+            consumed_chars=report["used_chars"],
+            headroom_chars=max(0, cap - report["used_chars"]),
+        )
+        return _joined_text(), ledger, _build_meta(), []
+
+    def _used_chars() -> int:
+        return sum(len(entry["text"]) for entry in entries if entry["text"])
+
+    def _trim_named_sections(
+        names: tuple[str, ...],
+        *,
+        min_chars: int,
+        ratio: float,
+        max_rounds: int,
+    ) -> None:
+        for _ in range(max_rounds):
+            if _used_chars() <= cap:
+                return
+            changed = False
+            ranked = sorted(
+                [entry for entry in entries if entry["name"] in names and entry["text"]],
+                key=lambda item: len(item["text"]),
+                reverse=True,
+            )
+            for entry in ranked:
+                current = entry["text"]
+                if len(current) <= min_chars:
+                    continue
+                target_chars = max(min_chars, int(len(current) * ratio))
+                if target_chars >= len(current):
+                    continue
+                trimmed = _smart_trim_stage3_semantic_section(current, max_chars=target_chars)
+                if len(trimmed) >= len(current):
+                    continue
+                entry["text"] = trimmed
+                changed = True
+                if _used_chars() <= cap:
+                    return
+            if not changed:
+                return
+
+    advisory_names = ("world_state", "style_guide", "fact_ledger", "stale_seed")
+    _trim_named_sections(advisory_names, min_chars=180, ratio=0.72, max_rounds=2)
+    _trim_named_sections(("semantic_ctx",), min_chars=420, ratio=0.7, max_rounds=3)
+    _trim_named_sections(("work_focus",), min_chars=180, ratio=0.82, max_rounds=2)
+    _trim_named_sections(advisory_names, min_chars=120, ratio=0.52, max_rounds=3)
+    _trim_named_sections(("semantic_ctx",), min_chars=280, ratio=0.58, max_rounds=3)
+    _trim_named_sections(("work_focus",), min_chars=140, ratio=0.7, max_rounds=2)
+
+    final_total = _used_chars()
+    dropped_chars = max(0, initial_total - final_total)
+    overflow_chars = max(0, final_total - cap)
+    coverage_warnings: list[str] = []
+    if dropped_chars > 0:
+        coverage_warnings.append("semantic_ctx_budget_trimmed")
+    if overflow_chars > 0:
+        coverage_warnings.append("semantic_ctx_budget_overflow")
+
+    ledger = build_context_budget_ledger(
+        stage="stage3",
+        configured_cap=cap,
+        effective_cap=cap,
+        consumed_chars=final_total,
+        dropped_chars=dropped_chars,
+        overflow_chars=overflow_chars,
+        headroom_chars=max(0, cap - final_total),
+    )
+    return _joined_text(), ledger, _build_meta(), coverage_warnings
 
 
 def _compose_stage3_work_focus_text(
@@ -1718,22 +1915,23 @@ class Stage3Orchestrator:
         _s3_plan = plan
         _source_counts: dict[str, int] = {}
         _coverage_warnings: list[str] = []
+        _semantic_sections: list[tuple[str, str]] = []
 
         _world_state_advisory = _build_world_state_advisory(getattr(ctx, "world_state", None))
         if _world_state_advisory:
-            _bp_semantic_ctx = _world_state_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+            _semantic_sections.append(("world_state", _world_state_advisory))
 
         _style_guide_advisory = _build_style_guide_advisory(getattr(ctx, "current_project", None))
         if _style_guide_advisory:
-            _bp_semantic_ctx = _style_guide_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+            _semantic_sections.append(("style_guide", _style_guide_advisory))
 
         _fact_ledger_advisory = _build_fact_ledger_advisory(getattr(ctx.current_project, "db", None))
         if _fact_ledger_advisory:
-            _bp_semantic_ctx = _fact_ledger_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+            _semantic_sections.append(("fact_ledger", _fact_ledger_advisory))
 
         _seed_advisory = _build_stale_seed_advisory(getattr(ctx.current_project, "db", None), working_ep)
         if _seed_advisory:
-            _bp_semantic_ctx = _seed_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+            _semantic_sections.append(("stale_seed", _seed_advisory))
 
         _work_focus_advisory = _build_stage3_work_focus_advisory(
             _s3_work_focus
@@ -1750,9 +1948,11 @@ class Stage3Orchestrator:
             protagonist_name=protagonist_name,
         )
         if _work_focus_advisory:
-            _bp_semantic_ctx = _work_focus_advisory + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+            _semantic_sections.append(("work_focus", _work_focus_advisory))
+        if _bp_semantic_ctx:
+            _semantic_sections.append(("semantic_ctx", _bp_semantic_ctx))
         _source_counts = _summarize_retrieval_sources(_s3_plan)
-        if not _source_counts and _bp_semantic_ctx:
+        if not _source_counts and (_bp_semantic_ctx or _semantic_sections):
             _source_counts = {"legacy_semantic_context": 1}
         if _s3_work_focus and not _work_focus_advisory:
             _coverage_warnings.append("missing_work_slot_summary")
@@ -1770,14 +1970,35 @@ class Stage3Orchestrator:
             and "[관계 의미 질의]" not in _bp_semantic_ctx
         ):
             _coverage_warnings.append("missing_relation_slice")
-        _stage3_budget_cap = int(getattr(_s3_plan, "total_budget_chars", 0) or 0)
-        _stage3_budget_ledger = build_context_budget_ledger(
-            stage="stage3",
-            configured_cap=_stage3_budget_cap,
-            effective_cap=_stage3_budget_cap,
-            consumed_chars=len(_bp_semantic_ctx),
-            overflow_chars=max(0, len(_bp_semantic_ctx) - _stage3_budget_cap) if _stage3_budget_cap > 0 else 0,
+        _repeated_coverage_warnings = _select_repeated_stage3_coverage_warnings(
+            self.app,
+            current_warnings=_coverage_warnings,
         )
+        _coverage_escalation_advisory = _build_stage3_repeated_coverage_warning_advisory(_repeated_coverage_warnings)
+        if _coverage_escalation_advisory:
+            _semantic_sections.append(("coverage_escalation", _coverage_escalation_advisory))
+        _stage3_budget_cap = int(getattr(_s3_plan, "total_budget_chars", 0) or 0)
+        (
+            _bp_semantic_ctx,
+            _stage3_budget_ledger,
+            _stage3_budget_meta,
+            _stage3_budget_warnings,
+        ) = _apply_stage3_semantic_context_budget(
+            sections=_semantic_sections,
+            total_budget_chars=_stage3_budget_cap,
+        )
+        for _warning in _stage3_budget_warnings:
+            if _warning not in _coverage_warnings:
+                _coverage_warnings.append(_warning)
+        if (
+            _source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0
+            and "[관계 의미 질의]" not in _bp_semantic_ctx
+            and "missing_relation_slice" not in _coverage_warnings
+        ):
+            _coverage_warnings.append("missing_relation_slice")
+        _work_slot_summary_included = bool(_stage3_budget_meta.get("protected_summary_survived", False))
+        _trimmed_work_slot_summary = bool(_stage3_budget_meta.get("trimmed_work_slot_summary", False))
+        _mandatory_context_chars = int(_stage3_budget_meta.get("mandatory_context_chars", 0) or 0)
         _stage3_observation = build_context_observation(
             stage="stage3",
             work_focus=_s3_work_focus,
@@ -1789,8 +2010,14 @@ class Stage3Orchestrator:
             work_slot_summary_included="[작품 추적 슬롯 요약]" in _bp_semantic_ctx,
             relation_slice_included="[관계 의미 질의]" in _bp_semantic_ctx,
             vector_context_chars=len(_bp_semantic_ctx),
+            mandatory_context_chars=_mandatory_context_chars,
+            protected_summary_survived=_work_slot_summary_included,
+            trimmed_work_slot_summary=_trimmed_work_slot_summary,
             budget_ledger=_stage3_budget_ledger,
         )
+        if _repeated_coverage_warnings:
+            _stage3_observation["repeated_coverage_warnings"] = list(_repeated_coverage_warnings)
+            _stage3_observation["coverage_warning_escalation_included"] = bool(_coverage_escalation_advisory)
         _source_anchor_summary = _build_stage3_source_anchor_summary(arc_data, blueprint_window)
         if _source_anchor_summary:
             _stage3_observation["source_anchor_summary"] = _source_anchor_summary
@@ -1964,9 +2191,17 @@ class Stage3Orchestrator:
         _source_counts = semantic_bundle.get("source_counts") or {}
         _coverage_warnings = semantic_bundle.get("coverage_warnings") or []
         _bp_semantic_ctx = str(semantic_bundle.get("semantic_ctx", "") or "")
+        _repeated_coverage_warnings = []
+        _coverage_warning_escalation_included = False
         _source_anchor_summary = {}
         if isinstance(_stage3_observation, dict):
             _source_anchor_summary = dict((_stage3_observation or {}).get("source_anchor_summary") or {})
+            _repeated_coverage_warnings = _normalize_stage3_coverage_warnings(
+                _stage3_observation.get("repeated_coverage_warnings")
+            )
+            _coverage_warning_escalation_included = bool(
+                _stage3_observation.get("coverage_warning_escalation_included", False)
+            )
         _constraint_phase = phases.get("constraint", {}) if isinstance(phases, dict) else {}
         if not isinstance(_constraint_phase, dict):
             _constraint_phase = {}
@@ -1982,6 +2217,8 @@ class Stage3Orchestrator:
             "semantic_ctx_chars": len(_bp_semantic_ctx),
             "source_counts": _normalize_semantic_source_counts(_source_counts),
             "coverage_warnings": list(_coverage_warnings),
+            "repeated_coverage_warnings": list(_repeated_coverage_warnings),
+            "coverage_warning_escalation_included": _coverage_warning_escalation_included,
             "advisor_path_used": bool(_s3_plan),
             "planned_slots_count": len(getattr(_s3_plan, "slots", []) or []) if _s3_plan else 0,
             "work_focus_present": bool(_s3_work_focus),

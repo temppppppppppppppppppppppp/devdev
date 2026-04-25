@@ -218,12 +218,20 @@ class Stage2Orchestrator:
 
         reason_counts = {}
         specific_issues = []
+        retry_directives = []
+        runtime_advisories = []
         for reject in arc_rejections:
             reason = str(reject.get("reason", "사유 미상") or "사유 미상")[:120]
             reason_counts[reason] = reason_counts.get(reason, 0) + 1
             issue = str(reject.get("specific_issue", "") or "").strip()
             if issue and issue not in specific_issues:
                 specific_issues.append(issue[:120])
+            retry_directive = str(reject.get("retry_directives", "") or "").strip()
+            if retry_directive and retry_directive not in retry_directives:
+                retry_directives.append(retry_directive[:160])
+            runtime_advisory = str(reject.get("runtime_advisory", "") or "").strip()
+            if runtime_advisory and runtime_advisory not in runtime_advisories:
+                runtime_advisories.append(runtime_advisory[:160])
 
         top_reasons = sorted(reason_counts.items(), key=lambda item: (-item[1], item[0]))[:3]
         lines = [
@@ -244,6 +252,16 @@ class Stage2Orchestrator:
             lines.append("📋 반복된 구체 지시:")
             for issue in specific_issues[:3]:
                 lines.append(f"   - {issue}")
+        if retry_directives:
+            lines.append("")
+            lines.append("🧭 보존된 재시도 지시:")
+            for directive in retry_directives[:3]:
+                lines.append(f"   - {directive}")
+        if runtime_advisories:
+            lines.append("")
+            lines.append("🛡️ 런타임 주의:")
+            for advisory in runtime_advisories[:3]:
+                lines.append(f"   - {advisory}")
         lines.append("")
         lines.append("💡 다음 재시도에서는 위 사유와 구체 지시를 Arc 설계 제약으로 직접 반영하세요.")
         lines.extend(["", "=" * 60, ""])

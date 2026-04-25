@@ -709,11 +709,34 @@ class TestMetricsRecording:
     def test_reject_metrics_records_optimizer_failure(self, finalizer):
         finalizer._record_s2_reject_metrics(
             global_arc_no=6,
-            attempt=0,
+            attempt=1,
             generation_method="analyst",
-            audit={"reason": "reject reason"},
+            audit={
+                "reason": "reject reason",
+                "verdict_reason": "verdict detail",
+                "runtime_advisory": "preserve runtime advisory",
+                "retry_directives": "retry with carryover packet",
+                "selection_reason": "candidate missed authority",
+                "fix_scope": "partial",
+                "fix_scope_reasoning": "only carryover packet drifted",
+                "score_breakdown": {"density": 5, "continuity": 4, "note": "skip"},
+            },
         )
         finalizer.ctx.stage2_optimizer.failure_memory.record_failure.assert_called_once()
+        call_kwargs = finalizer.ctx.stage2_optimizer.failure_memory.record_failure.call_args.kwargs
+        assert call_kwargs["arc_no"] == 6
+        assert call_kwargs["attempt"] == 2
+        assert call_kwargs["reason"] == "verdict detail"
+        assert call_kwargs["runtime_advisory"] == "preserve runtime advisory"
+        assert call_kwargs["retry_directives"] == "retry with carryover packet"
+        assert call_kwargs["selection_reason"] == "candidate missed authority"
+        assert call_kwargs["fix_scope"] == "partial"
+        assert call_kwargs["fix_scope_reasoning"] == "only carryover packet drifted"
+        assert call_kwargs["score_breakdown"] == "density=5, continuity=4"
+        history = finalizer.ctx.stage_rejection_history[0]
+        assert history["verdict_reason"] == "verdict detail"
+        assert history["runtime_advisory"] == "preserve runtime advisory"
+        assert history["retry_directives"] == "retry with carryover packet"
 
 
 class TestConstraintDbLogging:

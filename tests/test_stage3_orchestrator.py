@@ -398,6 +398,8 @@ class TestStageAttemptObservability:
                 "semantic_ctx_chars": 1234,
                 "source_counts": {"vec_memory": 2, "db_npc_relationship": 1},
                 "coverage_warnings": ["missing_relation_slice"],
+                "repeated_coverage_warnings": ["missing_relation_slice"],
+                "coverage_warning_escalation_included": True,
                 "advisor_path_used": True,
                 "planned_slots_count": 3,
                 "work_focus_present": True,
@@ -436,6 +438,8 @@ class TestStageAttemptObservability:
         assert kwargs["duration_ms"] == 4321
         assert kwargs["advisory_flags"]["semantic_ctx_chars"] == 1234
         assert kwargs["advisory_flags"]["semantic_ctx_sources"] == ["db_npc_relationship", "vec_memory"]
+        assert kwargs["advisory_flags"]["repeated_coverage_warnings"] == ["missing_relation_slice"]
+        assert kwargs["advisory_flags"]["coverage_warning_escalation_included"] is True
         assert kwargs["advisory_flags"]["provenance_ledger"]["source_pack"] == "stage3"
         assert kwargs["advisory_flags"]["budget_ledger"]["budget_bucket"] == "smart_retrieval.stage3_total_budget"
         assert (
@@ -1508,6 +1512,90 @@ class TestGenerateBlueprint:
         assert bundle["observation"]["advisor_path_used"] is False
         app_mock.quality_dashboard.record_retrieval_observation.assert_called_once()
 
+    def test_finalize_stage3_blueprint_semantic_bundle_applies_budget_arbiter(self, orch, app_mock):
+        app_mock.quality_dashboard = MagicMock()
+        plan = SimpleNamespace(
+            total_budget_chars=900,
+            slots=[SimpleNamespace(category="work_tracking_slot_1", source="vec_memory")],
+        )
+
+        with (
+            patch(
+                "modules.core.stage3_orchestrator._build_world_state_advisory", return_value="[World]\n" + ("W" * 600)
+            ),
+            patch("modules.core.stage3_orchestrator._build_style_guide_advisory", return_value=""),
+            patch("modules.core.stage3_orchestrator._build_fact_ledger_advisory", return_value=""),
+            patch("modules.core.stage3_orchestrator._build_stale_seed_advisory", return_value=""),
+            patch(
+                "modules.core.stage3_orchestrator._build_stage3_work_focus_advisory",
+                return_value="[작품 추적 슬롯 요약]\n" + ("F" * 260),
+            ),
+        ):
+            bundle = orch._finalize_stage3_blueprint_semantic_bundle(
+                semantic_ctx="[SC:genre_context_1]\n" + ("S" * 1000),
+                work_focus={"tracking_slots": ["slot focus"]},
+                plan=plan,
+                working_ep=3,
+                arc_data=app_mock.current_project.arcs[0],
+                entity_registry={},
+                protagonist_name="Seo",
+                blueprint_window=[{"ep_num": 1}],
+                focus_window=[{"ep_num": 1}],
+            )
+
+        assert len(bundle["semantic_ctx"]) <= 900
+        assert "[작품 추적 슬롯 요약]" in bundle["semantic_ctx"]
+        assert "semantic_ctx_budget_trimmed" in bundle["coverage_warnings"]
+        assert bundle["observation"]["budget_ledger"]["configured_cap"] == 900
+        assert bundle["observation"]["budget_ledger"]["trim_applied"] is True
+        assert bundle["observation"]["budget_ledger"]["overflow_chars"] == 0
+        assert bundle["observation"]["protected_summary_survived"] is True
+        assert bundle["observation"]["trimmed_work_slot_summary"] is True
+        assert bundle["observation"]["mandatory_context_chars"] > 0
+        app_mock.quality_dashboard.record_retrieval_observation.assert_called_once()
+
+    def test_finalize_stage3_blueprint_semantic_bundle_promotes_repeated_coverage_warning(self, orch, app_mock):
+        app_mock.quality_dashboard = SimpleNamespace(
+            retrieval_observation_history=[
+                {"stage": "stage3", "coverage_warnings": ["missing_relation_slice"]},
+            ],
+            record_retrieval_observation=MagicMock(),
+        )
+        plan = SimpleNamespace(
+            total_budget_chars=2500,
+            slots=[SimpleNamespace(category="relationship_probe", source="db_npc_relationship")],
+        )
+
+        with (
+            patch("modules.core.stage3_orchestrator._build_world_state_advisory", return_value=""),
+            patch("modules.core.stage3_orchestrator._build_style_guide_advisory", return_value=""),
+            patch("modules.core.stage3_orchestrator._build_fact_ledger_advisory", return_value=""),
+            patch("modules.core.stage3_orchestrator._build_stale_seed_advisory", return_value=""),
+            patch(
+                "modules.core.stage3_orchestrator._build_stage3_work_focus_advisory",
+                return_value="[작품 추적 슬롯 요약]\n- 관계 회복",
+            ),
+        ):
+            bundle = orch._finalize_stage3_blueprint_semantic_bundle(
+                semantic_ctx="[SC:relationship_probe]\n관계 근거 누락 후보",
+                work_focus={"tracking_slots": ["소꿉친구 관계선"]},
+                plan=plan,
+                working_ep=3,
+                arc_data=app_mock.current_project.arcs[0],
+                entity_registry={},
+                protagonist_name="Seo",
+                blueprint_window=[{"ep_num": 1}],
+                focus_window=[{"ep_num": 1}],
+            )
+
+        assert "[Stage3 검색 커버리지 경고]" in bundle["semantic_ctx"]
+        assert "`missing_relation_slice`" in bundle["semantic_ctx"]
+        assert "missing_relation_slice" in bundle["coverage_warnings"]
+        assert bundle["observation"]["repeated_coverage_warnings"] == ["missing_relation_slice"]
+        assert bundle["observation"]["coverage_warning_escalation_included"] is True
+        observation = app_mock.quality_dashboard.record_retrieval_observation.call_args.kwargs["observation"]
+        assert observation["repeated_coverage_warnings"] == ["missing_relation_slice"]
+
     @patch("modules.core.spinners.StageSpinner")
     def test_run_stage3_blueprint_generation_handoff_preserves_tail_and_prev_hud(self, MockSpinner, orch, app_mock):
         spinner = MagicMock()
@@ -1713,6 +1801,8 @@ class TestGenerateBlueprint:
             "observation": {
                 "provenance_ledger": {"source_pack": "stage3"},
                 "budget_ledger": {"budget_bucket": "smart_retrieval.stage3_total_budget"},
+                "repeated_coverage_warnings": ["missing_relation_slice"],
+                "coverage_warning_escalation_included": True,
                 "source_anchor_summary": {
                     "previous_blueprint_ep": 1,
                     "current_arc_start_location": "SW인베스트먼트 사무실",
@@ -1741,6 +1831,8 @@ class TestGenerateBlueprint:
         }
         assert result["_stage3_observability"]["planned_slots_count"] == 2
         assert result["_stage3_observability"]["provenance_ledger"]["source_pack"] == "stage3"
+        assert result["_stage3_observability"]["repeated_coverage_warnings"] == ["missing_relation_slice"]
+        assert result["_stage3_observability"]["coverage_warning_escalation_included"] is True
         assert result["_stage3_observability"]["source_anchor_summary"]["previous_blueprint_ep"] == 1
 
 

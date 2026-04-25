@@ -233,6 +233,14 @@ def _build_stage4_retry_contract_carryover_fields(
     reuse_contract = previous_attempt.get("reuse_contract")
     if isinstance(reuse_contract, dict) and reuse_contract:
         carryover["reuse_contract"] = copy.deepcopy(reuse_contract)
+    truth_pins = previous_attempt.get("truth_pins")
+    if isinstance(truth_pins, dict) and truth_pins:
+        carryover["truth_pins"] = copy.deepcopy(truth_pins)
+    truth_pin_items = previous_attempt.get("truth_pin_items")
+    if not truth_pin_items and isinstance(conflict_contract, dict):
+        truth_pin_items = conflict_contract.get("truth_pins")
+    if isinstance(truth_pin_items, list) and truth_pin_items:
+        carryover["truth_pin_items"] = copy.deepcopy(truth_pin_items)
     for key in ("repair_contract", "scope_authority", "fix_pack_origin"):
         value = previous_attempt.get(key)
         if isinstance(value, dict) and value:

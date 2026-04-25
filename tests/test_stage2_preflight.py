@@ -346,7 +346,10 @@ class TestPreflightArcAnalysis:
         result = preflight._build_patch_feedback(
             {
                 "rejection_reason": "keep structure, fix only local issue",
+                "verdict_reason": "director rejected carryover drift",
                 "selection_reason": "candidate 2 was closest",
+                "runtime_advisory": "verify carryover authority before rewrite",
+                "retry_directives": "repair only the state bridge",
                 "score_breakdown": {"coherence": 8, "density": 7.5, "note": "skip"},
                 "validation_warnings": ["minor drift", 123, "continuity watch"],
                 "fix_scope_reasoning": "local continuity delta only",
@@ -354,8 +357,14 @@ class TestPreflightArcAnalysis:
         )
 
         assert "keep structure, fix only local issue" in result
+        assert "[최종 판정 사유]" in result
+        assert "director rejected carryover drift" in result
         assert "[선택/거절 사유]" in result
         assert "candidate 2 was closest" in result
+        assert "[런타임 주의]" in result
+        assert "verify carryover authority before rewrite" in result
+        assert "[재시도 지시]" in result
+        assert "repair only the state bridge" in result
         assert "[점수 분해]" in result
         assert "coherence=8" in result
         assert "density=7.5" in result
@@ -433,9 +442,7 @@ class TestPreflightArcAnalysis:
         preflight.ctx.memory = MagicMock()
         preflight.ctx.memory.retrieve_high_res_context.return_value = "legacy vector block"
         preflight._resolve_work_retrieval_focus = MagicMock(return_value={"tracking_slots": ["핵심 배우 라인"]})
-        preflight._build_work_identity_slot_summary = MagicMock(
-            return_value="[작품 추적 슬롯 요약]\n핵심 배우 라인"
-        )
+        preflight._build_work_identity_slot_summary = MagicMock(return_value="[작품 추적 슬롯 요약]\n핵심 배우 라인")
         preflight._build_fact_ledger_context = MagicMock(return_value="[팩트 저장 요약]\n수치")
         preflight._record_retrieval_observation = MagicMock()
 
@@ -506,9 +513,7 @@ class TestPreflightArcAnalysis:
                 "block_theme": "유가 급등을 이용한 자산 불리기",
                 "constraint_summary": "소꿉친구와의 관계 복구가 필요하다",
                 "plot_suspension": ["PB 박성호와의 신뢰 회복"],
-                "episode_details": [
-                    {"ep_num": 4, "details": ["PB 박성호를 설득해 원유 익절 타이밍을 잡는다."]}
-                ],
+                "episode_details": [{"ep_num": 4, "details": ["PB 박성호를 설득해 원유 익절 타이밍을 잡는다."]}],
             },
             current_vol_strategy={"strategy_doc": "단기 유가 변동을 활용한 포지션 정리"},
         )
@@ -533,9 +538,7 @@ class TestPreflightArcAnalysis:
                 },
                 "stakes": "이번 선언이 실패하면 회귀 지식도 모두 무의미해진다.",
                 "foreshadow": ["이란 핵 이슈 재점화", "WTI 랠리 초입"],
-                "relationship_delta": [
-                    {"target": "박성호", "after": "경계", "trigger": "막내의 돌연한 선언"}
-                ],
+                "relationship_delta": [{"target": "박성호", "after": "경계", "trigger": "막내의 돌연한 선언"}],
                 "time_span": {"in_story_time": "2006년 1월 초", "duration": "3일"},
                 "location": {"place": "서울 강남 대표실", "type": "실내"},
                 "genre_ext": {
@@ -1205,7 +1208,11 @@ class TestPreflightEnrichment:
             },
             pipeline_result={"retries": 1, "phases": {"generate": {"candidates_count": 2}}},
             enriched_block={
-                "joint_docs": {"final_location": "block-city", "physical_inventory": ["ledger"], "world_joint": "stale"},
+                "joint_docs": {
+                    "final_location": "block-city",
+                    "physical_inventory": ["ledger"],
+                    "world_joint": "stale",
+                },
                 "status_shadow": {"expected_injuries": "stale-wound", "key_stat_change": "fallback-stat"},
             },
             genre_for_tracker="wuxia",
@@ -2236,7 +2243,9 @@ class TestPreflightEnrichment:
             "selection_reason": "candidate 2 was closest",
         }
 
-        preflight.ctx.agents["four_phase"]._inplace_patch_arc.side_effect = AssertionError("_inplace_patch_arc() should not be called")
+        preflight.ctx.agents["four_phase"]._inplace_patch_arc.side_effect = AssertionError(
+            "_inplace_patch_arc() should not be called"
+        )
         preflight.ctx.agents["four_phase"].patch_arc_with_feedback.side_effect = AssertionError(
             "patch_arc_with_feedback() should not be called"
         )
@@ -2339,9 +2348,7 @@ class TestPreflightEnrichment:
         preflight.ctx.sys.guard.select_retrieval_focus.return_value = {
             "tracking_slots": ["핵심 배우 라인"],
             "mandatory_scene_engines": ["인재 발굴"],
-            "registry_profiles": [
-                {"name": "talent_registry", "required_fields": ["name", "heat", "fan_reaction"]}
-            ],
+            "registry_profiles": [{"name": "talent_registry", "required_fields": ["name", "heat", "fan_reaction"]}],
         }
         preflight.ctx.context_advisor.plan_stage2_retrieval.return_value = RetrievalPlan(
             stage="stage2",
