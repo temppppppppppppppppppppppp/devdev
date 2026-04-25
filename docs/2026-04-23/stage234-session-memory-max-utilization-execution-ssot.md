@@ -422,7 +422,7 @@ Verification summary:
 
 Residual risks:
 - Full repository test suite was not run under this closure pass; validation stayed on the touched Stage2/Stage3 memory and retrieval surfaces.
-- The previously observed unrelated `tests/test_stage4_orchestrator.py::TestCrossEpisodeRepetitionHook` sqlite connection deepcopy failure remains outside this lane.
+- The previously observed unrelated `tests/test_stage4_orchestrator.py::TestCrossEpisodeRepetitionHook` sqlite connection deepcopy failure was outside this lane at closure time and was later resolved by `docs/2026-04-25/stage4-hud-snapshot-safe-copy-residual-fix.md`.
 - Provider-native `Sessions`, `Live API`, and `Memory Bank` experiments remain future optional sidecars behind explicit fresh survey and benchmark gates.
 
 Temp cleanup:
@@ -434,5 +434,20 @@ Closure 3-pass audit:
 - Pass 1 checked realized scope against the six execution tranches and confirmed the only unimplemented tranche is explicitly optional/deferred.
 - Pass 2 checked verification evidence against touched Stage2/Stage3 surfaces and recorded the unrun full-suite boundary honestly.
 - Pass 3 checked temp-queue cleanup ordering: canonical closure first, roadmap refresh second, temp mirror removal third, queue-state refresh and strict validator last.
+
+Confidence: 96/100.
+
+## 22. 2026-04-25 Post-Closure Residual Resolution Addendum
+
+Status: residual fixed.
+
+Resolved scope:
+- `modules/core/stage4_post_processor.py` no longer deep-copies non-dict HUD snapshots or unserializable HUD values before manuscript persistence.
+- `tests/test_stage4_post_processor.py` now covers non-dict HUD snapshots and dict snapshots containing unserializable values such as `sqlite3.Connection`.
+
+Validation:
+- `python -m pytest tests/test_stage4_orchestrator.py -k CrossEpisodeRepetitionHook -q` -> 3 passed.
+- `python -m pytest tests/test_stage4_post_processor.py -k "hud_snapshot or primary_db" -q` -> 4 passed.
+- `python -m pytest tests/test_stage4_orchestrator.py -q` -> 164 passed.
 
 Confidence: 96/100.
