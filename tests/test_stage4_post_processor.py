@@ -2,6 +2,7 @@
 
 import json
 import logging
+import sqlite3
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -360,6 +361,56 @@ class TestProcessPassResult:
         save_kwargs = pp.ctx.current_project.db.save_manuscript.call_args.kwargs
         assert save_kwargs["hud_snapshot"] == {"hp": 20, "location": "gate"}
 
+    def test_projected_hud_snapshot_ignores_non_dict_snapshot(self):
+        pp = self._make_pp()
+        conn = sqlite3.connect(":memory:")
+        try:
+            pp.ctx.sys.hud.snapshot.return_value = conn
+
+            assert pp._build_projected_hud_snapshot() is None
+        finally:
+            conn.close()
+
+    def test_projected_hud_snapshot_filters_unserializable_values(self):
+        pp = self._make_pp()
+        conn = sqlite3.connect(":memory:")
+        try:
+            pp.ctx.sys.hud.snapshot.return_value = {
+                "hp": 10,
+                "conn": conn,
+                "nested": {"location": "gate", "conn": conn},
+                "items": ["safe", conn, 3],
+            }
+
+            assert pp._build_projected_hud_snapshot() == {
+                "hp": 10,
+                "nested": {"location": "gate"},
+                "items": ["safe", 3],
+            }
+        finally:
+            conn.close()
+
+    def test_approved_hud_updates_filter_unserializable_values(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.sys.hud.snapshot.return_value = {"hp": 10}
+        conn = sqlite3.connect(":memory:")
+        try:
+            result = pp._save_pass_result_primary_db(
+                next_ep=3,
+                final_manuscript="test manuscript",
+                final_title="episode title",
+                final_state_updates={"hp": 20},
+                output_dir=tmp_path,
+                approved_hud_updates={"actual_truth": {"hp": 20, "conn": conn}},
+            )
+        finally:
+            conn.close()
+
+        assert result is True
+        save_kwargs = pp.ctx.current_project.db.save_manuscript.call_args.kwargs
+        assert save_kwargs["hud_snapshot"] == {"hp": 20}
+
     def test_save_pass_result_quality_sidecars_returns_signal_bundle(self):
         pp = self._make_pp()
 
@@ -413,7 +464,9 @@ class TestProcessPassResult:
             return_value={
                 "bible_delta": {"relationship_changes": []},
                 "actual_truth": {"location": "gate"},
-                "state_truth_owner_contract": {"field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}},
+                "state_truth_owner_contract": {
+                    "field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}
+                },
                 "meta_save_failed": True,
             }
         )
@@ -457,10 +510,9 @@ class TestProcessPassResult:
             arc_data={"arc_no": 2},
         )
         pp.post_pass_runtime._run_post_pass_advisories.assert_called_once()
-        assert (
-            pp.post_pass_runtime._run_post_pass_advisories.call_args.kwargs["state_truth_owner_contract"]
-            == {"field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}}
-        )
+        assert pp.post_pass_runtime._run_post_pass_advisories.call_args.kwargs["state_truth_owner_contract"] == {
+            "field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}
+        }
 
     def test_run_pass_result_post_pass_pipeline_normalizes_nonwuxia_soft_chain_link_before_save(self):
         pp = self._make_pp()
@@ -530,7 +582,7 @@ class TestProcessPassResult:
             "total_calls": 2,
             "total_tokens": 1800,
             "total_cost_usd": 0.017,
-            "model_breakdown": "{\"gpt\": 2}",
+            "model_breakdown": '{"gpt": 2}',
         }
 
         with patch("modules.core.stage4_post_processor.get_metrics_collector", return_value=collector):
@@ -872,7 +924,9 @@ class TestProcessPassResult:
         pp.post_pass_runtime._persist_manager_delta_outputs = MagicMock(
             return_value={
                 "bible_delta": {"state_changes": {}},
-                "state_truth_owner_contract": {"field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}},
+                "state_truth_owner_contract": {
+                    "field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}
+                },
                 "meta_save_failed": False,
             }
         )
@@ -908,9 +962,7 @@ class TestProcessPassResult:
         result = pp.post_pass_runtime._prepare_manager_delta_context(
             audit={
                 "state_updates": {
-                    "actual_truth": {
-                        "martial_arts": '["Storm Palm", {"name": "Cloud Step"}, "Storm Palm"]'
-                    }
+                    "actual_truth": {"martial_arts": '["Storm Palm", {"name": "Cloud Step"}, "Storm Palm"]'}
                 }
             },
             genre_type="wuxia",
@@ -975,7 +1027,6 @@ class TestProcessPassResult:
             ],
         )
 
-
     def test_apply_state_text_and_pressure_vectors_injects_pressure_vector_snapshot(self):
         pp = self._make_pp()
         pp.post_pass_runtime._build_active_pressure_vectors = MagicMock(
@@ -996,7 +1047,9 @@ class TestProcessPassResult:
 
         assert result["active_pressure_vectors"] == [{"text": "pressure vector", "source": "ending_hook"}]
         assert result["pressure_vectors_changed"] is True
-        assert result["actual_truth"]["active_pressure_vectors"] == [{"text": "pressure vector", "source": "ending_hook"}]
+        assert result["actual_truth"]["active_pressure_vectors"] == [
+            {"text": "pressure vector", "source": "ending_hook"}
+        ]
 
     def test_apply_state_text_and_pressure_vectors_clears_unsupported_pressure_vectors(self):
         pp = self._make_pp()
@@ -1071,8 +1124,13 @@ class TestProcessPassResult:
             "authority_scope": "carryover_baseline",
             "provenance": "fact_ledger_authority_scope",
         }
-        state_log_contract = pp.post_pass_runtime._persist_manager_state_log.call_args.kwargs["state_truth_owner_contract"]
-        assert state_log_contract["field_families"]["numeric_carryover_authority"]["fields"] == ["capital", "total_assets"]
+        state_log_contract = pp.post_pass_runtime._persist_manager_state_log.call_args.kwargs[
+            "state_truth_owner_contract"
+        ]
+        assert state_log_contract["field_families"]["numeric_carryover_authority"]["fields"] == [
+            "capital",
+            "total_assets",
+        ]
         pp.post_pass_runtime._sync_world_state_positions.assert_called_once_with(
             next_ep=10,
             key_npcs=[{"name": "npc-a"}],
@@ -1155,8 +1213,7 @@ class TestProcessPassResult:
         pp.post_pass_runtime._emit_post_pass_contract_signal = MagicMock()
         pp.ctx.fact_ledger = MagicMock()
         pp.ctx.fact_ledger.get_numbers.return_value = {
-            f"f{i}": {"value": i, "authority_scope": "carryover_baseline"}
-            for i in range(1, 9)
+            f"f{i}": {"value": i, "authority_scope": "carryover_baseline"} for i in range(1, 9)
         }
 
         pp.post_pass_runtime._persist_manager_delta_outputs(
@@ -1580,9 +1637,7 @@ class TestProcessPassResult:
     def test_inventory_counts_flow_into_state_log_and_state_sinks(self, tmp_path):
         pp = self._make_pp()
         pp.ctx.current_project.db.save_manuscript.return_value = True
-        pp.ctx.current_project.latest_state = {
-            "actual_truth": {"equipment": ["트레이딩용 컴퓨터 2대", "모니터 2대"]}
-        }
+        pp.ctx.current_project.latest_state = {"actual_truth": {"equipment": ["트레이딩용 컴퓨터 2대", "모니터 2대"]}}
         pp.ctx.agents["manager"].update_state_and_lore_v20.return_value = {
             "new_lore": {},
             "knowledge_map_updates": {},
@@ -1772,12 +1827,18 @@ class TestProcessPassResult:
         owner_contract = saved_state_log["state_truth_owner_contract"]
         assert owner_contract["actual_truth_primary_owner"] == "manager_actual_truth"
         assert owner_contract["field_families"]["active_pressure_vectors"]["owner"] == "runtime_blueprint_overlay"
-        assert owner_contract["field_families"]["active_pressure_vectors"]["provenance"] == "blueprint_filtered_by_manuscript"
+        assert (
+            owner_contract["field_families"]["active_pressure_vectors"]["provenance"]
+            == "blueprint_filtered_by_manuscript"
+        )
         assert saved_state_log["actual_truth"]["active_pressure_vectors"][0]["source"] == "ending_hook"
         assert saved_state_log["active_pressure_vectors"][1]["text"] == "흑풍회의 추격대가 문 앞에 도착했다."
 
         saved_bible = pp.ctx.current_project.db.save_episode_bible.call_args.args[1]
-        assert saved_bible["state_changes"]["active_pressure_vectors"][0]["text"] == "독이 퍼지기 시작했다. 해독제가 필요하다."
+        assert (
+            saved_bible["state_changes"]["active_pressure_vectors"][0]["text"]
+            == "독이 퍼지기 시작했다. 해독제가 필요하다."
+        )
 
         ws_changes = pp.ctx.world_state.update_from_state_changes.call_args.args[1]
         assert ws_changes["active_pressure_vectors"][1]["text"] == "흑풍회의 추격대가 문 앞에 도착했다."
@@ -1789,7 +1850,9 @@ class TestProcessPassResult:
         pp.ctx.current_project.db.save_manuscript.return_value = True
         pp.ctx.current_project.latest_state = {
             "actual_truth": {
-                "active_pressure_vectors": [{"text": "정체불명의 그림자가 들이닥치기 시작했다.", "source": "ending_hook"}]
+                "active_pressure_vectors": [
+                    {"text": "정체불명의 그림자가 들이닥치기 시작했다.", "source": "ending_hook"}
+                ]
             }
         }
         pp.ctx.agents["manager"].update_state_and_lore_v20.return_value = {
@@ -1808,7 +1871,8 @@ class TestProcessPassResult:
 
         result = pp.process_pass_result(
             next_ep=4,
-            final_manuscript="강민철은 계약서를 접어 재킷 안주머니에 넣고 자리에서 일어섰다. 그는 PB의 시선을 피하지 않았다. " * 40,
+            final_manuscript="강민철은 계약서를 접어 재킷 안주머니에 넣고 자리에서 일어섰다. 그는 PB의 시선을 피하지 않았다. "
+            * 40,
             final_title="테스트",
             final_state_updates={},
             blueprint={
@@ -1833,7 +1897,6 @@ class TestProcessPassResult:
 
         ws_changes = pp.ctx.world_state.update_from_state_changes.call_args.args[1]
         assert ws_changes["active_pressure_vectors"] == []
-
 
     def test_process_pass_result_normalizes_martial_arts_before_stv_and_persistence(self, tmp_path):
         pp = self._make_pp()
@@ -2009,7 +2072,8 @@ class TestProcessPassResult:
         ):
             result = pp.process_pass_result(
                 next_ep=6,
-                final_manuscript="The manuscript explicitly says the protagonist has not learned any technique yet. " * 90,
+                final_manuscript="The manuscript explicitly says the protagonist has not learned any technique yet. "
+                * 90,
                 final_title="test title",
                 final_state_updates={},
                 blueprint={"scene_breakdown": []},
@@ -2773,7 +2837,9 @@ class TestAtomicMetadataSave:
             return_value={
                 "bible_delta": {"relationship_changes": []},
                 "actual_truth": {},
-                "state_truth_owner_contract": {"field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}},
+                "state_truth_owner_contract": {
+                    "field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}
+                },
                 "meta_save_failed": False,
             }
         )
