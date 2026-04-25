@@ -633,6 +633,50 @@ class TestInterviewRoundHelpers:
         assert snapshot["selection_content_hash"] == "sel-hash-123"
         assert snapshot["retry_budget_axes"] == {"repair": "rewrite_regenerate"}
 
+    def test_compact_attempt_snapshot_preserves_truth_pin_and_numeric_contract_surfaces(self):
+        snapshot = Stage4InterviewRound._compact_attempt_snapshot(
+            {
+                "strategy": "repair",
+                "score": 44,
+                "truth_pins": {"carryover_numeric_authority": "FactLedger baseline wins"},
+                "conflict_contract": {
+                    "truth_pins": [
+                        {
+                            "pin_key": "family_group_name",
+                            "family": "proper_noun_group",
+                            "expected": "대한그룹",
+                            "observed": "대현그룹",
+                        }
+                    ]
+                },
+                "repair_contract": {
+                    "subtype": "numeric_carryover_authority",
+                    "fix_scope": "full",
+                    "authoritative_fix_scope": "partial",
+                },
+                "scope_authority": {
+                    "fix_scope": "full",
+                    "authoritative_fix_scope": "partial",
+                    "widened": True,
+                },
+                "scope_origin": {
+                    "fix_scope": "runtime_widened",
+                    "authoritative_fix_scope": "director_authoritative",
+                },
+                "reuse_contract": {"mode": "best_manuscript_baseline"},
+                "fix_pack_origin": {"provenance": "runtime_synthesized"},
+            }
+        )
+
+        assert snapshot["truth_pins"]["carryover_numeric_authority"] == "FactLedger baseline wins"
+        assert snapshot["truth_pins"]["family_group_name"] == "대한그룹"
+        assert snapshot["truth_pin_items"][0]["family"] == "proper_noun_group"
+        assert snapshot["repair_contract"]["subtype"] == "numeric_carryover_authority"
+        assert snapshot["scope_authority"]["widened"] is True
+        assert snapshot["scope_origin"]["fix_scope"] == "runtime_widened"
+        assert snapshot["reuse_contract"]["mode"] == "best_manuscript_baseline"
+        assert snapshot["fix_pack_origin"]["provenance"] == "runtime_synthesized"
+
     def test_extract_fix_feedback_preserves_full_fix_pack_and_issue_lists(self):
         ir = Stage4InterviewRound(_make_ctx())
         feedback = ir._extract_fix_feedback(
@@ -3036,6 +3080,213 @@ class TestRecordS4Attempt:
             "change ending"
         )
         assert db_payload["primary_failure_layer"] == "quality_floor"
+
+    def test_hydrate_persisted_stage4_previous_attempt_reads_db_envelope_and_artifact(self, tmp_path):
+        ctx = _make_ctx()
+        ctx.current_project.paths = SimpleNamespace(root=tmp_path)
+        ir = Stage4InterviewRound(ctx)
+
+        latest_artifact = tmp_path / "logs" / "stage4" / "rejected_best.txt"
+        latest_artifact.parent.mkdir(parents=True, exist_ok=True)
+        latest_artifact.write_text("candidate manuscript", encoding="utf-8")
+
+        older_artifact = tmp_path / "logs" / "stage4" / "earlier_reject.txt"
+        older_artifact.write_text("older manuscript", encoding="utf-8")
+
+        latest_row = ir._build_stage4_db_attempt_payload(
+            episode=2,
+            round_num=1,
+            success=False,
+            score=61,
+            arc=1,
+            verdict="REJECT",
+            reject_reason="conflict-first reject feedback",
+            fix_scope="full",
+            model="gemini-2.5-pro",
+            duration_ms=222,
+            advisory_flags={
+                "gate_semantics": {
+                    "director_verdict": "PASS",
+                    "final_verdict": "REJECT",
+                    "gate_basis": "post_select_conflict",
+                    "repair_scope": "full",
+                    "authoritative_fix_scope": "inplace",
+                    "scope_authority": {
+                        "fix_scope": "full",
+                        "repair_scope": "full",
+                        "authoritative_fix_scope": "inplace",
+                        "scope_origin": {
+                            "fix_scope": "post_select_conflict_override",
+                            "authoritative_fix_scope": "director_authoritative",
+                            "repair_scope": "runtime_lane",
+                        },
+                        "widened": True,
+                    },
+                    "reuse_contract": {
+                        "mode": "best_manuscript_baseline",
+                        "baseline_field": "best_manuscript",
+                    },
+                },
+                "fix_pack": {
+                    "patch_targets": ["opening_location_name"],
+                    "must_fix": ["fix the opening location"],
+                    "do_not_regress": ["preserve the truth pins"],
+                    "success_condition": "opening location matches canon",
+                    "target_kind": "entity_ref",
+                },
+                "repair_contract": {
+                    "subtype": "continuity",
+                    "fix_scope": "full",
+                    "repair_scope": "full",
+                    "authoritative_fix_scope": "inplace",
+                },
+                "scope_authority": {
+                    "fix_scope": "full",
+                    "repair_scope": "full",
+                    "authoritative_fix_scope": "inplace",
+                    "scope_origin": {
+                        "fix_scope": "post_select_conflict_override",
+                        "authoritative_fix_scope": "director_authoritative",
+                        "repair_scope": "runtime_lane",
+                    },
+                    "widened": True,
+                },
+                "retry_budget_axes": {
+                    "repair": "patch_revision",
+                    "strategy": "reduced",
+                    "escalation": "none",
+                },
+                "conflict_contract": {
+                    "contract_type": "post_select_conflict",
+                    "contradiction_types": ["continuity"],
+                    "conflicts": [
+                        {
+                            "conflict_type": "continuity",
+                            "detail": "opening location mismatch",
+                        }
+                    ],
+                    "truth_pins": [
+                        {
+                            "pin_key": "opening_location",
+                            "family": "world_fact",
+                            "expected": "부산역",
+                            "observed": "서울역",
+                        }
+                    ],
+                },
+                "reuse_contract": {
+                    "mode": "best_manuscript_baseline",
+                    "baseline_field": "best_manuscript",
+                },
+                "fix_pack_origin": {"provenance": "runtime_synthesized"},
+            },
+            session_id="sess-stage4",
+            attempt_key="s4:ep2:arc1:a2:sess-stage4",
+            artifact_meta={
+                "candidate_key": "A|balanced",
+                "content_hash": "hash123",
+                "artifact_path": "logs/stage4/rejected_best.txt",
+            },
+            selection_reason="best candidate because covert network felt sharp",
+            verdict_reason="director pass before firewall",
+            open_review="keep the burner phone idea",
+            fix_scope_reasoning="preserve the location truth pins",
+            runtime_advisory="runtime digest",
+            retry_directives="retry directives",
+            failure_category="LOGIC_ERROR",
+            initial_verdict="PASS_WITH_FIX",
+            score_breakdown={"narrative_flow": 9},
+            is_patch=False,
+            is_patch_fallback=False,
+            patch_strategy="",
+            reject_bucket="post_select_conflict",
+        )
+        older_row = ir._build_stage4_db_attempt_payload(
+            episode=2,
+            round_num=0,
+            success=False,
+            score=55,
+            arc=1,
+            verdict="REJECT",
+            reject_reason="earlier reject feedback",
+            fix_scope="partial",
+            model="gemini-2.5-pro",
+            duration_ms=111,
+            advisory_flags={
+                "retry_budget_axes": {"repair": "rewrite_regenerate"},
+            },
+            session_id="sess-stage4",
+            attempt_key="s4:ep2:arc1:a1:sess-stage4",
+            artifact_meta={
+                "candidate_key": "B|tension",
+                "content_hash": "hash-old",
+                "artifact_path": "logs/stage4/earlier_reject.txt",
+            },
+            selection_reason="older candidate",
+            verdict_reason="older conflict",
+            open_review="older review",
+            fix_scope_reasoning="older reasoning",
+            runtime_advisory="older advisory",
+            retry_directives="older directives",
+            failure_category="QUALITY_ISSUE",
+            initial_verdict="REJECT",
+            score_breakdown={"narrative_flow": 7},
+            is_patch=False,
+            is_patch_fallback=False,
+            patch_strategy="",
+            reject_bucket="quality_issue",
+        )
+
+        ctx.current_project.db.get_stage_attempts_for_arc.return_value = [latest_row, older_row]
+
+        hydrated = ir.hydrate_persisted_stage4_previous_attempt(
+            next_ep=2,
+            arc_num=1,
+            previous_attempt=None,
+        )
+
+        assert hydrated["strategy"] == "A"
+        assert hydrated["selected_strategy_key"] == "balanced"
+        assert hydrated["best_manuscript"] == "candidate manuscript"
+        assert hydrated["reject_bucket"] == "post_select_conflict"
+        assert hydrated["fix_scope"] == "full"
+        assert hydrated["runtime_advisory"] == "runtime digest"
+        assert hydrated["retry_directives"] == "retry directives"
+        assert hydrated["fix_pack"]["patch_targets"] == ["opening_location_name"]
+        assert hydrated["conflict_contract"]["contract_type"] == "post_select_conflict"
+        assert hydrated["reuse_contract"]["mode"] == "best_manuscript_baseline"
+        assert hydrated["truth_pins"]["opening_location"] == "부산역"
+        assert hydrated["truth_pin_items"][0]["observed"] == "서울역"
+        assert hydrated["feedback_provenance"]["merged_feedback"].startswith("conflict-first reject feedback")
+        assert hydrated["prior_attempts"][0]["attempt_key"] == "s4:ep2:arc1:a1:sess-stage4"
+
+    def test_hydrate_persisted_stage4_previous_attempt_skips_latest_pass_row(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        pass_row = {
+            "ep_num": 2,
+            "arc_num": 1,
+            "attempt_key": "s4:ep2:arc1:a2:sess-stage4",
+            "verdict": "PASS",
+            "advisory_flags": {},
+        }
+        reject_row = {
+            "ep_num": 2,
+            "arc_num": 1,
+            "attempt_key": "s4:ep2:arc1:a1:sess-stage4",
+            "verdict": "REJECT",
+            "advisory_flags": {},
+        }
+        ctx.current_project.db.get_stage_attempts_for_arc.return_value = [pass_row, reject_row]
+
+        hydrated = ir.hydrate_persisted_stage4_previous_attempt(
+            next_ep=2,
+            arc_num=1,
+            previous_attempt=None,
+        )
+
+        assert hydrated == {}
 
     def test_build_final_selection_advisory_payload_reuses_contract_packet(self):
         ctx = _make_ctx()
@@ -8640,6 +8891,16 @@ class TestLane2DirectorSemantics:
                 "reuse_contract": {
                     "mode": "best_manuscript_baseline",
                 },
+                "truth_pins": {
+                    "carryover_numeric_authority": "FactLedger baseline wins",
+                },
+                "truth_pin_items": [
+                    {
+                        "pin_key": "family_group_name",
+                        "family": "proper_noun_group",
+                        "expected": "대한그룹",
+                    }
+                ],
                 "conflict_contract": {
                     "contract_type": "post_select_conflict",
                 },
@@ -8666,6 +8927,16 @@ class TestLane2DirectorSemantics:
         assert payload["reuse_contract"] == {
             "mode": "best_manuscript_baseline",
         }
+        assert payload["truth_pins"] == {
+            "carryover_numeric_authority": "FactLedger baseline wins",
+        }
+        assert payload["truth_pin_items"] == [
+            {
+                "pin_key": "family_group_name",
+                "family": "proper_noun_group",
+                "expected": "대한그룹",
+            }
+        ]
         assert payload["conflict_contract"] == {
             "contract_type": "post_select_conflict",
         }

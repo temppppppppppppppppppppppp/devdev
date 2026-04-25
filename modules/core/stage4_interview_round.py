@@ -30,6 +30,7 @@ from modules.core.session_memory_envelope import (
     SESSION_MEMORY_ENVELOPE_KEY,
     attach_session_memory_envelope,
     build_stage4_session_memory_envelope,
+    get_session_memory_envelope,
 )
 from modules.core.soft_failure import resolve_project_log_dir
 from modules.core.stage4_director_runtime import Stage4DirectorRuntime
@@ -1927,6 +1928,48 @@ class Stage4InterviewRound:
             return ""
 
     @staticmethod
+    def _compact_attempt_contract_dict(payload: object) -> dict[str, object]:
+        if not isinstance(payload, dict):
+            return {}
+        return {
+            str(key): copy.deepcopy(value)
+            for key, value in payload.items()
+            if str(key or "").strip() and value not in ("", None, [], {})
+        }
+
+    @staticmethod
+    def _compact_truth_pin_items(items: object, *, max_items: int | None = None) -> list[dict[str, object]]:
+        if not isinstance(items, (list, tuple)):
+            return []
+        compacted: list[dict[str, object]] = []
+        seen: set[tuple[str, str, str, str]] = set()
+        for raw in items:
+            compact = Stage4InterviewRound._compact_attempt_contract_dict(raw)
+            if not compact:
+                continue
+            marker = (
+                str(compact.get("pin_key", "") or "").strip(),
+                str(compact.get("family", "") or "").strip(),
+                str(compact.get("expected", "") or "").strip(),
+                str(compact.get("observed", "") or "").strip(),
+            )
+            if marker in seen:
+                continue
+            seen.add(marker)
+            compacted.append(compact)
+        return compacted if max_items is None else compacted[:max_items]
+
+    @staticmethod
+    def _summarize_truth_pin_items(items: object) -> dict[str, object]:
+        summary: dict[str, object] = {}
+        for item in Stage4InterviewRound._compact_truth_pin_items(items):
+            pin_key = str(item.get("pin_key", "") or "").strip()
+            expected = item.get("expected")
+            if pin_key and expected not in ("", None, [], {}):
+                summary[pin_key] = copy.deepcopy(expected)
+        return summary
+
+    @staticmethod
     def _compact_attempt_snapshot(previous_attempt: dict | None) -> dict:
         """이전 시도 피드백을 재생성용 최소 스냅샷으로 축약."""
         if not isinstance(previous_attempt, dict) or not previous_attempt:
@@ -1955,6 +1998,28 @@ class Stage4InterviewRound:
             "contradiction_types": list(previous_attempt.get("contradiction_types", []) or []),
             "retry_budget_axes": dict(previous_attempt.get("retry_budget_axes", {}) or {}),
         }
+        conflict_contract = previous_attempt.get("conflict_contract")
+        truth_pin_items = Stage4InterviewRound._compact_truth_pin_items(
+            previous_attempt.get("truth_pin_items"),
+            max_items=4,
+        )
+        if not truth_pin_items and isinstance(conflict_contract, dict):
+            truth_pin_items = Stage4InterviewRound._compact_truth_pin_items(
+                conflict_contract.get("truth_pins"),
+                max_items=4,
+            )
+        truth_pins = Stage4InterviewRound._compact_attempt_contract_dict(previous_attempt.get("truth_pins"))
+        truth_pin_summary = Stage4InterviewRound._summarize_truth_pin_items(truth_pin_items)
+        if truth_pin_summary:
+            truth_pins = {**truth_pin_summary, **truth_pins}
+        if truth_pins:
+            snapshot["truth_pins"] = truth_pins
+        if truth_pin_items:
+            snapshot["truth_pin_items"] = truth_pin_items
+        for key in ("repair_contract", "scope_authority", "scope_origin", "reuse_contract", "fix_pack_origin"):
+            compact = Stage4InterviewRound._compact_attempt_contract_dict(previous_attempt.get(key))
+            if compact:
+                snapshot[key] = compact
         contradiction_details = Stage4InterviewRound._compact_contradiction_detail_lines(
             previous_attempt.get("contradiction_details"),
             max_items=None,
@@ -1998,6 +2063,409 @@ class Stage4InterviewRound:
             seen.add(marker)
             deduped.append(item)
         return deduped[-3:]
+
+    @staticmethod
+    def _parse_stage4_candidate_key(candidate_key: object) -> tuple[str, str]:
+        normalized = str(candidate_key or "").strip()
+        if not normalized:
+            return "", ""
+        label, _, strategy = normalized.partition("|")
+        return label.strip(), strategy.strip()
+
+    def _load_stage4_attempt_artifact_text(self, artifact_path: object) -> str:
+        normalized = str(artifact_path or "").strip()
+        if not normalized:
+            return ""
+
+        candidate_paths: list[Path] = []
+        artifact = Path(normalized)
+        if artifact.is_absolute():
+            candidate_paths.append(artifact)
+
+        project_root = getattr(getattr(getattr(self.ctx, "current_project", None), "paths", None), "root", None)
+        if isinstance(project_root, (str, Path)):
+            candidate_paths.append(Path(project_root) / normalized)
+
+        for candidate in candidate_paths:
+            try:
+                if candidate.is_file():
+                    return candidate.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                try:
+                    return candidate.read_text(encoding="utf-8-sig")
+                except OSError:
+                    continue
+            except OSError:
+                continue
+        return ""
+
+    @staticmethod
+    def _merge_stage4_resume_warning_lines(*values: object) -> list[str]:
+        merged: list[str] = []
+        seen: set[str] = set()
+        for value in values:
+            if not isinstance(value, list):
+                continue
+            for item in value:
+                text = str(item or "").strip()
+                if not text or text in seen:
+                    continue
+                seen.add(text)
+                merged.append(text)
+        return merged
+
+    @staticmethod
+    def _resolve_stage4_resume_reject_bucket(
+        *,
+        advisory_flags: dict | None,
+        envelope: dict | None,
+        gate_semantics: dict | None,
+        failure_category: object,
+        primary_failure_layer: object,
+    ) -> str:
+        advisory = advisory_flags if isinstance(advisory_flags, dict) else {}
+        memory_envelope = envelope if isinstance(envelope, dict) else {}
+        retry_surface = (
+            memory_envelope.get("retry_surface")
+            if isinstance(memory_envelope.get("retry_surface"), dict)
+            else {}
+        )
+        semantics = gate_semantics if isinstance(gate_semantics, dict) else {}
+
+        for raw in (
+            retry_surface.get("reject_bucket"),
+            advisory.get("reject_bucket"),
+            semantics.get("reject_bucket"),
+            primary_failure_layer,
+        ):
+            resolved = str(raw or "").strip()
+            if resolved:
+                return resolved
+
+        gate_basis = str(semantics.get("gate_basis") or "").strip().lower()
+        if gate_basis == "post_select_conflict":
+            return "post_select_conflict"
+        if gate_basis == "quality_floor_fail":
+            return "quality_issue"
+
+        category = str(failure_category or "").strip().lower()
+        if category in {"quality_issue", "constraint_violation", "structure_error", "post_select_conflict"}:
+            return category
+        if "quality" in category:
+            return "quality_issue"
+        if "constraint" in category:
+            return "constraint_violation"
+        if "structure" in category:
+            return "structure_error"
+        return gate_basis or category
+
+    def _build_stage4_persisted_attempt_snapshot(self, attempt_row: dict | None) -> dict[str, object]:
+        hydrated = self._hydrate_stage4_previous_attempt_from_row(attempt_row)
+        if not hydrated:
+            return {}
+        hydrated.pop("prior_attempts", None)
+        hydrated.pop("history", None)
+        return self._compact_attempt_snapshot(hydrated)
+
+    def _hydrate_stage4_previous_attempt_from_row(
+        self,
+        attempt_row: dict | None,
+        *,
+        prior_rows: list[dict] | None = None,
+    ) -> dict[str, object]:
+        if not isinstance(attempt_row, dict) or not attempt_row:
+            return {}
+
+        advisory_flags = (
+            copy.deepcopy(attempt_row.get("advisory_flags"))
+            if isinstance(attempt_row.get("advisory_flags"), dict)
+            else {}
+        )
+        envelope = get_session_memory_envelope(advisory_flags)
+        retry_surface = envelope.get("retry_surface") if isinstance(envelope.get("retry_surface"), dict) else {}
+        verdict_surface = (
+            envelope.get("verdict_surface") if isinstance(envelope.get("verdict_surface"), dict) else {}
+        )
+        candidate_surface = envelope.get("candidate") if isinstance(envelope.get("candidate"), dict) else {}
+        contract_packet = self._build_stage4_attempt_contract_packet(
+            advisory_flags,
+            resolve_db_fallbacks=True,
+        )
+
+        candidate_key = str(
+            attempt_row.get("candidate_key")
+            or candidate_surface.get("candidate_key")
+            or envelope.get("candidate_key")
+            or ""
+        ).strip()
+        selected_label, selected_strategy_key = self._parse_stage4_candidate_key(candidate_key)
+        artifact_path = str(
+            attempt_row.get("artifact_path") or candidate_surface.get("artifact_path") or ""
+        ).strip()
+        content_hash = str(
+            attempt_row.get("content_hash") or candidate_surface.get("content_hash") or ""
+        ).strip()
+        best_manuscript = self._load_stage4_attempt_artifact_text(artifact_path)
+        fix_pack = dict(contract_packet.fix_pack or {})
+        repair_contract = dict(contract_packet.repair_contract or {})
+        scope_authority = dict(contract_packet.scope_authority or {})
+        gate_semantics = dict(contract_packet.gate_semantics or {})
+        scope_origin = (
+            dict(scope_authority.get("scope_origin") or {})
+            if isinstance(scope_authority.get("scope_origin"), dict)
+            else dict(gate_semantics.get("scope_origin") or {})
+            if isinstance(gate_semantics.get("scope_origin"), dict)
+            else dict(repair_contract.get("scope_origin") or {})
+            if isinstance(repair_contract.get("scope_origin"), dict)
+            else {}
+        )
+        conflict_contract = (
+            copy.deepcopy(advisory_flags.get("conflict_contract"))
+            if isinstance(advisory_flags.get("conflict_contract"), dict)
+            else {}
+        )
+        truth_pin_items = self._compact_truth_pin_items(
+            envelope.get("truth_pin_items"),
+            max_items=4,
+        )
+        if not truth_pin_items and isinstance(conflict_contract.get("truth_pins"), list):
+            truth_pin_items = self._compact_truth_pin_items(
+                conflict_contract.get("truth_pins"),
+                max_items=4,
+            )
+        truth_pins = self._compact_attempt_contract_dict(envelope.get("truth_pins"))
+        truth_pin_summary = self._summarize_truth_pin_items(truth_pin_items)
+        if truth_pin_summary:
+            truth_pins = {**truth_pin_summary, **truth_pins}
+        reuse_contract = (
+            copy.deepcopy(advisory_flags.get("reuse_contract"))
+            if isinstance(advisory_flags.get("reuse_contract"), dict)
+            else copy.deepcopy(gate_semantics.get("reuse_contract"))
+            if isinstance(gate_semantics.get("reuse_contract"), dict)
+            else {}
+        )
+        fix_pack_origin = (
+            copy.deepcopy(advisory_flags.get("fix_pack_origin"))
+            if isinstance(advisory_flags.get("fix_pack_origin"), dict)
+            else {}
+        )
+        runtime_advisory = str(
+            attempt_row.get("runtime_advisory") or retry_surface.get("runtime_advisory") or ""
+        ).strip()
+        retry_directives = str(
+            attempt_row.get("retry_directives") or retry_surface.get("retry_directives") or ""
+        ).strip()
+        director_feedback_text = str(
+            attempt_row.get("reject_reason") or verdict_surface.get("reject_reason") or ""
+        ).strip()
+        merged_feedback = "\n".join(
+            section for section in (director_feedback_text, runtime_advisory, retry_directives) if section
+        ).strip()
+        feedback_provenance = self._build_stage4_feedback_provenance_payload(
+            director_feedback=director_feedback_text,
+            runtime_advisory=runtime_advisory,
+            retry_directives=retry_directives,
+            merged_feedback=merged_feedback,
+        )
+        reject_bucket = self._resolve_stage4_resume_reject_bucket(
+            advisory_flags=advisory_flags,
+            envelope=envelope,
+            gate_semantics=gate_semantics,
+            failure_category=attempt_row.get("failure_category"),
+            primary_failure_layer=attempt_row.get("primary_failure_layer"),
+        )
+        validation_warnings = self._merge_stage4_resume_warning_lines(
+            advisory_flags.get("coverage_warnings"),
+            advisory_flags.get("candidate_warnings"),
+            advisory_flags.get("final_warnings"),
+            advisory_flags.get("warnings"),
+            envelope.get("coverage_warnings"),
+        )
+        contradiction_types = list(conflict_contract.get("contradiction_types") or [])
+        contradiction_details = list(conflict_contract.get("contradiction_details") or [])
+        if not contradiction_details:
+            contradiction_details = [
+                str(item.get("detail") or item.get("reason") or "").strip()
+                for item in (conflict_contract.get("conflicts") or [])
+                if isinstance(item, dict) and str(item.get("detail") or item.get("reason") or "").strip()
+            ]
+        try:
+            score_value = int(attempt_row.get("score") or verdict_surface.get("score") or 0)
+        except (TypeError, ValueError):
+            score_value = 0
+
+        payload: dict[str, object] = {
+            "strategy": selected_label,
+            "selected_strategy_key": selected_strategy_key,
+            "selected_strategy": selected_strategy_key,
+            "rejection_reason": director_feedback_text,
+            "merged_director_feedback": director_feedback_text,
+            "action_items": [],
+            "score": score_value,
+            "best_manuscript": best_manuscript,
+            "selection_reason": str(
+                attempt_row.get("selection_reason") or verdict_surface.get("selection_reason") or ""
+            ).strip(),
+            "verdict_reason": str(
+                attempt_row.get("verdict_reason") or verdict_surface.get("verdict_reason") or ""
+            ).strip(),
+            "director_verdict": str(gate_semantics.get("director_verdict") or "").strip(),
+            "final_verdict": str(attempt_row.get("verdict") or verdict_surface.get("verdict") or "").strip(),
+            "gate_basis": str(gate_semantics.get("gate_basis") or "").strip(),
+            "repair_scope": str(
+                gate_semantics.get("repair_scope")
+                or scope_authority.get("repair_scope")
+                or repair_contract.get("repair_scope")
+                or ""
+            ).strip(),
+            "validation_warnings": validation_warnings,
+            "reject_bucket": reject_bucket,
+            "consistency_checklist": {},
+            "_tot_used": dict(contract_packet.retry_budget_axes or {}).get("escalation") == "tot",
+            "_mad_used": dict(contract_packet.retry_budget_axes or {}).get("escalation") == "mad",
+            "state_updates": {},
+            "fix_scope": str(
+                scope_authority.get("fix_scope")
+                or attempt_row.get("fix_scope")
+                or retry_surface.get("fix_scope")
+                or ""
+            ).strip(),
+            "authoritative_fix_scope": str(
+                scope_authority.get("authoritative_fix_scope")
+                or gate_semantics.get("authoritative_fix_scope")
+                or repair_contract.get("authoritative_fix_scope")
+                or ""
+            ).strip(),
+            "fix_scope_reasoning": str(
+                attempt_row.get("fix_scope_reasoning") or retry_surface.get("fix_scope_reasoning") or ""
+            ).strip(),
+            "fix_pack": fix_pack,
+            "fix_pack_reason": str(self._evaluate_fix_pack_contract(fix_pack).get("reason", "") or ""),
+            "open_review": str(attempt_row.get("open_review") or verdict_surface.get("open_review") or "").strip(),
+            "error_category": str(
+                attempt_row.get("failure_category") or verdict_surface.get("failure_category") or ""
+            ).strip(),
+            "violation_families": [],
+            "contradiction_types": contradiction_types,
+            "contradiction_details": contradiction_details,
+            "firewall_triggered": bool(
+                str(gate_semantics.get("gate_basis") or "").strip() == "post_select_conflict"
+                or attempt_row.get("downstream_override_applied", False)
+            ),
+            "firewall_reason": str(gate_semantics.get("gate_basis") or "").strip(),
+            "director_feedback_text": director_feedback_text,
+            "runtime_advisory": runtime_advisory,
+            "retry_directives": retry_directives,
+            "strategy_feedback_map": {},
+            "feedback_provenance": feedback_provenance,
+            "attempt_key": str(attempt_row.get("attempt_key") or envelope.get("attempt_key") or "").strip(),
+            "candidate_key": candidate_key,
+            "content_hash": content_hash,
+            "artifact_path": artifact_path,
+            "retry_budget_axes": dict(contract_packet.retry_budget_axes or {}),
+            "repair_contract": repair_contract,
+            "scope_authority": scope_authority,
+            "coverage_warnings": list(envelope.get("coverage_warnings") or []),
+            "truth_pins": truth_pins,
+            "carryover_refs": dict(envelope.get("carryover_refs") or {}),
+            "cache_lineage": dict(envelope.get("cache_lineage") or {}),
+        }
+        if truth_pin_items:
+            payload["truth_pin_items"] = truth_pin_items
+        if conflict_contract:
+            payload["conflict_contract"] = conflict_contract
+        if reuse_contract:
+            payload["reuse_contract"] = reuse_contract
+        if fix_pack_origin:
+            payload["fix_pack_origin"] = fix_pack_origin
+        if scope_origin:
+            payload["scope_origin"] = scope_origin
+        scope_violation = gate_semantics.get("authoritative_fix_scope_violation")
+        if isinstance(scope_violation, dict) and scope_violation:
+            payload["authoritative_fix_scope_violation"] = dict(scope_violation)
+        strong_advisory = gate_semantics.get("strong_advisory_escalation")
+        if isinstance(strong_advisory, dict) and strong_advisory:
+            payload["strong_advisory_escalation"] = dict(strong_advisory)
+        if gate_semantics.get("post_select_fix_pack_preserved"):
+            payload["post_select_fix_pack_preserved"] = True
+        if (
+            payload["reject_bucket"] == "post_select_conflict"
+            and payload["director_verdict"] in {"PASS", "PASS_WITH_FIX"}
+            and payload["final_verdict"] == "REJECT"
+        ):
+            payload["provisional_pass_downgrade"] = True
+
+        history: list[dict] = []
+        for row in reversed(prior_rows or []):
+            snapshot = self._build_stage4_persisted_attempt_snapshot(row if isinstance(row, dict) else None)
+            if snapshot:
+                history.append(snapshot)
+        if history:
+            payload["prior_attempts"] = history[-3:]
+        return payload
+
+    def hydrate_persisted_stage4_previous_attempt(
+        self,
+        *,
+        next_ep: int,
+        arc_num: int,
+        previous_attempt: dict | None = None,
+    ) -> dict[str, object]:
+        if isinstance(previous_attempt, dict) and previous_attempt:
+            return previous_attempt
+
+        db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+        getter = getattr(db, "get_stage_attempts_for_arc", None)
+        if not callable(getter):
+            return {}
+
+        try:
+            rows = getter(arc_num, stages=(4,), limit=12) or []
+        except Exception as exc:
+            logging.debug("[Stage4Resume] stage_attempt hydration load failed: %s", exc)
+            return {}
+        if not isinstance(rows, list):
+            return {}
+
+        try:
+            episode_num = int(next_ep or 0)
+        except (TypeError, ValueError):
+            episode_num = 0
+        same_episode_rows = [
+            row for row in rows if isinstance(row, dict) and int(row.get("ep_num") or 0) == episode_num
+        ]
+        if not same_episode_rows:
+            return {}
+
+        latest_row = same_episode_rows[0]
+        latest_verdict = str(latest_row.get("verdict") or "").strip().upper()
+        if latest_verdict in {"PASS", "PASS_WITH_FIX"}:
+            return {}
+
+        hydrated = self._hydrate_stage4_previous_attempt_from_row(
+            latest_row,
+            prior_rows=same_episode_rows[1:],
+        )
+        if not hydrated:
+            return {}
+
+        try:
+            self.ctx.ui.log(
+                "   [Stage4Resume] Persisted previous attempt hydrated from stage_attempts",
+                stage="stage4",
+                component="resume",
+                ep_num=episode_num,
+                attempt_key=str(hydrated.get("attempt_key") or ""),
+                event_kind="resume",
+                meta={
+                    "arc_num": int(arc_num or 0),
+                    "source": "stage_attempts",
+                    "candidate_key": str(hydrated.get("candidate_key") or ""),
+                },
+            )
+        except Exception:
+            pass
+        return hydrated
 
     def _maybe_enrich_director_result(self, director_result: dict, manuscript_text: str = "") -> dict:
         try:
@@ -7850,6 +8318,7 @@ class Stage4InterviewRound:
         fix_scope_reasoning: str = "",
         runtime_advisory: str = "",
         retry_directives: str = "",
+        reject_bucket: str = "",
         failure_category: str = "",
         initial_verdict: str = "",
         is_patch: bool = False,
@@ -7875,6 +8344,7 @@ class Stage4InterviewRound:
             fix_scope_reasoning=fix_scope_reasoning,
             runtime_advisory=runtime_advisory,
             retry_directives=retry_directives,
+            reject_bucket=reject_bucket,
             failure_category=failure_category,
             initial_verdict=initial_verdict,
             is_patch=is_patch,
@@ -8040,6 +8510,7 @@ class Stage4InterviewRound:
             attempt_key=attempt_key,
             artifact_meta=artifact_meta,
             failure_category=error_category,
+            reject_bucket=reject_bucket,
             is_patch=is_patch,
             is_patch_fallback=patch_fallback,
             patch_strategy=patch_strategy,
@@ -8107,6 +8578,7 @@ class Stage4InterviewRound:
         is_patch: bool = False,
         is_patch_fallback: bool = False,
         patch_strategy: str = "",
+        reject_bucket: str = "",
     ) -> dict:
         advisory_flags = self._resolve_stage4_db_attempt_advisory_flags(advisory_flags)
         advisory_flags = self._with_stage4_session_memory_envelope(
@@ -8128,6 +8600,7 @@ class Stage4InterviewRound:
             fix_scope_reasoning=fix_scope_reasoning,
             runtime_advisory=runtime_advisory,
             retry_directives=retry_directives,
+            reject_bucket=reject_bucket,
             failure_category=failure_category,
             initial_verdict=initial_verdict,
             is_patch=is_patch,
@@ -8314,6 +8787,7 @@ class Stage4InterviewRound:
         is_patch: bool = False,
         is_patch_fallback: bool = False,
         patch_strategy: str = "",
+        reject_bucket: str = "",
         prelude: _Stage4AttemptPreludePayload,
     ) -> None:
         try:
@@ -8348,6 +8822,7 @@ class Stage4InterviewRound:
                     is_patch=is_patch,
                     is_patch_fallback=is_patch_fallback,
                     patch_strategy=patch_strategy,
+                    reject_bucket=reject_bucket,
                 )
             )
         except Exception as _sa_err:
@@ -8452,6 +8927,7 @@ class Stage4InterviewRound:
             is_patch=is_patch,
             is_patch_fallback=patch_fallback,
             patch_strategy=prelude.normalized_patch_strategy,
+            reject_bucket=reject_bucket,
             prelude=prelude,
         )
         return self._build_stage4_attempt_return_payload(prelude)

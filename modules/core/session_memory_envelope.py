@@ -53,6 +53,42 @@ def _merge_lists(*values: Any) -> list[Any]:
     return merged
 
 
+def _merge_truth_pin_items(*values: Any) -> list[dict[str, Any]]:
+    merged: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str, str]] = set()
+    for value in values:
+        if isinstance(value, Mapping):
+            candidates = [_as_dict(value)]
+        elif isinstance(value, (list, tuple)):
+            candidates = [_as_dict(item) for item in value if isinstance(item, Mapping)]
+        else:
+            candidates = []
+        for item in candidates:
+            if not item:
+                continue
+            marker = (
+                str(item.get("pin_key", "") or "").strip(),
+                str(item.get("family", "") or "").strip(),
+                str(item.get("expected", "") or "").strip(),
+                str(item.get("observed", "") or "").strip(),
+            )
+            if marker in seen:
+                continue
+            seen.add(marker)
+            merged.append(item)
+    return merged
+
+
+def _summarize_truth_pin_items(items: list[dict[str, Any]]) -> dict[str, Any]:
+    summary: dict[str, Any] = {}
+    for item in items:
+        pin_key = str(item.get("pin_key", "") or "").strip()
+        expected = _json_safe(item.get("expected"))
+        if pin_key and expected not in ("", None, [], {}):
+            summary[pin_key] = expected
+    return summary
+
+
 def build_stage4_session_memory_envelope(
     *,
     episode: int,
@@ -73,6 +109,7 @@ def build_stage4_session_memory_envelope(
     fix_scope_reasoning: str,
     runtime_advisory: str,
     retry_directives: str,
+    reject_bucket: str = "",
     failure_category: str,
     initial_verdict: str,
     is_patch: bool,
@@ -86,10 +123,15 @@ def build_stage4_session_memory_envelope(
     conflict_contract = _as_dict(advisory.get("conflict_contract"))
     fix_pack = _as_dict(advisory.get("fix_pack"))
 
-    truth_pins = _merge_dicts(
+    truth_pin_items = _merge_truth_pin_items(
         advisory.get("truth_pins"),
         gate_semantics.get("truth_pins"),
         conflict_contract.get("truth_pins"),
+    )
+    truth_pins = _merge_dicts(
+        advisory.get("truth_pins"),
+        gate_semantics.get("truth_pins"),
+        _summarize_truth_pin_items(truth_pin_items),
     )
     carryover_refs = _merge_dicts(
         advisory.get("carryover_refs"),
@@ -134,6 +176,7 @@ def build_stage4_session_memory_envelope(
             "fix_scope_reasoning": str(fix_scope_reasoning or ""),
             "runtime_advisory": str(runtime_advisory or ""),
             "retry_directives": str(retry_directives or ""),
+            "reject_bucket": str(reject_bucket or ""),
             "retry_budget_axes": _as_dict(advisory.get("retry_budget_axes")),
             "repair_contract": repair_contract,
             "scope_authority": scope_authority,
@@ -143,6 +186,7 @@ def build_stage4_session_memory_envelope(
             "patch_strategy": str(patch_strategy or ""),
         },
         "truth_pins": truth_pins,
+        "truth_pin_items": truth_pin_items,
         "carryover_refs": carryover_refs,
         "coverage_warnings": coverage_warnings,
         "cache_lineage": _as_dict(advisory.get("cache_lineage")),
@@ -160,3 +204,9 @@ def attach_session_memory_envelope(
         **_as_dict(envelope),
     }
     return merged
+
+
+def get_session_memory_envelope(advisory_flags: Mapping[str, Any] | None) -> dict[str, Any]:
+    if not isinstance(advisory_flags, Mapping):
+        return {}
+    return copy.deepcopy(_as_dict(advisory_flags.get(SESSION_MEMORY_ENVELOPE_KEY)))

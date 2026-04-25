@@ -1789,6 +1789,36 @@ JSON으로 출력:
         loop_state.plateau_advisory_emitted = reject_step.plateau_advisory_emitted
         loop_state.tf29_advisory_emitted = reject_step.tf29_advisory_emitted
 
+    def _hydrate_round_loop_resume_state(
+        self,
+        *,
+        round_ctx: _RoundContext,
+        loop_state: _InterviewRoundLoopState,
+    ) -> _InterviewRoundLoopState:
+        if isinstance(loop_state.previous_attempt, dict) and loop_state.previous_attempt:
+            return loop_state
+
+        hydrated = self.interview_round.hydrate_persisted_stage4_previous_attempt(
+            next_ep=round_ctx.next_ep,
+            arc_num=int((round_ctx.arc_data or {}).get("arc_no", 0) or 0),
+            previous_attempt=loop_state.previous_attempt,
+        )
+        if not hydrated:
+            return loop_state
+
+        loop_state.previous_attempt = hydrated
+        if not str(loop_state.director_feedback or "").strip():
+            feedback_provenance = hydrated.get("feedback_provenance")
+            if not isinstance(feedback_provenance, dict):
+                feedback_provenance = {}
+            loop_state.director_feedback = str(
+                feedback_provenance.get("merged_feedback")
+                or hydrated.get("merged_director_feedback")
+                or hydrated.get("rejection_reason")
+                or ""
+            ).strip()
+        return loop_state
+
     def _handle_round_outcome(self, *, round_ctx: _RoundContext) -> _RoundOutcome:
         """[4-R1-e-3] Run N-round interview loop (N = retry.director_max_attempts).
 
@@ -1799,6 +1829,10 @@ JSON으로 출력:
         next_ep = round_ctx.next_ep
 
         loop_state = self._build_interview_round_loop_state()
+        loop_state = self._hydrate_round_loop_resume_state(
+            round_ctx=round_ctx,
+            loop_state=loop_state,
+        )
         rounds_attempted = 0
 
         with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
