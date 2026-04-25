@@ -1,8 +1,8 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-25T04:48:19.797489+00:00",
+  "generated_at": "2026-04-25T05:19:04.779276+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 3,
+  "active_item_count": 2,
   "roadmap": {
     "temp_path": "docs/temp/execution-roadmap.md",
     "canonical_path": "docs/2026-04-24/active-temp-execution-roadmap.md",
@@ -10,23 +10,12 @@
   },
   "items": [
     {
-      "topic": "stage0-bi-tr-production-harness-normalization-remediation",
-      "temp_path": "docs/temp/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md",
-      "canonical_path": "docs/2026-04-02/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md",
-      "status": "in_progress",
-      "queue_role": "front_active",
-      "roadmap_rank": 1,
-      "depends_on": [],
-      "mirror_present": true,
-      "canonical_present": true
-    },
-    {
       "topic": "canary-root-isolation",
       "temp_path": "docs/temp/canary-root-isolation-execution-ssot.md",
       "canonical_path": "docs/2026-04-24/canary-root-isolation-execution-ssot.md",
       "status": "pending",
       "queue_role": "parked_future_wave",
-      "roadmap_rank": 2,
+      "roadmap_rank": 1,
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
@@ -37,7 +26,7 @@
       "canonical_path": "docs/2026-04-24/repo-trashbox-cleanup-execution-ssot.md",
       "status": "pending",
       "queue_role": "parked_future_wave",
-      "roadmap_rank": 3,
+      "roadmap_rank": 2,
       "depends_on": [
         "canary-root-isolation"
       ],
