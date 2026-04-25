@@ -1,14 +1,14 @@
 # Repo Trashbox Cleanup Execution SSOT
 
 Date: 2026-04-24
-Status: in-progress (2026-04-25 reference-check tranche complete; no cleanup move authorized)
+Status: in-progress (2026-04-25 reference-check and move-plan tranches complete; no cleanup move authorized)
 Canonical Path: `docs/2026-04-24/repo-trashbox-cleanup-execution-ssot.md`
 Temp Mirror Path: `docs/temp/repo-trashbox-cleanup-execution-ssot.md`
 Commit State:
 - Baseline Commit: `143cee26d879d5de59ef43757f851e89b8d551c7`
 - Baseline Dirty Summary: `dirty: local runtime project outputs, benchmark index, .gitignore key ignore, and new 2026-04-24 hygiene docs; no trashbox file move performed`
-- Resume Commit: `8ec8435d11e68cdc8ea8f2a431a13a20bfdffcfe`
-- Resume Drift Summary: `canary-root-isolation merged and closed; repo-trashbox-cleanup is the only remaining temp queue item and was opened on branch feat/repo-trashbox-reference-check for reference-check only`
+- Resume Commit: `aed6e2ba2ba3b69c9278ff9484e31ca89bd6d1ba`
+- Resume Drift Summary: `reference-check merged via PR #17; repo-trashbox-cleanup moved to quarantine move planning on branch feat/repo-trashbox-move-plan without file movement`
 Source Survey Docs:
 - `docs/2026-04-24/repo-trashbox-candidate-survey.md`
 - `docs/2026-04-24/repo-trashbox-cleanup-adversarial-3pass-audit.md`
@@ -16,6 +16,7 @@ Source Survey Docs:
 - `docs/2026-04-24/ops-sync-harness-current-state-survey.md`
 - `docs/2026-04-25/repo-trashbox-cleanup-fresh-reaudit.md`
 - `docs/2026-04-25/repo-trashbox-reference-check.md`
+- `docs/2026-04-25/repo-trashbox-quarantine-move-plan.md`
 Evidence Artifacts:
 - `modules/core/runtime_paths.py`
 - `배포_패키징.ps1`
@@ -41,10 +42,10 @@ execution_meta:
       title: Candidate reference and runtime dependency check
     - id: quarantine-move-plan
       title: Trashbox quarantine move plan
-    - id: git-tracking-cleanup
-      title: Git tracking and ignore cleanup
     - id: packaging-scan-scope
       title: Packaging and security-scan scope cleanup
+    - id: git-tracking-cleanup
+      title: Git tracking and ignore cleanup
 ```
 
 ## 1. Intent
@@ -63,7 +64,7 @@ On the current PC, the proposed local holding area is:
 C:\Users\PC\Desktop\글도비_쓰레기통
 ```
 
-This document still does not authorize a move. The current active scope is reference-check and Git policy preparation only.
+This document still does not authorize a move. The reference-check and quarantine move-plan tranches are complete; the next safe implementation scope is packaging and ignore policy, not tracked-file removal.
 
 ## 2. Baseline Facts
 
@@ -150,7 +151,7 @@ Class C - Separate lane:
 
 File writes / artifacts:
 
-- Future work may move files to `C:\Users\wjjo\Desktop\글도비_쓰레기통`.
+- Future local-only quarantine work may copy files to `C:\Users\PC\Desktop\글도비_쓰레기통`.
 - This parking pass writes documentation only.
 
 DB / schema / transaction boundaries:
@@ -195,9 +196,9 @@ The canonical repo docs remain the SSOT. GitHub Issues and ClickUp are only visi
 ## 8. Execution Tranches
 
 1. Candidate reference and runtime dependency check (complete on 2026-04-25; no move authorized)
-2. Trashbox quarantine move plan (next, requires Git policy decision)
-3. Git tracking and ignore cleanup
-4. Packaging and security-scan scope cleanup
+2. Trashbox quarantine move plan (complete on 2026-04-25; no move authorized)
+3. Packaging and security-scan scope cleanup (next)
+4. Git tracking and ignore cleanup
 
 ## 9. Acceptance Criteria
 
