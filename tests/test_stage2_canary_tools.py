@@ -79,7 +79,7 @@ def _seed_stage2_source_project(root: Path) -> None:
 
 def test_prepare_stage2_canary_project_rewinds_arc_payloads_and_logs(tmp_path):
     source = tmp_path / "source_project"
-    target = tmp_path / "target_project"
+    target = tmp_path / "canary" / "target_project"
     _seed_stage2_source_project(source)
 
     result = prepare_stage2_canary_project(source, target, keep_arcs=3)

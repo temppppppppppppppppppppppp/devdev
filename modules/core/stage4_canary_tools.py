@@ -82,6 +82,7 @@ def prepare_stage2_canary_project(
         raise FileNotFoundError(f"source project not found: {source}")
     if source.resolve() == target.resolve():
         raise ValueError("source and target project must be different for stage2 canary prep")
+    _validate_canary_target_boundary(source, target)
     if target.exists():
         if not force:
             raise FileExistsError(f"target project already exists: {target}")
@@ -205,6 +206,7 @@ def prepare_stage3_canary_project(
         raise FileNotFoundError(f"source project not found: {source}")
     if source.resolve() == target.resolve():
         raise ValueError("source and target project must be different for stage3 canary prep")
+    _validate_canary_target_boundary(source, target)
     if target.exists():
         if not force:
             raise FileExistsError(f"target project already exists: {target}")
@@ -822,6 +824,7 @@ def prepare_stage4_canary_project(
         raise FileNotFoundError(f"source project not found: {source}")
     if source.resolve() == target.resolve():
         raise ValueError("source and target project must be different for canary prep")
+    _validate_canary_target_boundary(source, target)
     if target.exists():
         if not force:
             raise FileExistsError(f"target project already exists: {target}")
@@ -859,6 +862,7 @@ def prepare_stage34_canary_project(
         raise FileNotFoundError(f"source project not found: {source}")
     if source.resolve() == target.resolve():
         raise ValueError("source and target project must be different for stage3/4 canary prep")
+    _validate_canary_target_boundary(source, target)
     if target.exists():
         if not force:
             raise FileExistsError(f"target project already exists: {target}")
@@ -2062,6 +2066,47 @@ def _remove_path(path: Path) -> None:
         shutil.rmtree(path)
         return
     path.unlink(missing_ok=True)
+
+
+def _validate_canary_target_boundary(source: Path, target: Path) -> None:
+    source_root = source.resolve()
+    target_root = target.resolve()
+    if source_root == target_root:
+        raise ValueError("source and target project must be different for canary prep")
+    try:
+        source_root.relative_to(target_root)
+    except ValueError:
+        pass
+    else:
+        raise ValueError("canary target must not contain the source project")
+
+    app_root = _APP_ROOT.resolve()
+    try:
+        target_root.relative_to(app_root)
+    except ValueError:
+        if not _has_canary_boundary_segment(target_root):
+            raise ValueError("external canary target must include a canary boundary segment")
+        return
+
+    if any(_is_relative_to(target_root, root) for root in _allowed_canary_roots()):
+        return
+    raise ValueError("canary target must stay under the workspace canary root")
+
+
+def _allowed_canary_roots() -> tuple[Path, Path]:
+    return ((_APP_ROOT / "canary").resolve(), (_APP_ROOT / "projects" / "_canary").resolve())
+
+
+def _is_relative_to(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    return path != root
+
+
+def _has_canary_boundary_segment(path: Path) -> bool:
+    return any(part.lower() in {"canary", "_canary"} for part in path.parts)
 
 
 def _read_json(path: Path) -> dict:

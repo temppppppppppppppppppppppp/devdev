@@ -28,7 +28,7 @@ def load_stage4_policy_digest() -> dict[str, Any]:
             "max_rounds": None,
         },
         "exhaustion": {
-            "allow_best_manuscript_adoption": True,
+            "allow_best_manuscript_adoption": False,
             "default_operator_choice": 2,
         },
         "shadow_mode": {
