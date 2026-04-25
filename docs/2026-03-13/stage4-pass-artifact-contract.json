@@ -1,0 +1,129 @@
+{
+  "contract_id": "stage4-pass-artifact-contract-v2",
+  "status": "active",
+  "primary_source": "modules/core/stage4_post_processor.py",
+  "owner": "Stage4PostProcessor.process_pass_result",
+  "pass_result_surface": {
+    "bool_true_means": "all hard PASS settlement sinks completed",
+    "bool_false_means": "one or more hard PASS settlement sinks failed",
+    "notes": [
+      "Stage4 PASS is authoritative only after manuscript DB persistence, post-pass metadata settlement, settlement packet export, and human-facing txt export complete.",
+      "The stage4_pass_settlement_status audit/ui event records the exact partial or full settlement state."
+    ]
+  },
+  "settlement_status_codes": {
+    "primary_db_failed": {
+      "manuscript_persisted": false,
+      "metadata_settled": false,
+      "settlement_packet_persisted": false,
+      "human_export_persisted": false,
+      "fully_settled": false
+    },
+    "primary_persisted_meta_failed": {
+      "manuscript_persisted": true,
+      "metadata_settled": false,
+      "settlement_packet_persisted": false,
+      "human_export_persisted": false,
+      "fully_settled": false
+    },
+    "settlement_packet_failed": {
+      "manuscript_persisted": true,
+      "metadata_settled": true,
+      "settlement_packet_persisted": false,
+      "human_export_persisted": false,
+      "fully_settled": false
+    },
+    "human_export_failed": {
+      "manuscript_persisted": true,
+      "metadata_settled": true,
+      "settlement_packet_persisted": true,
+      "human_export_persisted": false,
+      "fully_settled": false
+    },
+    "fully_settled": {
+      "manuscript_persisted": true,
+      "metadata_settled": true,
+      "settlement_packet_persisted": true,
+      "human_export_persisted": true,
+      "fully_settled": true
+    }
+  },
+  "hard_sinks": [
+    {
+      "sink_id": "manuscript_db_commit",
+      "storage": "DB",
+      "method": "current_project.db.save_manuscript",
+      "owner_step": "initial manual transaction block in process_pass_result",
+      "failure_effect": "return_false",
+      "settlement_status": "primary_db_failed"
+    },
+    {
+      "sink_id": "episode_bible_db_commit",
+      "storage": "DB",
+      "method": "current_project.db.save_episode_bible",
+      "owner_step": "_collect_manager_and_build_delta",
+      "failure_effect": "_meta_save_failed=true then return_false",
+      "audit_event": "episode_bible_save_failed",
+      "settlement_status": "primary_persisted_meta_failed"
+    },
+    {
+      "sink_id": "settlement_packet_export",
+      "storage": "filesystem",
+      "method": "_persist_stage4_settlement_packet",
+      "owner_step": "post-pass hard artifact settlement",
+      "failure_effect": "return_false",
+      "audit_event": "stage4_settlement_packet_save_failed",
+      "settlement_status": "settlement_packet_failed"
+    },
+    {
+      "sink_id": "human_facing_txt_export",
+      "storage": "filesystem",
+      "method": "_write_human_facing_manuscript_export",
+      "owner_step": "post-pass hard artifact settlement",
+      "failure_effect": "return_false",
+      "audit_event": "stage4_human_facing_export_failed",
+      "settlement_status": "human_export_failed"
+    }
+  ],
+  "soft_sinks": [
+    {
+      "sink_id": "state_log_summary",
+      "storage": "DB",
+      "method": "current_project.db.save_state_log_with_summary",
+      "soft_failure_operation": "save_state_log_with_summary"
+    },
+    {
+      "sink_id": "world_state_and_fact_ledger_atomic",
+      "storage": "world_state + fact_ledger",
+      "method": "_save_world_state_atomic",
+      "soft_failure_operation": "save_world_state_atomic"
+    },
+    {
+      "sink_id": "episode_quality_label_sidecar",
+      "storage": "DB",
+      "method": "current_project.db.save_episode_quality_label",
+      "soft_failure_operation": "save_episode_quality_label"
+    },
+    {
+      "sink_id": "episode_quality_signal_sidecar",
+      "storage": "DB",
+      "method": "current_project.db.save_episode_quality_signal",
+      "soft_failure_operation": "save_episode_quality_signal"
+    }
+  ],
+  "operator_surface": {
+    "authoritative_pass": [
+      "process_pass_result returns True",
+      "stage4_pass_settlement_status.fully_settled is true"
+    ],
+    "partial_or_failed_settlement": [
+      "process_pass_result returns False",
+      "stage4_pass_settlement_status.fully_settled is false",
+      "settlement_status identifies the highest completed hard sink"
+    ],
+    "soft_degraded": [
+      "process_pass_result returns True",
+      "soft_failures.jsonl records stage4_post_processor.* operation rows"
+    ]
+  }
+}

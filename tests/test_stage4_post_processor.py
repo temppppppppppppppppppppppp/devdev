@@ -102,6 +102,14 @@ class TestProcessPassResult:
 
         return Stage4PostProcessor(ctx)
 
+    @staticmethod
+    def _settlement_status_payloads(pp):
+        return [
+            call.args[2]
+            for call in pp.ctx.audit_event.call_args_list
+            if len(call.args) >= 3 and call.args[0] == "stage4_pass_settlement_status"
+        ]
+
     def test_returns_true_on_success(self, tmp_path):
         pp = self._make_pp()
         pp.ctx.current_project.db.save_manuscript.return_value = True
@@ -129,6 +137,11 @@ class TestProcessPassResult:
         assert settlement["manuscript"]["char_count"] == len(normalized_manuscript)
         assert settlement["settlement"]["meta_save_failed"] is False
         assert settlement["artifacts"]["human_facing_txt_path"].endswith("ep_0001.txt")
+        status_payloads = self._settlement_status_payloads(pp)
+        assert status_payloads[-1]["settlement_status"] == "fully_settled"
+        assert status_payloads[-1]["fully_settled"] is True
+        assert status_payloads[-1]["manuscript_persisted"] is True
+        pp.ctx.current_project.db.save_ui_event.assert_called()
 
     def test_returns_false_on_db_failure(self, tmp_path):
         pp = self._make_pp()
@@ -153,6 +166,9 @@ class TestProcessPassResult:
         dump_text = dump_path.read_text(encoding="utf-8")
         assert "# 테스트" in dump_text
         assert manuscript[:40] in dump_text
+        status_payloads = self._settlement_status_payloads(pp)
+        assert status_payloads[-1]["settlement_status"] == "primary_db_failed"
+        assert status_payloads[-1]["manuscript_persisted"] is False
 
     def test_returns_false_and_logs_when_meta_save_fails(self, tmp_path):
         pp = self._make_pp()
@@ -184,6 +200,10 @@ class TestProcessPassResult:
         pp._persist_stage4_settlement_packet.assert_not_called()
         pp._write_human_facing_manuscript_export.assert_not_called()
         pp._finalize_pass_result_session.assert_not_called()
+        status_payloads = self._settlement_status_payloads(pp)
+        assert status_payloads[-1]["settlement_status"] == "primary_persisted_meta_failed"
+        assert status_payloads[-1]["manuscript_persisted"] is True
+        assert status_payloads[-1]["fully_settled"] is False
 
     def test_returns_false_when_settlement_packet_save_fails(self, tmp_path):
         pp = self._make_pp()
@@ -210,11 +230,15 @@ class TestProcessPassResult:
         )
 
         assert result is False
-        pp.ctx.audit_event.assert_called_once_with(
+        pp.ctx.audit_event.assert_any_call(
             "stage4_settlement_packet_save_failed",
             "stage4 settlement packet save failed",
             {"ep": 3},
         )
+        status_payloads = self._settlement_status_payloads(pp)
+        assert status_payloads[-1]["settlement_status"] == "settlement_packet_failed"
+        assert status_payloads[-1]["metadata_settled"] is True
+        assert status_payloads[-1]["settlement_packet_persisted"] is False
         pp._write_human_facing_manuscript_export.assert_not_called()
         pp._finalize_pass_result_session.assert_not_called()
 
@@ -244,11 +268,15 @@ class TestProcessPassResult:
 
         assert result is False
         pp._persist_stage4_settlement_packet.assert_called_once()
-        pp.ctx.audit_event.assert_called_once_with(
+        pp.ctx.audit_event.assert_any_call(
             "stage4_human_facing_export_failed",
             "stage4 human-facing txt export failed",
             {"ep": 3},
         )
+        status_payloads = self._settlement_status_payloads(pp)
+        assert status_payloads[-1]["settlement_status"] == "human_export_failed"
+        assert status_payloads[-1]["settlement_packet_persisted"] is True
+        assert status_payloads[-1]["human_export_persisted"] is False
         pp._finalize_pass_result_session.assert_not_called()
 
     def test_hud_update_called(self, tmp_path):
