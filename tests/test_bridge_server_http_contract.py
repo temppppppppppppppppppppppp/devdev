@@ -48,11 +48,13 @@ class _DummyRunner:
         self.run_id = run_id
         self.pid = 12345
 
-    async def stop(self) -> None:
+    async def stop(self) -> dict:
+        diagnostics = dict(self._diagnostics)
         self.stop_calls += 1
         self.state = "idle"
         self.run_id = None
         self.pid = None
+        return diagnostics
 
     def get_runtime_diagnostics(self) -> dict:
         return dict(self._diagnostics)
@@ -61,9 +63,21 @@ class _DummyRunner:
 class _DummyPromptBroker:
     def __init__(self, snapshot: dict | None = None) -> None:
         self.snapshot = snapshot or {"pending_prompt_count": 0, "pending_prompts": []}
+        self.cleanup_calls: list[str] = []
 
     def snapshot_run(self, run_id: str) -> dict:
         return dict(self.snapshot)
+
+    def cleanup_run(self, run_id: str) -> None:
+        self.cleanup_calls.append(run_id)
+
+
+class _DummyWSManager:
+    def __init__(self) -> None:
+        self.events: list[dict] = []
+
+    async def broadcast(self, event: dict) -> None:
+        self.events.append(event)
 
 
 def test_status_returns_runtime_state_model(tmp_path):
@@ -128,6 +142,38 @@ def test_status_includes_runtime_resync_snapshot_when_prompt_is_pending(tmp_path
     assert payload["data"]["last_prompt_step"] == "choice"
     assert payload["data"]["pending_prompt_count"] == 1
     assert payload["data"]["pending_prompts"] == [pending_prompt]
+
+
+def test_stop_cleans_prompt_broker_and_broadcasts_diagnostics(tmp_path):
+    broker = _DummyPromptBroker()
+    ws_manager = _DummyWSManager()
+
+    with TestClient(app) as client:
+        client.app.state.runner = _DummyRunner(
+            state="running",
+            run_id="run-stop",
+            pid=999,
+            diagnostics={
+                "key": "4",
+                "mode": "B",
+                "stderr_tail": ["last stderr"],
+                "failure_phase": "stderr",
+            },
+        )
+        client.app.state.prompt_broker = broker
+        client.app.state.ws_manager = ws_manager
+        client.app.state.control_plane_provenance_log_path = tmp_path / "missing-control-plane-provenance.jsonl"
+
+        response = client.post("/stop")
+
+    assert response.status_code == 200
+    assert broker.cleanup_calls == ["run-stop"]
+    assert len(ws_manager.events) == 1
+    event = ws_manager.events[0]
+    assert event["run_id"] == "run-stop"
+    assert event["type"] == "run_stopped"
+    assert event["payload"]["stderr_tail"] == ["last stderr"]
+    assert event["payload"]["failure_phase"] == "stderr"
 
 
 def test_status_surfaces_control_plane_provenance_summary_when_log_exists(tmp_path):

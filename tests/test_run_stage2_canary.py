@@ -82,3 +82,15 @@ def test_parse_args_full_stage2_canary():
     assert args.keep_arcs == 3
     assert args.target_arc_count == 2
     assert args.force is True
+
+
+def test_stage2_run_main_returns_nonzero_on_failed_hard_gates():
+    with (
+        patch("sys.argv", ["run_stage2_canary.py", "run", "--project", "s2", "--target-arc-count", "2"]),
+        patch.object(
+            canary_script,
+            "run_canary",
+            return_value={"hard_gates": {"status": "fail"}, "benchmark_archive": {"status": "ok"}},
+        ),
+    ):
+        assert canary_script.main() == 1
