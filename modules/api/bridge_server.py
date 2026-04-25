@@ -2588,11 +2588,14 @@ async def stop_endpoint(request: Request) -> JSONResponse:
     실행 중이 아니어도 200 OK 반환.
     """
     runner: ProcessRunner = request.app.state.runner
+    broker: PromptBroker = request.app.state.prompt_broker
     ws_manager: WSManager = request.app.state.ws_manager
     run_id = runner.run_id or "unknown"
 
-    await runner.stop()
-    await ws_manager.broadcast(_build_event(run_id, "run_stopped", {}))
+    stop_payload = await runner.stop()
+    if run_id != "unknown":
+        broker.cleanup_run(run_id)
+    await ws_manager.broadcast(_build_event(run_id, "run_stopped", stop_payload or {}))
     logger.info("STOP run_id=%r", run_id)
 
     return JSONResponse(status_code=200, content=_ok("stopped"))

@@ -28,6 +28,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from scripts.benchmark_archive_runtime import safe_archive_benchmark_record  # noqa: E402
 from scripts.canary_path_utils import project_name_from_path, resolve_workspace_project_dir  # noqa: E402
+from scripts.canary_semantic_exit import guarded_stage4_exit_code  # noqa: E402
 from scripts.run_stage4_direct_supervised import (  # noqa: E402
     _load_latest_written_ep,
     _load_project_genre,
@@ -82,7 +83,7 @@ def main() -> int:
         termination_grace_seconds=args.termination_grace_seconds,
     )
     print(json.dumps(payload, ensure_ascii=False, indent=2))
-    return 0
+    return guarded_stage4_exit_code(payload)
 
 
 def run_guarded_stage4(

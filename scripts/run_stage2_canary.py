@@ -22,6 +22,7 @@ from scripts.canary_path_utils import (  # noqa: E402
     project_name_from_path,
     resolve_workspace_project_dir,
 )
+from scripts.canary_semantic_exit import semantic_exit_code  # noqa: E402
 from scripts.regression_validation_tiers import FULL_CANARY_PROOF  # noqa: E402
 
 VALIDATION_TIER = FULL_CANARY_PROOF
@@ -73,7 +74,7 @@ def main() -> int:
             expected_final_arcs=args.expected_final_arcs,
         )
         _print_json(payload)
-        return 0
+        return semantic_exit_code(payload)
 
     if args.command == "analyze":
         payload = analyze_canary(args.project, expected_final_arcs=args.expected_final_arcs)
@@ -91,7 +92,7 @@ def main() -> int:
         expected_final_arcs=expected_final_arcs,
     )
     _print_json(payload)
-    return 0
+    return semantic_exit_code(payload)
 
 
 def prepare_canary(source_project: str, target_project: str, *, keep_arcs: int, force: bool) -> dict:
