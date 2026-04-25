@@ -67,6 +67,22 @@
       "test_mode/projects",
       "lite_mode/projects"
     ],
+    "removed_tracked_temp_paths": [
+      "temp-electron-paths.js",
+      "temp-proc-poll-oswarn.ps1",
+      "temp-proc-poll.ps1",
+      "temp-proc-trace.ps1",
+      "temp-run-packaged-ascii.ps1",
+      "temp-run-packaged.ps1",
+      "temp.txt",
+      "temp/yt_test/xc6znHjNFOI/xc6znHjNFOI.info.json",
+      "temp/yt_test/xc6znHjNFOI/xc6znHjNFOI.ko.json3",
+      "temp_triage_test.json",
+      "temp_시리즈.txt"
+    ],
+    "preserved_evidence_files": [
+      "0_temp.txt"
+    ],
     "removed_tracked_files": [
       "crash_dump.log",
       "error.log",
@@ -79,8 +95,12 @@
       "test_mode/projects",
       "lite_mode/projects"
     ],
-    "globs": [
-      "temp-*"
+    "ignored_future_root_temp_paths": [
+      "/temp-*",
+      "/temp.txt",
+      "/temp_*.txt",
+      "/temp_triage_test.json",
+      "/temp/"
     ]
   }
 }

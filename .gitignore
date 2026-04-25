@@ -56,6 +56,13 @@ tmp_stage2_digest_debug/
 test_mode/projects/
 lite_mode/projects/
 
+# === 루트 임시 파일/디렉터리 ===
+/temp-*
+/temp.txt
+/temp_*.txt
+/temp_triage_test.json
+/temp/
+
 # === Gemini 관련 ===
 .gemini/
 
