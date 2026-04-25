@@ -27,7 +27,6 @@ from modules.core.partial_fix_contract import (
     normalize_repair_trace_entries,
 )
 from modules.core.session_memory_envelope import (
-    SESSION_MEMORY_ENVELOPE_KEY,
     attach_session_memory_envelope,
     build_stage4_session_memory_envelope,
     get_session_memory_envelope,
@@ -466,9 +465,6 @@ def _build_stage4_attempt_contract_projection(
         strong_advisory = contract_packet.gate_semantics.get("strong_advisory_escalation")
         if isinstance(strong_advisory, dict):
             projection["strong_advisory_escalation"] = strong_advisory
-    session_memory_envelope = contract_packet.advisory_flags.get(SESSION_MEMORY_ENVELOPE_KEY)
-    if isinstance(session_memory_envelope, dict):
-        projection[SESSION_MEMORY_ENVELOPE_KEY] = session_memory_envelope
     return projection
 
 

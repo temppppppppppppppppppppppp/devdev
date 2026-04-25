@@ -45,7 +45,7 @@ def _coerce_direct_financial_scalar(raw: object) -> float | None:
     """Normalize direct financial scalar fields into won-scale floats."""
     if isinstance(raw, bool):
         return None
-    if isinstance(raw, (int, float)):
+    if isinstance(raw, int | float):
         return float(raw)
     if not isinstance(raw, str):
         return None
@@ -100,6 +100,16 @@ def _is_carryover_baseline_number_key(key: object) -> bool:
     if not token:
         return False
     return any(marker in token for marker in _CARRYOVER_BASELINE_KEY_MARKERS)
+
+
+def _load_anchor_with_status(db, key: str) -> tuple[bool, object, str | None]:
+    loader = getattr(db, "load_anchor_with_status", None)
+    if callable(loader):
+        status = loader(key, default=None)
+        if isinstance(status, dict):
+            return bool(status.get("found")), status.get("data"), status.get("error")
+    raw = db.load_anchor(key)
+    return bool(raw), raw, None
 
 
 def _resolve_number_authority_scope(key: object, info: dict | None) -> str:
@@ -199,7 +209,11 @@ class FactLedger:
     def _load(self) -> dict:
         """DB anchor에서 팩트 원장 로드. 없으면 빈 스키마 반환."""
         try:  # [V70] DB 오류 시 비차단 (WorldStateManager._load_or_init 패턴)
-            raw = self.db.load_anchor("fact_ledger")
+            _found, raw, load_error = _load_anchor_with_status(self.db, "fact_ledger")
+            if load_error:
+                self._degraded = True
+                self._degraded_reason = f"fact_ledger anchor load failed: {load_error}"
+                return self._empty_ledger()
             if raw and isinstance(raw, dict):
                 # 스키마 보강: 누락된 키가 있으면 추가 (마이그레이션)
                 defaults = self._empty_ledger()
@@ -234,8 +248,18 @@ class FactLedger:
 
     def save(self) -> bool:
         """팩트 원장을 DB anchor에 저장."""
+        if self._degraded:
+            self.last_save_ok = False
+            self.last_save_error = f"refusing to overwrite after degraded load: {self.degraded_reason}"
+            _logger.warning("[V68] 팩트 원장 저장 차단: %s", self.last_save_error)
+            return False
         try:
-            self.db.save_anchor("fact_ledger", self._ledger)
+            saved = self.db.save_anchor("fact_ledger", self._ledger)
+            if saved is not True:
+                self.last_save_ok = False
+                self.last_save_error = f"save_anchor returned {saved!r}"
+                _logger.warning("[V68] 팩트 원장 저장 실패: %s", self.last_save_error)
+                return False
             self.last_save_ok = True
             self.last_save_error = None
             return True
@@ -308,7 +332,9 @@ class FactLedger:
             npc = rel.get("npc", "") or rel.get("target", "")  # [G17] analyst 프롬프트는 "target" 키 사용
             # [IFC] Sink-side guard: scalarize dict actor refs to prevent unhashable-type errors
             if isinstance(npc, dict):
-                npc = str(npc.get("name") or npc.get("npc") or next((v for v in npc.values() if isinstance(v, str)), str(npc)))
+                npc = str(
+                    npc.get("name") or npc.get("npc") or next((v for v in npc.values() if isinstance(v, str)), str(npc))
+                )
             npc = str(npc).strip()
             if npc:
                 self._upsert_character(

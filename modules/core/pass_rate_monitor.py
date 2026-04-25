@@ -150,9 +150,13 @@ class PassRateMonitor:
                 with open(self.log_path, encoding="utf-8") as f:
                     data = json.load(f)
                     fields = set(AttemptRecord.__dataclass_fields__.keys())
-                    self.records = [
-                        AttemptRecord(**{k: v for k, v in r.items() if k in fields}) for r in data.get("records", [])
-                    ]
+                    self.records = []
+                    for record in data.get("records", []):
+                        if not isinstance(record, dict):
+                            continue
+                        payload = {k: v for k, v in record.items() if k in fields}
+                        payload.setdefault("timestamp", data.get("session_start") or datetime.now().isoformat())
+                        self.records.append(AttemptRecord(**payload))
             except Exception as e:
                 logging.warning(f" [PassRateMonitor] 기록 로드 실패: {e}")
                 self.records = []
@@ -342,8 +346,7 @@ class PassRateMonitor:
             prev_score=prev_score,
             patch_fallback=patch_fallback,
             attempt_key=str(
-                attempt_key
-                or build_attempt_key(stage=stage, ep_num=episode, arc_num=arc, attempt_num=attempt_num)
+                attempt_key or build_attempt_key(stage=stage, ep_num=episode, arc_num=arc, attempt_num=attempt_num)
             ),
             final_verdict=str(final_verdict or ""),
             director_verdict=str(director_verdict or ""),
@@ -590,7 +593,9 @@ class PassRateMonitor:
 
             max_attempt_num = max(int(getattr(record, "attempt_num", 0) or 0) for record in episode_records)
             attempts = max(len(episode_records), max_attempt_num)
-            token_cost_usd = sum(max(0.0, float(getattr(record, "token_cost", 0.0) or 0.0)) for record in episode_records)
+            token_cost_usd = sum(
+                max(0.0, float(getattr(record, "token_cost", 0.0) or 0.0)) for record in episode_records
+            )
             duration_ms = sum(max(0, int(getattr(record, "duration_ms", 0) or 0)) for record in episode_records)
             quality_entry = quality_by_episode[ep_num]
             calculation = calculate_episode_rol(

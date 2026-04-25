@@ -389,7 +389,7 @@ class BaseAgent:
             return False
 
         payload = {
-            "component": self._agent_name,
+            "component": getattr(self, "_agent_name", self.__class__.__name__),
             "event_kind": "agent_log",
             "stage": self._resolve_operator_stage_label(),
             "ep_num": self._resolve_episode_number(),
@@ -606,6 +606,9 @@ class BaseAgent:
         api_elapsed_ms: int | None = None,
         retry_count: int | None = None,
         continuation_count: int | None = None,
+        context_cache_name: str | None = None,
+        context_cache_content_hash: str | None = None,
+        context_cache_outcome: str | None = None,
     ) -> None:
         """Non-blocking DB write for LLM call telemetry."""
         try:
@@ -677,6 +680,9 @@ class BaseAgent:
                 api_elapsed_ms=api_elapsed_ms,
                 retry_count=retry_count,
                 continuation_count=continuation_count,
+                context_cache_name=context_cache_name,
+                context_cache_content_hash=context_cache_content_hash,
+                context_cache_outcome=context_cache_outcome,
             )
         except Exception as _e:
             logging.debug("[llm_call_log] save failed: %s", _e)
@@ -2241,6 +2247,34 @@ class BaseAgent:
     _CONTEXT_CACHE_MAX = int(_SYSTEM_CFG.get("cache", {}).get("context_max_entries", 50))
     _MIN_CACHE_CONTENT = int(_SYSTEM_CFG.get("cache", {}).get("min_content_chars", 50000))
 
+    @classmethod
+    def _context_cache_lineage_by_name(cls, cache_name: str) -> dict:
+        if not cache_name:
+            return {}
+        with cls._cache_lock:
+            for cache_key, info in cls._context_caches.items():
+                if isinstance(info, dict) and info.get("name") == cache_name:
+                    return {
+                        "cache_key": cache_key,
+                        "cache_name": cache_name,
+                        "content_hash": str(info.get("content_hash") or ""),
+                    }
+        return {"cache_name": cache_name, "content_hash": ""}
+
+    @classmethod
+    def _evict_context_cache_by_name(cls, cache_name: str) -> int:
+        if not cache_name:
+            return 0
+        with cls._cache_lock:
+            stale_keys = [
+                cache_key
+                for cache_key, info in cls._context_caches.items()
+                if isinstance(info, dict) and info.get("name") == cache_name
+            ]
+            for cache_key in stale_keys:
+                cls._context_caches.pop(cache_key, None)
+        return len(stale_keys)
+
     def _get_or_create_context_cache(
         self, cache_type: str, content: str, ttl_seconds: int = 1800, project_name: str = ""
     ) -> dict:
@@ -2400,6 +2434,43 @@ class BaseAgent:
                 "reason": cache_reason,
             }
 
+    def _build_cached_context_request(
+        self,
+        *,
+        cache_name: str,
+        prompt: str,
+        temperature: float,
+        thinking_level,
+        response_schema,
+    ) -> tuple[str, object]:
+        directives = self._escape_braces(getattr(self.context, "author_directives", ""))
+        wrapped_prompt = (
+            f"### [AUTHOR'S ABSOLUTE DIRECTIVES]\n{directives}\n\n"
+            f"### [TASK]\n{prompt}\n\n"
+            f"### [FORMAT]\nRespond ONLY in valid JSON format."
+        )
+        wrapped_prompt = self._apply_prompt_size_gate(wrapped_prompt)
+
+        config_params = {
+            "temperature": temperature,
+            "max_output_tokens": self.MAX_OUTPUT_TOKENS,
+            "top_p": 0.95,
+            "response_mime_type": "application/json",
+            "cached_content": cache_name,
+            "http_options": types.HttpOptions(timeout=max(10_000, int(self.API_TIMEOUT) * 1000)),
+        }
+        if response_schema:
+            config_params["response_schema"] = response_schema
+        if thinking_level:
+            budget = (
+                self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
+                if isinstance(thinking_level, str)
+                else int(thinking_level)
+            )
+            config_params["thinking_config"] = types.ThinkingConfig(thinking_budget=budget, include_thoughts=True)
+
+        return wrapped_prompt, types.GenerateContentConfig(**config_params)
+
     def _ask_with_cached_context(
         self,
         cache_name: str,
@@ -2429,37 +2500,17 @@ class BaseAgent:
                 fallback_prompt, temperature=temperature, thinking_level=thinking_level, response_schema=response_schema
             )
 
+        cache_lineage = self._context_cache_lineage_by_name(cache_name)
+        cache_content_hash = str(cache_lineage.get("content_hash") or "")
         try:
             self._reset_usage_tracking()
-            # [V61.7] 전략 프롬프트를 ask()와 동일한 형식으로 래핑
-            directives = self._escape_braces(getattr(self.context, "author_directives", ""))
-            wrapped_prompt = (
-                f"### [AUTHOR'S ABSOLUTE DIRECTIVES]\n{directives}\n\n"
-                f"### [TASK]\n{prompt}\n\n"
-                f"### [FORMAT]\nRespond ONLY in valid JSON format."
+            wrapped_prompt, config = self._build_cached_context_request(
+                cache_name=cache_name,
+                prompt=prompt,
+                temperature=temperature,
+                thinking_level=thinking_level,
+                response_schema=response_schema,
             )
-            wrapped_prompt = self._apply_prompt_size_gate(wrapped_prompt)
-
-            config_params = {
-                "temperature": temperature,
-                "max_output_tokens": self.MAX_OUTPUT_TOKENS,
-                "top_p": 0.95,
-                "response_mime_type": "application/json",
-                "cached_content": cache_name,
-                "http_options": types.HttpOptions(timeout=max(10_000, int(self.API_TIMEOUT) * 1000)),
-            }
-            # [TF11] response_schema 확대 적용 — API 레벨 타입 강제
-            if response_schema:
-                config_params["response_schema"] = response_schema
-            # [V61.7] Thinking Budget 지원
-            if thinking_level:
-                if isinstance(thinking_level, str):
-                    budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
-                else:
-                    budget = int(thinking_level)
-                config_params["thinking_config"] = types.ThinkingConfig(thinking_budget=budget, include_thoughts=True)
-
-            config = types.GenerateContentConfig(**config_params)
 
             _cached_t0 = time.monotonic()
             metric_id = None
@@ -2514,6 +2565,9 @@ class BaseAgent:
                     api_elapsed_ms=_cached_api_elapsed_ms,
                     retry_count=0,
                     continuation_count=0,
+                    context_cache_name=cache_name,
+                    context_cache_content_hash=cache_content_hash,
+                    context_cache_outcome="used",
                 )
             except Exception:
                 pass
@@ -2560,9 +2614,19 @@ class BaseAgent:
                     api_elapsed_ms=_cached_api_elapsed_ms if "_cached_api_elapsed_ms" in locals() else None,
                     retry_count=0,
                     continuation_count=0,
+                    context_cache_name=cache_name,
+                    context_cache_content_hash=cache_content_hash,
+                    context_cache_outcome="failed",
                 )
             except Exception:
                 pass
+            evicted_count = self._evict_context_cache_by_name(cache_name)
+            if evicted_count:
+                logging.warning(
+                    "[V61.7] cached-context failure evicted stale cache name=%s count=%d",
+                    cache_name,
+                    evicted_count,
+                )
             logging.warning(f"[V61.7] cached-context path failed; falling back to direct ask(): {str(e)[:80]}")
             fallback_prompt = full_prompt_fallback if full_prompt_fallback else prompt
             return self.ask(
