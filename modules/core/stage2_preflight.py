@@ -1029,9 +1029,7 @@ class Stage2PreflightAnalysis:
                         _ws = _pf_result.setdefault("world_state", {})
                         _ps = _ws.setdefault("protagonist_status", {})
                         _ps["injuries"] = _actual_injuries
-                        _pf_injection = self.ctx.agents["preflight"].generate_analyst_injection(
-                            _pf_result, genre=genre
-                        )
+                        _pf_injection = self.ctx.agents["preflight"].generate_analyst_injection(_pf_result, genre=genre)
                 except Exception as pf_err:
                     logging.warning(f" [Preflight] 스킵: {str(pf_err)[:50]}")
             return _pf_injection, _pf_result
@@ -1183,9 +1181,7 @@ class Stage2PreflightAnalysis:
             )
 
         if callable(getattr(self.ctx, "build_minimal_arc_context", None)):
-            minimal_prev_context = self.ctx.build_minimal_arc_context(
-                all_refined_arcs, protagonist_name or "주인공"
-            )
+            minimal_prev_context = self.ctx.build_minimal_arc_context(all_refined_arcs, protagonist_name or "주인공")
         else:
             minimal_prev_context = smart_truncate(
                 enhanced_context, max_chars=15000, head_chars=8250
@@ -1201,17 +1197,27 @@ class Stage2PreflightAnalysis:
 
     @staticmethod
     def _build_patch_feedback(previous_attempt: dict) -> str:
-        patch_feedback = previous_attempt.get("rejection_reason", "")
+        patch_feedback = str(previous_attempt.get("rejection_reason", "") or "")
+        verdict_reason = previous_attempt.get("verdict_reason", "")
         selection_reason = previous_attempt.get("selection_reason", "")
+        runtime_advisory = previous_attempt.get("runtime_advisory", "")
+        retry_directives = previous_attempt.get("retry_directives", "")
         score_breakdown = previous_attempt.get("score_breakdown", {})
         validation_warnings = previous_attempt.get("validation_warnings", [])
 
-        if selection_reason:
-            patch_feedback += f"\n[선택/거절 사유]\n{selection_reason}"
+        def _append_feedback_block(current: str, label: str, value: object) -> str:
+            text = str(value or "").strip()
+            if not text:
+                return current
+            prefix = "\n" if current else ""
+            return f"{current}{prefix}[{label}]\n{text}"
+
+        patch_feedback = _append_feedback_block(patch_feedback, "최종 판정 사유", verdict_reason)
+        patch_feedback = _append_feedback_block(patch_feedback, "선택/거절 사유", selection_reason)
+        patch_feedback = _append_feedback_block(patch_feedback, "런타임 주의", runtime_advisory)
+        patch_feedback = _append_feedback_block(patch_feedback, "재시도 지시", retry_directives)
         if isinstance(score_breakdown, dict) and score_breakdown:
-            score_summary = ", ".join(
-                f"{k}={v}" for k, v in score_breakdown.items() if isinstance(v, int | float)
-            )
+            score_summary = ", ".join(f"{k}={v}" for k, v in score_breakdown.items() if isinstance(v, int | float))
             if score_summary:
                 patch_feedback += f"\n[점수 분해]\n{score_summary}"
         if isinstance(validation_warnings, list) and validation_warnings:
@@ -1336,10 +1342,7 @@ class Stage2PreflightAnalysis:
             )
         ):
             coverage_warnings.append("work_focus_without_slots")
-        if (
-            source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0
-            and "[관계 의미 질의]" not in s2_vector_ctx
-        ):
+        if source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0 and "[관계 의미 질의]" not in s2_vector_ctx:
             coverage_warnings.append("missing_relation_slice")
 
         stage2_budget_cap = int(getattr(retrieval_plan, "total_budget_chars", 0) or 0)
@@ -1361,9 +1364,7 @@ class Stage2PreflightAnalysis:
                 coverage_warnings=coverage_warnings,
                 advisor_path_used=use_advisor_path,
                 work_slot_summary_present=bool(work_slot_summary),
-                work_slot_summary_included=bool(
-                    work_slot_summary and "[작품 추적 슬롯 요약]" in s2_vector_ctx
-                ),
+                work_slot_summary_included=bool(work_slot_summary and "[작품 추적 슬롯 요약]" in s2_vector_ctx),
                 relation_slice_included="[관계 의미 질의]" in s2_vector_ctx,
                 vector_context_chars=len(s2_vector_ctx),
                 budget_ledger=stage2_budget_ledger,
@@ -1549,7 +1550,6 @@ class Stage2PreflightAnalysis:
             logging.info(f"- 후보 수: {generate_phase.get('candidates_count', 0)}개")
             logging.info(f"- 선택 전략: {generate_phase.get('selected_strategy', 'unknown')}")
 
-
     def _apply_four_phase_pass_state_tracker_updates(
         self,
         *,
@@ -1626,7 +1626,6 @@ class Stage2PreflightAnalysis:
             learned_skills=learned_skills,
             npc_info=npc_info,
         )
-
 
     def _emit_patch_mode_audit_event(
         self,
@@ -2028,7 +2027,6 @@ class Stage2PreflightAnalysis:
                 director=self.ctx.agents.get("director"),
             )
         return four_phase_arc, pipeline_result, patch_fallback
-
 
     def _preflight_enrichment(
         self,

@@ -1,6 +1,35 @@
 """Stage2Optimizer regression tests."""
 
-from modules.core.stage2_optimizer import ArcAutoCorrector
+from modules.core.stage2_optimizer import ArcAutoCorrector, SessionFailureMemory
+
+
+def test_session_failure_memory_retains_rich_retry_context_with_tail():
+    memory = SessionFailureMemory(max_records=3, recent_prompt_records=2)
+    long_reason = "alpha " + ("middle " * 80) + "omega-tail"
+
+    memory.record_failure(
+        arc_no=3,
+        attempt=2,
+        reason=long_reason,
+        category="continuity",
+        details="detail body",
+        retry_directives="retry exact carryover packet",
+        runtime_advisory="runtime exact guard",
+        selection_reason="selection exact",
+        fix_scope="partial",
+        fix_scope_reasoning="scope exact",
+        score_breakdown="density=5, continuity=4",
+    )
+
+    prompt = memory.generate_warning_prompt()
+
+    assert "continuity" in prompt
+    assert "omega-tail" in prompt
+    assert "retry exact carryover packet" in prompt
+    assert "runtime exact guard" in prompt
+    assert "selection exact" in prompt
+    assert "scope exact" in prompt
+    assert "density=5, continuity=4" in prompt
 
 
 def test_remove_duplicate_items_normalizes_item_key():
@@ -165,12 +194,14 @@ def test_filter_abstract_items_consumed():
 def test_patch_b_reads_protagonist_items_over_items_acquired():
     """[BUG-F] protagonist_items 우선 폴백 — items_acquired만 읽던 오탐 수정."""
     corrector = ArcAutoCorrector()
-    prev_arcs = [{
-        "state_constraints": {
-            "arc_end_state": {"location": "강남", "equipment": ["법인 서류"]},
-        },
-        "joint_docs": {},
-    }]
+    prev_arcs = [
+        {
+            "state_constraints": {
+                "arc_end_state": {"location": "강남", "equipment": ["법인 서류"]},
+            },
+            "joint_docs": {},
+        }
+    ]
     arc = {
         "state_constraints": {
             "arc_start_state": {"location": "강남", "equipment": ["법인 서류"]},
@@ -192,12 +223,14 @@ def test_patch_b_reads_protagonist_items_over_items_acquired():
 def test_patch_b_falls_back_to_items_acquired():
     """[BUG-F] protagonist_items 없으면 items_acquired 폴백."""
     corrector = ArcAutoCorrector()
-    prev_arcs = [{
-        "state_constraints": {
-            "arc_end_state": {"location": "강남", "equipment": ["법인 서류"]},
-        },
-        "joint_docs": {},
-    }]
+    prev_arcs = [
+        {
+            "state_constraints": {
+                "arc_end_state": {"location": "강남", "equipment": ["법인 서류"]},
+            },
+            "joint_docs": {},
+        }
+    ]
     arc = {
         "state_constraints": {
             "arc_start_state": {"location": "강남", "equipment": ["법인 서류"]},
@@ -209,20 +242,20 @@ def test_patch_b_falls_back_to_items_acquired():
 
     _, corrections = corrector.auto_correct(arc, prev_arcs=prev_arcs, genre="investment")
 
-    assert not any("출처 불명" in msg for msg in corrections), (
-        f"items_acquired 폴백 실패: {corrections}"
-    )
+    assert not any("출처 불명" in msg for msg in corrections), f"items_acquired 폴백 실패: {corrections}"
 
 
 def test_patch_b_detects_truly_unexplained_items():
     """[BUG-F] 진짜 출처 불명 아이템은 정상 감지."""
     corrector = ArcAutoCorrector()
-    prev_arcs = [{
-        "state_constraints": {
-            "arc_end_state": {"location": "강남", "equipment": ["법인 서류"]},
-        },
-        "joint_docs": {},
-    }]
+    prev_arcs = [
+        {
+            "state_constraints": {
+                "arc_end_state": {"location": "강남", "equipment": ["법인 서류"]},
+            },
+            "joint_docs": {},
+        }
+    ]
     arc = {
         "state_constraints": {
             "arc_start_state": {"location": "강남", "equipment": ["법인 서류"]},
