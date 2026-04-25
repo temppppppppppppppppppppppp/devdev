@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from modules.core.project_manager import ProjectContext
 from modules.core.response_schemas import validate_phase0_files, validate_treatment_structure
-from modules.core.stage0_handoff import build_plot_roadmap_from_treatment
+from modules.core.stage0_handoff import STAGE0_RUNTIME_HANDOFF_KEY, build_plot_roadmap_from_treatment
 
 
 def _full_content(label: str) -> dict:
@@ -137,4 +137,10 @@ def test_force_sync_v25_dna_uses_normalized_block_list(tmp_path):
     assert ctx.master_bible["_stage0_contract"]["artifact_role"] == "bi_projection_artifact"
     assert ctx.master_bible["_stage0_contract"]["runtime_handoff"]["owner"] == "db_anchor:bible"
     assert ctx.master_bible["_stage0_contract"]["field_authority"]["plot_roadmap"] == "MasterBible.plot_roadmap"
+    handoff = ctx.master_bible[STAGE0_RUNTIME_HANDOFF_KEY]
+    assert handoff["runtime_handoff_owner"] == "db_anchor:bible"
+    assert handoff["stage2_consumer_mode"] == "db_anchor_first"
+    assert handoff["projection_source"] == "treatment.blocks"
+    assert handoff["compatibility_bridges"]["force_sync_v25_dna"] == "compatibility_bridge"
+    assert handoff["persistence_call"] == "save_v20_anchor:bible"
     ctx.save_v20_anchor.assert_called_once_with("bible", ctx.master_bible)

@@ -1,14 +1,19 @@
 Date: 2026-04-02
-Status: parked (2026-04-19 reactivation refresh; first bounded source-of-truth declaration tranche landed on 2026-04-07, the remaining runtime handoff and production-harness normalization debt is still real, and the honest queue reading is now parked Stage0 source-of-truth debt rather than active implementation progress)
+Status: in_progress (2026-04-25 Tranche 2 runtime handoff normalization patch added locally and focused tests passed; pending PR/merge validation; production-harness normalization remains deferred)
 Canonical Path: `docs/2026-04-02/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md`
 Baseline Commit: `eac3386ce3b19f720e6e12548721df5abe2ee755`
 Baseline Dirty Summary: `dirty: prior Stage3 and Stage4 bounded tranches, the Stage0 enrich tranche, and queue docs were already in flight during the 2026-04-07 re-audit`
 Source Survey Docs:
-- `docs/2026-04-02/stage0-bible-generation-dna-sync-stage2-consume-bounded-survey.md`
 - `docs/2026-04-19/stage0-bi-tr-production-harness-normalization-reactivation-refresh.md`
+- `docs/2026-04-25/stage0-bi-tr-runtime-handoff-normalization-fresh-reaudit.md`
 Evidence Artifacts:
-- `docs/2026-04-02/stage0-bible-generation-dna-sync-stage2-consume-evidence.json`
+- `modules/core/stage0_handoff.py`
+- `modules/core/project_manager.py`
+- `modules/core/stage2_orchestrator.py`
+- `tests/test_bi_tr_canonical_contract.py`
+- `tests/test_stage0_handoff_ingress.py`
+- `tests/test_stage2_orchestrator.py`
 Side-Effect Coverage:
 - `scripts/build_bi_from_phase0_and_tr.py` routed BI builder contract
 - `scripts/build_wuxia_bi_from_phase0_and_tr.py` family-specific BI builder contract
@@ -25,9 +30,9 @@ execution_meta:
   topic: stage0-bi-tr-production-harness-normalization-remediation
   github_issue: 10
   depends_on: []
-  status: pending
-  queue_role: parked_future_wave
-  roadmap_rank: 3
+  status: in_progress
+  queue_role: front_active
+  roadmap_rank: 1
   tranches:
     - id: source-of-truth-declaration
       title: Stage0 source-of-truth declaration
@@ -157,11 +162,19 @@ Status: landed
 
 runtime handoff normalization
 
-Status: next bounded continuation
+Status: landed locally on 2026-04-25; pending PR/merge validation
 
 - reduce `force_sync_v25_dna()` and roadmap backfill toward a narrower compatibility bridge
 - make Stage2 handoff transport explicit without broad Stage2 logic churn
 - continue reducing silent overwrite behavior
+
+Implementation notes:
+
+- canonical BI payloads now persist `_stage0_runtime_handoff` beside `_stage0_contract`
+- the runtime handoff manifest separates `runtime_handoff_owner`, `runtime_handoff_surface`, `stage2_consumer_mode`, `projection_source`, `plot_roadmap_authority`, and `persistence_call`
+- `force_sync_v25_dna()` now logs the manifest instead of re-reading scattered contract fields
+- Stage2 bootstrap now logs the same manifest shape, including the `force_sync_v25_dna` compatibility-bridge state
+- focused validation passed with `py -3.12 -m pytest tests/test_bi_tr_canonical_contract.py tests/test_stage0_handoff_ingress.py tests/test_stage2_orchestrator.py -q`
 
 ## Tranche 3
 

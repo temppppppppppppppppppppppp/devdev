@@ -162,3 +162,6 @@ def test_bootstrap_stage2_arc_pipeline_surfaces_stage0_contract(monkeypatch):
     assert result["ready"] is True
     log_messages = [call.args[0] for call in ctx.ui.log.call_args_list if call.args]
     assert any("[Stage0 Contract] runtime_handoff_owner=db_anchor:bible" in message for message in log_messages)
+    assert any("stage2_consumer_mode=db_anchor_first" in message for message in log_messages)
+    assert any("projection_source=treatment.blocks" in message for message in log_messages)
+    assert any("force_sync_bridge=compatibility_bridge" in message for message in log_messages)

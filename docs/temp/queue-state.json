@@ -1,6 +1,6 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-25T04:01:52.839400+00:00",
+  "generated_at": "2026-04-25T04:48:19.797489+00:00",
   "queue_mode": "aggregate",
   "active_item_count": 3,
   "roadmap": {
@@ -13,8 +13,8 @@
       "topic": "stage0-bi-tr-production-harness-normalization-remediation",
       "temp_path": "docs/temp/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md",
       "canonical_path": "docs/2026-04-02/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md",
-      "status": "pending",
-      "queue_role": "parked_future_wave",
+      "status": "in_progress",
+      "queue_role": "front_active",
       "roadmap_rank": 1,
       "depends_on": [],
       "mirror_present": true,
