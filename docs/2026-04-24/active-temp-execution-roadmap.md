@@ -1,13 +1,13 @@
 # Active Temp Execution Roadmap
 
 Date: 2026-04-24
-Status: active (#5 proof-governor lane closed; stage234-session-memory-max-utilization closed on 2026-04-25; canary-root-isolation merged via PR #15 and moved to historical backing)
+Status: active (repo-trashbox-cleanup opened for 2026-04-25 reference-check; no cleanup move authorized)
 Canonical Path: `docs/2026-04-24/active-temp-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Baseline Commit: `143cee26d879d5de59ef43757f851e89b8d551c7`
 Baseline Dirty Summary: `dirty: local runtime project outputs, benchmark index, .gitignore key ignore, and new 2026-04-24 hygiene docs; no canary code, data migration, or trashbox move performed`
 Resume Commit: `fabf78127cbcdfb724c35a38f314a25b94ec9ce5`
-Resume Drift Summary: `stage234-session-memory-max-utilization was explicitly opened by the user on 2026-04-24, fresh re-audited PASS, and closed on 2026-04-25 after bounded Stage4, Stage3, and Stage2 memory rollout; stage0-bi-tr-production-harness-normalization-remediation Tranche 2 was merged on 2026-04-25 via PR #13; canary-root-isolation was merged on 2026-04-25 via PR #15; repo-trashbox-cleanup remains parked`
+Resume Drift Summary: `stage234-session-memory-max-utilization was explicitly opened by the user on 2026-04-24, fresh re-audited PASS, and closed on 2026-04-25 after bounded Stage4, Stage3, and Stage2 memory rollout; stage0-bi-tr-production-harness-normalization-remediation Tranche 2 was merged on 2026-04-25 via PR #13; canary-root-isolation was merged on 2026-04-25 via PR #15 and closed via PR #16; repo-trashbox-cleanup opened on branch feat/repo-trashbox-reference-check for reference-check only`
 
 ## 1. Why This Refresh Exists
 
@@ -27,15 +27,16 @@ After the Standard Vertex cache-proof run on 2026-04-24, `authority-alignment-be
 - `stage234-session-memory-max-utilization` is now closed historical backing after its bounded memory/cache rollout landed.
 - `stage0-bi-tr-production-harness-normalization-remediation` is now historical backing after PR #13 merged the runtime handoff normalization tranche.
 - `canary-root-isolation` is now historical backing after PR #15 merged the canary root isolation tranche.
-- `repo-trashbox-cleanup` is the only remaining parked future-wave item after canary policy settlement.
+- `repo-trashbox-cleanup` is the only remaining queue item after canary policy settlement and is now front-active for reference-check only.
 
 ## 3. Queue Semantics
 
+- `front-active reference-check`: current implementation authority is limited to read-only reference and Git-policy preparation.
 - `parked future wave`: still-real execution debt, but not current implementation authority.
 - `historical backing`: keep canonical SSOTs for audit history, but do not keep them visible as active queue residue.
 
 Working order:
-1. `repo-trashbox-cleanup` (parked future wave; quarantine maintenance-only/test/experiment residue after canary policy is settled)
+1. `repo-trashbox-cleanup` (front-active reference-check; quarantine movement remains unauthorized until Git policy and move manifest are approved)
 
 Closed historical backing in this closure pass:
 
@@ -46,11 +47,11 @@ Closed historical backing in this closure pass:
 
 ## 4. Immediate Next Moves
 
-1. keep `repo-trashbox-cleanup` parked unless the user explicitly opens it
+1. keep `repo-trashbox-cleanup` limited to reference-check and Git policy preparation until a quarantine move plan is explicitly approved
 2. do not reopen `stage234-session-memory-max-utilization` without a fresh live anchor or narrower follow-up SSOT
 3. do not reopen Stage0 production-harness normalization without a fresh dedicated re-audit
 4. do not move or delete existing `projects/_canary/` without a fresh cleanup SSOT
-5. do not move `test_mode/`, `lite_mode/`, `spikes/`, or root residue from this roadmap refresh
+5. do not move `test_mode/`, `lite_mode/`, `spikes/`, root residue, or old `projects/_canary/` from this roadmap refresh
 6. refresh `docs/temp/queue-state.json`
 7. validate the queue with `python scripts/ops_validator.py --strict`
 8. reflect the queue to ClickUp only if the user explicitly asks for it
@@ -102,3 +103,13 @@ Confidence: 96/100
 - GitHub Issues and ClickUp remain external mirrors, not automatic SSOT sync
 
 Confidence: 95/100
+
+## 2026-04-25 Repo Trashbox Reference-Check Refresh
+
+- fresh re-audit saved at `docs/2026-04-25/repo-trashbox-cleanup-fresh-reaudit.md`
+- reference-check saved at `docs/2026-04-25/repo-trashbox-reference-check.md`
+- `test_mode/` and `lite_mode/` each currently have `1554` tracked files, so immediate movement remains unauthorized
+- `MagicMock` string matches in tests are not root `MagicMock/` path dependencies
+- current PC holding path proposal is `C:\Users\PC\Desktop\글도비_쓰레기통`, but it is not created or used by this tranche
+
+Confidence: 96/100
