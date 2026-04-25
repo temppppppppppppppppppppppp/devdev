@@ -1,5 +1,5 @@
 Date: 2026-04-02
-Status: in_progress (2026-04-25 Tranche 2 runtime handoff normalization patch added locally and focused tests passed; pending PR/merge validation; production-harness normalization remains deferred)
+Status: completed (2026-04-25 PR #13 merged Tranche 2 runtime handoff normalization; production-harness normalization remains deferred for a future dedicated activation)
 Canonical Path: `docs/2026-04-02/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md`
 Baseline Commit: `eac3386ce3b19f720e6e12548721df5abe2ee755`
@@ -30,9 +30,9 @@ execution_meta:
   topic: stage0-bi-tr-production-harness-normalization-remediation
   github_issue: 10
   depends_on: []
-  status: in_progress
-  queue_role: front_active
-  roadmap_rank: 1
+  status: completed
+  queue_role: historical_backing
+  roadmap_rank: null
   tranches:
     - id: source-of-truth-declaration
       title: Stage0 source-of-truth declaration
@@ -162,7 +162,7 @@ Status: landed
 
 runtime handoff normalization
 
-Status: landed locally on 2026-04-25; pending PR/merge validation
+Status: landed and merged on 2026-04-25 via PR #13
 
 - reduce `force_sync_v25_dna()` and roadmap backfill toward a narrower compatibility bridge
 - make Stage2 handoff transport explicit without broad Stage2 logic churn
@@ -175,6 +175,8 @@ Implementation notes:
 - `force_sync_v25_dna()` now logs the manifest instead of re-reading scattered contract fields
 - Stage2 bootstrap now logs the same manifest shape, including the `force_sync_v25_dna` compatibility-bridge state
 - focused validation passed with `py -3.12 -m pytest tests/test_bi_tr_canonical_contract.py tests/test_stage0_handoff_ingress.py tests/test_stage2_orchestrator.py -q`
+- GitHub CI passed with `lint`, `syntax-check`, and `test (3.12)`
+- merge commit: `7c7a929ac1c5d192afb31e567e97b07e10d4dfb7`
 
 ## Tranche 3
 
@@ -203,14 +205,14 @@ Queue implication:
 
 # 8. Next Action
 
-Continue `Tranche 2: runtime handoff normalization`.
+This SSOT is closed for the source-of-truth declaration and runtime handoff normalization work already authorized in this wave.
 
-Bounded priorities for the next pass:
+Deferred future work:
 
-- keep `force_sync_v25_dna()` framed as a compatibility bridge
+- open a fresh execution SSOT before starting `Tranche 3: production harness normalization`
+- keep `force_sync_v25_dna()` framed as a compatibility bridge unless a replacement runtime boundary is designed
 - keep `db_anchor:bible` as the currently declared runtime handoff owner until the replacement boundary is ready
-- normalize Stage2 intake transport without broad Stage2 prompt or runtime redesign
-- do not widen into full builder-family refactors
+- do not widen into full builder-family refactors without a fresh re-audit
 
 # 9. Validation Targets For This Tranche
 
