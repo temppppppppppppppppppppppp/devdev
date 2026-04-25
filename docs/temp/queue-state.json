@@ -1,6 +1,6 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-25T05:47:32.670627+00:00",
+  "generated_at": "2026-04-25T06:01:45.247886+00:00",
   "queue_mode": "single",
   "active_item_count": 1,
   "roadmap": {
@@ -13,8 +13,8 @@
       "topic": "repo-trashbox-cleanup",
       "temp_path": "docs/temp/repo-trashbox-cleanup-execution-ssot.md",
       "canonical_path": "docs/2026-04-24/repo-trashbox-cleanup-execution-ssot.md",
-      "status": "pending",
-      "queue_role": "parked_future_wave",
+      "status": "in_progress",
+      "queue_role": "front_active",
       "roadmap_rank": 1,
       "depends_on": [],
       "mirror_present": true,
