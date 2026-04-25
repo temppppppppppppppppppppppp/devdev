@@ -315,7 +315,7 @@ class Stage2Orchestrator:
         """Prepare Stage 2 startup state before entering batch orchestration."""
         from modules.core.constants import HUDKeys
         from modules.core.constraint_db import ConstraintDB
-        from modules.core.stage0_handoff import check_plot_roadmap_ready, resolve_stage0_bible_contract
+        from modules.core.stage0_handoff import build_stage0_runtime_handoff_summary, check_plot_roadmap_ready
         from modules.domain.agents.state_tracker import StateTracker
 
         self.ctx.ui.log("🔞 [Stage 2] 0124 매니페스트 정합 엔진 및 멀티 공정 기동...")
@@ -344,12 +344,15 @@ class Stage2Orchestrator:
             return {"ready": False}
         arcs_source = roadmap_status.roadmap
 
-        stage0_contract = resolve_stage0_bible_contract(bible_data)
+        stage0_handoff = build_stage0_runtime_handoff_summary(bible_data)
         self.ctx.ui.log(
             "      [Stage0 Contract] "
-            f"runtime_handoff_owner={stage0_contract.get('runtime_handoff', {}).get('owner')}; "
-            f"plot_roadmap_authority={stage0_contract.get('field_authority', {}).get('plot_roadmap')}; "
-            f"projection_source={stage0_contract.get('projection_source')}"
+            f"runtime_handoff_owner={stage0_handoff.get('runtime_handoff_owner')}; "
+            f"stage2_surface={stage0_handoff.get('runtime_handoff_surface')}; "
+            f"stage2_consumer_mode={stage0_handoff.get('stage2_consumer_mode')}; "
+            f"projection_source={stage0_handoff.get('projection_source')}; "
+            f"plot_roadmap_authority={stage0_handoff.get('plot_roadmap_authority')}; "
+            f"force_sync_bridge={stage0_handoff.get('compatibility_bridges', {}).get('force_sync_v25_dna')}"
         )
 
         protagonist_name = None

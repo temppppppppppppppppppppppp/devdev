@@ -886,9 +886,9 @@ class ProjectContext:
 
             from modules.core.stage0_handoff import (
                 build_plot_roadmap_from_treatment,
+                build_stage0_runtime_handoff_summary,
                 canonicalize_bible_payload,
                 canonicalize_treatment_payload,
-                resolve_stage0_bible_contract,
             )
 
             # [V49.3] Phase 0 JSON 스키마 검증
@@ -931,20 +931,22 @@ class ProjectContext:
                 bible_data,
                 treatment=canonical_treatment,
             )
-            stage0_contract = resolve_stage0_bible_contract(canonical_bible, treatment=canonical_treatment)
+            stage0_handoff = build_stage0_runtime_handoff_summary(canonical_bible, treatment=canonical_treatment)
             if treatment_warnings:
                 logging.info(" [DNA Injection] treatment canonicalization: %s", "; ".join(treatment_warnings[:5]))
             if bible_warnings:
                 logging.info(" [DNA Injection] bible canonicalization: %s", "; ".join(bible_warnings[:5]))
             logging.info(
-                " [DNA Injection] Stage0 contract: role=%s, runtime_handoff_owner=%s, plot_roadmap_authority=%s, projection_source=%s",
-                stage0_contract.get("artifact_role"),
-                stage0_contract.get("runtime_handoff", {}).get("owner"),
-                stage0_contract.get("field_authority", {}).get("plot_roadmap"),
-                stage0_contract.get("projection_source"),
+                " [DNA Injection] Stage0 runtime handoff: owner=%s, surface=%s, consumer_mode=%s, projection_source=%s",
+                stage0_handoff.get("runtime_handoff_owner"),
+                stage0_handoff.get("runtime_handoff_surface"),
+                stage0_handoff.get("stage2_consumer_mode"),
+                stage0_handoff.get("projection_source"),
             )
             logging.info(
-                " [DNA Injection] force_sync_v25_dna remains a compatibility bridge; DB bible anchor is the runtime handoff owner"
+                " [DNA Injection] compatibility bridge force_sync_v25_dna=%s; persistence_call=%s",
+                stage0_handoff.get("compatibility_bridges", {}).get("force_sync_v25_dna"),
+                stage0_handoff.get("persistence_call"),
             )
 
             # 2. MasterBible 루트 확보 (포장지가 있든 없든 대응)
