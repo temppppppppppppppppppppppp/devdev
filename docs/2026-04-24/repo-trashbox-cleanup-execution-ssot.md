@@ -1,14 +1,14 @@
 # Repo Trashbox Cleanup Execution SSOT
 
 Date: 2026-04-24
-Status: in-progress (2026-04-25 packaging scope complete; no tracked cleanup authorized)
+Status: in-progress (2026-04-25 low-risk tracked removal manifest complete; no tracked removal performed)
 Canonical Path: `docs/2026-04-24/repo-trashbox-cleanup-execution-ssot.md`
 Temp Mirror Path: `docs/temp/repo-trashbox-cleanup-execution-ssot.md`
 Commit State:
 - Baseline Commit: `143cee26d879d5de59ef43757f851e89b8d551c7`
 - Baseline Dirty Summary: `dirty: local runtime project outputs, benchmark index, .gitignore key ignore, and new 2026-04-24 hygiene docs; no trashbox file move performed`
-- Resume Commit: `01ef453ab606ecbb7fb17658543892dff2fa86a5`
-- Resume Drift Summary: `move plan merged via PR #18; packaging and ignore scope opened on branch feat/repo-trashbox-packaging-scope without tracked cleanup`
+- Resume Commit: `bcbe0955a53b57d0e44953ace2db54ffadffc651`
+- Resume Drift Summary: `packaging scope merged via PR #19; low-risk tracked removal manifest opened on branch feat/repo-trashbox-low-risk-removal-manifest without tracked cleanup`
 Source Survey Docs:
 - `docs/2026-04-24/repo-trashbox-candidate-survey.md`
 - `docs/2026-04-24/repo-trashbox-cleanup-adversarial-3pass-audit.md`
@@ -18,6 +18,7 @@ Source Survey Docs:
 - `docs/2026-04-25/repo-trashbox-reference-check.md`
 - `docs/2026-04-25/repo-trashbox-quarantine-move-plan.md`
 - `docs/2026-04-25/repo-trashbox-packaging-scope-fresh-reaudit.md`
+- `docs/2026-04-25/repo-trashbox-low-risk-tracked-removal-manifest.md`
 Evidence Artifacts:
 - `modules/core/runtime_paths.py`
 - `배포_패키징.ps1`
@@ -65,7 +66,7 @@ On the current PC, the proposed local holding area is:
 C:\Users\PC\Desktop\글도비_쓰레기통
 ```
 
-This document still does not authorize a move. The reference-check, quarantine move-plan, and packaging/ignore scope tranches are complete; the next safe scope is a dedicated low-risk tracked residue removal manifest.
+This document still does not authorize a move. The reference-check, quarantine move-plan, packaging/ignore scope, and low-risk tracked removal manifest tranches are complete; the next safe scope is a dedicated tracked-removal PR that removes only the manifest-listed paths.
 
 ## 2. Baseline Facts
 
@@ -199,7 +200,7 @@ The canonical repo docs remain the SSOT. GitHub Issues and ClickUp are only visi
 1. Candidate reference and runtime dependency check (complete on 2026-04-25; no move authorized)
 2. Trashbox quarantine move plan (complete on 2026-04-25; no move authorized)
 3. Packaging and security-scan scope cleanup (complete on 2026-04-25; no tracked cleanup authorized)
-4. Git tracking and ignore cleanup (next, requires dedicated removal manifest)
+4. Git tracking and ignore cleanup (manifest complete on 2026-04-25; actual tracked removal requires a dedicated follow-up PR)
 
 ## 9. Acceptance Criteria
 
@@ -207,7 +208,7 @@ The canonical repo docs remain the SSOT. GitHub Issues and ClickUp are only visi
 - `docs/temp/` remains the active queue mirror.
 - `projects/_canary/` is not moved by this lane.
 - Each moved candidate has a manifest entry.
-- Tracked-file changes are intentional and reviewable.
+- Tracked-file changes are intentional, manifest-bound, and reviewable.
 - Packaging excludes maintenance-only/non-runtime residue where appropriate.
 - `python scripts/ops_validator.py --strict` passes after queue/document updates.
 
@@ -225,6 +226,12 @@ Future implementation validation:
 - targeted packaging exclusion scan
 - focused pytest only if runtime-facing references are changed
 
+Future low-risk tracked removal validation:
+
+- remove only the 21 paths listed in `docs/2026-04-25/repo-trashbox-low-risk-tracked-removal-manifest.md`
+- keep `test_mode/`, `lite_mode/`, `spikes/`, `projects/_canary/`, `tests/`, and `docs/temp/` unchanged
+- run `python -m pytest tests/test_surface_containment_contract.py tests/test_runtime_authority_contract.py -q`
+
 ## 11. Guardrails
 
 - Do not delete on first pass.
@@ -233,6 +240,7 @@ Future implementation validation:
 - Do not use ClickUp as SSOT.
 - Do not assume roadmap parking creates GitHub Issues automatically.
 - Do not clean tracked files without a Git policy table.
+- Do not clean tracked files outside the low-risk manifest without a new manifest refresh.
 
 ## 12. Temp Queue Notes
 
