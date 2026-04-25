@@ -23,6 +23,16 @@ def _build_truncation_suffix(total: int, shown: int, *, unit: str = "개") -> st
     return ""
 
 
+def _load_anchor_with_status(db, key: str) -> tuple[bool, object, str | None]:
+    loader = getattr(db, "load_anchor_with_status", None)
+    if callable(loader):
+        status = loader(key, default=None)
+        if isinstance(status, dict):
+            return bool(status.get("found")), status.get("data"), status.get("error")
+    raw = db.load_anchor(key)
+    return bool(raw), raw, None
+
+
 def _normalize_known_attr_value(raw) -> str:
     if isinstance(raw, list):
         return ", ".join(str(item).strip() for item in raw if str(item).strip())
@@ -153,6 +163,8 @@ class WorldStateManager:
             db: DBManager 인스턴스
         """
         self.db = db
+        self._degraded = False
+        self._degraded_reason = ""
         self._state: dict = self._load_or_init()
         self.last_save_ok: bool | None = None
         self.last_save_error: str | None = None
@@ -164,19 +176,40 @@ class WorldStateManager:
     def _load_or_init(self) -> dict:
         """DB anchor 'world_state'에서 로드, 없으면 초기화"""
         try:
-            loaded = self.db.load_anchor("world_state")
+            _found, loaded, load_error = _load_anchor_with_status(self.db, "world_state")
+            if load_error:
+                self._degraded = True
+                self._degraded_reason = f"world_state anchor load failed: {load_error}"
+                _logger.warning("[V68] WorldState: DB 로드 실패, 초기화: %s", load_error)
+                return json.loads(json.dumps(self._INIT_STATE, ensure_ascii=False))
             if loaded and isinstance(loaded, dict) and loaded.get("version"):
                 _logger.info("[V68] WorldState: DB에서 로드 완료 (ep %d)", loaded.get("last_updated_ep", 0))
+                self._degraded = False
+                self._degraded_reason = ""
                 return loaded
+            self._degraded = False
+            self._degraded_reason = ""
         except Exception as e:
             _logger.warning("[V68] WorldState: DB 로드 실패, 초기화: %s", e)
+            self._degraded = True
+            self._degraded_reason = str(e)
 
         return json.loads(json.dumps(self._INIT_STATE, ensure_ascii=False))  # deep copy
 
     def save(self) -> bool:
         """DB anchor 'world_state'에 저장"""
+        if self._degraded:
+            self.last_save_ok = False
+            self.last_save_error = f"refusing to overwrite after degraded load: {self.degraded_reason}"
+            _logger.error("[V68] WorldState: DB 저장 차단: %s", self.last_save_error)
+            return False
         try:
-            self.db.save_anchor("world_state", self._state)
+            saved = self.db.save_anchor("world_state", self._state)
+            if saved is not True:
+                self.last_save_ok = False
+                self.last_save_error = f"save_anchor returned {saved!r}"
+                _logger.error("[V68] WorldState: DB 저장 실패: %s", self.last_save_error)
+                return False
             self.last_save_ok = True
             self.last_save_error = None
             return True
@@ -185,6 +218,14 @@ class WorldStateManager:
             self.last_save_ok = False
             self.last_save_error = str(e)
             return False
+
+    @property
+    def degraded(self) -> bool:
+        return bool(self._degraded)
+
+    @property
+    def degraded_reason(self) -> str:
+        return str(self._degraded_reason or "")
 
     def _ensure_alive_npc_entry(self, npc_name: str, ep_num: int) -> dict:
         if npc_name not in self._state["alive_npcs"]:
@@ -204,7 +245,7 @@ class WorldStateManager:
         _value = _normalize_known_attr_value(value)
         if not _value:
             return
-        _stored_value = value if isinstance(value, (list, dict)) else _value
+        _stored_value = value if isinstance(value, list | dict) else _value
         _ka[field] = {
             "value": _stored_value,
             "prev": _prev,
@@ -225,17 +266,9 @@ class WorldStateManager:
             if not isinstance(raw_npc, dict):
                 continue
 
-            role = str(
-                raw_npc.get("role")
-                or raw_npc.get("role_at_intro")
-                or raw_npc.get("public_role")
-                or ""
-            ).strip()
+            role = str(raw_npc.get("role") or raw_npc.get("role_at_intro") or raw_npc.get("public_role") or "").strip()
             relation = str(
-                raw_npc.get("relation")
-                or raw_npc.get("relation_to_protag")
-                or raw_npc.get("to")
-                or ""
+                raw_npc.get("relation") or raw_npc.get("relation_to_protag") or raw_npc.get("to") or ""
             ).strip()
             if role:
                 npc_entry["role"] = role
@@ -324,9 +357,17 @@ class WorldStateManager:
                 to_rel = rel.get("to", "")
                 # [IFC] Sink-side guard: scalarize dict actor refs
                 if isinstance(npc, dict):
-                    npc = str(npc.get("name") or npc.get("npc") or next((v for v in npc.values() if isinstance(v, str)), str(npc)))
+                    npc = str(
+                        npc.get("name")
+                        or npc.get("npc")
+                        or next((v for v in npc.values() if isinstance(v, str)), str(npc))
+                    )
                 if isinstance(to_rel, dict):
-                    to_rel = str(to_rel.get("status") or to_rel.get("value") or next((v for v in to_rel.values() if isinstance(v, str)), str(to_rel)))
+                    to_rel = str(
+                        to_rel.get("status")
+                        or to_rel.get("value")
+                        or next((v for v in to_rel.values() if isinstance(v, str)), str(to_rel))
+                    )
                 npc = str(npc).strip()
                 to_rel = str(to_rel).strip()
                 if npc and to_rel:
@@ -415,9 +456,7 @@ class WorldStateManager:
     def _apply_entity_and_companion_state_changes(self, ep_num: int, state_changes: StateChangesDict):
         try:
             # 5. 엔티티 파괴 (조직/장소)
-            _existing_destroyed_names = {
-                d.get("name") for d in self._state["destroyed"] if isinstance(d, dict)
-            }
+            _existing_destroyed_names = {d.get("name") for d in self._state["destroyed"] if isinstance(d, dict)}
             for dest in state_changes.get("entity_destructions") or []:
                 if not isinstance(dest, dict):
                     continue
@@ -737,7 +776,9 @@ class WorldStateManager:
                 if normalized_techniques:
                     existing_techniques = martial_state.get("techniques", [])
                     if not isinstance(existing_techniques, list):
-                        existing_techniques = [str(existing_techniques).strip()] if str(existing_techniques).strip() else []
+                        existing_techniques = (
+                            [str(existing_techniques).strip()] if str(existing_techniques).strip() else []
+                        )
 
                     merged_techniques = []
                     seen_merged = set()
@@ -1049,9 +1090,7 @@ class WorldStateManager:
         promises = [
             promise
             for promise in (self._state.get("promises") or [])
-            if isinstance(promise, dict)
-            and promise.get("text")
-            and promise.get("status") in ("pending", None, "")
+            if isinstance(promise, dict) and promise.get("text") and promise.get("status") in ("pending", None, "")
         ]
         if promises:
             promise_lines = []
@@ -1154,7 +1193,9 @@ class WorldStateManager:
                 else:
                     dead_lines.append(f"- {name}")
             dead_suffix = _build_truncation_suffix(len(dead), len(shown_dead_rows), unit="명")
-            parts.append(f"[사망 NPC ({len(shown_dead_rows)}명){dead_suffix} -- 절대 등장 금지]\n" + "\n".join(dead_lines))
+            parts.append(
+                f"[사망 NPC ({len(shown_dead_rows)}명){dead_suffix} -- 절대 등장 금지]\n" + "\n".join(dead_lines)
+            )
         return parts
 
     def _build_summary_relation_and_inventory_sections(self) -> list[str]:
@@ -1195,7 +1236,9 @@ class WorldStateManager:
         plots = self._state.get("active_plots", [])
         if plots:
             shown_plots = plots[-10:]
-            plot_lines = [f"- {entry.get('plot', 'unknown')} (제{entry.get('since_ep', 'unknown')}화~)" for entry in shown_plots]
+            plot_lines = [
+                f"- {entry.get('plot', 'unknown')} (제{entry.get('since_ep', 'unknown')}화~)" for entry in shown_plots
+            ]
             plot_suffix = _build_truncation_suffix(len(plots), len(shown_plots))
             parts.append(f"[진행 중 플롯{plot_suffix}]\n" + "\n".join(plot_lines))
 
@@ -1204,7 +1247,9 @@ class WorldStateManager:
             shown_vectors = pressure_vectors[:5]
             pressure_lines = []
             for vector in shown_vectors:
-                text = str(vector.get("text", "") or "").strip() if isinstance(vector, dict) else str(vector or "").strip()
+                text = (
+                    str(vector.get("text", "") or "").strip() if isinstance(vector, dict) else str(vector or "").strip()
+                )
                 if text:
                     pressure_lines.append(f"- {text}")
             if pressure_lines:
@@ -1496,8 +1541,16 @@ class WorldStateManager:
                 return v
         # 복합 표현
         compounds = {
-            "일주일": 7, "보름": 15, "한 달": 30, "한달": 30, "반년": 180,
-            "반나절": 1, "수일": 3, "며칠": 3, "몇 주": 14, "몇주": 14,
+            "일주일": 7,
+            "보름": 15,
+            "한 달": 30,
+            "한달": 30,
+            "반년": 180,
+            "반나절": 1,
+            "수일": 3,
+            "며칠": 3,
+            "몇 주": 14,
+            "몇주": 14,
         }
         for k, v in compounds.items():
             if k in text:

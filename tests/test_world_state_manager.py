@@ -11,7 +11,7 @@ class _WorldStateDB:
         return None
 
     def save_anchor(self, _name, _payload):
-        return None
+        return True
 
 
 class _SavingWorldStateDB(_WorldStateDB):
@@ -25,11 +25,22 @@ class _SavingWorldStateDB(_WorldStateDB):
 
     def save_anchor(self, _name, _payload):
         self.anchor = json.loads(json.dumps(_payload, ensure_ascii=False))
+        return True
 
 
 class _BrokenWorldStateDB(_WorldStateDB):
     def save_anchor(self, _name, _payload):
         raise RuntimeError("world write fail")
+
+
+class _FalseSaveWorldStateDB(_WorldStateDB):
+    def save_anchor(self, _name, _payload):
+        return False
+
+
+class _CorruptWorldStateStatusDB(_WorldStateDB):
+    def load_anchor_with_status(self, _name, default=None):
+        return {"found": True, "data": default if default is not None else {}, "error": "bad json"}
 
 
 def test_save_sets_degraded_contract_on_failure():
@@ -42,6 +53,16 @@ def test_save_sets_degraded_contract_on_failure():
     assert manager.last_save_error == "world write fail"
 
 
+def test_save_sets_degraded_contract_on_false_return():
+    manager = WorldStateManager(_FalseSaveWorldStateDB())
+
+    result = manager.save()
+
+    assert result is False
+    assert manager.last_save_ok is False
+    assert manager.last_save_error == "save_anchor returned False"
+
+
 def test_save_clears_degraded_contract_on_success():
     manager = WorldStateManager(_WorldStateDB())
     manager.last_save_ok = False
@@ -52,6 +73,17 @@ def test_save_clears_degraded_contract_on_success():
     assert result is True
     assert manager.last_save_ok is True
     assert manager.last_save_error is None
+
+
+def test_corrupt_anchor_status_refuses_empty_overwrite():
+    manager = WorldStateManager(_CorruptWorldStateStatusDB())
+
+    assert manager.degraded is True
+    assert manager.degraded_reason == "world_state anchor load failed: bad json"
+    assert manager.save() is False
+    assert (
+        manager.last_save_error == "refusing to overwrite after degraded load: world_state anchor load failed: bad json"
+    )
 
 
 def test_apply_actor_and_inventory_state_changes_updates_front_family_contract():

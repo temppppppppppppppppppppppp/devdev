@@ -439,7 +439,10 @@ class DBBootstrapRuntime:
                 total_cost_usd REAL,
                 prompt_snippet TEXT,
                 response_snippet TEXT,
-                thinking_snippet TEXT
+                thinking_snippet TEXT,
+                context_cache_name TEXT,
+                context_cache_content_hash TEXT,
+                context_cache_outcome TEXT
             )
             """
         )
@@ -462,9 +465,13 @@ class DBBootstrapRuntime:
                 ("api_elapsed_ms", "INTEGER"),
                 ("retry_count", "INTEGER"),
                 ("continuation_count", "INTEGER"),
+                ("context_cache_name", "TEXT"),
+                ("context_cache_content_hash", "TEXT"),
+                ("context_cache_outcome", "TEXT"),
             ),
             log_label="llm_calls",
         )
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_calls_context_cache ON llm_calls(context_cache_name)")
 
     def _create_context_cache_attempt_tables(self) -> None:
         owner = self.owner
@@ -495,12 +502,8 @@ class DBBootstrapRuntime:
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_context_cache_attempts_agent ON context_cache_attempts(agent_name)"
         )
-        cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_context_cache_attempts_ep ON context_cache_attempts(ep_num)"
-        )
-        cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_context_cache_attempts_ts ON context_cache_attempts(ts)"
-        )
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_context_cache_attempts_ep ON context_cache_attempts(ep_num)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_context_cache_attempts_ts ON context_cache_attempts(ts)")
 
     def _create_stage_attempt_tables(self) -> None:
         owner = self.owner

@@ -18,6 +18,7 @@ class _ProofDigestDBFacade:
 
     _director_stage_predicate = staticmethod(DBManager._director_stage_predicate)
     get_stage4_final_authority_rows = DBManager.get_stage4_final_authority_rows
+    get_attempt_raw_rationale = DBManager.get_attempt_raw_rationale
 
     def __init__(self, db_path) -> None:
         self.db_path = db_path
@@ -816,7 +817,16 @@ class AuditService:
             }
             summary["contract"] = self._build_summary_contract()
             recent_events = self._runtime_audit[-10:]
-            for event in self._runtime_audit[-200:]:
+            count_window = self._runtime_audit[-200:]
+            summary["summary_window"] = {
+                "count_window_size": 200,
+                "counted_events": len(count_window),
+                "counts_truncated": len(self._runtime_audit) > len(count_window),
+                "recent_event_window_size": 10,
+                "recent_events_returned": len(recent_events),
+                "event_window_truncated": len(self._runtime_audit) > len(recent_events),
+            }
+            for event in count_window:
                 summary["counts"][event["type"]] = summary["counts"].get(event["type"], 0) + 1
             if recent_events:
                 summary["latest_event_type"] = str(recent_events[-1].get("type", "") or "")

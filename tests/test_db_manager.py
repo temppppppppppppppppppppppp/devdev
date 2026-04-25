@@ -32,6 +32,21 @@ def test_load_anchor_missing_default_behavior(db):
     assert db.load_anchor("missing_custom", default={"fallback": True}) == {"fallback": True}
 
 
+def test_load_anchor_with_status_distinguishes_missing_valid_and_corrupt(db):
+    assert db.load_anchor_with_status("missing") == {"found": False, "data": {}, "error": None}
+
+    assert db.save_anchor("valid_status", {"ok": True}) is True
+    assert db.load_anchor_with_status("valid_status") == {"found": True, "data": {"ok": True}, "error": None}
+
+    db.cursor.execute("INSERT OR REPLACE INTO anchors (key, data) VALUES (?, ?)", ("corrupt_status", "{bad json"))
+    db.conn.commit()
+
+    status = db.load_anchor_with_status("corrupt_status")
+    assert status["found"] is True
+    assert status["data"] == {}
+    assert "error" in status and status["error"]
+
+
 def test_arcs_anchor_roundtrips_via_per_arc_payload_authority(db):
     arcs = [
         {"arc_num": 2, "title": "Arc 2"},
@@ -113,6 +128,59 @@ def test_save_stage_attempt_respects_outer_transaction_rollback(db):
         "SELECT COUNT(*) AS cnt FROM stage_attempts WHERE attempt_key = 's4:ep22:arc2:a1:sess_tx'"
     ).fetchone()
     assert row["cnt"] == 0
+
+
+def test_save_llm_call_respects_outer_transaction_rollback(db):
+    with pytest.raises(DBError):
+        with db.transaction():
+            db.save_llm_call(
+                agent_name="chief_writer",
+                model="gemini-2.5-pro",
+                prompt_chars=100,
+                response_chars=200,
+                duration_ms=321,
+                success=True,
+                session_id="sess-tx-llm",
+            )
+            raise RuntimeError("rollback trigger")
+
+    row = db.conn.execute("SELECT COUNT(*) AS cnt FROM llm_calls WHERE session_id = 'sess-tx-llm'").fetchone()
+    assert row["cnt"] == 0
+
+
+def test_save_context_cache_attempt_respects_outer_transaction_rollback(db):
+    with pytest.raises(DBError):
+        with db.transaction():
+            db.save_context_cache_attempt(
+                agent_name="chief_writer",
+                model="vertexai:gemini-2.5-pro",
+                cache_type="manuscript",
+                project_name="tx_project_ep_1",
+                content_chars=42000,
+                min_content_chars=50000,
+                ttl_seconds=1800,
+                cache_outcome="skipped",
+                cache_reason="content_too_short",
+                content_hash="tx-cache-hash",
+                stage=4,
+                ep_num=1,
+            )
+            raise RuntimeError("rollback trigger")
+
+    row = db.conn.execute(
+        "SELECT COUNT(*) AS cnt FROM context_cache_attempts WHERE content_hash = 'tx-cache-hash'"
+    ).fetchone()
+    assert row["cnt"] == 0
+
+
+def test_upsert_canonical_fact_respects_outer_transaction_rollback(db):
+    with pytest.raises(DBError):
+        with db.transaction():
+            db.upsert_canonical_fact("tx_fact", "numerical", {"value": 100}, 1, 1)
+            raise RuntimeError("rollback trigger")
+
+    facts = db.get_canonical_facts()
+    assert not any(fact["fact_key"] == "tx_fact" for fact in facts)
 
 
 def test_reset_after_commit_false_keeps_changes_uncommitted(db):
@@ -319,6 +387,34 @@ def test_save_llm_call_persists_timing_decomposition_fields(db):
     assert row["api_elapsed_ms"] == 8000
     assert row["retry_count"] == 2
     assert row["continuation_count"] == 1
+
+
+def test_save_llm_call_persists_context_cache_lineage_fields(db):
+    db.save_llm_call(
+        agent_name="chief_writer",
+        model="gemini-2.5-pro",
+        prompt_chars=100,
+        response_chars=200,
+        duration_ms=5000,
+        success=True,
+        session_id="sess-cache-lineage",
+        context_tag="cached_context",
+        context_cache_name="cachedContents/abc",
+        context_cache_content_hash="hash-cache-123",
+        context_cache_outcome="used",
+    )
+
+    row = db.cursor.execute(
+        """
+        SELECT context_cache_name, context_cache_content_hash, context_cache_outcome
+        FROM llm_calls
+        WHERE session_id = 'sess-cache-lineage'
+        """
+    ).fetchone()
+
+    assert row["context_cache_name"] == "cachedContents/abc"
+    assert row["context_cache_content_hash"] == "hash-cache-123"
+    assert row["context_cache_outcome"] == "used"
 
 
 def test_save_context_cache_attempt_persists_runtime_fields(db):
@@ -1262,6 +1358,30 @@ def test_save_ui_event_persists_meta_json(db):
     assert row["component"] == "Stage4"
     assert row["message"] == "director frame visible"
     assert "origin" in row["meta_json"]
+
+
+def test_save_ui_event_preserves_full_text_message(db):
+    long_message = "운영자 증거:" + ("가나다라" * 1500) + ":END"
+
+    persisted = db.save_ui_event(
+        session_id="sess-ui-long-message",
+        seq=8,
+        stage=4,
+        component="Stage4",
+        message=long_message,
+    )
+
+    row = db.conn.execute(
+        """
+        SELECT message
+        FROM ui_events
+        WHERE session_id = 'sess-ui-long-message'
+        """
+    ).fetchone()
+
+    assert persisted is True
+    assert row["message"] == long_message
+    assert row["message"].endswith(":END")
 
 
 def test_save_ui_event_normalizes_stage_labels_and_preserves_original_label(db):

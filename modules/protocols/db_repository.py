@@ -14,8 +14,7 @@ from typing import Any, Protocol, runtime_checkable
 
 @runtime_checkable
 class DBRepositoryProtocol(Protocol):
-    """S등급 무결성 DB 엔진 계약
-    """
+    """S등급 무결성 DB 엔진 계약"""
 
     # --- 트랜잭션 제어 (db_manager.py:295-297, 299, 310) ---
 
@@ -66,6 +65,7 @@ class DBRepositoryProtocol(Protocol):
 
     def save_anchor(self, key: str, data: Any) -> bool: ...
     def load_anchor(self, key: str, default: Any = None) -> Any: ...
+    def load_anchor_with_status(self, key: str, default: Any = None) -> dict: ...
     def load_all_anchors(self) -> dict: ...
     def save_context_cache_attempt(
         self,

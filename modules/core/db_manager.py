@@ -497,6 +497,16 @@ class DBManager:
         """[Phase 4A] 현재 트랜잭션 진행 여부"""
         return bool(self.conn and self.conn.in_transaction)
 
+    def _rollback_if_own_transaction(self, nested: bool) -> None:
+        """Best-effort rollback only for transactions started by the current method."""
+        if nested or self.conn is None:
+            return
+        try:
+            if self.conn.in_transaction:
+                self.conn.rollback()
+        except Exception:
+            pass
+
     # --- [범용 쿼리] ---
     def execute_query(self, sql: str, params: tuple = ()) -> list:
         """[INF-P2-1] **읽기 전용** SELECT 쿼리 실행 후 결과 리스트 반환.
@@ -1135,16 +1145,22 @@ class DBManager:
                 authoritative_arcs = self.load_arc_payloads()
                 if authoritative_arcs:
                     return authoritative_arcs
+            return self.load_anchor_with_status(key, default=default)["data"]
+
+    def load_anchor_with_status(self, key, default=None) -> dict:
+        """Load a raw anchor while distinguishing missing rows from corrupt JSON."""
+        with self._lock:
+            fallback = default if default is not None else {}
             cur = self.cursor.execute("SELECT data FROM anchors WHERE key = ?", (key,))
             row = cur.fetchone()
             if not row:
                 # [V61.5] default=[] 전달 시 [] or {} → {} 반환 버그 수정
-                return default if default is not None else {}
+                return {"found": False, "data": fallback, "error": None}
             try:
-                return json.loads(row["data"])
+                return {"found": True, "data": json.loads(row["data"]), "error": None}
             except (json.JSONDecodeError, TypeError) as e:  # [V70] row['data']가 None일 때 TypeError 방어
                 logging.warning(f" [DB] Anchor JSON 파싱 실패 (key={key}): {e}")
-                return default if default is not None else {}
+                return {"found": True, "data": fallback, "error": str(e)}
 
     def load_all_anchors(self):
         with self._lock:
@@ -1183,8 +1199,10 @@ class DBManager:
 
     def upsert_canonical_fact(self, fact_key: str, fact_type: str, value, first_ep: int, last_ep: int) -> None:
         """캐노니컬 팩트 생성 또는 갱신."""
+        nested = False
         with self._lock:
             try:
+                nested = self.conn.in_transaction
                 value_json = json.dumps(value, ensure_ascii=False) if value is not None else None
                 cur = self.conn.cursor()
                 cur.execute(
@@ -1198,8 +1216,10 @@ class DBManager:
                     """,
                     (fact_key, fact_type, value_json, first_ep, last_ep),
                 )
-                self.conn.commit()
+                if not nested:
+                    self.conn.commit()
             except Exception as e:
+                self._rollback_if_own_transaction(nested)
                 logging.warning("[canonical_facts] upsert 실패 (비치명): %s", e)
 
     def get_canonical_facts(self, fact_type: str | None = None) -> list[dict]:
@@ -3147,6 +3167,9 @@ class DBManager:
         api_elapsed_ms: int | None = None,
         retry_count: int | None = None,
         continuation_count: int | None = None,
+        context_cache_name: str | None = None,
+        context_cache_content_hash: str | None = None,
+        context_cache_outcome: str | None = None,
     ) -> None:
         """[Log-1] Save one LLM call record in non-blocking mode.
 
@@ -3160,6 +3183,7 @@ class DBManager:
           retry_count        — number of error-driven retries within a single ask() invocation.
           continuation_count — number of continuation rounds (response overflow / finish_reason).
         """
+        nested = False
         try:
             if not self.accepts_runtime_telemetry_writes:
                 return
@@ -3172,15 +3196,18 @@ class DBManager:
             with self._lock:
                 if not self.accepts_runtime_telemetry_writes:
                     return
-                self.cursor.execute(
+                nested = self.conn.in_transaction
+                cur = self.conn.cursor()  # [INF-P1-1] local cursor
+                cur.execute(
                     """INSERT INTO llm_calls
                        (session_id, ts, stage, ep_num, agent_name, model,
                         prompt_chars, response_chars, duration_ms,
                         success, error_type, error_msg, verdict, context_tag,
                         input_tokens, output_tokens, cached_tokens, thinking_tokens, total_cost_usd,
                         prompt_snippet, response_snippet, thinking_snippet,
-                        api_elapsed_ms, retry_count, continuation_count)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        api_elapsed_ms, retry_count, continuation_count,
+                        context_cache_name, context_cache_content_hash, context_cache_outcome)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (
                         session_id,
                         ts,
@@ -3207,10 +3234,16 @@ class DBManager:
                         int(api_elapsed_ms) if api_elapsed_ms is not None else None,
                         int(retry_count) if retry_count is not None else None,
                         int(continuation_count) if continuation_count is not None else None,
+                        str(context_cache_name or "") if context_cache_name is not None else None,
+                        str(context_cache_content_hash or "") if context_cache_content_hash is not None else None,
+                        str(context_cache_outcome or "") if context_cache_outcome is not None else None,
                     ),
                 )
-                self.conn.commit()
+                if not nested:
+                    self.conn.commit()
         except Exception as _e:
+            with self._lock:
+                self._rollback_if_own_transaction(nested)
             logging.debug("[llm_calls] save_llm_call failed (non-blocking): %s", _e)
 
     def save_context_cache_attempt(
@@ -3232,6 +3265,7 @@ class DBManager:
         ep_num: int | None = None,
     ) -> None:
         """Persist one context-cache attempt record in non-blocking mode."""
+        nested = False
         try:
             if not self.accepts_runtime_telemetry_writes:
                 return
@@ -3239,7 +3273,9 @@ class DBManager:
             with self._lock:
                 if not self.accepts_runtime_telemetry_writes:
                     return
-                self.cursor.execute(
+                nested = self.conn.in_transaction
+                cur = self.conn.cursor()  # [INF-P1-1] local cursor
+                cur.execute(
                     """INSERT INTO context_cache_attempts
                        (ts, stage, ep_num, agent_name, model, cache_type, project_name,
                         content_chars, min_content_chars, ttl_seconds, cache_outcome,
@@ -3263,8 +3299,11 @@ class DBManager:
                         error_msg or "",
                     ),
                 )
-                self.conn.commit()
+                if not nested:
+                    self.conn.commit()
         except Exception as _e:
+            with self._lock:
+                self._rollback_if_own_transaction(nested)
             logging.debug("[context_cache_attempts] save failed (non-blocking): %s", _e)
 
     def save_stage_attempt(
@@ -3372,11 +3411,7 @@ class DBManager:
             return True
         except Exception as _e:
             with self._lock:
-                if not nested and self.conn is not None and self.conn.in_transaction:
-                    try:
-                        self.conn.rollback()
-                    except Exception:
-                        pass
+                self._rollback_if_own_transaction(nested)
             logging.debug("[stage_attempts] save_stage_attempt failed (non-blocking): %s", _e)
             return False
 
@@ -3486,7 +3521,7 @@ class DBManager:
                         str(event_kind or "log"),
                         str(level or "info"),
                         str(render_format or "text"),
-                        str(message or "")[:4000],
+                        str(message or ""),
                         1 if visible else 0,
                         str(selection_value or "") if selection_value is not None else None,
                         str(prompt_id or "")[:200] if prompt_id is not None else None,
@@ -3499,11 +3534,7 @@ class DBManager:
             return True
         except Exception as _e:
             with self._lock:
-                if not nested and self.conn is not None and self.conn.in_transaction:
-                    try:
-                        self.conn.rollback()
-                    except Exception:
-                        pass
+                self._rollback_if_own_transaction(nested)
             logging.debug("[ui_events] save_ui_event failed (non-blocking): %s", _e)
             return False
 

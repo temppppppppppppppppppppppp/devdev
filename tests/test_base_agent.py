@@ -844,7 +844,9 @@ class TestContextCacheEviction:
         db.save_context_cache_attempt = MagicMock()
         agent.context = SimpleNamespace(current_project=SimpleNamespace(db=db), current_stage=3, current_ep=15)
 
-        result = agent._get_or_create_context_cache("blueprint", "short content", ttl_seconds=45, project_name="gc_ep15")
+        result = agent._get_or_create_context_cache(
+            "blueprint", "short content", ttl_seconds=45, project_name="gc_ep15"
+        )
 
         assert result["reason"] == "content_too_short"
         db.save_context_cache_attempt.assert_called_once()
@@ -923,6 +925,59 @@ class TestContextCacheEviction:
         assert kwargs["cache_reason"] == "cache_create_failed_not_found"
         assert kwargs["stage"] == 4
         assert kwargs["ep_num"] == 16
+
+    def test_cached_context_success_logs_cache_lineage(self, agent, monkeypatch):
+        import time
+
+        monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
+        cache_key = "manuscript_gc_ep21_hash-lineage-success"
+        agent._context_caches[cache_key] = {
+            "name": "cached/ctx-success",
+            "created_at": time.time(),
+            "content_hash": "hash-lineage-success",
+        }
+        response = MagicMock()
+        response.text = json.dumps({"content": "cached"})
+        agent._generate_content = MagicMock(return_value=response)
+        agent._log_llm_call_to_db = MagicMock()
+
+        try:
+            result = agent._ask_with_cached_context(cache_name="cached/ctx-success", prompt="prompt")
+
+            assert json.loads(result)["content"] == "cached"
+            kwargs = agent._log_llm_call_to_db.call_args.kwargs
+            assert kwargs["context_cache_name"] == "cached/ctx-success"
+            assert kwargs["context_cache_content_hash"] == "hash-lineage-success"
+            assert kwargs["context_cache_outcome"] == "used"
+            assert cache_key in agent._context_caches
+        finally:
+            agent._context_caches.pop(cache_key, None)
+
+    def test_cached_context_failure_evicts_cache_by_name_and_logs_lineage(self, agent, monkeypatch):
+        import time
+
+        monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
+        cache_key = "manuscript_gc_ep21_hash-lineage-fail"
+        agent._context_caches[cache_key] = {
+            "name": "cached/ctx-fail",
+            "created_at": time.time(),
+            "content_hash": "hash-lineage-fail",
+        }
+        agent._generate_content = MagicMock(side_effect=RuntimeError("cached boom"))
+        agent._log_llm_call_to_db = MagicMock()
+        agent.ask = MagicMock(return_value='{"fallback": true}')
+
+        try:
+            result = agent._ask_with_cached_context(cache_name="cached/ctx-fail", prompt="prompt")
+
+            assert json.loads(result)["fallback"] is True
+            assert cache_key not in agent._context_caches
+            kwargs = agent._log_llm_call_to_db.call_args.kwargs
+            assert kwargs["context_cache_name"] == "cached/ctx-fail"
+            assert kwargs["context_cache_content_hash"] == "hash-lineage-fail"
+            assert kwargs["context_cache_outcome"] == "failed"
+        finally:
+            agent._context_caches.pop(cache_key, None)
 
 
 class TestMetricsUsageTracking:
@@ -1093,8 +1148,8 @@ class TestMetricsUsageTracking:
     def test_backup_recovery_uses_measured_usage_and_closes_failed_metric(self, agent, monkeypatch):
         collector = MagicMock()
         collector.start_call.return_value = "backup_metric"
-        collector.calculate_cost.side_effect = (
-            lambda model, *_args, **_kwargs: 0.321 if model == "gemini-2.5-pro" else 9.999
+        collector.calculate_cost.side_effect = lambda model, *_args, **_kwargs: (
+            0.321 if model == "gemini-2.5-pro" else 9.999
         )
 
         monkeypatch.setattr(base_agent_module, "METRICS_ENABLED", True)
@@ -1149,8 +1204,8 @@ class TestMetricsUsageTracking:
     def test_backup_recovery_success_logs_session_entry_with_backup_model_pricing(self, agent, monkeypatch):
         collector = MagicMock()
         collector.start_call.return_value = "backup_metric"
-        collector.calculate_cost.side_effect = (
-            lambda model, *_args, **_kwargs: 0.432 if model == "gemini-2.5-pro" else 8.765
+        collector.calculate_cost.side_effect = lambda model, *_args, **_kwargs: (
+            0.432 if model == "gemini-2.5-pro" else 8.765
         )
 
         monkeypatch.setattr(base_agent_module, "METRICS_ENABLED", True)
