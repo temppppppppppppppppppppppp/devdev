@@ -3,6 +3,7 @@ from modules.core.session_memory_envelope import (
     SESSION_MEMORY_ENVELOPE_VERSION,
     attach_session_memory_envelope,
     build_stage4_session_memory_envelope,
+    get_session_memory_envelope,
 )
 
 
@@ -52,6 +53,7 @@ def test_build_stage4_session_memory_envelope_collects_retry_and_truth_surfaces(
     assert envelope["verdict_surface"]["accepted"] is False
     assert envelope["verdict_surface"]["initial_verdict"] == "PASS_WITH_FIX"
     assert envelope["retry_surface"]["retry_directives"] == "change ending"
+    assert envelope["retry_surface"]["reject_bucket"] == ""
     assert envelope["retry_surface"]["retry_budget_axes"] == {"repair": "patch_revision"}
     assert envelope["truth_pins"] == {"ledger": "position=40"}
     assert envelope["carryover_refs"] == {"original_contract_type": "timeline"}
@@ -72,3 +74,69 @@ def test_attach_session_memory_envelope_preserves_existing_advisory_payload():
     assert merged["continuity"] == ["keep timeline"]
     assert merged[SESSION_MEMORY_ENVELOPE_KEY]["attempt_key"] == "s4:ep1:arc1:a1"
     assert SESSION_MEMORY_ENVELOPE_KEY not in advisory_flags
+
+
+def test_get_session_memory_envelope_returns_deep_copied_payload():
+    advisory_flags = {
+        SESSION_MEMORY_ENVELOPE_KEY: {
+            "schema_version": SESSION_MEMORY_ENVELOPE_VERSION,
+            "retry_surface": {"runtime_advisory": "keep continuity"},
+        }
+    }
+
+    envelope = get_session_memory_envelope(advisory_flags)
+    envelope["retry_surface"]["runtime_advisory"] = "mutated"
+
+    assert (
+        advisory_flags[SESSION_MEMORY_ENVELOPE_KEY]["retry_surface"]["runtime_advisory"]
+        == "keep continuity"
+    )
+
+
+def test_build_stage4_session_memory_envelope_preserves_structured_truth_pin_items():
+    envelope = build_stage4_session_memory_envelope(
+        episode=2,
+        round_num=1,
+        arc=3,
+        success=False,
+        score=61,
+        verdict="REJECT",
+        reject_reason="retry needed",
+        fix_scope="full",
+        advisory_flags={
+            "conflict_contract": {
+                "truth_pins": [
+                    {
+                        "pin_key": "family_group_name",
+                        "family": "proper_noun_group",
+                        "expected": "대한그룹",
+                        "observed": "대현그룹",
+                    }
+                ]
+            }
+        },
+        session_id="sess-stage4",
+        attempt_key="s4:ep2:arc3:a2:sess-stage4",
+        artifact_meta={},
+        selection_reason="best candidate",
+        verdict_reason="conflict",
+        open_review="repeat detected",
+        fix_scope_reasoning="rewrite only",
+        runtime_advisory="keep canon",
+        retry_directives="retry",
+        failure_category="LOGIC_ERROR",
+        initial_verdict="PASS_WITH_FIX",
+        is_patch=False,
+        is_patch_fallback=False,
+        patch_strategy="",
+    )
+
+    assert envelope["truth_pin_items"] == [
+        {
+            "pin_key": "family_group_name",
+            "family": "proper_noun_group",
+            "expected": "대한그룹",
+            "observed": "대현그룹",
+        }
+    ]
+    assert envelope["truth_pins"]["family_group_name"] == "대한그룹"

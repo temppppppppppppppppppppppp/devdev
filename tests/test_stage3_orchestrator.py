@@ -1508,6 +1508,46 @@ class TestGenerateBlueprint:
         assert bundle["observation"]["advisor_path_used"] is False
         app_mock.quality_dashboard.record_retrieval_observation.assert_called_once()
 
+    def test_finalize_stage3_blueprint_semantic_bundle_applies_budget_arbiter(self, orch, app_mock):
+        app_mock.quality_dashboard = MagicMock()
+        plan = SimpleNamespace(
+            total_budget_chars=900,
+            slots=[SimpleNamespace(category="work_tracking_slot_1", source="vec_memory")],
+        )
+
+        with (
+            patch("modules.core.stage3_orchestrator._build_world_state_advisory", return_value="[World]\n" + ("W" * 600)),
+            patch("modules.core.stage3_orchestrator._build_style_guide_advisory", return_value=""),
+            patch("modules.core.stage3_orchestrator._build_fact_ledger_advisory", return_value=""),
+            patch("modules.core.stage3_orchestrator._build_stale_seed_advisory", return_value=""),
+            patch(
+                "modules.core.stage3_orchestrator._build_stage3_work_focus_advisory",
+                return_value="[작품 추적 슬롯 요약]\n" + ("F" * 260),
+            ),
+        ):
+            bundle = orch._finalize_stage3_blueprint_semantic_bundle(
+                semantic_ctx="[SC:genre_context_1]\n" + ("S" * 1000),
+                work_focus={"tracking_slots": ["slot focus"]},
+                plan=plan,
+                working_ep=3,
+                arc_data=app_mock.current_project.arcs[0],
+                entity_registry={},
+                protagonist_name="Seo",
+                blueprint_window=[{"ep_num": 1}],
+                focus_window=[{"ep_num": 1}],
+            )
+
+        assert len(bundle["semantic_ctx"]) <= 900
+        assert "[작품 추적 슬롯 요약]" in bundle["semantic_ctx"]
+        assert "semantic_ctx_budget_trimmed" in bundle["coverage_warnings"]
+        assert bundle["observation"]["budget_ledger"]["configured_cap"] == 900
+        assert bundle["observation"]["budget_ledger"]["trim_applied"] is True
+        assert bundle["observation"]["budget_ledger"]["overflow_chars"] == 0
+        assert bundle["observation"]["protected_summary_survived"] is True
+        assert bundle["observation"]["trimmed_work_slot_summary"] is True
+        assert bundle["observation"]["mandatory_context_chars"] > 0
+        app_mock.quality_dashboard.record_retrieval_observation.assert_called_once()
+
     @patch("modules.core.spinners.StageSpinner")
     def test_run_stage3_blueprint_generation_handoff_preserves_tail_and_prev_hud(self, MockSpinner, orch, app_mock):
         spinner = MagicMock()

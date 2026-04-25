@@ -1415,6 +1415,48 @@ class TestHandleRoundOutcomeErrorPaths:
 
         assert orch._interview_round.run.call_count == 1
 
+    def test_handle_round_outcome_hydrates_persisted_previous_attempt_before_first_round(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+        monkeypatch,
+    ):
+        from modules.core.stage4_types import _InterviewRoundResult
+
+        orch = orch_with_ctx
+        orch._interview_round = MagicMock()
+        orch._interview_round.hydrate_persisted_stage4_previous_attempt = MagicMock(
+            return_value={
+                "score": 61,
+                "fix_scope": "partial",
+                "rejection_reason": "persisted reject",
+                "feedback_provenance": {"merged_feedback": "persisted reject\nruntime advisory"},
+            }
+        )
+        orch._interview_round.run = MagicMock(
+            return_value=_InterviewRoundResult(
+                verdict="REJECT",
+                director_feedback="retry feedback",
+                previous_attempt={"score": 30},
+            )
+        )
+
+        import modules.core.spinners
+
+        monkeypatch.setattr(modules.core.spinners, "StageSpinner", MagicMock())
+        orch._get_stage4_max_rounds = MagicMock(return_value=1)
+
+        orch._handle_round_outcome(round_ctx=minimal_round_ctx)
+
+        orch._interview_round.hydrate_persisted_stage4_previous_attempt.assert_called_once_with(
+            next_ep=1,
+            arc_num=1,
+            previous_attempt={},
+        )
+        run_kwargs = orch._interview_round.run.call_args.kwargs
+        assert run_kwargs["previous_attempt"]["fix_scope"] == "partial"
+        assert run_kwargs["director_feedback"] == "persisted reject\nruntime advisory"
+
     def test_handle_round_outcome_injects_stage4_to_3_feedback_into_inplace_patch(
         self,
         orch_with_ctx,

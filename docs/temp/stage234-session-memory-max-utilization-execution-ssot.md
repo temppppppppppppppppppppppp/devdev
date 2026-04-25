@@ -1,15 +1,15 @@
 # Stage234 Session Memory Max-Utilization Execution SSOT
 
 Date: 2026-04-23
-Status: in_progress (3-pass audited; fresh re-audit PASS on 2026-04-24; upstream #5 proof gate closed; opened for bounded memory/cache rollout)
+Status: in_progress (3-pass audited; fresh re-audit PASS on 2026-04-24; upstream #5 proof gate closed; bounded Stage4 envelope seed plus persisted resume hydration landed; bounded Stage3 retrieval-window and budget hardening landed)
 Canonical Path: `docs/2026-04-23/stage234-session-memory-max-utilization-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage234-session-memory-max-utilization-execution-ssot.md`
 Commit State:
 - Baseline Commit: `30b9436fc3a5c3fcc3f6397bf23bfe45d24af918`
 - Baseline Dirty Summary: `dirty: modified docs/temp/queue-state.json from prior queue sync; untracked docs/2026-04-23/`
 - Resume Commit: `fabf78127cbcdfb724c35a38f314a25b94ec9ce5`
-- Resume Dirty Summary: `clean at branch open; post-reaudit working tree carries bounded Stage4 test-contract patch plus fresh audit/SSOT metadata docs`
-- Resume Drift Summary: `PR #11 merged the #5 proof-governor closure into main; fresh re-audit PASS is recorded in docs/2026-04-24/stage234-session-memory-fresh-reaudit-3pass-audit.md; next execution unit is provider-neutral session-memory envelope plus Stage4-facing runtime hardening`
+- Resume Dirty Summary: `clean at branch open; current working tree carries bounded Stage4 envelope seed, persisted-attempt resume hydration, trim-resistant Stage4 carryover hardening, bounded Stage3 retrieval-window and budget hardening, targeted regressions, and fresh audit/SSOT metadata docs`
+- Resume Drift Summary: `PR #11 merged the #5 proof-governor closure into main; fresh re-audit PASS is recorded in docs/2026-04-24/stage234-session-memory-fresh-reaudit-3pass-audit.md; same-day bounded rollout has now landed provider-neutral Stage4 session-memory envelope seeding plus persisted-attempt resume hydration`
 Source Survey Docs:
 - `docs/2026-04-23/stage234-session-memory-max-utilization-deep-dive-adversarial-3pass-audit.md`
 - `docs/2026-04-23/authority-alignment-benchmark-operating-model-hardening-3pass-audit.md`
@@ -18,18 +18,22 @@ Evidence Artifacts:
 - `config/models.yaml`
 - `modules/core/providers/vertex_provider.py`
 - `modules/domain/agents/base_agent.py`
+- `modules/core/session_memory_envelope.py`
 - `modules/core/stage2_optimizer.py`
 - `modules/core/stage2_preflight.py`
 - `modules/core/stage3_orchestrator.py`
 - `modules/core/stage3_envelope_builder.py`
 - `modules/core/stage4_interview_round.py`
+- `modules/core/stage4_orchestrator.py`
 - `modules/core/stage4_reject_runtime.py`
 - `modules/core/db_manager.py`
 - `tests/test_base_agent.py`
 - `tests/test_blueprint_ensemble_generate_ensemble.py`
 - `tests/test_chief_writer.py`
+- `tests/test_session_memory_envelope.py`
 - `tests/test_stage2_optimizer.py`
 - `tests/test_stage4_interview_round.py`
+- `tests/test_stage4_orchestrator.py`
 Side-Effect Coverage: covered
 
 ## 0. Execution Metadata Block
@@ -255,11 +259,94 @@ Implemented scope:
 
 Tranche impact:
 - Tranche 2, internal session-memory envelope contract: Stage4 seed completed.
-- Tranche 3, Stage4-first runtime hardening: telemetry-facing envelope subset completed.
-- Persisted-attempt resume hydration remains pending.
+- Tranche 3, Stage4-first runtime hardening: telemetry-facing envelope subset completed; persisted-attempt resume hydration moved into the bounded follow-up unit below.
 - Stage3 and Stage2 consumption remain pending.
 
 Validation:
 - `py -3.12 -m pytest tests/test_session_memory_envelope.py tests/test_stage4_interview_round.py -q` -> 318 passed.
 - `python scripts/check_utf8_hygiene.py ...` -> passed for touched code, tests, SSOT, roadmap, queue state, and fresh audit doc.
 - Complexity recount: touched production functions remain below 120 LOC; largest touched function is `_build_stage4_db_attempt_payload` at 101 LOC.
+
+## 15. 2026-04-24 Second Implementation Unit
+
+Status: persisted-attempt resume hydration completed.
+
+Implemented scope:
+- Reused the provider-neutral envelope through `get_session_memory_envelope(...)` so persisted Stage4 advisory payloads can be replayed without trusting provider-native hidden state.
+- Added persisted-attempt hydration in `modules/core/stage4_interview_round.py` to rebuild `previous_attempt` from the latest same-episode `stage_attempts` row, advisory flags, saved artifact text, and compacted prior attempts.
+- Threaded `reject_bucket` through the envelope so restart/resume routing keeps the prior rejection lane visible to the next retry.
+- Added orchestrator-side pre-round hydration in `modules/core/stage4_orchestrator.py` so restart/resume loads the hydrated attempt before the first retry turn and seeds fallback `director_feedback` from stored merged feedback when needed.
+- Preserved the existing DB schema and provider-neutral authority posture; the runtime still reads from DB/advisory/artifact surfaces rather than provider-native session memory.
+
+Tranche impact:
+- Tranche 2, internal session-memory envelope contract: Stage4 advisory persistence plus resume-read path completed.
+- Tranche 3, Stage4-first runtime hardening: persisted-attempt resume hydration completed.
+- Stage4 trim-sensitive truth pinning and numeric baseline-promotion closure moved into the bounded follow-up unit below.
+- Stage3 and Stage2 consumption remain pending.
+
+Validation:
+- `py -3.12 -m pytest tests/test_session_memory_envelope.py tests/test_stage4_interview_round.py tests/test_stage4_orchestrator.py::TestHandleRoundOutcomeErrorPaths::test_handle_round_outcome_hydrates_persisted_previous_attempt_before_first_round -q` -> 322 passed.
+- `python scripts/check_utf8_hygiene.py modules/core/session_memory_envelope.py modules/core/stage4_interview_round.py modules/core/stage4_orchestrator.py tests/test_session_memory_envelope.py tests/test_stage4_interview_round.py tests/test_stage4_orchestrator.py docs/2026-04-23/stage234-session-memory-max-utilization-execution-ssot.md docs/temp/stage234-session-memory-max-utilization-execution-ssot.md docs/2026-04-24/stage234-session-memory-fresh-reaudit-3pass-audit.md` -> passed.
+- Residual note: full `tests/test_stage4_orchestrator.py -q` still shows two unrelated `TestCrossEpisodeRepetitionHook` failures rooted in `modules/core/stage4_post_processor.py` deepcopying `sqlite3.Connection`; this tranche did not change that path.
+
+## 16. 2026-04-24 Third Implementation Unit
+
+Status: trim-resistant truth pinning and numeric contract carryover hardening completed.
+
+Implemented scope:
+- Preserved structured `truth_pin_items` inside `modules/core/session_memory_envelope.py` so post-select conflict pins survive persistence instead of collapsing away when they arrive as list-form contract metadata.
+- Backfilled a stable top-level truth-pin summary from structured pins so persisted envelopes and resumed attempts keep provider-neutral pin keys such as opening continuity or proper-noun/asset drift anchors.
+- Hardened `modules/core/stage4_interview_round.py` compact history snapshots to retain truth pins, truth-pin items, reuse contracts, repair contracts, scope authority/origin, and fix-pack provenance through retry-history trimming.
+- Extended `modules/core/stage4_reject_runtime.py` carryover projection so reject retry contracts keep truth-pin and numeric-authority context when the runtime rebuilds the next attempt packet.
+- Preserved the existing DB schema and provider-neutral authority posture; the added carryover remains derived from DB/advisory/conflict-contract surfaces rather than provider-native session state.
+
+Tranche impact:
+- Tranche 3, Stage4-first runtime hardening: trim-sensitive truth pinning completed.
+- Tranche 3, Stage4-first runtime hardening: numeric baseline-promotion contract carryover completed for persisted/retry history and resume hydration surfaces.
+- Stage4-first runtime hardening is now completed as a bounded tranche.
+- Stage3 and Stage2 consumption remain pending.
+
+Validation:
+- `py -3.12 -m pytest tests/test_session_memory_envelope.py tests/test_stage4_interview_round.py -q` -> 323 passed.
+- `python scripts/check_utf8_hygiene.py modules/core/session_memory_envelope.py modules/core/stage4_interview_round.py modules/core/stage4_reject_runtime.py tests/test_session_memory_envelope.py tests/test_stage4_interview_round.py docs/2026-04-23/stage234-session-memory-max-utilization-execution-ssot.md docs/temp/stage234-session-memory-max-utilization-execution-ssot.md docs/2026-04-24/stage234-session-memory-fresh-reaudit-3pass-audit.md` -> passed.
+
+## 17. 2026-04-24 Fourth Implementation Unit
+
+Status: Stage3 anchor-aware retrieval-window hardening completed.
+
+Implemented scope:
+- Removed the extra `focus_window[-5:]` tail collapse in `modules/core/stage3_envelope_builder.py`.
+- Reused the already bounded anchor-aware `blueprint_window` for Stage3 smart retrieval planning and work-focus resolution.
+- Preserved the existing Stage3 bounded-history guardrails because `_select_stage3_anchor_recent_window(...)` still limits the source set to `24 recent + 6 anchor`.
+- Kept the provider-neutral authority posture unchanged; only retrieval-planning inputs widened, with no DB/schema or provider-native state promotion.
+
+Tranche impact:
+- Tranche 4, Stage3 budget and retrieval hardening: broader anchor-aware retrieval window completed.
+- Tranche 4, Stage3 budget and retrieval hardening: budget arbiter moved into the bounded follow-up unit below.
+- Stage2 retry-memory hardening remains pending.
+
+Validation:
+- `py -3.12 -m pytest tests/test_stage3_orchestrator.py tests/test_stage3_orchestrator_lane_e.py tests/test_stage3_orchestrator_legacy_tail_lane_f.py tests/test_context_advisor.py -q` -> 137 passed.
+- `python scripts/check_utf8_hygiene.py modules/core/stage3_envelope_builder.py tests/test_stage3_orchestrator_lane_e.py docs/2026-04-23/stage234-session-memory-max-utilization-execution-ssot.md docs/temp/stage234-session-memory-max-utilization-execution-ssot.md docs/2026-04-24/stage234-session-memory-fresh-reaudit-3pass-audit.md` -> passed.
+- `python scripts/ops_validator.py --strict` -> PASS, errors=0, warnings=0.
+
+## 18. 2026-04-24 Fifth Implementation Unit
+
+Status: Stage3 semantic budget-arbiter hardening completed.
+
+Implemented scope:
+- Added a bounded Stage3 semantic-context budget arbiter in `modules/core/stage3_orchestrator.py`.
+- Converted Stage3 semantic bundle assembly from blind prepend chaining into named sections so advisory blocks, work-focus summary, and retrieval context can be trimmed deterministically against `plan.total_budget_chars`.
+- Reused the existing `ContextBudgetTracker` and `build_context_budget_ledger(...)` surfaces so Stage3 observability now records actual dropped chars, overflow, headroom, and trim state instead of only post-hoc over-budget detection.
+- Preserved the work-focus summary as a protected section and surfaced whether it survived or was trimmed through `protected_summary_survived`, `trimmed_work_slot_summary`, and `mandatory_context_chars`.
+- Added a regression test that fixes the Stage3 contract at the semantic bundle boundary: the final Stage3 semantic context must fit the configured cap, emit `semantic_ctx_budget_trimmed`, and keep the work-focus summary alive.
+
+Tranche impact:
+- Tranche 4, Stage3 budget and retrieval hardening: budget arbiter completed.
+- Tranche 4, Stage3 budget and retrieval hardening: repeated-coverage-warning promotion remains pending bounded follow-up work.
+- Stage2 retry-memory hardening remains pending.
+
+Validation:
+- `py -3.12 -m pytest tests/test_stage3_orchestrator.py tests/test_stage3_orchestrator_lane_e.py tests/test_stage3_orchestrator_legacy_tail_lane_f.py tests/test_context_advisor.py -q` -> 138 passed.
+- `python scripts/check_utf8_hygiene.py modules/core/stage3_orchestrator.py tests/test_stage3_orchestrator.py docs/2026-04-23/stage234-session-memory-max-utilization-execution-ssot.md docs/temp/stage234-session-memory-max-utilization-execution-ssot.md docs/2026-04-24/stage234-session-memory-fresh-reaudit-3pass-audit.md` -> passed.
+- `python scripts/ops_validator.py --strict` -> PASS, errors=0, warnings=0.

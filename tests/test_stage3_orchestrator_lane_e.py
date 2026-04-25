@@ -16,7 +16,7 @@ def orch():
 def test_build_stage3_blueprint_semantic_bundle_shell_delegates_to_helper_family(orch):
     prev_blueprints = [{"ep_num": ep} for ep in range(1, 9)]
     expected_window = _select_stage3_anchor_recent_window(prev_blueprints)
-    expected_focus_window = expected_window[-5:]
+    expected_focus_window = expected_window
     smart_bundle = {"semantic_ctx": "[sc]", "work_focus": {"focus": "npc"}, "plan": object()}
     final_bundle = {
         "semantic_ctx": "[final]",
