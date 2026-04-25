@@ -79,6 +79,36 @@ jobs:
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
 
+      - name: Run CI reliability meta smoke
+        run: |
+          python -m pytest -q \
+            tests/test_run_pytest_lowmem.py \
+            tests/test_telemetry_dual_instance.py
+
+      - name: Run memory persistence reliability shard
+        run: |
+          python scripts/run_pytest_lowmem.py \
+            --chunk-size 3 \
+            --capture=fd \
+            --tb=short \
+            --log-dir logs/pytest_lowmem/ci-reliability \
+            --memory-pause-threshold-percent 99 \
+            --memory-resume-threshold-percent 95 \
+            --memory-poll-seconds 2 \
+            --keep-going \
+            tests/test_session_memory_envelope.py \
+            tests/test_fact_ledger.py \
+            tests/test_world_state_manager.py \
+            tests/test_logging_enhancement.py \
+            tests/test_logging_phase2.py \
+            tests/test_audit_service.py \
+            tests/test_bridge_quality_summary.py \
+            tests/test_archive_benchmark_record.py \
+            tests/test_pass_rate_monitor_rol.py \
+            tests/test_stage4_interview_round.py
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
