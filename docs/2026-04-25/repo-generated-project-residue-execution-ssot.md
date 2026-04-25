@@ -1,14 +1,14 @@
 # Repo Generated Project Residue Execution SSOT
 
 Date: 2026-04-25
-Status: in-progress (generated project and root temp removal complete; spikes preservation follow-up next)
+Status: closed (generated project, root temp, and spikes preservation cleanup complete)
 Canonical Path: `docs/2026-04-25/repo-generated-project-residue-execution-ssot.md`
 Temp Mirror Path: `docs/temp/repo-generated-project-residue-execution-ssot.md`
 Commit State:
 - Baseline Commit: `f93b5749c38e6374669b199fb8a0da65d0f2aac0`
 - Baseline Dirty Summary: `clean branch feat/repo-hygiene-next-wave-survey opened from main after PR #21 merge`
-- Resume Commit: `217bfb7d6b2619ff682abd7f892aa6a1d0fb86f2`
-- Resume Drift Summary: `PR #23 merged generated-project removal into main; branch feat/repo-root-temp-residue-cleanup opened and removed only the 11 preflight-approved root/temp paths while preserving 0_temp.txt`
+- Resume Commit: `f03cadf3042f946ac6487fd8523a7dcecd37932a`
+- Resume Drift Summary: `PR #24 merged root-temp removal into main; branch feat/spikes-preservation-cleanup opened to preserve useful spike conclusions, remove the tracked spikes prototype tree, and close this queue item`
 Source Survey Docs:
 - `docs/2026-04-24/repo-trashbox-candidate-survey.md`
 - `docs/2026-04-25/repo-trashbox-quarantine-move-plan.md`
@@ -16,6 +16,7 @@ Source Survey Docs:
 - `docs/2026-04-25/repo-trashbox-low-risk-removal-preflight-reaudit.md`
 - `docs/2026-04-25/repo-generated-project-residue-removal-preflight-reaudit.md`
 - `docs/2026-04-25/repo-root-temp-residue-removal-preflight-reaudit.md`
+- `docs/2026-04-25/repo-spikes-preservation-removal-preflight-reaudit.md`
 Evidence Artifacts:
 - `.gitignore`
 - `tests/test_surface_containment_contract.py`
@@ -26,6 +27,8 @@ Post-Removal Evidence:
 - `git ls-files -- temp-electron-paths.js temp-proc-poll-oswarn.ps1 temp-proc-poll.ps1 temp-proc-trace.ps1 temp-run-packaged-ascii.ps1 temp-run-packaged.ps1 temp.txt temp/yt_test temp_triage_test.json temp_시리즈.txt`
 - `git ls-files -- 0_temp.txt`
 - `git check-ignore --no-index temp-electron-paths.js temp-run-packaged.ps1 temp.txt temp_시리즈.txt temp_triage_test.json temp/yt_test/example.json`
+- `git ls-files -- spikes`
+- `git check-ignore --no-index spikes/example.txt spikes/subprocess/example.py`
 Side-Effect Coverage: covered
 
 ## 0. Execution Metadata Block
@@ -36,8 +39,8 @@ execution_meta:
   topic: repo-generated-project-residue
   github_issue: 9
   depends_on: []
-  status: in_progress
-  queue_role: front_active
+  status: completed
+  queue_role: closed
   roadmap_rank: 1
   tranches:
     - id: generated-project-removal
@@ -50,9 +53,9 @@ execution_meta:
 
 ## 1. Intent
 
-Continue repository hygiene after the bounded repo-trashbox cleanup closure by targeting generated project residue and root temp residue that can be removed without touching live runtime surfaces.
+Continue repository hygiene after the bounded repo-trashbox cleanup closure by targeting generated project residue, root temp residue, and prototype spike residue that can be removed without touching live runtime surfaces.
 
-This SSOT does not authorize broad removal of `test_mode/`, `lite_mode/`, or `spikes/`. The generated project removal tranche removed only `test_mode/projects/` plus `lite_mode/projects/`, and the root temp tranche removed only the 11 paths authorized by the fresh preflight re-audit while preserving `0_temp.txt`.
+This SSOT does not authorize broad removal of `test_mode/` or `lite_mode/`. The generated project removal tranche removed only `test_mode/projects/` plus `lite_mode/projects/`, the root temp tranche removed only the 11 paths authorized by the fresh preflight re-audit while preserving `0_temp.txt`, and the spikes tranche removed `spikes/` only after preserving useful conclusions in a dated preflight document.
 
 ## 2. Baseline Facts
 
@@ -66,7 +69,7 @@ Current live tracked inventory:
 | `lite_mode/` total | 1554 | 42426849 | mixed manual source plus generated project residue | do not remove whole tree |
 | root/temp removable set | 11 | 1127159 | YouTube-test residue and helper scripts | completed manifest-bound `git rm` |
 | `0_temp.txt` | 1 | 22445 | historical evidence anchor | preserve |
-| `spikes/` | 7 | 26468 | prototype notes/code | preserve useful notes before cleanup |
+| `spikes/` | 7 | 26468 | prototype notes/code | conclusions preserved; completed manifest-bound `git rm` |
 
 The two generated project trees have:
 
@@ -88,13 +91,15 @@ lite_mode/projects/
 - completed: contract/test update so generated project residue absence is asserted
 - completed: `git rm -r --` the 11 preflight-approved root/temp residue paths
 - completed: root-only ignore policy for future temp residue
-- in progress: spikes preservation follow-up decision after validation
+- completed: preserved useful `spikes/**/result.md` conclusions in `docs/2026-04-25/repo-spikes-preservation-removal-preflight-reaudit.md`
+- completed: `git rm -r -- spikes`
+- completed: root-level ignore policy for future `spikes/` prototype residue
+- completed: temp queue closure after validation
 
 ## 4. Excluded Scope
 
 - `test_mode/` non-project manual helpers
 - `lite_mode/` non-project manual helpers
-- `spikes/`
 - `0_temp.txt`
 - `projects/_canary/`
 - runtime code, packaging code, and source entrypoints
@@ -121,6 +126,7 @@ File writes / artifacts:
 
 - Completed implementation deleted tracked generated project artifacts via Git.
 - Completed implementation deleted the 11 preflight-approved root/temp residue paths via Git.
+- Completed implementation deleted the tracked `spikes/` prototype tree via Git after preserving conclusions.
 - No local trashbox copy was created.
 
 DB / schema / transaction boundaries:
@@ -147,6 +153,7 @@ Bootstrap fallback / config-env mutation:
 
 - `.gitignore` prevents future generated project residue from re-entering the tracked surface.
 - `.gitignore` now prevents future root `temp-*`, `temp.txt`, `temp_*.txt`, `temp_triage_test.json`, and `temp/` residue from re-entering the tracked surface without ignoring `docs/temp/`.
+- `.gitignore` now prevents future root `spikes/` prototype residue from re-entering the tracked surface.
 
 ## 8. Pass 3 - Execution Shape
 
@@ -176,7 +183,18 @@ The PR verifies that:
 - root-only `.gitignore` rules prevent future temp residue while leaving `docs/temp/` available for queue mirrors
 - no runtime code changes are bundled
 
-Tranche 3 may handle `spikes/` only after useful `spikes/**/result.md` conclusions are preserved or explicitly judged unnecessary.
+Tranche 3 was a separate focused spikes preservation cleanup:
+
+```text
+git rm -r -- spikes
+```
+
+The PR verifies that:
+
+- the useful spike conclusions are preserved in `docs/2026-04-25/repo-spikes-preservation-removal-preflight-reaudit.md`
+- `git ls-files -- spikes` returns no files after removal
+- `.gitignore` prevents future root `spikes/` prototype residue
+- no runtime code changes are bundled
 
 Pass 3 result: pass.
 
@@ -187,8 +205,9 @@ Pass 3 result: pass.
 - Non-project manual helper files under `test_mode/` and `lite_mode/` remain tracked.
 - The 11 preflight-approved root/temp residue paths have zero tracked files. (complete)
 - `0_temp.txt` remains tracked. (complete)
-- `spikes/` remains untouched.
-- `docs/temp/queue-state.json` reflects the active or closed state honestly.
+- Useful `spikes/**/result.md` conclusions are preserved in a dated docs note. (complete)
+- `spikes/` has zero tracked files. (complete)
+- The active temp mirror and `docs/temp/queue-state.json` are removed because the queue is exhausted. (complete)
 - `python scripts/ops_validator.py --strict` passes.
 
 ## 10. Verification Plan
@@ -200,9 +219,10 @@ After implementation:
 - `git ls-files -- temp-electron-paths.js temp-proc-poll-oswarn.ps1 temp-proc-poll.ps1 temp-proc-trace.ps1 temp-run-packaged-ascii.ps1 temp-run-packaged.ps1 temp.txt temp/yt_test temp_triage_test.json temp_시리즈.txt`
 - `git ls-files -- 0_temp.txt`
 - `git check-ignore --no-index temp-electron-paths.js temp-run-packaged.ps1 temp.txt temp_시리즈.txt temp_triage_test.json temp/yt_test/example.json`
-- `python scripts/sync_temp_queue_state.py`
+- `git ls-files -- spikes`
+- `git check-ignore --no-index spikes/example.txt spikes/subprocess/example.py`
 - `python scripts/ops_validator.py --strict`
-- `python scripts/check_utf8_hygiene.py docs/2026-04-25/repo-root-temp-residue-removal-preflight-reaudit.md docs/2026-04-25/repo-generated-project-residue-execution-ssot.md docs/temp/repo-generated-project-residue-execution-ssot.md docs/temp/queue-state.json tests/test_surface_containment_contract.py docs/implementation/surface-containment-contract-v1.json .gitignore`
+- `python scripts/check_utf8_hygiene.py docs/2026-04-25/repo-spikes-preservation-removal-preflight-reaudit.md docs/2026-04-25/repo-generated-project-residue-execution-ssot.md tests/test_surface_containment_contract.py docs/implementation/surface-containment-contract-v1.json .gitignore`
 - `python -m pytest tests/test_surface_containment_contract.py tests/test_runtime_authority_contract.py -q`
 
 ## 11. Generated Project Removal Closure Note
@@ -216,7 +236,7 @@ Implemented:
 
 Residual queue:
 
-- `spikes/` still requires notes-preservation review before cleanup
+- none
 
 ## 12. Root Temp Removal Closure Note
 
@@ -229,18 +249,31 @@ Implemented:
 
 Residual queue:
 
-- `spikes/` still requires notes-preservation review before cleanup
+- none
 
-## 13. Guardrails
+## 13. Spikes Preservation Cleanup Closure Note
+
+Implemented:
+
+- preserved useful conclusions from `spikes/bridge/result.md`, `spikes/electron/result.md`, `spikes/pyinstaller/result.md`, and `spikes/subprocess/result.md`
+- removed the tracked `spikes/` prototype tree
+- updated `docs/implementation/surface-containment-contract-v1.json` and `tests/test_surface_containment_contract.py` so spike residue is expected to be absent while the preservation document is expected to remain
+- added root-level `.gitignore` coverage for future `spikes/` residue
+- removed the active temp mirror and `docs/temp/queue-state.json` because all tranches are complete
+
+Residual queue:
+
+- none
+
+## 14. Guardrails
 
 - Do not delete all of `test_mode/`.
 - Do not delete all of `lite_mode/`.
-- Do not touch `spikes/` in the root-temp PR.
 - Do not delete `0_temp.txt` unless a separate evidence-preservation decision supersedes this SSOT.
 - Do not treat old size estimates as authority when live `git ls-files -z` evidence differs.
-- Do not proceed to cleanup without a fresh current-state re-audit of this SSOT.
+- Do not reintroduce `spikes/` prototype files into normal tracked source unless a new execution SSOT explicitly authorizes it.
 
-## 14. Document 3-Pass Audit
+## 15. Document 3-Pass Audit
 
 Pass 1 - Structure and scope:
 

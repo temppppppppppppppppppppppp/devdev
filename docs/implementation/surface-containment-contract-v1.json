@@ -83,6 +83,18 @@
     "preserved_evidence_files": [
       "0_temp.txt"
     ],
+    "removed_tracked_spike_paths": [
+      "spikes/bridge/result.md",
+      "spikes/electron/result.md",
+      "spikes/pyinstaller/result.md",
+      "spikes/pyinstaller/spike_pyinstaller.py",
+      "spikes/pyinstaller/spike_pyinstaller.spec",
+      "spikes/subprocess/result.md",
+      "spikes/subprocess/spike_subprocess.py"
+    ],
+    "preserved_spike_summary_docs": [
+      "docs/2026-04-25/repo-spikes-preservation-removal-preflight-reaudit.md"
+    ],
     "removed_tracked_files": [
       "crash_dump.log",
       "error.log",
@@ -93,7 +105,8 @@
       "MagicMock",
       "tmp_stage2_digest_debug",
       "test_mode/projects",
-      "lite_mode/projects"
+      "lite_mode/projects",
+      "spikes"
     ],
     "ignored_future_root_temp_paths": [
       "/temp-*",
