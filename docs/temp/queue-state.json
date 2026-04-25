@@ -1,8 +1,20 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-25T07:03:05.258917+00:00",
-  "queue_mode": "empty",
-  "active_item_count": 0,
+  "generated_at": "2026-04-25T07:15:02.730653+00:00",
+  "queue_mode": "single",
+  "active_item_count": 1,
   "roadmap": null,
-  "items": []
+  "items": [
+    {
+      "topic": "repo-generated-project-residue",
+      "temp_path": "docs/temp/repo-generated-project-residue-execution-ssot.md",
+      "canonical_path": "docs/2026-04-25/repo-generated-project-residue-execution-ssot.md",
+      "status": "in_progress",
+      "queue_role": "front_active",
+      "roadmap_rank": null,
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    }
+  ]
 }
