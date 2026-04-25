@@ -56,6 +56,8 @@ def test_residue_surfaces_are_removed_or_tracked_separately_from_live_inventory(
     removed_project_dirs = CONTRACT["residue_surfaces"]["removed_tracked_project_directories"]
     removed_temp_paths = CONTRACT["residue_surfaces"]["removed_tracked_temp_paths"]
     preserved_evidence_files = CONTRACT["residue_surfaces"]["preserved_evidence_files"]
+    removed_spike_paths = CONTRACT["residue_surfaces"]["removed_tracked_spike_paths"]
+    preserved_spike_summary_docs = CONTRACT["residue_surfaces"]["preserved_spike_summary_docs"]
     removed_files = CONTRACT["residue_surfaces"]["removed_tracked_files"]
 
     for rel_path in removed_dirs:
@@ -80,7 +82,18 @@ def test_residue_surfaces_are_removed_or_tracked_separately_from_live_inventory(
     )
     assert tracked_temp_residue == ""
 
+    tracked_spike_residue = subprocess.check_output(
+        ["git", "ls-files", "--", *removed_spike_paths],
+        cwd=ROOT,
+        text=True,
+        encoding="utf-8",
+    )
+    assert tracked_spike_residue == ""
+
     for rel_path in preserved_evidence_files:
+        assert (ROOT / rel_path).exists()
+
+    for rel_path in preserved_spike_summary_docs:
         assert (ROOT / rel_path).exists()
 
     tracked_preserved_evidence = subprocess.check_output(

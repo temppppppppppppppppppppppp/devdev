@@ -55,6 +55,7 @@ projects/MagicMock/
 tmp_stage2_digest_debug/
 test_mode/projects/
 lite_mode/projects/
+spikes/
 
 # === 루트 임시 파일/디렉터리 ===
 /temp-*
