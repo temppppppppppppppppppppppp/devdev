@@ -99,6 +99,27 @@ def test_fit_prompt_text_preserves_tail_context_for_failure_report():
     assert "...(중간 생략)..." in result
 
 
+def test_compose_rejection_pattern_feedback_preserves_retry_advisories():
+    orch = Stage2Orchestrator(app=MagicMock(), context=_make_ctx(arcs=[]))
+
+    feedback = orch._compose_rejection_pattern_feedback(
+        [
+            {
+                "reason": "carryover drift",
+                "specific_issue": "restore bridge packet",
+                "retry_directives": "repair only the state bridge",
+                "runtime_advisory": "verify carryover authority before rewrite",
+            }
+        ],
+        global_arc_no=4,
+    )
+
+    assert "carryover drift" in feedback
+    assert "restore bridge packet" in feedback
+    assert "repair only the state bridge" in feedback
+    assert "verify carryover authority before rewrite" in feedback
+
+
 def test_stage2_failure_report_source_normalizes_constraints_before_reporting():
     src = Path("modules/core/stage2_orchestrator.py").read_text(encoding="utf-8")
 

@@ -2,7 +2,7 @@
 [V60.25] Stage 2 Optimizer
 Stage 2 Arc 생성 통과율 최적화 모듈
 
-utf8-hygiene: allow-file -- legacy Korean regex and prompt strings predate this bounded patch; current edits are ASCII-bounded.
+utf8-hygiene: allow-file -- legacy Korean regex and prompt strings predate this bounded patch; current edits only extend existing UTF-8 prompt surfaces.
 
 Components:
 1. StateSnapshotInjector - 이전 Arc 종료 상태를 정확히 주입
@@ -41,13 +41,31 @@ _ABSTRACT_ITEMS_CONSUMED_RE = re.compile(
 )
 
 _KOREAN_NUMBER_RE = re.compile(r"-?\d+(?:\.\d+)?")
+_STAGE2_FAILURE_MEMORY_RECORD_LIMIT = 30
+_STAGE2_FAILURE_PROMPT_RECENT_LIMIT = 6
+_STAGE2_FAILURE_PROMPT_FIELD_CHARS = 240
+
+
+def _clean_stage2_failure_text(value: Any) -> str:
+    return str(value or "").strip()
+
+
+def _fit_stage2_failure_prompt_text(value: Any, max_chars: int = _STAGE2_FAILURE_PROMPT_FIELD_CHARS) -> str:
+    text = _clean_stage2_failure_text(value)
+    if len(text) <= max_chars:
+        return text
+    if max_chars <= 20:
+        return text[:max_chars]
+    head_chars = max(10, max_chars // 2)
+    tail_chars = max(10, max_chars - head_chars - 5)
+    return f"{text[:head_chars].rstrip()} ... {text[-tail_chars:].lstrip()}"
 
 
 def _parse_korean_number(value: Any) -> float | None:
     """한국어 금액 문자열을 숫자로 변환한다. 예: 111.7억 -> 11170000000."""
     if value is None:
         return None
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return float(value)
     if not isinstance(value, str):
         return None
@@ -107,8 +125,12 @@ def _location_text_mentions_label(text: Any, label: str) -> bool:
 
 
 def _resolve_final_location_authority(tactical_doc: Any, arc_end_location: str, joint_location: str) -> str:
-    end_location = collapse_stage2_location_label(str(arc_end_location or "").strip()) or str(arc_end_location or "").strip()
-    final_location = collapse_stage2_location_label(str(joint_location or "").strip()) or str(joint_location or "").strip()
+    end_location = (
+        collapse_stage2_location_label(str(arc_end_location or "").strip()) or str(arc_end_location or "").strip()
+    )
+    final_location = (
+        collapse_stage2_location_label(str(joint_location or "").strip()) or str(joint_location or "").strip()
+    )
     if not end_location:
         return final_location
     if not final_location:
@@ -124,6 +146,7 @@ def _resolve_final_location_authority(tactical_doc: Any, arc_end_location: str, 
     if final_mentioned and not end_mentioned:
         return final_location
     return final_location
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 1. STATE SNAPSHOT INJECTOR
@@ -337,7 +360,7 @@ class ArcAutoCorrector:
             state = prev_arc.get("state_constraints", {})
             # [Sweep46] dict 아이템 → 이름 추출 (set 추가 시 unhashable 방지)
             # [BUG-F] protagonist_items 우선 폴백
-            for _it in (state.get("protagonist_items") or state.get("items_acquired", [])):
+            for _it in state.get("protagonist_items") or state.get("items_acquired", []):
                 if isinstance(_it, dict):
                     _n = _it.get("name", _it.get("item", ""))
                     if _n:
@@ -549,9 +572,7 @@ class ArcAutoCorrector:
         cleaned_loc = preferred_loc or cleaned_loc
 
         if current_loc != cleaned_loc:
-            self.corrections_made.append(
-                f"arc_end_state 위치 동기화: '{current_loc}' → '{cleaned_loc}'"
-            )
+            self.corrections_made.append(f"arc_end_state 위치 동기화: '{current_loc}' → '{cleaned_loc}'")
             arc_end["location"] = cleaned_loc
             state["arc_end_state"] = arc_end
             arc["state_constraints"] = state
@@ -572,9 +593,7 @@ class ArcAutoCorrector:
             for key in removed:
                 section.pop(key, None)
             if removed:
-                self.corrections_made.append(
-                    f"{section_key}에서 무협 전용 필드 제거: {removed}"
-                )
+                self.corrections_made.append(f"{section_key}에서 무협 전용 필드 제거: {removed}")
 
         arc["state_constraints"] = state
         return arc
@@ -659,9 +678,7 @@ class ArcAutoCorrector:
         if removed:
             state["items_consumed"] = filtered
             arc["state_constraints"] = state
-            self.corrections_made.append(
-                f"items_consumed 추상 개념 {len(removed)}건 제거: {removed[:3]}"
-            )
+            self.corrections_made.append(f"items_consumed 추상 개념 {len(removed)}건 제거: {removed[:3]}")
 
         return arc
 
@@ -705,24 +722,18 @@ class ArcAutoCorrector:
         end_state = state.get("arc_end_state", {})
         start_equip = set(_normalize_items(start_state.get("equipment", [])))
         # [BUG-F] protagonist_items 우선, items_acquired 폴백 (response_schemas 스키마 정합)
-        acquired = set(_normalize_items(
-            state.get("protagonist_items") or state.get("items_acquired", [])
-        ))
+        acquired = set(_normalize_items(state.get("protagonist_items") or state.get("items_acquired", [])))
         end_equip = set(_normalize_items(end_state.get("equipment", [])))
 
         # 1) 출처 불명 등장
         unexplained = sorted(end_equip - start_equip - acquired - prev_equip)
         if unexplained:
-            self.corrections_made.append(
-                f"[PATCH-B] 출처 불명 소지품: {unexplained[:5]} (items_acquired에 미등록)"
-            )
+            self.corrections_made.append(f"[PATCH-B] 출처 불명 소지품: {unexplained[:5]} (items_acquired에 미등록)")
 
         # 2) 이전 Arc 대비 시작 시점 소멸
         disappeared = sorted(prev_equip - start_equip)
         if disappeared:
-            self.corrections_made.append(
-                f"[PATCH-B] 이전 Arc 소지품 소멸: {disappeared[:5]} (처분/폐기 사유 미기재)"
-            )
+            self.corrections_made.append(f"[PATCH-B] 이전 Arc 소지품 소멸: {disappeared[:5]} (처분/폐기 사유 미기재)")
 
         return arc
 
@@ -991,6 +1002,12 @@ class FailureRecord:
     reason: str
     category: str
     details: str = ""
+    retry_directives: str = ""
+    runtime_advisory: str = ""
+    selection_reason: str = ""
+    fix_scope: str = ""
+    fix_scope_reasoning: str = ""
+    score_breakdown: str = ""
     timestamp: str = ""
 
 
@@ -1001,9 +1018,16 @@ class SessionFailureMemory:
     같은 세션에서 반복되는 실패 패턴을 학습하여 프롬프트에 주입
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        max_records: int = _STAGE2_FAILURE_MEMORY_RECORD_LIMIT,
+        recent_prompt_records: int = _STAGE2_FAILURE_PROMPT_RECENT_LIMIT,
+    ) -> None:
         self.failures: list[FailureRecord] = []
         self.pattern_counts: dict[str, int] = defaultdict(int)
+        self.max_records = max(1, int(max_records or _STAGE2_FAILURE_MEMORY_RECORD_LIMIT))
+        self.recent_prompt_records = max(1, int(recent_prompt_records or _STAGE2_FAILURE_PROMPT_RECENT_LIMIT))
 
     def record_failure(
         self,
@@ -1012,7 +1036,13 @@ class SessionFailureMemory:
         reason: str = "",
         category: str = "unknown",
         details: str = "",
-        failure_type: str = None,
+        failure_type: str | None = None,
+        retry_directives: str = "",
+        runtime_advisory: str = "",
+        selection_reason: str = "",
+        fix_scope: str = "",
+        fix_scope_reasoning: str = "",
+        score_breakdown: str = "",
     ):
         """실패 기록
 
@@ -1025,13 +1055,26 @@ class SessionFailureMemory:
             failure_type: 실패 유형 (category 대체)
         """
         # failure_type이 제공되면 category로 사용 (호환성)
-        actual_category = failure_type if failure_type else category
-        actual_reason = reason if reason else details
+        actual_category = _clean_stage2_failure_text(failure_type if failure_type else category) or "unknown"
+        actual_details = _clean_stage2_failure_text(details)
+        actual_reason = _clean_stage2_failure_text(reason) or actual_details
 
         record = FailureRecord(
-            arc_no=arc_no, attempt=attempt, reason=actual_reason, category=actual_category, details=details
+            arc_no=arc_no,
+            attempt=attempt,
+            reason=actual_reason,
+            category=actual_category,
+            details=actual_details,
+            retry_directives=_clean_stage2_failure_text(retry_directives),
+            runtime_advisory=_clean_stage2_failure_text(runtime_advisory),
+            selection_reason=_clean_stage2_failure_text(selection_reason),
+            fix_scope=_clean_stage2_failure_text(fix_scope),
+            fix_scope_reasoning=_clean_stage2_failure_text(fix_scope_reasoning),
+            score_breakdown=_clean_stage2_failure_text(score_breakdown),
         )
         self.failures.append(record)
+        if len(self.failures) > self.max_records:
+            del self.failures[: len(self.failures) - self.max_records]
         self.pattern_counts[actual_category] += 1
 
     def get_top_failure_patterns(self, n: int = 3) -> list[tuple[str, int]]:
@@ -1045,7 +1088,7 @@ class SessionFailureMemory:
             return ""
 
         top_patterns = self.get_top_failure_patterns(3)
-        recent_failures = self.failures[-5:]  # 최근 5개
+        recent_failures = self.failures[-self.recent_prompt_records :]
 
         prompt = f"""
 ╔══════════════════════════════════════════════════════════════════════════════╗
@@ -1059,8 +1102,23 @@ class SessionFailureMemory:
             prompt += f"║    • {pattern}: {count}회\n"
 
         prompt += "║\n║  【최근 실패 사례】\n"
-        for f in recent_failures:
-            prompt += f"║    • Arc {f.arc_no} (시도 {f.attempt}): {f.reason[:50]}\n"
+        for index, f in enumerate(recent_failures):
+            recency_rank = len(recent_failures) - index - 1
+            field_chars = max(120, _STAGE2_FAILURE_PROMPT_FIELD_CHARS - (recency_rank * 30))
+            reason = _fit_stage2_failure_prompt_text(f.reason, field_chars)
+            prompt += f"║    • Arc {f.arc_no} (시도 {f.attempt}, {f.category}): {reason}\n"
+            for label, value in (
+                ("details", f.details),
+                ("retry_directives", f.retry_directives),
+                ("runtime_advisory", f.runtime_advisory),
+                ("selection_reason", f.selection_reason),
+                ("fix_scope", f.fix_scope),
+                ("fix_scope_reasoning", f.fix_scope_reasoning),
+                ("score_breakdown", f.score_breakdown),
+            ):
+                rendered = _fit_stage2_failure_prompt_text(value, field_chars)
+                if rendered and rendered != reason:
+                    prompt += f"║      - {label}: {rendered}\n"
 
         prompt += """╚══════════════════════════════════════════════════════════════════════════════╝
 """

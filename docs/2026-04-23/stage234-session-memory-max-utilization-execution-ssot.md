@@ -1,14 +1,14 @@
 # Stage234 Session Memory Max-Utilization Execution SSOT
 
 Date: 2026-04-23
-Status: in_progress (3-pass audited; fresh re-audit PASS on 2026-04-24; upstream #5 proof gate closed; bounded Stage4 envelope seed plus persisted resume hydration landed; bounded Stage3 retrieval-window and budget hardening landed)
+Status: closed (3-pass audited; fresh re-audit PASS on 2026-04-24; upstream #5 proof gate closed; bounded Stage4 envelope seed plus persisted resume hydration landed; bounded Stage3 retrieval-window, budget, and repeated coverage-warning behavior hardening landed; bounded Stage2 retry-memory preservation landed; provider-native sidecars deferred)
 Canonical Path: `docs/2026-04-23/stage234-session-memory-max-utilization-execution-ssot.md`
-Temp Mirror Path: `docs/temp/stage234-session-memory-max-utilization-execution-ssot.md`
+Temp Mirror Path: `none`
 Commit State:
 - Baseline Commit: `30b9436fc3a5c3fcc3f6397bf23bfe45d24af918`
 - Baseline Dirty Summary: `dirty: modified docs/temp/queue-state.json from prior queue sync; untracked docs/2026-04-23/`
 - Resume Commit: `fabf78127cbcdfb724c35a38f314a25b94ec9ce5`
-- Resume Dirty Summary: `clean at branch open; current working tree carries bounded Stage4 envelope seed, persisted-attempt resume hydration, trim-resistant Stage4 carryover hardening, bounded Stage3 retrieval-window and budget hardening, targeted regressions, and fresh audit/SSOT metadata docs`
+- Resume Dirty Summary: `clean at branch open; current working tree carries bounded Stage4 envelope seed, persisted-attempt resume hydration, trim-resistant Stage4 carryover hardening, bounded Stage3 retrieval-window, budget, repeated coverage-warning behavior hardening, bounded Stage2 retry-memory preservation, targeted regressions, and fresh audit/SSOT metadata docs`
 - Resume Drift Summary: `PR #11 merged the #5 proof-governor closure into main; fresh re-audit PASS is recorded in docs/2026-04-24/stage234-session-memory-fresh-reaudit-3pass-audit.md; same-day bounded rollout has now landed provider-neutral Stage4 session-memory envelope seeding plus persisted-attempt resume hydration`
 Source Survey Docs:
 - `docs/2026-04-23/stage234-session-memory-max-utilization-deep-dive-adversarial-3pass-audit.md`
@@ -19,7 +19,9 @@ Evidence Artifacts:
 - `modules/core/providers/vertex_provider.py`
 - `modules/domain/agents/base_agent.py`
 - `modules/core/session_memory_envelope.py`
+- `modules/core/stage2_finalizer.py`
 - `modules/core/stage2_optimizer.py`
+- `modules/core/stage2_orchestrator.py`
 - `modules/core/stage2_preflight.py`
 - `modules/core/stage3_orchestrator.py`
 - `modules/core/stage3_envelope_builder.py`
@@ -31,7 +33,10 @@ Evidence Artifacts:
 - `tests/test_blueprint_ensemble_generate_ensemble.py`
 - `tests/test_chief_writer.py`
 - `tests/test_session_memory_envelope.py`
+- `tests/test_stage2_finalizer.py`
 - `tests/test_stage2_optimizer.py`
+- `tests/test_stage2_orchestrator.py`
+- `tests/test_stage2_preflight.py`
 - `tests/test_stage4_interview_round.py`
 - `tests/test_stage4_orchestrator.py`
 Side-Effect Coverage: covered
@@ -57,6 +62,7 @@ execution_meta:
     - id: optional-provider-native-sidecars
       title: Optional provider-native sidecars
   github_issue: 3
+  status: completed
 ```
 
 ## 1. Intent
@@ -350,3 +356,83 @@ Validation:
 - `py -3.12 -m pytest tests/test_stage3_orchestrator.py tests/test_stage3_orchestrator_lane_e.py tests/test_stage3_orchestrator_legacy_tail_lane_f.py tests/test_context_advisor.py -q` -> 138 passed.
 - `python scripts/check_utf8_hygiene.py modules/core/stage3_orchestrator.py tests/test_stage3_orchestrator.py docs/2026-04-23/stage234-session-memory-max-utilization-execution-ssot.md docs/temp/stage234-session-memory-max-utilization-execution-ssot.md docs/2026-04-24/stage234-session-memory-fresh-reaudit-3pass-audit.md` -> passed.
 - `python scripts/ops_validator.py --strict` -> PASS, errors=0, warnings=0.
+
+## 19. 2026-04-25 Sixth Implementation Unit
+
+Status: Stage3 repeated coverage-warning behavior hardening completed.
+
+Implemented scope:
+- Added bounded Stage3 coverage-warning history helpers in `modules/core/stage3_orchestrator.py` that read recent `quality_dashboard.retrieval_observation_history` rows without adding DB schema or provider-native memory authority.
+- Promoted repeated Stage3 `coverage_warnings` into deterministic behavior by injecting a `[Stage3 검색 커버리지 경고]` semantic section before budget arbitration when a warning repeats across current and recent Stage3 retrieval observations.
+- Kept telemetry honest: the escalation advisory does not fake missing relationship slices or suppress the original `coverage_warnings`; it only instructs the next Blueprint generation to explicitly recover the missing axis.
+- Threaded `repeated_coverage_warnings` and `coverage_warning_escalation_included` through Stage3 observability and persisted stage-attempt advisory flags.
+- Restored one corrupted Stage3 relation-slice sentinel from mojibake to `[관계 의미 질의]` after byte-level UTF-8 read-back proved it was real source text, not console rendering.
+
+Tranche impact:
+- Tranche 4, Stage3 budget and retrieval hardening: repeated coverage-warning behavior promotion completed.
+- Tranche 4 is now completed as a bounded Stage3 hardening tranche.
+- Stage2 retry-memory hardening remains pending as the next substrate widening step.
+
+Validation:
+- `py -3.12 -m pytest tests/test_stage3_orchestrator.py -k "coverage_warning or semantic_context_metadata or normalizes_non_dict_result" -q` -> 3 passed.
+- `py -3.12 -m pytest tests/test_stage3_orchestrator.py tests/test_stage3_orchestrator_lane_e.py tests/test_stage3_orchestrator_legacy_tail_lane_f.py tests/test_context_advisor.py -q` -> 139 passed.
+- `python scripts/check_utf8_hygiene.py modules/core/stage3_orchestrator.py tests/test_stage3_orchestrator.py` -> passed.
+- `git diff --check` -> passed.
+- Complexity recount: `_finalize_stage3_blueprint_semantic_bundle` is 142 LOC after the patch; it remains a Stage3 semantic core plus observability sink boundary and stays below the 180 LOC high-risk band.
+
+## 20. 2026-04-25 Seventh Implementation Unit
+
+Status: Stage2 retry-memory preservation hardening completed.
+
+Implemented scope:
+- Extended `SessionFailureMemory` to retain richer Stage2 reject context: verdict-derived reason, details, retry directives, runtime advisory, selection reason, fix scope, fix-scope reasoning, and score-breakdown summary.
+- Replaced the old recent-failure prompt collapse from `reason[:50]` with bounded head-plus-tail fitting so the newest failure keeps its actionable tail while older recent failures receive progressively smaller prompt budgets.
+- Threaded Stage2 REJECT metadata from `Stage2Finalizer` into both `stage_rejection_history` and optimizer failure memory without adding DB schema, provider-native memory authority, or hidden state above existing stage-attempt/session-decision logs.
+- Expanded Stage2 patch/retry feedback to include persisted `verdict_reason`, `runtime_advisory`, and `retry_directives`, and taught raw rejection-pattern fallback feedback to preserve retry directives and runtime advisories when the helper callback is unavailable.
+
+Tranche impact:
+- Tranche 5, Stage2 retry-memory hardening: richer retained feedback completed.
+- Tranche 5, Stage2 retry-memory hardening: recency-aware prompt retention completed.
+- Optional provider-native sidecars remain deferred behind internal substrate and benchmark gates.
+
+Validation:
+- `py -3.12 -m pytest tests/test_stage2_optimizer.py tests/test_stage2_finalizer.py -k "failure_memory or optimizer_failure or reject_metrics_records_optimizer_failure" -q` -> 3 passed.
+- `py -3.12 -m pytest tests/test_stage2_preflight.py -k "build_patch_feedback" -q` -> 2 passed.
+- `py -3.12 -m pytest tests/test_stage2_orchestrator.py -k "rejection_pattern_feedback or fit_prompt_text" -q` -> 2 passed.
+- `py -3.12 -m pytest tests/test_stage2_optimizer.py tests/test_stage2_finalizer.py tests/test_stage2_preflight.py tests/test_stage2_orchestrator.py tests/test_stage2_preflight_helpers.py -q` -> 245 passed.
+- Complexity recount: touched Stage2 production functions remain below the 120 LOC caution band; largest touched function is `_record_stage2_reject_side_metrics` at 76 LOC.
+
+## 21. 2026-04-25 Closure Note
+
+Status: closed.
+
+Realized scope:
+- Tranche 1 cache-path proof remains satisfied by the upstream `#5` proof-governor closure and its retained historical evidence.
+- Tranche 2 internal session-memory envelope contract landed through the provider-neutral Stage4 envelope seed and persisted advisory read/write path.
+- Tranche 3 Stage4-first runtime hardening landed through persisted-attempt resume hydration, trim-resistant truth pins, and numeric carryover contract preservation.
+- Tranche 4 Stage3 budget and retrieval hardening landed through anchor-aware retrieval-window expansion, semantic-context budget arbitration, and repeated coverage-warning behavior promotion.
+- Tranche 5 Stage2 retry-memory hardening landed through richer retained feedback and recency-aware prompt retention.
+- Tranche 6 optional provider-native sidecars remains intentionally deferred; no provider-native hidden state was promoted above DB, fact-ledger, world-state, anchors, explicit carryover packets, or stage-attempt/session-decision logs.
+
+Verification summary:
+- `py -3.12 -m pytest tests/test_stage2_optimizer.py tests/test_stage2_finalizer.py tests/test_stage2_preflight.py tests/test_stage2_orchestrator.py tests/test_stage2_preflight_helpers.py tests/test_stage3_orchestrator.py tests/test_stage3_orchestrator_lane_e.py tests/test_stage3_orchestrator_legacy_tail_lane_f.py tests/test_context_advisor.py -q` -> 384 passed.
+- `python scripts/check_utf8_hygiene.py modules/core/stage2_optimizer.py modules/core/stage2_finalizer.py modules/core/stage2_preflight.py modules/core/stage2_orchestrator.py tests/test_stage2_optimizer.py tests/test_stage2_finalizer.py tests/test_stage2_preflight.py tests/test_stage2_orchestrator.py docs/2026-04-23/stage234-session-memory-max-utilization-execution-ssot.md docs/temp/stage234-session-memory-max-utilization-execution-ssot.md` -> passed before temp cleanup.
+- `git diff --check` -> passed.
+- `python scripts/ops_validator.py --strict` -> PASS before closure cleanup with errors=0 and warnings=0.
+
+Residual risks:
+- Full repository test suite was not run under this closure pass; validation stayed on the touched Stage2/Stage3 memory and retrieval surfaces.
+- The previously observed unrelated `tests/test_stage4_orchestrator.py::TestCrossEpisodeRepetitionHook` sqlite connection deepcopy failure remains outside this lane.
+- Provider-native `Sessions`, `Live API`, and `Memory Bank` experiments remain future optional sidecars behind explicit fresh survey and benchmark gates.
+
+Temp cleanup:
+- execution SSOT mirror removed: yes, after canonical closure.
+- roadmap mirror retained: yes, because three parked future-wave items remain in the aggregate temp queue.
+- queue-state refreshed: yes, after removing the closed execution SSOT mirror.
+
+Closure 3-pass audit:
+- Pass 1 checked realized scope against the six execution tranches and confirmed the only unimplemented tranche is explicitly optional/deferred.
+- Pass 2 checked verification evidence against touched Stage2/Stage3 surfaces and recorded the unrun full-suite boundary honestly.
+- Pass 3 checked temp-queue cleanup ordering: canonical closure first, roadmap refresh second, temp mirror removal third, queue-state refresh and strict validator last.
+
+Confidence: 96/100.
