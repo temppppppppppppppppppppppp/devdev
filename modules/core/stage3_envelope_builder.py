@@ -26,7 +26,9 @@ class Stage3EnvelopeBuilder:
         protagonist_name,
     ) -> dict[str, object]:
         blueprint_window = self.anchor_selector_fn(prev_blueprints)
-        focus_window = blueprint_window[-5:] if blueprint_window else []
+        # `blueprint_window` is already bounded and anchor-aware; do not
+        # collapse retrieval back to a blind recent tail before Stage3 planning.
+        focus_window = list(blueprint_window) if blueprint_window else []
         smart_bundle = self.orchestrator._collect_stage3_smart_retrieval_bundle(
             working_ep=working_ep,
             arc_data=arc_data,

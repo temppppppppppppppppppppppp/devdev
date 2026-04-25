@@ -1610,6 +1610,39 @@ def _resolve_stage2_runtime_advisory(audit: dict | None, artifact_payload: dict 
     return ""
 
 
+def _summarize_stage2_score_breakdown(score_breakdown: Any, *, limit: int = 5) -> str:
+    if not isinstance(score_breakdown, dict):
+        return ""
+    entries: list[str] = []
+    for key, value in list(score_breakdown.items())[:limit]:
+        if isinstance(value, int | float):
+            entries.append(f"{key}={value}")
+    return ", ".join(entries)
+
+
+def _build_stage2_failure_memory_kwargs(audit: dict | None, artifact_payload: dict | None = None) -> dict[str, str]:
+    if not isinstance(audit, dict):
+        audit = {}
+    verdict_reason = _resolve_stage2_verdict_reason(audit, artifact_payload)
+    reason = verdict_reason or str(audit.get("reason", "") or "").strip()
+    details_parts = [
+        str(audit.get("reason", "") or "").strip(),
+        str(audit.get("re_slice_instruction", "") or "").strip(),
+        str(audit.get("open_review", "") or "").strip(),
+    ]
+    details = "\n".join(part for part in details_parts if part)
+    return {
+        "reason": reason or details,
+        "details": details,
+        "retry_directives": _resolve_stage2_retry_directives(audit),
+        "runtime_advisory": _resolve_stage2_runtime_advisory(audit, artifact_payload),
+        "selection_reason": _resolve_stage2_selection_reason(audit, artifact_payload),
+        "fix_scope": str(audit.get("fix_scope", "") or "").strip(),
+        "fix_scope_reasoning": str(audit.get("fix_scope_reasoning", "") or "").strip(),
+        "score_breakdown": _summarize_stage2_score_breakdown(audit.get("score_breakdown", {})),
+    }
+
+
 def _coerce_stage2_audit_score(audit: dict | None) -> int:
     if not isinstance(audit, dict):
         audit = {}
@@ -4315,6 +4348,7 @@ class Stage2Finalizer:
         global_arc_no: int,
         attempt: int,
         audit: dict,
+        artifact_payload: dict | None = None,
     ) -> None:
         from modules.core.spinners import V50_MODULES_AVAILABLE
 
@@ -4343,6 +4377,7 @@ class Stage2Finalizer:
             score_breakdown = audit.get("score_breakdown", {})
             if not isinstance(score_breakdown, dict):
                 score_breakdown = {}
+            memory_kwargs = _build_stage2_failure_memory_kwargs(audit, artifact_payload)
             self.ctx.stage_rejection_history.append(
                 {
                     "stage": 2,
@@ -4350,8 +4385,12 @@ class Stage2Finalizer:
                     "reason": str(audit.get("reason", "")),
                     "attempt": attempt + 1,
                     "specific_issue": str(audit.get("re_slice_instruction", "") or ""),
+                    "verdict_reason": memory_kwargs["reason"],
+                    "runtime_advisory": memory_kwargs["runtime_advisory"],
+                    "retry_directives": memory_kwargs["retry_directives"],
                     "failure_category": failure_category or "",
                     "fix_scope": str(audit.get("fix_scope", "") or ""),
+                    "fix_scope_reasoning": memory_kwargs["fix_scope_reasoning"],
                     "score_breakdown": {
                         str(key): value
                         for key, value in list(score_breakdown.items())[:5]
@@ -4362,10 +4401,20 @@ class Stage2Finalizer:
 
         if self.ctx.stage2_optimizer:
             try:
+                failure_category = self._extract_failure_category(audit) or "director_reject"
+                memory_kwargs = _build_stage2_failure_memory_kwargs(audit, artifact_payload)
                 self.ctx.stage2_optimizer.failure_memory.record_failure(
                     arc_no=global_arc_no,
-                    failure_type="director_reject",
-                    details=str(audit.get("reason", "")),
+                    attempt=attempt + 1,
+                    failure_type=failure_category,
+                    reason=memory_kwargs["reason"],
+                    details=memory_kwargs["details"],
+                    retry_directives=memory_kwargs["retry_directives"],
+                    runtime_advisory=memory_kwargs["runtime_advisory"],
+                    selection_reason=memory_kwargs["selection_reason"],
+                    fix_scope=memory_kwargs["fix_scope"],
+                    fix_scope_reasoning=memory_kwargs["fix_scope_reasoning"],
+                    score_breakdown=memory_kwargs["score_breakdown"],
                 )
             except Exception as optimizer_err:
                 logging.debug(f"[SILENT] optimizer failure recording: {optimizer_err}")
@@ -4442,6 +4491,7 @@ class Stage2Finalizer:
             global_arc_no=global_arc_no,
             attempt=attempt,
             audit=audit,
+            artifact_payload=artifact_payload,
         )
 
     @staticmethod
