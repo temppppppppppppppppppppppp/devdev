@@ -1,13 +1,13 @@
 # Active Temp Execution Roadmap
 
 Date: 2026-04-24
-Status: active (repo-trashbox-cleanup packaging scope complete; next low-risk tracked residue manifest)
+Status: active (repo-trashbox-cleanup low-risk tracked removal manifest complete; next actual tracked removal PR)
 Canonical Path: `docs/2026-04-24/active-temp-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Baseline Commit: `143cee26d879d5de59ef43757f851e89b8d551c7`
 Baseline Dirty Summary: `dirty: local runtime project outputs, benchmark index, .gitignore key ignore, and new 2026-04-24 hygiene docs; no canary code, data migration, or trashbox move performed`
-Resume Commit: `fabf78127cbcdfb724c35a38f314a25b94ec9ce5`
-Resume Drift Summary: `stage234-session-memory-max-utilization was explicitly opened by the user on 2026-04-24, fresh re-audited PASS, and closed on 2026-04-25 after bounded Stage4, Stage3, and Stage2 memory rollout; stage0-bi-tr-production-harness-normalization-remediation Tranche 2 was merged on 2026-04-25 via PR #13; canary-root-isolation was merged on 2026-04-25 via PR #15 and closed via PR #16; repo-trashbox-cleanup reference-check merged via PR #17, move-plan merged via PR #18, and packaging-scope opened on branch feat/repo-trashbox-packaging-scope`
+Resume Commit: `bcbe0955a53b57d0e44953ace2db54ffadffc651`
+Resume Drift Summary: `stage234-session-memory-max-utilization was explicitly opened by the user on 2026-04-24, fresh re-audited PASS, and closed on 2026-04-25 after bounded Stage4, Stage3, and Stage2 memory rollout; stage0-bi-tr-production-harness-normalization-remediation Tranche 2 was merged on 2026-04-25 via PR #13; canary-root-isolation was merged on 2026-04-25 via PR #15 and closed via PR #16; repo-trashbox-cleanup reference-check merged via PR #17, move-plan merged via PR #18, packaging-scope merged via PR #19, and low-risk tracked removal manifest opened on branch feat/repo-trashbox-low-risk-removal-manifest`
 
 ## 1. Why This Refresh Exists
 
@@ -27,16 +27,16 @@ After the Standard Vertex cache-proof run on 2026-04-24, `authority-alignment-be
 - `stage234-session-memory-max-utilization` is now closed historical backing after its bounded memory/cache rollout landed.
 - `stage0-bi-tr-production-harness-normalization-remediation` is now historical backing after PR #13 merged the runtime handoff normalization tranche.
 - `canary-root-isolation` is now historical backing after PR #15 merged the canary root isolation tranche.
-- `repo-trashbox-cleanup` is the only remaining queue item after canary policy settlement; reference-check, move-plan, and packaging/ignore scope are complete, and a low-risk tracked residue manifest is next.
+- `repo-trashbox-cleanup` is the only remaining queue item after canary policy settlement; reference-check, move-plan, packaging/ignore scope, and the low-risk tracked residue manifest are complete, and an actual manifest-bound tracked removal PR is next.
 
 ## 3. Queue Semantics
 
-- `front-active tracked cleanup planning`: current implementation authority is limited to a dedicated low-risk tracked residue manifest; tracked-file removal remains unauthorized until that manifest is complete.
+- `front-active tracked cleanup implementation`: current implementation authority is limited to the 21 paths listed in `docs/2026-04-25/repo-trashbox-low-risk-tracked-removal-manifest.md`.
 - `parked future wave`: still-real execution debt, but not current implementation authority.
 - `historical backing`: keep canonical SSOTs for audit history, but do not keep them visible as active queue residue.
 
 Working order:
-1. `repo-trashbox-cleanup` (front-active tracked cleanup planning; tracked-file removal remains unauthorized until a dedicated removal manifest is approved)
+1. `repo-trashbox-cleanup` (front-active tracked cleanup implementation; actual removal must be manifest-bound and reviewable)
 
 Closed historical backing in this closure pass:
 
@@ -47,11 +47,11 @@ Closed historical backing in this closure pass:
 
 ## 4. Immediate Next Moves
 
-1. keep `repo-trashbox-cleanup` limited to low-risk tracked residue manifest planning until a dedicated tracked-removal PR is explicitly opened
+1. open a dedicated tracked-removal PR for only the 21 paths listed in `docs/2026-04-25/repo-trashbox-low-risk-tracked-removal-manifest.md`
 2. do not reopen `stage234-session-memory-max-utilization` without a fresh live anchor or narrower follow-up SSOT
 3. do not reopen Stage0 production-harness normalization without a fresh dedicated re-audit
 4. do not move or delete existing `projects/_canary/` without a fresh cleanup SSOT
-5. do not move `test_mode/`, `lite_mode/`, `spikes/`, root residue, or old `projects/_canary/` from this roadmap refresh
+5. do not move `test_mode/`, `lite_mode/`, `spikes/`, or old `projects/_canary/` from this roadmap refresh
 6. refresh `docs/temp/queue-state.json`
 7. validate the queue with `python scripts/ops_validator.py --strict`
 8. reflect the queue to ClickUp only if the user explicitly asks for it
@@ -131,5 +131,15 @@ Confidence: 96/100
 - `.gitignore` covers future root `MagicMock/`, `tmp_stage2_digest_debug/`, `test_mode/projects/`, and `lite_mode/projects/` residue
 - `pyproject.toml` excludes manual/prototype surfaces `lite_mode` and `spikes` from broad Ruff traversal
 - no tracked cleanup, file movement, deletion, or `git rm` was performed
+
+Confidence: 96/100
+
+## 2026-04-25 Repo Trashbox Low-Risk Tracked Removal Manifest Refresh
+
+- tracked removal manifest saved at `docs/2026-04-25/repo-trashbox-low-risk-tracked-removal-manifest.md`
+- the next implementation authority is limited to exactly 21 tracked files, 1503197 bytes total
+- `crash_dump.log` and `error.log` are classified as tracked residue only; runtime crash/log behavior must not change in the removal PR
+- `test_mode/`, `lite_mode/`, `spikes/`, `projects/_canary/`, `tests/`, and `docs/temp/` remain outside the removal set
+- no tracked cleanup, file movement, deletion, or `git rm` was performed by the manifest tranche
 
 Confidence: 96/100
