@@ -30,6 +30,7 @@ from scripts.canary_path_utils import (  # noqa: E402
     resolve_workspace_project_dir,
     scoped_canary_projects_root,
 )
+from scripts.canary_semantic_exit import semantic_exit_code  # noqa: E402
 from scripts.regression_validation_tiers import FULL_CANARY_PROOF  # noqa: E402
 
 VALIDATION_TIER = FULL_CANARY_PROOF
@@ -80,7 +81,7 @@ def main() -> int:
     if args.command == "run":
         payload = run_canary(args.project, target_ep=args.target_ep)
         _print_json(payload)
-        return 0
+        return semantic_exit_code(payload, proof_keys=("multi_stage_proof_scope_summary",))
 
     if args.command == "analyze":
         payload = analyze_canary(args.project, target_ep=args.target_ep)
@@ -91,7 +92,7 @@ def main() -> int:
     _print_json(payload)
     payload = run_canary(args.target_project, target_ep=args.target_ep)
     _print_json(payload)
-    return 0
+    return semantic_exit_code(payload, proof_keys=("multi_stage_proof_scope_summary",))
 
 
 def prepare_canary(source_project: str, target_project: str, *, from_ep: int, force: bool) -> dict:

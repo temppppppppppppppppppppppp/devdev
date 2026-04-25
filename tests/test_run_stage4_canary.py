@@ -375,3 +375,26 @@ def test_branch_inventory_writes_output(tmp_path):
         "summary_role": "stage4_runtime_branch_proof_inventory",
         "entries_considered": 1,
     }
+
+
+def test_stage4_run_main_returns_nonzero_on_failed_hard_gates():
+    with (
+        patch("sys.argv", ["run_stage4_canary.py", "run", "--project", "s4", "--target-ep", "4"]),
+        patch.object(
+            canary_script,
+            "run_canary",
+            return_value={"hard_gates": {"status": "fail"}, "benchmark_archive": {"status": "ok"}},
+        ),
+    ):
+        assert canary_script.main() == 1
+
+
+def test_stage4_branch_inventory_main_remains_advisory_exit_zero():
+    with (
+        patch(
+            "sys.argv",
+            ["run_stage4_canary.py", "branch-inventory", "--project", "s4", "--output", "docs/out.json"],
+        ),
+        patch.object(canary_script, "branch_inventory", return_value={"summary_role": "inventory"}),
+    ):
+        assert canary_script.main() == 0
