@@ -89,6 +89,20 @@ def test_archive_benchmark_record_creates_bundle_and_index(tmp_path, monkeypatch
                     "counts_truncated": True,
                     "event_window_truncated": True,
                 },
+                "run_scope": {
+                    "status": "scoped",
+                    "engine_run_id": "run-archive-123",
+                    "latest_session_id": "20260422_080513",
+                    "basis": ["GEULDOBI_RUN_ID", "proof_digest.latest_session_id"],
+                    "authority_role": "companion_snapshot",
+                },
+                "freshness": {
+                    "status": "scoped",
+                    "basis": ["GEULDOBI_RUN_ID", "proof_digest.latest_session_id"],
+                    "engine_run_id_present": True,
+                    "latest_session_id_present": True,
+                    "operator_guidance_only": True,
+                },
             },
             ensure_ascii=False,
             indent=2,
@@ -153,6 +167,7 @@ def test_archive_benchmark_record_creates_bundle_and_index(tmp_path, monkeypatch
     assert row["status"] == "interrupted"
     assert row["runtime_audit_tag"] == "interrupted"
     assert row["latest_session_id"] == "20260422_080513"
+    assert row["runtime_freshness_status"] == "scoped"
     assert row["s2_duration_ms"] == "1000"
     assert row["s3_duration_ms"] == "2000"
     assert row["s4_duration_ms"] == "3000"
@@ -160,6 +175,10 @@ def test_archive_benchmark_record_creates_bundle_and_index(tmp_path, monkeypatch
     assert row["total_cost_usd"] == "0.660000"
     assert manifest["runtime_summary"]["summary_window"]["counts_truncated"] is True
     assert manifest["runtime_summary"]["summary_window"]["event_window_truncated"] is True
+    assert manifest["runtime_summary"]["run_scope"]["engine_run_id"] == "run-archive-123"
+    assert manifest["runtime_summary"]["run_scope"]["latest_session_id"] == "20260422_080513"
+    assert manifest["runtime_summary"]["freshness"]["status"] == "scoped"
+    assert manifest["runtime_summary"]["freshness"]["operator_guidance_only"] is True
 
 
 def test_archive_benchmark_record_overwrite_replaces_existing_index_row(tmp_path, monkeypatch):
