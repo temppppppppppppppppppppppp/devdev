@@ -1,23 +1,27 @@
 # Repo Generated Project Residue Execution SSOT
 
 Date: 2026-04-25
-Status: in-progress (generated project residue manifest ready; no tracked removal performed)
+Status: in-progress (generated project removal complete; root temp follow-up next)
 Canonical Path: `docs/2026-04-25/repo-generated-project-residue-execution-ssot.md`
 Temp Mirror Path: `docs/temp/repo-generated-project-residue-execution-ssot.md`
 Commit State:
 - Baseline Commit: `f93b5749c38e6374669b199fb8a0da65d0f2aac0`
 - Baseline Dirty Summary: `clean branch feat/repo-hygiene-next-wave-survey opened from main after PR #21 merge`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Commit: `ff97b5716a16589ea63109261c88538c20f62919`
+- Resume Drift Summary: `PR #22 merged this SSOT into main; branch feat/repo-generated-project-residue-removal opened and removed only test_mode/projects plus lite_mode/projects`
 Source Survey Docs:
 - `docs/2026-04-24/repo-trashbox-candidate-survey.md`
 - `docs/2026-04-25/repo-trashbox-quarantine-move-plan.md`
 - `docs/2026-04-25/repo-trashbox-low-risk-tracked-removal-manifest.md`
 - `docs/2026-04-25/repo-trashbox-low-risk-removal-preflight-reaudit.md`
+- `docs/2026-04-25/repo-generated-project-residue-removal-preflight-reaudit.md`
 Evidence Artifacts:
 - `.gitignore`
 - `tests/test_surface_containment_contract.py`
 - `docs/implementation/surface-containment-contract-v1.json`
+Post-Removal Evidence:
+- `git ls-files -- test_mode/projects lite_mode/projects`
+- `git ls-files -- test_mode/bridge lite_mode/bridge`
 Side-Effect Coverage: covered
 
 ## 0. Execution Metadata Block
@@ -44,7 +48,7 @@ execution_meta:
 
 Continue repository hygiene after the bounded repo-trashbox cleanup closure by targeting the largest remaining generated residue that is already excluded from future tracking: `test_mode/projects/` and `lite_mode/projects/`.
 
-This SSOT does not authorize broad removal of `test_mode/`, `lite_mode/`, or `spikes/`. It authorizes only a dedicated follow-up PR for the two generated project trees named above.
+This SSOT does not authorize broad removal of `test_mode/`, `lite_mode/`, or `spikes/`. The generated project removal tranche removed only the two generated project trees named above.
 
 ## 2. Baseline Facts
 
@@ -75,9 +79,9 @@ lite_mode/projects/
 
 ## 3. Included Scope
 
-- `git rm -- test_mode/projects lite_mode/projects`
-- contract/test update only if the current surface-containment test needs to assert absence after cleanup
-- queue-state refresh and closure after validation
+- completed: `git rm -r -- test_mode/projects lite_mode/projects`
+- completed: contract/test update so generated project residue absence is asserted
+- in progress: queue-state refresh and root-temp follow-up decision after validation
 
 ## 4. Excluded Scope
 
@@ -137,20 +141,20 @@ Bootstrap fallback / config-env mutation:
 
 ## 8. Pass 3 - Execution Shape
 
-Tranche 1 should be a single focused removal PR:
+Tranche 1 was a single focused removal PR:
 
 ```text
-git rm -- test_mode/projects lite_mode/projects
+git rm -r -- test_mode/projects lite_mode/projects
 ```
 
-The PR must verify that:
+The PR verifies that:
 
 - `git ls-files -- test_mode/projects lite_mode/projects` returns no files after removal
 - `test_mode/bridge` and `lite_mode/bridge` remain tracked
 - `.gitignore` still contains `test_mode/projects/` and `lite_mode/projects/`
 - no runtime code changes are bundled
 
-Tranche 2 may survey the remaining `temp*` tracked set, but it must not be bundled with Tranche 1.
+Tranche 2 may survey the remaining `temp*` tracked set, but it was not bundled with Tranche 1.
 
 Tranche 3 may handle `spikes/` only after useful `spikes/**/result.md` conclusions are preserved or explicitly judged unnecessary.
 
@@ -158,8 +162,8 @@ Pass 3 result: pass.
 
 ## 9. Acceptance Criteria
 
-- `test_mode/projects/` has zero tracked files.
-- `lite_mode/projects/` has zero tracked files.
+- `test_mode/projects/` has zero tracked files. (complete)
+- `lite_mode/projects/` has zero tracked files. (complete)
 - Non-project manual helper files under `test_mode/` and `lite_mode/` remain tracked.
 - `spikes/` remains untouched.
 - Root temp files remain untouched.
@@ -182,7 +186,21 @@ After implementation:
 - `python scripts/check_utf8_hygiene.py docs/2026-04-25/repo-generated-project-residue-execution-ssot.md docs/temp/repo-generated-project-residue-execution-ssot.md docs/temp/queue-state.json tests/test_surface_containment_contract.py docs/implementation/surface-containment-contract-v1.json`
 - `python -m pytest tests/test_surface_containment_contract.py tests/test_runtime_authority_contract.py -q`
 
-## 11. Guardrails
+## 11. Generated Project Removal Closure Note
+
+Implemented:
+
+- removed exactly `test_mode/projects/` and `lite_mode/projects/`
+- left `test_mode/bridge` and `lite_mode/bridge` tracked
+- left `spikes/`, root `temp*`, `projects/_canary/`, runtime code, packaging code, and source entrypoints untouched
+- updated `docs/implementation/surface-containment-contract-v1.json` and `tests/test_surface_containment_contract.py` so the generated project residue directories are expected to be absent and still ignored for future regeneration
+
+Residual queue:
+
+- root `temp*` residue remains the next possible follow-up
+- `spikes/` still requires notes-preservation review before cleanup
+
+## 12. Guardrails
 
 - Do not delete all of `test_mode/`.
 - Do not delete all of `lite_mode/`.
@@ -191,7 +209,7 @@ After implementation:
 - Do not treat old size estimates as authority when live `git ls-files -z` evidence differs.
 - Do not proceed to cleanup without a fresh current-state re-audit of this SSOT.
 
-## 12. Document 3-Pass Audit
+## 13. Document 3-Pass Audit
 
 Pass 1 - Structure and scope:
 
