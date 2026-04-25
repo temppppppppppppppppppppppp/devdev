@@ -1,7 +1,7 @@
 # Canary Root Isolation Execution SSOT
 
 Date: 2026-04-24
-Status: in_progress (2026-04-25 canary root isolation patch added locally and focused tests passed; pending PR/merge validation; no legacy canary data migration authorized)
+Status: completed (2026-04-25 PR #15 merged canary root isolation; no legacy canary data migration performed)
 Canonical Path: `docs/2026-04-24/canary-root-isolation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/canary-root-isolation-execution-ssot.md`
 Commit State:
@@ -40,9 +40,9 @@ execution_meta:
   topic: canary-root-isolation
   github_issue: 8
   depends_on: []
-  status: in_progress
-  queue_role: front_active
-  roadmap_rank: 1
+  status: completed
+  queue_role: historical_backing
+  roadmap_rank: null
   tranches:
     - id: helper-contract
       title: Canary path helper contract
@@ -68,7 +68,7 @@ Geuldobi repo
     <generated canary project>
 ```
 
-This SSOT is now the current implementation authority for the bounded canary root isolation tranche opened on `2026-04-25`.
+This SSOT is now historical backing for the bounded canary root isolation tranche merged on `2026-04-25` via PR #15.
 
 ## 2. Current Problem
 
@@ -139,6 +139,8 @@ Implementation status on 2026-04-25:
 - Stage 2 subprocess execution now receives the scoped canary runtime environment
 - `.gitignore` now ignores generated `canary/` output
 - focused validation passed with `py -3.12 -m pytest tests/test_canary_path_utils.py tests/test_run_stage2_canary.py tests/test_run_stage3_canary.py tests/test_run_stage34_canary.py tests/test_run_stage34_ep_demo_canary.py tests/test_run_stage4_canary.py -q`
+- GitHub CI passed with `lint`, `syntax-check`, and `test (3.12)`
+- merge commit: `fc803ccc94b1ed1fdfe6ea188668300122f8d75c`
 
 ## 5. Side-Effect Map
 
@@ -201,9 +203,9 @@ The optional smoke must not move or create legacy data.
 
 ## 9. Temp Queue Notes
 
-- temp status: `front-active`
+- temp status: `historical backing`
 - roadmap role:
-  - rank 1
+  - rank: n/a
   - hygiene/runtime isolation lane
   - not a blocker for current proof or memory rollout lanes
 - cleanup condition:
