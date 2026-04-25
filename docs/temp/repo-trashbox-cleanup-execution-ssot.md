@@ -1,19 +1,21 @@
 # Repo Trashbox Cleanup Execution SSOT
 
 Date: 2026-04-24
-Status: execution-ready (3-pass adversarial audited; parked future wave; no cleanup authorized)
+Status: in-progress (2026-04-25 reference-check tranche complete; no cleanup move authorized)
 Canonical Path: `docs/2026-04-24/repo-trashbox-cleanup-execution-ssot.md`
 Temp Mirror Path: `docs/temp/repo-trashbox-cleanup-execution-ssot.md`
 Commit State:
 - Baseline Commit: `143cee26d879d5de59ef43757f851e89b8d551c7`
 - Baseline Dirty Summary: `dirty: local runtime project outputs, benchmark index, .gitignore key ignore, and new 2026-04-24 hygiene docs; no trashbox file move performed`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `initial documentation-only parking wave`
+- Resume Commit: `8ec8435d11e68cdc8ea8f2a431a13a20bfdffcfe`
+- Resume Drift Summary: `canary-root-isolation merged and closed; repo-trashbox-cleanup is the only remaining temp queue item and was opened on branch feat/repo-trashbox-reference-check for reference-check only`
 Source Survey Docs:
 - `docs/2026-04-24/repo-trashbox-candidate-survey.md`
 - `docs/2026-04-24/repo-trashbox-cleanup-adversarial-3pass-audit.md`
 - `docs/2026-04-24/canary-root-isolation-plan.md`
 - `docs/2026-04-24/ops-sync-harness-current-state-survey.md`
+- `docs/2026-04-25/repo-trashbox-cleanup-fresh-reaudit.md`
+- `docs/2026-04-25/repo-trashbox-reference-check.md`
 Evidence Artifacts:
 - `modules/core/runtime_paths.py`
 - `배포_패키징.ps1`
@@ -31,8 +33,8 @@ execution_meta:
   topic: repo-trashbox-cleanup
   github_issue: 9
   depends_on: []
-  status: pending
-  queue_role: parked_future_wave
+  status: in_progress
+  queue_role: front_active
   roadmap_rank: 1
   tranches:
     - id: reference-check
@@ -49,20 +51,26 @@ execution_meta:
 
 Quarantine old manual modes, experiments, debug residue, and generated test/demo project data so the main Geuldobi repository view stays focused on production code, formal tests, current docs, and active operational queue files.
 
-The intended local holding area is:
+The originally proposed local holding area was:
 
 ```text
 C:\Users\wjjo\Desktop\글도비_쓰레기통
 ```
 
-This document does not authorize a move. It parks the future execution shape.
+On the current PC, the proposed local holding area is:
+
+```text
+C:\Users\PC\Desktop\글도비_쓰레기통
+```
+
+This document still does not authorize a move. The current active scope is reference-check and Git policy preparation only.
 
 ## 2. Baseline Facts
 
 Surveyed candidate groups:
 
-- `test_mode/`: maintenance-only/manual mode; many tracked files
-- `lite_mode/`: lightweight/legacy experiment surface; many tracked files
+- `test_mode/`: maintenance-only/manual mode; currently `1554` tracked files
+- `lite_mode/`: lightweight/legacy experiment surface; currently `1554` tracked files
 - `spikes/`: one-off probes and build/dist residue
 - `MagicMock/`: mock/runtime residue
 - `tmp_stage2_digest_debug/`: debug residue
@@ -186,8 +194,8 @@ The canonical repo docs remain the SSOT. GitHub Issues and ClickUp are only visi
 
 ## 8. Execution Tranches
 
-1. Candidate reference and runtime dependency check
-2. Trashbox quarantine move plan
+1. Candidate reference and runtime dependency check (complete on 2026-04-25; no move authorized)
+2. Trashbox quarantine move plan (next, requires Git policy decision)
 3. Git tracking and ignore cleanup
 4. Packaging and security-scan scope cleanup
 
@@ -226,7 +234,7 @@ Future implementation validation:
 
 ## 12. Temp Queue Notes
 
-- temp status: pending
+- temp status: in_progress
 - cleanup condition: remove temp mirror after the trashbox cleanup is either implemented and closed, or superseded by a narrower SSOT
 - roadmap dependency: after `canary-root-isolation`
 
