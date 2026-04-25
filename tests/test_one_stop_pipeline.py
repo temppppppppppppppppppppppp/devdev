@@ -85,6 +85,16 @@ def _build_one_stop_app(
     return app
 
 
+def _run_one_stop_arc_step(app, *, current_arc_no: int = 1, total_arcs: int = 2):
+    fake_stage2 = _make_stage_context_module("Stage2Context")
+    fake_stage3 = _make_stage_context_module("Stage3Context")
+    with patch.dict(
+        sys.modules,
+        {"modules.core.stage2_context": fake_stage2, "modules.core.stage3_context": fake_stage3},
+    ):
+        return SovereignApp._run_one_stop_arc_step(app, current_arc_no=current_arc_no, total_arcs=total_arcs)
+
+
 def test_run_one_stop_arc_step_returns_continue_on_stage3_skip():
     app = _build_one_stop_app(
         total_arcs=2,
@@ -93,18 +103,78 @@ def test_run_one_stop_arc_step_returns_continue_on_stage3_skip():
     )
     app._ui_service.get_choice_input.return_value = "1"
 
-    fake_stage2 = _make_stage_context_module("Stage2Context")
-    fake_stage3 = _make_stage_context_module("Stage3Context")
-
-    with patch.dict(
-        sys.modules,
-        {"modules.core.stage2_context": fake_stage2, "modules.core.stage3_context": fake_stage3},
-    ):
-        result = SovereignApp._run_one_stop_arc_step(app, current_arc_no=1, total_arcs=2)
+    result = _run_one_stop_arc_step(app)
 
     app._stage_4_v2_chief_writer.assert_not_called()
     assert result == {
         "status": "continue",
+        "arcs_completed_delta": 1,
+        "manuscripts_delta": 0,
+    }
+
+
+def test_run_one_stop_arc_step_returns_completed_when_stage4_reaches_arc_target():
+    app = _build_one_stop_app(
+        total_arcs=2,
+        stage3_results=[{"success_count": 3, "fail_count": 0}],
+        manuscripts_after=[0, 3],
+    )
+
+    result = _run_one_stop_arc_step(app)
+
+    app._stage_4_v2_chief_writer.assert_called_once_with(target_ep=3, skip_pause=True)
+    assert result == {
+        "status": "completed",
+        "arcs_completed_delta": 1,
+        "manuscripts_delta": 3,
+    }
+
+
+def test_run_one_stop_arc_step_returns_incomplete_when_stage4_does_not_reach_arc_target():
+    app = _build_one_stop_app(
+        total_arcs=2,
+        stage3_results=[{"success_count": 3, "fail_count": 0}],
+        manuscripts_after=[0, 2],
+    )
+
+    result = _run_one_stop_arc_step(app)
+
+    assert result == {
+        "status": "stage4_incomplete",
+        "arcs_completed_delta": 0,
+        "manuscripts_delta": 2,
+    }
+
+
+def test_run_one_stop_arc_step_returns_error_when_stage4_raises():
+    app = _build_one_stop_app(
+        total_arcs=2,
+        stage3_results=[{"success_count": 3, "fail_count": 0}],
+        manuscripts_after=[0, 1],
+    )
+    app._stage_4_v2_chief_writer.side_effect = RuntimeError("stage4 boom")
+
+    result = _run_one_stop_arc_step(app)
+
+    assert result == {
+        "status": "stage4_error",
+        "arcs_completed_delta": 0,
+        "manuscripts_delta": 1,
+    }
+
+
+def test_run_one_stop_arc_step_allows_zero_delta_when_arc_already_written():
+    app = _build_one_stop_app(
+        total_arcs=2,
+        stage3_results=[{"success_count": 0, "fail_count": 0}],
+        manuscripts_after=[3, 3],
+        initial_designed_arcs=1,
+    )
+
+    result = _run_one_stop_arc_step(app)
+
+    assert result == {
+        "status": "completed",
         "arcs_completed_delta": 1,
         "manuscripts_delta": 0,
     }
