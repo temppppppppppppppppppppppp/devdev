@@ -2110,6 +2110,14 @@ def _load_runtime_audit_summary(project_dir: Path) -> dict:
         "contract": {},
         "proof_digest": {},
         "summary_window": {},
+        "run_scope": {},
+        "freshness": {
+            "status": "unavailable",
+            "basis": [],
+            "engine_run_id_present": False,
+            "latest_session_id_present": False,
+            "operator_guidance_only": True,
+        },
     }
     summary_path = project_dir / "logs" / "runtime_audit_summary.json"
     if not summary_path.exists():
@@ -2129,7 +2137,44 @@ def _load_runtime_audit_summary(project_dir: Path) -> dict:
     payload["proof_digest"] = proof_digest if isinstance(proof_digest, dict) else {}
     summary_window = summary.get("summary_window", {})
     payload["summary_window"] = summary_window if isinstance(summary_window, dict) else {}
+    run_scope = summary.get("run_scope", {})
+    payload["run_scope"] = run_scope if isinstance(run_scope, dict) else {}
+    freshness = summary.get("freshness", {})
+    if isinstance(freshness, dict) and freshness:
+        payload["freshness"] = freshness
+    else:
+        payload["freshness"] = _classify_runtime_summary_freshness(payload)
     return payload
+
+
+def _classify_runtime_summary_freshness(runtime_audit_summary: dict) -> dict:
+    run_scope = runtime_audit_summary.get("run_scope", {}) if isinstance(runtime_audit_summary, dict) else {}
+    run_scope = run_scope if isinstance(run_scope, dict) else {}
+    proof_digest = runtime_audit_summary.get("proof_digest", {}) if isinstance(runtime_audit_summary, dict) else {}
+    proof_digest = proof_digest if isinstance(proof_digest, dict) else {}
+    operational = proof_digest.get("operational_metadata", {})
+    operational = operational if isinstance(operational, dict) else {}
+    session_lineage = proof_digest.get("session_lineage", {})
+    session_lineage = session_lineage if isinstance(session_lineage, dict) else {}
+    engine_run_id = str(run_scope.get("engine_run_id", "") or "").strip()
+    latest_session_id = str(
+        run_scope.get("latest_session_id")
+        or operational.get("latest_session_id")
+        or session_lineage.get("structured_session_id")
+        or ""
+    ).strip()
+    basis = []
+    if engine_run_id:
+        basis.append("run_scope.engine_run_id")
+    if latest_session_id:
+        basis.append("latest_session_id")
+    return {
+        "status": "scoped" if basis else "unknown",
+        "basis": basis,
+        "engine_run_id_present": bool(engine_run_id),
+        "latest_session_id_present": bool(latest_session_id),
+        "operator_guidance_only": True,
+    }
 
 
 def _build_dashboard_proof_status(*, sink_alignment_summary: dict, runtime_audit_summary: dict) -> dict:

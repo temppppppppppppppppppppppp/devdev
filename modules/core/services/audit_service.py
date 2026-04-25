@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sqlite3
 import threading
@@ -794,6 +795,58 @@ class AuditService:
             ),
         }
 
+    @staticmethod
+    def _extract_latest_session_id_from_proof_digest(proof_digest: dict) -> str:
+        if not isinstance(proof_digest, dict):
+            return ""
+        candidate_paths = (
+            ("operational_metadata", "latest_session_id"),
+            ("session_lineage", "structured_session_id"),
+        )
+        for path in candidate_paths:
+            value: Any = proof_digest
+            for key in path:
+                if not isinstance(value, dict):
+                    value = ""
+                    break
+                value = value.get(key)
+            if value:
+                return str(value).strip()
+        return ""
+
+    @classmethod
+    def _build_summary_run_scope(cls, *, tag: str, timestamp: str, proof_digest: dict) -> dict:
+        engine_run_id = str(os.environ.get("GEULDOBI_RUN_ID", "") or "").strip()
+        latest_session_id = cls._extract_latest_session_id_from_proof_digest(proof_digest)
+        basis = []
+        if engine_run_id:
+            basis.append("GEULDOBI_RUN_ID")
+        if latest_session_id:
+            basis.append("proof_digest.latest_session_id")
+        return {
+            "status": "scoped" if basis else "unknown",
+            "engine_run_id": engine_run_id,
+            "latest_session_id": latest_session_id,
+            "summary_tag": str(tag or ""),
+            "summary_timestamp": str(timestamp or ""),
+            "basis": basis,
+            "authority_role": "companion_snapshot",
+        }
+
+    @staticmethod
+    def _build_summary_freshness(run_scope: dict) -> dict:
+        basis = list(run_scope.get("basis") or []) if isinstance(run_scope, dict) else []
+        status = str(run_scope.get("status", "") or "").strip() if isinstance(run_scope, dict) else ""
+        return {
+            "status": status or ("scoped" if basis else "unknown"),
+            "basis": basis,
+            "engine_run_id_present": bool(run_scope.get("engine_run_id")) if isinstance(run_scope, dict) else False,
+            "latest_session_id_present": bool(run_scope.get("latest_session_id"))
+            if isinstance(run_scope, dict)
+            else False,
+            "operator_guidance_only": True,
+        }
+
     def write_audit_summary(self, tag: str = "snapshot") -> None:
         """Write a runtime heartbeat plus compact proof digest summary."""
         self.flush_audit_buffer()
@@ -838,6 +891,12 @@ class AuditService:
                     for event in recent_events
                 ]
             summary["proof_digest"] = self._build_proof_digest(paths)
+            summary["run_scope"] = self._build_summary_run_scope(
+                tag=tag,
+                timestamp=str(summary["timestamp"]),
+                proof_digest=summary["proof_digest"],
+            )
+            summary["freshness"] = self._build_summary_freshness(summary["run_scope"])
             log_dir = paths.root / "logs"
             log_dir.mkdir(parents=True, exist_ok=True)
             summary_path = log_dir / "runtime_audit_summary.json"

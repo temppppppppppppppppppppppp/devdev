@@ -41,6 +41,7 @@ INDEX_FIELDNAMES = [
     "status",
     "runtime_audit_tag",
     "latest_session_id",
+    "runtime_freshness_status",
     "git_branch",
     "git_head",
     "git_dirty",
@@ -168,6 +169,8 @@ def archive_benchmark_record(
     latest_session_id = _extract_latest_session_id(runtime_summary)
     runtime_audit_tag = str(runtime_summary.get("tag", "")) if isinstance(runtime_summary, dict) else ""
     runtime_summary_window = runtime_summary.get("summary_window", {}) if isinstance(runtime_summary, dict) else {}
+    runtime_run_scope = _extract_runtime_run_scope(runtime_summary, latest_session_id=latest_session_id)
+    runtime_freshness = _extract_runtime_freshness(runtime_summary, run_scope=runtime_run_scope)
 
     copied_files = _copy_snapshot_payload(project_root=project_root, record_root=record_root)
     stage_metrics_path = record_root / "stage_metrics.csv"
@@ -194,6 +197,8 @@ def archive_benchmark_record(
             "runtime_audit_tag": runtime_audit_tag,
             "latest_session_id": latest_session_id,
             "summary_window": runtime_summary_window if isinstance(runtime_summary_window, dict) else {},
+            "run_scope": runtime_run_scope,
+            "freshness": runtime_freshness,
         },
         "workspace_git": {
             "branch": git_info["branch"],
@@ -276,6 +281,7 @@ def _build_index_row(
         "status": str(manifest["status"]),
         "runtime_audit_tag": str(runtime_summary.get("runtime_audit_tag", "")),
         "latest_session_id": str(runtime_summary.get("latest_session_id", "")),
+        "runtime_freshness_status": str((runtime_summary.get("freshness", {}) or {}).get("status", "")),
         "git_branch": str(git_info.get("branch", "")),
         "git_head": str(git_info.get("head", "")),
         "git_dirty": "true" if git_info.get("dirty") else "false",
@@ -435,6 +441,69 @@ def _extract_latest_session_id(runtime_summary: dict[str, Any] | list[Any]) -> s
         if value:
             return str(value)
     return ""
+
+
+def _extract_runtime_run_scope(
+    runtime_summary: dict[str, Any] | list[Any], *, latest_session_id: str
+) -> dict[str, Any]:
+    if not isinstance(runtime_summary, dict) or not runtime_summary:
+        return {
+            "status": "unavailable",
+            "engine_run_id": "",
+            "latest_session_id": "",
+            "basis": [],
+            "authority_role": "companion_snapshot",
+        }
+    raw_scope = runtime_summary.get("run_scope", {})
+    run_scope = dict(raw_scope) if isinstance(raw_scope, dict) else {}
+    engine_run_id = str(run_scope.get("engine_run_id", "") or "").strip()
+    resolved_session_id = str(run_scope.get("latest_session_id") or latest_session_id or "").strip()
+    basis = [str(item) for item in run_scope.get("basis", []) if str(item or "").strip()]
+    if engine_run_id and not any(item == "GEULDOBI_RUN_ID" for item in basis):
+        basis.append("GEULDOBI_RUN_ID")
+    if resolved_session_id and not any("session" in item for item in basis):
+        basis.append("latest_session_id")
+    return {
+        **run_scope,
+        "status": str(run_scope.get("status") or ("scoped" if basis else "unknown")),
+        "engine_run_id": engine_run_id,
+        "latest_session_id": resolved_session_id,
+        "basis": basis,
+        "authority_role": str(run_scope.get("authority_role") or "companion_snapshot"),
+    }
+
+
+def _extract_runtime_freshness(
+    runtime_summary: dict[str, Any] | list[Any], *, run_scope: dict[str, Any]
+) -> dict[str, Any]:
+    if not isinstance(runtime_summary, dict) or not runtime_summary:
+        return {
+            "status": "unavailable",
+            "basis": [],
+            "engine_run_id_present": False,
+            "latest_session_id_present": False,
+            "operator_guidance_only": True,
+        }
+    raw_freshness = runtime_summary.get("freshness", {})
+    if isinstance(raw_freshness, dict) and raw_freshness:
+        return {
+            **raw_freshness,
+            "status": str(raw_freshness.get("status") or run_scope.get("status") or "unknown"),
+            "basis": list(raw_freshness.get("basis") or run_scope.get("basis") or []),
+            "engine_run_id_present": bool(raw_freshness.get("engine_run_id_present"))
+            or bool(run_scope.get("engine_run_id")),
+            "latest_session_id_present": bool(raw_freshness.get("latest_session_id_present"))
+            or bool(run_scope.get("latest_session_id")),
+            "operator_guidance_only": True,
+        }
+    basis = list(run_scope.get("basis") or [])
+    return {
+        "status": str(run_scope.get("status") or ("scoped" if basis else "unknown")),
+        "basis": basis,
+        "engine_run_id_present": bool(run_scope.get("engine_run_id")),
+        "latest_session_id_present": bool(run_scope.get("latest_session_id")),
+        "operator_guidance_only": True,
+    }
 
 
 def _dedupe_attempt_rows(rows: Any) -> list[dict[str, Any]]:

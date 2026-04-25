@@ -140,6 +140,7 @@ class TestWriteAuditSummary:
         assert data["proof_digest"]["hook_ran"] is True
 
     def test_write_summary_includes_structured_proof_digest(self, svc, tmp_project, monkeypatch):
+        monkeypatch.setenv("GEULDOBI_RUN_ID", "run-proof-123")
         db = DBManager(tmp_project.root / "project_data.db")
         attempt_key = "s4:ep9:arc1:a1:sess_proof"
         artifact_path = "logs/artifacts/stage4/ep_0009/attempt_01/final_manuscript__A_balanced.txt"
@@ -306,6 +307,13 @@ class TestWriteAuditSummary:
             assert data["proof_digest"]["session_lineage"]["plain_log_token"] == "legacy_token"
             assert data["proof_digest"]["session_lineage"]["structured_session_id"] == "sess_proof"
             assert data["proof_digest"]["session_lineage"]["status"] == "split_mapped"
+            assert data["run_scope"]["status"] == "scoped"
+            assert data["run_scope"]["engine_run_id"] == "run-proof-123"
+            assert data["run_scope"]["latest_session_id"] == "sess_proof"
+            assert data["freshness"]["status"] == "scoped"
+            assert data["freshness"]["engine_run_id_present"] is True
+            assert data["freshness"]["latest_session_id_present"] is True
+            assert data["freshness"]["operator_guidance_only"] is True
             assert data["proof_digest"]["stages"]["stage4"]["status"] == "ok"
             assert data["proof_digest"]["stages"]["stage4"]["coverage"]["session_decisions"] == 1
             runtime_audit_path = tmp_project.root / "logs" / "runtime_audit.jsonl"
