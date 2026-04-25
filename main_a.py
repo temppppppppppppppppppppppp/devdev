@@ -4690,17 +4690,28 @@ class SovereignApp:
         self.ui.log(f"\n   🚀 [Stage 4] 원고 집필 중 (ep {arc_ep_start}~{arc_ep_end})...")
         manuscripts_before = self._get_max_episode_from_manuscripts()
         manuscripts_delta = 0
+        manuscripts_after = manuscripts_before
         try:
             self._stage_4_v2_chief_writer(target_ep=arc_ep_end, skip_pause=True)
             manuscripts_after = self._get_max_episode_from_manuscripts()
             manuscripts_delta = max(0, manuscripts_after - manuscripts_before)
-            self.ui.log(f"   ✅ [Stage 4] 원고 완료 ({manuscripts_delta}화 생산)")
         except KeyboardInterrupt:
             self.ui.log("\n   ⚠️ 사용자 중단 요청.")
             return {"status": "stop", "arcs_completed_delta": 0, "manuscripts_delta": 0}
         except Exception as s4_err:
             self.ui.log(f"   ❌ [Stage 4] 원고 집필 오류: {str(s4_err)[:100]}")
-            self.ui.log("   (기존 에러 핸들링에 따라 최선 결과 수용)")
+            try:
+                manuscripts_after = self._get_max_episode_from_manuscripts()
+                manuscripts_delta = max(0, manuscripts_after - manuscripts_before)
+            except Exception:
+                manuscripts_delta = 0
+            return {"status": "stage4_error", "arcs_completed_delta": 0, "manuscripts_delta": manuscripts_delta}
+
+        if manuscripts_after < arc_ep_end:
+            self.ui.log(f"   ⚠️ [Stage 4] 목표 미도달: latest_ep={manuscripts_after}, target_ep={arc_ep_end}")
+            return {"status": "stage4_incomplete", "arcs_completed_delta": 0, "manuscripts_delta": manuscripts_delta}
+
+        self.ui.log(f"   ✅ [Stage 4] 원고 완료 ({manuscripts_delta}화 생산)")
 
         return {
             "status": "completed",

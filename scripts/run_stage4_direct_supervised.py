@@ -73,7 +73,7 @@ def run_direct_stage4(project_name: str, *, target_ep: int, archive_enabled: boo
 
     after_latest_ep = _load_latest_written_ep(project_root)
     runtime_audit_tag = _load_runtime_audit_tag(project_root)
-    success = after_latest_ep >= target_ep or runtime_audit_tag == "stage4_complete"
+    success = after_latest_ep >= target_ep
     archive_status = "completed" if success else "partial"
     archive_notes = (
         f"direct supervised stage4; target_ep={target_ep}; before_latest_ep={before_latest_ep}; "

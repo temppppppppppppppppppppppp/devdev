@@ -1,6 +1,6 @@
 import json
-import sys
 import subprocess
+import sys
 from pathlib import Path
 from unittest.mock import patch
 
@@ -106,7 +106,11 @@ def test_run_guarded_stage4_terminates_when_attempt_limit_is_exceeded(tmp_path):
         patch.object(guarded_script, "_load_project_genre", return_value={"type": "investment", "name": "investment"}),
         patch.object(guarded_script, "_capture_stage4_baseline", return_value=20),
         patch.object(guarded_script, "_launch_direct_stage4_child", return_value=_FakeProc([timeout])),
-        patch.object(guarded_script, "_get_stream_monitor_snapshot", return_value={"latest_round_seen": 0, "latest_round_total": 10}),
+        patch.object(
+            guarded_script,
+            "_get_stream_monitor_snapshot",
+            return_value={"latest_round_seen": 0, "latest_round_total": 10},
+        ),
         patch.object(guarded_script, "_load_stage4_attempt_summary", return_value={"ep_num": 4, "max_attempt_num": 6}),
         patch.object(guarded_script, "_terminate_process", return_value=("terminate", 1)) as terminate,
         patch.object(guarded_script, "_load_latest_written_ep", side_effect=[3, 3]),
@@ -148,7 +152,11 @@ def test_run_guarded_stage4_terminates_when_round_six_starts(tmp_path):
         patch.object(guarded_script, "_load_project_genre", return_value={"type": "investment", "name": "investment"}),
         patch.object(guarded_script, "_capture_stage4_baseline", return_value=20),
         patch.object(guarded_script, "_launch_direct_stage4_child", return_value=_FakeProc([timeout])),
-        patch.object(guarded_script, "_get_stream_monitor_snapshot", return_value={"latest_round_seen": 6, "latest_round_total": 10}),
+        patch.object(
+            guarded_script,
+            "_get_stream_monitor_snapshot",
+            return_value={"latest_round_seen": 6, "latest_round_total": 10},
+        ),
         patch.object(guarded_script, "_terminate_process", return_value=("terminate", 1)) as terminate,
         patch.object(guarded_script, "_load_latest_written_ep", side_effect=[3, 3]),
         patch.object(guarded_script, "_load_runtime_audit_tag", return_value="stage3_complete"),
@@ -171,6 +179,39 @@ def test_run_guarded_stage4_terminates_when_round_six_starts(tmp_path):
     assert payload["success"] is False
     assert payload["termination_reason"] == "stage4_round_limit_exceeded"
     assert payload["terminated_attempt_num"] == 6
+
+
+def test_run_guarded_stage4_fallback_does_not_treat_stale_stage4_complete_tag_as_success(tmp_path):
+    project_root = _make_project(tmp_path)
+
+    with (
+        patch.object(guarded_script, "PROJECT_ROOT", tmp_path),
+        patch.object(guarded_script, "_load_project_genre", return_value={"type": "investment", "name": "investment"}),
+        patch.object(guarded_script, "_capture_stage4_baseline", return_value=12),
+        patch.object(guarded_script, "_launch_direct_stage4_child", return_value=_FakeProc([0])),
+        patch.object(guarded_script, "_load_latest_written_ep", side_effect=[3, 4]),
+        patch.object(guarded_script, "_load_runtime_audit_tag", return_value="stage4_complete"),
+        patch.object(
+            guarded_script,
+            "safe_archive_benchmark_record",
+            return_value={"status": "ok", "run_id": "guarded-partial"},
+        ) as archive,
+    ):
+        payload = guarded_script.run_guarded_stage4(
+            "gold",
+            target_ep=10,
+            max_attempts=5,
+            poll_interval_seconds=300,
+        )
+
+    assert payload["success"] is False
+    archive.assert_called_once()
+    assert archive.call_args.kwargs["status"] == "partial"
+    summary = json.loads(
+        (project_root / "logs" / "stage4_direct_supervised_guarded_result.json").read_text(encoding="utf-8")
+    )
+    assert summary["success"] is False
+    assert summary["runtime_audit_tag"] == "stage4_complete"
 
 
 def test_launch_direct_stage4_child_pins_utf8_pipe_io():

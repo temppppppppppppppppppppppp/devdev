@@ -214,7 +214,7 @@ def run_guarded_stage4(
         if clean_exit:
             success = bool(payload.get("success"))
             if not child_summary:
-                success = after_latest_ep >= target_ep or runtime_audit_tag == "stage4_complete"
+                success = after_latest_ep >= target_ep
         payload["success"] = success
         archive_status = "completed" if success else ("operational_failure" if not clean_exit else "partial")
 

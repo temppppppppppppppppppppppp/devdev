@@ -114,6 +114,18 @@ def _has_writer_blueprint_ui_contamination(text: object) -> bool:
     return any(marker.lower() in lowered for marker in _WRITER_BLUEPRINT_UI_CONTAMINATION_MARKERS)
 
 
+def _is_suspected_critical_blocking_failure(failure: object) -> bool:
+    if not isinstance(failure, dict):
+        return False
+    return str(failure.get("severity", "") or "").strip().upper() == "CRITICAL"
+
+
+def _collect_suspected_critical_blocking_failures(failures: object) -> list[dict]:
+    if not isinstance(failures, list):
+        return []
+    return [dict(failure) for failure in failures if _is_suspected_critical_blocking_failure(failure)]
+
+
 def _sanitize_writer_blueprint_text(text: object) -> str:
     raw = str(text or "").strip()
     if not raw or not _has_writer_blueprint_ui_contamination(raw):
@@ -1939,7 +1951,7 @@ class Stage4InterviewRound:
 
     @staticmethod
     def _compact_truth_pin_items(items: object, *, max_items: int | None = None) -> list[dict[str, object]]:
-        if not isinstance(items, (list, tuple)):
+        if not isinstance(items, list | tuple):
             return []
         compacted: list[dict[str, object]] = []
         seen: set[tuple[str, str, str, str]] = set()
@@ -2083,7 +2095,7 @@ class Stage4InterviewRound:
             candidate_paths.append(artifact)
 
         project_root = getattr(getattr(getattr(self.ctx, "current_project", None), "paths", None), "root", None)
-        if isinstance(project_root, (str, Path)):
+        if isinstance(project_root, str | Path):
             candidate_paths.append(Path(project_root) / normalized)
 
         for candidate in candidate_paths:
@@ -2126,9 +2138,7 @@ class Stage4InterviewRound:
         advisory = advisory_flags if isinstance(advisory_flags, dict) else {}
         memory_envelope = envelope if isinstance(envelope, dict) else {}
         retry_surface = (
-            memory_envelope.get("retry_surface")
-            if isinstance(memory_envelope.get("retry_surface"), dict)
-            else {}
+            memory_envelope.get("retry_surface") if isinstance(memory_envelope.get("retry_surface"), dict) else {}
         )
         semantics = gate_semantics if isinstance(gate_semantics, dict) else {}
 
@@ -2183,9 +2193,7 @@ class Stage4InterviewRound:
         )
         envelope = get_session_memory_envelope(advisory_flags)
         retry_surface = envelope.get("retry_surface") if isinstance(envelope.get("retry_surface"), dict) else {}
-        verdict_surface = (
-            envelope.get("verdict_surface") if isinstance(envelope.get("verdict_surface"), dict) else {}
-        )
+        verdict_surface = envelope.get("verdict_surface") if isinstance(envelope.get("verdict_surface"), dict) else {}
         candidate_surface = envelope.get("candidate") if isinstance(envelope.get("candidate"), dict) else {}
         contract_packet = self._build_stage4_attempt_contract_packet(
             advisory_flags,
@@ -2199,12 +2207,8 @@ class Stage4InterviewRound:
             or ""
         ).strip()
         selected_label, selected_strategy_key = self._parse_stage4_candidate_key(candidate_key)
-        artifact_path = str(
-            attempt_row.get("artifact_path") or candidate_surface.get("artifact_path") or ""
-        ).strip()
-        content_hash = str(
-            attempt_row.get("content_hash") or candidate_surface.get("content_hash") or ""
-        ).strip()
+        artifact_path = str(attempt_row.get("artifact_path") or candidate_surface.get("artifact_path") or "").strip()
+        content_hash = str(attempt_row.get("content_hash") or candidate_surface.get("content_hash") or "").strip()
         best_manuscript = self._load_stage4_attempt_artifact_text(artifact_path)
         fix_pack = dict(contract_packet.fix_pack or {})
         repair_contract = dict(contract_packet.repair_contract or {})
@@ -2325,10 +2329,7 @@ class Stage4InterviewRound:
             "_mad_used": dict(contract_packet.retry_budget_axes or {}).get("escalation") == "mad",
             "state_updates": {},
             "fix_scope": str(
-                scope_authority.get("fix_scope")
-                or attempt_row.get("fix_scope")
-                or retry_surface.get("fix_scope")
-                or ""
+                scope_authority.get("fix_scope") or attempt_row.get("fix_scope") or retry_surface.get("fix_scope") or ""
             ).strip(),
             "authoritative_fix_scope": str(
                 scope_authority.get("authoritative_fix_scope")
@@ -3434,8 +3435,12 @@ class Stage4InterviewRound:
             and not str(fix_pack.get("success_condition", "") or "").strip()
         )
         has_local_backfill = bool(semantic_fix_pack or relation_field_fix_pack or flashback_fix_pack)
-        runtime_scene_model_sentinel = target_kind == "scene_model" and has_local_backfill and (
-            "scene-model rewrite boundary" in patch_targets or "strong_advisory_non_local_fix" in provenance_sources
+        runtime_scene_model_sentinel = (
+            target_kind == "scene_model"
+            and has_local_backfill
+            and (
+                "scene-model rewrite boundary" in patch_targets or "strong_advisory_non_local_fix" in provenance_sources
+            )
         )
         if runtime_scene_model_sentinel or scene_model_placeholder_contract:
             escalation["inherited_non_local_fix_contract_overridden"] = True
@@ -6032,12 +6037,22 @@ class Stage4InterviewRound:
     ) -> None:
         if not bv_failures:
             return
+        suspected_critical_failures = _collect_suspected_critical_blocking_failures(bv_failures)
+        if suspected_critical_failures:
+            validation_result["suspected_critical_blocking"] = True
+            validation_result["suspected_critical_blocking_failures"] = suspected_critical_failures
         for failure in bv_failures:
             reason = failure.get("reason", str(failure))
             severity = failure.get("severity", "HIGH")
-            validation_result["warnings"].append(f"[Python검증-{severity}] {reason}")
+            prefix = (
+                "Python검증-SUSPECTED-CRITICAL"
+                if _is_suspected_critical_blocking_failure(failure)
+                else f"Python검증-{severity}"
+            )
+            validation_result["warnings"].append(f"[{prefix}] {reason}")
         validation_result["warning_count"] = len(validation_result["warnings"])
-        validation_result["focus_points"].append(f"Python 검증 경고 {len(bv_failures)}건 (Director 판단 필요)")
+        focus_suffix = "LLM Director 최종 판단 필요" if suspected_critical_failures else "Director 판단 필요"
+        validation_result["focus_points"].append(f"Python 검증 경고 {len(bv_failures)}건 ({focus_suffix})")
         self.ctx.ui.log(
             f"      ⚠️ 후보{candidate_index} Python 검증 경고 {len(bv_failures)}건 → Director에 전달",
             stage="stage4",
@@ -6046,7 +6061,11 @@ class Stage4InterviewRound:
             round_num=round_num,
             event_kind="warning",
             level="warning",
-            meta={"candidate_index": candidate_index, "failure_count": len(bv_failures)},
+            meta={
+                "candidate_index": candidate_index,
+                "failure_count": len(bv_failures),
+                "suspected_critical_blocking": bool(suspected_critical_failures),
+            },
         )
         for failure in bv_failures:
             self.ctx.ui.log(
