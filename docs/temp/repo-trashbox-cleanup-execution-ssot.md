@@ -30,11 +30,10 @@ execution_meta:
   schema_version: execution-meta-block-v1
   topic: repo-trashbox-cleanup
   github_issue: 9
-  depends_on:
-    - canary-root-isolation
+  depends_on: []
   status: pending
   queue_role: parked_future_wave
-  roadmap_rank: 5
+  roadmap_rank: 1
   tranches:
     - id: reference-check
       title: Candidate reference and runtime dependency check
