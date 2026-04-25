@@ -1,3 +1,5 @@
+import json
+
 from modules.core.pass_rate_monitor import PassRateMonitor, calculate_episode_rol
 
 
@@ -47,3 +49,33 @@ def test_get_episode_rol_snapshot_joins_latest_quality_rows(tmp_path):
     assert summary["rows"][1]["decision"] == "PASS"
     assert summary["rows"][1]["success"] is True
     assert summary["rows"][1]["rol_score"] == 90.0
+
+
+def test_load_records_accepts_legacy_records_without_timestamp(tmp_path):
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir()
+    (log_dir / "pass_rate_monitor.json").write_text(
+        json.dumps(
+            {
+                "session_start": "2026-04-25T00:00:00",
+                "records": [
+                    {
+                        "stage": 4,
+                        "episode": 7,
+                        "arc": 1,
+                        "attempt_num": 1,
+                        "success": True,
+                        "attempt_key": "s4:ep7:arc1:a1:sess_legacy",
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+
+    monitor = PassRateMonitor(str(tmp_path))
+
+    assert len(monitor.records) == 1
+    assert monitor.records[0].timestamp == "2026-04-25T00:00:00"
+    assert monitor.records[0].attempt_key == "s4:ep7:arc1:a1:sess_legacy"

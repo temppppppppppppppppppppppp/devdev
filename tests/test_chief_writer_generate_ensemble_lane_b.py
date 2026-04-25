@@ -87,6 +87,7 @@ def test_prepare_generate_ensemble_context_builds_context_cache_and_strategies()
     context, cache_name, strategies, temperatures = writer._prepare_generate_ensemble_context(
         ep_num=7,
         blueprint={},
+        arc_data={},
         prev_manuscript="prev",
         hud_report="hud",
         arc_doc="arc",

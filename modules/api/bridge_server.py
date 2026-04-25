@@ -26,9 +26,7 @@ import statistics
 import uuid
 from collections import Counter
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
-
-UTC = timezone.utc
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -66,6 +64,7 @@ logger = logging.getLogger(__name__)
 
 def _authority_role_for(surface: str, *, fallback: str = AUTHORITY_ROLE_COMPANION_SNAPSHOT) -> str:
     return get_control_plane_authority_role(surface) or fallback
+
 
 _QUALITY_SIGNAL_LABELS = {
     "ced": "CED",
@@ -111,13 +110,17 @@ _CHECKLIST_LABELS = {
 # ─── seq 카운터 (전역, 단조 증가) ────────────────────────────────────────────
 _seq_iter = itertools.count(1)
 
+
 def _next_seq() -> int:
     return next(_seq_iter)
+
 
 def _ts() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
+
 # ─── WS 연결 관리자 ──────────────────────────────────────────────────────────
+
 
 class WSManager:
     """연결된 WebSocket 클라이언트 목록 유지 + 브로드캐스트."""
@@ -155,6 +158,7 @@ class WSManager:
         ensure_future로 비동기 broadcast를 예약한다.
         """
         import asyncio
+
         try:
             loop = asyncio.get_event_loop()
             if loop.is_running():
@@ -164,7 +168,9 @@ class WSManager:
         except Exception:
             logger.exception("WS broadcast 실패 run_id=%r type=%r", run_id, event.get("type"))
 
+
 # ─── 이벤트 빌더 헬퍼 ────────────────────────────────────────────────────────
+
 
 def _build_event(run_id: str, event_type: str, payload: dict) -> dict:
     """event-schema-v1.json 필수 필드 전량 포함."""
@@ -189,13 +195,17 @@ def _build_run_exit_payload(runner: ProcessRunner, returncode: int) -> dict:
         payload.update(diagnostics)
     return payload
 
+
 # ─── Envelope 헬퍼 (api-contract-v1.yaml) ────────────────────────────────────
+
 
 def _accepted(run_id: str, message: str = "accepted") -> dict:
     return {"ok": True, "run_id": run_id, "code": "OK", "message": message, "data": {}}
 
+
 def _ok(message: str = "ok") -> dict:
     return {"ok": True, "code": "OK", "message": message, "data": None}
+
 
 def _err(code: str, message: str, run_id: str | None = None) -> dict:
     return {"ok": False, "run_id": run_id, "code": code, "message": message, "data": None}
@@ -897,11 +907,7 @@ def _build_budget_status_payload(
     if isinstance(retry_axes, dict) and retry_axes:
         available = True
         authoritative_inputs.append("gate_repair_summary")
-        normalized_axes = {
-            str(key): max(0, int(value or 0))
-            for key, value in retry_axes.items()
-            if str(key).strip()
-        }
+        normalized_axes = {str(key): max(0, int(value or 0)) for key, value in retry_axes.items() if str(key).strip()}
         total_retry_axes = sum(normalized_axes.values())
         max_retry_axis = max(normalized_axes.values(), default=0)
         retry_status = "ok"
@@ -965,9 +971,7 @@ def _build_budget_status_payload(
         )
         status = _promote_budget_status(status, retrieval_status)
         if retrieval_status != "ok":
-            reasons.append(
-                f"retrieval budget {retrieval_status} (trimmed={trimmed_rows}, overflow={overflow_rows})"
-            )
+            reasons.append(f"retrieval budget {retrieval_status} (trimmed={trimmed_rows}, overflow={overflow_rows})")
 
     payload["available"] = available
     payload["authoritative_inputs"] = authoritative_inputs
@@ -1079,7 +1083,9 @@ def _collect_artifact_ladder_file_context(project_dir: Path) -> dict[str, Any]:
     ]
     latest_treatment = _latest_file(treatment_candidates)
     arc_files = sorted((plans_dir / "arcs").glob("arc_*.txt")) if (plans_dir / "arcs").exists() else []
-    blueprint_files = sorted((plans_dir / "blueprints").glob("blueprint_*.txt")) if (plans_dir / "blueprints").exists() else []
+    blueprint_files = (
+        sorted((plans_dir / "blueprints").glob("blueprint_*.txt")) if (plans_dir / "blueprints").exists() else []
+    )
     manuscript_files = sorted(drafts_dir.glob("ep_*.txt")) if drafts_dir.exists() else []
     latest_arc = _latest_file(arc_files) if arc_files else None
     latest_blueprint = _latest_file(blueprint_files) if blueprint_files else None
@@ -1120,7 +1126,7 @@ def _load_artifact_ladder_db_snapshot(project: str, db_path: Path) -> dict[str, 
         snapshot["roadmap_count"] = len(plot_roadmap) if isinstance(plot_roadmap, list) else 0
 
         arcs_anchor = db.load_anchor("arcs") or []
-        if isinstance(arcs_anchor, (list, dict)):
+        if isinstance(arcs_anchor, list | dict):
             snapshot["arc_count_from_anchor"] = len(arcs_anchor)
 
         snapshot["blueprint_count"] = int(db.get_latest_blueprint_number() or 0)
@@ -1270,8 +1276,12 @@ def _build_artifact_ladder_support_items(support_assets: dict[str, Any]) -> list
                     ", ".join(
                         part
                         for part in (
-                            f"tone={support_assets['style_guide']['tone']}" if support_assets["style_guide"]["tone"] else "",
-                            f"pov={support_assets['style_guide']['pov']}" if support_assets["style_guide"]["pov"] else "",
+                            f"tone={support_assets['style_guide']['tone']}"
+                            if support_assets["style_guide"]["tone"]
+                            else "",
+                            f"pov={support_assets['style_guide']['pov']}"
+                            if support_assets["style_guide"]["pov"]
+                            else "",
                         )
                         if part
                     )
@@ -1510,7 +1520,8 @@ def _split_issue_text(text: str, *, limit: int = 3) -> list[str]:
     if not raw or raw in {"없음", "특이사항 없음", "문제 없음"}:
         return []
 
-    chunks = [piece.strip(" -•\t") for piece in re.split(r"[\r\n]+|(?<=[.!?])\s+|[;·]+", raw) if piece.strip()]  # utf8-hygiene: allow-line regex uses literal ? token safely
+    split_pattern = r"[\r\n]+|(?<=[.!?])\s+|[;·]+"  # utf8-hygiene: allow-line regex uses literal ? token safely
+    chunks = [piece.strip(" -•\t") for piece in re.split(split_pattern, raw) if piece.strip()]
     if not chunks:
         chunks = [raw]
     return _dedupe_preserve_order(chunks)[:limit]
@@ -1629,20 +1640,14 @@ def _build_gate_repair_summary(snapshot: dict | None) -> dict[str, Any]:
     fix_pack = snapshot.get("fix_pack")
     retry_budget_axes = snapshot.get("retry_budget_axes")
     repair_contract = (
-        dict(snapshot.get("repair_contract") or {})
-        if isinstance(snapshot.get("repair_contract"), dict)
-        else {}
+        dict(snapshot.get("repair_contract") or {}) if isinstance(snapshot.get("repair_contract"), dict) else {}
     )
     partial_fix_eval = (
-        dict(snapshot.get("partial_fix_eval") or {})
-        if isinstance(snapshot.get("partial_fix_eval"), dict)
-        else {}
+        dict(snapshot.get("partial_fix_eval") or {}) if isinstance(snapshot.get("partial_fix_eval"), dict) else {}
     )
     repair_trace = list(snapshot.get("repair_trace") or []) if isinstance(snapshot.get("repair_trace"), list) else []
     scope_authority = (
-        dict(snapshot.get("scope_authority") or {})
-        if isinstance(snapshot.get("scope_authority"), dict)
-        else {}
+        dict(snapshot.get("scope_authority") or {}) if isinstance(snapshot.get("scope_authority"), dict) else {}
     )
     repair_contract_subtype = str(
         snapshot.get("repair_contract_subtype") or repair_contract.get("subtype") or ""
@@ -1654,9 +1659,7 @@ def _build_gate_repair_summary(snapshot: dict | None) -> dict[str, Any]:
         snapshot.get("scope_authority_fix_scope") or scope_authority.get("fix_scope") or ""
     ).strip()
     scope_authority_authoritative_fix_scope = str(
-        snapshot.get("scope_authority_authoritative_fix_scope")
-        or scope_authority.get("authoritative_fix_scope")
-        or ""
+        snapshot.get("scope_authority_authoritative_fix_scope") or scope_authority.get("authoritative_fix_scope") or ""
     ).strip()
     scope_authority_scope_origin = snapshot.get("scope_authority_scope_origin")
     if scope_authority_scope_origin in (None, "", []):
@@ -1887,9 +1890,13 @@ def _build_calibration_payload(
     if not observations:
         health = data_health or {}
         if health.get("stage4_validation_eps", 0) > 0 and health.get("manual_review_rows", 0) <= 0:
-            payload["next_step"] = "수동 review 라벨이 아직 없습니다. 최근 Stage 4 원고부터 운영자 라벨을 5건 이상 쌓으세요."
+            payload["next_step"] = (
+                "수동 review 라벨이 아직 없습니다. 최근 Stage 4 원고부터 운영자 라벨을 5건 이상 쌓으세요."
+            )
         elif health.get("retrieval_observation_rows", 0) <= 0 and health.get("stage4_validation_eps", 0) > 0:
-            payload["next_step"] = "retrieval 관측 로그가 부족합니다. 최신 코드로 Stage 2/3/4를 다시 실행해 표본을 쌓으세요."
+            payload["next_step"] = (
+                "retrieval 관측 로그가 부족합니다. 최신 코드로 Stage 2/3/4를 다시 실행해 표본을 쌓으세요."
+            )
         return payload
 
     signal_map = {int(row.get("ep_num")): row for row in signals if row.get("ep_num") is not None}
@@ -1908,7 +1915,9 @@ def _build_calibration_payload(
         "complexity": _median("complexity"),
     }
 
-    label_counts = Counter(str(row.get("operator_label") or "").strip() for row in observations if row.get("operator_label"))
+    label_counts = Counter(
+        str(row.get("operator_label") or "").strip() for row in observations if row.get("operator_label")
+    )
     candidate_counts = Counter()
     recent_rows: list[dict] = []
 
@@ -1921,7 +1930,9 @@ def _build_calibration_payload(
 
         if operator_label == "AI 티" and "AI Slop 동반" in signal_notes:
             candidate_counts["AI Slop"] += 1
-        if operator_label == "과잉 설명" and any(note in {"Density 상승", "gzip 압축 비율 상승"} for note in signal_notes):
+        if operator_label == "과잉 설명" and any(
+            note in {"Density 상승", "gzip 압축 비율 상승"} for note in signal_notes
+        ):
             candidate_counts["Density/gzip"] += 1
         if operator_label == "지나친 단조" and "Rhythm 저하" in signal_notes:
             candidate_counts["Rhythm"] += 1
@@ -1967,7 +1978,9 @@ def _build_calibration_payload(
     payload["recent_observations"] = list(reversed(recent_rows[-8:]))
     payload["advisory_candidates"] = advisory_candidates[:4]
     if advisory_candidates:
-        payload["next_step"] = "후보 신호를 바로 hard gate로 올리지 말고, CW retry feedback advisory부터 제한적으로 시험하는 편이 안전합니다."
+        payload["next_step"] = (
+            "후보 신호를 바로 hard gate로 올리지 말고, CW retry feedback advisory부터 제한적으로 시험하는 편이 안전합니다."
+        )
     elif payload["total_reviews"] < 5:
         payload["next_step"] = "관측 샘플이 아직 적습니다. 최소 5화 이상에서 라벨을 더 쌓는 편이 좋습니다."
     else:
@@ -2005,15 +2018,12 @@ def _load_runtime_health(project_dir: Path, *, limit: int = 10) -> dict:
     if not recent:
         return payload
 
-    window = recent[-max(1, limit):]
-    component_counts = Counter(
-        f"{row.get('component', 'unknown')}.{row.get('operation', 'unknown')}" for row in window
-    )
+    window = recent[-max(1, limit) :]
+    component_counts = Counter(f"{row.get('component', 'unknown')}.{row.get('operation', 'unknown')}" for row in window)
     payload["available"] = True
     payload["recent_count"] = len(window)
     payload["top_components"] = [
-        {"component": component, "count": count}
-        for component, count in component_counts.most_common(5)
+        {"component": component, "count": count} for component, count in component_counts.most_common(5)
     ]
     payload["recent"] = [
         {
@@ -2099,6 +2109,7 @@ def _load_runtime_audit_summary(project_dir: Path) -> dict:
         "summary_role": "",
         "contract": {},
         "proof_digest": {},
+        "summary_window": {},
     }
     summary_path = project_dir / "logs" / "runtime_audit_summary.json"
     if not summary_path.exists():
@@ -2116,6 +2127,8 @@ def _load_runtime_audit_summary(project_dir: Path) -> dict:
     payload["contract"] = contract if isinstance(contract, dict) else {}
     proof_digest = summary.get("proof_digest", {})
     payload["proof_digest"] = proof_digest if isinstance(proof_digest, dict) else {}
+    summary_window = summary.get("summary_window", {})
+    payload["summary_window"] = summary_window if isinstance(summary_window, dict) else {}
     return payload
 
 
@@ -2337,7 +2350,9 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
         payload["available"] = bool(payload["stage_stats"] or payload["episode_trend"])
     return payload
 
+
 # ─── 앱 수명주기 ──────────────────────────────────────────────────────────────
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -2362,6 +2377,7 @@ async def lifespan(app: FastAPI):
     await runner.stop()
     logger.info("bridge_server 종료")
 
+
 # ─── FastAPI 앱 ───────────────────────────────────────────────────────────────
 
 app = FastAPI(
@@ -2371,6 +2387,7 @@ app = FastAPI(
 )
 
 # ─── POST /run ────────────────────────────────────────────────────────────────
+
 
 @app.post("/run")
 async def run_endpoint(request: Request) -> JSONResponse:
@@ -2483,7 +2500,9 @@ async def run_endpoint(request: Request) -> JSONResponse:
 
     return JSONResponse(status_code=202, content=_accepted(run_id))
 
+
 # ─── POST /run/{run_id}/input ────────────────────────────────────────────────
+
 
 @app.post("/run/{run_id}/input")
 async def resolve_prompt(run_id: str, request: Request) -> JSONResponse:
@@ -2513,7 +2532,9 @@ async def resolve_prompt(run_id: str, request: Request) -> JSONResponse:
 
     return JSONResponse(status_code=200, content=_ok("prompt accepted"))
 
+
 # ─── POST /stop ───────────────────────────────────────────────────────────────
+
 
 @app.post("/stop")
 async def stop_endpoint(request: Request) -> JSONResponse:
@@ -2531,7 +2552,9 @@ async def stop_endpoint(request: Request) -> JSONResponse:
 
     return JSONResponse(status_code=200, content=_ok("stopped"))
 
+
 # ─── GET /status ──────────────────────────────────────────────────────────────
+
 
 @app.get("/status")
 async def status_endpoint(request: Request) -> JSONResponse:
@@ -2668,7 +2691,9 @@ async def quality_review_endpoint(request: Request) -> JSONResponse:
 
     return JSONResponse(status_code=200, content={"ok": True, "code": "OK", "data": saved})
 
+
 # ─── WS /events ───────────────────────────────────────────────────────────────
+
 
 @app.websocket("/events")
 async def ws_events(websocket: WebSocket) -> None:

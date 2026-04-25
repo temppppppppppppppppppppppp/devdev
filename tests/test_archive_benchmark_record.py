@@ -80,6 +80,11 @@ def test_archive_benchmark_record_creates_bundle_and_index(tmp_path):
                         "latest_session_id": "20260422_080513",
                     }
                 },
+                "summary_window": {
+                    "count_window_size": 200,
+                    "counts_truncated": True,
+                    "event_window_truncated": True,
+                },
             },
             ensure_ascii=False,
             indent=2,
@@ -149,6 +154,8 @@ def test_archive_benchmark_record_creates_bundle_and_index(tmp_path):
     assert row["s4_duration_ms"] == "3000"
     assert row["s4_tokens"] == "4567"
     assert row["total_cost_usd"] == "0.660000"
+    assert manifest["runtime_summary"]["summary_window"]["counts_truncated"] is True
+    assert manifest["runtime_summary"]["summary_window"]["event_window_truncated"] is True
 
 
 def test_archive_benchmark_record_overwrite_replaces_existing_index_row(tmp_path):

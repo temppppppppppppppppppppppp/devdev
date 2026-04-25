@@ -95,6 +95,27 @@ class TestWriteAuditSummary:
         assert data["tag"] == "my_tag"
         assert data["total_events"] == 1
         assert "evt" in data["counts"]
+        assert data["summary_window"]["count_window_size"] == 200
+        assert data["summary_window"]["counted_events"] == 1
+        assert data["summary_window"]["recent_event_window_size"] == 10
+        assert data["summary_window"]["recent_events_returned"] == 1
+        assert data["summary_window"]["counts_truncated"] is False
+        assert data["summary_window"]["event_window_truncated"] is False
+
+    def test_write_summary_discloses_compact_event_windows(self, svc, tmp_project):
+        for idx in range(205):
+            svc.audit_event("evt", f"msg-{idx}")
+        svc.write_audit_summary("window_tag")
+
+        summary_path = tmp_project.root / "logs" / "runtime_audit_summary.json"
+        data = json.loads(summary_path.read_text(encoding="utf-8"))
+
+        assert data["total_events"] == 205
+        assert data["counts"]["evt"] == 200
+        assert data["summary_window"]["counted_events"] == 200
+        assert data["summary_window"]["recent_events_returned"] == 10
+        assert data["summary_window"]["counts_truncated"] is True
+        assert data["summary_window"]["event_window_truncated"] is True
 
     def test_write_summary_runs_pre_summary_hook_before_proof_digest(self, runtime_audit, tmp_project):
         sentinel = tmp_project.root / "logs" / "pass_rate_monitor.json"
@@ -179,6 +200,19 @@ class TestWriteAuditSummary:
                 content_hash="hash-proof",
                 artifact_path=artifact_path,
             )
+            for payload_kind in (
+                "selection_contract_snapshot_raw",
+                "selection_surface_raw",
+                "feedback_provenance_raw",
+                "contract_snapshot_raw",
+            ):
+                db.save_attempt_raw_rationale(
+                    attempt_key=attempt_key,
+                    stage=4,
+                    ep_num=9,
+                    payload_kind=payload_kind,
+                    payload=json.dumps({"_meta": {"surface": payload_kind}}, ensure_ascii=False),
+                )
             (tmp_project.root / "logs" / "session" / "decisions.jsonl").write_text(
                 json.dumps(
                     {
