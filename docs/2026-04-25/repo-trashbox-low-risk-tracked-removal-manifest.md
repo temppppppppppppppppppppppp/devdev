@@ -1,7 +1,7 @@
 # Repo Trashbox Low-Risk Tracked Removal Manifest
 
 Date: 2026-04-25
-Status: final - manifest complete; no tracked removal performed
+Status: final - manifest complete; removal executed in follow-up closure PR
 Canonical Path: `docs/2026-04-25/repo-trashbox-low-risk-tracked-removal-manifest.md`
 Governing SSOT: `docs/2026-04-24/repo-trashbox-cleanup-execution-ssot.md`
 Baseline Commit: `bcbe0955a53b57d0e44953ace2db54ffadffc651`
@@ -15,7 +15,7 @@ Can the lowest-risk tracked repo residue be made reviewable for a future deletio
 
 Yes. The tracked removal set below is low-risk enough for a dedicated follow-up PR, provided that the PR uses `git rm` for exactly the listed paths and does not bundle broader repo cleanup.
 
-This document does not authorize or perform removal. It only freezes the removal candidate set and validation contract.
+This document itself did not perform removal. It froze the removal candidate set and validation contract; the follow-up closure PR executed the manifest-bound removal.
 
 ## 3. Removal Set
 
@@ -76,7 +76,7 @@ Future removal PR validation should include:
 - scoped `rg` reference scans for the removed roots and root files
 - `python scripts/sync_temp_queue_state.py`
 - `python scripts/ops_validator.py --strict`
-- `python scripts/check_utf8_hygiene.py docs/2026-04-25/repo-trashbox-low-risk-tracked-removal-manifest.md docs/2026-04-24/repo-trashbox-cleanup-execution-ssot.md docs/2026-04-24/active-temp-execution-roadmap.md docs/temp/repo-trashbox-cleanup-execution-ssot.md docs/temp/execution-roadmap.md docs/temp/queue-state.json`
+- `python scripts/check_utf8_hygiene.py docs/2026-04-25/repo-trashbox-low-risk-tracked-removal-manifest.md docs/2026-04-25/repo-trashbox-low-risk-removal-preflight-reaudit.md docs/2026-04-24/repo-trashbox-cleanup-execution-ssot.md docs/2026-04-24/active-temp-execution-roadmap.md docs/implementation/surface-containment-contract-v1.json tests/test_surface_containment_contract.py docs/temp/queue-state.json`
 - `python -m pytest tests/test_surface_containment_contract.py tests/test_runtime_authority_contract.py -q`
 
 ## 7. Pass 1 - Inventory Check

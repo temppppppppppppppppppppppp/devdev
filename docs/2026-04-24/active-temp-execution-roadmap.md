@@ -1,13 +1,13 @@
 # Active Temp Execution Roadmap
 
 Date: 2026-04-24
-Status: active (repo-trashbox-cleanup low-risk tracked removal manifest complete; next actual tracked removal PR)
+Status: closed (repo-trashbox-cleanup bounded queue exhausted after low-risk tracked removal)
 Canonical Path: `docs/2026-04-24/active-temp-execution-roadmap.md`
-Temp Mirror Path: `docs/temp/execution-roadmap.md`
+Temp Mirror Path: `docs/temp/execution-roadmap.md` (removed after closure)
 Baseline Commit: `143cee26d879d5de59ef43757f851e89b8d551c7`
 Baseline Dirty Summary: `dirty: local runtime project outputs, benchmark index, .gitignore key ignore, and new 2026-04-24 hygiene docs; no canary code, data migration, or trashbox move performed`
-Resume Commit: `bcbe0955a53b57d0e44953ace2db54ffadffc651`
-Resume Drift Summary: `stage234-session-memory-max-utilization was explicitly opened by the user on 2026-04-24, fresh re-audited PASS, and closed on 2026-04-25 after bounded Stage4, Stage3, and Stage2 memory rollout; stage0-bi-tr-production-harness-normalization-remediation Tranche 2 was merged on 2026-04-25 via PR #13; canary-root-isolation was merged on 2026-04-25 via PR #15 and closed via PR #16; repo-trashbox-cleanup reference-check merged via PR #17, move-plan merged via PR #18, packaging-scope merged via PR #19, and low-risk tracked removal manifest opened on branch feat/repo-trashbox-low-risk-removal-manifest`
+Resume Commit: `0e840af956e40f152b4467189b91762d157c4a4c`
+Resume Drift Summary: `stage234-session-memory-max-utilization was explicitly opened by the user on 2026-04-24, fresh re-audited PASS, and closed on 2026-04-25 after bounded Stage4, Stage3, and Stage2 memory rollout; stage0-bi-tr-production-harness-normalization-remediation Tranche 2 was merged on 2026-04-25 via PR #13; canary-root-isolation was merged on 2026-04-25 via PR #15 and closed via PR #16; repo-trashbox-cleanup reference-check merged via PR #17, move-plan merged via PR #18, packaging-scope merged via PR #19, low-risk tracked removal manifest merged via PR #20, and manifest-bound tracked removal opened on branch feat/repo-trashbox-low-risk-tracked-removal`
 
 ## 1. Why This Refresh Exists
 
@@ -27,16 +27,17 @@ After the Standard Vertex cache-proof run on 2026-04-24, `authority-alignment-be
 - `stage234-session-memory-max-utilization` is now closed historical backing after its bounded memory/cache rollout landed.
 - `stage0-bi-tr-production-harness-normalization-remediation` is now historical backing after PR #13 merged the runtime handoff normalization tranche.
 - `canary-root-isolation` is now historical backing after PR #15 merged the canary root isolation tranche.
-- `repo-trashbox-cleanup` is the only remaining queue item after canary policy settlement; reference-check, move-plan, packaging/ignore scope, and the low-risk tracked residue manifest are complete, and an actual manifest-bound tracked removal PR is next.
+- `repo-trashbox-cleanup` is now historical backing after the bounded low-risk tracked residue removal landed. Broader cleanup requires a new SSOT.
 
 ## 3. Queue Semantics
 
-- `front-active tracked cleanup implementation`: current implementation authority is limited to the 21 paths listed in `docs/2026-04-25/repo-trashbox-low-risk-tracked-removal-manifest.md`.
+- `closed queue`: no active temp execution SSOT remains after the bounded repo-trashbox cleanup lane closes.
 - `parked future wave`: still-real execution debt, but not current implementation authority.
 - `historical backing`: keep canonical SSOTs for audit history, but do not keep them visible as active queue residue.
 
 Working order:
-1. `repo-trashbox-cleanup` (front-active tracked cleanup implementation; actual removal must be manifest-bound and reviewable)
+
+- none; the temp queue is exhausted after closure
 
 Closed historical backing in this closure pass:
 
@@ -44,15 +45,16 @@ Closed historical backing in this closure pass:
 - `stage234-session-memory-max-utilization`
 - `stage0-bi-tr-production-harness-normalization-remediation`
 - `canary-root-isolation`
+- `repo-trashbox-cleanup`
 
 ## 4. Immediate Next Moves
 
-1. open a dedicated tracked-removal PR for only the 21 paths listed in `docs/2026-04-25/repo-trashbox-low-risk-tracked-removal-manifest.md`
+1. do not reopen `repo-trashbox-cleanup` without a fresh SSOT or narrower manifest
 2. do not reopen `stage234-session-memory-max-utilization` without a fresh live anchor or narrower follow-up SSOT
 3. do not reopen Stage0 production-harness normalization without a fresh dedicated re-audit
 4. do not move or delete existing `projects/_canary/` without a fresh cleanup SSOT
 5. do not move `test_mode/`, `lite_mode/`, `spikes/`, or old `projects/_canary/` from this roadmap refresh
-6. refresh `docs/temp/queue-state.json`
+6. refresh `docs/temp/queue-state.json` to empty mode after temp mirror cleanup
 7. validate the queue with `python scripts/ops_validator.py --strict`
 8. reflect the queue to ClickUp only if the user explicitly asks for it
 
@@ -141,5 +143,16 @@ Confidence: 96/100
 - `crash_dump.log` and `error.log` are classified as tracked residue only; runtime crash/log behavior must not change in the removal PR
 - `test_mode/`, `lite_mode/`, `spikes/`, `projects/_canary/`, `tests/`, and `docs/temp/` remain outside the removal set
 - no tracked cleanup, file movement, deletion, or `git rm` was performed by the manifest tranche
+
+Confidence: 96/100
+
+## 2026-04-25 Repo Trashbox Low-Risk Tracked Removal Closure
+
+- preflight re-audit saved at `docs/2026-04-25/repo-trashbox-low-risk-removal-preflight-reaudit.md`
+- exactly the 21 manifest-listed tracked residue files were removed with `git rm`
+- surface-containment contract tests now assert the removed tracked residue surfaces are absent and future generated residue remains ignored
+- `git ls-files -- MagicMock tmp_stage2_digest_debug rlhf_data/test_project datasets/test_project crash_dump.log error.log test_results.xml tmp_project_00.db` now returns no tracked files
+- temp execution mirror and temp roadmap are removed after canonical closure, leaving `docs/temp/queue-state.json` in empty mode
+- `test_mode/`, `lite_mode/`, `spikes/`, `projects/_canary/`, `tests/`, and runtime log behavior remain unchanged
 
 Confidence: 96/100
