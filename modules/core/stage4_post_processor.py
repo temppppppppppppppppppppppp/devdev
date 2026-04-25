@@ -20,6 +20,44 @@ from modules.core.stage4_post_pass_runtime import Stage4PostPassRuntime
 class Stage4PostProcessor:
     """[B-1-1] Stage4 PASS 후처리 전담 모듈"""
 
+    _SETTLEMENT_STATUS_FLAGS = {
+        "primary_db_failed": {
+            "manuscript_persisted": False,
+            "metadata_settled": False,
+            "settlement_packet_persisted": False,
+            "human_export_persisted": False,
+            "fully_settled": False,
+        },
+        "primary_persisted_meta_failed": {
+            "manuscript_persisted": True,
+            "metadata_settled": False,
+            "settlement_packet_persisted": False,
+            "human_export_persisted": False,
+            "fully_settled": False,
+        },
+        "settlement_packet_failed": {
+            "manuscript_persisted": True,
+            "metadata_settled": True,
+            "settlement_packet_persisted": False,
+            "human_export_persisted": False,
+            "fully_settled": False,
+        },
+        "human_export_failed": {
+            "manuscript_persisted": True,
+            "metadata_settled": True,
+            "settlement_packet_persisted": True,
+            "human_export_persisted": False,
+            "fully_settled": False,
+        },
+        "fully_settled": {
+            "manuscript_persisted": True,
+            "metadata_settled": True,
+            "settlement_packet_persisted": True,
+            "human_export_persisted": True,
+            "fully_settled": True,
+        },
+    }
+
     _SCENE_HEADER_LINE_RE = re.compile(
         r"(?m)^\s*#{1,6}\s*씬\s*\d+\s*[:\-].*$"  # utf8-hygiene: allow-line -- regex uses literal ? token safely for scene-header normalization
     )
@@ -247,6 +285,87 @@ class Stage4PostProcessor:
             json.dumps(packet, ensure_ascii=False, indent=2, sort_keys=True, default=str), encoding="utf-8"
         )
         return packet_path
+
+    @staticmethod
+    def _extract_stage4_settlement_attempt_key(final_state_updates: dict | None) -> str:
+        if not isinstance(final_state_updates, dict):
+            return ""
+        for key in ("attempt_key", "_attempt_key", "_stage4_attempt_key"):
+            value = final_state_updates.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        return ""
+
+    def _build_stage4_settlement_status_payload(
+        self,
+        *,
+        status: str,
+        next_ep: int,
+        arc_data: dict | None,
+        final_state_updates: dict | None,
+        artifact_path: Path | str | None = None,
+        detail: str = "",
+    ) -> dict:
+        flags = dict(self._SETTLEMENT_STATUS_FLAGS.get(status, {}))
+        arc_no = arc_data.get("arc_no", 0) if isinstance(arc_data, dict) else 0
+        attempt_key = self._extract_stage4_settlement_attempt_key(final_state_updates)
+        return {
+            "event": "STAGE4_PASS_SETTLEMENT_STATUS",
+            "stage": 4,
+            "ep_num": int(next_ep),
+            "arc_num": int(arc_no or 0),
+            "attempt_key": attempt_key,
+            "settlement_status": status,
+            "artifact_path": self._relativize_artifact_path(Path(artifact_path)) if artifact_path else "",
+            "detail": str(detail or "")[:1000],
+            "authority_note": "fully_settled is the only authoritative PASS settlement state",
+            **flags,
+        }
+
+    def _emit_stage4_settlement_status(
+        self,
+        *,
+        status: str,
+        next_ep: int,
+        arc_data: dict | None,
+        final_state_updates: dict | None,
+        artifact_path: Path | str | None = None,
+        detail: str = "",
+    ) -> dict:
+        payload = self._build_stage4_settlement_status_payload(
+            status=status,
+            next_ep=next_ep,
+            arc_data=arc_data,
+            final_state_updates=final_state_updates,
+            artifact_path=artifact_path,
+            detail=detail,
+        )
+        audit_event = getattr(self.ctx, "audit_event", None)
+        if callable(audit_event):
+            audit_event("stage4_pass_settlement_status", "stage4 pass settlement status recorded", payload)
+
+        db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+        save_ui_event = getattr(db, "save_ui_event", None)
+        if callable(save_ui_event):
+            try:
+                project = getattr(self.ctx, "current_project", None)
+                save_ui_event(
+                    session_id=str(getattr(project, "metrics_session_id", "") or ""),
+                    stage=4,
+                    ep_num=payload["ep_num"],
+                    arc_num=payload["arc_num"],
+                    attempt_key=payload["attempt_key"],
+                    component="post_pass_settlement",
+                    event_kind="status",
+                    level="info" if payload.get("fully_settled") else "error",
+                    message=f"stage4 pass settlement status: {status}",
+                    visible=False,
+                    artifact_path=payload["artifact_path"] or None,
+                    meta=payload,
+                )
+            except Exception as ui_event_err:
+                logging.debug("[S4-SETTLEMENT] status ui_event save failed: %s", ui_event_err)
+        return payload
 
     @staticmethod
     def _extract_save_error(manager, fallback: str) -> str:
@@ -1238,6 +1357,11 @@ class Stage4PostProcessor:
             next_ep=next_ep,
             final_state_updates=final_state_updates,
         )
+        settlement_status_context = {
+            "next_ep": next_ep,
+            "arc_data": arc_data,
+            "final_state_updates": final_state_updates,
+        }
 
         # DB 저장 (HUD보다 먼저 — DB 실패 시 HUD 오염 방지) [Sweep56]
         # [P0-D1/D4] lock 보호 + 원자적 트랜잭션으로 부분 저장 방지
@@ -1249,6 +1373,7 @@ class Stage4PostProcessor:
             output_dir=output_dir,
             approved_hud_updates=approved_hud_updates,
         ):
+            self._emit_stage4_settlement_status(status="primary_db_failed", **settlement_status_context)
             return False
 
         _quality_signals = self._save_pass_result_quality_sidecars(
@@ -1288,6 +1413,7 @@ class Stage4PostProcessor:
         # WARNING: early return below skips remaining sinks. Manuscript is already persisted.
         if _meta_save_failed:
             logging.error("[S4-001] _meta_save_failed=True → process_pass_result 반환 False")
+            self._emit_stage4_settlement_status(status="primary_persisted_meta_failed", **settlement_status_context)
             self.ctx.ui.log(
                 "   ❌ 후처리 메타 저장 실패: 원고 본문은 저장됐지만 PASS 정산을 성공으로 확정하지 않습니다.",
                 stage="stage4",
@@ -1300,8 +1426,9 @@ class Stage4PostProcessor:
             )
             return False
 
+        settlement_packet_path = None
         try:
-            self._persist_stage4_settlement_packet(
+            settlement_packet_path = self._persist_stage4_settlement_packet(
                 next_ep=next_ep,
                 final_title=final_title,
                 final_manuscript=final_manuscript,
@@ -1315,6 +1442,9 @@ class Stage4PostProcessor:
             )
         except Exception as packet_err:
             logging.error("[S4-SETTLEMENT] settlement packet save failed ep=%d: %s", next_ep, packet_err)
+            self._emit_stage4_settlement_status(
+                status="settlement_packet_failed", detail=str(packet_err), **settlement_status_context
+            )
             if callable(getattr(self.ctx, "audit_event", None)):
                 self.ctx.audit_event(
                     "stage4_settlement_packet_save_failed",
@@ -1342,6 +1472,12 @@ class Stage4PostProcessor:
             )
         except Exception as file_err:
             logging.error("[S4-TXT] human-facing txt save failed ep=%d: %s", next_ep, file_err)
+            self._emit_stage4_settlement_status(
+                status="human_export_failed",
+                artifact_path=settlement_packet_path,
+                detail=str(file_err),
+                **settlement_status_context,
+            )
             if callable(getattr(self.ctx, "audit_event", None)):
                 self.ctx.audit_event(
                     "stage4_human_facing_export_failed",
@@ -1360,13 +1496,17 @@ class Stage4PostProcessor:
             )
             return False
 
+        self._emit_stage4_settlement_status(
+            status="fully_settled",
+            artifact_path=settlement_packet_path,
+            **settlement_status_context,
+        )
         self._finalize_pass_result_session(
             next_ep=next_ep,
             final_title=final_title,
             final_manuscript=final_manuscript,
             arc_data=arc_data,
         )
-
         return True
 
     # ═══════════════════════════════════════════════════════════════
