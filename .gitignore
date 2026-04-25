@@ -50,7 +50,11 @@ chroma_data/
 
 # === 테스트 ===
 .hypothesis/
+MagicMock/
 projects/MagicMock/
+tmp_stage2_digest_debug/
+test_mode/projects/
+lite_mode/projects/
 
 # === Gemini 관련 ===
 .gemini/

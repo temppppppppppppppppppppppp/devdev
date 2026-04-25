@@ -9,6 +9,8 @@ line-length = 120
 extend-exclude = [
     "백업의백업의백업",
     "test_mode",
+    "lite_mode",
+    "spikes",
     "tools",
     "tools2",
 ]
