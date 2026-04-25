@@ -1,3 +1,4 @@
+import ast
 import json
 import re
 import subprocess
@@ -7,7 +8,7 @@ import yaml
 
 from modules.api.control_plane_contract import INTERNAL_UI_ACTION_KEYS, PUBLIC_RUN_KEYS
 from modules.api.process_runner import MODE_B_KEYS
-
+from modules.core.constants import GenreTypes
 
 ROOT = Path(".")
 PACKAGE_JSON = json.loads((ROOT / "geuldobi-desktop/package.json").read_text(encoding="utf-8"))
@@ -48,9 +49,7 @@ def _desktop_public_run_keys() -> frozenset[str]:
 
 
 def _api_contract_run_keys() -> frozenset[str]:
-    return frozenset(
-        API_CONTRACT["components"]["schemas"]["RunRequest"]["properties"]["key"]["enum"]
-    )
+    return frozenset(API_CONTRACT["components"]["schemas"]["RunRequest"]["properties"]["key"]["enum"])
 
 
 def _extract_cli_contract(source: str, *, anchor: str) -> tuple[int, dict[str, int]]:
@@ -68,34 +67,39 @@ def _extract_cli_contract(source: str, *, anchor: str) -> tuple[int, dict[str, i
 
 
 def _extract_engine_genre_index_map() -> dict[str, int]:
-    index_to_const: dict[int, str] = {}
-    current_index: int | None = None
-    in_genres_block = False
-    for line in MAIN_A.splitlines():
-        if "genres = {" in line:
-            in_genres_block = True
-            continue
-        if not in_genres_block:
-            continue
-        if line.strip() == "}":
-            break
-        index_match = re.match(r'\s*"(\d+)":\s*\{', line)
-        if index_match:
-            current_index = int(index_match.group(1))
-            continue
-        type_match = re.search(r'"type":\s*GenreTypes\.([A-Z_]+),', line)
-        if current_index is not None and type_match:
-            index_to_const[current_index] = type_match.group(1)
-            current_index = None
-
     const_to_slug = {
-        match.group(1): match.group(2)
-        for match in re.finditer(r'GenreTypes\.([A-Z_]+):\s*"([a-z_]+)"', MAIN_A)
+        name: value for name, value in vars(GenreTypes).items() if name.isupper() and isinstance(value, str)
     }
-    return {
-        const_to_slug[genre_const]: index
-        for index, genre_const in sorted(index_to_const.items())
-    }
+    tree = ast.parse(MAIN_A)
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef) or node.name != "_build_genre_selection_catalog":
+            continue
+        for child in ast.walk(node):
+            if not isinstance(child, ast.Return) or not isinstance(child.value, ast.Dict):
+                continue
+            genre_map: dict[str, int] = {}
+            for key_node, value_node in zip(child.value.keys, child.value.values):
+                if not isinstance(key_node, ast.Constant) or not isinstance(key_node.value, str):
+                    continue
+                if not isinstance(value_node, ast.Dict):
+                    continue
+                type_slug = ""
+                for field_key, field_value in zip(value_node.keys, value_node.values):
+                    if not isinstance(field_key, ast.Constant) or field_key.value != "type":
+                        continue
+                    if (
+                        isinstance(field_value, ast.Attribute)
+                        and isinstance(field_value.value, ast.Name)
+                        and field_value.value.id == "GenreTypes"
+                    ):
+                        type_slug = const_to_slug.get(field_value.attr, "")
+                    elif isinstance(field_value, ast.Constant) and isinstance(field_value.value, str):
+                        type_slug = field_value.value
+                if type_slug:
+                    genre_map[type_slug] = int(key_node.value)
+            assert genre_map, "_build_genre_selection_catalog return map not found"
+            return dict(sorted(genre_map.items(), key=lambda item: item[1]))
+    raise AssertionError("_build_genre_selection_catalog not found in main_a.py")
 
 
 def _run_main_guardrail_helper(expression: str):
@@ -187,10 +191,7 @@ def test_desktop_cli_contract_genre_map_matches_engine_and_genre_config_inventor
         anchor="let cliContract = {",
     )
     engine_genre_map = _extract_engine_genre_index_map()
-    config_genre_keys = {
-        path.stem
-        for path in GENRE_CONFIG_DIR.glob("*.yaml")
-    }
+    config_genre_keys = {path.stem for path in GENRE_CONFIG_DIR.glob("*.yaml")}
 
     assert main_default == 3
     assert renderer_default == main_default
@@ -201,7 +202,10 @@ def test_desktop_cli_contract_genre_map_matches_engine_and_genre_config_inventor
 
 def test_desktop_main_guardrails_match_public_run_contract_and_settings_limit():
     assert "const SETTINGS_PAYLOAD_MAX_BYTES = 1024 * 1024;" in MAIN_JS
-    assert "const DESKTOP_PUBLIC_RUN_KEYS = Object.freeze([\"0\", \"1\", \"2\", \"3\", \"4\", \"6\", \"7\", \"44\", \"77\", \"88\", \"99\"]);" in MAIN_JS
+    assert (
+        'const DESKTOP_PUBLIC_RUN_KEYS = Object.freeze(["0", "1", "2", "3", "4", "6", "7", "44", "77", "88", "99"]);'
+        in MAIN_JS
+    )
 
     allowed = _run_main_guardrail_helper(
         "({ allowed: isAllowedDesktopRunKey('44'), denied: isAllowedDesktopRunKey('5') })"
@@ -216,8 +220,6 @@ def test_desktop_main_guardrails_match_public_run_contract_and_settings_limit():
     assert invalid_key["data"]["backend_code"] == "INVALID_KEY"
     assert invalid_key["data"]["transport_status"] == 400
 
-    oversized = _run_main_guardrail_helper(
-        "serializeDesktopSettingsPayload({ payload: 'x'.repeat(1024 * 1024) })"
-    )
+    oversized = _run_main_guardrail_helper("serializeDesktopSettingsPayload({ payload: 'x'.repeat(1024 * 1024) })")
     assert oversized["ok"] is False
     assert oversized["code"] == "SETTINGS_PAYLOAD_TOO_LARGE"
