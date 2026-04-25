@@ -7,7 +7,7 @@
     "max_rounds": null
   },
   "exhaustion": {
-    "allow_best_manuscript_adoption": true,
+    "allow_best_manuscript_adoption": false,
     "default_operator_choice": 2
   },
   "shadow_mode": {

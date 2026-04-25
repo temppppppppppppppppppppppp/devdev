@@ -6,6 +6,7 @@ import json
 import shutil
 import subprocess
 import sys
+import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
@@ -162,53 +163,61 @@ def archive_benchmark_record(
     if record_root.exists():
         if not overwrite:
             raise FileExistsError(f"benchmark record already exists: {record_root}")
-        shutil.rmtree(record_root)
+    build_root = _build_staging_record_root(record_root) if overwrite else record_root
 
-    stage_metrics = collect_stage_metrics(project_root)
-    runtime_summary = _load_json(project_root / "logs" / "runtime_audit_summary.json")
-    latest_session_id = _extract_latest_session_id(runtime_summary)
-    runtime_audit_tag = str(runtime_summary.get("tag", "")) if isinstance(runtime_summary, dict) else ""
-    runtime_summary_window = runtime_summary.get("summary_window", {}) if isinstance(runtime_summary, dict) else {}
-    runtime_run_scope = _extract_runtime_run_scope(runtime_summary, latest_session_id=latest_session_id)
-    runtime_freshness = _extract_runtime_freshness(runtime_summary, run_scope=runtime_run_scope)
+    try:
+        stage_metrics = collect_stage_metrics(project_root)
+        runtime_summary = _load_json(project_root / "logs" / "runtime_audit_summary.json")
+        latest_session_id = _extract_latest_session_id(runtime_summary)
+        runtime_audit_tag = str(runtime_summary.get("tag", "")) if isinstance(runtime_summary, dict) else ""
+        runtime_summary_window = runtime_summary.get("summary_window", {}) if isinstance(runtime_summary, dict) else {}
+        runtime_run_scope = _extract_runtime_run_scope(runtime_summary, latest_session_id=latest_session_id)
+        runtime_freshness = _extract_runtime_freshness(runtime_summary, run_scope=runtime_run_scope)
 
-    copied_files = _copy_snapshot_payload(project_root=project_root, record_root=record_root)
-    stage_metrics_path = record_root / "stage_metrics.csv"
-    _write_stage_metrics_csv(stage_metrics_path, stage_metrics)
+        copied_files = _copy_snapshot_payload(project_root=project_root, record_root=build_root)
+        copied_files = _rewrite_copied_file_archives(copied_files, source_root=build_root, final_root=record_root)
+        stage_metrics_path = build_root / "stage_metrics.csv"
+        _write_stage_metrics_csv(stage_metrics_path, stage_metrics)
 
-    project_locator = _display_relative_path(workspace, project_root)
-    record_path = _display_relative_path(workspace, record_root)
-    db_snapshot_path = _display_relative_path(workspace, record_root / "snapshots" / "project_data.db")
-    manifest = {
-        "schema_version": "benchmark_record_v1",
-        "run_id": run_id,
-        "recorded_at": recorded_dt.isoformat(timespec="seconds"),
-        "workspace_root": str(workspace),
-        "project_name": project_root.name,
-        "project_root": str(project_root),
-        "project_locator": project_locator,
-        "lane": lane,
-        "target_ep": target_ep,
-        "status": status,
-        "notes": notes,
-        "benchmark_root": str(benchmark_dir),
-        "record_root": str(record_root),
-        "runtime_summary": {
-            "runtime_audit_tag": runtime_audit_tag,
-            "latest_session_id": latest_session_id,
-            "summary_window": runtime_summary_window if isinstance(runtime_summary_window, dict) else {},
-            "run_scope": runtime_run_scope,
-            "freshness": runtime_freshness,
-        },
-        "workspace_git": {
-            "branch": git_info["branch"],
-            "head": git_info["head"],
-            "dirty": git_info["dirty"],
-        },
-        "copied_files": copied_files,
-        "stage_metrics": {key: asdict(value) for key, value in stage_metrics.items()},
-    }
-    _write_json(record_root / "manifest.json", manifest)
+        project_locator = _display_relative_path(workspace, project_root)
+        record_path = _display_relative_path(workspace, record_root)
+        db_snapshot_path = _display_relative_path(workspace, record_root / "snapshots" / "project_data.db")
+        manifest = {
+            "schema_version": "benchmark_record_v1",
+            "run_id": run_id,
+            "recorded_at": recorded_dt.isoformat(timespec="seconds"),
+            "workspace_root": str(workspace),
+            "project_name": project_root.name,
+            "project_root": str(project_root),
+            "project_locator": project_locator,
+            "lane": lane,
+            "target_ep": target_ep,
+            "status": status,
+            "notes": notes,
+            "benchmark_root": str(benchmark_dir),
+            "record_root": str(record_root),
+            "runtime_summary": {
+                "runtime_audit_tag": runtime_audit_tag,
+                "latest_session_id": latest_session_id,
+                "summary_window": runtime_summary_window if isinstance(runtime_summary_window, dict) else {},
+                "run_scope": runtime_run_scope,
+                "freshness": runtime_freshness,
+            },
+            "workspace_git": {
+                "branch": git_info["branch"],
+                "head": git_info["head"],
+                "dirty": git_info["dirty"],
+            },
+            "copied_files": copied_files,
+            "stage_metrics": {key: asdict(value) for key, value in stage_metrics.items()},
+        }
+        _write_json(build_root / "manifest.json", manifest)
+        if build_root != record_root:
+            _commit_staged_record(build_root=build_root, record_root=record_root)
+    except Exception:
+        if build_root != record_root and build_root.exists():
+            shutil.rmtree(build_root)
+        raise
 
     index_row = _build_index_row(
         manifest=manifest,
@@ -329,6 +338,43 @@ def _copy_snapshot_payload(*, project_root: Path, record_root: Path) -> list[dic
         copied.append({"source": str(source_dir), "archive": str(target_dir)})
 
     return copied
+
+
+def _build_staging_record_root(record_root: Path) -> Path:
+    return record_root.parent / f".{record_root.name}.staging-{uuid.uuid4().hex}"
+
+
+def _rewrite_copied_file_archives(
+    copied_files: list[dict[str, str]], *, source_root: Path, final_root: Path
+) -> list[dict[str, str]]:
+    rewritten: list[dict[str, str]] = []
+    for entry in copied_files:
+        archive_path = Path(entry.get("archive", ""))
+        try:
+            relative_archive = archive_path.resolve().relative_to(source_root.resolve())
+            archive = str(final_root / relative_archive)
+        except Exception:
+            archive = str(archive_path)
+        rewritten.append({**entry, "archive": archive})
+    return rewritten
+
+
+def _commit_staged_record(*, build_root: Path, record_root: Path) -> None:
+    record_root.parent.mkdir(parents=True, exist_ok=True)
+    if not record_root.exists():
+        build_root.rename(record_root)
+        return
+
+    backup_root = record_root.parent / f".{record_root.name}.backup-{uuid.uuid4().hex}"
+    record_root.rename(backup_root)
+    try:
+        build_root.rename(record_root)
+    except Exception:
+        if record_root.exists():
+            shutil.rmtree(record_root)
+        backup_root.rename(record_root)
+        raise
+    shutil.rmtree(backup_root)
 
 
 def _ensure_index_file(index_path: Path) -> None:

@@ -252,7 +252,7 @@ def test_prepare_stage3_canary_project_allows_partial_from_ep(tmp_path):
     from modules.core import stage4_canary_tools
 
     source = tmp_path / "source_project"
-    target = tmp_path / "target_project"
+    target = tmp_path / "canary" / "target_project"
     source.mkdir()
 
     with (

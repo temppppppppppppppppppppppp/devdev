@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+import pytest
+
 from scripts.canary_path_utils import (
     canary_runtime_env,
     project_name_from_path,
@@ -48,6 +50,16 @@ def test_resolve_workspace_project_dir_falls_back_to_live_project_for_existing_s
     )
 
     assert source == live_project.resolve()
+
+
+def test_resolve_workspace_project_dir_rejects_absolute_project_paths(tmp_path):
+    with pytest.raises(ValueError, match="absolute project paths"):
+        resolve_workspace_project_dir(
+            tmp_path,
+            str((tmp_path / "canary" / "stage4_ep3_probe_r1").resolve()),
+            prefer_canary=True,
+            require_exists=False,
+        )
 
 
 def test_project_name_from_path_preserves_nested_canary_segment(tmp_path):

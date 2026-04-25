@@ -2,6 +2,8 @@ import csv
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.archive_benchmark_record import archive_benchmark_record
 
 
@@ -228,3 +230,64 @@ def test_archive_benchmark_record_overwrite_replaces_existing_index_row(tmp_path
     assert rows[0]["run_id"] == "20260422_100000__manual-freeze__target-open__nogit"
     assert rows[0]["status"] == "completed"
     assert rows[0]["notes"] == "second"
+
+
+def test_archive_benchmark_record_overwrite_preserves_existing_record_on_staging_failure(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "scripts.archive_benchmark_record._collect_git_info",
+        lambda _workspace: {"branch": "", "head": "", "dirty": False},
+    )
+    project = _make_project(tmp_path)
+    (project / "project_data.db").write_bytes(b"v1")
+    (project / "logs" / "pass_rate_monitor.json").write_text('{"records":[]}', encoding="utf-8")
+    (project / "logs" / "episode_production.jsonl").write_text("", encoding="utf-8")
+    (project / "logs" / "runtime_audit_summary.json").write_text(
+        json.dumps({"tag": "snapshot"}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    first_manifest = archive_benchmark_record(
+        workspace_root=tmp_path,
+        project="골든 카나리아",
+        lane="stage4-supervised",
+        run_label="manual-freeze",
+        status="snapshot",
+        notes="first",
+        recorded_at="2026-04-22T10:00:00+09:00",
+    )
+    record_root = Path(first_manifest["record_root"])
+
+    (project / "project_data.db").write_bytes(b"v2")
+
+    def fail_copy_snapshot_payload(*, project_root, record_root):  # noqa: ARG001
+        raise RuntimeError("copy boom")
+
+    monkeypatch.setattr(
+        "scripts.archive_benchmark_record._copy_snapshot_payload",
+        fail_copy_snapshot_payload,
+    )
+
+    with pytest.raises(RuntimeError, match="copy boom"):
+        archive_benchmark_record(
+            workspace_root=tmp_path,
+            project="골든 카나리아",
+            lane="stage4-supervised",
+            run_label="manual-freeze",
+            status="completed",
+            notes="second",
+            recorded_at="2026-04-22T10:00:00+09:00",
+            overwrite=True,
+        )
+
+    assert (record_root / "snapshots" / "project_data.db").read_bytes() == b"v1"
+    with (record_root / "manifest.json").open("r", encoding="utf-8") as handle:
+        manifest = json.load(handle)
+    assert manifest["notes"] == "first"
+    assert not list(record_root.parent.glob("*.staging-*"))
+
+    index_path = tmp_path / "benchmarks" / "benchmark_index.csv"
+    with index_path.open("r", encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    assert len(rows) == 1
+    assert rows[0]["status"] == "snapshot"
+    assert rows[0]["notes"] == "first"

@@ -18,7 +18,7 @@ def _make_project_root(root: Path) -> None:
 
 def test_prepare_stage4_canary_project_copies_and_resets_stage4_only(tmp_path):
     source = tmp_path / "source_project"
-    target = tmp_path / "target_project"
+    target = tmp_path / "canary" / "target_project"
     _make_project_root(source)
 
     source_db = DBManager(source / "project_data.db")
@@ -106,7 +106,7 @@ def test_prepare_stage4_canary_project_copies_and_resets_stage4_only(tmp_path):
 
 def test_prepare_stage4_canary_project_supports_partial_from_ep(tmp_path):
     source = tmp_path / "source_project"
-    target = tmp_path / "target_project"
+    target = tmp_path / "canary" / "target_project"
     _make_project_root(source)
     db = DBManager(source / "project_data.db")
     try:
@@ -126,7 +126,7 @@ def test_prepare_stage4_canary_project_supports_partial_from_ep(tmp_path):
 
 def test_prepare_stage34_canary_project_resets_blueprints_and_stage3_stage4_outputs(tmp_path):
     source = tmp_path / "source_stage34"
-    target = tmp_path / "target_stage34"
+    target = tmp_path / "canary" / "target_stage34"
     _make_project_root(source)
 
     source_db = DBManager(source / "project_data.db")
