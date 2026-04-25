@@ -1,14 +1,14 @@
 # Repo Trashbox Cleanup Execution SSOT
 
 Date: 2026-04-24
-Status: in-progress (2026-04-25 low-risk tracked removal manifest complete; no tracked removal performed)
+Status: closed (2026-04-25 bounded low-risk tracked removal complete; broader cleanup requires a new SSOT)
 Canonical Path: `docs/2026-04-24/repo-trashbox-cleanup-execution-ssot.md`
-Temp Mirror Path: `docs/temp/repo-trashbox-cleanup-execution-ssot.md`
+Temp Mirror Path: `docs/temp/repo-trashbox-cleanup-execution-ssot.md` (removed after closure)
 Commit State:
 - Baseline Commit: `143cee26d879d5de59ef43757f851e89b8d551c7`
 - Baseline Dirty Summary: `dirty: local runtime project outputs, benchmark index, .gitignore key ignore, and new 2026-04-24 hygiene docs; no trashbox file move performed`
-- Resume Commit: `bcbe0955a53b57d0e44953ace2db54ffadffc651`
-- Resume Drift Summary: `packaging scope merged via PR #19; low-risk tracked removal manifest opened on branch feat/repo-trashbox-low-risk-removal-manifest without tracked cleanup`
+- Resume Commit: `0e840af956e40f152b4467189b91762d157c4a4c`
+- Resume Drift Summary: `low-risk tracked removal manifest merged via PR #20; manifest-bound tracked removal opened on branch feat/repo-trashbox-low-risk-tracked-removal`
 Source Survey Docs:
 - `docs/2026-04-24/repo-trashbox-candidate-survey.md`
 - `docs/2026-04-24/repo-trashbox-cleanup-adversarial-3pass-audit.md`
@@ -19,6 +19,7 @@ Source Survey Docs:
 - `docs/2026-04-25/repo-trashbox-quarantine-move-plan.md`
 - `docs/2026-04-25/repo-trashbox-packaging-scope-fresh-reaudit.md`
 - `docs/2026-04-25/repo-trashbox-low-risk-tracked-removal-manifest.md`
+- `docs/2026-04-25/repo-trashbox-low-risk-removal-preflight-reaudit.md`
 Evidence Artifacts:
 - `modules/core/runtime_paths.py`
 - `배포_패키징.ps1`
@@ -26,6 +27,8 @@ Evidence Artifacts:
 - `scripts/sync_temp_queue_state.py`
 - `scripts/github_issue_readiness.py`
 - `scripts/sync_clickup_queue.py`
+- `docs/implementation/surface-containment-contract-v1.json`
+- `tests/test_surface_containment_contract.py`
 Side-Effect Coverage: covered
 
 ## 0. Execution Metadata Block
@@ -36,8 +39,8 @@ execution_meta:
   topic: repo-trashbox-cleanup
   github_issue: 9
   depends_on: []
-  status: in_progress
-  queue_role: front_active
+  status: completed
+  queue_role: historical_backing
   roadmap_rank: 1
   tranches:
     - id: reference-check
@@ -66,7 +69,7 @@ On the current PC, the proposed local holding area is:
 C:\Users\PC\Desktop\글도비_쓰레기통
 ```
 
-This document still does not authorize a move. The reference-check, quarantine move-plan, packaging/ignore scope, and low-risk tracked removal manifest tranches are complete; the next safe scope is a dedicated tracked-removal PR that removes only the manifest-listed paths.
+This document closes the bounded repo-trashbox cleanup lane. The reference-check, quarantine move-plan, packaging/ignore scope, low-risk tracked removal manifest, preflight re-audit, and manifest-bound `git rm` tranches are complete. Larger cleanup surfaces such as `test_mode/`, `lite_mode/`, `spikes/`, and any remaining root temp files require a new SSOT before further action.
 
 ## 2. Baseline Facts
 
@@ -200,7 +203,7 @@ The canonical repo docs remain the SSOT. GitHub Issues and ClickUp are only visi
 1. Candidate reference and runtime dependency check (complete on 2026-04-25; no move authorized)
 2. Trashbox quarantine move plan (complete on 2026-04-25; no move authorized)
 3. Packaging and security-scan scope cleanup (complete on 2026-04-25; no tracked cleanup authorized)
-4. Git tracking and ignore cleanup (manifest complete on 2026-04-25; actual tracked removal requires a dedicated follow-up PR)
+4. Git tracking and ignore cleanup (complete on 2026-04-25; removed only the 21 manifest-listed tracked residue files)
 
 ## 9. Acceptance Criteria
 
@@ -254,3 +257,27 @@ Future low-risk tracked removal validation:
 - queue refresh command: `python scripts/sync_temp_queue_state.py`
 - GitHub readiness command: `python scripts/github_issue_readiness.py`
 - closure harness: `docs/implementation/execution-closure-harness.md`
+
+## 14. Closure Note - 2026-04-25 Low-Risk Tracked Removal
+
+Closure status: closed.
+
+Implemented:
+
+- removed exactly the 21 tracked paths listed in `docs/2026-04-25/repo-trashbox-low-risk-tracked-removal-manifest.md`
+- updated `docs/implementation/surface-containment-contract-v1.json` and `tests/test_surface_containment_contract.py` so the contract now asserts those tracked residue surfaces are absent and future generated residue remains ignored
+- removed no runtime code, formal tests, active queue docs, canary data, `test_mode/`, `lite_mode/`, or `spikes/`
+- created no local trashbox holding directory and performed no history rewrite
+
+Verification evidence:
+
+- preflight re-audit passed at `docs/2026-04-25/repo-trashbox-low-risk-removal-preflight-reaudit.md`
+- post-removal `git ls-files -- MagicMock tmp_stage2_digest_debug rlhf_data/test_project datasets/test_project crash_dump.log error.log test_results.xml tmp_project_00.db` returns no tracked files
+- queue closure refresh writes `docs/temp/queue-state.json` with `queue_mode: empty`
+- local validation commands are recorded in the removal PR body
+
+Residual scope:
+
+- `test_mode/`, `lite_mode/`, and `spikes/` remain intentionally out of scope.
+- Remaining root residue outside the 21-path manifest remains intentionally out of scope.
+- Any future cleanup must start from a fresh SSOT or manifest rather than reopening this closed temp queue item.
