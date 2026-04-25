@@ -57,8 +57,21 @@
     }
   ],
   "residue_surfaces": {
-    "directories": [
-      "MagicMock"
+    "removed_tracked_directories": [
+      "MagicMock",
+      "tmp_stage2_digest_debug",
+      "rlhf_data/test_project",
+      "datasets/test_project"
+    ],
+    "removed_tracked_files": [
+      "crash_dump.log",
+      "error.log",
+      "test_results.xml",
+      "tmp_project_00.db"
+    ],
+    "ignored_future_directories": [
+      "MagicMock",
+      "tmp_stage2_digest_debug"
     ],
     "globs": [
       "temp-*"
