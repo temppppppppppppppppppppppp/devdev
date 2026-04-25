@@ -1,13 +1,13 @@
 # Active Temp Execution Roadmap
 
 Date: 2026-04-24
-Status: active (#5 proof-governor lane closed; stage234-session-memory-max-utilization closed on 2026-04-25; stage0-bi-tr-production-harness-normalization-remediation Tranche 2 merged via PR #13 and moved to historical backing)
+Status: active (#5 proof-governor lane closed; stage234-session-memory-max-utilization closed on 2026-04-25; canary-root-isolation patch added locally and pending PR/merge validation)
 Canonical Path: `docs/2026-04-24/active-temp-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Baseline Commit: `143cee26d879d5de59ef43757f851e89b8d551c7`
 Baseline Dirty Summary: `dirty: local runtime project outputs, benchmark index, .gitignore key ignore, and new 2026-04-24 hygiene docs; no canary code, data migration, or trashbox move performed`
 Resume Commit: `fabf78127cbcdfb724c35a38f314a25b94ec9ce5`
-Resume Drift Summary: `stage234-session-memory-max-utilization was explicitly opened by the user on 2026-04-24, fresh re-audited PASS, and closed on 2026-04-25 after bounded Stage4, Stage3, and Stage2 memory rollout; stage0-bi-tr-production-harness-normalization-remediation Tranche 2 was merged on 2026-04-25 via PR #13; canary-root-isolation and repo-trashbox-cleanup remain parked unless separately opened`
+Resume Drift Summary: `stage234-session-memory-max-utilization was explicitly opened by the user on 2026-04-24, fresh re-audited PASS, and closed on 2026-04-25 after bounded Stage4, Stage3, and Stage2 memory rollout; stage0-bi-tr-production-harness-normalization-remediation Tranche 2 was merged on 2026-04-25 via PR #13; canary-root-isolation was opened on 2026-04-25 after fresh re-audit; repo-trashbox-cleanup remains parked`
 
 ## 1. Why This Refresh Exists
 
@@ -26,8 +26,8 @@ After the Standard Vertex cache-proof run on 2026-04-24, `authority-alignment-be
 
 - `stage234-session-memory-max-utilization` is now closed historical backing after its bounded memory/cache rollout landed.
 - `stage0-bi-tr-production-harness-normalization-remediation` is now historical backing after PR #13 merged the runtime handoff normalization tranche.
-- `canary-root-isolation` is the first remaining parked future-wave item because it is a repository hygiene/runtime isolation lane, not a blocker for the completed proof, memory rollout, or completed Stage0 runtime-handoff lane.
-- `repo-trashbox-cleanup` remains second among parked future-wave items because it should quarantine old residue only after canary policy is not accidentally swept into a broad cleanup.
+- `canary-root-isolation` is now front-active because future canary output isolation is the next honest runtime/repository hygiene lane.
+- `repo-trashbox-cleanup` remains parked because it should quarantine old residue only after canary policy is not accidentally swept into a broad cleanup.
 
 ## 3. Queue Semantics
 
@@ -35,7 +35,7 @@ After the Standard Vertex cache-proof run on 2026-04-24, `authority-alignment-be
 - `historical backing`: keep canonical SSOTs for audit history, but do not keep them visible as active queue residue.
 
 Working order:
-1. `canary-root-isolation` (parked future wave; isolate future canary output from `projects/`, no migration authorized)
+1. `canary-root-isolation` (front-active; local patch added on 2026-04-25, pending PR/merge validation; no migration authorized)
 2. `repo-trashbox-cleanup` (parked future wave; quarantine maintenance-only/test/experiment residue after canary policy is settled)
 
 Closed historical backing in this closure pass:
@@ -46,7 +46,7 @@ Closed historical backing in this closure pass:
 
 ## 4. Immediate Next Moves
 
-1. keep `canary-root-isolation` and `repo-trashbox-cleanup` parked unless the user explicitly opens one
+1. finish validation, commit, push, and PR the bounded `canary-root-isolation` tranche
 2. do not reopen `stage234-session-memory-max-utilization` without a fresh live anchor or narrower follow-up SSOT
 3. do not reopen Stage0 production-harness normalization without a fresh dedicated re-audit
 4. do not move or delete `projects/_canary/`

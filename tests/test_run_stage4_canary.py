@@ -23,6 +23,12 @@ def test_run_canary_saves_and_flushes_before_analyze():
     app.current_project.db.close = MagicMock()
 
     with (
+        patch.object(
+            canary_script,
+            "resolve_workspace_project_dir",
+            return_value=canary_script.PROJECT_ROOT / "canary" / "00_test_06",
+        ),
+        patch.object(canary_script, "project_name_from_path", return_value="00_test_06"),
         patch.object(canary_script, "_load_project_genre", return_value={"type": "investment", "name": "investment"}),
         patch.object(canary_script, "_boot_app", return_value=app),
         patch.object(canary_script, "analyze_canary", return_value={"hard_gates": {"status": "pass"}}) as analyze,
@@ -37,7 +43,7 @@ def test_run_canary_saves_and_flushes_before_analyze():
     app._stage_4_v2_chief_writer.assert_called_once_with(limit_mode=False, target_ep=4)
     monitor.save.assert_called_once()
     app._flush_audit_buffer.assert_called_once()
-    analyze.assert_called_once_with("_canary/00_test_06", target_ep=4)
+    analyze.assert_called_once_with("00_test_06", target_ep=4)
     archive.assert_called_once()
     assert result["hard_gates"]["status"] == "pass"
     assert result["benchmark_archive"]["run_id"] == "canary-s4"
@@ -64,7 +70,7 @@ def test_run_canary_bootstraps_missing_pass_rate_monitor():
     ):
         canary_script.run_canary("00_test_06", target_ep=4)
 
-    prm_cls.assert_called_once_with(canary_script.PROJECT_ROOT / "projects" / "_canary" / "00_test_06")
+    prm_cls.assert_called_once_with(canary_script.PROJECT_ROOT / "canary" / "00_test_06")
     assert app.pass_rate_monitor is monitor
     monitor.save.assert_called_once()
     app._stage_4_v2_chief_writer.assert_called_once_with(limit_mode=False, target_ep=4)
@@ -93,7 +99,7 @@ def test_run_canary_rebinds_pass_rate_monitor_when_log_path_points_elsewhere():
     ):
         canary_script.run_canary("00_test_06", target_ep=4)
 
-    prm_cls.assert_called_once_with(canary_script.PROJECT_ROOT / "projects" / "_canary" / "00_test_06")
+    prm_cls.assert_called_once_with(canary_script.PROJECT_ROOT / "canary" / "00_test_06")
     assert app.pass_rate_monitor is rebound_monitor
     rebound_monitor.save.assert_called_once()
 
@@ -289,14 +295,14 @@ def test_prepare_canary_routes_new_target_into_canary_root(tmp_path):
     assert payload == {"ok": True}
     prepare.assert_called_once_with(
         source_root.resolve(),
-        (tmp_path / "projects" / "_canary" / "canary___000403_stage4_ep3_numauth_r3").resolve(),
+        (tmp_path / "canary" / "canary___000403_stage4_ep3_numauth_r3").resolve(),
         from_ep=3,
         force=False,
     )
 
 
 def test_run_canary_boots_nested_canary_project_name(tmp_path):
-    project_root = tmp_path / "projects" / "_canary" / "proof_refresh"
+    project_root = tmp_path / "canary" / "proof_refresh"
     project_root.mkdir(parents=True)
 
     app = SimpleNamespace(
@@ -318,11 +324,12 @@ def test_run_canary_boots_nested_canary_project_name(tmp_path):
     ):
         canary_script.run_canary("proof_refresh", target_ep=4)
 
-    boot.assert_called_once_with("_canary/proof_refresh", {"type": "investment", "name": "investment"})
+    boot.assert_called_once_with("proof_refresh", {"type": "investment", "name": "investment"})
+    assert "GEULDOBI_PROJECTS_ROOT" not in canary_script.os.environ
 
 
 def test_analyze_canary_writes_summary_and_companion_audit(tmp_path):
-    project_root = tmp_path / "projects" / "proof_refresh"
+    project_root = tmp_path / "canary" / "proof_refresh"
     (project_root / "logs").mkdir(parents=True, exist_ok=True)
     summary_payload = {
         "project_locator": "projects/proof_refresh",
