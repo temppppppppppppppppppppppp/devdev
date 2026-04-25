@@ -1,20 +1,21 @@
 # Repo Generated Project Residue Execution SSOT
 
 Date: 2026-04-25
-Status: in-progress (generated project removal complete; root temp follow-up next)
+Status: in-progress (generated project and root temp removal complete; spikes preservation follow-up next)
 Canonical Path: `docs/2026-04-25/repo-generated-project-residue-execution-ssot.md`
 Temp Mirror Path: `docs/temp/repo-generated-project-residue-execution-ssot.md`
 Commit State:
 - Baseline Commit: `f93b5749c38e6374669b199fb8a0da65d0f2aac0`
 - Baseline Dirty Summary: `clean branch feat/repo-hygiene-next-wave-survey opened from main after PR #21 merge`
-- Resume Commit: `ff97b5716a16589ea63109261c88538c20f62919`
-- Resume Drift Summary: `PR #22 merged this SSOT into main; branch feat/repo-generated-project-residue-removal opened and removed only test_mode/projects plus lite_mode/projects`
+- Resume Commit: `217bfb7d6b2619ff682abd7f892aa6a1d0fb86f2`
+- Resume Drift Summary: `PR #23 merged generated-project removal into main; branch feat/repo-root-temp-residue-cleanup opened and removed only the 11 preflight-approved root/temp paths while preserving 0_temp.txt`
 Source Survey Docs:
 - `docs/2026-04-24/repo-trashbox-candidate-survey.md`
 - `docs/2026-04-25/repo-trashbox-quarantine-move-plan.md`
 - `docs/2026-04-25/repo-trashbox-low-risk-tracked-removal-manifest.md`
 - `docs/2026-04-25/repo-trashbox-low-risk-removal-preflight-reaudit.md`
 - `docs/2026-04-25/repo-generated-project-residue-removal-preflight-reaudit.md`
+- `docs/2026-04-25/repo-root-temp-residue-removal-preflight-reaudit.md`
 Evidence Artifacts:
 - `.gitignore`
 - `tests/test_surface_containment_contract.py`
@@ -22,6 +23,9 @@ Evidence Artifacts:
 Post-Removal Evidence:
 - `git ls-files -- test_mode/projects lite_mode/projects`
 - `git ls-files -- test_mode/bridge lite_mode/bridge`
+- `git ls-files -- temp-electron-paths.js temp-proc-poll-oswarn.ps1 temp-proc-poll.ps1 temp-proc-trace.ps1 temp-run-packaged-ascii.ps1 temp-run-packaged.ps1 temp.txt temp/yt_test temp_triage_test.json temp_시리즈.txt`
+- `git ls-files -- 0_temp.txt`
+- `git check-ignore --no-index temp-electron-paths.js temp-run-packaged.ps1 temp.txt temp_시리즈.txt temp_triage_test.json temp/yt_test/example.json`
 Side-Effect Coverage: covered
 
 ## 0. Execution Metadata Block
@@ -46,9 +50,9 @@ execution_meta:
 
 ## 1. Intent
 
-Continue repository hygiene after the bounded repo-trashbox cleanup closure by targeting the largest remaining generated residue that is already excluded from future tracking: `test_mode/projects/` and `lite_mode/projects/`.
+Continue repository hygiene after the bounded repo-trashbox cleanup closure by targeting generated project residue and root temp residue that can be removed without touching live runtime surfaces.
 
-This SSOT does not authorize broad removal of `test_mode/`, `lite_mode/`, or `spikes/`. The generated project removal tranche removed only the two generated project trees named above.
+This SSOT does not authorize broad removal of `test_mode/`, `lite_mode/`, or `spikes/`. The generated project removal tranche removed only `test_mode/projects/` plus `lite_mode/projects/`, and the root temp tranche removed only the 11 paths authorized by the fresh preflight re-audit while preserving `0_temp.txt`.
 
 ## 2. Baseline Facts
 
@@ -60,8 +64,9 @@ Current live tracked inventory:
 | `lite_mode/projects/` | 1522 | 42091969 | generated project residue | manifest-bound `git rm` |
 | `test_mode/` total | 1554 | 42428086 | mixed manual source plus generated project residue | do not remove whole tree |
 | `lite_mode/` total | 1554 | 42426849 | mixed manual source plus generated project residue | do not remove whole tree |
+| root/temp removable set | 11 | 1127159 | YouTube-test residue and helper scripts | completed manifest-bound `git rm` |
+| `0_temp.txt` | 1 | 22445 | historical evidence anchor | preserve |
 | `spikes/` | 7 | 26468 | prototype notes/code | preserve useful notes before cleanup |
-| `temp*` tracked set | 11 | 1127159 | root/temp YouTube-test residue and helper scripts | separate follow-up manifest |
 
 The two generated project trees have:
 
@@ -81,14 +86,16 @@ lite_mode/projects/
 
 - completed: `git rm -r -- test_mode/projects lite_mode/projects`
 - completed: contract/test update so generated project residue absence is asserted
-- in progress: queue-state refresh and root-temp follow-up decision after validation
+- completed: `git rm -r --` the 11 preflight-approved root/temp residue paths
+- completed: root-only ignore policy for future temp residue
+- in progress: spikes preservation follow-up decision after validation
 
 ## 4. Excluded Scope
 
 - `test_mode/` non-project manual helpers
 - `lite_mode/` non-project manual helpers
 - `spikes/`
-- `temp*` root files and `temp/yt_test/`
+- `0_temp.txt`
 - `projects/_canary/`
 - runtime code, packaging code, and source entrypoints
 - local trashbox directory creation
@@ -112,8 +119,9 @@ Pass 2 result: pass.
 
 File writes / artifacts:
 
-- Future implementation deletes tracked generated project artifacts via Git.
-- No local trashbox copy is created by default.
+- Completed implementation deleted tracked generated project artifacts via Git.
+- Completed implementation deleted the 11 preflight-approved root/temp residue paths via Git.
+- No local trashbox copy was created.
 
 DB / schema / transaction boundaries:
 
@@ -137,7 +145,8 @@ Cache / global state:
 
 Bootstrap fallback / config-env mutation:
 
-- Not applicable. `.gitignore` already prevents future generated project residue from re-entering the tracked surface.
+- `.gitignore` prevents future generated project residue from re-entering the tracked surface.
+- `.gitignore` now prevents future root `temp-*`, `temp.txt`, `temp_*.txt`, `temp_triage_test.json`, and `temp/` residue from re-entering the tracked surface without ignoring `docs/temp/`.
 
 ## 8. Pass 3 - Execution Shape
 
@@ -154,7 +163,18 @@ The PR verifies that:
 - `.gitignore` still contains `test_mode/projects/` and `lite_mode/projects/`
 - no runtime code changes are bundled
 
-Tranche 2 may survey the remaining `temp*` tracked set, but it was not bundled with Tranche 1.
+Tranche 2 was a separate focused root-temp removal PR:
+
+```text
+git rm -r -- <11 preflight-approved root/temp paths>
+```
+
+The PR verifies that:
+
+- the 11 removable root/temp paths have zero tracked files after removal
+- `0_temp.txt` remains tracked as a historical evidence anchor
+- root-only `.gitignore` rules prevent future temp residue while leaving `docs/temp/` available for queue mirrors
+- no runtime code changes are bundled
 
 Tranche 3 may handle `spikes/` only after useful `spikes/**/result.md` conclusions are preserved or explicitly judged unnecessary.
 
@@ -165,25 +185,24 @@ Pass 3 result: pass.
 - `test_mode/projects/` has zero tracked files. (complete)
 - `lite_mode/projects/` has zero tracked files. (complete)
 - Non-project manual helper files under `test_mode/` and `lite_mode/` remain tracked.
+- The 11 preflight-approved root/temp residue paths have zero tracked files. (complete)
+- `0_temp.txt` remains tracked. (complete)
 - `spikes/` remains untouched.
-- Root temp files remain untouched.
 - `docs/temp/queue-state.json` reflects the active or closed state honestly.
 - `python scripts/ops_validator.py --strict` passes.
 
 ## 10. Verification Plan
 
-Before implementation:
-
-- re-audit this SSOT against current `main`
-- confirm `git ls-files -- test_mode/projects lite_mode/projects` still returns 3044 files
-
 After implementation:
 
 - `git ls-files -- test_mode/projects lite_mode/projects`
 - `git ls-files -- test_mode/bridge lite_mode/bridge`
+- `git ls-files -- temp-electron-paths.js temp-proc-poll-oswarn.ps1 temp-proc-poll.ps1 temp-proc-trace.ps1 temp-run-packaged-ascii.ps1 temp-run-packaged.ps1 temp.txt temp/yt_test temp_triage_test.json temp_시리즈.txt`
+- `git ls-files -- 0_temp.txt`
+- `git check-ignore --no-index temp-electron-paths.js temp-run-packaged.ps1 temp.txt temp_시리즈.txt temp_triage_test.json temp/yt_test/example.json`
 - `python scripts/sync_temp_queue_state.py`
 - `python scripts/ops_validator.py --strict`
-- `python scripts/check_utf8_hygiene.py docs/2026-04-25/repo-generated-project-residue-execution-ssot.md docs/temp/repo-generated-project-residue-execution-ssot.md docs/temp/queue-state.json tests/test_surface_containment_contract.py docs/implementation/surface-containment-contract-v1.json`
+- `python scripts/check_utf8_hygiene.py docs/2026-04-25/repo-root-temp-residue-removal-preflight-reaudit.md docs/2026-04-25/repo-generated-project-residue-execution-ssot.md docs/temp/repo-generated-project-residue-execution-ssot.md docs/temp/queue-state.json tests/test_surface_containment_contract.py docs/implementation/surface-containment-contract-v1.json .gitignore`
 - `python -m pytest tests/test_surface_containment_contract.py tests/test_runtime_authority_contract.py -q`
 
 ## 11. Generated Project Removal Closure Note
@@ -197,19 +216,31 @@ Implemented:
 
 Residual queue:
 
-- root `temp*` residue remains the next possible follow-up
 - `spikes/` still requires notes-preservation review before cleanup
 
-## 12. Guardrails
+## 12. Root Temp Removal Closure Note
+
+Implemented:
+
+- removed exactly the 11 root/temp paths authorized by `docs/2026-04-25/repo-root-temp-residue-removal-preflight-reaudit.md`
+- preserved `0_temp.txt` because historical audit docs cite it as a direct evidence anchor
+- updated `docs/implementation/surface-containment-contract-v1.json` and `tests/test_surface_containment_contract.py` so root-temp residue is expected to be absent and `0_temp.txt` is expected to remain
+- added root-only `.gitignore` rules for future temp residue without ignoring `docs/temp/`
+
+Residual queue:
+
+- `spikes/` still requires notes-preservation review before cleanup
+
+## 13. Guardrails
 
 - Do not delete all of `test_mode/`.
 - Do not delete all of `lite_mode/`.
-- Do not touch `spikes/` in the generated-project PR.
-- Do not touch root `temp*` files in the generated-project PR.
+- Do not touch `spikes/` in the root-temp PR.
+- Do not delete `0_temp.txt` unless a separate evidence-preservation decision supersedes this SSOT.
 - Do not treat old size estimates as authority when live `git ls-files -z` evidence differs.
 - Do not proceed to cleanup without a fresh current-state re-audit of this SSOT.
 
-## 13. Document 3-Pass Audit
+## 14. Document 3-Pass Audit
 
 Pass 1 - Structure and scope:
 
