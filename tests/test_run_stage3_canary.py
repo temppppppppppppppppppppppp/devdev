@@ -22,6 +22,12 @@ def test_run_stage3_canary_calls_stage3_only_and_analyzes():
     app.current_project.db.close = MagicMock()
 
     with (
+        patch.object(
+            canary_script,
+            "resolve_workspace_project_dir",
+            return_value=canary_script.PROJECT_ROOT / "canary" / "test_s3_canary",
+        ),
+        patch.object(canary_script, "project_name_from_path", return_value="test_s3_canary"),
         patch.object(canary_script, "_load_project_genre", return_value={"type": "wuxia", "name": "wuxia"}),
         patch.object(canary_script, "_boot_app", return_value=app),
         patch.object(canary_script, "analyze_canary", return_value={"hard_gates": {"status": "pass"}}) as analyze,
@@ -38,7 +44,7 @@ def test_run_stage3_canary_calls_stage3_only_and_analyzes():
     stage3_orch.stage_3_batch_blueprinting.assert_called_once_with(target_ep=4)
     app.pass_rate_monitor.save.assert_called_once()
     app._flush_audit_buffer.assert_called_once()
-    analyze.assert_called_once_with("_canary/test_s3_canary", target_ep=4)
+    analyze.assert_called_once_with("test_s3_canary", target_ep=4)
     archive.assert_called_once()
     assert result["hard_gates"]["status"] == "pass"
     assert result["benchmark_archive"]["run_id"] == "canary-s3"
@@ -95,7 +101,7 @@ def test_analyze_stage3_canary_writes_summary(tmp_path):
         patch.object(canary_script, "PROJECT_ROOT", tmp_path),
         patch.object(canary_script, "build_stage3_canary_summary", return_value=summary),
     ):
-        project_root = tmp_path / "projects" / "s3test"
+        project_root = tmp_path / "canary" / "s3test"
         (project_root / "logs").mkdir(parents=True, exist_ok=True)
         result = canary_script.analyze_canary("s3test", target_ep=4)
 

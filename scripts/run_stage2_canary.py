@@ -17,7 +17,11 @@ from modules.core.stage4_canary_tools import (  # noqa: E402
     prepare_stage2_canary_project,
 )
 from scripts.benchmark_archive_runtime import safe_archive_benchmark_record  # noqa: E402
-from scripts.canary_path_utils import project_name_from_path, resolve_workspace_project_dir  # noqa: E402
+from scripts.canary_path_utils import (  # noqa: E402
+    canary_runtime_env,
+    project_name_from_path,
+    resolve_workspace_project_dir,
+)
 from scripts.regression_validation_tiers import FULL_CANARY_PROOF  # noqa: E402
 
 VALIDATION_TIER = FULL_CANARY_PROOF
@@ -103,6 +107,7 @@ def run_canary(project_name: str, *, target_arc_count: int, expected_final_arcs:
     subprocess.run(
         [sys.executable, str(runner), runtime_project_name, str(int(target_arc_count))],
         cwd=PROJECT_ROOT,
+        env=canary_runtime_env(PROJECT_ROOT, project_path=project_root),
         check=True,
     )
     payload = analyze_canary(runtime_project_name, expected_final_arcs=expected_final_arcs)
