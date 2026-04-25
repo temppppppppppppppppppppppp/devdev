@@ -11,8 +11,8 @@ from unittest.mock import ANY, MagicMock, mock_open, patch
 
 from modules.core import stage4_episode_logging as s4_episode_logging
 from modules.core.context_advisor import RetrievalPlan, RetrievalSlot, RetrievalSources
-from modules.core.session_memory_envelope import SESSION_MEMORY_ENVELOPE_KEY
 from modules.core.session_logger import SessionLogger
+from modules.core.session_memory_envelope import SESSION_MEMORY_ENVELOPE_KEY
 from modules.core.stage4_context import Stage4Context
 from modules.core.stage4_director_runtime import _DirectorInputPackResult
 from modules.core.stage4_interview_round import (
@@ -2769,9 +2769,7 @@ class TestRecordS4Attempt:
 
         assert payload["model"] == "gemini-2.5-pro"
         assert payload["advisory_flags"]["continuity"] == ["keep timeline"]
-        assert payload["advisory_flags"][SESSION_MEMORY_ENVELOPE_KEY]["attempt_key"] == (
-            "s4:ep2:arc1:a2:sess-stage4"
-        )
+        assert payload["advisory_flags"][SESSION_MEMORY_ENVELOPE_KEY]["attempt_key"] == ("s4:ep2:arc1:a2:sess-stage4")
         assert payload["attempt_key"] == "s4:ep2:arc1:a2:sess-stage4"
         assert payload["selection_reason"] == "best candidate"
         assert payload["artifact_path"] == "logs/final.txt"
@@ -12607,6 +12605,32 @@ class TestOperatorParityAdvisoryFullSurface:
             assert w in log_msg
         call_kwargs = ctx.ui.log.call_args.kwargs
         assert call_kwargs["meta"]["advisory_details"] == bv_warnings
+
+    def test_python_validation_suspected_critical_failure_gets_structured_evidence_marker(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        validation_result = {"warnings": [], "warning_count": 0, "focus_points": []}
+        ir._apply_blocking_validator_failures(
+            validation_result=validation_result,
+            bv_failures=[
+                {
+                    "type": "dead_npc_resurrection",
+                    "reason": "사망 NPC 행동 감지",
+                    "severity": "CRITICAL",
+                }
+            ],
+            candidate_index=1,
+            next_ep=1,
+            round_num=0,
+        )
+
+        assert validation_result["suspected_critical_blocking"] is True
+        assert validation_result["suspected_critical_blocking_failures"][0]["type"] == "dead_npc_resurrection"
+        assert "[Python검증-SUSPECTED-CRITICAL]" in validation_result["warnings"][0]
+        assert any(
+            call.kwargs.get("meta", {}).get("suspected_critical_blocking") is True for call in ctx.ui.log.call_args_list
+        )
 
 
 class TestOperatorParityCompactTextNone:

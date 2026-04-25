@@ -140,6 +140,69 @@ def test_blocking_failure_calls_failure_learner_record_failure():
     assert stage_val == 4, f"record_failure must be called with stage=4, got stage={stage_val}"
 
 
+def test_suspected_critical_blocking_failure_is_structured_advisory_not_python_veto():
+    orch = _make_orchestrator()
+    orch.scoring.validate_v59 = MagicMock(
+        return_value={
+            "total_score": 100,
+            "message": "excellent",
+            "feedback": "",
+            "score_breakdown": {},
+        }
+    )
+    orch.blocking = MagicMock()
+    orch.blocking.validate = MagicMock(
+        return_value={
+            "passed": False,
+            "failures": [
+                {
+                    "type": "dead_npc_resurrection",
+                    "reason": "사망 NPC 행동 감지",
+                    "check": "dead_npc_resurrection",
+                    "severity": "CRITICAL",
+                }
+            ],
+            "failure_count": 1,
+            "warnings": [],
+        }
+    )
+    orch.continuity = MagicMock()
+    orch.continuity.validate = MagicMock(
+        return_value={
+            "tier": "CONTINUITY",
+            "passed": True,
+            "violations": [],
+            "warnings": [],
+            "message": "OK",
+            "violation_count": 0,
+            "warning_count": 0,
+        }
+    )
+    orch.consistency = MagicMock()
+    orch.consistency.validate = MagicMock(
+        return_value={
+            "passed": True,
+            "unjustifiable_violations": [],
+            "justifiable_violations": [],
+            "score_penalty": 0,
+            "feedback": "",
+        }
+    )
+
+    result = orch.validate(
+        ep_num=5,
+        manuscript=_MANUSCRIPT,
+        validation_context={"mode": "MANUSCRIPT", "encyclopedia": {"npcs": [], "items": [], "locations": []}},
+    )
+
+    assert result["total_score"] >= 85
+    assert result["final_decision"] == "PASS"
+    assert "critical_blocking_gate" not in result
+    assert result["_blocking_advisory"]["suspected_critical_blocking"] is True
+    assert result["_blocking_advisory"]["evidence_level"] == "suspected_critical"
+    assert result["_blocking_advisory"]["severity"] == "HIGH"
+
+
 # ---------------------------------------------------------------------------
 # Test 2: _failure_learner=None in context does not crash ValidationOrchestrator
 # ---------------------------------------------------------------------------
