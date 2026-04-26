@@ -599,6 +599,8 @@ class TestProcessPassResult:
             "actual_truth": {"location": "gate"},
             "state_truth_owner_contract": {"field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}},
             "meta_save_failed": True,
+            "atomic_metadata_save_failed": False,
+            "metadata_failure_detail": "",
         }
         pp.ctx.current_project.db.save_anchor.assert_called_once_with(
             "chain_link_6",
@@ -1099,7 +1101,7 @@ class TestProcessPassResult:
 
         assert result["actual_truth"]["martial_arts"] == ["Storm Palm", "Cloud Step"]
 
-    def test_merge_manager_key_npcs_into_master_bible_merges_existing_and_new_entries(self):
+    def test_merge_manager_key_npcs_into_master_bible_proposes_existing_updates_and_appends_new_entries(self):
         pp = self._make_pp()
         pp.ctx.current_project.master_bible = {
             "MasterBible": {
@@ -1111,7 +1113,7 @@ class TestProcessPassResult:
             }
         }
 
-        pp.post_pass_runtime._merge_manager_key_npcs_into_master_bible(
+        result = pp.post_pass_runtime._merge_manager_key_npcs_into_master_bible(
             next_ep=8,
             key_npcs=[
                 {"name": "윤호", "position": "수문장"},
@@ -1119,9 +1121,23 @@ class TestProcessPassResult:
             ],
         )
 
-        merged_npcs = pp.ctx.current_project.master_bible["MasterBible"]["AssetLibrary"]["KeyNPCs"]
-        assert merged_npcs[0]["position"] == "수문장"
+        bible_root = pp.ctx.current_project.master_bible["MasterBible"]
+        merged_npcs = bible_root["AssetLibrary"]["KeyNPCs"]
+        assert result["appended_count"] == 1
+        assert result["proposed_delta_count"] == 1
+        assert "position" not in merged_npcs[0]
         assert any(npc.get("name") == "서린" for npc in merged_npcs)
+        proposal = bible_root["FactCommitProposals"]["ManagerKeyNPCDeltas"][0]
+        assert proposal["authority_status"] == "proposed_only_requires_director_fact_commit"
+        assert proposal["npc"] == "윤호"
+        assert proposal["changes"] == [
+            {
+                "field": "position",
+                "existing_value": None,
+                "proposed_value": "수문장",
+                "conflict": False,
+            }
+        ]
 
     def test_build_manager_delta_collections_builds_relationships_deaths_and_reveals(self):
         pp = self._make_pp()
@@ -2628,12 +2644,11 @@ class TestAtomicMetadataSave:
         pp.ctx.fact_ledger.save.assert_called_once()
 
     def test_transaction_rollback_on_failure(self, tmp_path):
-        """[TF-C10] FactLedger.save 실패 시 전체 트랜잭션 롤백 (비차단)"""
+        """[TF-C10] FactLedger.save 실패 시 PASS 정산을 차단한다."""
         pp = self._make_pp_with_metadata()
         pp.ctx.current_project.db.save_manuscript.return_value = True
         pp.ctx.fact_ledger.save.side_effect = RuntimeError("DB write error")
 
-        # 비차단 — 원고는 이미 저장됨, 전체 프로세스는 True 반환
         result = pp.process_pass_result(
             next_ep=1,
             final_manuscript="테스트 원고 " * 500,
@@ -2646,7 +2661,7 @@ class TestAtomicMetadataSave:
             extract_chain_link_fn=lambda *_args, **_kwargs: {},
         )
 
-        assert result is True  # 원고 저장은 성공 → True
+        assert result is False
         pp.ctx.world_state.rollback_to.assert_not_called()
 
     def test_sequential_mode_rolls_back_persisted_world_state(self):
@@ -2656,13 +2671,15 @@ class TestAtomicMetadataSave:
         pp.ctx.world_state.save.return_value = True
         pp.ctx.fact_ledger.save.side_effect = RuntimeError("DB write error")
 
-        pp.post_pass_runtime._save_world_state_atomic(
+        result = pp.post_pass_runtime._save_world_state_atomic(
             next_ep=3,
             actual_truth={},
             final_state_updates={"inventory_counts": {"gold": 1}},
             bible_delta={},
         )
 
+        assert result["atomic_metadata_saved"] is False
+        assert result["atomic_metadata_failure_detail"] == "DB write error"
         pp.ctx.world_state.rollback_to.assert_called_once_with(3)
         pp.ctx.fact_ledger.rollback_to.assert_not_called()
         log_calls = [str(call.args[0]) for call in pp.ctx.ui.log.call_args_list if call.args]
@@ -3069,7 +3086,7 @@ class TestAtomicMetadataSave:
             extract_chain_link_fn=lambda *_args, **_kwargs: {},
         )
 
-        assert result is True
+        assert result is False
         log_calls = [str(call.args[0]) for call in pp.ctx.ui.log.call_args_list if call.args]
         assert any("WorldState save 실패: world write fail" in text for text in log_calls)
         assert any("메타데이터 원자적 저장 실패" in text for text in log_calls)
@@ -3092,7 +3109,7 @@ class TestAtomicMetadataSave:
             extract_chain_link_fn=lambda *_args, **_kwargs: {},
         )
 
-        assert result is True
+        assert result is False
         log_calls = [str(call.args[0]) for call in pp.ctx.ui.log.call_args_list if call.args]
         assert any("FactLedger save 실패: ledger write fail" in text for text in log_calls)
         assert any("메타데이터 원자적 저장 실패" in text for text in log_calls)

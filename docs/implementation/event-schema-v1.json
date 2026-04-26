@@ -183,6 +183,25 @@
               "returncode": {
                 "type": "integer"
               },
+              "process_exit_status": {
+                "type": "string",
+                "enum": ["process_exit_zero", "process_exit_nonzero"]
+              },
+              "completion_claim_scope": {
+                "type": "string",
+                "const": "subprocess_exit_only"
+              },
+              "semantic_completion_status": {
+                "type": "string",
+                "const": "not_asserted_by_bridge"
+              },
+              "canonical_truth_status": {
+                "type": "string",
+                "const": "not_asserted_by_bridge"
+              },
+              "authority_note": {
+                "type": "string"
+              },
               "key": {
                 "type": ["string", "null"]
               },

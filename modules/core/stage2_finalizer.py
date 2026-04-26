@@ -2740,6 +2740,9 @@ class Stage2Finalizer:
         audit["reason"] = (audit.get("reason") or "") + (
             f"\n[Quality Gate] score {score}점으로 {quality_gate_score}점 미달."
         )
+        audit["director_verdict"] = decision
+        audit["runtime_route_verdict"] = "REJECT"
+        audit["verdict_contract_version"] = "verdict-layer-v1"
         audit["final_judgment_authority"] = "director_llm"
         audit["runtime_gate_authority"] = "python_runtime_routing_gate"
         audit["runtime_gate_role"] = "route_or_block_automatic_progress"

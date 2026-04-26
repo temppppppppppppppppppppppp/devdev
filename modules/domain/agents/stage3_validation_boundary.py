@@ -281,6 +281,9 @@ class Stage3ValidationBoundary:
         normalized_validation["quality_gate_effective_score"] = effective_score
         normalized_validation["quality_gate_raw_score"] = raw_score
         authority_payload = {
+            "director_verdict": validation_verdict,
+            "runtime_route_verdict": verdict,
+            "verdict_contract_version": "verdict-layer-v1",
             "final_judgment_authority": "director_llm",
             "runtime_gate_authority": "python_runtime_routing_gate",
             "runtime_gate_role": "route_or_block_automatic_progress",
