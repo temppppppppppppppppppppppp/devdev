@@ -350,7 +350,7 @@ def cached_arcs_source_lineage_matches(
         return True
     saved_lineage = load_plot_roadmap_lineage(project)
     if not saved_lineage:
-        return True
+        return False
     current_lineage = build_plot_roadmap_lineage(roadmap)
     return plot_roadmap_lineage_matches(saved_lineage, current_lineage)
 

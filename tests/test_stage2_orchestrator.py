@@ -233,3 +233,44 @@ def test_bootstrap_stage2_arc_pipeline_rejects_stale_cached_arc_lineage(monkeypa
     assert not any(
         call.args[0] == STAGE2_ARCS_SOURCE_LINEAGE_ANCHOR for call in ctx.current_project.save_v20_anchor.call_args_list
     )
+
+
+def test_bootstrap_stage2_arc_pipeline_rejects_cached_arcs_with_missing_lineage(monkeypatch):
+    _install_stage2_bootstrap_dummies(monkeypatch)
+
+    ctx = _make_bootstrap_ctx()
+
+    def load_anchor(name):
+        if name == "volumes":
+            return []
+        if name == "arcs":
+            return [{"arc_no": 1, "title": "lineageless cached arc"}]
+        if name == STAGE2_ARCS_SOURCE_LINEAGE_ANCHOR:
+            return {}
+        return {}
+
+    ctx.current_project.db.load_anchor.side_effect = load_anchor
+    orch = Stage2Orchestrator(app=MagicMock(), context=ctx)
+
+    result = orch._bootstrap_stage2_arc_pipeline(target_arc_count=1)
+
+    assert result == {"ready": False}
+    log_messages = [call.args[0] for call in ctx.ui.log.call_args_list if call.args]
+    assert any("cached arcs source lineage missing" in message for message in log_messages)
+    assert not any(
+        call.args[0] == STAGE2_ARCS_SOURCE_LINEAGE_ANCHOR for call in ctx.current_project.save_v20_anchor.call_args_list
+    )
+
+
+def test_bootstrap_stage2_arc_pipeline_rejects_when_initial_lineage_persist_fails(monkeypatch):
+    _install_stage2_bootstrap_dummies(monkeypatch)
+
+    ctx = _make_bootstrap_ctx()
+    ctx.current_project.save_v20_anchor.return_value = False
+    orch = Stage2Orchestrator(app=MagicMock(), context=ctx)
+
+    result = orch._bootstrap_stage2_arc_pipeline(target_arc_count=1)
+
+    assert result == {"ready": False}
+    log_messages = [call.args[0] for call in ctx.ui.log.call_args_list if call.args]
+    assert any("failed to persist plot_roadmap source lineage" in message for message in log_messages)

@@ -312,16 +312,16 @@ class Stage2Orchestrator:
 
         return (ep_num - 1) // DEFAULT_EP_COUNT + 1
 
-    def _save_stage2_arcs_source_lineage(self, lineage: dict[str, Any]) -> None:
+    def _save_stage2_arcs_source_lineage(self, lineage: dict[str, Any]) -> bool:
         project = getattr(self.ctx, "current_project", None)
         save_v20_anchor = getattr(project, "save_v20_anchor", None)
         if callable(save_v20_anchor):
-            save_v20_anchor(STAGE2_ARCS_SOURCE_LINEAGE_ANCHOR, lineage)
-            return
+            return bool(save_v20_anchor(STAGE2_ARCS_SOURCE_LINEAGE_ANCHOR, lineage))
         db = getattr(project, "db", None)
         save_anchor = getattr(db, "save_anchor", None)
         if callable(save_anchor):
-            save_anchor(STAGE2_ARCS_SOURCE_LINEAGE_ANCHOR, lineage)
+            return bool(save_anchor(STAGE2_ARCS_SOURCE_LINEAGE_ANCHOR, lineage))
+        return False
 
     def _stage2_cached_arcs_lineage_ready(self, *, all_refined_arcs: list[Any], arcs_source: list[Any]) -> bool:
         from modules.core.stage0_handoff import (
@@ -334,13 +334,13 @@ class Stage2Orchestrator:
         saved_lineage = load_plot_roadmap_lineage(project)
         current_lineage = build_plot_roadmap_lineage(arcs_source)
         if not cached_arcs_source_lineage_matches(project, cached_arcs=all_refined_arcs, roadmap=arcs_source):
-            self.ctx.ui.log(
-                "❌ [Stage 2] cached arcs source lineage differs from current plot_roadmap; "
-                "refusing ordinal cache reuse."
-            )
+            reason = "missing" if not saved_lineage else "differs from current plot_roadmap"
+            self.ctx.ui.log(f"❌ [Stage 2] cached arcs source lineage {reason}; refusing ordinal cache reuse.")
             return False
         if not saved_lineage:
-            self._save_stage2_arcs_source_lineage(current_lineage)
+            if not self._save_stage2_arcs_source_lineage(current_lineage):
+                self.ctx.ui.log("❌ [Stage 2] failed to persist plot_roadmap source lineage; refusing to proceed.")
+                return False
         return True
 
     def _bootstrap_stage2_arc_pipeline(self, *, target_arc_count: int | None) -> Stage2BootstrapPayload:
