@@ -104,7 +104,9 @@ class Stage3ValidationBoundary:
         all_candidates: list[dict],
         score: int,
     ) -> None:
-        validation_selection_reason = self.resolve_selection_reason_text_fn(validation_result.get("selection_reason", ""))
+        validation_selection_reason = self.resolve_selection_reason_text_fn(
+            validation_result.get("selection_reason", "")
+        )
         validation_verdict_reason = str(
             validation_result.get("verdict_reason")
             or validation_result.get("summary")
@@ -247,7 +249,11 @@ class Stage3ValidationBoundary:
                     quality_gate_score,
                 )
                 return verdict
-            logging.warning("[QualityGate] Stage3 PASS but score=%d < %s; force REJECT", score, quality_gate_score)
+            logging.warning(
+                "[QualityGate] Stage3 PASS but score=%d < %s; route to REJECT as runtime gate",
+                score,
+                quality_gate_score,
+            )
             return "REJECT"
         return verdict
 
@@ -274,11 +280,19 @@ class Stage3ValidationBoundary:
         normalized_validation["quality_gate_score"] = quality_gate_score
         normalized_validation["quality_gate_effective_score"] = effective_score
         normalized_validation["quality_gate_raw_score"] = raw_score
+        authority_payload = {
+            "final_judgment_authority": "director_llm",
+            "runtime_gate_authority": "python_runtime_routing_gate",
+            "runtime_gate_role": "route_or_block_automatic_progress",
+            "runtime_gate_basis": "quality_gate_reject",
+        }
+        normalized_validation.update(authority_payload)
 
         validate_phase = pipeline_result.setdefault("phases", {}).setdefault("validate", {})
         validate_phase["quality_gate_score"] = quality_gate_score
         validate_phase["quality_gate_effective_score"] = effective_score
         validate_phase["quality_gate_raw_score"] = raw_score
+        validate_phase.update(authority_payload)
 
         terminal_retry = retry >= max_retries
         if terminal_retry and best_blueprint and effective_score >= self.patch_mode_thresholds.REWRITE:

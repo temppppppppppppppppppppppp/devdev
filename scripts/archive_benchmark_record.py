@@ -5,6 +5,7 @@ import csv
 import json
 import re
 import shutil
+import sqlite3
 import subprocess
 import sys
 import uuid
@@ -186,6 +187,7 @@ def archive_benchmark_record(
             lane=lane,
             stage_metrics=stage_metrics,
             notes=notes,
+            project_root=project_root,
         )
 
         copied_files = _copy_snapshot_payload(project_root=project_root, record_root=build_root)
@@ -274,6 +276,7 @@ def _resolve_benchmark_status(
     lane: str,
     stage_metrics: dict[str, StageAggregate],
     notes: str,
+    project_root: Path | None = None,
 ) -> str:
     normalized_status = str(status or "snapshot").strip() or "snapshot"
     if normalized_status != "completed" or target_ep is None:
@@ -282,7 +285,43 @@ def _resolve_benchmark_status(
     latest_ep = _benchmark_latest_progress_episode(lane=lane, stage_metrics=stage_metrics, notes=notes)
     if latest_ep is None or latest_ep < int(target_ep):
         return "operational_failure"
+    db_latest_ep = _benchmark_latest_settled_db_episode(project_root=project_root, lane=lane)
+    if db_latest_ep is not None and db_latest_ep < int(target_ep):
+        return "operational_failure"
+    if db_latest_ep is None and _benchmark_requires_settled_db_crosscheck(lane):
+        return "operational_failure"
     return normalized_status
+
+
+def _benchmark_requires_settled_db_crosscheck(lane: str) -> bool:
+    return "stage4" in str(lane or "").lower()
+
+
+def _benchmark_latest_settled_db_episode(*, project_root: Path | None, lane: str) -> int | None:
+    if not _benchmark_requires_settled_db_crosscheck(lane) or project_root is None:
+        return None
+
+    db_path = Path(project_root) / "project_data.db"
+    if not db_path.exists():
+        return None
+
+    try:
+        conn = sqlite3.connect(f"file:{db_path.as_posix()}?mode=ro", uri=True)
+    except sqlite3.Error:
+        return None
+
+    try:
+        table_row = conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='manuscripts'").fetchone()
+        if table_row is None:
+            return None
+        row = conn.execute("SELECT MAX(ep_num) FROM manuscripts").fetchone()
+        if not row or row[0] is None:
+            return 0
+        return _safe_int(row[0])
+    except sqlite3.Error:
+        return None
+    finally:
+        conn.close()
 
 
 def _benchmark_latest_progress_episode(

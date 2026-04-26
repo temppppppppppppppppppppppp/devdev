@@ -8114,6 +8114,12 @@ class TestLane2DirectorSemantics:
             "widened": True,
         }
         assert gate_semantics["repair_scope"] == "partial"
+        assert gate_semantics["final_judgment_authority"] == "director_llm"
+        assert gate_semantics["runtime_gate_authority"] == "python_runtime_routing_gate"
+        assert gate_semantics["runtime_gate_role"] == "route_or_block_automatic_progress"
+        assert gate_semantics["verdict_layers"]["director_quality_authority"] == "director_llm"
+        assert gate_semantics["verdict_layers"]["runtime_gate_authority"] == "python_runtime_routing_gate"
+        assert gate_semantics["verdict_layers"]["runtime_gate_role"] == "route_or_block_automatic_progress"
 
     def test_save_director_selection_persists_raw_advisory_payload_bundle(self):
         ctx = _make_ctx()
@@ -12172,6 +12178,9 @@ class TestLane2DirectorSemantics:
         assert payload["repair_scope"] == "partial"
         assert payload["fix_scope"] == "partial"
         assert payload["authoritative_fix_scope"] == "inplace"
+        assert payload["final_judgment_authority"] == "director_llm"
+        assert payload["runtime_gate_authority"] == "python_runtime_routing_gate"
+        assert payload["runtime_gate_role"] == "route_or_block_automatic_progress"
         assert payload["repair_contract"]["subtype"] == "movement"
         assert payload["repair_contract"]["fix_scope"] == "partial"
         assert payload["repair_contract"]["provenance"] == "director_authored"

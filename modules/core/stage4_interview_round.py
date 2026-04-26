@@ -3947,14 +3947,14 @@ class Stage4InterviewRound:
                     }
                 )
                 logging.warning(
-                    "[Stage4Gate] strong advisory escalation forced REJECT: local fix contract invalid"
+                    "[Stage4Gate] strong advisory escalation routed to REJECT: local fix contract invalid"
                     " (scope=%s reason=%s)",
                     _runtime_fix_scope or "<blank>",
                     _contract_reason,
                 )
                 _emit_stage4_ui_log(
                     self.ctx.ui,
-                    "   [Stage4Gate] strong advisory escalation forced REJECT: local fix contract invalid",
+                    "   [Stage4Gate] strong advisory escalation routed to REJECT: local fix contract invalid",
                     component="director_gate",
                     event_kind="policy",
                     meta={
@@ -4014,6 +4014,9 @@ class Stage4InterviewRound:
             "gate_basis": str(normalized.get("gate_basis", "") or ""),
             "repair_scope": str(normalized.get("repair_scope", "none") or "none"),
             "authoritative_fix_scope": str(normalized.get("authoritative_fix_scope", "") or ""),
+            "final_judgment_authority": "director_llm",
+            "runtime_gate_authority": "python_runtime_routing_gate",
+            "runtime_gate_role": "route_or_block_automatic_progress",
             "scope_origin": {
                 "fix_scope": (
                     "runtime_widened"
@@ -4248,6 +4251,9 @@ class Stage4InterviewRound:
             "director_quality_passed": director_quality_passed,
             "downstream_override_applied": downstream_override_applied,
             "primary_failure_layer": primary_failure_layer,
+            "director_quality_authority": "director_llm",
+            "runtime_gate_authority": "python_runtime_routing_gate",
+            "runtime_gate_role": "route_or_block_automatic_progress",
         }
 
     def _setup_writing_directive(
@@ -6182,7 +6188,7 @@ class Stage4InterviewRound:
         Returns (result|None, director_feedback, previous_attempt, trace_meta).
 
         Post-gate chain applied here (in order):
-          1. Quality-floor gate — PASS with score < quality_gate_score → REJECT
+          1. Quality-floor gate — PASS with score < quality_gate_score routes to REJECT
           2. CONDITIONAL_PASS normalization → PASS
         After gates, positive verdicts delegate to _process_positive_verdict;
         negative verdicts return None with a trace_meta snapshot.
@@ -6191,7 +6197,9 @@ class Stage4InterviewRound:
 
         _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
         if verdict == "PASS" and score < _quality_gate_score:
-            self.ctx.ui.log(f"   [QualityGate] PASS -> score={score} < {_quality_gate_score}; downgrade to REJECT")
+            self.ctx.ui.log(
+                f"   [QualityGate] PASS -> score={score} < {_quality_gate_score}; runtime gate REJECT route"
+            )
             verdict = "REJECT"
             error_category = error_category or "QUALITY_FLOOR_FAIL"  # [TF-5]
             director_result = self._apply_director_gate_update(
@@ -8116,6 +8124,9 @@ class Stage4InterviewRound:
                 ),
                 "fix_scope": str(_scope_authority.get("fix_scope", "") or ""),
                 "authoritative_fix_scope": str(_gate_semantics.get("authoritative_fix_scope", "") or ""),
+                "final_judgment_authority": str(_gate_semantics.get("final_judgment_authority", "") or ""),
+                "runtime_gate_authority": str(_gate_semantics.get("runtime_gate_authority", "") or ""),
+                "runtime_gate_role": str(_gate_semantics.get("runtime_gate_role", "") or ""),
                 "selected": director_result.get("selected", ""),
                 "strategy": _sel_candidate.get("strategy", "") or _sel_candidate.get("strategy_name", ""),
                 "model": model,

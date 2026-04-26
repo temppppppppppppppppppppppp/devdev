@@ -1,5 +1,6 @@
 import csv
 import json
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -239,6 +240,99 @@ def test_archive_benchmark_record_demotes_completed_when_target_ep_not_reached(t
     assert rows[0]["target_ep"] == "18"
     assert rows[0]["status"] == "operational_failure"
     assert rows[0]["archive_reproducibility_status"] == "local_only_non_reproducible"
+
+
+def test_archive_benchmark_record_demotes_completed_when_stage4_db_not_settled(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "scripts.archive_benchmark_record._collect_git_info",
+        lambda _workspace: {"branch": "", "head": "", "dirty": False},
+    )
+    project = _make_project(tmp_path)
+    db_path = project / "project_data.db"
+    conn = sqlite3.connect(str(db_path))
+    conn.execute("CREATE TABLE manuscripts (ep_num INTEGER PRIMARY KEY, title TEXT, content TEXT)")
+    conn.execute("INSERT INTO manuscripts (ep_num, title, content) VALUES (17, 'ep17', 'settled')")
+    conn.commit()
+    conn.close()
+    (project / "logs" / "pass_rate_monitor.json").write_text('{"records":[]}', encoding="utf-8")
+    (project / "logs" / "episode_production.jsonl").write_text(
+        json.dumps(
+            {
+                "ep": 18,
+                "attempt_key": "s4:ep18:a1",
+                "duration_ms": 3000,
+                "round_total_tokens": 4567,
+                "token_cost": 0.33,
+                "final_verdict": "PASS",
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (project / "logs" / "runtime_audit_summary.json").write_text(
+        json.dumps({"tag": "stage4_complete"}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    manifest = archive_benchmark_record(
+        workspace_root=tmp_path,
+        project=project.name,
+        lane="stage4-supervised",
+        target_ep=18,
+        status="completed",
+        notes="target_ep=18; after_latest_ep=18; child_exit_code=0",
+        recorded_at="2026-04-24T14:26:16+09:00",
+    )
+
+    assert manifest["requested_status"] == "completed"
+    assert manifest["status"] == "operational_failure"
+
+
+def test_archive_benchmark_record_keeps_completed_when_stage4_db_settled(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "scripts.archive_benchmark_record._collect_git_info",
+        lambda _workspace: {"branch": "", "head": "", "dirty": False},
+    )
+    project = _make_project(tmp_path)
+    db_path = project / "project_data.db"
+    conn = sqlite3.connect(str(db_path))
+    conn.execute("CREATE TABLE manuscripts (ep_num INTEGER PRIMARY KEY, title TEXT, content TEXT)")
+    conn.execute("INSERT INTO manuscripts (ep_num, title, content) VALUES (18, 'ep18', 'settled')")
+    conn.commit()
+    conn.close()
+    (project / "logs" / "pass_rate_monitor.json").write_text('{"records":[]}', encoding="utf-8")
+    (project / "logs" / "episode_production.jsonl").write_text(
+        json.dumps(
+            {
+                "ep": 18,
+                "attempt_key": "s4:ep18:a1",
+                "duration_ms": 3000,
+                "round_total_tokens": 4567,
+                "token_cost": 0.33,
+                "final_verdict": "PASS",
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (project / "logs" / "runtime_audit_summary.json").write_text(
+        json.dumps({"tag": "stage4_complete"}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    manifest = archive_benchmark_record(
+        workspace_root=tmp_path,
+        project=project.name,
+        lane="stage4-supervised",
+        target_ep=18,
+        status="completed",
+        notes="target_ep=18; after_latest_ep=18; child_exit_code=0",
+        recorded_at="2026-04-24T14:26:16+09:00",
+    )
+
+    assert manifest["status"] == "completed"
 
 
 def test_archive_benchmark_record_overwrite_replaces_existing_index_row(tmp_path, monkeypatch):

@@ -1154,6 +1154,10 @@ class TestBlueprintPatchIntegration:
         assert result.verdict == "REJECT"
         assert result.validation_result["reject_origin"] == "quality_gate_reject"
         assert result.validation_result["quality_gate_effective_score"] == 89
+        assert result.validation_result["final_judgment_authority"] == "director_llm"
+        assert result.validation_result["runtime_gate_authority"] == "python_runtime_routing_gate"
+        assert result.validation_result["runtime_gate_role"] == "route_or_block_automatic_progress"
+        assert pipeline_result["phases"]["validate"]["runtime_gate_basis"] == "quality_gate_reject"
         assert any("QualityGate" in text for text in log_texts)
         assert any("사유: score는 통과선 아래라 재수정 필요" in text for text in log_texts)
         assert any("fix_scope: inplace" in text for text in log_texts)
@@ -1273,6 +1277,8 @@ class TestBlueprintPatchIntegration:
         assert pipeline_result["quality_gate_failed"] is True
         assert pipeline_result["quality_risk"] is True
         assert pipeline_result["revision_required"] is True
+        assert result.validation_result["runtime_gate_authority"] == "python_runtime_routing_gate"
+        assert pipeline_result["phases"]["validate"]["final_judgment_authority"] == "director_llm"
         assert pipeline_result["phases"]["validate"]["verdict"] == "PASS_WITH_WARNING"
         assert pipeline_result["phases"]["validate"]["quality_gate_terminal_acceptance"] == {
             "decision": "promote_to_pass_with_warning",

@@ -203,6 +203,7 @@ class TestProcessPassResult:
         pp._save_pass_result_primary_db = MagicMock(return_value=True)
         pp._save_pass_result_quality_sidecars = MagicMock(return_value={})
         pp._run_pass_result_local_side_effects = MagicMock()
+        pp.post_pass_runtime._memorize_and_validate = MagicMock()
         pp._run_pass_result_post_pass_pipeline = MagicMock(
             return_value={"actual_truth": {"location": "gate"}, "bible_delta": {}, "meta_save_failed": True}
         )
@@ -223,6 +224,8 @@ class TestProcessPassResult:
         )
 
         assert result is False
+        pp._run_pass_result_local_side_effects.assert_not_called()
+        pp.post_pass_runtime._memorize_and_validate.assert_not_called()
         log_texts = [call.args[0] for call in pp.ctx.ui.log.call_args_list if call.args]
         assert any("후처리 메타 저장 실패" in text for text in log_texts)
         pp._persist_stage4_settlement_packet.assert_not_called()
@@ -238,6 +241,7 @@ class TestProcessPassResult:
         pp._save_pass_result_primary_db = MagicMock(return_value=True)
         pp._save_pass_result_quality_sidecars = MagicMock(return_value={})
         pp._run_pass_result_local_side_effects = MagicMock()
+        pp.post_pass_runtime._memorize_and_validate = MagicMock()
         pp._run_pass_result_post_pass_pipeline = MagicMock(
             return_value={"actual_truth": {"location": "gate"}, "bible_delta": {}, "meta_save_failed": False}
         )
@@ -258,6 +262,8 @@ class TestProcessPassResult:
         )
 
         assert result is False
+        pp._run_pass_result_local_side_effects.assert_not_called()
+        pp.post_pass_runtime._memorize_and_validate.assert_not_called()
         pp.ctx.audit_event.assert_any_call(
             "stage4_settlement_packet_save_failed",
             "stage4 settlement packet save failed",
@@ -275,6 +281,7 @@ class TestProcessPassResult:
         pp._save_pass_result_primary_db = MagicMock(return_value=True)
         pp._save_pass_result_quality_sidecars = MagicMock(return_value={})
         pp._run_pass_result_local_side_effects = MagicMock()
+        pp.post_pass_runtime._memorize_and_validate = MagicMock()
         pp._run_pass_result_post_pass_pipeline = MagicMock(
             return_value={"actual_truth": {"location": "gate"}, "bible_delta": {}, "meta_save_failed": False}
         )
@@ -295,6 +302,8 @@ class TestProcessPassResult:
         )
 
         assert result is False
+        pp._run_pass_result_local_side_effects.assert_not_called()
+        pp.post_pass_runtime._memorize_and_validate.assert_not_called()
         pp._persist_stage4_settlement_packet.assert_called_once()
         pp.ctx.audit_event.assert_any_call(
             "stage4_human_facing_export_failed",
@@ -306,6 +315,47 @@ class TestProcessPassResult:
         assert status_payloads[-1]["settlement_packet_persisted"] is True
         assert status_payloads[-1]["human_export_persisted"] is False
         pp._finalize_pass_result_session.assert_not_called()
+
+    def test_post_settlement_side_effects_run_only_after_fully_settled_status(self, tmp_path):
+        pp = self._make_pp()
+        events = []
+
+        def record_status(**kwargs):
+            events.append(("status", kwargs["status"]))
+
+        pp._save_pass_result_primary_db = MagicMock(return_value=True)
+        pp._save_pass_result_quality_sidecars = MagicMock(return_value={})
+        pp._run_pass_result_post_pass_pipeline = MagicMock(
+            return_value={"actual_truth": {"location": "gate"}, "bible_delta": {}, "meta_save_failed": False}
+        )
+        pp._persist_stage4_settlement_packet = MagicMock(return_value=tmp_path / "ep_0003.settlement.json")
+        pp._write_human_facing_manuscript_export = MagicMock()
+        pp._emit_stage4_settlement_status = MagicMock(side_effect=record_status)
+        pp._run_pass_result_local_side_effects = MagicMock(side_effect=lambda **_kwargs: events.append(("local", None)))
+        pp.post_pass_runtime._memorize_and_validate = MagicMock(
+            side_effect=lambda **_kwargs: events.append(("memory", None))
+        )
+        pp._finalize_pass_result_session = MagicMock(side_effect=lambda **_kwargs: events.append(("finalize", None)))
+
+        result = pp.process_pass_result(
+            next_ep=3,
+            final_manuscript="settled manuscript " * 200,
+            final_title="title",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 9},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        assert events == [
+            ("status", "fully_settled"),
+            ("local", None),
+            ("memory", None),
+            ("finalize", None),
+        ]
 
     def test_hud_update_called(self, tmp_path):
         pp = self._make_pp()
@@ -569,6 +619,7 @@ class TestProcessPassResult:
         assert pp.post_pass_runtime._run_post_pass_advisories.call_args.kwargs["state_truth_owner_contract"] == {
             "field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}
         }
+        pp.post_pass_runtime._memorize_and_validate.assert_not_called()
 
     def test_run_pass_result_post_pass_pipeline_normalizes_nonwuxia_soft_chain_link_before_save(self):
         pp = self._make_pp()
