@@ -74,6 +74,7 @@ jobs:
             tests/test_stage2_orchestrator_lane_b.py \
             tests/test_stage2_orchestrator_lane_d.py \
             tests/test_stage2_orchestrator_lane_f.py \
+            tests/test_stage4_post_processor.py \
             tests/test_sweep34.py \
             tests/test_sync_github_issues.py \
             tests/test_sync_temp_queue_state.py \
