@@ -513,6 +513,24 @@ class BaseAgent:
         return self._generate_llm_response(model=model, contents=contents, config=config)
 
     @staticmethod
+    def _response_finish_reason(response) -> str:
+        candidate_reason = ""
+        try:
+            candidates = getattr(response, "candidates", None)
+            if candidates:
+                candidate_reason = str(getattr(candidates[0], "finish_reason", "") or "")
+        except Exception:
+            candidate_reason = ""
+        if candidate_reason:
+            return candidate_reason
+        return str(getattr(response, "finish_reason", "") or "")
+
+    @staticmethod
+    def _is_max_tokens_finish_reason(finish_reason: str) -> bool:
+        normalized = str(finish_reason or "").strip().lower()
+        return normalized in {"max_tokens", "max_token", "length", "incomplete"} or "max_tokens" in normalized
+
+    @staticmethod
     def _coerce_usage_int(value) -> int:
         try:
             normalized = int(value or 0)
@@ -1666,6 +1684,8 @@ class BaseAgent:
                 if full_response.endswith(chunk[:i]):
                     overlap_found = i
                     break
+            if overlap_found < 8:
+                overlap_found = 0
 
             # 중복된 부분은 제외하고 순수 데이터만 정밀하게 접합
             full_response += chunk[overlap_found:]
@@ -1684,13 +1704,8 @@ class BaseAgent:
             "action": "break",
         }
 
-        # [Wave1:C] non-Gemini raw responses lack .candidates — skip continuation logic
-        if not hasattr(response, "candidates") or not response.candidates:
-            return result
-        candidate = response.candidates[0]
-
         # 토큰 제한(MAX_TOKENS) 발생 시 '비트 3' 유실 방지를 위한 이어쓰기 시퀀스
-        if hasattr(candidate, "finish_reason") and candidate.finish_reason in ["MAX_TOKENS", "LENGTH"]:
+        if self._is_max_tokens_finish_reason(self._response_finish_reason(response)):
             # 🔒 Circuit Breaker 경고
             if attempt >= warn_threshold:
                 logging.warning(f" [Circuit Breaker] 과도한 continuation 감지 ({attempt + 1}/{max_continuations}회)")
@@ -2710,6 +2725,9 @@ class BaseAgent:
             except (ValueError, AttributeError):
                 logging.warning("[V61.7] cached-context response.text unavailable; treating as empty response")
                 _cached_text = ""
+
+            if self._is_max_tokens_finish_reason(self._response_finish_reason(response)):
+                raise RuntimeError("cached_context_max_tokens_truncated")
 
             try:
                 self._log_llm_call_to_db(

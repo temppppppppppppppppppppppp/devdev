@@ -528,6 +528,72 @@ def test_openai_provider_sets_backend_family(monkeypatch):
     assert response.family == "gpt"
 
 
+def test_openai_provider_applies_http_options_timeout_to_client():
+    class FakeResponses:
+        def __init__(self):
+            self.kwargs = {}
+
+        def create(self, **kw):
+            self.kwargs = kw
+            return SimpleNamespace(output_text="ok", status="completed", usage=None)
+
+    class FakeClient:
+        def __init__(self):
+            self.responses = FakeResponses()
+            self.timeout = None
+
+        def with_options(self, *, timeout):
+            self.timeout = timeout
+            return self
+
+    fake_client = FakeClient()
+    provider = OpenAIProvider()
+    provider._client = fake_client
+
+    response = provider.generate(
+        client=MagicMock(),
+        request=LLMRequest(
+            model="gpt-5",
+            contents="hello",
+            config=SimpleNamespace(http_options=SimpleNamespace(timeout=123000)),
+        ),
+    )
+
+    assert response.text == "ok"
+    assert fake_client.timeout == 123.0
+
+
+def test_anthropic_provider_applies_http_options_timeout_to_client():
+    class FakeMessages:
+        def create(self, **_kwargs):
+            return SimpleNamespace(content=[SimpleNamespace(type="text", text="ok")], stop_reason="stop", usage=None)
+
+    class FakeClient:
+        def __init__(self):
+            self.messages = FakeMessages()
+            self.timeout = None
+
+        def with_options(self, *, timeout):
+            self.timeout = timeout
+            return self
+
+    fake_client = FakeClient()
+    provider = AnthropicProvider()
+    provider._client = fake_client
+
+    response = provider.generate(
+        client=MagicMock(),
+        request=LLMRequest(
+            model="claude-sonnet-4-6",
+            contents="hello",
+            config=SimpleNamespace(http_options=SimpleNamespace(timeout=456000)),
+        ),
+    )
+
+    assert response.text == "ok"
+    assert fake_client.timeout == 456.0
+
+
 # ── Wave 1: Metrics attribution tests ─────────────────────────────────────
 
 

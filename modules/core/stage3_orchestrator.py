@@ -16,6 +16,12 @@ import traceback as _traceback
 from dataclasses import dataclass
 
 from modules.core.artifact_logging import build_candidate_key, normalize_artifact_meta, snapshot_logged_artifact
+from modules.core.authoritative_continuity_projection import (
+    build_authoritative_continuity_projection,
+    load_continuity_bridge_proposals_for_projection,
+    render_authoritative_continuity_projection_for_prompt,
+    summarize_authoritative_continuity_projection,
+)
 from modules.core.constants import Emojis, ErrorMessages, smart_truncate
 from modules.core.context_advisor import (
     ContextBudgetTracker,
@@ -75,6 +81,17 @@ _STAGE3_UI_OBSERVABILITY_LABELS = {
     "planned_slots_count": "planned_slots",
     "work_focus_present": "work_focus",
 }
+_STAGE3_AUTHORITY_ACCEPTED_VERDICTS = {"PASS", "PASS_WITH_WARNING", "PASS_WITH_FIX"}
+
+
+class Stage3AuthorityPersistenceError(RuntimeError):
+    """Raised when an accepted Stage3 authority decision cannot be persisted."""
+
+
+def _stage3_verdict_requires_authority_persistence(verdict: object) -> bool:
+    return str(verdict or "").strip().upper() in _STAGE3_AUTHORITY_ACCEPTED_VERDICTS
+
+
 _STAGE3_UI_OBSERVABILITY_HIDDEN_KEYS = {"semantic_ctx_source_counts"}
 _STAGE3_REPEATED_COVERAGE_WARNING_THRESHOLD = 2
 _STAGE3_REPEATED_COVERAGE_WARNING_RECENT_LIMIT = 8
@@ -1930,6 +1947,32 @@ class Stage3Orchestrator:
         _source_counts: dict[str, int] = {}
         _coverage_warnings: list[str] = []
         _semantic_sections: list[tuple[str, str]] = []
+        _authority_projection: dict[str, object] = {}
+
+        try:
+            _db = getattr(getattr(ctx, "current_project", None), "db", None)
+            _bridge_rows = load_continuity_bridge_proposals_for_projection(
+                _db,
+                target_stage="stage3",
+                ep_num=int(working_ep or 0),
+                limit=12,
+            )
+            _authority_projection = build_authoritative_continuity_projection(
+                ep_num=int(working_ep or 0),
+                arc_data=arc_data,
+                prev_blueprints=blueprint_window,
+                bridge_proposals=_bridge_rows,
+                source_stage="stage2_or_previous_blueprint",
+                target_stage="stage3_blueprint",
+            )
+            _authority_projection_text = render_authoritative_continuity_projection_for_prompt(
+                _authority_projection,
+                max_chars=2200,
+            )
+            if _authority_projection_text:
+                _semantic_sections.append(("authority_continuity_projection", _authority_projection_text))
+        except Exception as _authority_projection_err:
+            _logging.debug("[Stage3] authoritative continuity projection skipped: %s", _authority_projection_err)
 
         _world_state_advisory = _build_world_state_advisory(getattr(ctx, "world_state", None))
         if _world_state_advisory:
@@ -2035,6 +2078,10 @@ class Stage3Orchestrator:
         _source_anchor_summary = _build_stage3_source_anchor_summary(arc_data, blueprint_window)
         if _source_anchor_summary:
             _stage3_observation["source_anchor_summary"] = _source_anchor_summary
+        if _authority_projection:
+            _stage3_observation["authoritative_continuity_projection"] = summarize_authoritative_continuity_projection(
+                _authority_projection
+            )
         _record_retrieval_observation(
             self.app,
             ep_num=working_ep,
@@ -2367,6 +2414,20 @@ class Stage3Orchestrator:
                 pipeline_result=pipeline_result,
                 pov_contract=pov_contract,
             )
+        except Stage3AuthorityPersistenceError as stage_attempt_err:
+            ctx.ui.log(f"   [DB] ep {working_ep} Stage3 authority attempt persistence failed")
+            if callable(ctx.audit_event):
+                ctx.audit_event(
+                    "stage3_authority_persistence_failed",
+                    str(stage_attempt_err),
+                    {"ep_num": working_ep, "arc_num": arc_no, "verdict": str(final_verdict)},
+                )
+            return {
+                "next_ep": working_ep + 1,
+                "success_count": success_count,
+                "fail_count": fail_count + 1,
+                "break": True,
+            }
         except Exception as stage_attempt_err:
             _logging.debug("[stage_attempts] Stage3 PASS record failed (non-blocking): %s", stage_attempt_err)
 
@@ -2604,26 +2665,37 @@ class Stage3Orchestrator:
                 _logging.debug("[stage3_prm] Stage3 PASS record failed (non-blocking): %s", prm_err)
 
         db = runtime_payload.db
-        if db and hasattr(db, "save_stage_attempt"):
+        authority_persistence_required = _stage3_verdict_requires_authority_persistence(final_verdict)
+        if not (db and hasattr(db, "save_stage_attempt")):
+            if authority_persistence_required:
+                raise Stage3AuthorityPersistenceError("stage3_authority_persistence_unavailable")
+        elif db and hasattr(db, "save_stage_attempt"):
             director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
             model = getattr(director, "primary_model", None) if director else None
             prompt_version = _build_stage3_prompt_version()
             _s3_validate = (
                 (pipeline_result.get("phases") or {}).get("validate", {}) if isinstance(pipeline_result, dict) else {}
             )
-            db.save_stage_attempt(
-                **self._build_stage3_stage_attempt_kwargs(
-                    ep_num=working_ep,
-                    arc_no=arc_no,
-                    verdict=str(final_verdict),
-                    packet=runtime_payload,
-                    model=str(model) if model else None,
-                    prompt_version=prompt_version,
-                    duration_ms=duration_ms,
-                    advisory_flags=observability_flags,
-                    validate=_s3_validate,
+            try:
+                stage_attempt_saved = db.save_stage_attempt(
+                    **self._build_stage3_stage_attempt_kwargs(
+                        ep_num=working_ep,
+                        arc_no=arc_no,
+                        verdict=str(final_verdict),
+                        packet=runtime_payload,
+                        model=str(model) if model else None,
+                        prompt_version=prompt_version,
+                        duration_ms=duration_ms,
+                        advisory_flags=observability_flags,
+                        validate=_s3_validate,
+                    )
                 )
-            )
+            except Exception as db_err:
+                if authority_persistence_required:
+                    raise Stage3AuthorityPersistenceError("stage3_authority_persistence_failed") from db_err
+                raise
+            if authority_persistence_required and stage_attempt_saved is False:
+                raise Stage3AuthorityPersistenceError("stage3_authority_persistence_failed")
             if hasattr(db, "save_director_selection") and selection_kwargs and selection_contract_ok:
                 try:
                     db.save_director_selection(**selection_kwargs)
@@ -3424,6 +3496,23 @@ class Stage3Orchestrator:
             value = validate.get(key)
             if isinstance(value, dict) and value:
                 resolved_advisory_flags[key] = dict(value)
+        for key in (
+            "terminal_failure_diagnostic",
+            "director_verdict",
+            "runtime_route_verdict",
+            "verdict_contract_version",
+            "final_judgment_authority",
+            "runtime_gate_authority",
+            "runtime_gate_role",
+            "runtime_gate_basis",
+            "runtime_route_action",
+            "runtime_route_reason",
+        ):
+            value = validate.get(key)
+            if isinstance(value, dict) and value:
+                resolved_advisory_flags[key] = dict(value)
+            elif value not in ("", None, [], {}):
+                resolved_advisory_flags[key] = value
         repair_contract = _compact_stage3_repair_contract(validate.get("repair_contract"))
         if repair_contract:
             resolved_advisory_flags["repair_contract"] = repair_contract

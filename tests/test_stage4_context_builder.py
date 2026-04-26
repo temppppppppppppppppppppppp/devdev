@@ -3,6 +3,7 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from modules.core.authoritative_continuity_projection import AUTHORITATIVE_CONTINUITY_PROJECTION_HEADER
 from modules.core.context_advisor import RetrievalPlan, RetrievalSlot, RetrievalSources
 from modules.core.cross_stage_authority_packet import CROSS_STAGE_AUTHORITY_PACKET_VERSION
 from modules.core.stage4_context_builder import Stage4ContextBuilder
@@ -343,6 +344,65 @@ class TestLoadChainLinkSection:
         ctx.current_project.db.load_anchor.side_effect = RuntimeError("DB error")
         cb = Stage4ContextBuilder(ctx)
         assert cb.load_chain_link_section(5) == ""
+
+
+class TestAuthoritativeContinuityProjection:
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_injects_authoritative_continuity_projection(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.sys.guard = MagicMock()
+        ctx.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": [],
+            "mandatory_scene_engines": [],
+            "registry_profiles": [],
+        }
+
+        def bridge_rows(**kwargs):
+            if kwargs.get("applied_status") == "approved":
+                return [
+                    {
+                        "bridge_id": "bridge-stage4-ep2",
+                        "target_stage": "stage4",
+                        "ep_num": 2,
+                        "applied_status": "approved",
+                        "allowed_fix_scope": "candidate_only",
+                        "proposed_bridge": '{"ending_state.timeline": "직후"}',
+                        "director_verdict": "APPROVE",
+                    }
+                ]
+            return []
+
+        ctx.current_project.db.get_continuity_bridge_proposals.side_effect = bridge_rows
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=2,
+            arc_data={"arc_no": 1, "constraint_summary": "Open directly after EP1."},
+            arc_tactical="Continue the prior ending.",
+            prev_text="이전 원고",
+            prev_ending="회의실에서 표결 직전 멈췄다.",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="investment",
+            v50_modules_available=False,
+            blueprint={
+                "ep_num": 2,
+                "start_location": "회의실",
+                "time_flow": "직후",
+                "opening_transition": {"type": "direct_continuation"},
+            },
+        )
+
+        text = result["mandatory_context"]
+        assert AUTHORITATIVE_CONTINUITY_PROJECTION_HEADER in text
+        assert "Director/LLM remains final narrative judge" in text
+        assert "start_location=회의실" in text
+        assert "director_approved_bridges" in text
+        assert text.index(AUTHORITATIVE_CONTINUITY_PROJECTION_HEADER) < text.index("writer mandatory")
 
 
 class TestBuildContinuityPacketHelpers:

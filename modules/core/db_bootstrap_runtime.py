@@ -407,6 +407,7 @@ class DBBootstrapRuntime:
         self._create_llm_call_tables()
         self._create_context_cache_attempt_tables()
         self._create_stage_attempt_tables()
+        self._create_continuity_bridge_tables()
         self._create_ui_event_tables()
         self._create_cost_log_tables()
 
@@ -572,6 +573,45 @@ class DBBootstrapRuntime:
             log_label="stage_attempts",
         )
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_stage_attempts_attempt_key ON stage_attempts(attempt_key)")
+
+    def _create_continuity_bridge_tables(self) -> None:
+        cursor = self.owner.cursor
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS continuity_bridge_proposals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                bridge_id TEXT NOT NULL UNIQUE,
+                created_at TEXT NOT NULL,
+                updated_at TEXT,
+                source_stage TEXT,
+                target_stage TEXT,
+                work_id TEXT,
+                project_id TEXT,
+                arc_num INTEGER,
+                ep_num INTEGER,
+                authority_source TEXT,
+                observed_downstream_candidate TEXT,
+                observed_conflict TEXT,
+                proposed_bridge TEXT,
+                allowed_fix_scope TEXT,
+                director_verdict TEXT,
+                director_reason TEXT,
+                applied_status TEXT NOT NULL DEFAULT 'pending_director',
+                applied_artifact_key TEXT,
+                source_hashes TEXT
+            )
+            """
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_continuity_bridge_status ON continuity_bridge_proposals(applied_status)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_continuity_bridge_stage_ep ON continuity_bridge_proposals(source_stage, target_stage, ep_num)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_continuity_bridge_project ON continuity_bridge_proposals(project_id, work_id)"
+        )
 
     def _create_ui_event_tables(self) -> None:
         cursor = self.owner.cursor

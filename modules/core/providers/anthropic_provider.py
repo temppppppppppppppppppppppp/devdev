@@ -55,7 +55,9 @@ class AnthropicProvider:
         try:
             from anthropic import Anthropic
         except ImportError as exc:
-            raise RuntimeError("anthropic package is not installed. Install `anthropic` to enable Claude models.") from exc
+            raise RuntimeError(
+                "anthropic package is not installed. Install `anthropic` to enable Claude models."
+            ) from exc
 
         self._client = Anthropic(api_key=api_key)
         return self._client
@@ -71,8 +73,37 @@ class AnthropicProvider:
         # Anthropic sync calls reject very large max_tokens budgets as long-running requests.
         return min(requested, self._MAX_SYNC_OUTPUT_TOKENS)
 
+    def _client_for_request(self, resolved_client: Any, request: LLMRequest) -> Any:
+        timeout_seconds = self._request_timeout_seconds(request.config)
+        if timeout_seconds is None or not hasattr(resolved_client, "with_options"):
+            return resolved_client
+        return resolved_client.with_options(timeout=timeout_seconds)
+
+    @classmethod
+    def _request_timeout_seconds(cls, config: Any) -> float | None:
+        direct_timeout = cls._config_value(config, "timeout") or cls._config_value(config, "request_timeout")
+        if direct_timeout:
+            try:
+                return max(1.0, float(direct_timeout))
+            except (TypeError, ValueError):
+                return None
+        http_options = cls._config_value(config, "http_options")
+        if not http_options:
+            return None
+        if isinstance(http_options, dict):
+            raw_timeout = http_options.get("timeout")
+        else:
+            raw_timeout = getattr(http_options, "timeout", None)
+        try:
+            timeout_ms = float(raw_timeout or 0)
+        except (TypeError, ValueError):
+            return None
+        if timeout_ms <= 0:
+            return None
+        return max(1.0, timeout_ms / 1000.0)
+
     def generate(self, *, client: Any, request: LLMRequest) -> LLMResponse:
-        resolved_client = self._get_client()
+        resolved_client = self._client_for_request(self._get_client(), request)
         kwargs = {
             "model": self._resolve_model_name(request.model),
             "messages": self._normalize_messages(request.contents),
@@ -87,7 +118,9 @@ class AnthropicProvider:
         if top_p is not None:
             kwargs["top_p"] = top_p
 
-        system = self._config_value(request.config, "system") or self._config_value(request.config, "system_instruction")
+        system = self._config_value(request.config, "system") or self._config_value(
+            request.config, "system_instruction"
+        )
         if system:
             kwargs["system"] = system
 

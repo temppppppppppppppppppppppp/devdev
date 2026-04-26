@@ -1,5 +1,6 @@
 """Tests for Blueprint in-place patch mode (ThreePhaseBlueprintGenerator._inplace_patch_blueprint)."""
 
+import json
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -1322,17 +1323,32 @@ class TestBlueprintPatchIntegration:
         assert resolved_pipeline["final_verdict"] == "PASS_WITH_WARNING"
         assert resolved_pipeline["last_score"] == PatchModeThresholds.REWRITE
 
-    def test_finalize_terminal_failure_blocks_emergency_fallback_with_binding_issue(self, blueprint_generator):
+    def test_finalize_terminal_failure_blocks_emergency_fallback_with_binding_issue(
+        self, blueprint_generator, tmp_path
+    ):
         from modules.core.constants import PatchModeThresholds
         from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
 
+        blueprint_generator.context.current_project = MagicMock()
+        blueprint_generator.context.current_project.paths.root = tmp_path
         retry_state = _ThreePhaseRetryState(
             prev_reject_score=PatchModeThresholds.REWRITE,
             prev_reject_feedback="latest feedback",
             prev_binding_issue_count=1,
         )
         best_blueprint = {"ep_num": 1, "scene_list": [{"scene_no": 1, "summary": "fallback"}]}
-        pipeline = {}
+        pipeline = {
+            "arc_no": 1,
+            "phases": {
+                "generate": {"selected_strategy": "steady"},
+                "validate": {
+                    "verdict": "PASS_WITH_FIX",
+                    "director_verdict": "PASS",
+                    "runtime_route_verdict": "PASS_WITH_FIX",
+                    "binding_prevalidation_categories": ["arc_timeline"],
+                },
+            },
+        }
 
         result, resolved_pipeline = blueprint_generator.runtime._finalize_terminal_failure(
             ep_num=1,
@@ -1346,6 +1362,25 @@ class TestBlueprintPatchIntegration:
 
         assert result is None
         assert resolved_pipeline["final_verdict"] == "FAILED"
+        assert resolved_pipeline["runtime_route_verdict"] == "REJECT"
+        assert resolved_pipeline["runtime_gate_basis"] == "binding_prevalidation_reopen"
+        assert resolved_pipeline["runtime_route_action"] == "block_artifact_adoption"
+        assert resolved_pipeline["objective_status"] == "blocked_by_runtime_guard"
+        assert resolved_pipeline["objective_success"] is False
+        assert resolved_pipeline["objective_root_cause"] == "binding_prevalidation_unresolved"
+        assert resolved_pipeline["final_verdict_authority"] == "compatibility_objective_status"
+        diagnostic = resolved_pipeline["terminal_failure_diagnostic"]
+        assert diagnostic["artifact_kind"] == "terminal_failure_diagnostic"
+        assert diagnostic["official_artifact"] is False
+        assert diagnostic["artifact_path"].endswith("terminal_failure_diagnostic__steady.json")
+        diagnostic_path = tmp_path / diagnostic["artifact_path"]
+        assert diagnostic_path.exists()
+        payload = json.loads(diagnostic_path.read_text(encoding="utf-8"))
+        assert payload["summary_role"] == "stage3_terminal_failure_diagnostic"
+        assert payload["director_verdict"] == "PASS"
+        assert payload["runtime_route_verdict"] == "REJECT"
+        assert payload["binding_prevalidation_categories"] == ["arc_timeline"]
+        assert payload["candidate_blueprint"] == best_blueprint
 
     def test_resolve_retry_cycle_result_accepts_direct_terminal_quality_gate_warning(self, blueprint_generator):
         from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState

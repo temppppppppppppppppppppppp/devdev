@@ -2468,12 +2468,16 @@ class FailureAnalyzer:
                 attempt_key
             ]["fix_scope"]
             if stage in (2, 3, 4):
-                rationale_values_by_field.setdefault("runtime_advisory", {})["director_selections"] = str(
-                    director_selections[attempt_key].get("runtime_advisory", "") or ""
-                ).strip()
-                rationale_values_by_field.setdefault("retry_directives", {})["director_selections"] = str(
-                    director_selections[attempt_key].get("retry_directives", "") or ""
-                ).strip()
+                runtime_advisory = str(director_selections[attempt_key].get("runtime_advisory", "") or "").strip()
+                retry_directives = str(director_selections[attempt_key].get("retry_directives", "") or "").strip()
+                if runtime_advisory or stage != 4:
+                    rationale_values_by_field.setdefault("runtime_advisory", {})["director_selections"] = (
+                        runtime_advisory
+                    )
+                if retry_directives or stage != 4:
+                    rationale_values_by_field.setdefault("retry_directives", {})["director_selections"] = (
+                        retry_directives
+                    )
         if attempt_key in session_decisions:
             rationale_values_by_field.setdefault("selection_reason", {})["session_decisions"] = str(
                 session_decisions[attempt_key].get("selection_reason", "") or ""
@@ -2791,7 +2795,6 @@ class FailureAnalyzer:
                 "gate_repair_metadata_missing",
                 "rationale_metadata_missing",
                 "artifact_missing_files",
-                "selection_companion_pre_final_rows",
                 "selection_companion_missing_rows",
             ),
         )

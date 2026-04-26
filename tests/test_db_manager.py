@@ -168,6 +168,58 @@ def test_mark_stage4_attempt_settlement_failed_demotes_pass_attempt(db):
     assert row["downstream_override_applied"] == 0
 
 
+def test_continuity_bridge_proposal_store_is_director_pending_by_default(db):
+    bridge_id = db.save_continuity_bridge_proposal(
+        bridge_id="bridge-jan1-jan3",
+        source_stage="stage3",
+        target_stage="stage4",
+        work_id="golden_canary",
+        project_id="project-1",
+        arc_num=2,
+        ep_num=4,
+        authority_source="stage3_binding_prevalidation",
+        observed_downstream_candidate={"ending_state": {"timeline": "2006-01-01"}},
+        observed_conflict={"expected": "2006-01-03", "observed": "2006-01-01"},
+        proposed_bridge={"candidate_only": {"ending_state.timeline": "2006-01-03"}},
+        allowed_fix_scope="candidate_only",
+        source_hashes={"candidate": "abc"},
+    )
+
+    rows = db.get_continuity_bridge_proposals(applied_status="pending_director")
+
+    assert bridge_id == "bridge-jan1-jan3"
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["bridge_id"] == "bridge-jan1-jan3"
+    assert row["applied_status"] == "pending_director"
+    assert row["director_verdict"] == ""
+    assert json.loads(row["observed_conflict"]) == {"expected": "2006-01-03", "observed": "2006-01-01"}
+    assert json.loads(row["proposed_bridge"]) == {"candidate_only": {"ending_state.timeline": "2006-01-03"}}
+
+
+def test_continuity_bridge_adjudication_records_director_decision_without_auto_apply(db):
+    bridge_id = db.save_continuity_bridge_proposal(
+        source_stage="stage3",
+        target_stage="stage4",
+        ep_num=4,
+        observed_conflict={"expected": "2006-01-03", "observed": "2006-01-01"},
+        proposed_bridge={"candidate_only": {"ending_state.timeline": "2006-01-03"}},
+    )
+
+    updated = db.adjudicate_continuity_bridge_proposal(
+        bridge_id=bridge_id,
+        director_verdict="APPROVE",
+        director_reason="candidate timeline should match arc head",
+    )
+    row = db.get_continuity_bridge_proposals(limit=1)[0]
+
+    assert updated is True
+    assert row["director_verdict"] == "APPROVE"
+    assert row["director_reason"] == "candidate timeline should match arc head"
+    assert row["applied_status"] == "approved"
+    assert row["applied_artifact_key"] == ""
+
+
 def test_save_llm_call_respects_outer_transaction_rollback(db):
     with pytest.raises(DBError):
         with db.transaction():
@@ -298,6 +350,7 @@ def test_create_selection_and_logging_tables_delegates_to_family_helpers():
     runtime._create_llm_call_tables = MagicMock()
     runtime._create_context_cache_attempt_tables = MagicMock()
     runtime._create_stage_attempt_tables = MagicMock()
+    runtime._create_continuity_bridge_tables = MagicMock()
     runtime._create_ui_event_tables = MagicMock()
     runtime._create_cost_log_tables = MagicMock()
 
@@ -307,6 +360,7 @@ def test_create_selection_and_logging_tables_delegates_to_family_helpers():
     runtime._create_llm_call_tables.assert_called_once_with()
     runtime._create_context_cache_attempt_tables.assert_called_once_with()
     runtime._create_stage_attempt_tables.assert_called_once_with()
+    runtime._create_continuity_bridge_tables.assert_called_once_with()
     runtime._create_ui_event_tables.assert_called_once_with()
     runtime._create_cost_log_tables.assert_called_once_with()
 
@@ -921,6 +975,10 @@ def test_update_director_selection_rationale_merges_advisory_warnings(db):
     assert advisory["repair_contract"]["provenance"] == "runtime_backfilled"
     assert advisory["scope_authority"]["fix_scope"] == "full"
     assert advisory["scope_authority"]["widened"] is True
+    assert advisory["advisory_authority_schema_version"] == "advisory-authority-levels-v1"
+    assert advisory["advisory_authority_levels"]["fix_pack"] == "historical_companion"
+    assert advisory["advisory_authority_levels"]["repair_contract"] == "historical_companion"
+    assert advisory["advisory_authority_levels"]["scope_authority"] == "historical_companion"
 
 
 def test_save_director_selection_persists_verdict_layers(db):
@@ -1140,7 +1198,14 @@ def test_get_latest_stage4_gate_repair_snapshot_surfaces_repair_contract_and_sco
         "repair_scope": "runtime_lane",
     }
     assert row["scope_authority_widened"] is True
+    assert row["repair_contract_authority_level"] == "route"
+    assert row["scope_authority_authority_level"] == "route"
     assert row["retry_budget_axes"] == {"repair": "patch_revision"}
+    assert row["authority_schema_version"] == "advisory-authority-levels-v1"
+    assert row["fix_pack_authority_level"] == "route"
+    assert row["repair_contract_authority_level"] == "route"
+    assert row["scope_authority_authority_level"] == "route"
+    assert row["retry_budget_axes_authority_level"] == "route"
     assert row["partial_fix_eval"]["patch_round"] == 2
     assert row["partial_fix_eval"]["patch_target_id"] == "pt:movement"
     assert row["repair_trace"][0]["target"] == "scene_7"
