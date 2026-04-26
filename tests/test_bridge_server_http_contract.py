@@ -279,6 +279,37 @@ def test_run_rejects_when_runner_is_starting():
     assert payload["code"] == "RUN_ALREADY_ACTIVE"
 
 
+def test_run_rejects_public_stdin_lines_override_before_start():
+    with TestClient(app) as client:
+        runner = _DummyRunner()
+        client.app.state.runner = runner
+
+        response = client.post(
+            "/run",
+            json={"key": "1", "inputs": {"stdin_lines": ["1", "77"]}},
+        )
+
+    assert response.status_code == 403
+    payload = response.json()
+    assert payload["ok"] is False
+    assert payload["code"] == "STDIN_LINES_NOT_ALLOWED"
+    assert runner.start_calls == []
+
+
+def test_run_rejects_non_object_inputs_before_start():
+    with TestClient(app) as client:
+        runner = _DummyRunner()
+        client.app.state.runner = runner
+
+        response = client.post("/run", json={"key": "1", "inputs": ["not", "an", "object"]})
+
+    assert response.status_code == 400
+    payload = response.json()
+    assert payload["ok"] is False
+    assert payload["code"] == "INVALID_INPUTS"
+    assert runner.start_calls == []
+
+
 def test_run_accepts_valid_request_through_real_app():
     with TestClient(app) as client:
         runner = _DummyRunner()
