@@ -1,9 +1,9 @@
 # Current Pipeline Post-Settlement Truth Residuals Execution SSOT
 
 Date: 2026-04-26
-Status: active
+Status: closed
 Canonical Path: `docs/2026-04-26/current-pipeline-post-settlement-truth-residuals-execution-ssot.md`
-Temp Mirror Path: `docs/temp/current-pipeline-post-settlement-truth-residuals-execution-ssot.md`
+Temp Mirror Path: removed after closure
 Commit State:
 - Baseline Commit: `871713eab804d6ed6f8e2fb48a9f56dedff89dd7`
 - Baseline Dirty Summary: clean
@@ -23,8 +23,8 @@ execution_meta:
   schema_version: execution-meta-block-v1
   topic: current-pipeline-post-settlement-truth-residuals
   github_issue: 41
-  status: in_progress
-  queue_role: front_active
+  status: completed
+  queue_role: historical_backing
   roadmap_rank: 1
   depends_on: []
   tranches:
@@ -235,8 +235,8 @@ Implementation constraints:
 
 ## 12. Temp Queue Notes
 
-- temp status: active-local-implementation-complete
-- cleanup condition: remove `docs/temp/current-pipeline-post-settlement-truth-residuals-execution-ssot.md` after all tranches are implemented, verified, merged, and canonical status is updated to `closed`
+- temp status: closed-and-cleaned
+- cleanup condition: satisfied. `docs/temp/current-pipeline-post-settlement-truth-residuals-execution-ssot.md` was removed after all tranches were implemented, verified, merged, and this canonical status was updated to `closed`
 - roadmap dependency: none; this is the only active execution SSOT at creation time
 
 ## 13. Validation and Closure Hooks
@@ -255,7 +255,8 @@ Completed in current realization pass:
 - `director-authority-normalization`: implemented as metadata/observability normalization without behavior-flipping. Stage2 and Stage3 quality gates now stamp Director/LLM final-judgment authority plus Python runtime routing-gate authority. Stage4 downstream override gate semantics, verdict layers, DB selection payloads, and episode JSONL logs now carry the same authority split. Operator-facing `force/downgrade/forced REJECT` wording in touched Stage2/3/4 quality-gate surfaces was normalized to runtime REJECT-route wording.
 
 Pending:
-- No remaining implementation tranche in this execution SSOT. The temp mirror remains active until the local patch is committed, pushed, reviewed, merged, and the closure harness removes the temp copy.
+- No remaining implementation tranche in this execution SSOT.
+- No active temp mirror remains after closure sync.
 
 Validation completed:
 - `python -m pytest tests/test_stage4_post_processor.py -q`: passed, 108 tests.
@@ -285,3 +286,18 @@ Pass 3 - execution and readability:
 Confidence gate:
 - Estimated confidence: 96%.
 - Rationale: the strongest original claim, Stage4 memory before full settlement, is directly supported by local code inspection and regression coverage across `stage4_post_processor.py`, `stage4_post_pass_runtime.py`, and `vec_memory.py`. The authority-normalization tranche is deliberately metadata/observability-only, with behavior-flipping refactors avoided to preserve existing repair-loop contracts.
+
+## 16. Closure Note
+
+Closure status:
+- closed
+
+Closure evidence:
+- GitHub issue `#41` closed automatically on 2026-04-26 after PR `#42` merged.
+- PR `#42` merged into `main` as squash commit `83e5cccf3dd747852cf91acf13e616134e524454`.
+- GitHub Actions for PR `#42` passed: `lint`, `syntax-check`, `desktop-contract`, and `test (3.12)`.
+- Local validation before merge passed: targeted pytest shard with 617 tests, `python scripts/ops_validator.py --strict`, touched-file UTF-8 hygiene, `git diff --cached --check`, and pre-commit `ruff` / `ruff-format` / UTF-8 hygiene.
+
+Residual risk:
+- No active follow-up tranche remains in this SSOT.
+- Future deep-dive findings should open a new execution SSOT and GitHub issue instead of reactivating this closed item.
