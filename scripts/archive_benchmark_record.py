@@ -33,6 +33,9 @@ CORE_LOG_RELATIVE_PATHS = (
     "logs/quality_metrics.jsonl",
 )
 OPTIONAL_LOG_DIRS = ("logs/metrics",)
+ARCHIVE_EVIDENCE_SCOPE = "local_ignored_snapshot"
+ARCHIVE_REPRODUCIBILITY_STATUS = "local_only_non_reproducible"
+ARCHIVE_REPO_TRACKING_POLICY = "benchmark_record_directories_ignored_by_git"
 INDEX_FIELDNAMES = [
     "run_id",
     "recorded_at",
@@ -61,6 +64,9 @@ INDEX_FIELDNAMES = [
     "s4_tokens",
     "s4_cost_usd",
     "total_cost_usd",
+    "archive_evidence_scope",
+    "archive_reproducibility_status",
+    "archive_repo_tracking_policy",
     "record_path",
     "db_snapshot_path",
     "notes",
@@ -190,6 +196,11 @@ def archive_benchmark_record(
         project_locator = _display_relative_path(workspace, project_root)
         record_path = _display_relative_path(workspace, record_root)
         db_snapshot_path = _display_relative_path(workspace, record_root / "snapshots" / "project_data.db")
+        archive_evidence = _build_archive_evidence_policy(
+            record_path=record_path,
+            db_snapshot_path=db_snapshot_path,
+            copied_files=copied_files,
+        )
         manifest = {
             "schema_version": "benchmark_record_v1",
             "run_id": run_id,
@@ -217,6 +228,7 @@ def archive_benchmark_record(
                 "head": git_info["head"],
                 "dirty": git_info["dirty"],
             },
+            "archive_evidence": archive_evidence,
             "copied_files": copied_files,
             "stage_metrics": {key: asdict(value) for key, value in stage_metrics.items()},
         }
@@ -339,6 +351,9 @@ def _build_index_row(
     total_cost_usd = round(stage2.total_cost_usd + stage3.total_cost_usd + stage4.total_cost_usd, 6)
     git_info = manifest.get("workspace_git", {})
     runtime_summary = manifest.get("runtime_summary", {})
+    archive_evidence = (
+        manifest.get("archive_evidence", {}) if isinstance(manifest.get("archive_evidence"), dict) else {}
+    )
     return {
         "run_id": str(manifest["run_id"]),
         "recorded_at": str(manifest["recorded_at"]),
@@ -367,9 +382,29 @@ def _build_index_row(
         "s4_tokens": str(stage4.total_tokens),
         "s4_cost_usd": f"{stage4.total_cost_usd:.6f}",
         "total_cost_usd": f"{total_cost_usd:.6f}",
+        "archive_evidence_scope": str(archive_evidence.get("scope", "")),
+        "archive_reproducibility_status": str(archive_evidence.get("reproducibility_status", "")),
+        "archive_repo_tracking_policy": str(archive_evidence.get("repo_tracking_policy", "")),
         "record_path": record_path,
         "db_snapshot_path": db_snapshot_path,
         "notes": str(manifest.get("notes", "")),
+    }
+
+
+def _build_archive_evidence_policy(
+    *, record_path: str, db_snapshot_path: str, copied_files: list[dict[str, str]]
+) -> dict[str, Any]:
+    return {
+        "scope": ARCHIVE_EVIDENCE_SCOPE,
+        "reproducibility_status": ARCHIVE_REPRODUCIBILITY_STATUS,
+        "repo_tracking_policy": ARCHIVE_REPO_TRACKING_POLICY,
+        "record_path": record_path,
+        "db_snapshot_path": db_snapshot_path,
+        "copied_file_count": len(copied_files),
+        "operator_note": (
+            "benchmark_index.csv is durable repo metadata; backing snapshot bytes are local-only unless "
+            "a separate export or tracked evidence bundle is created"
+        ),
     }
 
 

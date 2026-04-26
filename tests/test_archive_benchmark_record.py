@@ -175,12 +175,19 @@ def test_archive_benchmark_record_creates_bundle_and_index(tmp_path, monkeypatch
     assert row["s4_duration_ms"] == "3000"
     assert row["s4_tokens"] == "4567"
     assert row["total_cost_usd"] == "0.660000"
+    assert row["archive_evidence_scope"] == "local_ignored_snapshot"
+    assert row["archive_reproducibility_status"] == "local_only_non_reproducible"
+    assert row["archive_repo_tracking_policy"] == "benchmark_record_directories_ignored_by_git"
     assert manifest["runtime_summary"]["summary_window"]["counts_truncated"] is True
     assert manifest["runtime_summary"]["summary_window"]["event_window_truncated"] is True
     assert manifest["runtime_summary"]["run_scope"]["engine_run_id"] == "run-archive-123"
     assert manifest["runtime_summary"]["run_scope"]["latest_session_id"] == "20260422_080513"
     assert manifest["runtime_summary"]["freshness"]["status"] == "scoped"
     assert manifest["runtime_summary"]["freshness"]["operator_guidance_only"] is True
+    assert manifest["archive_evidence"]["scope"] == "local_ignored_snapshot"
+    assert manifest["archive_evidence"]["reproducibility_status"] == "local_only_non_reproducible"
+    assert manifest["archive_evidence"]["repo_tracking_policy"] == "benchmark_record_directories_ignored_by_git"
+    assert manifest["archive_evidence"]["copied_file_count"] == len(manifest["copied_files"])
 
 
 def test_archive_benchmark_record_demotes_completed_when_target_ep_not_reached(tmp_path, monkeypatch):
@@ -231,6 +238,7 @@ def test_archive_benchmark_record_demotes_completed_when_target_ep_not_reached(t
     assert len(rows) == 1
     assert rows[0]["target_ep"] == "18"
     assert rows[0]["status"] == "operational_failure"
+    assert rows[0]["archive_reproducibility_status"] == "local_only_non_reproducible"
 
 
 def test_archive_benchmark_record_overwrite_replaces_existing_index_row(tmp_path, monkeypatch):
@@ -280,6 +288,7 @@ def test_archive_benchmark_record_overwrite_replaces_existing_index_row(tmp_path
     assert rows[0]["run_id"] == "20260422_100000__manual-freeze__target-open__nogit"
     assert rows[0]["status"] == "completed"
     assert rows[0]["notes"] == "second"
+    assert rows[0]["archive_evidence_scope"] == "local_ignored_snapshot"
 
 
 def test_archive_benchmark_record_overwrite_preserves_existing_record_on_staging_failure(tmp_path, monkeypatch):
