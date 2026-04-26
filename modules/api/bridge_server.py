@@ -185,7 +185,17 @@ def _build_event(run_id: str, event_type: str, payload: dict) -> dict:
 
 
 def _build_run_exit_payload(runner: ProcessRunner, returncode: int) -> dict:
-    payload = {"returncode": returncode}
+    payload = {
+        "returncode": returncode,
+        "process_exit_status": "process_exit_zero" if returncode == 0 else "process_exit_nonzero",
+        "completion_claim_scope": "subprocess_exit_only",
+        "semantic_completion_status": "not_asserted_by_bridge",
+        "canonical_truth_status": "not_asserted_by_bridge",
+        "authority_note": (
+            "run_completed/run_failed are subprocess lifecycle events; verify pipeline settlement and proof "
+            "artifacts before treating the run as canonical semantic completion."
+        ),
+    }
     try:
         diagnostics = runner.get_runtime_diagnostics()
     except Exception as exc:
@@ -425,6 +435,10 @@ def _quality_dashboard_runtime_defaults(lookback: int) -> dict[str, Any]:
             "status": "unavailable",
             "sink_alignment_status": "unavailable",
             "runtime_summary_status": "unavailable",
+            "completion_claim_scope": "proof_artifact_alignment_only",
+            "semantic_completion_status": "unavailable",
+            "canonical_truth_status": "not_asserted_by_dashboard",
+            "authority_note": "Proof status is a companion dashboard summary, not canonical PASS settlement authority.",
             "summary": "No proof artifacts available.",
         },
         "sink_alignment_summary": {
@@ -2204,9 +2218,14 @@ def _build_dashboard_proof_status(*, sink_alignment_summary: dict, runtime_audit
     else:
         status = "unavailable"
 
+    semantic_status_map = {
+        "ok": "proof_evidence_aligned",
+        "warn": "proof_evidence_warning",
+        "unavailable": "unavailable",
+    }
     summary_map = {
-        "ok": "Proof sinks aligned.",
-        "warn": "Proof chain has alignment gaps.",
+        "ok": "Proof evidence sinks aligned; canonical truth still belongs to pipeline settlement artifacts.",
+        "warn": "Proof evidence chain has alignment gaps; do not treat this as canonical completion.",
         "unavailable": "No proof artifacts available.",
     }
     return {
@@ -2215,6 +2234,10 @@ def _build_dashboard_proof_status(*, sink_alignment_summary: dict, runtime_audit
         "authority_role": _authority_role_for("proof_status"),
         "sink_alignment_status": sink_alignment_status,
         "runtime_summary_status": runtime_summary_status,
+        "completion_claim_scope": "proof_artifact_alignment_only",
+        "semantic_completion_status": semantic_status_map.get(status, "unavailable"),
+        "canonical_truth_status": "not_asserted_by_dashboard",
+        "authority_note": "Proof status is a companion dashboard summary, not canonical PASS settlement authority.",
         "summary": summary_map.get(status, summary_map["unavailable"]),
     }
 

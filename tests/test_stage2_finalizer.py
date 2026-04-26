@@ -182,6 +182,9 @@ def test_stage2_quality_gate_reject_records_runtime_gate_authority(finalizer, va
 
     assert result is not None
     assert audit["decision"] == "REJECT"
+    assert audit["director_verdict"] == "PASS"
+    assert audit["runtime_route_verdict"] == "REJECT"
+    assert audit["verdict_contract_version"] == "verdict-layer-v1"
     assert audit["final_judgment_authority"] == "director_llm"
     assert audit["runtime_gate_authority"] == "python_runtime_routing_gate"
     assert audit["runtime_gate_role"] == "route_or_block_automatic_progress"

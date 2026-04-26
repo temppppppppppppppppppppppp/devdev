@@ -1154,9 +1154,14 @@ class TestBlueprintPatchIntegration:
         assert result.verdict == "REJECT"
         assert result.validation_result["reject_origin"] == "quality_gate_reject"
         assert result.validation_result["quality_gate_effective_score"] == 89
+        assert result.validation_result["director_verdict"] == "PASS"
+        assert result.validation_result["runtime_route_verdict"] == "REJECT"
+        assert result.validation_result["verdict_contract_version"] == "verdict-layer-v1"
         assert result.validation_result["final_judgment_authority"] == "director_llm"
         assert result.validation_result["runtime_gate_authority"] == "python_runtime_routing_gate"
         assert result.validation_result["runtime_gate_role"] == "route_or_block_automatic_progress"
+        assert pipeline_result["phases"]["validate"]["director_verdict"] == "PASS"
+        assert pipeline_result["phases"]["validate"]["runtime_route_verdict"] == "REJECT"
         assert pipeline_result["phases"]["validate"]["runtime_gate_basis"] == "quality_gate_reject"
         assert any("QualityGate" in text for text in log_texts)
         assert any("사유: score는 통과선 아래라 재수정 필요" in text for text in log_texts)
