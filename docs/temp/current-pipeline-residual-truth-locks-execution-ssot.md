@@ -279,9 +279,11 @@ Completed tranches:
 - `stage4-post-pass-exception-fail-closed`: `_collect_manager_and_build_delta()` now fails closed with `meta_save_failed=True` when the manager/post-pass delta path raises, and touched operator output no longer truncates the exception text.
 - `stage2-lineageless-cache-fail-closed`: cached Stage2 arcs with missing source-lineage are refused instead of being stamped with the current plot-roadmap lineage; initial lineage persistence is now checked.
 - `direct-runner-archive-exit-truth`: direct supervised semantic exit now returns non-zero when archive-enabled payloads contain `benchmark_archive.status` other than `ok`.
+- `stage4-settlement-side-effect-containment`: `_persist_manager_delta_outputs()` now stops before WorldState, causal-link, state-log, karma, summary, numeric-authority, and contract-signal side effects when the primary `save_episode_bible` write fails; the audit payload preserves the full exception text.
 
 Focused verification completed so far:
 - `python -m pytest tests/test_stage4_post_processor.py -k "collect_manager_and_build_delta_fails_closed_on_manager_exception or returns_false_and_logs_when_meta_save_fails or returns_true_on_success or settlement_failure_demotes" -q`: 4 passed.
+- `python -m pytest tests/test_stage4_post_processor.py -k "persist_manager_delta_outputs_stops_side_effects_when_bible_save_fails or persist_manager_delta_outputs_saves_bible_and_delegates_side_effect_sinks or returns_false_and_logs_when_meta_save_fails or collect_manager_and_build_delta_fails_closed_on_manager_exception" -q`: 4 passed.
 - `python -m pytest tests/test_stage2_orchestrator.py -k "bootstrap_stage2_arc_pipeline" -q`: 5 passed.
 - `python -m pytest tests/test_stage2_stage3_episode_boundary_guardrail.py -k "stale_cached_arc_lineage" -q`: 1 passed.
 - `python -m pytest tests/test_stage4_context_builder.py -k "stale" -q`: 1 passed.
@@ -289,7 +291,9 @@ Focused verification completed so far:
 
 Static and hygiene verification completed:
 - `python -m ruff check modules/core/stage4_post_pass_runtime.py modules/core/stage0_handoff.py modules/core/stage2_orchestrator.py scripts/direct_supervised_semantic_exit.py tests/test_stage4_post_processor.py tests/test_stage2_orchestrator.py tests/test_direct_supervised_semantic_exit.py`: passed.
+- `python -m ruff check modules/core/stage4_post_pass_runtime.py tests/test_stage4_post_processor.py`: passed.
 - `python -m py_compile modules/core/stage4_post_pass_runtime.py modules/core/stage0_handoff.py modules/core/stage2_orchestrator.py scripts/direct_supervised_semantic_exit.py tests/test_stage4_post_processor.py tests/test_stage2_orchestrator.py tests/test_direct_supervised_semantic_exit.py`: passed.
+- `python -m py_compile modules/core/stage4_post_pass_runtime.py tests/test_stage4_post_processor.py`: passed.
 - `python scripts/check_utf8_hygiene.py <touched files>`: passed.
 
 Complexity recount:
@@ -299,7 +303,13 @@ Complexity recount:
 - `scripts/direct_supervised_semantic_exit.py`: touched functions are 5 LOC each; 120+ and 180+ function counts remain 0.
 
 Remaining queue:
-- `stage4-settlement-side-effect-containment`
 - `benchmark-archive-reproducibility-truth`
 - `legacy-cache-lineage-auditability`
 - `doc-and-ci-consistency-cleanup`
+
+Progress update 3-pass audit:
+- Pass 1 - structure/scope: update remains inside the active execution SSOT and only changes implementation progress for accepted tranches.
+- Pass 2 - evidence/consistency: new Stage4 side-effect claim is backed by the focused pytest shard plus ruff/py_compile checks above; remaining queue no longer lists the completed Stage4 containment tranche.
+- Pass 3 - execution/readability: next actionable queue is benchmark archive reproducibility, then legacy cache auditability, then doc/CI cleanup.
+
+Estimated confidence after progress update: 96%.
