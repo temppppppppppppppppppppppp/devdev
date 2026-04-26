@@ -43,7 +43,7 @@ from modules.api.process_runner import MODE_B_KEYS, PROJECT_ROOT, ProcessRunner
 from modules.api.prompt_broker import PromptBroker, PromptState
 from modules.api.prompt_classifier import classify as classify_prompt
 from modules.api.risk_approval import RiskApprovalGate
-from modules.api.run_validator import RISK_KEYS, validate_run_request
+from modules.api.run_validator import RISK_KEYS, validate_run_inputs, validate_run_request
 from modules.core.config_manager import ConfigManager
 from modules.core.db_manager import DBManager
 from modules.core.failure_analyzer import FailureAnalyzer
@@ -2449,16 +2449,26 @@ async def run_endpoint(request: Request) -> JSONResponse:
         body = await request.json()
     except Exception:
         return JSONResponse(status_code=400, content=_err("INVALID_KEY", "request body must be valid JSON"))
+    if not isinstance(body, dict):
+        return JSONResponse(status_code=400, content=_err("INVALID_KEY", "request body must be a JSON object"))
 
     key: str = str(body.get("key", ""))
     sub_key: str | None = body.get("sub_key") or None
     approval_id: str | None = body.get("approval_id") or None
-    inputs: dict = body.get("inputs") or {}
+    raw_inputs: object = body.get("inputs", {})
 
     # T4: key / sub_key / 실행 상태 검증
     v = validate_run_request(key, sub_key, runner.state)
     if not v.ok:
         return JSONResponse(status_code=v.http_status, content=_err(v.code, v.message))
+
+    input_validation = validate_run_inputs(raw_inputs)
+    if not input_validation.ok:
+        return JSONResponse(
+            status_code=input_validation.http_status,
+            content=_err(input_validation.code, input_validation.message),
+        )
+    inputs: dict = raw_inputs if isinstance(raw_inputs, dict) else {}
 
     # T6: 위험키 승인 게이트
     if key in RISK_KEYS:
