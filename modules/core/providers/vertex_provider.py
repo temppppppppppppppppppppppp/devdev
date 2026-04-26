@@ -25,8 +25,7 @@ class VertexAIProvider:
         normalized_auth_mode = (auth_mode or "api_key").strip().lower()
         if normalized_auth_mode not in self._AUTH_MODES:
             raise ValueError(
-                f"Unsupported Vertex AI auth_mode {auth_mode!r}; "
-                f"expected one of {sorted(self._AUTH_MODES)}."
+                f"Unsupported Vertex AI auth_mode {auth_mode!r}; expected one of {sorted(self._AUTH_MODES)}."
             )
         self.api_key_env = api_key_env
         self.project_id_env = project_id_env
@@ -52,9 +51,7 @@ class VertexAIProvider:
         try:
             from google.auth import load_credentials_from_file
         except ImportError as exc:
-            raise RuntimeError(
-                "google-auth is required to load Vertex AI credentials files."
-            ) from exc
+            raise RuntimeError("google-auth is required to load Vertex AI credentials files.") from exc
 
         credentials, _ = load_credentials_from_file(
             credentials_path,
@@ -63,8 +60,14 @@ class VertexAIProvider:
         return credentials
 
     def _resolve_auth_mode(self) -> str:
-        if self.auth_mode != "auto":
-            return self.auth_mode
+        env_auth_mode = (os.getenv("GEULDOBI_VERTEX_AUTH_MODE") or "").strip().lower()
+        auth_mode = env_auth_mode or self.auth_mode
+        if auth_mode not in self._AUTH_MODES:
+            raise RuntimeError(
+                f"Unsupported Vertex AI auth mode {auth_mode!r}; expected one of {sorted(self._AUTH_MODES)}."
+            )
+        if auth_mode != "auto":
+            return auth_mode
         if os.getenv(self.api_key_env):
             return "api_key"
         return "project_credentials"
@@ -72,9 +75,7 @@ class VertexAIProvider:
     def _build_api_key_client(self):
         api_key = os.getenv(self.api_key_env)
         if not api_key:
-            raise RuntimeError(
-                f"Vertex AI auth_mode=api_key requires {self.api_key_env}."
-            )
+            raise RuntimeError(f"Vertex AI auth_mode=api_key requires {self.api_key_env}.")
         return genai.Client(vertexai=True, api_key=api_key)
 
     def _build_project_credentials_client(self):

@@ -1,0 +1,77 @@
+{
+  "summary_role": "gcp_iam_5arc_cleanrun_prerun_baseline",
+  "created_at": "2026-04-27T01:45:30",
+  "run_status": "not_started",
+  "branch": "codex/gcp-iam-cleanrun-proof",
+  "head": "2897783f3c361e23c1413f346529cefc2b5c94ce",
+  "target_project_name": "01_골든카나리아",
+  "target_project_locator": "projects\\01_골든카나리아",
+  "provider_env_summary": {
+    "GOOGLE_API_KEY": {
+      "is_set": true,
+      "length": 39
+    },
+    "VERTEX_API_KEY": {
+      "is_set": true,
+      "length": 53
+    },
+    "VERTEX_PROJECT_ID": {
+      "is_set": true,
+      "length": 26
+    },
+    "GOOGLE_CLOUD_PROJECT": {
+      "is_set": true,
+      "length": 26
+    },
+    "VERTEX_LOCATION": {
+      "is_set": true,
+      "length": 11
+    },
+    "GEULDOBI_PROVIDER_MODE": {
+      "is_set": true,
+      "length": 9
+    },
+    "GEULDOBI_VERTEX_AUTH_MODE": {
+      "is_set": true,
+      "length": 19
+    }
+  },
+  "file_hashes": {
+    "project_data_db_sha256": "dc0414da12f44a485d388fa0d208fd306a9973783b3456d756a63711462b73b5",
+    "style_guide_sha256": "0cd7feea1a2fc31dacd2e8aa9c4c7e2858a03fb7dbc10a11fd9e94591faac274",
+    "work_guard_sha256": "4df471716f4b247f98c8975d33fb41bde6251640278a1449a4f18bd0001de3cc"
+  },
+  "db_counts": {
+    "stage_attempts": 0,
+    "context_cache_attempts": 0,
+    "llm_calls": 0,
+    "cost_log": 0,
+    "blueprints": 0,
+    "manuscripts": 0,
+    "reflexion_memory": 1,
+    "state_logs": 0
+  },
+  "anchor_keys": [
+    "bible",
+    "emotion_history",
+    "genre_info",
+    "style_guide"
+  ],
+  "plot_roadmap_count": 60,
+  "style_summary": {
+    "analysis_version": "v2",
+    "genre": "investment",
+    "exemplary_passages_count": 15,
+    "anti_ai_patterns_count": 10
+  },
+  "work_guard_summary": {
+    "exists": true,
+    "has_work_id": true,
+    "has_family_blockguide": true
+  },
+  "readiness_verdict": "ready_for_operator_approved_run",
+  "notes": [
+    "No 5-arc run was started while creating this baseline.",
+    "Use post-run deltas from this baseline to prove context cache and session memory activity."
+  ]
+}
