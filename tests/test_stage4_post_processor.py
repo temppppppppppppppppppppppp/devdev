@@ -1225,6 +1225,61 @@ class TestProcessPassResult:
             state_truth_owner_contract=owner_contract,
         )
 
+    def test_persist_manager_delta_outputs_stops_side_effects_when_bible_save_fails(self):
+        pp = self._make_pp()
+        pp.post_pass_runtime._sync_world_state_positions = MagicMock()
+        pp.post_pass_runtime._persist_manager_causal_side_effects = MagicMock()
+        pp.post_pass_runtime._persist_manager_state_log = MagicMock()
+        pp.post_pass_runtime._persist_karma_status = MagicMock()
+        pp.post_pass_runtime._log_manager_delta_summary = MagicMock()
+        pp.post_pass_runtime._log_numeric_carryover_authority_summary = MagicMock()
+        pp.post_pass_runtime._emit_post_pass_contract_signal = MagicMock()
+        pp.ctx.current_project.db.save_episode_bible.side_effect = RuntimeError(
+            "episode bible primary store unavailable with full diagnostic detail"
+        )
+
+        result = pp.post_pass_runtime._persist_manager_delta_outputs(
+            next_ep=10,
+            key_npcs=[{"name": "npc-a"}],
+            actual_truth={"location": "gate"},
+            final_state_updates={"hp": 90},
+            arc_data={},
+            state_updates_from_audit={"time_passed": "3h"},
+            knowledge_map={"new_witnesses": ["npc-a"]},
+            karma_matrix=[{"target": "npc-b", "obsession": 70, "value": 10}],
+            curr_inventory_counts={"sword": 2},
+            inventory_count_deltas=[{"name": "sword", "from": 1, "to": 2, "delta": 1}],
+            relationship_changes=[{"npc": "npc-b", "to": "obsession70/misread10", "from": ""}],
+            active_pressure_vectors=[{"text": "pressure vector", "source": "ending_hook"}],
+            pressure_vectors_changed=True,
+            causal_links=[{"cause": "seed", "effect": "payoff"}],
+            all_new_items=["sword"],
+            lost_items_from_equip=[],
+            new_npc_names=["npc-a"],
+            npc_deaths=[],
+            reveal_list=["seed-01"],
+        )
+
+        assert result["meta_save_failed"] is True
+        assert result["bible_delta"]["active_pressure_vectors"] == [
+            {"text": "pressure vector", "source": "ending_hook"}
+        ]
+        pp.post_pass_runtime._sync_world_state_positions.assert_not_called()
+        pp.post_pass_runtime._persist_manager_causal_side_effects.assert_not_called()
+        pp.post_pass_runtime._persist_manager_state_log.assert_not_called()
+        pp.post_pass_runtime._persist_karma_status.assert_not_called()
+        pp.post_pass_runtime._log_manager_delta_summary.assert_not_called()
+        pp.post_pass_runtime._log_numeric_carryover_authority_summary.assert_not_called()
+        pp.post_pass_runtime._emit_post_pass_contract_signal.assert_not_called()
+        pp.ctx.audit_event.assert_any_call(
+            "episode_bible_save_failed",
+            "save_episode_bible 실패",
+            {
+                "ep": 10,
+                "error": "episode bible primary store unavailable with full diagnostic detail",
+            },
+        )
+
     def test_persist_manager_delta_outputs_surfaces_cross_stage_numeric_transport_metadata(self):
         pp = self._make_pp()
         pp.post_pass_runtime._sync_world_state_positions = MagicMock()
