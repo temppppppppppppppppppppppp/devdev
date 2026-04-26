@@ -1,4 +1,5 @@
 import json
+import sqlite3
 
 from modules.core.stagewise_manuscript_truth_report import (
     build_stagewise_manuscript_truth_report,
@@ -36,8 +37,12 @@ def _build_fixture_project(tmp_path):
         },
     )
 
-    ep4_blueprint_path = project / "logs" / "artifacts" / "stage3" / "ep_0004" / "attempt_01" / "final_blueprint__dialogue_focused.json"
-    ep5_blueprint_path = project / "logs" / "artifacts" / "stage3" / "ep_0005" / "attempt_01" / "final_blueprint__action_focused.json"
+    ep4_blueprint_path = (
+        project / "logs" / "artifacts" / "stage3" / "ep_0004" / "attempt_01" / "final_blueprint__dialogue_focused.json"
+    )
+    ep5_blueprint_path = (
+        project / "logs" / "artifacts" / "stage3" / "ep_0005" / "attempt_01" / "final_blueprint__action_focused.json"
+    )
     _write_json(
         ep4_blueprint_path,
         {
@@ -101,10 +106,12 @@ def _build_fixture_project(tmp_path):
         encoding="utf-8",
     )
 
-    ep4_terminal_path = project / "logs" / "artifacts" / "stage4" / "ep_0004" / "attempt_03" / "patched_after_fix__A.txt"
+    ep4_terminal_path = (
+        project / "logs" / "artifacts" / "stage4" / "ep_0004" / "attempt_03" / "patched_after_fix__A.txt"
+    )
     ep4_terminal_path.parent.mkdir(parents=True, exist_ok=True)
     ep4_terminal_path.write_text(
-        "Episode 4 opening line\nEpisode 4 legal hook line\n[원고_끝]\n{{ \"patch_state_updates\": {} }}\n",
+        'Episode 4 opening line\nEpisode 4 legal hook line\n[원고_끝]\n{{ "patch_state_updates": {} }}\n',
         encoding="utf-8",
     )
 
@@ -183,7 +190,10 @@ def test_build_stagewise_manuscript_truth_report_normalizes_terminal_truth(tmp_p
     assert report["artifact_counts"]["stage4_terminal_passes"] == 2
     assert report["stage2_arc_truth"][0]["constraint_summary_state"] == "blank"
     assert report["stage2_arc_truth"][1]["constraint_summary_state"] == "present"
-    assert report["stage3_blueprint_truth"][0]["comparison_notes"] == "Candidate B preserves the attorney relay most cleanly."
+    assert (
+        report["stage3_blueprint_truth"][0]["comparison_notes"]
+        == "Candidate B preserves the attorney relay most cleanly."
+    )
     assert report["stage3_blueprint_truth"][0]["selected_candidate_advisory_struct"]["quality_risk"] is True
     assert report["stage4_terminal_truth"][0]["terminal_artifact_kind"] == "patched_after_fix"
     assert report["stage4_terminal_truth"][0]["last_narrative_line"] == "Episode 4 legal hook line"
@@ -192,6 +202,30 @@ def test_build_stagewise_manuscript_truth_report_normalizes_terminal_truth(tmp_p
     assert continuity["contradiction_summary"] == "Blueprint still conflicts with episode 4 all-in ending."
     assert continuity["repair_summary"] == "Candidate C keeps episode 4 all-in continuity while preserving tension."
     assert continuity["ep5_pass_round"]["candidate_key"] == "C|twist"
+
+
+def test_stagewise_manuscript_truth_report_marks_stage4_pass_without_db_settlement_as_advisory(tmp_path):
+    project = _build_fixture_project(tmp_path)
+    ep4_terminal_path = (
+        project / "logs" / "artifacts" / "stage4" / "ep_0004" / "attempt_03" / "patched_after_fix__A.txt"
+    )
+    conn = sqlite3.connect(str(project / "project_data.db"))
+    conn.execute("CREATE TABLE manuscripts (ep_num INTEGER PRIMARY KEY, title TEXT, content TEXT)")
+    conn.execute(
+        "INSERT INTO manuscripts (ep_num, title, content) VALUES (?, ?, ?)",
+        (4, "Episode Four", ep4_terminal_path.read_text(encoding="utf-8")),
+    )
+    conn.commit()
+    conn.close()
+
+    report = build_stagewise_manuscript_truth_report(project, project_label="projects/fixture")
+
+    assert [row["ep_num"] for row in report["stage4_terminal_truth"]] == [4]
+    assert report["stage4_terminal_truth"][0]["settled_db_status"] == "matched"
+    assert report["artifact_counts"]["stage4_terminal_passes"] == 1
+    assert report["artifact_counts"]["stage4_unsettled_terminal_rows"] == 1
+    assert report["stage4_unsettled_terminal_advisories"][0]["ep_num"] == 5
+    assert report["stage4_unsettled_terminal_advisories"][0]["settled_db_status"] == "missing_db_manuscript"
 
 
 def test_render_and_write_stagewise_manuscript_truth_report(tmp_path):
@@ -224,7 +258,9 @@ def test_render_and_write_stagewise_manuscript_truth_report(tmp_path):
 def test_stagewise_manuscript_truth_report_backfills_empty_rationale_from_reason(tmp_path):
     project = _build_fixture_project(tmp_path)
     episode_production_path = project / "logs" / "episode_production.jsonl"
-    rows = [json.loads(line) for line in episode_production_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    rows = [
+        json.loads(line) for line in episode_production_path.read_text(encoding="utf-8").splitlines() if line.strip()
+    ]
     rows[0]["selection_reason"] = ""
     rows[0]["verdict_reason"] = ""
     rows[0]["reason"] = "Fallback rationale from reason."

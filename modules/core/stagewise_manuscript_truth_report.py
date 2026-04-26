@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sqlite3
 from collections import defaultdict
-from datetime import datetime, timezone
-
-UTC = timezone.utc
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -74,6 +73,32 @@ def _display_project_path(project_label: str, relative_or_absolute: str | Path) 
 
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _load_settled_manuscript_hashes(project_root: Path) -> dict[int, str] | None:
+    db_path = project_root / "project_data.db"
+    if not db_path.exists():
+        return None
+    try:
+        conn = sqlite3.connect(f"file:{db_path.as_posix()}?mode=ro", uri=True)
+    except sqlite3.Error:
+        return {}
+    try:
+        table_row = conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='manuscripts'").fetchone()
+        if table_row is None:
+            return {}
+        rows = conn.execute("SELECT ep_num, content FROM manuscripts").fetchall()
+        return {
+            int(ep_num): _sha256_text(str(content or "")) for ep_num, content in rows if _coerce_int(ep_num) is not None
+        }
+    except sqlite3.Error:
+        return {}
+    finally:
+        conn.close()
 
 
 def _first_nonempty_line(path: Path) -> str:
@@ -192,9 +217,11 @@ def _stage3_blueprint_truth(project_root: Path, project_label: str) -> list[dict
 
 def _stage4_terminal_truth(
     project_root: Path, project_label: str
-) -> tuple[list[dict[str, Any]], dict[int, list[dict[str, Any]]]]:
+) -> tuple[list[dict[str, Any]], dict[int, list[dict[str, Any]]], list[dict[str, Any]]]:
     rows_by_episode: dict[int, list[dict[str, Any]]] = defaultdict(list)
     latest_terminal_by_episode: dict[int, dict[str, Any]] = {}
+    settled_manuscript_hashes = _load_settled_manuscript_hashes(project_root)
+    unsettled_terminal_rows: list[dict[str, Any]] = []
 
     for row in _load_jsonl(project_root / "logs" / "episode_production.jsonl"):
         ep_num = _coerce_int(row.get("ep"))
@@ -211,6 +238,30 @@ def _stage4_terminal_truth(
         row = latest_terminal_by_episode[ep_num]
         artifact_rel = str(row.get("artifact_path", "") or "").strip()
         artifact_path = _resolve_project_file(project_root, artifact_rel)
+        artifact_sha256 = _sha256(artifact_path)
+        artifact_text_sha256 = _sha256_text(artifact_path.read_text(encoding="utf-8"))
+        settled_db_status = "not_checked_no_db"
+        settled_db_content_sha256 = ""
+        if settled_manuscript_hashes is not None:
+            settled_db_content_sha256 = settled_manuscript_hashes.get(ep_num, "")
+            if not settled_db_content_sha256:
+                settled_db_status = "missing_db_manuscript"
+            elif settled_db_content_sha256 != artifact_text_sha256:
+                settled_db_status = "db_artifact_hash_mismatch"
+            else:
+                settled_db_status = "matched"
+            if settled_db_status != "matched":
+                unsettled_terminal_rows.append(
+                    {
+                        "ep_num": ep_num,
+                        "artifact_path": _display_project_path(project_label, artifact_rel),
+                        "artifact_sha256": artifact_sha256,
+                        "artifact_text_sha256": artifact_text_sha256,
+                        "settled_db_status": settled_db_status,
+                        "settled_db_content_sha256": settled_db_content_sha256,
+                    }
+                )
+                continue
         selection_artifact_rel = str(row.get("selection_artifact_path", "") or "").strip()
         rows.append(
             {
@@ -219,7 +270,10 @@ def _stage4_terminal_truth(
                 "candidate_key": str(row.get("candidate_key", "") or ""),
                 "terminal_artifact_kind": _terminal_artifact_kind(artifact_rel),
                 "artifact_path": _display_project_path(project_label, artifact_rel),
-                "artifact_sha256": _sha256(artifact_path),
+                "artifact_sha256": artifact_sha256,
+                "artifact_text_sha256": artifact_text_sha256,
+                "settled_db_status": settled_db_status,
+                "settled_db_content_sha256": settled_db_content_sha256,
                 "selection_artifact_path": _display_project_path(project_label, selection_artifact_rel),
                 "final_verdict": str(row.get("final_verdict", row.get("verdict", "")) or ""),
                 "selection_reason": resolve_selection_reason_text(
@@ -240,7 +294,7 @@ def _stage4_terminal_truth(
                 "last_narrative_line": _last_narrative_line(artifact_path),
             }
         )
-    return rows, rows_by_episode
+    return rows, rows_by_episode, unsettled_terminal_rows
 
 
 def _episode_4_to_5_continuity(
@@ -306,12 +360,14 @@ def build_stagewise_manuscript_truth_report(
 
     stage2_rows = _stage2_arc_truth(project_root, project_label)
     stage3_rows = _stage3_blueprint_truth(project_root, project_label)
-    stage4_rows, episode_production_rows = _stage4_terminal_truth(project_root, project_label)
+    stage4_rows, episode_production_rows, unsettled_stage4_rows = _stage4_terminal_truth(project_root, project_label)
     continuity = _episode_4_to_5_continuity(stage3_rows, stage4_rows, episode_production_rows)
 
     stage2_count = len(stage2_rows)
     stage3_count = len(stage3_rows)
-    stage4_artifact_file_count = len([path for path in (project_root / "logs" / "artifacts" / "stage4").rglob("*") if path.is_file()])
+    stage4_artifact_file_count = len(
+        [path for path in (project_root / "logs" / "artifacts" / "stage4").rglob("*") if path.is_file()]
+    )
 
     return {
         "generated_at": datetime.now(UTC).isoformat(),
@@ -328,10 +384,12 @@ def build_stagewise_manuscript_truth_report(
             "stage3_selected_blueprint_files": stage3_count,
             "stage4_artifact_files": stage4_artifact_file_count,
             "stage4_terminal_passes": len(stage4_rows),
+            "stage4_unsettled_terminal_rows": len(unsettled_stage4_rows),
         },
         "stage2_arc_truth": stage2_rows,
         "stage3_blueprint_truth": stage3_rows,
         "stage4_terminal_truth": stage4_rows,
+        "stage4_unsettled_terminal_advisories": unsettled_stage4_rows,
         "continuity_handoff": {
             "episode_4_to_5": continuity,
         },
@@ -364,10 +422,13 @@ def render_stagewise_manuscript_truth_markdown(report: dict[str, Any]) -> str:
     )
 
     reject_lines = continuity["ep5_reject_rounds"]
-    reject_block = "\n".join(
-        f"- round `{row['round']}` / `{row['candidate_key']}`: {_clean_inline(row['verdict_reason'], limit=220)}"
-        for row in reject_lines
-    ) or "- no reject rounds captured"
+    reject_block = (
+        "\n".join(
+            f"- round `{row['round']}` / `{row['candidate_key']}`: {_clean_inline(row['verdict_reason'], limit=220)}"
+            for row in reject_lines
+        )
+        or "- no reject rounds captured"
+    )
 
     pass_round = continuity["ep5_pass_round"]
     pass_block = (
@@ -381,22 +442,23 @@ def render_stagewise_manuscript_truth_markdown(report: dict[str, Any]) -> str:
 
     return f"""# Stagewise Manuscript Truth Report
 
-Project: `{report['project']}`
+Project: `{report["project"]}`
 Generated By: `scripts/generate_stagewise_manuscript_truth_report.py`
-Generated At: `{report['generated_at']}`
+Generated At: `{report["generated_at"]}`
 
 Source Evidence:
-- `{report['source_evidence']['stage2_dir']}`
-- `{report['source_evidence']['stage3_dir']}`
-- `{report['source_evidence']['stage4_dir']}`
-- `{report['source_evidence']['session_decisions']}`
-- `{report['source_evidence']['episode_production']}`
+- `{report["source_evidence"]["stage2_dir"]}`
+- `{report["source_evidence"]["stage3_dir"]}`
+- `{report["source_evidence"]["stage4_dir"]}`
+- `{report["source_evidence"]["session_decisions"]}`
+- `{report["source_evidence"]["episode_production"]}`
 
 ## 1. Artifact Counts
-- Stage 2 selected arc files: `{counts['stage2_selected_arc_files']}`
-- Stage 3 selected blueprint files: `{counts['stage3_selected_blueprint_files']}`
-- Stage 4 artifact files: `{counts['stage4_artifact_files']}`
-- Stage 4 terminal PASS rows: `{counts['stage4_terminal_passes']}`
+- Stage 2 selected arc files: `{counts["stage2_selected_arc_files"]}`
+- Stage 3 selected blueprint files: `{counts["stage3_selected_blueprint_files"]}`
+- Stage 4 artifact files: `{counts["stage4_artifact_files"]}`
+- Stage 4 terminal PASS rows: `{counts["stage4_terminal_passes"]}`
+- Stage 4 unsettled terminal advisory rows: `{counts["stage4_unsettled_terminal_rows"]}`
 
 ## 2. Stage 2 Arc Truth
 | Arc | Title | Episodes | Constraint Summary | Artifact | SHA256 |
@@ -414,11 +476,11 @@ Source Evidence:
 {stage4_table}
 
 ## 5. Episode 4 -> Episode 5 Continuity Repair
-- Episode 4 blueprint hook: {_clean_inline(continuity['ep4_blueprint'].get('ending_hook', ''), limit=220)}
-- Episode 4 terminal authority: `{continuity['ep4_terminal'].get('artifact_path', '')}` (`{continuity['ep4_terminal'].get('terminal_artifact_kind', '')}`)
-- Episode 5 blueprint hook: {_clean_inline(continuity['ep5_blueprint'].get('ending_hook', ''), limit=220)}
-- Contradiction summary: {_clean_inline(continuity.get('contradiction_summary', ''), limit=220)}
-- Repair summary: {_clean_inline(continuity.get('repair_summary', ''), limit=220)}
+- Episode 4 blueprint hook: {_clean_inline(continuity["ep4_blueprint"].get("ending_hook", ""), limit=220)}
+- Episode 4 terminal authority: `{continuity["ep4_terminal"].get("artifact_path", "")}` (`{continuity["ep4_terminal"].get("terminal_artifact_kind", "")}`)
+- Episode 5 blueprint hook: {_clean_inline(continuity["ep5_blueprint"].get("ending_hook", ""), limit=220)}
+- Contradiction summary: {_clean_inline(continuity.get("contradiction_summary", ""), limit=220)}
+- Repair summary: {_clean_inline(continuity.get("repair_summary", ""), limit=220)}
 
 Reject rounds:
 {reject_block}

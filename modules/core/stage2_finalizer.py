@@ -2732,14 +2732,21 @@ class Stage2Finalizer:
         if decision not in ("PASS", "PASS_WITH_FIX") or tactical_doc_len < 1500 or score >= quality_gate_score:
             return None
 
-        self.ctx.ui.log(f"      ⚠️ [QualityGate] {decision} 판정이나 score={score} < {quality_gate_score} → REJECT 전환")
+        self.ctx.ui.log(
+            f"      ⚠️ [QualityGate] {decision} 판정이나 score={score} < {quality_gate_score} "
+            "→ runtime gate REJECT route"
+        )
         audit["decision"] = "REJECT"
         audit["reason"] = (audit.get("reason") or "") + (
             f"\n[Quality Gate] score {score}점으로 {quality_gate_score}점 미달."
         )
+        audit["final_judgment_authority"] = "director_llm"
+        audit["runtime_gate_authority"] = "python_runtime_routing_gate"
+        audit["runtime_gate_role"] = "route_or_block_automatic_progress"
+        audit["runtime_gate_basis"] = "quality_gate_reject"
         audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "품질 개선 후 재제출"
         director_feedback_for_fourphase = (
-            f"[QualityGate REJECT] score {score}점 < {quality_gate_score}점.\n"
+            f"[QualityGate runtime gate] score {score}점 < {quality_gate_score}점; REJECT route.\n"
             f"{audit.get('reason', '')}\n"
             f"[수정 지시] {audit.get('re_slice_instruction', '품질 개선 후 재제출')}"
         )
