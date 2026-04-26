@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -173,6 +174,13 @@ def archive_benchmark_record(
         runtime_summary_window = runtime_summary.get("summary_window", {}) if isinstance(runtime_summary, dict) else {}
         runtime_run_scope = _extract_runtime_run_scope(runtime_summary, latest_session_id=latest_session_id)
         runtime_freshness = _extract_runtime_freshness(runtime_summary, run_scope=runtime_run_scope)
+        effective_status = _resolve_benchmark_status(
+            status=status,
+            target_ep=target_ep,
+            lane=lane,
+            stage_metrics=stage_metrics,
+            notes=notes,
+        )
 
         copied_files = _copy_snapshot_payload(project_root=project_root, record_root=build_root)
         copied_files = _rewrite_copied_file_archives(copied_files, source_root=build_root, final_root=record_root)
@@ -192,7 +200,8 @@ def archive_benchmark_record(
             "project_locator": project_locator,
             "lane": lane,
             "target_ep": target_ep,
-            "status": status,
+            "status": effective_status,
+            "requested_status": status,
             "notes": notes,
             "benchmark_root": str(benchmark_dir),
             "record_root": str(record_root),
@@ -244,6 +253,56 @@ def collect_stage_metrics(project_root: str | Path) -> dict[str, StageAggregate]
         "stage3": _aggregate_rows("stage3", "logs/pass_rate_monitor.json", stage3_rows, episode_key="episode"),
         "stage4": _aggregate_rows("stage4", "logs/episode_production.jsonl", stage4_rows, episode_key="ep"),
     }
+
+
+def _resolve_benchmark_status(
+    *,
+    status: str,
+    target_ep: int | None,
+    lane: str,
+    stage_metrics: dict[str, StageAggregate],
+    notes: str,
+) -> str:
+    normalized_status = str(status or "snapshot").strip() or "snapshot"
+    if normalized_status != "completed" or target_ep is None:
+        return normalized_status
+
+    latest_ep = _benchmark_latest_progress_episode(lane=lane, stage_metrics=stage_metrics, notes=notes)
+    if latest_ep is None or latest_ep < int(target_ep):
+        return "operational_failure"
+    return normalized_status
+
+
+def _benchmark_latest_progress_episode(
+    *,
+    lane: str,
+    stage_metrics: dict[str, StageAggregate],
+    notes: str,
+) -> int | None:
+    lane_text = str(lane or "").lower()
+    if "stage4" in lane_text:
+        latest = stage_metrics["stage4"].latest_episode
+    elif "stage3" in lane_text:
+        latest = stage_metrics["stage3"].latest_episode
+    elif "stage2" in lane_text:
+        latest = stage_metrics["stage2"].latest_episode
+    else:
+        latest = max(metric.latest_episode for metric in stage_metrics.values())
+
+    noted_latest = _extract_latest_episode_from_notes(notes)
+    if noted_latest is not None:
+        latest = max(latest, noted_latest)
+    return latest if latest > 0 else None
+
+
+def _extract_latest_episode_from_notes(notes: str) -> int | None:
+    match = re.search(r"(?:after_latest_ep|latest_(?:blueprint|manuscript)?_?ep)\s*=\s*(\d+)", str(notes or ""))
+    if not match:
+        return None
+    try:
+        return int(match.group(1))
+    except ValueError:
+        return None
 
 
 def _aggregate_rows(

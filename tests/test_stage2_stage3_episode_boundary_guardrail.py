@@ -332,6 +332,49 @@ class TestTreatmentBlockQuarantine:
         assert "방향성" in result
         assert "제거되었습니다" in result
 
+    def test_treatment_block_injection_skips_stale_cached_arc_lineage(self):
+        from modules.core.stage0_handoff import PLOT_ROADMAP_LINEAGE_ANCHOR, build_plot_roadmap_lineage
+        from modules.core.stage3_orchestrator import Stage3Orchestrator
+
+        project = MagicMock()
+        project.master_bible = {
+            "MasterBible": {
+                "plot_roadmap": [
+                    {
+                        "block_no": 1,
+                        "title": "New roadmap title",
+                        "content": {"context": "new roadmap context"},
+                    }
+                ]
+            }
+        }
+        project.arcs = [{"arc_no": 1, "title": "cached arc from old roadmap"}]
+        stale_lineage = build_plot_roadmap_lineage(
+            [
+                {
+                    "block_no": 1,
+                    "title": "Old roadmap title",
+                    "content": {"context": "old roadmap context"},
+                }
+            ]
+        )
+        project.db.load_anchor.side_effect = lambda key: stale_lineage if key == PLOT_ROADMAP_LINEAGE_ANCHOR else []
+
+        orch = Stage3Orchestrator.__new__(Stage3Orchestrator)
+        orch.ctx = MagicMock()
+        orch.ctx.current_project = project
+
+        result = orch._inject_stage3_treatment_block_context(
+            semantic_ctx="existing semantic context",
+            working_ep=1,
+            arc_data={"ep_start": 1, "ep_end": 4},
+            arc_idx=0,
+        )
+
+        assert result == "existing semantic context"
+        assert "New roadmap title" not in result
+        assert "new roadmap context" not in result
+
 
 # ── Seam 3: Stop Line Expansion ──────────────────────────────
 

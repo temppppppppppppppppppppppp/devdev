@@ -170,6 +170,36 @@ class TestStage4AuditSummary:
         ctx.audit_event.assert_called_once()
         ctx.write_audit_summary.assert_called_once_with("stage4_complete")
 
+    def test_stage4_completion_is_blocked_after_settlement_failure(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.agents = mock_app.agents
+        ctx.state_tracker = None
+        ctx.memory = None
+        ctx.context_advisor = None
+        ctx.perf_timer = MagicMock()
+        ctx.sys = mock_app.sys
+        ctx.audit_event = MagicMock()
+        ctx.write_audit_summary = MagicMock()
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+        orch._prepare_stage4_session = MagicMock(return_value=object())
+
+        def _fail_settlement(*_args, **_kwargs):
+            orch._stage4_completion_blocked = True
+            return False
+
+        orch._run_interview_loop = MagicMock(side_effect=_fail_settlement)
+
+        orch.stage_4_v2_chief_writer()
+
+        ctx.audit_event.assert_not_called()
+        ctx.write_audit_summary.assert_not_called()
+
     def test_log_target_ep_reached_writes_control_decision_and_audit_event(self, mock_app):
         from modules.core.stage4_orchestrator import Stage4Orchestrator
 
@@ -2211,13 +2241,13 @@ class TestHandleRoundOutcomeRetryPathology:
         orch._ctx.ui.log.assert_any_call("   ⚠️ [CoVe] Quick 검증 런타임 실패 → Director PASS 유지")
         assert mock_warning.call_count == 2
 
-    def test_build_cove_runtime_failure_messages_returns_failclosed_and_ui_text(self, orch_with_ctx):
-        fail_closed_warning, ui_message = orch_with_ctx.outcome_runtime._build_cove_runtime_failure_messages(
+    def test_build_cove_runtime_failure_messages_returns_advisory_and_ui_text(self, orch_with_ctx):
+        advisory_warning, ui_message = orch_with_ctx.outcome_runtime._build_cove_runtime_failure_messages(
             source_label="Quick",
             exc=RuntimeError("boom"),
         )
 
-        assert fail_closed_warning == "[FailClosed:CoVe:Quick] boom"
+        assert advisory_warning == "[Advisory:CoVeRuntime:Quick] boom"
         assert ui_message == "   ⚠️ [CoVe] Quick 검증 런타임 실패 → Director PASS 유지"
 
     def test_build_cove_runtime_stage_warning_args_increments_round_number(self, orch_with_ctx):

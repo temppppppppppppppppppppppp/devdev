@@ -3284,6 +3284,34 @@ class TestRecordS4Attempt:
 
         assert hydrated == {}
 
+    def test_hydrate_persisted_stage4_previous_attempt_filters_current_session(self):
+        ctx = _make_ctx()
+        ctx.current_project.metrics_session_id = "sess-current"
+        ir = Stage4InterviewRound(ctx)
+        stale_row = {
+            "ep_num": 2,
+            "arc_num": 1,
+            "session_id": "sess-old",
+            "attempt_key": "s4:ep2:arc1:a1:sess-old",
+            "verdict": "REJECT",
+            "advisory_flags": {},
+        }
+        ctx.current_project.db.get_stage_attempts_for_arc.return_value = [stale_row]
+
+        hydrated = ir.hydrate_persisted_stage4_previous_attempt(
+            next_ep=2,
+            arc_num=1,
+            previous_attempt=None,
+        )
+
+        assert hydrated == {}
+        ctx.current_project.db.get_stage_attempts_for_arc.assert_called_once_with(
+            1,
+            stages=(4,),
+            limit=12,
+            session_id="sess-current",
+        )
+
     def test_build_final_selection_advisory_payload_reuses_contract_packet(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
@@ -5997,7 +6025,7 @@ class TestRecordS4Attempt:
                 "widened": False,
             },
         }
-        ir._record_s4_attempt = MagicMock(return_value={"candidate_key": "stage4|A"})
+        ir._record_s4_attempt = MagicMock(return_value={"attempt_key": "attempt-1", "candidate_key": "stage4|A"})
         round_ctx = _make_round_ctx()
 
         payload = ir._build_positive_verdict_payload(
@@ -6031,7 +6059,9 @@ class TestRecordS4Attempt:
         assert payload.pass_result is not None
         assert payload.pass_result.verdict == "PASS"
         assert payload.pass_result.final_manuscript == "patched manuscript"
-        assert payload.pass_result.attempt_artifact_meta == {"candidate_key": "stage4|A"}
+        assert payload.pass_result.attempt_artifact_meta == {"attempt_key": "attempt-1", "candidate_key": "stage4|A"}
+        assert payload.pass_result.final_state_updates["_stage4_attempt_key"] == "attempt-1"
+        assert payload.pass_result.final_state_updates["_stage4_attempt_artifact_meta"]["candidate_key"] == "stage4|A"
         assert payload.trace_meta["final_verdict"] == "PASS"
         assert payload.trace_meta["final_score"] == 98
         ir._record_s4_attempt.assert_called_once()

@@ -183,6 +183,56 @@ def test_archive_benchmark_record_creates_bundle_and_index(tmp_path, monkeypatch
     assert manifest["runtime_summary"]["freshness"]["operator_guidance_only"] is True
 
 
+def test_archive_benchmark_record_demotes_completed_when_target_ep_not_reached(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "scripts.archive_benchmark_record._collect_git_info",
+        lambda _workspace: {"branch": "", "head": "", "dirty": False},
+    )
+    project = _make_project(tmp_path)
+    (project / "project_data.db").write_bytes(b"sqlite-binary")
+    (project / "logs" / "pass_rate_monitor.json").write_text('{"records":[]}', encoding="utf-8")
+    (project / "logs" / "episode_production.jsonl").write_text(
+        json.dumps(
+            {
+                "ep": 17,
+                "attempt_key": "s4:ep17:a1",
+                "duration_ms": 3000,
+                "round_total_tokens": 4567,
+                "token_cost": 0.33,
+                "final_verdict": "PASS",
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (project / "logs" / "runtime_audit_summary.json").write_text(
+        json.dumps({"tag": "stage4_complete"}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    manifest = archive_benchmark_record(
+        workspace_root=tmp_path,
+        project="골든 카나리아",
+        lane="stage4-supervised",
+        target_ep=18,
+        status="completed",
+        notes="target_ep=18; after_latest_ep=17; child_exit_code=0",
+        recorded_at="2026-04-24T14:26:16+09:00",
+    )
+
+    assert manifest["requested_status"] == "completed"
+    assert manifest["status"] == "operational_failure"
+
+    index_path = tmp_path / "benchmarks" / "benchmark_index.csv"
+    with index_path.open("r", encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+
+    assert len(rows) == 1
+    assert rows[0]["target_ep"] == "18"
+    assert rows[0]["status"] == "operational_failure"
+
+
 def test_archive_benchmark_record_overwrite_replaces_existing_index_row(tmp_path, monkeypatch):
     monkeypatch.setattr(
         "scripts.archive_benchmark_record._collect_git_info",
