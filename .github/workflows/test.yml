@@ -88,6 +88,20 @@ jobs:
             tests/test_run_pytest_lowmem.py \
             tests/test_telemetry_dual_instance.py
 
+      - name: Run pipeline truth-lock regression shard
+        run: |
+          python -m pytest -q tests/test_stage4_orchestrator.py -k "settlement or completion"
+          python -m pytest -q \
+            tests/test_stage4_context_builder.py \
+            tests/test_stage2_stage3_episode_boundary_guardrail.py \
+            tests/test_run_stage2_direct_supervised.py \
+            tests/test_run_stage3_direct_supervised.py \
+            tests/test_run_stage4_direct_supervised.py \
+            tests/test_main_a_boot_binding.py \
+            tests/test_stagewise_manuscript_truth_report.py
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+
       - name: Run memory persistence reliability shard
         run: |
           python scripts/run_pytest_lowmem.py \
