@@ -1,14 +1,14 @@
 # Current Pipeline Residual Truth Locks Execution SSOT
 
 Date: 2026-04-26
-Status: active
+Status: closed
 Canonical Path: `docs/2026-04-26/current-pipeline-residual-truth-locks-execution-ssot.md`
-Temp Mirror Path: `docs/temp/current-pipeline-residual-truth-locks-execution-ssot.md`
+Temp Mirror Path: removed after closure; former path was `docs/temp/current-pipeline-residual-truth-locks-execution-ssot.md`
 Commit State:
 - Baseline Commit: `b816e76004d7b3a84f3ce5736702b4888f6521c4`
 - Baseline Dirty Summary: clean
-- Resume Commit: same-as-baseline
-- Resume Drift Summary: none
+- Resume Commit: `45ccc7685a01aa0a37ffde380c346c5d14473730`
+- Resume Drift Summary: main includes PR #36 through PR #39; this closure update only adds CI coverage and canonical queue cleanup.
 Source Survey Docs:
 - `docs/2026-04-26/current-pipeline-truth-locks-execution-ssot.md`
 - post-merge interactive residual survey on `main` at `b816e76004d7b3a84f3ce5736702b4888f6521c4`
@@ -22,8 +22,8 @@ Side-Effect Coverage: covered
 execution_meta:
   schema_version: execution-meta-block-v1
   topic: current-pipeline-residual-truth-locks
-  status: in_progress
-  queue_role: front_active
+  status: closed
+  queue_role: closed
   roadmap_rank: 1
   depends_on:
     - docs/2026-04-26/current-pipeline-truth-locks-execution-ssot.md
@@ -40,7 +40,10 @@ execution_meta:
       title: Make benchmark index truth reproducible or explicitly external
     - id: legacy-cache-lineage-auditability
       title: Make legacy context-cache lineage bypasses auditable
+    - id: doc-and-ci-consistency-cleanup
+      title: Close stale execution status wording and add Stage4 post-pass CI coverage
   verification_commands:
+    - python -m pytest tests/test_stage4_post_processor.py -q
     - python -m pytest tests/test_stage4_post_processor.py -k "meta_save_failed or settlement or collect_manager" -q
     - python -m pytest tests/test_stage2_orchestrator.py -k "bootstrap_stage2_arc_pipeline" -q
     - python -m pytest tests/test_direct_supervised_semantic_exit.py tests/test_run_stage2_direct_supervised.py tests/test_run_stage3_direct_supervised.py tests/test_run_stage4_direct_supervised.py -q
@@ -238,8 +241,8 @@ Static and operational checks:
 
 ## 12. Temp Queue Notes
 
-- temp status: in_progress
-- cleanup condition: remove the temp mirror only after all accepted tranches are implemented, verified, committed or explicitly parked, and closure notes are added to the canonical SSOT.
+- temp status: closed; execution mirror removed after this canonical closure update.
+- cleanup condition: satisfied after all accepted tranches were implemented, verified, committed or explicitly parked, and closure notes were added to this canonical SSOT.
 - roadmap dependency: no separate aggregate roadmap is required while this is the only active execution SSOT in `docs/temp/`.
 
 ## 13. Validation and Closure Hooks
@@ -273,7 +276,7 @@ Estimated confidence: 96%.
 
 ## 15. Implementation Progress
 
-Status: in progress.
+Status: closed.
 
 Completed tranches:
 - `stage4-post-pass-exception-fail-closed`: `_collect_manager_and_build_delta()` now fails closed with `meta_save_failed=True` when the manager/post-pass delta path raises, and touched operator output no longer truncates the exception text.
@@ -282,8 +285,10 @@ Completed tranches:
 - `stage4-settlement-side-effect-containment`: `_persist_manager_delta_outputs()` now stops before WorldState, causal-link, state-log, karma, summary, numeric-authority, and contract-signal side effects when the primary `save_episode_bible` write fails; the audit payload preserves the full exception text.
 - `benchmark-archive-reproducibility-truth`: benchmark manifests and index rows now mark archive backing evidence as `local_ignored_snapshot` / `local_only_non_reproducible`, with README guidance that ignored snapshot directories are local-only unless separately exported or tracked.
 - `legacy-cache-lineage-auditability`: cached-context missing/stale lineage bypasses now write `context_cache_attempts` rows with `cache_outcome=bypassed` and a specific lineage reason instead of only emitting a warning before direct fallback.
+- `doc-and-ci-consistency-cleanup`: CI focused PR gate now includes the full Stage4 post-processor regression file, and this canonical SSOT no longer leaves an active temp queue behind.
 
 Focused verification completed so far:
+- `python -m pytest tests/test_stage4_post_processor.py -q`: 107 passed.
 - `python -m pytest tests/test_stage4_post_processor.py -k "collect_manager_and_build_delta_fails_closed_on_manager_exception or returns_false_and_logs_when_meta_save_fails or returns_true_on_success or settlement_failure_demotes" -q`: 4 passed.
 - `python -m pytest tests/test_stage4_post_processor.py -k "persist_manager_delta_outputs_stops_side_effects_when_bible_save_fails or persist_manager_delta_outputs_saves_bible_and_delegates_side_effect_sinks or returns_false_and_logs_when_meta_save_fails or collect_manager_and_build_delta_fails_closed_on_manager_exception" -q`: 4 passed.
 - `python -m pytest tests/test_stage2_orchestrator.py -k "bootstrap_stage2_arc_pipeline" -q`: 5 passed.
@@ -294,6 +299,7 @@ Focused verification completed so far:
 - `python -m pytest tests/test_base_agent.py -k "cached_context_missing_lineage_bypasses_cache or cached_context_stale_model_lineage_bypasses_cache or cached_context_success_logs_cache_lineage or cached_context_failure_evicts_cache_by_name_and_logs_lineage or context_cache_hit_logs_direct_attempt" -q`: 5 passed.
 
 Static and hygiene verification completed:
+- `python scripts/check_utf8_hygiene.py .github/workflows/test.yml docs/2026-04-26/current-pipeline-residual-truth-locks-execution-ssot.md`: passed.
 - `python -m ruff check modules/core/stage4_post_pass_runtime.py modules/core/stage0_handoff.py modules/core/stage2_orchestrator.py scripts/direct_supervised_semantic_exit.py tests/test_stage4_post_processor.py tests/test_stage2_orchestrator.py tests/test_direct_supervised_semantic_exit.py`: passed.
 - `python -m ruff check modules/core/stage4_post_pass_runtime.py tests/test_stage4_post_processor.py`: passed.
 - `python -m ruff check scripts/archive_benchmark_record.py tests/test_archive_benchmark_record.py`: passed.
@@ -312,11 +318,21 @@ Complexity recount:
 - `modules/domain/agents/base_agent.py`: touched `_context_cache_lineage_bypass_reason` is 13 LOC, `_log_context_cache_lineage_bypass` is 34 LOC, `_fallback_after_context_cache_lineage_bypass` is 28 LOC, and `_ask_with_cached_context` is 177 LOC; file 180+ function count remains at the pre-change count of 1.
 
 Remaining queue:
-- `doc-and-ci-consistency-cleanup`
+- none.
 
-Progress update 3-pass audit:
-- Pass 1 - structure/scope: update remains inside the active execution SSOT and only changes implementation progress for accepted tranches.
-- Pass 2 - evidence/consistency: new Stage4 side-effect, benchmark archive, and legacy cache lineage claims are backed by focused pytest shards plus ruff/py_compile checks above; remaining queue no longer lists completed Stage4 containment, benchmark archive, or legacy cache tranches.
-- Pass 3 - execution/readability: next actionable queue is doc/CI cleanup, then closure if no residual queue remains.
+Closure update 3-pass audit:
+- Pass 1 - structure/scope: update remains inside the canonical execution SSOT, marks the execution state closed, and records the temp-mirror cleanup policy.
+- Pass 2 - evidence/consistency: all accepted runtime tranches are backed by focused pytest, static, hygiene, and queue-validation evidence; the final CI cleanup is backed by the full local Stage4 post-processor shard and the workflow diff.
+- Pass 3 - execution/readability: the active queue is empty, residual scope is explicit, and the temp mirror is no longer presented as an active execution artifact.
 
-Estimated confidence after progress update: 96%.
+Estimated confidence after closure update: 97%.
+
+## 16. Closure Summary
+
+Closure state:
+- closed after realizing the accepted residual truth-lock tranches and adding CI coverage for the Stage4 post-pass regression surface.
+- temp execution mirror removed in the same closure change; no aggregate roadmap was required because this was the only active execution SSOT.
+
+Residual risk:
+- no remaining active item is governed by this SSOT.
+- future broad surveys may still find separate pipeline hardening candidates, but they should start from a new execution doc rather than reopening this queue.
