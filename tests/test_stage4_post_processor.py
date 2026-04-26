@@ -1012,6 +1012,28 @@ class TestProcessPassResult:
             "Heavenly Blade",
         }
 
+    def test_collect_manager_and_build_delta_fails_closed_on_manager_exception(self):
+        pp = self._make_pp()
+        pp.post_pass_runtime._resolve_manager_audit = MagicMock(side_effect=RuntimeError("manager delta failed"))
+
+        result = pp.post_pass_runtime._collect_manager_and_build_delta(
+            next_ep=11,
+            final_manuscript="test manuscript",
+            bible_future=None,
+            current_state={"actual_truth": {}},
+            lore_list=[],
+            active_seeds=[],
+            causal_history="",
+            genre_type="wuxia",
+            critical_keys=[],
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={},
+        )
+
+        assert result["meta_save_failed"] is True
+        assert result["bible_delta"] is None
+
     def test_prepare_manager_delta_context_parses_stringified_martial_arts_list(self):
         pp = self._make_pp()
 

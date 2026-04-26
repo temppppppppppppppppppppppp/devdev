@@ -196,7 +196,9 @@ def _resolve_numeric_carryover_authority_fields(
     if not overlap_fields:
         return carryover_fields, {}
 
-    ordered_fields = overlap_fields + [field_name for field_name in carryover_fields if field_name not in overlap_fields]
+    ordered_fields = overlap_fields + [
+        field_name for field_name in carryover_fields if field_name not in overlap_fields
+    ]
     transport: dict[str, object] = {
         "transport_lineage": "cross_stage_authority_packet.numeric_carryover",
         "transport_fields": overlap_fields,
@@ -358,9 +360,7 @@ def _build_state_truth_owner_contract(
             "fields": ["active_pressure_vectors"],
             "provenance": "blueprint_filtered_by_manuscript",
         }
-    carryover_fields = [
-        str(item).strip() for item in (fact_ledger_carryover_fields or []) if str(item).strip()
-    ]
+    carryover_fields = [str(item).strip() for item in (fact_ledger_carryover_fields or []) if str(item).strip()]
     if carryover_fields:
         transport = numeric_carryover_transport if isinstance(numeric_carryover_transport, dict) else {}
         transport_mode = str(transport.get("transport_authority_mode", "") or "").strip()
@@ -436,9 +436,7 @@ def _build_numeric_carryover_authority_visibility(state_truth_owner_contract: di
     families = families if isinstance(families, dict) else {}
     carryover_family = families.get("numeric_carryover_authority")
     carryover_family = carryover_family if isinstance(carryover_family, dict) else {}
-    carryover_fields = [
-        str(item).strip() for item in list(carryover_family.get("fields") or []) if str(item).strip()
-    ]
+    carryover_fields = [str(item).strip() for item in list(carryover_family.get("fields") or []) if str(item).strip()]
     if not carryover_fields:
         return {}
 
@@ -448,8 +446,7 @@ def _build_numeric_carryover_authority_visibility(state_truth_owner_contract: di
     provenance_suffix = f" ({provenance})" if provenance else ""
     ui_note = ", ".join(carryover_fields[:4]) + f" [{authority_scope}]{provenance_suffix}"
     operator_note = (
-        f"{owner or 'numeric_carryover_authority'} owns {', '.join(carryover_fields[:4])} "
-        f"[{authority_scope}]"
+        f"{owner or 'numeric_carryover_authority'} owns {', '.join(carryover_fields[:4])} [{authority_scope}]"
     )
     if provenance:
         operator_note += f" ({provenance})"
@@ -779,7 +776,8 @@ class Stage4PostPassRuntime:
             _meta_save_failed = persist_payload["meta_save_failed"]
 
         except Exception as bible_err:
-            self.ctx.ui.log(f"   ⚠️ Episode Bible 저장 실패 (비차단): {str(bible_err)[:50]}")
+            _meta_save_failed = True
+            self.ctx.ui.log(f"   ⚠️ Episode Bible 저장 실패 (비차단): {bible_err}")
             import traceback
 
             traceback.print_exc()
@@ -1055,9 +1053,13 @@ class Stage4PostPassRuntime:
             witnesses = knowledge_map.get("new_witnesses", [])
             misled = knowledge_map.get("new_misled", [])
             if witnesses:
-                relationship_changes.extend([{"npc": witness, "to": "목격자", "from": ""} for witness in witnesses if witness])
+                relationship_changes.extend(
+                    [{"npc": witness, "to": "목격자", "from": ""} for witness in witnesses if witness]
+                )
             if misled:
-                relationship_changes.extend([{"npc": misled_npc, "to": "오해 대상", "from": ""} for misled_npc in misled if misled_npc])
+                relationship_changes.extend(
+                    [{"npc": misled_npc, "to": "오해 대상", "from": ""} for misled_npc in misled if misled_npc]
+                )
 
         karma_matrix = state_updates_from_audit.get("karma_matrix", [])
         if isinstance(karma_matrix, list):
