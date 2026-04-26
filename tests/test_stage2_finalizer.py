@@ -158,6 +158,37 @@ def test_build_stage2_carryover_authority_summary_surfaces_start_end_and_finance
     assert "semantic_carryover_keys" in summary
 
 
+def test_stage2_quality_gate_reject_records_runtime_gate_authority(finalizer, valid_refined_arc):
+    audit = {"decision": "PASS", "reason": "director pass", "fix_scope": "inplace"}
+    finalizer._record_s2_reject_metrics = MagicMock()
+
+    result = finalizer._maybe_reject_stage2_pass_for_quality_gate(
+        refined_arc=valid_refined_arc,
+        audit=audit,
+        decision="PASS",
+        score=84,
+        tactical_doc_len=1600,
+        quality_gate_score=90,
+        st_snapshot=None,
+        generation_method="four_phase",
+        cdb_snapshot=None,
+        constraint_db=None,
+        global_arc_no=1,
+        attempt=0,
+        is_patch=False,
+        prev_score=0.0,
+        patch_fallback=False,
+    )
+
+    assert result is not None
+    assert audit["decision"] == "REJECT"
+    assert audit["final_judgment_authority"] == "director_llm"
+    assert audit["runtime_gate_authority"] == "python_runtime_routing_gate"
+    assert audit["runtime_gate_role"] == "route_or_block_automatic_progress"
+    assert audit["runtime_gate_basis"] == "quality_gate_reject"
+    finalizer._record_s2_reject_metrics.assert_called_once()
+
+
 def test_build_cross_stage_authority_packet_surfaces_stage2_transport_families():
     refined_arc = {
         "arc_no": 3,

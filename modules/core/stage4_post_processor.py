@@ -1239,14 +1239,6 @@ class Stage4PostProcessor:
             genre_type=genre_type,
             critical_keys=critical_keys,
         )
-        self.post_pass_runtime._memorize_and_validate(
-            next_ep=next_ep,
-            final_manuscript=final_manuscript,
-            final_title=final_title,
-            final_state_updates=final_state_updates,
-            arc_data=arc_data,
-            blueprint=blueprint,
-        )
 
         delta = self.post_pass_runtime._collect_manager_and_build_delta(
             next_ep=next_ep,
@@ -1300,6 +1292,39 @@ class Stage4PostProcessor:
             "state_truth_owner_contract": delta.get("state_truth_owner_contract", {}),
             "meta_save_failed": delta["meta_save_failed"],
         }
+
+    def _run_pass_result_post_settlement_side_effects(
+        self,
+        *,
+        next_ep: int,
+        final_manuscript: str,
+        final_title: str,
+        final_state_updates: dict,
+        blueprint: dict,
+        arc_data: dict,
+        output_dir,
+        v50_modules_available: bool,
+        approved_hud_updates: dict | None,
+        hud_update_error: str,
+    ) -> None:
+        self._run_pass_result_local_side_effects(
+            next_ep=next_ep,
+            final_manuscript=final_manuscript,
+            final_title=final_title,
+            final_state_updates=final_state_updates,
+            output_dir=output_dir,
+            v50_modules_available=v50_modules_available,
+            approved_hud_updates=approved_hud_updates,
+            hud_update_error=hud_update_error,
+        )
+        self.post_pass_runtime._memorize_and_validate(
+            next_ep=next_ep,
+            final_manuscript=final_manuscript,
+            final_title=final_title,
+            final_state_updates=final_state_updates,
+            arc_data=arc_data,
+            blueprint=blueprint,
+        )
 
     def _finalize_pass_result_session(
         self,
@@ -1448,16 +1473,6 @@ class Stage4PostProcessor:
             quality_labels=_quality_labels,
         )
 
-        self._run_pass_result_local_side_effects(
-            next_ep=next_ep,
-            final_manuscript=final_manuscript,
-            final_title=final_title,
-            final_state_updates=final_state_updates,
-            output_dir=output_dir,
-            v50_modules_available=v50_modules_available,
-            approved_hud_updates=approved_hud_updates,
-            hud_update_error=hud_update_error,
-        )
         post_pass_payload = self._run_pass_result_post_pass_pipeline(
             next_ep=next_ep,
             final_manuscript=final_manuscript,
@@ -1565,6 +1580,18 @@ class Stage4PostProcessor:
             status="fully_settled",
             artifact_path=settlement_packet_path,
             **settlement_status_context,
+        )
+        self._run_pass_result_post_settlement_side_effects(
+            next_ep=next_ep,
+            final_manuscript=final_manuscript,
+            final_title=final_title,
+            final_state_updates=final_state_updates,
+            blueprint=blueprint,
+            arc_data=arc_data,
+            output_dir=output_dir,
+            v50_modules_available=v50_modules_available,
+            approved_hud_updates=approved_hud_updates,
+            hud_update_error=hud_update_error,
         )
         self._finalize_pass_result_session(
             next_ep=next_ep,

@@ -44,6 +44,9 @@ def test_build_gate_semantics_payload_includes_verdict_layers_for_downstream_ove
         "director_quality_passed": True,
         "downstream_override_applied": True,
         "primary_failure_layer": "downstream_gate",
+        "director_quality_authority": "director_llm",
+        "runtime_gate_authority": "python_runtime_routing_gate",
+        "runtime_gate_role": "route_or_block_automatic_progress",
     }
 
 
@@ -169,8 +172,10 @@ def test_append_episode_log_persists_verdict_layers():
         }
     )
 
-    with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"), patch(
-        "time.monotonic", return_value=1.0
+    with (
+        patch("builtins.open", mock_open()) as mocked_open,
+        patch("os.makedirs"),
+        patch("time.monotonic", return_value=1.0),
     ):
         ir._append_episode_log(
             ep_num=10,
@@ -208,6 +213,8 @@ def test_append_episode_log_persists_verdict_layers():
     written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
     assert '"downstream_override_applied": true' in written
     assert '"primary_failure_layer": "downstream_gate"' in written
+    assert '"final_judgment_authority": "director_llm"' in written
+    assert '"runtime_gate_authority": "python_runtime_routing_gate"' in written
 
 
 def test_main_prompt_has_early_authority_preface():

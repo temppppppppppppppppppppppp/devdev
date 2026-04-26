@@ -1,0 +1,20 @@
+{
+  "version": "temp-queue-state-v1",
+  "generated_at": "2026-04-26T05:39:46.596918+00:00",
+  "queue_mode": "single",
+  "active_item_count": 1,
+  "roadmap": null,
+  "items": [
+    {
+      "topic": "current-pipeline-post-settlement-truth-residuals",
+      "temp_path": "docs/temp/current-pipeline-post-settlement-truth-residuals-execution-ssot.md",
+      "canonical_path": "docs/2026-04-26/current-pipeline-post-settlement-truth-residuals-execution-ssot.md",
+      "status": "in_progress",
+      "queue_role": "front_active",
+      "roadmap_rank": null,
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    }
+  ]
+}

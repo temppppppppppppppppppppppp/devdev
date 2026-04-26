@@ -1,22 +1,15 @@
 {
   "version": "clickup-queue-sync-v1",
-  "updated_at": "2026-04-23T07:30:00.096959+00:00",
+  "updated_at": "2026-04-26T05:39:59.963717+00:00",
   "list_id": "901817292518",
   "queue_state_path": "docs/temp/queue-state.json",
   "tasks": {
-    "stage234-session-memory-max-utilization": {
-      "task_id": "86exbr9hy",
-      "name": "stage234-session-memory-max-utilization",
-      "desired_status": "Parked",
-      "resolved_status": "parked",
-      "synced_at": "2026-04-23T07:29:59.373185+00:00"
-    },
-    "stage0-bi-tr-production-harness-normalization-remediation": {
-      "task_id": "86ex7684v",
-      "name": "stage0-bi-tr-production-harness-normalization-remediation",
-      "desired_status": "Parked",
-      "resolved_status": "parked",
-      "synced_at": "2026-04-23T07:30:00.096959+00:00"
+    "current-pipeline-post-settlement-truth-residuals": {
+      "task_id": "86exct4jr",
+      "name": "current-pipeline-post-settlement-truth-residuals",
+      "desired_status": "Realizing",
+      "resolved_status": "in progress",
+      "synced_at": "2026-04-26T05:39:59.963717+00:00"
     }
   }
 }
