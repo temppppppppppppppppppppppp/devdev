@@ -90,6 +90,55 @@ class TestContextBuilderInit:
         assert isinstance(cb, Stage4ContextBuilder)
         assert cb.ctx is ctx
 
+    def test_tier12_skips_treatment_genre_ext_when_cached_arcs_lineage_stale(self):
+        from modules.core.stage0_handoff import PLOT_ROADMAP_LINEAGE_ANCHOR, build_plot_roadmap_lineage
+
+        ctx = _make_ctx()
+        ctx.current_project.master_bible = {
+            "MasterBible": {
+                "plot_roadmap": [
+                    {
+                        "block_no": 1,
+                        "title": "New roadmap title",
+                        "genre_ext": {"capital_before": "30b"},
+                        "content": {"context": "new roadmap context"},
+                    }
+                ]
+            }
+        }
+        ctx.current_project.arcs = [{"arc_no": 1, "title": "cached arc from old roadmap"}]
+        stale_lineage = build_plot_roadmap_lineage(
+            [
+                {
+                    "block_no": 1,
+                    "title": "Old roadmap title",
+                    "content": {"context": "old roadmap context"},
+                }
+            ]
+        )
+        ctx.current_project.db.load_anchor.side_effect = (
+            lambda key: stale_lineage if key == PLOT_ROADMAP_LINEAGE_ANCHOR else []
+        )
+
+        cb = Stage4ContextBuilder(ctx)
+        cb.build_extended_lookback_digest = MagicMock(return_value="")
+
+        result = cb.context_packets.build_tier12_auxiliary_sections(
+            next_ep=1,
+            arc_data={"arc_no": 1},
+            blueprint={},
+            s4_genre_type="investment",
+            v50_modules_available=False,
+            pacing_analyzer=None,
+            prev_text="",
+            work_focus="",
+            slot_summary="",
+        )
+
+        tier2_text = "\n".join(result["tier2_parts"])
+        assert "V74 Treatment" not in tier2_text
+        assert "capital_before" not in tier2_text
+
     def test_lazy_init_singleton(self):
         app = MagicMock()
         ctx = _make_ctx()
@@ -2492,7 +2541,9 @@ class TestBuildMandatoryContext:
         )
 
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
-    def test_build_mandatory_context_falls_back_to_cross_stage_numeric_packet_when_fact_ledger_missing(self, _mock_build):
+    def test_build_mandatory_context_falls_back_to_cross_stage_numeric_packet_when_fact_ledger_missing(
+        self, _mock_build
+    ):
         ctx = _make_ctx()
         ctx.current_project.genre = {"name": "investment", "type": "investment"}
         ctx.sys.guard = MagicMock()
@@ -2532,7 +2583,9 @@ class TestBuildMandatoryContext:
         text = result["mandatory_context"]
         assert "FactLedger carryover baseline is unavailable here" in text
         assert "upstream transport lineage: cross_stage_authority_packet.v1" in text
-        assert "total_assets: 20000000 (cross-stage packet; source=state_constraints.arc_end_state.total_assets)" in text
+        assert (
+            "total_assets: 20000000 (cross-stage packet; source=state_constraints.arc_end_state.total_assets)" in text
+        )
 
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_build_mandatory_context_supplements_fact_ledger_with_packet_only_numeric_fields(self, _mock_build):

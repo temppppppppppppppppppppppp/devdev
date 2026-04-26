@@ -53,7 +53,9 @@ jobs:
             tests/test_control_plane_approval_provenance_ssot.py \
             tests/test_db_manager.py \
             tests/test_desktop_packaging_contract.py \
+            tests/test_direct_supervised_semantic_exit.py \
             tests/test_director_modules.py \
+            tests/test_failure_analyzer.py \
             tests/test_github_issue_readiness.py \
             tests/test_issue_5_benchmark_snapshot.py \
             tests/test_link_benchmark_companions.py \

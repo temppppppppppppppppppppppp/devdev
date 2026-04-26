@@ -1797,9 +1797,23 @@ class Stage3Orchestrator:
     def _inject_stage3_treatment_block_context(self, *, semantic_ctx: str, working_ep, arc_data, arc_idx: int) -> str:
         _bp_semantic_ctx = semantic_ctx
         try:
-            _master_bible = getattr(self.ctx.current_project, "master_bible", None) or {}
+            from modules.core.stage0_handoff import cached_arcs_source_lineage_matches
+
+            _project = self.ctx.current_project
+            _master_bible = getattr(_project, "master_bible", None) or {}
             _bible_root = _master_bible.get("MasterBible", _master_bible)
             _plot_roadmap = _bible_root.get("plot_roadmap", [])
+            _cached_arcs = getattr(_project, "arcs", []) or []
+            if not cached_arcs_source_lineage_matches(
+                _project,
+                cached_arcs=_cached_arcs,
+                roadmap=_plot_roadmap,
+            ):
+                _logging.warning(
+                    "[Stage3] cached arcs source lineage differs from current plot_roadmap; "
+                    "skipping treatment block context injection."
+                )
+                return _bp_semantic_ctx
             if isinstance(_plot_roadmap, list) and 0 <= arc_idx < len(_plot_roadmap):
                 _block = _plot_roadmap[arc_idx]
                 if isinstance(_block, dict):

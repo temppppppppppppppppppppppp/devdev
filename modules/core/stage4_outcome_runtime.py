@@ -393,11 +393,11 @@ class Stage4OutcomeRuntime:
         interview_round: int,
         max_rounds: int,
     ) -> None:
-        fail_closed_warning, ui_message = self._build_cove_runtime_failure_messages(
+        advisory_warning, ui_message = self._build_cove_runtime_failure_messages(
             source_label=source_label,
             exc=exc,
         )
-        logging.warning(fail_closed_warning)
+        logging.warning(advisory_warning)
         self.owner.ctx.ui.log(ui_message)
         self._log_cove_runtime_failure_stage_warning(
             source_label=source_label,
@@ -413,7 +413,7 @@ class Stage4OutcomeRuntime:
         exc: Exception,
     ) -> tuple[str, str]:
         return (
-            f"[FailClosed:CoVe:{source_label}] {exc!s}",
+            f"[Advisory:CoVeRuntime:{source_label}] {exc!s}",
             f"   ⚠️ [CoVe] {source_label} 검증 런타임 실패 → Director PASS 유지",
         )
 

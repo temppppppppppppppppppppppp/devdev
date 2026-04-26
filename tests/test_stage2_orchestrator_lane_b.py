@@ -268,6 +268,58 @@ def test_run_stage2_single_arc_design_threads_attempt_state_between_calls():
     orch._handle_stage2_single_arc_failure.assert_not_awaited()
 
 
+def test_run_stage2_single_arc_design_preserves_exhausted_retry_choice():
+    orch = Stage2Orchestrator(app=MagicMock(), context=_make_ctx())
+    orch._resolve_stage2_current_vol_strategy = MagicMock(return_value={"vol_no": 1, "strategy_doc": "vol"})
+    setup = _make_setup(attempt=0, max_attempts=1, current_feedback="seed-feedback")
+    orch._prepare_stage2_single_arc_state = MagicMock(return_value=setup)
+    orch._run_stage2_single_arc_attempt = AsyncMock(
+        side_effect=[
+            {
+                "action": "retry",
+                "next_attempt": 1,
+                "current_feedback": "failed-feedback",
+                "director_feedback_for_fourphase": "failed-director",
+                "st_snapshot": {"snap": "failed"},
+                "last_refined_context": "ctx-failed",
+                "current_ep_start": 6,
+                "previous_attempt": {"score": 41},
+                "refined_arc": {"draft": "failed"},
+            },
+            {
+                "action": "break",
+                "next_attempt": 1,
+                "current_feedback": "passed-feedback",
+                "director_feedback_for_fourphase": "passed-director",
+                "st_snapshot": {"snap": "passed"},
+                "last_refined_context": "ctx-passed",
+                "current_ep_start": 7,
+                "previous_attempt": {"score": 95},
+                "refined_arc": {"draft": "passed"},
+            },
+        ]
+    )
+    orch._handle_stage2_single_arc_failure = AsyncMock(
+        return_value={
+            "action": "retry",
+            "current_feedback": "operator retry feedback",
+            "constraint_block": "retry-constraint",
+        }
+    )
+
+    result = asyncio.run(orch._run_stage2_single_arc_design(**_make_design_kwargs()))
+
+    assert result == {"action": "next", "current_ep_start": 7, "last_refined_context": "ctx-passed"}
+    assert orch._run_stage2_single_arc_attempt.await_count == 2
+    retry_call = orch._run_stage2_single_arc_attempt.await_args_list[1].kwargs
+    assert retry_call["attempt"] == 0
+    assert retry_call["current_feedback"] == "operator retry feedback"
+    assert retry_call["director_feedback_for_fourphase"] == "operator retry feedback"
+    assert retry_call["setup"]["constraint_block"] == "retry-constraint"
+    assert retry_call["previous_attempt"] is None
+    orch._handle_stage2_single_arc_failure.assert_awaited_once()
+
+
 def test_handle_stage2_finalize_transition_logs_attempt_key_for_arc_design():
     ctx = _make_ctx()
     ctx.current_project.metrics_session_id = "sess_stage2"

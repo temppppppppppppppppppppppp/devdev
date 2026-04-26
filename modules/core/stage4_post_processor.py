@@ -296,6 +296,14 @@ class Stage4PostProcessor:
                 return value.strip()
         return ""
 
+    @staticmethod
+    def _strip_stage4_internal_state_updates(final_state_updates: dict) -> dict:
+        return {
+            key: value
+            for key, value in final_state_updates.items()
+            if key not in {"_director_quality_labels", "_stage4_attempt_key", "_stage4_attempt_artifact_meta"}
+        }
+
     def _build_stage4_settlement_status_payload(
         self,
         *,
@@ -303,12 +311,13 @@ class Stage4PostProcessor:
         next_ep: int,
         arc_data: dict | None,
         final_state_updates: dict | None,
+        attempt_key: str = "",
         artifact_path: Path | str | None = None,
         detail: str = "",
     ) -> dict:
         flags = dict(self._SETTLEMENT_STATUS_FLAGS.get(status, {}))
         arc_no = arc_data.get("arc_no", 0) if isinstance(arc_data, dict) else 0
-        attempt_key = self._extract_stage4_settlement_attempt_key(final_state_updates)
+        attempt_key = str(attempt_key or "").strip() or self._extract_stage4_settlement_attempt_key(final_state_updates)
         return {
             "event": "STAGE4_PASS_SETTLEMENT_STATUS",
             "stage": 4,
@@ -329,6 +338,7 @@ class Stage4PostProcessor:
         next_ep: int,
         arc_data: dict | None,
         final_state_updates: dict | None,
+        attempt_key: str = "",
         artifact_path: Path | str | None = None,
         detail: str = "",
     ) -> dict:
@@ -337,6 +347,7 @@ class Stage4PostProcessor:
             next_ep=next_ep,
             arc_data=arc_data,
             final_state_updates=final_state_updates,
+            attempt_key=attempt_key,
             artifact_path=artifact_path,
             detail=detail,
         )
@@ -365,7 +376,30 @@ class Stage4PostProcessor:
                 )
             except Exception as ui_event_err:
                 logging.debug("[S4-SETTLEMENT] status ui_event save failed: %s", ui_event_err)
+        if payload.get("fully_settled") is not True:
+            self._mark_stage4_attempt_settlement_failed(
+                attempt_key=payload.get("attempt_key", ""),
+                status=status,
+                detail=detail,
+            )
         return payload
+
+    def _mark_stage4_attempt_settlement_failed(self, *, attempt_key: str, status: str, detail: str = "") -> None:
+        attempt_key = str(attempt_key or "").strip()
+        if not attempt_key:
+            return
+        db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+        marker = getattr(db, "mark_stage4_attempt_settlement_failed", None)
+        if not callable(marker):
+            return
+        try:
+            marker(
+                attempt_key=attempt_key,
+                settlement_status=str(status or "").strip(),
+                detail=str(detail or "").strip(),
+            )
+        except Exception as exc:
+            logging.debug("[S4-SETTLEMENT] stage_attempt settlement demotion failed: %s", exc)
 
     @staticmethod
     def _extract_save_error(manager, fallback: str) -> str:
@@ -1329,6 +1363,40 @@ class Stage4PostProcessor:
         except Exception as perf_err:
             logging.debug("[PerfTimer] s4 summary/reset: %s", perf_err)
 
+    def _prepare_pass_result_settlement_inputs(
+        self,
+        *,
+        next_ep: int,
+        final_manuscript: str,
+        final_state_updates: dict,
+        arc_data: dict,
+    ) -> dict:
+        quality_labels = None
+        stage4_attempt_key = ""
+        if isinstance(final_state_updates, dict):
+            quality_labels = final_state_updates.get("_director_quality_labels")
+            stage4_attempt_key = self._extract_stage4_settlement_attempt_key(final_state_updates)
+            final_state_updates = self._strip_stage4_internal_state_updates(final_state_updates)
+        final_manuscript = self._normalize_reader_facing_manuscript(final_manuscript)
+        approved_hud_updates, hud_update_error = self._resolve_approved_hud_updates(
+            next_ep=next_ep,
+            final_state_updates=final_state_updates,
+        )
+        return {
+            "quality_labels": quality_labels,
+            "attempt_key": stage4_attempt_key,
+            "final_manuscript": final_manuscript,
+            "final_state_updates": final_state_updates,
+            "approved_hud_updates": approved_hud_updates,
+            "hud_update_error": hud_update_error,
+            "settlement_status_context": {
+                "next_ep": next_ep,
+                "arc_data": arc_data,
+                "final_state_updates": final_state_updates,
+                "attempt_key": stage4_attempt_key,
+            },
+        }
+
     def process_pass_result(
         self,
         *,
@@ -1346,22 +1414,19 @@ class Stage4PostProcessor:
     ) -> bool:
         """[4-R1-c] Pass result post-processing. Returns False on DB save failure."""
         self.ctx.ui.log(f"\n📦 제{next_ep}화 데이터 정산 중...")
-        _quality_labels = None
-        _quality_signals = None
-        if isinstance(final_state_updates, dict):
-            _quality_labels = final_state_updates.get("_director_quality_labels")
-            if isinstance(_quality_labels, dict):
-                final_state_updates = {k: v for k, v in final_state_updates.items() if k != "_director_quality_labels"}
-        final_manuscript = self._normalize_reader_facing_manuscript(final_manuscript)
-        approved_hud_updates, hud_update_error = self._resolve_approved_hud_updates(
+        settlement_inputs = self._prepare_pass_result_settlement_inputs(
             next_ep=next_ep,
+            final_manuscript=final_manuscript,
             final_state_updates=final_state_updates,
+            arc_data=arc_data,
         )
-        settlement_status_context = {
-            "next_ep": next_ep,
-            "arc_data": arc_data,
-            "final_state_updates": final_state_updates,
-        }
+        _quality_labels = settlement_inputs["quality_labels"]
+        _quality_signals = None
+        final_manuscript = settlement_inputs["final_manuscript"]
+        final_state_updates = settlement_inputs["final_state_updates"]
+        approved_hud_updates = settlement_inputs["approved_hud_updates"]
+        hud_update_error = settlement_inputs["hud_update_error"]
+        settlement_status_context = settlement_inputs["settlement_status_context"]
 
         # DB 저장 (HUD보다 먼저 — DB 실패 시 HUD 오염 방지) [Sweep56]
         # [P0-D1/D4] lock 보호 + 원자적 트랜잭션으로 부분 저장 방지
