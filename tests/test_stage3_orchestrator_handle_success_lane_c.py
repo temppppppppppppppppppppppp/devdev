@@ -47,6 +47,30 @@ def test_lane_c_handle_success_short_circuits_on_persistence_failure():
     orch._record_stage3_success_observability.assert_not_called()
 
 
+def test_lane_c_handle_success_breaks_on_authority_attempt_persistence_failure():
+    orch, _, ctx = _build_lane_orchestrator()
+    ctx.current_project.db.save_stage_attempt.return_value = False
+    ctx.current_project.db.save_director_selection = MagicMock()
+    orch._record_stage3_success_completion = MagicMock()
+
+    result = orch._handle_success(
+        1,
+        1,
+        {"arc_no": 1},
+        {"integrated_scenario": "bp", "scene_breakdown": {"s1": "scene"}},
+        {"final_verdict": "PASS", "last_score": 88, "phases": {"generate": {"selected_strategy": "A"}}},
+        [],
+        4,
+        1,
+    )
+
+    assert result == {"next_ep": 2, "success_count": 4, "fail_count": 2, "break": True}
+    ctx.current_project.db.save_stage_attempt.assert_called_once()
+    ctx.current_project.db.save_director_selection.assert_not_called()
+    orch._record_stage3_success_completion.assert_not_called()
+    ctx.audit_event.assert_called_once()
+
+
 def test_lane_c_persist_stage3_success_blueprint_returns_break_on_commit_failure():
     orch, _, ctx = _build_lane_orchestrator()
     ctx.safe_commit.return_value = False

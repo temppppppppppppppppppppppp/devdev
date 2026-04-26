@@ -527,9 +527,7 @@ def test_lane_c_python_pre_validate_flags_direct_opening_active_character_reentr
                     "type": "tension_build",
                 },
             },
-            "integrated_scenario": (
-                "한시우가 전화를 끊자 박성호와 함께 리스크관리팀장이 VIP룸으로 들어온다. " * 20
-            ),
+            "integrated_scenario": ("한시우가 전화를 끊자 박성호와 함께 리스크관리팀장이 VIP룸으로 들어온다. " * 20),
             "start_location": "여의도 한미증권 VIP룸",
             "time_flow": "그날 밤 직후",
             "core_tension": "전화를 받은 직후의 연속성을 유지해야 한다.",
@@ -1178,7 +1176,7 @@ def test_lane_c_python_pre_validate_flags_direct_opening_single_replay_family():
                     "key_events": ["같은 압박을 되풀이한다."],
                     "location": "한미증권 VIP룸",
                     "type": "dialogue_duel",
-                }
+                },
             },
             "integrated_scenario": "같은 VIP룸 압박을 다시 반복한다. " * 40,
             "protagonist_state": {"mood": "rigid"},
@@ -1208,7 +1206,7 @@ def test_lane_c_python_pre_validate_flags_direct_opening_single_replay_family():
             "time_flow": "그날 밤",
             "scene_breakdown": {
                 "scene_4": {"location": "한미증권 VIP룸", "characters": ["한시우", "박성호"]},
-            }
+            },
         },
         state_tracker=None,
         arc_data={},
@@ -1546,6 +1544,12 @@ def test_lane_c_build_director_validation_result_escalates_binding_issue_to_pass
 
     assert verdict == "PASS_WITH_FIX"
     assert result["verdict"] == "PASS_WITH_FIX"
+    assert result["director_verdict"] == "PASS"
+    assert result["runtime_route_verdict"] == "PASS_WITH_FIX"
+    assert result["runtime_gate_basis"] == "binding_prevalidation_contract"
+    assert result["runtime_route_action"] == "regenerate_required"
+    assert result["final_judgment_authority"] == "director_llm"
+    assert result["runtime_gate_authority"] == "python_runtime_routing_gate"
     assert result["revision_required"] is True
     assert result["fix_scope"] == "full"
     assert "regenerate-only repair" in result["fix_scope_reasoning"]
@@ -1842,6 +1846,10 @@ def test_lane_c_build_director_validation_result_escalates_capital_unit_issue_to
 
     assert verdict == "PASS_WITH_FIX"
     assert result["verdict"] == "PASS_WITH_FIX"
+    assert result["director_verdict"] == "PASS"
+    assert result["runtime_route_verdict"] == "PASS_WITH_FIX"
+    assert result["runtime_gate_basis"] == "binding_prevalidation_contract"
+    assert result["runtime_route_action"] == "regenerate_required"
     assert result["revision_required"] is True
     assert result["fix_scope"] == "full"
     assert result["binding_prevalidation_issue_count"] == 1

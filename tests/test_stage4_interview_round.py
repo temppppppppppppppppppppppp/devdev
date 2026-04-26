@@ -9,6 +9,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import ANY, MagicMock, mock_open, patch
 
+import pytest
+
 from modules.core import stage4_episode_logging as s4_episode_logging
 from modules.core.context_advisor import RetrievalPlan, RetrievalSlot, RetrievalSources
 from modules.core.pass_rate_monitor import PassRateMonitor
@@ -17,6 +19,7 @@ from modules.core.session_memory_envelope import SESSION_MEMORY_ENVELOPE_KEY
 from modules.core.stage4_context import Stage4Context
 from modules.core.stage4_director_runtime import _DirectorInputPackResult
 from modules.core.stage4_interview_round import (
+    Stage4AuthorityPersistenceError,
     Stage4InterviewRound,
     _build_stage4_attempt_contract_projection,
     _build_stage4_attempt_raw_evidence_records,
@@ -2962,6 +2965,11 @@ class TestRecordS4Attempt:
         assert packet.repair_contract["subtype"] == "movement"
         assert packet.scope_authority["authoritative_fix_scope"] == "inplace"
         assert packet.retry_budget_axes == {"repair": "patch_revision"}
+        assert packet.advisory_flags["advisory_authority_schema_version"] == "advisory-authority-levels-v1"
+        assert packet.advisory_flags["advisory_authority_levels"]["fix_pack"] == "route"
+        assert packet.advisory_flags["advisory_authority_levels"]["repair_contract"] == "route"
+        assert packet.advisory_flags["advisory_authority_levels"]["scope_authority"] == "route"
+        assert packet.advisory_flags["advisory_authority_levels"]["retry_budget_axes"] == "route"
         assert packet.verdict_layers["primary_failure_layer"] == "quality_floor"
 
     def test_stage4_attempt_payload_builders_share_contract_packet(self):
@@ -4248,6 +4256,46 @@ class TestRecordS4Attempt:
         assert kw["is_patch"] is True
         assert kw["is_patch_fallback"] is False
         assert kw["patch_strategy"] == "patch_with_feedback"
+
+    def test_save_stage4_db_attempt_hard_fails_when_success_authority_write_returns_false(self):
+        ctx = _make_ctx()
+        ctx.current_project.db.save_stage_attempt.return_value = False
+        ir = Stage4InterviewRound(ctx)
+        prelude = _Stage4AttemptPreludePayload(
+            duration_ms=222,
+            token_cost=0.0,
+            session_id="sess-stage4",
+            attempt_key="s4:ep2:arc1:a2:sess-stage4",
+            normalized_patch_strategy="patch_with_feedback",
+            artifact_meta={
+                "candidate_key": "A|balanced",
+                "content_hash": "hash123",
+                "artifact_path": "logs/final.txt",
+            },
+        )
+
+        with pytest.raises(Stage4AuthorityPersistenceError, match="stage4_authority_persistence_failed"):
+            ir._save_stage4_db_attempt(
+                episode=2,
+                round_num=1,
+                success=True,
+                score=96,
+                arc=1,
+                verdict="PASS",
+                reject_reason="",
+                fix_scope="none",
+                model="gemini-2.5-pro",
+                advisory_flags={},
+                selection_reason="best candidate",
+                verdict_reason="accepted",
+                open_review="",
+                fix_scope_reasoning="",
+                runtime_advisory="",
+                retry_directives="",
+                prelude=prelude,
+            )
+
+        ctx.current_project.db.save_stage_attempt.assert_called_once()
 
     def test_attempt_key_uses_metrics_session_id_when_available(self):
         ctx = _make_ctx()

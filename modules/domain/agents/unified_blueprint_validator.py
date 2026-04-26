@@ -804,6 +804,33 @@ class UnifiedBlueprintValidator:
         return merged_verdict, merged_feedback, merged_reason, merged_scope, merged_scope_reasoning, binding_issues
 
     @staticmethod
+    def _build_runtime_route_authority_payload(
+        *,
+        director_verdict: str,
+        runtime_route_verdict: str,
+        runtime_gate_basis: str = "",
+        runtime_route_action: str = "",
+        runtime_route_reason: str = "",
+    ) -> dict[str, str]:
+        director_layer = str(director_verdict or "").strip()
+        route_layer = str(runtime_route_verdict or director_layer or "").strip()
+        payload = {
+            "director_verdict": director_layer,
+            "runtime_route_verdict": route_layer,
+            "verdict_contract_version": "verdict-layer-v1",
+            "final_judgment_authority": "director_llm",
+            "runtime_gate_authority": "python_runtime_routing_gate",
+            "runtime_gate_role": "route_or_block_automatic_progress",
+        }
+        if runtime_gate_basis:
+            payload["runtime_gate_basis"] = str(runtime_gate_basis)
+        if runtime_route_action:
+            payload["runtime_route_action"] = str(runtime_route_action)
+        if runtime_route_reason:
+            payload["runtime_route_reason"] = str(runtime_route_reason)
+        return payload
+
+    @staticmethod
     def _extract_binding_regenerate_only_categories(binding_categories: list[str]) -> list[str]:
         if not isinstance(binding_categories, list):
             return []
@@ -1000,18 +1027,23 @@ class UnifiedBlueprintValidator:
             else {"candidate_index": selected_idx, "quality_risk": False}
         )
 
-        verdict = compare_result.get("decision", "REJECT")
+        director_verdict = str(compare_result.get("decision", "REJECT") or "REJECT")
+        verdict = director_verdict
         quality_risk = bool(
             compare_result.get("quality_risk", False) or selected_candidate_advisory.get("quality_risk", False)
         )
         feedback = str(compare_result.get("feedback", "") or "")
+        director_feedback = feedback
         revision_required = bool(
             compare_result.get("revision_required", False) or verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
         )
         selection_reason = str(compare_result.get("selection_reason") or compare_result.get("reason", "") or "")
         verdict_reason = str(compare_result.get("verdict_reason") or selection_reason or "")
+        director_verdict_reason = verdict_reason
         fix_scope = str(compare_result.get("fix_scope", "") or "")
+        director_fix_scope = fix_scope
         fix_scope_reasoning = str(compare_result.get("fix_scope_reasoning", "") or "")
+        director_fix_scope_reasoning = fix_scope_reasoning
         (
             verdict,
             feedback,
@@ -1034,6 +1066,10 @@ class UnifiedBlueprintValidator:
             if regenerate_only_categories
             else ""
         )
+        route_changed_by_binding = bool(binding_issues and verdict != director_verdict)
+        runtime_route_action = ""
+        if route_changed_by_binding:
+            runtime_route_action = "regenerate_required" if fix_scope == "full" else "repair_required"
         revision_required = bool(revision_required or verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING"))
         issue_fix_pack = self._build_issue_fix_pack(selected_pre_result.get("issues", []))
         fix_pack = _normalize_stage3_fix_pack(compare_result) or issue_fix_pack
@@ -1060,9 +1096,23 @@ class UnifiedBlueprintValidator:
             "candidate_count": len(all_candidates),
             "candidate_advisories": candidate_advisories,
             "selected_candidate_advisory": selected_candidate_advisory,
+            "director_feedback": director_feedback,
+            "director_verdict_reason": director_verdict_reason,
+            "director_fix_scope": director_fix_scope,
+            "director_fix_scope_reasoning": director_fix_scope_reasoning,
             "binding_prevalidation_issue_count": len(binding_issues),
             "binding_prevalidation_categories": binding_categories,
         }
+        result.update(
+            self._build_runtime_route_authority_payload(
+                director_verdict=director_verdict,
+                runtime_route_verdict=verdict,
+                runtime_gate_basis="binding_prevalidation_contract" if route_changed_by_binding else "",
+                runtime_route_action=runtime_route_action,
+                runtime_route_reason=regenerate_only_reason
+                or ("binding prevalidation repair required" if route_changed_by_binding else ""),
+            )
+        )
         if regenerate_only_categories:
             result["binding_regenerate_only_categories"] = regenerate_only_categories
             result["binding_regenerate_only_reason"] = regenerate_only_reason
@@ -1260,6 +1310,8 @@ class UnifiedBlueprintValidator:
         final_verdict = director_verdict
         python_warnings, quality_risk = self._build_python_warning_entries(pre_result["issues"])
         advisory_fix_pack = self._build_advisory_fix_pack(pre_result["issues"])
+        director_fix_scope = str(director_result.get("fix_scope", "") or "")
+        director_fix_scope_reasoning = str(director_result.get("fix_scope_reasoning", "") or "")
         (
             final_verdict,
             director_feedback,
@@ -1272,8 +1324,8 @@ class UnifiedBlueprintValidator:
             issues=pre_result["issues"],
             feedback=director_feedback,
             verdict_reason=director_reason,
-            fix_scope=str(director_result.get("fix_scope", "") or ""),
-            fix_scope_reasoning=str(director_result.get("fix_scope_reasoning", "") or ""),
+            fix_scope=director_fix_scope,
+            fix_scope_reasoning=director_fix_scope_reasoning,
         )
         binding_categories = self._summarize_binding_prevalidation_categories(binding_issues)
         regenerate_only_categories = self._extract_binding_regenerate_only_categories(binding_categories)
@@ -1282,6 +1334,10 @@ class UnifiedBlueprintValidator:
             if regenerate_only_categories
             else ""
         )
+        route_changed_by_binding = bool(binding_issues and final_verdict != director_verdict)
+        runtime_route_action = ""
+        if route_changed_by_binding:
+            runtime_route_action = "regenerate_required" if fix_scope == "full" else "repair_required"
         self._sync_prevalidation_ensemble_meta(
             blueprint if isinstance(blueprint, dict) else None,
             python_warnings=python_warnings,
@@ -1310,9 +1366,23 @@ class UnifiedBlueprintValidator:
             "quality_risk": quality_risk,
             "revision_required": final_verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING"),
             "candidate_count": 1,
+            "director_feedback": str(director_result.get("feedback", "") or ""),
+            "director_verdict_reason": str(director_result.get("reason", "") or ""),
+            "director_fix_scope": director_fix_scope,
+            "director_fix_scope_reasoning": director_fix_scope_reasoning,
             "binding_prevalidation_issue_count": len(binding_issues),
             "binding_prevalidation_categories": binding_categories,
         }
+        result.update(
+            self._build_runtime_route_authority_payload(
+                director_verdict=director_verdict,
+                runtime_route_verdict=final_verdict,
+                runtime_gate_basis="binding_prevalidation_contract" if route_changed_by_binding else "",
+                runtime_route_action=runtime_route_action,
+                runtime_route_reason=regenerate_only_reason
+                or ("binding prevalidation repair required" if route_changed_by_binding else ""),
+            )
+        )
         if regenerate_only_categories:
             result["binding_regenerate_only_categories"] = regenerate_only_categories
             result["binding_regenerate_only_reason"] = regenerate_only_reason

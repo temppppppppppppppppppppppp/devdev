@@ -1303,19 +1303,19 @@ def test_failure_analyzer_build_sink_alignment_summary_payload_marks_warn_and_co
             "verify surface projection and persistence ordering."
         )
         assert result["coverage_gap_count"] == 0
-        assert result["structured_issue_count"] == 3
+        assert result["structured_issue_count"] == 2
         assert result["raw_issue_count"] == 1
         assert result["top_issue_headline"] == {
-            "headline": "P2 structured_sink_drift x3",
+            "headline": "P2 structured_sink_drift x2",
             "priority": "P2",
             "focus": "structured_sink_drift",
-            "count": 3,
+            "count": 2,
             "next_action": "Inspect structured sink mismatches before trusting cross-sink contract parity.",
         }
         assert result["operator_summary"] == (
             "Stage4 sink alignment warn: 2 attempt(s), final 1/1, lifecycle 1/1, "
-            "coverage gaps 0, sink issues 3, evidence issues 1. "
-            "Top issue: P2 structured_sink_drift x3. "
+            "coverage gaps 0, sink issues 2, evidence issues 1. "
+            "Top issue: P2 structured_sink_drift x2. "
             "Next: Inspect structured sink mismatches before trusting cross-sink contract parity. "
             "Evidence: Stage4 raw rationale warn: 1 attempt(s), 1 projected, 2 family(s), 2 surface(s). "
             "Top watchlist: P2 raw_surface_drift x1. "
@@ -3676,6 +3676,61 @@ def test_failure_analyzer_sink_alignment_summary_aligns_stage4_session_rationale
         assert result["final_sink_missing"] == {}
         assert result["lifecycle_sink_missing"] == {}
         assert result["lifecycle_missing_in_final_sinks"] == {}
+    finally:
+        db.close()
+
+
+def test_failure_analyzer_stage4_companion_missing_runtime_advisory_is_not_metadata_gap(tmp_path):
+    db = DBManager(tmp_path / "test_sink_alignment_stage4_companion_advisory.db")
+    try:
+        analyzer = FailureAnalyzer(db)
+        attempt_key = "s4:ep16:arc2:a1:sess_stage4_companion"
+        result = analyzer._collect_sink_alignment_rationale_results(
+            stage=4,
+            include_session_decisions=True,
+            attempt_key=attempt_key,
+            stage_attempts={
+                attempt_key: {
+                    "selection_reason": "candidate B best preserves continuity",
+                    "verdict_reason": "director accepted candidate B",
+                    "comparison_notes": "B has stronger scene continuity",
+                    "selected_candidate_advisory_struct": {},
+                    "fix_scope": "inplace",
+                    "runtime_advisory": "[stage4 advisory] preserve continuity",
+                    "retry_directives": "",
+                }
+            },
+            director_selections={
+                attempt_key: {
+                    "selection_reason": "candidate B best preserves continuity",
+                    "verdict_reason": "director accepted candidate B",
+                    "comparison_notes": "B has stronger scene continuity",
+                    "selected_candidate_advisory_struct": {},
+                    "fix_scope": "inplace",
+                }
+            },
+            session_decisions={
+                attempt_key: {
+                    "selection_reason": "candidate B best preserves continuity",
+                    "verdict_reason": "director accepted candidate B",
+                    "comparison_notes": "B has stronger scene continuity",
+                    "selected_candidate_advisory_struct": {},
+                    "fix_scope": "inplace",
+                    "runtime_advisory": "[stage4 advisory] preserve continuity",
+                    "retry_directives": "",
+                }
+            },
+            episode_production={
+                attempt_key: {
+                    "selection_reason": "candidate B best preserves continuity",
+                    "verdict_reason": "director accepted candidate B",
+                }
+            },
+        )
+
+        assert result["runtime_advisory_mismatches"] == []
+        assert result["retry_directives_mismatches"] == []
+        assert result["rationale_metadata_missing"] == []
     finally:
         db.close()
 

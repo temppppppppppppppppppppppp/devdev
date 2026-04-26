@@ -138,6 +138,24 @@ class Stage3ValidationBoundary:
                 len(all_candidates) if isinstance(all_candidates, list) else 1,
             ),
         }
+        for key in (
+            "director_verdict",
+            "runtime_route_verdict",
+            "verdict_contract_version",
+            "final_judgment_authority",
+            "runtime_gate_authority",
+            "runtime_gate_role",
+            "runtime_gate_basis",
+            "runtime_route_action",
+            "runtime_route_reason",
+            "director_feedback",
+            "director_verdict_reason",
+            "director_fix_scope",
+            "director_fix_scope_reasoning",
+        ):
+            value = validation_result.get(key)
+            if value:
+                pipeline_result["phases"]["validate"][key] = value
         binding_issue_count = validation_result.get("binding_prevalidation_issue_count", 0)
         try:
             binding_issue_count = int(binding_issue_count or 0)

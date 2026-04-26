@@ -1,18 +1,26 @@
 from __future__ import annotations
 
 import copy
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
+
+from modules.core.advisory_authority import (
+    ADVISORY_AUTHORITY_SCHEMA_KEY,
+    build_retry_surface_authority_levels,
+    ensure_stage4_route_authority,
+)
+from modules.core.authoritative_continuity_projection import AUTHORITATIVE_CONTINUITY_PROJECTION_KEY
 
 SESSION_MEMORY_ENVELOPE_VERSION = "session-memory-envelope-v1"
 SESSION_MEMORY_ENVELOPE_KEY = "session_memory_envelope"
 
 
 def _json_safe(value: Any) -> Any:
-    if value is None or isinstance(value, (str, int, float, bool)):
+    if value is None or isinstance(value, str | int | float | bool):
         return value
     if isinstance(value, Mapping):
         return {str(key): _json_safe(item) for key, item in value.items()}
-    if isinstance(value, (list, tuple)):
+    if isinstance(value, list | tuple):
         return [_json_safe(item) for item in value]
     return str(value)
 
@@ -59,7 +67,7 @@ def _merge_truth_pin_items(*values: Any) -> list[dict[str, Any]]:
     for value in values:
         if isinstance(value, Mapping):
             candidates = [_as_dict(value)]
-        elif isinstance(value, (list, tuple)):
+        elif isinstance(value, list | tuple):
             candidates = [_as_dict(item) for item in value if isinstance(item, Mapping)]
         else:
             candidates = []
@@ -116,12 +124,22 @@ def build_stage4_session_memory_envelope(
     is_patch_fallback: bool,
     patch_strategy: str,
 ) -> dict[str, Any]:
-    advisory = _as_dict(advisory_flags)
+    advisory = ensure_stage4_route_authority(advisory_flags, source="stage4_session_memory_envelope")
     gate_semantics = _as_dict(advisory.get("gate_semantics"))
     repair_contract = _first_dict(advisory.get("repair_contract"), gate_semantics.get("repair_contract"))
     scope_authority = _first_dict(advisory.get("scope_authority"), gate_semantics.get("scope_authority"))
     conflict_contract = _as_dict(advisory.get("conflict_contract"))
     fix_pack = _as_dict(advisory.get("fix_pack"))
+    retry_budget_axes = _as_dict(advisory.get("retry_budget_axes"))
+    retry_authority_levels = build_retry_surface_authority_levels(
+        advisory,
+        route_payloads={
+            "fix_pack": fix_pack,
+            "repair_contract": repair_contract,
+            "scope_authority": scope_authority,
+            "retry_budget_axes": retry_budget_axes,
+        },
+    )
 
     truth_pin_items = _merge_truth_pin_items(
         advisory.get("truth_pins"),
@@ -132,6 +150,10 @@ def build_stage4_session_memory_envelope(
         advisory.get("truth_pins"),
         gate_semantics.get("truth_pins"),
         _summarize_truth_pin_items(truth_pin_items),
+    )
+    authoritative_continuity_projection = _first_dict(
+        advisory.get(AUTHORITATIVE_CONTINUITY_PROJECTION_KEY),
+        gate_semantics.get(AUTHORITATIVE_CONTINUITY_PROJECTION_KEY),
     )
     carryover_refs = _merge_dicts(
         advisory.get("carryover_refs"),
@@ -177,7 +199,9 @@ def build_stage4_session_memory_envelope(
             "runtime_advisory": str(runtime_advisory or ""),
             "retry_directives": str(retry_directives or ""),
             "reject_bucket": str(reject_bucket or ""),
-            "retry_budget_axes": _as_dict(advisory.get("retry_budget_axes")),
+            "authority_schema_version": str(advisory.get(ADVISORY_AUTHORITY_SCHEMA_KEY) or ""),
+            "authority_levels": retry_authority_levels,
+            "retry_budget_axes": retry_budget_axes,
             "repair_contract": repair_contract,
             "scope_authority": scope_authority,
             "fix_pack": fix_pack,
@@ -187,6 +211,7 @@ def build_stage4_session_memory_envelope(
         },
         "truth_pins": truth_pins,
         "truth_pin_items": truth_pin_items,
+        AUTHORITATIVE_CONTINUITY_PROJECTION_KEY: authoritative_continuity_projection,
         "carryover_refs": carryover_refs,
         "coverage_warnings": coverage_warnings,
         "cache_lineage": _as_dict(advisory.get("cache_lineage")),

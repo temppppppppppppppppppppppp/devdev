@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from modules.core import stage4_episode_logging as s4_episode_logging
+from modules.core.advisory_authority import ensure_stage4_route_authority
 from modules.core.artifact_logging import (
     build_candidate_key,
     normalize_artifact_meta,
@@ -65,6 +66,18 @@ _WRITER_BLUEPRINT_UI_CONTAMINATION_MARKERS = (
     "hologram",
     "퀘스트 창",
 )
+_STAGE4_AUTHORITY_ACCEPTED_VERDICTS = {"PASS", "PASS_WITH_WARNING", "PASS_WITH_FIX"}
+
+
+class Stage4AuthorityPersistenceError(RuntimeError):
+    """Raised when an accepted Stage4 authority decision cannot be persisted."""
+
+
+def _stage4_attempt_requires_authority_persistence(*, success: bool, verdict: object) -> bool:
+    if not success:
+        return False
+    normalized = str(verdict or "").strip().upper()
+    return not normalized or normalized in _STAGE4_AUTHORITY_ACCEPTED_VERDICTS
 
 
 def _parse_retry_advisory_round_tag(line: str) -> int | None:
@@ -8335,6 +8348,16 @@ class Stage4InterviewRound:
             if isinstance(gate_semantics.get("verdict_layers"), dict)
             else {}
         )
+        normalized_advisory = ensure_stage4_route_authority(
+            normalized_advisory,
+            route_payloads={
+                "fix_pack": fix_pack,
+                "repair_contract": repair_contract,
+                "scope_authority": scope_authority,
+                "retry_budget_axes": retry_budget_axes,
+            },
+            source="stage4_attempt_contract_packet",
+        )
         return _Stage4AttemptContractPacket(
             advisory_flags=normalized_advisory if isinstance(normalized_advisory, dict) else {},
             gate_semantics=gate_semantics,
@@ -8838,11 +8861,17 @@ class Stage4InterviewRound:
         reject_bucket: str = "",
         prelude: _Stage4AttemptPreludePayload,
     ) -> None:
+        authority_persistence_required = _stage4_attempt_requires_authority_persistence(
+            success=success,
+            verdict=verdict,
+        )
         try:
             _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
             if not _db or not hasattr(_db, "save_stage_attempt"):
+                if authority_persistence_required:
+                    raise Stage4AuthorityPersistenceError("stage4_authority_persistence_unavailable")
                 return
-            _db.save_stage_attempt(
+            stage_attempt_saved = _db.save_stage_attempt(
                 **self._build_stage4_db_attempt_payload(
                     episode=episode,
                     round_num=round_num,
@@ -8873,7 +8902,13 @@ class Stage4InterviewRound:
                     reject_bucket=reject_bucket,
                 )
             )
+            if authority_persistence_required and stage_attempt_saved is False:
+                raise Stage4AuthorityPersistenceError("stage4_authority_persistence_failed")
+        except Stage4AuthorityPersistenceError:
+            raise
         except Exception as _sa_err:
+            if authority_persistence_required:
+                raise Stage4AuthorityPersistenceError("stage4_authority_persistence_failed") from _sa_err
             logging.debug("[stage_attempts] Stage4 record failed (non-blocking): %s", _sa_err)
 
     @staticmethod

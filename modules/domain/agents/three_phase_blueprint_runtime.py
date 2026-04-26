@@ -11,6 +11,7 @@ import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from modules.core.artifact_logging import build_candidate_key, normalize_artifact_meta, snapshot_logged_artifact
 from modules.core.constants import PatchModeThresholds
 from modules.core.episode_state_arbiter import summarize_episode_state_packet
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
@@ -2134,6 +2135,19 @@ class ThreePhaseBlueprintRuntime:
             validate_phase.pop("binding_prevalidation_categories", None)
 
         for key in (
+            "director_verdict",
+            "runtime_route_verdict",
+            "verdict_contract_version",
+            "final_judgment_authority",
+            "runtime_gate_authority",
+            "runtime_gate_role",
+            "runtime_gate_basis",
+            "runtime_route_action",
+            "runtime_route_reason",
+            "director_feedback",
+            "director_verdict_reason",
+            "director_fix_scope",
+            "director_fix_scope_reasoning",
             "binding_regenerate_only_categories",
             "binding_regenerate_only_reason",
             "fix_pack",
@@ -2963,6 +2977,83 @@ class ThreePhaseBlueprintRuntime:
             candidate_key=selected_strategy or "",
         )
 
+    def _record_terminal_failure_diagnostic_snapshot(
+        self,
+        *,
+        ep_num: int,
+        max_retries: int,
+        pipeline_result: dict,
+        retry_state: _ThreePhaseRetryState,
+        best_blueprint: dict | None,
+        terminal_reason: str,
+        feedback: str,
+    ) -> None:
+        project = getattr(self.owner.context, "current_project", None)
+        phases = pipeline_result.get("phases") if isinstance(pipeline_result.get("phases"), dict) else {}
+        validate_phase = phases.setdefault("validate", {}) if isinstance(phases, dict) else {}
+        generate_phase = phases.get("generate", {}) if isinstance(phases.get("generate"), dict) else {}
+        selected_strategy = str(
+            generate_phase.get("selected_strategy") or retry_state.prev_reject_strategy or "stage3_terminal_failure"
+        )
+        candidate_key = build_candidate_key(strategy=selected_strategy, fallback="stage3_terminal_failure")
+        attempt_num = max(1, int(max_retries or 0) + 1)
+        try:
+            arc_num = int(pipeline_result.get("arc_no", 0) or 0)
+        except (TypeError, ValueError):
+            arc_num = 0
+
+        diagnostic_payload = {
+            "summary_role": "stage3_terminal_failure_diagnostic",
+            "ep_num": ep_num,
+            "arc_num": arc_num,
+            "attempt_num": attempt_num,
+            "terminal_reason": str(terminal_reason or ""),
+            "final_verdict": str(pipeline_result.get("final_verdict", "") or ""),
+            "director_verdict": str(
+                validate_phase.get("director_verdict") or pipeline_result.get("director_verdict") or ""
+            ),
+            "runtime_route_verdict": str(
+                pipeline_result.get("runtime_route_verdict") or validate_phase.get("runtime_route_verdict") or ""
+            ),
+            "runtime_gate_basis": str(
+                pipeline_result.get("runtime_gate_basis") or validate_phase.get("runtime_gate_basis") or ""
+            ),
+            "objective_status": str(pipeline_result.get("objective_status", "") or ""),
+            "objective_root_cause": str(pipeline_result.get("objective_root_cause", "") or ""),
+            "binding_prevalidation_issue_count": int(retry_state.prev_binding_issue_count or 0),
+            "binding_prevalidation_categories": list(validate_phase.get("binding_prevalidation_categories") or []),
+            "selected_candidate_key": candidate_key,
+            "selected_strategy": selected_strategy,
+            "candidate_present": isinstance(best_blueprint, dict),
+            "candidate_blueprint": best_blueprint if isinstance(best_blueprint, dict) else None,
+            "last_feedback": str(feedback or ""),
+            "phases": phases,
+        }
+        artifact_meta = normalize_artifact_meta(
+            snapshot_logged_artifact(
+                project,
+                stage=3,
+                ep_num=ep_num,
+                arc_num=arc_num or None,
+                attempt_num=attempt_num,
+                candidate_key=candidate_key,
+                artifact_kind="terminal_failure_diagnostic",
+                payload=diagnostic_payload,
+            ),
+            fallback_candidate_key=candidate_key,
+        )
+        diagnostic = {
+            "summary_role": "stage3_terminal_failure_diagnostic",
+            "artifact_kind": "terminal_failure_diagnostic",
+            "terminal_reason": str(terminal_reason or ""),
+            "candidate_key": artifact_meta.get("candidate_key", ""),
+            "content_hash": artifact_meta.get("content_hash", ""),
+            "artifact_path": artifact_meta.get("artifact_path", ""),
+            "official_artifact": False,
+        }
+        pipeline_result["terminal_failure_diagnostic"] = diagnostic
+        validate_phase["terminal_failure_diagnostic"] = diagnostic
+
     def _finalize_terminal_failure(
         self,
         *,
@@ -2979,12 +3070,72 @@ class ThreePhaseBlueprintRuntime:
 
         if pipeline_result.get("failure_reason") == AgentErrorType.SCHEMA_INCOMPATIBLE:
             pipeline_result["final_verdict"] = "FAILED"
+            self._record_terminal_failure_diagnostic_snapshot(
+                ep_num=ep_num,
+                max_retries=max_retries,
+                pipeline_result=pipeline_result,
+                retry_state=retry_state,
+                best_blueprint=best_blueprint,
+                terminal_reason="schema_incompatible",
+                feedback=final_feedback,
+            )
             logging.warning(f"[ThreePhase] ep{ep_num} schema_incompatible immediate failure")
             return None, pipeline_result
 
         if best_blueprint and director and last_score >= PatchModeThresholds.REWRITE:
             if retry_state.prev_binding_issue_count > 0:
                 pipeline_result["final_verdict"] = "FAILED"
+                validate_phase = pipeline_result.setdefault("phases", {}).setdefault("validate", {})
+                director_verdict = str(
+                    validate_phase.get("director_verdict")
+                    or validate_phase.get("verdict")
+                    or pipeline_result.get("director_verdict")
+                    or ""
+                ).strip()
+                if director_verdict:
+                    pipeline_result["director_verdict"] = director_verdict
+                    validate_phase["director_verdict"] = director_verdict
+                authority_payload = {
+                    "runtime_route_verdict": "REJECT",
+                    "verdict_contract_version": "verdict-layer-v1",
+                    "final_judgment_authority": "director_llm",
+                    "runtime_gate_authority": "python_runtime_routing_gate",
+                    "runtime_gate_role": "route_or_block_automatic_progress",
+                    "runtime_gate_basis": "binding_prevalidation_reopen",
+                    "runtime_route_action": "block_artifact_adoption",
+                    "runtime_route_reason": "emergency fallback blocked by unresolved binding prevalidation issues",
+                    "objective_status": "blocked_by_runtime_guard",
+                    "objective_success": False,
+                    "objective_root_cause": "binding_prevalidation_unresolved",
+                    "final_verdict_authority": "compatibility_objective_status",
+                }
+                pipeline_result.update(authority_payload)
+                validate_phase.update(
+                    {
+                        key: value
+                        for key, value in authority_payload.items()
+                        if key
+                        in {
+                            "runtime_route_verdict",
+                            "verdict_contract_version",
+                            "final_judgment_authority",
+                            "runtime_gate_authority",
+                            "runtime_gate_role",
+                            "runtime_gate_basis",
+                            "runtime_route_action",
+                            "runtime_route_reason",
+                        }
+                    }
+                )
+                self._record_terminal_failure_diagnostic_snapshot(
+                    ep_num=ep_num,
+                    max_retries=max_retries,
+                    pipeline_result=pipeline_result,
+                    retry_state=retry_state,
+                    best_blueprint=best_blueprint,
+                    terminal_reason="binding_prevalidation_reopen",
+                    feedback=final_feedback,
+                )
                 logging.warning(
                     "[ThreePhase] ep%d emergency fallback blocked: unresolved binding issues=%d",
                     ep_num,
@@ -3003,6 +3154,15 @@ class ThreePhaseBlueprintRuntime:
             return best_blueprint, pipeline_result
 
         pipeline_result["final_verdict"] = "FAILED"
+        self._record_terminal_failure_diagnostic_snapshot(
+            ep_num=ep_num,
+            max_retries=max_retries,
+            pipeline_result=pipeline_result,
+            retry_state=retry_state,
+            best_blueprint=best_blueprint,
+            terminal_reason="retries_exhausted",
+            feedback=final_feedback,
+        )
         logging.warning(f"[ThreePhase] ep{ep_num} all retries failed ({max_retries + 1})")
         if final_feedback:
             logging.info(f"Last feedback: {final_feedback[:200]}...")
