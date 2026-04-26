@@ -383,6 +383,33 @@ def test_vertex_provider_auto_mode_prefers_api_key(monkeypatch):
     assert captured_kwargs == {"vertexai": True, "api_key": "vertex-express-key"}
 
 
+def test_vertex_provider_env_auth_mode_overrides_auto_api_key(monkeypatch):
+    captured_kwargs = {}
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            captured_kwargs.update(kwargs)
+
+    monkeypatch.setenv("GEULDOBI_VERTEX_AUTH_MODE", "project_credentials")
+    monkeypatch.setenv("VERTEX_API_KEY", "vertex-express-key")
+    monkeypatch.setenv("VERTEX_PROJECT_ID", "vertex-proj")
+    monkeypatch.setenv("VERTEX_LOCATION", "us-central1")
+    monkeypatch.setattr("modules.core.providers.vertex_provider.genai.Client", FakeClient)
+    monkeypatch.setattr(
+        "modules.core.providers.vertex_provider.VertexAIProvider._load_credentials",
+        lambda self: None,
+    )
+
+    provider = VertexAIProvider(auth_mode="auto")
+    provider._get_client()
+
+    assert captured_kwargs == {
+        "vertexai": True,
+        "project": "vertex-proj",
+        "location": "us-central1",
+    }
+
+
 def test_vertex_provider_project_credentials_mode_uses_project_location(monkeypatch):
     captured_kwargs = {}
     fake_credentials = object()
