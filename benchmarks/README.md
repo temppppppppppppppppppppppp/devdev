@@ -9,7 +9,7 @@ Each archived run is stored under `benchmarks/<project>/<run_id>/` and includes:
 - `manifest.json`
 - `stage_metrics.csv`
 
-`benchmark_index.csv` is the quick comparison surface across runs. Snapshot folders are ignored by git by default so large DB copies do not get staged accidentally.
+`benchmark_index.csv` is the quick comparison surface across runs. Snapshot folders are ignored by git by default so large DB copies do not get staged accidentally. The index therefore marks archive backing evidence as `local_ignored_snapshot` / `local_only_non_reproducible` unless a separate export or tracked evidence bundle is created.
 
 Example:
 
