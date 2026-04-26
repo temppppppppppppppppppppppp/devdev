@@ -1,5 +1,6 @@
 """FailureAnalyzer success-pattern and quality-distribution tests."""
 
+import hashlib
 import json
 
 from modules.core.db_manager import DBManager
@@ -1456,6 +1457,46 @@ def test_failure_analyzer_collect_sink_alignment_artifact_results_detects_mismat
                 "attempt_key": attempt_key,
                 "sink": "pass_rate_monitor",
                 "artifact_path": missing_path,
+            }
+        ]
+    finally:
+        db.close()
+
+
+def test_failure_analyzer_collect_sink_alignment_artifact_results_recomputes_file_hash(tmp_path):
+    db = DBManager(tmp_path / "test_sink_alignment_artifact_hash_helper.db")
+    try:
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        attempt_key = "s4:ep93:arc9:a1:sess_artifact_hash"
+        artifact_path = "logs/artifacts/stage4/ep_0093/attempt_01/final.txt"
+        artifact_file = tmp_path / artifact_path
+        artifact_file.parent.mkdir(parents=True, exist_ok=True)
+        artifact_file.write_bytes(b"artifact bytes")
+        actual_hash = hashlib.sha256(b"artifact bytes").hexdigest()
+
+        result = analyzer._collect_sink_alignment_artifact_results(
+            attempt_key=attempt_key,
+            stage_attempts={
+                attempt_key: {
+                    "candidate_key": "A|final",
+                    "content_hash": "0" * 64,
+                    "artifact_path": artifact_path,
+                }
+            },
+            pass_rate_monitor={},
+            director_selections={},
+            session_decisions={},
+            episode_production={},
+        )
+
+        assert result["artifact_missing_files"] == []
+        assert result["artifact_content_hash_mismatches"] == [
+            {
+                "attempt_key": attempt_key,
+                "sink": "stage_attempts",
+                "artifact_path": artifact_path,
+                "content_hash": "0" * 64,
+                "actual_content_hash": actual_hash,
             }
         ]
     finally:

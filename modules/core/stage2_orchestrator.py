@@ -23,6 +23,7 @@ from modules.core.logging_keys import build_attempt_key, resolve_logging_session
 from modules.core.stage2_contracts import TACTICAL_DOC_DUPLICATE_THRESHOLD
 
 DEFAULT_EP_COUNT = VolumeSettings.EPISODES_PER_ARC
+STAGE2_ARCS_SOURCE_LINEAGE_ANCHOR = "stage2_arcs_source_lineage"
 
 
 class Stage2BootstrapPayload(TypedDict):
@@ -311,6 +312,37 @@ class Stage2Orchestrator:
 
         return (ep_num - 1) // DEFAULT_EP_COUNT + 1
 
+    def _save_stage2_arcs_source_lineage(self, lineage: dict[str, Any]) -> None:
+        project = getattr(self.ctx, "current_project", None)
+        save_v20_anchor = getattr(project, "save_v20_anchor", None)
+        if callable(save_v20_anchor):
+            save_v20_anchor(STAGE2_ARCS_SOURCE_LINEAGE_ANCHOR, lineage)
+            return
+        db = getattr(project, "db", None)
+        save_anchor = getattr(db, "save_anchor", None)
+        if callable(save_anchor):
+            save_anchor(STAGE2_ARCS_SOURCE_LINEAGE_ANCHOR, lineage)
+
+    def _stage2_cached_arcs_lineage_ready(self, *, all_refined_arcs: list[Any], arcs_source: list[Any]) -> bool:
+        from modules.core.stage0_handoff import (
+            build_plot_roadmap_lineage,
+            cached_arcs_source_lineage_matches,
+            load_plot_roadmap_lineage,
+        )
+
+        project = getattr(self.ctx, "current_project", None)
+        saved_lineage = load_plot_roadmap_lineage(project)
+        current_lineage = build_plot_roadmap_lineage(arcs_source)
+        if not cached_arcs_source_lineage_matches(project, cached_arcs=all_refined_arcs, roadmap=arcs_source):
+            self.ctx.ui.log(
+                "❌ [Stage 2] cached arcs source lineage differs from current plot_roadmap; "
+                "refusing ordinal cache reuse."
+            )
+            return False
+        if not saved_lineage:
+            self._save_stage2_arcs_source_lineage(current_lineage)
+        return True
+
     def _bootstrap_stage2_arc_pipeline(self, *, target_arc_count: int | None) -> Stage2BootstrapPayload:
         """Prepare Stage 2 startup state before entering batch orchestration."""
         from modules.core.constants import HUDKeys
@@ -370,6 +402,8 @@ class Stage2Orchestrator:
         grand_obj = meta_info.get("grand_objective", "천하제일") if isinstance(meta_info, dict) else "천하제일"
 
         all_refined_arcs = self.ctx.current_project.db.load_anchor("arcs") or []
+        if not self._stage2_cached_arcs_lineage_ready(all_refined_arcs=all_refined_arcs, arcs_source=arcs_source):
+            return {"ready": False}
         done_count = len(all_refined_arcs)
         total_count = len(arcs_source)
 
@@ -1170,40 +1204,42 @@ class Stage2Orchestrator:
         previous_attempt = None
         refined_arc = None
 
-        while attempt < max_attempts:
-            attempt_result = await self._run_stage2_single_arc_attempt(
-                global_arc_no=global_arc_no,
-                attempt=attempt,
-                max_attempts=max_attempts,
-                setup=setup,
-                enriched_block=enriched_block,
-                all_refined_arcs=all_refined_arcs,
-                current_vol_strategy=current_vol_strategy,
-                protagonist_name=protagonist_name,
-                bible_root=bible_root,
-                constraint_db=constraint_db,
-                genre=genre,
-                last_refined_context=last_refined_context,
-                current_ep_start=current_ep_start,
-                current_feedback=current_feedback,
-                director_feedback_for_fourphase=director_feedback_for_fourphase,
-                st_snapshot=st_snapshot,
-                previous_attempt=previous_attempt,
-            )
-            attempt = attempt_result["next_attempt"]
-            refined_arc = attempt_result["refined_arc"]
-            current_feedback = attempt_result["current_feedback"]
-            director_feedback_for_fourphase = attempt_result["director_feedback_for_fourphase"]
-            st_snapshot = attempt_result["st_snapshot"]
-            last_refined_context = attempt_result["last_refined_context"]
-            current_ep_start = attempt_result["current_ep_start"]
-            previous_attempt = attempt_result["previous_attempt"]
+        while True:
+            while attempt < max_attempts:
+                attempt_result = await self._run_stage2_single_arc_attempt(
+                    global_arc_no=global_arc_no,
+                    attempt=attempt,
+                    max_attempts=max_attempts,
+                    setup=setup,
+                    enriched_block=enriched_block,
+                    all_refined_arcs=all_refined_arcs,
+                    current_vol_strategy=current_vol_strategy,
+                    protagonist_name=protagonist_name,
+                    bible_root=bible_root,
+                    constraint_db=constraint_db,
+                    genre=genre,
+                    last_refined_context=last_refined_context,
+                    current_ep_start=current_ep_start,
+                    current_feedback=current_feedback,
+                    director_feedback_for_fourphase=director_feedback_for_fourphase,
+                    st_snapshot=st_snapshot,
+                    previous_attempt=previous_attempt,
+                )
+                attempt = attempt_result["next_attempt"]
+                refined_arc = attempt_result["refined_arc"]
+                current_feedback = attempt_result["current_feedback"]
+                director_feedback_for_fourphase = attempt_result["director_feedback_for_fourphase"]
+                st_snapshot = attempt_result["st_snapshot"]
+                last_refined_context = attempt_result["last_refined_context"]
+                current_ep_start = attempt_result["current_ep_start"]
+                previous_attempt = attempt_result["previous_attempt"]
 
-            if attempt_result["action"] == "break":
-                passed = True
+                if attempt_result["action"] == "break":
+                    passed = True
+                    break
+
+            if passed:
                 break
-
-        if not passed:
             failure_state = await self._handle_stage2_single_arc_failure(
                 global_arc_no=global_arc_no,
                 batch_start=batch_start,
@@ -1217,7 +1253,18 @@ class Stage2Orchestrator:
             )
             if failure_state["action"] == "abort":
                 return failure_state
+            if failure_state["action"] == "retry":
+                current_feedback = failure_state.get("current_feedback", current_feedback)
+                director_feedback_for_fourphase = current_feedback
+                if failure_state.get("constraint_block"):
+                    setup["constraint_block"] = failure_state["constraint_block"]
+                attempt = 0
+                refined_arc = None
+                previous_attempt = None
+                passed = False
+                continue
             current_ep_start = failure_state["current_ep_start"]
+            break
 
         return {"action": "next", "current_ep_start": current_ep_start, "last_refined_context": last_refined_context}
 

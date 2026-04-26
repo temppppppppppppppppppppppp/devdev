@@ -2,7 +2,8 @@
 
 import json
 import logging
-from typing import TYPE_CHECKING, Any, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 from modules.core.constants import VolumeSettings
 from modules.core.fact_ledger import _format_number_basis_label
@@ -358,7 +359,9 @@ class Stage4ContextPackets:
                 lines = []
                 for name, info in remaining_dead[:8]:
                     if isinstance(info, dict):
-                        lines.append(f"- {name} (제{info.get('ep', 'unknown')}화, {owner._trim_summary_value(info.get('cause'), 24)})")
+                        lines.append(
+                            f"- {name} (제{info.get('ep', 'unknown')}화, {owner._trim_summary_value(info.get('cause'), 24)})"
+                        )
                     else:
                         lines.append(f"- {name}")
                 parts.append(f"[사망 NPC - CP 비포함 {len(lines)}명]\n" + "\n".join(lines))
@@ -375,7 +378,9 @@ class Stage4ContextPackets:
 
         active_items = state.get("active_items", {})
         if isinstance(active_items, dict) and active_items:
-            item_lines = [f"- {name}" for name, _info in list(active_items.items())[:20] if str(name).strip() not in cp_items]
+            item_lines = [
+                f"- {name}" for name, _info in list(active_items.items())[:20] if str(name).strip() not in cp_items
+            ]
             if item_lines:
                 parts.append("[보유 아이템 - CP 비포함]\n" + "\n".join(item_lines[:12]))
             if cp_items:
@@ -618,9 +623,19 @@ class Stage4ContextPackets:
             owner.ctx.ui.log(f"   ⚠️ [V68] 계층형 요약 로드 실패 (비치명): {str(hierarchy_err)[:60]}")
 
         try:
+            from modules.core.stage0_handoff import cached_arcs_source_lineage_matches
+
+            project = owner.ctx.current_project
             master_bible = getattr(owner.ctx.current_project, "master_bible", None) or {}
             bible_root = master_bible.get("MasterBible", master_bible)
             plot_roadmap = bible_root.get("plot_roadmap", [])
+            cached_arcs = getattr(project, "arcs", []) or []
+            if not cached_arcs_source_lineage_matches(project, cached_arcs=cached_arcs, roadmap=plot_roadmap):
+                logging.warning(
+                    "[Stage4] cached arcs source lineage differs from current plot_roadmap; "
+                    "skipping treatment genre_ext injection."
+                )
+                plot_roadmap = []
             arc_no = arc_data.get("arc_no", 1) if arc_data else 1
             arc_idx = arc_no - 1
             if isinstance(plot_roadmap, list) and 0 <= arc_idx < len(plot_roadmap):
@@ -675,7 +690,9 @@ class Stage4ContextPackets:
                     tactical_text = str(tactical_text)
                 semantic_plot_guard_warnings = owner.ctx.semantic_plot_guard.check_new_arc(tactical_doc=tactical_text)
                 if semantic_plot_guard_warnings:
-                    semantic_plot_guard_text = owner.ctx.semantic_plot_guard.format_warnings(semantic_plot_guard_warnings)
+                    semantic_plot_guard_text = owner.ctx.semantic_plot_guard.format_warnings(
+                        semantic_plot_guard_warnings
+                    )
                     if semantic_plot_guard_text:
                         tier2_parts.append(semantic_plot_guard_text)
             except Exception as semantic_guard_err:

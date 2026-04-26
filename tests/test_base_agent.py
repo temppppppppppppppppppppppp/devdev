@@ -41,6 +41,36 @@ def agent():
     return BaseAgent(context=context, client=client, model_tier="gemini-2.5-flash")
 
 
+def seed_context_cache(
+    agent,
+    cache_name="cached/ctx",
+    content_hash="hash-lineage",
+    cache_type="manuscript",
+    project_name="gc_ep21",
+):
+    import time
+
+    cache_key = build_context_cache_key(agent, cache_type, project_name, content_hash)
+    agent._context_caches[cache_key] = {
+        "name": cache_name,
+        "created_at": time.time(),
+        "content_hash": content_hash,
+        "model": agent.primary_model or "",
+        "provider": base_agent_module._context_cache_provider_token(agent.client, agent.primary_model),
+    }
+    return cache_key
+
+
+def build_context_cache_key(agent, cache_type, project_name, content_hash):
+    return base_agent_module._build_context_cache_key(
+        cache_type,
+        project_name,
+        content_hash,
+        client=agent.client,
+        primary_model=agent.primary_model,
+    )
+
+
 def test_base_agent_init_api_keys_uses_vertex_keys_when_mode_forced(monkeypatch):
     monkeypatch.setenv("GEULDOBI_PROVIDER_MODE", "vertex_ai")
     monkeypatch.setenv("VERTEX_API_KEY", "vertex-key-1")
@@ -802,11 +832,13 @@ class TestContextCacheEviction:
 
         content = "short content"
         content_hash = hashlib.md5(content.encode("utf-8")).hexdigest()[:16]
-        cache_key = f"test__{content_hash}"
+        cache_key = build_context_cache_key(agent, "test", "", content_hash)
         agent._context_caches[cache_key] = {
             "name": "test",
             "created_at": time.time() - 99999,
             "content_hash": content_hash,
+            "model": agent.primary_model or "",
+            "provider": base_agent_module._context_cache_provider_token(agent.client, agent.primary_model),
         }
         # 만료 캐시 접근 → pop으로 안전 삭제 (KeyError 없음)
         result = agent._get_or_create_context_cache("test", content, ttl_seconds=1)
@@ -867,11 +899,13 @@ class TestContextCacheEviction:
         agent.context = SimpleNamespace(current_project=SimpleNamespace(db=db), current_stage=4, current_ep=21)
         content = "A" * max(10, agent._MIN_CACHE_CONTENT)
         content_hash = hashlib.md5(content.encode("utf-8")).hexdigest()[:16]
-        cache_key = f"manuscript_gc_ep21_{content_hash}"
+        cache_key = build_context_cache_key(agent, "manuscript", "gc_ep21", content_hash)
         agent._context_caches[cache_key] = {
             "name": "cache/existing",
             "created_at": time.time(),
             "content_hash": content_hash,
+            "model": agent.primary_model or "",
+            "provider": base_agent_module._context_cache_provider_token(agent.client, agent.primary_model),
         }
 
         result = agent._get_or_create_context_cache("manuscript", content, ttl_seconds=1800, project_name="gc_ep21")
@@ -883,6 +917,23 @@ class TestContextCacheEviction:
         assert kwargs["cache_name"] == "cache/existing"
         assert kwargs["stage"] == 4
         assert kwargs["ep_num"] == 21
+
+    def test_context_cache_key_separates_model_and_provider(self, agent):
+        agent.primary_model = "gemini-2.5-flash"
+        agent.client = SimpleNamespace(_geuldobi_provider_mode="google_genai")
+        google_key = build_context_cache_key(agent, "manuscript", "gc_ep21", "hash123")
+
+        agent.client = SimpleNamespace(_geuldobi_provider_mode="vertex_ai", _geuldobi_vertex_auth_mode="adc")
+        vertex_key = build_context_cache_key(agent, "manuscript", "gc_ep21", "hash123")
+
+        agent.primary_model = "gemini-2.5-pro"
+        pro_key = build_context_cache_key(agent, "manuscript", "gc_ep21", "hash123")
+
+        assert google_key != vertex_key
+        assert vertex_key != pro_key
+        assert "google_genai" in google_key
+        assert "vertex_ai.adc" in vertex_key
+        assert "gemini-2.5-pro" in pro_key
 
     def test_context_cache_skips_vertex_api_key_mode_before_create(self, agent):
         db = MagicMock()
@@ -927,15 +978,8 @@ class TestContextCacheEviction:
         assert kwargs["ep_num"] == 16
 
     def test_cached_context_success_logs_cache_lineage(self, agent, monkeypatch):
-        import time
-
         monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
-        cache_key = "manuscript_gc_ep21_hash-lineage-success"
-        agent._context_caches[cache_key] = {
-            "name": "cached/ctx-success",
-            "created_at": time.time(),
-            "content_hash": "hash-lineage-success",
-        }
+        cache_key = seed_context_cache(agent, cache_name="cached/ctx-success", content_hash="hash-lineage-success")
         response = MagicMock()
         response.text = json.dumps({"content": "cached"})
         agent._generate_content = MagicMock(return_value=response)
@@ -954,15 +998,8 @@ class TestContextCacheEviction:
             agent._context_caches.pop(cache_key, None)
 
     def test_cached_context_failure_evicts_cache_by_name_and_logs_lineage(self, agent, monkeypatch):
-        import time
-
         monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
-        cache_key = "manuscript_gc_ep21_hash-lineage-fail"
-        agent._context_caches[cache_key] = {
-            "name": "cached/ctx-fail",
-            "created_at": time.time(),
-            "content_hash": "hash-lineage-fail",
-        }
+        cache_key = seed_context_cache(agent, cache_name="cached/ctx-fail", content_hash="hash-lineage-fail")
         agent._generate_content = MagicMock(side_effect=RuntimeError("cached boom"))
         agent._log_llm_call_to_db = MagicMock()
         agent.ask = MagicMock(return_value='{"fallback": true}')
@@ -978,6 +1015,31 @@ class TestContextCacheEviction:
             assert kwargs["context_cache_outcome"] == "failed"
         finally:
             agent._context_caches.pop(cache_key, None)
+
+    def test_cached_context_missing_lineage_bypasses_cache(self, agent):
+        agent.ask = MagicMock(return_value='{"fallback": true}')
+        agent._generate_content = MagicMock()
+
+        result = agent._ask_with_cached_context(cache_name="cached/missing", prompt="prompt")
+
+        assert json.loads(result)["fallback"] is True
+        agent.ask.assert_called_once()
+        agent._generate_content.assert_not_called()
+
+    def test_cached_context_stale_model_lineage_bypasses_cache(self, agent):
+        cache_key = seed_context_cache(agent, cache_name="cached/stale-model", content_hash="hash-stale-model")
+        agent.primary_model = "gemini-2.5-pro"
+        agent.ask = MagicMock(return_value='{"fallback": true}')
+        agent._generate_content = MagicMock()
+
+        try:
+            result = agent._ask_with_cached_context(cache_name="cached/stale-model", prompt="prompt")
+        finally:
+            agent._context_caches.pop(cache_key, None)
+
+        assert json.loads(result)["fallback"] is True
+        agent.ask.assert_called_once()
+        agent._generate_content.assert_not_called()
 
 
 class TestMetricsUsageTracking:
@@ -1111,8 +1173,12 @@ class TestMetricsUsageTracking:
 
         agent._generate_content = fake_generate
         agent._log_llm_call_to_db = MagicMock()
+        cache_key = seed_context_cache(agent, cache_name="cached/ctx", content_hash="hash-metric-success")
 
-        result = agent._ask_with_cached_context(cache_name="cached/ctx", prompt="prompt")
+        try:
+            result = agent._ask_with_cached_context(cache_name="cached/ctx", prompt="prompt")
+        finally:
+            agent._context_caches.pop(cache_key, None)
 
         assert json.loads(result)["content"] == "cached"
         collector.start_call.assert_called_once_with(agent.agent_name, agent.primary_model)
@@ -1136,8 +1202,12 @@ class TestMetricsUsageTracking:
         agent._classify_error = MagicMock(return_value=AgentErrorType.NETWORK_ERROR)
         agent.ask = MagicMock(return_value='{"fallback": true}')
         agent._log_llm_call_to_db = MagicMock()
+        cache_key = seed_context_cache(agent, cache_name="cached/ctx", content_hash="hash-metric-fail")
 
-        result = agent._ask_with_cached_context(cache_name="cached/ctx", prompt="prompt")
+        try:
+            result = agent._ask_with_cached_context(cache_name="cached/ctx", prompt="prompt")
+        finally:
+            agent._context_caches.pop(cache_key, None)
 
         assert json.loads(result)["fallback"] is True
         collector.end_call.assert_called_once()
@@ -1322,8 +1392,12 @@ class TestTimeoutAndPromptGate:
         response = MagicMock()
         response.text = json.dumps({"content": "cached"})
         agent.client.models.generate_content.return_value = response
+        cache_key = seed_context_cache(agent, cache_name="cached/ctx", content_hash="hash-timeout")
 
-        _ = agent._ask_with_cached_context(cache_name="cached/ctx", prompt="테스트")
+        try:
+            _ = agent._ask_with_cached_context(cache_name="cached/ctx", prompt="테스트")
+        finally:
+            agent._context_caches.pop(cache_key, None)
         config = agent.client.models.generate_content.call_args.kwargs["config"]
         assert config.http_options is not None
         assert config.http_options.timeout == int(agent.API_TIMEOUT) * 1000

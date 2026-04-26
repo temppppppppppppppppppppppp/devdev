@@ -170,6 +170,34 @@ class TestProcessPassResult:
         assert status_payloads[-1]["settlement_status"] == "primary_db_failed"
         assert status_payloads[-1]["manuscript_persisted"] is False
 
+    def test_settlement_failure_demotes_pre_settlement_pass_attempt(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.side_effect = RuntimeError("DB error")
+
+        result = pp.process_pass_result(
+            next_ep=1,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="테스트",
+            final_state_updates={
+                "_stage4_attempt_key": "s4:ep1:arc1:a1:sess",
+                "_stage4_attempt_artifact_meta": {"attempt_key": "s4:ep1:arc1:a1:sess"},
+            },
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is False
+        status_payloads = self._settlement_status_payloads(pp)
+        assert status_payloads[-1]["attempt_key"] == "s4:ep1:arc1:a1:sess"
+        pp.ctx.current_project.db.mark_stage4_attempt_settlement_failed.assert_called_once_with(
+            attempt_key="s4:ep1:arc1:a1:sess",
+            settlement_status="primary_db_failed",
+            detail="",
+        )
+
     def test_returns_false_and_logs_when_meta_save_fails(self, tmp_path):
         pp = self._make_pp()
         pp._save_pass_result_primary_db = MagicMock(return_value=True)

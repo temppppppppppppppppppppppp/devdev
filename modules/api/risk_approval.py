@@ -6,6 +6,9 @@
 
 오류코드:
     RISK_APPROVAL_REQUIRED              403  approval_id 없거나 레코드 없음
+    RISK_APPROVAL_NOT_APPROVED          403  승인 상태가 approved 가 아님
+    RISK_APPROVAL_KEY_MISMATCH          403  승인된 key 와 요청 key 불일치
+    RISK_APPROVAL_USED                  403  이미 사용된 approval_id
     RISK_APPROVAL_EXPIRED               403  expires_at 초과
     RISK_APPROVAL_DUAL_CONTROL_REQUIRED 403  primary == secondary approver
 
@@ -18,9 +21,7 @@ import json
 import logging
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
-
-UTC = timezone.utc
+from datetime import UTC, datetime
 from pathlib import Path
 
 from modules.api.run_validator import ValidationResult
@@ -31,6 +32,7 @@ _DEFAULT_AUDIT_LOG = Path("logs/risk-approval-log.jsonl")
 
 
 # ─── 데이터 클래스 ───────────────────────────────────────────────────────────
+
 
 @dataclass
 class ApprovalRecord:
@@ -66,16 +68,20 @@ class ApprovalRecord:
 
 # ─── 오류 헬퍼 ───────────────────────────────────────────────────────────────
 
+
 def _err(code: str, message: str) -> ValidationResult:
     return ValidationResult(ok=False, http_status=403, code=code, message=message)
 
 
-_OK_APPROVAL = ValidationResult(
-    ok=True, http_status=202, code="OK", message="Approval validated."
-)
+_OK_APPROVAL = ValidationResult(ok=True, http_status=202, code="OK", message="Approval validated.")
+
+
+def _record_status(record: ApprovalRecord) -> str:
+    return str(record.status or "").strip().lower()
 
 
 # ─── 승인 게이트 ─────────────────────────────────────────────────────────────
+
 
 class RiskApprovalGate:
     """위험키 승인 정책을 강제하고 감사 로그를 기록한다.
@@ -92,6 +98,7 @@ class RiskApprovalGate:
     ) -> None:
         self._store: dict[str, ApprovalRecord] = store if store is not None else {}
         self._audit_log_path = audit_log_path
+        self._used_approval_ids: set[str] = set()
 
     # ── 공개 API ────────────────────────────────────────────────────────────
 
@@ -132,15 +139,23 @@ class RiskApprovalGate:
         # 2. 레코드 조회 실패
         record = self._store.get(approval_id)
         if record is None:
-            logger.warning(
-                "RISK_APPROVAL_REQUIRED unknown approval_id=%r key=%r", approval_id, key
-            )
+            logger.warning("RISK_APPROVAL_REQUIRED unknown approval_id=%r key=%r", approval_id, key)
             result = _err(
                 "RISK_APPROVAL_REQUIRED",
                 f"approval_id '{approval_id}' not found.",
             )
             self._write_audit(key, approval_id, operator, now, result)
             return result
+
+        record_authority_error = self._validate_record_authority(
+            key=key,
+            approval_id=approval_id,
+            operator=operator,
+            now=now,
+            record=record,
+        )
+        if record_authority_error is not None:
+            return record_authority_error
 
         # 3. 만료 검사
         expires = record.expires_at
@@ -174,14 +189,61 @@ class RiskApprovalGate:
             self._write_audit(key, approval_id, operator, now, result, record)
             return result
 
-        # 5. 통과 — 감사 로그 기록
-        logger.info(
-            "RISK_APPROVAL_OK approval_id=%r key=%r operator=%r", approval_id, key, operator
-        )
+        # 5. 통과 — approval_id 단회 사용 처리 + 감사 로그 기록
+        self._used_approval_ids.add(approval_id)
+        logger.info("RISK_APPROVAL_OK approval_id=%r key=%r operator=%r", approval_id, key, operator)
         self._write_audit(key, approval_id, operator, now, _OK_APPROVAL, record)
         return _OK_APPROVAL
 
     # ── 내부 헬퍼 ───────────────────────────────────────────────────────────
+
+    def _validate_record_authority(
+        self,
+        *,
+        key: str,
+        approval_id: str,
+        operator: str,
+        now: datetime,
+        record: ApprovalRecord,
+    ) -> ValidationResult | None:
+        """승인 레코드 자체의 권한 경계(status/key/replay)를 검증한다."""
+        if approval_id in self._used_approval_ids or _record_status(record) == "used":
+            logger.warning("RISK_APPROVAL_USED approval_id=%r key=%r", approval_id, key)
+            result = _err(
+                "RISK_APPROVAL_USED",
+                f"approval_id '{approval_id}' has already been used.",
+            )
+            self._write_audit(key, approval_id, operator, now, result, record)
+            return result
+
+        if _record_status(record) != "approved":
+            logger.warning(
+                "RISK_APPROVAL_NOT_APPROVED approval_id=%r status=%r",
+                approval_id,
+                record.status,
+            )
+            result = _err(
+                "RISK_APPROVAL_NOT_APPROVED",
+                f"approval_id '{approval_id}' is not approved.",
+            )
+            self._write_audit(key, approval_id, operator, now, result, record)
+            return result
+
+        if str(record.key) != str(key):
+            logger.warning(
+                "RISK_APPROVAL_KEY_MISMATCH approval_id=%r record_key=%r requested_key=%r",
+                approval_id,
+                record.key,
+                key,
+            )
+            result = _err(
+                "RISK_APPROVAL_KEY_MISMATCH",
+                f"approval_id '{approval_id}' is approved for key '{record.key}', not key '{key}'.",
+            )
+            self._write_audit(key, approval_id, operator, now, result, record)
+            return result
+
+        return None
 
     def _write_audit(
         self,
@@ -203,6 +265,8 @@ class RiskApprovalGate:
             "ok": result.ok,
         }
         if record is not None:
+            entry["record_key"] = record.key
+            entry["approval_status"] = record.status
             entry["ticket_id"] = record.ticket_id
             entry["approved_by_primary"] = record.approved_by_primary
             entry["approved_by_secondary"] = record.approved_by_secondary

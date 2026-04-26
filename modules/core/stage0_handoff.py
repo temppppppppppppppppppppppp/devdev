@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 from copy import deepcopy
 from dataclasses import dataclass
@@ -18,6 +20,8 @@ STAGE0_RUNTIME_HANDOFF_SURFACE = "MasterBible.plot_roadmap"
 STAGE0_RUNTIME_HANDOFF_CONSUMER_MODE = "db_anchor_first"
 STAGE0_TREATMENT_ROLE = "canonical_material_source"
 STAGE0_BIBLE_ROLE = "bi_projection_artifact"
+PLOT_ROADMAP_LINEAGE_ANCHOR = "stage2_arcs_source_lineage"
+PLOT_ROADMAP_LINEAGE_SCHEMA = "stage0.plot_roadmap_lineage.v1"
 
 
 @dataclass
@@ -302,6 +306,53 @@ def normalize_treatment_to_canonical_view(treatment: Any) -> tuple[dict[str, Any
 def build_plot_roadmap_from_treatment(treatment: Any) -> list[dict[str, Any]]:
     """Normalize Stage 0 treatment blocks into the flat roadmap shape Stage 2 reads."""
     return normalize_treatment_blocks(treatment)
+
+
+def build_plot_roadmap_lineage(roadmap: Any) -> dict[str, Any]:
+    normalized = normalize_treatment_blocks(roadmap)
+    encoded = json.dumps(normalized, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str).encode(
+        "utf-8"
+    )
+    return {
+        "schema": PLOT_ROADMAP_LINEAGE_SCHEMA,
+        "fingerprint": hashlib.sha256(encoded).hexdigest(),
+        "block_count": len(normalized),
+        "authority": STAGE0_RUNTIME_HANDOFF_SURFACE,
+    }
+
+
+def plot_roadmap_lineage_matches(saved_lineage: Any, current_lineage: Any) -> bool:
+    if not isinstance(saved_lineage, dict) or not isinstance(current_lineage, dict):
+        return False
+    return (
+        saved_lineage.get("schema") == PLOT_ROADMAP_LINEAGE_SCHEMA
+        and current_lineage.get("schema") == PLOT_ROADMAP_LINEAGE_SCHEMA
+        and str(saved_lineage.get("fingerprint") or "") == str(current_lineage.get("fingerprint") or "")
+    )
+
+
+def load_plot_roadmap_lineage(project: Any) -> dict[str, Any]:
+    db = getattr(project, "db", None)
+    load_anchor = getattr(db, "load_anchor", None)
+    if not callable(load_anchor):
+        return {}
+    lineage = load_anchor(PLOT_ROADMAP_LINEAGE_ANCHOR)
+    return lineage if isinstance(lineage, dict) else {}
+
+
+def cached_arcs_source_lineage_matches(
+    project: Any,
+    *,
+    cached_arcs: Any,
+    roadmap: Any,
+) -> bool:
+    if not isinstance(cached_arcs, list) or not cached_arcs:
+        return True
+    saved_lineage = load_plot_roadmap_lineage(project)
+    if not saved_lineage:
+        return True
+    current_lineage = build_plot_roadmap_lineage(roadmap)
+    return plot_roadmap_lineage_matches(saved_lineage, current_lineage)
 
 
 def repair_runtime_protagonist_contract(

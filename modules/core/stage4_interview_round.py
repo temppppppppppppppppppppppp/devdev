@@ -2416,8 +2416,12 @@ class Stage4InterviewRound:
         if not callable(getter):
             return {}
 
+        session_id = resolve_logging_session_id(getattr(self.ctx, "current_project", None))
         try:
-            rows = getter(arc_num, stages=(4,), limit=12) or []
+            if session_id:
+                rows = getter(arc_num, stages=(4,), limit=12, session_id=session_id) or []
+            else:
+                rows = getter(arc_num, stages=(4,), limit=12) or []
         except Exception as exc:
             logging.debug("[Stage4Resume] stage_attempt hydration load failed: %s", exc)
             return {}
@@ -2431,6 +2435,10 @@ class Stage4InterviewRound:
         same_episode_rows = [
             row for row in rows if isinstance(row, dict) and int(row.get("ep_num") or 0) == episode_num
         ]
+        if session_id:
+            same_episode_rows = [
+                row for row in same_episode_rows if str(row.get("session_id") or "").strip() == session_id
+            ]
         if not same_episode_rows:
             return {}
 
@@ -6583,6 +6591,12 @@ class Stage4InterviewRound:
             score_breakdown=director_result.get("score_breakdown", {}),
             initial_verdict=director_result.get("director_verdict", "") or director_result.get("original_verdict", ""),
         )
+        if isinstance(final_state_updates, dict):
+            final_state_updates = dict(final_state_updates)
+            attempt_key = str(attempt_artifact_meta.get("attempt_key", "") or "").strip()
+            if attempt_key:
+                final_state_updates["_stage4_attempt_key"] = attempt_key
+                final_state_updates["_stage4_attempt_artifact_meta"] = dict(attempt_artifact_meta)
         return _VerdictProcessingPayload(
             pass_result=_InterviewRoundResult(
                 verdict=verdict,
