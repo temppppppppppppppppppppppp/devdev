@@ -1017,6 +1017,9 @@ class TestContextCacheEviction:
             agent._context_caches.pop(cache_key, None)
 
     def test_cached_context_missing_lineage_bypasses_cache(self, agent):
+        db = MagicMock()
+        db.save_context_cache_attempt = MagicMock()
+        agent.context = SimpleNamespace(current_project=SimpleNamespace(db=db), current_stage=4, current_ep=22)
         agent.ask = MagicMock(return_value='{"fallback": true}')
         agent._generate_content = MagicMock()
 
@@ -1025,8 +1028,19 @@ class TestContextCacheEviction:
         assert json.loads(result)["fallback"] is True
         agent.ask.assert_called_once()
         agent._generate_content.assert_not_called()
+        db.save_context_cache_attempt.assert_called_once()
+        kwargs = db.save_context_cache_attempt.call_args.kwargs
+        assert kwargs["cache_outcome"] == "bypassed"
+        assert kwargs["cache_reason"] == "missing_lineage"
+        assert kwargs["cache_name"] == "cached/missing"
+        assert kwargs["content_hash"] == ""
+        assert kwargs["stage"] == 4
+        assert kwargs["ep_num"] == 22
 
     def test_cached_context_stale_model_lineage_bypasses_cache(self, agent):
+        db = MagicMock()
+        db.save_context_cache_attempt = MagicMock()
+        agent.context = SimpleNamespace(current_project=SimpleNamespace(db=db), current_stage=4, current_ep=23)
         cache_key = seed_context_cache(agent, cache_name="cached/stale-model", content_hash="hash-stale-model")
         agent.primary_model = "gemini-2.5-pro"
         agent.ask = MagicMock(return_value='{"fallback": true}')
@@ -1040,6 +1054,14 @@ class TestContextCacheEviction:
         assert json.loads(result)["fallback"] is True
         agent.ask.assert_called_once()
         agent._generate_content.assert_not_called()
+        db.save_context_cache_attempt.assert_called_once()
+        kwargs = db.save_context_cache_attempt.call_args.kwargs
+        assert kwargs["cache_outcome"] == "bypassed"
+        assert kwargs["cache_reason"] == "stale_model_lineage"
+        assert kwargs["cache_name"] == "cached/stale-model"
+        assert kwargs["content_hash"] == "hash-stale-model"
+        assert kwargs["stage"] == 4
+        assert kwargs["ep_num"] == 23
 
 
 class TestMetricsUsageTracking:

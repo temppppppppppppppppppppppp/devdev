@@ -155,13 +155,22 @@ def _context_cache_lineage_is_current(
     client: object | None,
     primary_model: str,
 ) -> bool:
+    return not _context_cache_lineage_bypass_reason(cache_lineage, client=client, primary_model=primary_model)
+
+
+def _context_cache_lineage_bypass_reason(
+    cache_lineage: dict,
+    *,
+    client: object | None,
+    primary_model: str,
+) -> str:
     if not cache_lineage.get("cache_key") or not cache_lineage.get("content_hash"):
-        return False
+        return "missing_lineage"
     if str(cache_lineage.get("model") or "") != str(primary_model or ""):
-        return False
+        return "stale_model_lineage"
     if str(cache_lineage.get("provider") or "") != _context_cache_provider_token(client, primary_model):
-        return False
-    return True
+        return "stale_provider_lineage"
+    return ""
 
 
 def _get_agent_default_model(agent_key: str) -> str | None:
@@ -789,6 +798,70 @@ class BaseAgent:
             )
         except Exception as _e:
             logging.debug("[context_cache_attempt_log] save failed: %s", _e)
+
+    def _log_context_cache_lineage_bypass(
+        self,
+        *,
+        cache_name: str,
+        cache_lineage: dict,
+        cache_reason: str,
+        prompt: str,
+    ) -> None:
+        cache_key = str(cache_lineage.get("cache_key") or "")
+        cache_type = cache_key.split("_", 1)[0] if cache_key else "cached_context"
+        expected_provider = _context_cache_provider_token(self.client, self.primary_model)
+        error_msg = json.dumps(
+            {
+                "cache_name": cache_name,
+                "lineage_model": str(cache_lineage.get("model") or ""),
+                "expected_model": str(self.primary_model or ""),
+                "lineage_provider": str(cache_lineage.get("provider") or ""),
+                "expected_provider": expected_provider,
+                "lineage_cache_key_present": bool(cache_lineage.get("cache_key")),
+                "lineage_content_hash_present": bool(cache_lineage.get("content_hash")),
+            },
+            ensure_ascii=False,
+        )
+        self._log_context_cache_attempt_to_db(
+            cache_type=cache_type,
+            project_name="",
+            content_chars=len(str(prompt or "")),
+            ttl_seconds=0,
+            content_hash=str(cache_lineage.get("content_hash") or ""),
+            cache_outcome="bypassed",
+            cache_reason=cache_reason,
+            cache_name=cache_name,
+            error_msg=error_msg,
+        )
+
+    def _fallback_after_context_cache_lineage_bypass(
+        self,
+        *,
+        cache_name: str,
+        cache_lineage: dict,
+        cache_reason: str,
+        fallback_prompt: str,
+        temperature: float,
+        thinking_level,
+        response_schema,
+    ) -> str:
+        logging.warning(
+            "[V61.7] cached-context bypassed due to %s: %s",
+            cache_reason,
+            cache_name,
+        )
+        self._log_context_cache_lineage_bypass(
+            cache_name=cache_name,
+            cache_lineage=cache_lineage,
+            cache_reason=cache_reason,
+            prompt=fallback_prompt,
+        )
+        return self.ask(
+            fallback_prompt,
+            temperature=temperature,
+            thinking_level=thinking_level,
+            response_schema=response_schema,
+        )
 
     def ask(self, prompt, temperature=0.5, response_schema=None, thinking_level=None):
         """Submit a JSON-only prompt to the configured LLM stack."""
@@ -2570,15 +2643,21 @@ class BaseAgent:
 
         cache_lineage = self._context_cache_lineage_by_name(cache_name)
         cache_content_hash = str(cache_lineage.get("content_hash") or "")
-        if not _context_cache_lineage_is_current(
+        lineage_bypass_reason = _context_cache_lineage_bypass_reason(
             cache_lineage,
             client=self.client,
             primary_model=self.primary_model,
-        ):
-            logging.warning("[V61.7] cached-context bypassed due to missing/stale lineage: %s", cache_name)
+        )
+        if lineage_bypass_reason:
             fallback_prompt = full_prompt_fallback if full_prompt_fallback else prompt
-            return self.ask(
-                fallback_prompt, temperature=temperature, thinking_level=thinking_level, response_schema=response_schema
+            return self._fallback_after_context_cache_lineage_bypass(
+                cache_name=cache_name,
+                cache_lineage=cache_lineage,
+                cache_reason=lineage_bypass_reason,
+                fallback_prompt=fallback_prompt,
+                temperature=temperature,
+                thinking_level=thinking_level,
+                response_schema=response_schema,
             )
         try:
             self._reset_usage_tracking()
