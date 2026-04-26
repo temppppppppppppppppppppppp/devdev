@@ -3992,6 +3992,7 @@ class Stage4InterviewRound:
         if final_verdict:
             normalized["final_verdict"] = str(final_verdict)
             normalized["verdict"] = str(final_verdict)
+            normalized["runtime_route_verdict"] = str(final_verdict)
         if gate_basis:
             normalized["gate_basis"] = str(gate_basis)
         if repair_scope is not None:
@@ -4011,6 +4012,10 @@ class Stage4InterviewRound:
         payload: dict[str, object] = {
             "director_verdict": str(normalized.get("director_verdict", "") or ""),
             "final_verdict": str(normalized.get("final_verdict", "") or ""),
+            "runtime_route_verdict": str(
+                normalized.get("runtime_route_verdict") or normalized.get("final_verdict") or ""
+            ),
+            "verdict_contract_version": str(normalized.get("verdict_contract_version") or "verdict-layer-v1"),
             "gate_basis": str(normalized.get("gate_basis", "") or ""),
             "repair_scope": str(normalized.get("repair_scope", "none") or "none"),
             "authoritative_fix_scope": str(normalized.get("authoritative_fix_scope", "") or ""),
@@ -4248,6 +4253,9 @@ class Stage4InterviewRound:
             primary_failure_layer = "downstream_gate" if director_quality_passed else "director_quality"
 
         return {
+            "director_verdict": director_verdict,
+            "runtime_route_verdict": final_verdict,
+            "verdict_contract_version": str(normalized.get("verdict_contract_version") or "verdict-layer-v1"),
             "director_quality_passed": director_quality_passed,
             "downstream_override_applied": downstream_override_applied,
             "primary_failure_layer": primary_failure_layer,

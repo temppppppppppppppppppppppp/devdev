@@ -5,14 +5,9 @@ from pathlib import Path
 
 import yaml
 
-
 ROOT = Path(__file__).resolve().parents[1]
-API_CONTRACT = yaml.safe_load(
-    (ROOT / "docs/implementation/api-contract-v1.yaml").read_text(encoding="utf-8")
-)
-EVENT_SCHEMA = json.loads(
-    (ROOT / "docs/implementation/event-schema-v1.json").read_text(encoding="utf-8")
-)
+API_CONTRACT = yaml.safe_load((ROOT / "docs/implementation/api-contract-v1.yaml").read_text(encoding="utf-8"))
+EVENT_SCHEMA = json.loads((ROOT / "docs/implementation/event-schema-v1.json").read_text(encoding="utf-8"))
 MAIN_JS = (ROOT / "geuldobi-desktop/src/main.js").read_text(encoding="utf-8")
 INDEX_HTML = (ROOT / "geuldobi-desktop/src/index.html").read_text(encoding="utf-8")
 BRIDGE_SERVER = (ROOT / "modules/api/bridge_server.py").read_text(encoding="utf-8")
@@ -142,6 +137,11 @@ def test_runtime_websocket_payload_contract_matches_renderer_and_backend_usage()
     run_exit = _payload_schema_for("run_failed")
     assert run_exit["required"] == ["returncode"]
     assert {
+        "process_exit_status",
+        "completion_claim_scope",
+        "semantic_completion_status",
+        "canonical_truth_status",
+        "authority_note",
         "stdout_tail",
         "stderr_tail",
         "stderr_authoritative",
@@ -149,10 +149,8 @@ def test_runtime_websocket_payload_contract_matches_renderer_and_backend_usage()
         "failure_phase",
         "last_prompt_step",
         "duration_ms",
-    }.issubset(
-        run_exit["properties"]
-    )
-    assert '_build_event(run_id, etype, _build_run_exit_payload(runner, returncode))' in BRIDGE_SERVER
+    }.issubset(run_exit["properties"])
+    assert "_build_event(run_id, etype, _build_run_exit_payload(runner, returncode))" in BRIDGE_SERVER
 
     prompt_resolved = _payload_schema_for("prompt_resolved")
     assert prompt_resolved["properties"]["source"]["enum"] == ["user", "default"]
@@ -165,8 +163,8 @@ def test_renderer_control_plane_resync_contract_matches_source():
     assert "window.geuldobiDesktop.getStatus()" in INDEX_HTML
     assert "let _commandPathReady = false;" in INDEX_HTML
     assert "let _pendingPromptQueue = [];" in INDEX_HTML
-    assert '[prompt] queueing concurrent prompt_request while dialog open' in INDEX_HTML
-    assert 'pending_prompts' in BRIDGE_SERVER
+    assert "[prompt] queueing concurrent prompt_request while dialog open" in INDEX_HTML
+    assert "pending_prompts" in BRIDGE_SERVER
     assert "function _resolveRuntimeStartTimestamp({" in INDEX_HTML
     assert "function _syncRunStartedAtFromBridge(timing = {}, options = {})" in INDEX_HTML
     assert "durationMs: data.duration_ms" in INDEX_HTML
