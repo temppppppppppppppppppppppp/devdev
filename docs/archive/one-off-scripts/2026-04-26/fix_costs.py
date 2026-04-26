@@ -1,9 +1,8 @@
 """사업승인요청서 비용 수치 전면 재계산 3pass 감리 스크립트."""
-import re
 
 path = r"C:\Users\wjjo\Desktop\글도비\docs\2026-03-11\사업승인요청서-글도비.md"
 
-with open(path, "r", encoding="utf-8") as f:
+with open(path, encoding="utf-8") as f:
     text = f.read()
 
 original = text
@@ -303,5 +302,7 @@ for key, label in checks.items():
 with open(path, "w", encoding="utf-8") as f:
     f.write(text)
 
-print(f"\n총 변경 문자 수: {sum(1 for a, b in zip(original, text) if a != b) if len(original) == len(text) else '길이 변경'}")
+print(
+    f"\n총 변경 문자 수: {sum(1 for a, b in zip(original, text) if a != b) if len(original) == len(text) else '길이 변경'}"
+)
 print("Done.")
