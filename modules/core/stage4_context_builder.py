@@ -24,6 +24,12 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any, TypedDict
 
+from modules.core.authoritative_continuity_projection import (
+    AUTHORITATIVE_CONTINUITY_PROJECTION_HEADER,
+    build_authoritative_continuity_projection,
+    load_continuity_bridge_proposals_for_projection,
+    render_authoritative_continuity_projection_for_prompt,
+)
 from modules.core.constants import Stage2Limits, smart_truncate
 from modules.core.context_advisor import (
     RetrievalSources,
@@ -1663,6 +1669,7 @@ class Stage4ContextBuilder:
             "[작품 추적 슬롯 요약]",
             "[Stage4 Opening Scene Authority]",
             "[Stage4 Work Identity Authority]",
+            AUTHORITATIVE_CONTINUITY_PROJECTION_HEADER,
             _STAGE4_NUMERIC_CARRYOVER_AUTHORITY_HEADER,
         )
 
@@ -2273,6 +2280,39 @@ class Stage4ContextBuilder:
                     )
             except Exception as continuity_err:
                 logging.warning("[CP] Continuity Packet 생성 실패 (비치명): %s", str(continuity_err)[:80])
+
+        try:
+            _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+            _bridge_rows = load_continuity_bridge_proposals_for_projection(
+                _db,
+                target_stage="stage4",
+                ep_num=int(next_ep or 0),
+                limit=12,
+            )
+            _authority_projection = build_authoritative_continuity_projection(
+                ep_num=int(next_ep or 0),
+                arc_data=arc_data,
+                accepted_blueprint=blueprint,
+                prev_manuscript_ending=prev_ending,
+                bridge_proposals=_bridge_rows,
+                source_stage="stage3_blueprint",
+                target_stage="stage4_manuscript",
+            )
+            _authority_projection_text = render_authoritative_continuity_projection_for_prompt(
+                _authority_projection,
+                max_chars=2600,
+            )
+            if _authority_projection_text:
+                tier0_parts.insert(0, _authority_projection_text)
+                logging.info(
+                    "[AuthorityProjection] Stage4 continuity projection injected (%d chars)",
+                    len(_authority_projection_text),
+                )
+        except Exception as authority_projection_err:
+            logging.debug(
+                "[AuthorityProjection] Stage4 projection build failed (non-blocking): %s",
+                authority_projection_err,
+            )
 
         try:
             work_identity_authority = self._build_work_identity_authority_packet(

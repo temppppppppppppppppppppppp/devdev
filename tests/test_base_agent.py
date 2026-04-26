@@ -1388,6 +1388,49 @@ class TestNormalizedProviderHelpers:
         assert result.text == "ok"
         assert result.raw is raw
 
+    def test_ask_continues_normalized_max_tokens_response(self, agent, monkeypatch):
+        monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
+        agent._build_model_stack = MagicMock(
+            return_value={
+                "model_stack": ["claude-sonnet-4-6"],
+                "current_model": "claude-sonnet-4-6",
+                "config": object(),
+                "metric_id": None,
+            }
+        )
+        agent._generate_content = MagicMock(
+            side_effect=[
+                LLMResponse(text='{"content":"hel', finish_reason="MAX_TOKENS"),
+                LLMResponse(text='lo"}', finish_reason="stop"),
+            ]
+        )
+        BaseAgent._session_logger_global = None
+
+        result = agent.ask("테스트 프롬프트")
+
+        assert result == '{"content":"hello"}'
+        assert agent._generate_content.call_count == 2
+
+    def test_cached_context_max_tokens_falls_back_to_direct_ask(self, agent, monkeypatch):
+        monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
+        agent._generate_content = MagicMock(return_value=LLMResponse(text='{"partial":', finish_reason="MAX_TOKENS"))
+        agent.ask = MagicMock(return_value='{"fallback": true}')
+        agent._log_llm_call_to_db = MagicMock()
+        cache_key = seed_context_cache(agent, cache_name="cached/ctx", content_hash="hash-max-tokens")
+
+        try:
+            result = agent._ask_with_cached_context(
+                cache_name="cached/ctx",
+                prompt="short prompt",
+                full_prompt_fallback="full prompt",
+            )
+        finally:
+            agent._context_caches.pop(cache_key, None)
+
+        assert json.loads(result)["fallback"] is True
+        agent.ask.assert_called_once()
+        assert agent.ask.call_args.args[0] == "full prompt"
+
 
 # ══════════════════════════════════════════════════════════════
 # [TF3-H3/H7] Timeout + Prompt Gate
@@ -1398,29 +1441,28 @@ class TestTimeoutAndPromptGate:
     def test_ask_injects_http_options_timeout(self, agent, monkeypatch):
         # [TF-44] Gemini API 무한 hang 방지 — http_options timeout 주입 검증
         monkeypatch.setattr(agent, "API_DELAY", 0)
-        response = MagicMock()
-        response.text = json.dumps({"content": "ok"})
-        response.candidates = [MagicMock(finish_reason="STOP")]
-        agent.client.models.generate_content.return_value = response
+        agent._generate_content = MagicMock(
+            return_value=LLMResponse(text=json.dumps({"content": "ok"}), finish_reason="STOP")
+        )
 
         _ = agent.ask("짧은 프롬프트")
-        config = agent.client.models.generate_content.call_args.kwargs["config"]
+        config = agent._generate_content.call_args.kwargs["config"]
         assert config.http_options is not None
         assert config.http_options.timeout == int(agent.API_TIMEOUT) * 1000
 
     def test_cached_context_call_injects_http_options_timeout(self, agent, monkeypatch):
         # [TF-44] Gemini API 무한 hang 방지 — cached context http_options timeout 주입 검증
         monkeypatch.setattr(agent, "API_DELAY", 0)
-        response = MagicMock()
-        response.text = json.dumps({"content": "cached"})
-        agent.client.models.generate_content.return_value = response
+        agent._generate_content = MagicMock(
+            return_value=LLMResponse(text=json.dumps({"content": "cached"}), finish_reason="STOP")
+        )
         cache_key = seed_context_cache(agent, cache_name="cached/ctx", content_hash="hash-timeout")
 
         try:
             _ = agent._ask_with_cached_context(cache_name="cached/ctx", prompt="테스트")
         finally:
             agent._context_caches.pop(cache_key, None)
-        config = agent.client.models.generate_content.call_args.kwargs["config"]
+        config = agent._generate_content.call_args.kwargs["config"]
         assert config.http_options is not None
         assert config.http_options.timeout == int(agent.API_TIMEOUT) * 1000
 

@@ -12,6 +12,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from modules.core.authoritative_continuity_projection import AUTHORITATIVE_CONTINUITY_PROJECTION_HEADER
 from modules.core.session_logger import SessionLogger
 from modules.core.stage3_context import Stage3Context
 from modules.core.stage3_orchestrator import (
@@ -1219,23 +1220,30 @@ class TestGenerateBlueprint:
 
     @patch("modules.core.spinners.StageSpinner")
     def test_treatment_block_is_injected_into_semantic_context(self, MockSpinner, orch, app_mock):
+        from modules.core.stage0_handoff import PLOT_ROADMAP_LINEAGE_ANCHOR, build_plot_roadmap_lineage
+
         spinner = MagicMock()
         spinner.update_detail = MagicMock()
         MockSpinner.return_value.__enter__.return_value = spinner
         app_mock.current_project.db.get_recent_manuscripts.return_value = []
+        roadmap = [
+            {
+                "title": "시장 선점",
+                "event_villain": "유동성 위기",
+                "solution": "리스크 관리",
+                "content": {"context": "기관 매도 공세"},
+            }
+        ]
         app_mock.current_project.master_bible = {
             "MasterBible": {
                 "protagonist_config": {},
-                "plot_roadmap": [
-                    {
-                        "title": "시장 선점",
-                        "event_villain": "유동성 위기",
-                        "solution": "리스크 관리",
-                        "content": {"context": "기관 매도 공세"},
-                    }
-                ],
+                "plot_roadmap": roadmap,
             }
         }
+        lineage = build_plot_roadmap_lineage(roadmap)
+        app_mock.current_project.db.load_anchor.side_effect = (
+            lambda key: lineage if key == PLOT_ROADMAP_LINEAGE_ANCHOR else []
+        )
 
         orch._generate_blueprint(
             working_ep=1,
@@ -1595,6 +1603,52 @@ class TestGenerateBlueprint:
         assert bundle["observation"]["coverage_warning_escalation_included"] is True
         observation = app_mock.quality_dashboard.record_retrieval_observation.call_args.kwargs["observation"]
         assert observation["repeated_coverage_warnings"] == ["missing_relation_slice"]
+
+    def test_finalize_stage3_blueprint_semantic_bundle_injects_authoritative_projection(self, orch, app_mock):
+        app_mock.quality_dashboard = SimpleNamespace(
+            retrieval_observation_history=[],
+            record_retrieval_observation=MagicMock(),
+        )
+        app_mock.current_project.db.get_continuity_bridge_proposals.return_value = []
+
+        with (
+            patch("modules.core.stage3_orchestrator._build_world_state_advisory", return_value=""),
+            patch("modules.core.stage3_orchestrator._build_style_guide_advisory", return_value=""),
+            patch("modules.core.stage3_orchestrator._build_fact_ledger_advisory", return_value=""),
+            patch("modules.core.stage3_orchestrator._build_stale_seed_advisory", return_value=""),
+            patch("modules.core.stage3_orchestrator._build_stage3_work_focus_advisory", return_value=""),
+        ):
+            bundle = orch._finalize_stage3_blueprint_semantic_bundle(
+                semantic_ctx="",
+                work_focus={},
+                plan=None,
+                working_ep=4,
+                arc_data={"arc_no": 1, "constraint_summary": "Carry EP3 directly into EP4."},
+                entity_registry={},
+                protagonist_name="Seo",
+                blueprint_window=[
+                    {
+                        "ep_num": 3,
+                        "end_location": "회의실",
+                        "time_flow": "직후",
+                        "ending_hook": "표결 직전 긴장이 남았다.",
+                    }
+                ],
+                focus_window=[
+                    {
+                        "ep_num": 3,
+                        "end_location": "회의실",
+                        "time_flow": "직후",
+                    }
+                ],
+            )
+
+        assert AUTHORITATIVE_CONTINUITY_PROJECTION_HEADER in bundle["semantic_ctx"]
+        assert "end_location=회의실" in bundle["semantic_ctx"]
+        observation = app_mock.quality_dashboard.record_retrieval_observation.call_args.kwargs["observation"]
+        summary = observation["authoritative_continuity_projection"]
+        assert summary["target_stage"] == "stage3_blueprint"
+        assert summary["non_regression_anchor_count"] >= 2
 
     @patch("modules.core.spinners.StageSpinner")
     def test_run_stage3_blueprint_generation_handoff_preserves_tail_and_prev_hud(self, MockSpinner, orch, app_mock):
@@ -2257,6 +2311,15 @@ class TestProcessSingleEpisode:
                     "quality_risk": True,
                     "python_warnings": [{"category": "continuity", "message": "opening beat needs a tighter relay"}],
                 },
+                "terminal_failure_diagnostic": {
+                    "summary_role": "stage3_terminal_failure_diagnostic",
+                    "artifact_kind": "terminal_failure_diagnostic",
+                    "terminal_reason": "binding_prevalidation_reopen",
+                    "candidate_key": "B",
+                    "content_hash": "diag-hash",
+                    "artifact_path": "logs/artifacts/stage3/ep_0006/attempt_02/terminal_failure_diagnostic__B.json",
+                    "official_artifact": False,
+                },
             },
             failure_category="quality_gate",
             reject_reason="opening continuity drift",
@@ -2306,6 +2369,11 @@ class TestProcessSingleEpisode:
         assert stage_attempt_kwargs["advisory_flags"]["repair_contract"]["provenance"] == "director_authored"
         assert stage_attempt_kwargs["advisory_flags"]["gate_semantics"]["repair_contract"]["subtype"] == "movement"
         assert stage_attempt_kwargs["advisory_flags"]["scope_authority"]["widened"] is False
+        assert (
+            stage_attempt_kwargs["advisory_flags"]["terminal_failure_diagnostic"]["artifact_path"]
+            == "logs/artifacts/stage3/ep_0006/attempt_02/terminal_failure_diagnostic__B.json"
+        )
+        assert stage_attempt_kwargs["advisory_flags"]["terminal_failure_diagnostic"]["official_artifact"] is False
         assert pass_rate_kwargs["attempt_key"] == packet.attempt_key
         assert pass_rate_kwargs["candidate_key"] == packet.candidate_key
         assert pass_rate_kwargs["content_hash"] == packet.artifact_meta["content_hash"]

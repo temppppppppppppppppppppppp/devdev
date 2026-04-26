@@ -4,9 +4,19 @@ import sqlite3
 import threading
 import time
 import traceback
+import uuid
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
+
+from modules.core.advisory_authority import (
+    ADVISORY_AUTHORITY_LEVELS_KEY,
+    ADVISORY_AUTHORITY_SCHEMA_KEY,
+    ADVISORY_AUTHORITY_SOURCES_KEY,
+    ensure_stage4_historical_companion_authority,
+    ensure_stage4_route_authority,
+    resolve_advisory_authority_level,
+)
 
 from .constants import MARTIAL_METRICS  # 👈 상수 임포트
 from .db_bootstrap_runtime import DBBootstrapRuntime
@@ -105,6 +115,15 @@ class DBManager:
             return json.loads(raw or fallback)
         except (json.JSONDecodeError, TypeError, ValueError):
             return json.loads(fallback)
+
+    @staticmethod
+    def _json_dumps_or_empty(payload: object) -> str:
+        if payload in (None, ""):
+            return ""
+        try:
+            return json.dumps(payload, ensure_ascii=False, sort_keys=True)
+        except (TypeError, ValueError):
+            return json.dumps(str(payload), ensure_ascii=False)
 
     @staticmethod
     def _safe_bool(value: object) -> bool | None:
@@ -2351,6 +2370,10 @@ class DBManager:
                 advisory_payload["runtime_advisory"] = str(runtime_advisory or "")
             if retry_directives:
                 advisory_payload["retry_directives"] = str(retry_directives or "")
+            advisory_payload = ensure_stage4_historical_companion_authority(
+                advisory_payload,
+                source="director_selections",
+            )
             resolved_initial_verdict = str(initial_verdict or verdict or "")
             resolved_final_verdict = str(final_verdict or verdict or "")
             resolved_downstream_override = bool(
@@ -2491,6 +2514,10 @@ class DBManager:
                 existing = parsed
         merged = self._merge_director_selection_json_payloads(
             existing, advisory_warnings if isinstance(advisory_warnings, dict) else {}
+        )
+        merged = ensure_stage4_historical_companion_authority(
+            merged,
+            source="director_selections",
         )
         return json.dumps(merged, ensure_ascii=False) if merged else None
 
@@ -3018,6 +3045,22 @@ class DBManager:
         retry_budget_axes = advisory_flags.get("retry_budget_axes")
         if not isinstance(retry_budget_axes, dict):
             retry_budget_axes = {}
+        advisory_flags = ensure_stage4_route_authority(
+            advisory_flags,
+            route_payloads={
+                "fix_pack": fix_pack,
+                "repair_contract": repair_contract,
+                "scope_authority": scope_authority,
+                "retry_budget_axes": retry_budget_axes,
+            },
+            source="stage_attempts_gate_repair_snapshot",
+        )
+        authority_levels = advisory_flags.get(ADVISORY_AUTHORITY_LEVELS_KEY)
+        if not isinstance(authority_levels, dict):
+            authority_levels = {}
+        authority_sources = advisory_flags.get(ADVISORY_AUTHORITY_SOURCES_KEY)
+        if not isinstance(authority_sources, dict):
+            authority_sources = {}
         partial_fix_eval = advisory_flags.get("partial_fix_eval")
         if not isinstance(partial_fix_eval, dict):
             partial_fix_eval = {}
@@ -3109,6 +3152,16 @@ class DBManager:
             "scope_authority_scope_origin": scope_authority_scope_origin,
             "scope_authority_widened": scope_authority_widened,
             "retry_budget_axes": retry_budget_axes,
+            "authority_schema_version": str(advisory_flags.get(ADVISORY_AUTHORITY_SCHEMA_KEY) or ""),
+            "advisory_authority_levels": authority_levels,
+            "advisory_authority_sources": authority_sources,
+            "fix_pack_authority_level": resolve_advisory_authority_level(advisory_flags, "fix_pack"),
+            "repair_contract_authority_level": resolve_advisory_authority_level(advisory_flags, "repair_contract"),
+            "scope_authority_authority_level": resolve_advisory_authority_level(advisory_flags, "scope_authority"),
+            "retry_budget_axes_authority_level": resolve_advisory_authority_level(
+                advisory_flags,
+                "retry_budget_axes",
+            ),
             "partial_fix_eval": partial_fix_eval,
             "repair_trace": repair_trace,
             "final_authority_sink": "stage_attempts",
@@ -3144,6 +3197,147 @@ class DBManager:
     # return path and in the episode_production JSONL written by
     # stage4_post_processor / stage4_post_pass_runtime.
     # ═══════════════════════════════════════════════════════════════
+
+    def save_continuity_bridge_proposal(
+        self,
+        *,
+        bridge_id: str | None = None,
+        source_stage: str = "",
+        target_stage: str = "",
+        work_id: str = "",
+        project_id: str = "",
+        arc_num: int | None = None,
+        ep_num: int | None = None,
+        authority_source: str = "",
+        observed_downstream_candidate: str | dict | list = "",
+        observed_conflict: str | dict | list = "",
+        proposed_bridge: str | dict | list = "",
+        allowed_fix_scope: str = "candidate_only",
+        source_hashes: dict | list | str | None = None,
+    ) -> str:
+        """Persist a Director-pending continuity bridge proposal.
+
+        Python stores observations and proposals only; it never marks them
+        applied. Director adjudication is recorded through a separate method.
+        """
+        normalized_bridge_id = str(bridge_id or "").strip() or f"bridge-{uuid.uuid4().hex}"
+        now = datetime.now().isoformat(timespec="seconds")
+        with self._lock:
+            cur = self.conn.cursor()
+            cur.execute(
+                """
+                INSERT OR REPLACE INTO continuity_bridge_proposals
+                    (bridge_id, created_at, updated_at, source_stage, target_stage, work_id, project_id,
+                     arc_num, ep_num, authority_source, observed_downstream_candidate, observed_conflict,
+                     proposed_bridge, allowed_fix_scope, director_verdict, director_reason, applied_status,
+                     applied_artifact_key, source_hashes)
+                VALUES (
+                    ?,
+                    COALESCE((SELECT created_at FROM continuity_bridge_proposals WHERE bridge_id = ?), ?),
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', '', 'pending_director', '', ?
+                )
+                """,
+                (
+                    normalized_bridge_id,
+                    normalized_bridge_id,
+                    now,
+                    now,
+                    str(source_stage or ""),
+                    str(target_stage or ""),
+                    str(work_id or ""),
+                    str(project_id or ""),
+                    arc_num,
+                    ep_num,
+                    str(authority_source or ""),
+                    self._json_dumps_or_empty(observed_downstream_candidate),
+                    self._json_dumps_or_empty(observed_conflict),
+                    self._json_dumps_or_empty(proposed_bridge),
+                    str(allowed_fix_scope or "candidate_only"),
+                    self._json_dumps_or_empty(source_hashes),
+                ),
+            )
+            self.conn.commit()
+        return normalized_bridge_id
+
+    def adjudicate_continuity_bridge_proposal(
+        self,
+        *,
+        bridge_id: str,
+        director_verdict: str,
+        director_reason: str = "",
+        applied_status: str | None = None,
+        applied_artifact_key: str = "",
+    ) -> bool:
+        """Record Director adjudication for a bridge proposal without auto-applying it."""
+        normalized_bridge_id = str(bridge_id or "").strip()
+        if not normalized_bridge_id:
+            return False
+        verdict = str(director_verdict or "").strip()
+        status = str(applied_status or "").strip()
+        if not status:
+            upper_verdict = verdict.upper()
+            if upper_verdict in {"APPROVE", "APPROVED", "PASS"}:
+                status = "approved"
+            elif upper_verdict in {"REJECT", "REJECTED"}:
+                status = "rejected"
+            else:
+                status = "escalate"
+        with self._lock:
+            cur = self.conn.cursor()
+            cur.execute(
+                """
+                UPDATE continuity_bridge_proposals
+                   SET updated_at = ?,
+                       director_verdict = ?,
+                       director_reason = ?,
+                       applied_status = ?,
+                       applied_artifact_key = ?
+                 WHERE bridge_id = ?
+                """,
+                (
+                    datetime.now().isoformat(timespec="seconds"),
+                    verdict,
+                    str(director_reason or ""),
+                    status,
+                    str(applied_artifact_key or ""),
+                    normalized_bridge_id,
+                ),
+            )
+            self.conn.commit()
+            return cur.rowcount > 0
+
+    def get_continuity_bridge_proposals(
+        self,
+        *,
+        applied_status: str | None = None,
+        source_stage: str | None = None,
+        target_stage: str | None = None,
+        limit: int = 50,
+    ) -> list[dict]:
+        clauses: list[str] = []
+        params: list[object] = []
+        if applied_status:
+            clauses.append("applied_status = ?")
+            params.append(str(applied_status))
+        if source_stage:
+            clauses.append("source_stage = ?")
+            params.append(str(source_stage))
+        if target_stage:
+            clauses.append("target_stage = ?")
+            params.append(str(target_stage))
+        where_sql = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+        params.append(max(1, int(limit or 50)))
+        rows = self.conn.execute(
+            f"""
+            SELECT *
+              FROM continuity_bridge_proposals
+              {where_sql}
+             ORDER BY id DESC
+             LIMIT ?
+            """,
+            params,
+        ).fetchall()
+        return [dict(row) for row in rows]
 
     def save_llm_call(
         self,

@@ -4171,7 +4171,19 @@ class SovereignApp:
         self.ui.log(f"   ✅ [Stage 2] Arc {current_arc_no} 완료 (ep {arc_ep_start}~{arc_ep_end})")
         return {"status": "ready", "refreshed_arcs": refreshed_arcs}
 
-    def _run_frontier_lag_stage3_sync(self, *, frontier_plan: dict[str, Any]) -> dict[str, Any]:
+    def _normalize_frontier_lag_stage3_failure_policy(self, value: str | None) -> str:
+        policy = str(value or "strict").strip().lower()
+        if policy not in {"strict", "operator_prompt", "skip", "quarantine"}:
+            return "strict"
+        return policy
+
+    def _run_frontier_lag_stage3_sync(
+        self,
+        *,
+        frontier_plan: dict[str, Any],
+        stage3_failure_policy: str = "strict",
+    ) -> dict[str, Any]:
+        stage3_failure_policy = self._normalize_frontier_lag_stage3_failure_policy(stage3_failure_policy)
         self.ui.log(f"\n   📐 [Stage 3] Blueprint frontier 동기화 (target <= ep {frontier_plan['stage3_target']})...")
         try:
             from modules.core.stage3_context import Stage3Context
@@ -4183,6 +4195,33 @@ class SovereignApp:
 
             if s3_success == 0 and s3_fail > 0:
                 self.ui.log(f"   ⚠️ [Stage 3] Blueprint 생성 실패 (성공: 0, 실패: {s3_fail})")
+                if stage3_failure_policy == "strict":
+                    self.ui.log("   [FrontierLag] strict Stage3 policy stops before Arc advancement.")
+                    return {
+                        "status": "stop",
+                        "payload": {
+                            "arcs_advanced_delta": 0,
+                            "arcs_skipped_delta": 0,
+                            "manuscripts_delta": 0,
+                            "status": "stop",
+                            "stop_reason": "stage3_strict_failure_stop",
+                            "stage3_failure_policy": stage3_failure_policy,
+                        },
+                    }
+                if stage3_failure_policy in {"skip", "quarantine"}:
+                    self.ui.log("   [FrontierLag] non-strict Stage3 policy records a skipped Arc slot.")
+                    return {
+                        "status": "continue",
+                        "payload": {
+                            "arcs_advanced_delta": 0,
+                            "arcs_skipped_delta": 1,
+                            "manuscripts_delta": 0,
+                            "status": "continue",
+                            "stop_reason": None,
+                            "stage3_failure_policy": stage3_failure_policy,
+                            "skip_reason": "stage3_generation_failed",
+                        },
+                    }
                 # [HIL-BOUNDARY] Operator skip/stop decision inside automated FrontierLag pipeline.
                 # Automation cannot silently continue after Stage 3 failure — the operator must
                 # decide whether to skip this Arc or stop the pipeline entirely.
@@ -4210,10 +4249,13 @@ class SovereignApp:
                 return {
                     "status": "continue",
                     "payload": {
-                        "arcs_advanced_delta": 1,
+                        "arcs_advanced_delta": 0,
+                        "arcs_skipped_delta": 1,
                         "manuscripts_delta": 0,
                         "status": "continue",
                         "stop_reason": None,
+                        "stage3_failure_policy": stage3_failure_policy,
+                        "skip_reason": "stage3_generation_failed",
                     },
                 }
             if s3_success == 0 and s3_fail == 0:
@@ -4223,6 +4265,33 @@ class SovereignApp:
             return {"status": "completed"}
         except Exception as s3_err:
             self.ui.log(f"   ❌ [Stage 3] Blueprint 생성 오류: {str(s3_err)[:100]}")
+            if stage3_failure_policy == "strict":
+                self.ui.log("   [FrontierLag] strict Stage3 policy stops after Stage3 exception.")
+                return {
+                    "status": "stop",
+                    "payload": {
+                        "arcs_advanced_delta": 0,
+                        "arcs_skipped_delta": 0,
+                        "manuscripts_delta": 0,
+                        "status": "stop",
+                        "stop_reason": "stage3_exception_strict_stop",
+                        "stage3_failure_policy": stage3_failure_policy,
+                    },
+                }
+            if stage3_failure_policy in {"skip", "quarantine"}:
+                self.ui.log("   [FrontierLag] non-strict Stage3 policy records a skipped Arc slot after exception.")
+                return {
+                    "status": "continue",
+                    "payload": {
+                        "arcs_advanced_delta": 0,
+                        "arcs_skipped_delta": 1,
+                        "manuscripts_delta": 0,
+                        "status": "continue",
+                        "stop_reason": None,
+                        "stage3_failure_policy": stage3_failure_policy,
+                        "skip_reason": "stage3_exception",
+                    },
+                }
             # [HIL-BOUNDARY] Operator skip/stop decision inside automated FrontierLag pipeline.
             # Exception path — same contract as the fail-count branch above.
             skip_choice = (
@@ -4248,10 +4317,13 @@ class SovereignApp:
             return {
                 "status": "continue",
                 "payload": {
-                    "arcs_advanced_delta": 1,
+                    "arcs_advanced_delta": 0,
+                    "arcs_skipped_delta": 1,
                     "manuscripts_delta": 0,
                     "status": "continue",
                     "stop_reason": None,
+                    "stage3_failure_policy": stage3_failure_policy,
+                    "skip_reason": "stage3_exception",
                 },
             }
 
@@ -4280,6 +4352,20 @@ class SovereignApp:
                     "status": "stop",
                     "stop_reason": "stage4_no_progress_blocked",
                 }
+            stage4_target = int(frontier_plan.get("stage4_target") or 0)
+            if stage4_target > 0 and int(ms_max_after or 0) < stage4_target:
+                self.ui.log(
+                    "   ❌ [Stage 4] 원고 집필 partial: "
+                    f"target <= ep {stage4_target} not reached "
+                    f"(ms_max_before={ms_max_before}, ms_max_after={ms_max_after})"
+                )
+                self.ui.log("   🛑 Stage 4 목표치 미달로 다음 Arc로 진행하지 않습니다.")
+                return {
+                    "arcs_advanced_delta": 0,
+                    "manuscripts_delta": arc_manuscripts,
+                    "status": "stop",
+                    "stop_reason": "stage4_target_not_reached",
+                }
             self.ui.log(f"   ✅ [Stage 4] 원고 완료 ({arc_manuscripts}화 생산)")
             return {
                 "arcs_advanced_delta": 1,
@@ -4305,6 +4391,7 @@ class SovereignApp:
         *,
         current_arc_no: int,
         total_arcs: int,
+        stage3_failure_policy: str = "strict",
     ) -> dict[str, Any]:
         arc_ready = self._ensure_frontier_lag_arc_ready(current_arc_no=current_arc_no)
         if arc_ready["status"] != "ready":
@@ -4334,7 +4421,10 @@ class SovereignApp:
             f", S4→{frontier_plan['stage4_target']} ({frontier_plan['stage4_alignment']})"
         )
         self.ui.log(f"   📌 [FrontierLag] bp_max={frontier_plan['bp_max']} / ms_max={frontier_plan['ms_max']}")
-        stage3_result = self._run_frontier_lag_stage3_sync(frontier_plan=frontier_plan)
+        stage3_result = self._run_frontier_lag_stage3_sync(
+            frontier_plan=frontier_plan,
+            stage3_failure_policy=stage3_failure_policy,
+        )
         if stage3_result["status"] != "completed":
             return stage3_result["payload"]
         return self._run_frontier_lag_stage4_sync(frontier_plan=frontier_plan)
@@ -4419,6 +4509,7 @@ class SovereignApp:
         *,
         total_arcs: int,
         arcs_advanced: int,
+        arcs_skipped: int,
         total_manuscripts: int,
         requested_arc_limit: int | None,
         requested_limit_hit: bool,
@@ -4444,6 +4535,8 @@ class SovereignApp:
 
         return {
             "arcs_advanced": arcs_advanced,
+            "arcs_skipped": arcs_skipped,
+            "arc_units_processed": arcs_advanced + arcs_skipped,
             "total_manuscripts": total_manuscripts,
             "requested_arc_limit": requested_arc_limit,
             "requested_limit_hit": requested_limit_hit,
@@ -4457,8 +4550,10 @@ class SovereignApp:
         max_arc_advances: int | None = None,
         batch_size_override: int | None = None,
         wait_for_menu_return: bool = True,
+        stage3_failure_policy: str = "strict",
     ) -> dict[str, Any]:
         """[FrontierLag] Stage 2 frontier는 유지하되 Stage 3/4는 한 박자 늦춰 미래 정보를 확보."""
+        stage3_failure_policy = self._normalize_frontier_lag_stage3_failure_policy(stage3_failure_policy)
         self._show_resume_status()
 
         if not self.current_project.master_bible:
@@ -4495,6 +4590,7 @@ class SovereignApp:
 
         total_manuscripts = 0
         arcs_advanced = 0
+        arcs_skipped = 0
 
         def _mark_requested_limit_hit() -> None:
             nonlocal requested_limit_hit, stop_reason
@@ -4511,6 +4607,8 @@ class SovereignApp:
             if final_close_result["stop_reason"]:
                 return {
                     "arcs_advanced": arcs_advanced,
+                    "arcs_skipped": arcs_skipped,
+                    "arc_units_processed": arcs_advanced + arcs_skipped,
                     "total_manuscripts": total_manuscripts,
                     "requested_arc_limit": requested_arc_limit,
                     "requested_limit_hit": requested_limit_hit,
@@ -4524,7 +4622,7 @@ class SovereignApp:
             while True:
                 tranche_completed = True
                 for arc_offset in range(target_count):
-                    current_arc_no = designed_arcs + arcs_advanced + 1
+                    current_arc_no = designed_arcs + arcs_advanced + arcs_skipped + 1
                     self.ui.log(f"\n{'━' * 60}")
                     self.ui.log(
                         f"🧭 [FrontierLag] Arc {current_arc_no}/{total_arcs} frontier 전진 ({arc_offset + 1}/{target_count})"
@@ -4534,6 +4632,7 @@ class SovereignApp:
                     arc_step_result = self._run_frontier_lag_arc_step(
                         current_arc_no=current_arc_no,
                         total_arcs=total_arcs,
+                        stage3_failure_policy=stage3_failure_policy,
                     )
                     if arc_step_result["status"] == "stop":
                         stop_reason = arc_step_result["stop_reason"]
@@ -4542,7 +4641,8 @@ class SovereignApp:
 
                     total_manuscripts += arc_step_result["manuscripts_delta"]
                     arcs_advanced += arc_step_result["arcs_advanced_delta"]
-                    if requested_arc_limit is not None and arcs_advanced >= requested_arc_limit:
+                    arcs_skipped += int(arc_step_result.get("arcs_skipped_delta", 0) or 0)
+                    if requested_arc_limit is not None and (arcs_advanced + arcs_skipped) >= requested_arc_limit:
                         _mark_requested_limit_hit()
                         tranche_completed = False
                         break
@@ -4555,14 +4655,14 @@ class SovereignApp:
 
                 self.ui.log(f"\n   ✅ 요청한 {target_count}개 Arc frontier 전진 완료!")
 
-                remaining_design = total_arcs - (designed_arcs + arcs_advanced)
+                remaining_design = total_arcs - (designed_arcs + arcs_advanced + arcs_skipped)
                 if remaining_design <= 0:
                     self.ui.log("   🎉 모든 Arc frontier 전진 완료!")
                     break
 
                 target_count = min(remaining_design, batch_size)
                 if requested_arc_limit is not None:
-                    remaining_requested = requested_arc_limit - arcs_advanced
+                    remaining_requested = requested_arc_limit - (arcs_advanced + arcs_skipped)
                     if remaining_requested <= 0:
                         _mark_requested_limit_hit()
                         break
@@ -4576,6 +4676,7 @@ class SovereignApp:
         return self._finalize_frontier_lag_result(
             total_arcs=total_arcs,
             arcs_advanced=arcs_advanced,
+            arcs_skipped=arcs_skipped,
             total_manuscripts=total_manuscripts,
             requested_arc_limit=requested_arc_limit,
             requested_limit_hit=requested_limit_hit,

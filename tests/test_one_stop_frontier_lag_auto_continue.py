@@ -125,7 +125,7 @@ def test_frontier_lag_uses_default_batch_without_boundary_input():
                 "ms_max": 6,
             },
         ],
-        manuscripts_after=[0, 0, 0, 0],
+        manuscripts_after=[0, 1, 1, 6],
     )
 
     fake_stage2 = _make_stage_context_module("Stage2Context")
@@ -135,6 +135,7 @@ def test_frontier_lag_uses_default_batch_without_boundary_input():
         sys.modules,
         {"modules.core.stage2_context": fake_stage2, "modules.core.stage3_context": fake_stage3},
     ):
+
         def _input_side_effect(prompt=""):
             if prompt == "[Enter] 메뉴로 돌아가기":
                 return ""
@@ -155,9 +156,7 @@ def test_frontier_lag_uses_default_batch_without_boundary_input():
     assert result["requested_arc_limit"] == 2
     assert result["requested_limit_hit"] is True
     default_batch_logs = [
-        call.args[0]
-        for call in app.ui.log.call_args_list
-        if "auto-selected default batch_size" in str(call.args[0])
+        call.args[0] for call in app.ui.log.call_args_list if "auto-selected default batch_size" in str(call.args[0])
     ]
     assert len(default_batch_logs) == 1
     assert "auto-selected default batch_size: 2" in default_batch_logs[0]
@@ -227,7 +226,7 @@ def test_frontier_lag_auto_shrinks_last_tranche_to_remaining():
                 "ms_max": 12,
             },
         ],
-        manuscripts_after=[0, 0, 0, 0, 0, 0, 0, 0],
+        manuscripts_after=[0, 1, 1, 4, 4, 7, 7, 12],
     )
 
     fake_stage2 = _make_stage_context_module("Stage2Context")
@@ -237,6 +236,7 @@ def test_frontier_lag_auto_shrinks_last_tranche_to_remaining():
         sys.modules,
         {"modules.core.stage2_context": fake_stage2, "modules.core.stage3_context": fake_stage3},
     ):
+
         def _input_side_effect(prompt=""):
             if prompt == "[Enter] 메뉴로 돌아가기":
                 return ""
@@ -255,9 +255,7 @@ def test_frontier_lag_auto_shrinks_last_tranche_to_remaining():
     assert result["requested_arc_limit"] == 4
     assert result["requested_limit_hit"] is True
     default_batch_logs = [
-        call.args[0]
-        for call in app.ui.log.call_args_list
-        if "auto-selected default batch_size" in str(call.args[0])
+        call.args[0] for call in app.ui.log.call_args_list if "auto-selected default batch_size" in str(call.args[0])
     ]
     assert len(default_batch_logs) == 1
     assert "auto-selected default batch_size: 3" in default_batch_logs[0]
@@ -315,7 +313,7 @@ def test_frontier_lag_interactive_requested_arc_limit_stops_at_requested_total()
                 "ms_max": 7,
             },
         ],
-        manuscripts_after=[0, 0, 0, 0, 0, 0],
+        manuscripts_after=[0, 1, 1, 4, 4, 7],
     )
 
     fake_stage2 = _make_stage_context_module("Stage2Context")
@@ -325,6 +323,7 @@ def test_frontier_lag_interactive_requested_arc_limit_stops_at_requested_total()
         sys.modules,
         {"modules.core.stage2_context": fake_stage2, "modules.core.stage3_context": fake_stage3},
     ):
+
         def _input_side_effect(prompt=""):
             if prompt == "[Enter] 메뉴로 돌아가기":
                 return ""
@@ -551,6 +550,7 @@ def test_finalize_frontier_lag_result_returns_payload_without_pause():
         app,
         total_arcs=2,
         arcs_advanced=1,
+        arcs_skipped=0,
         total_manuscripts=3,
         requested_arc_limit=2,
         requested_limit_hit=False,
@@ -561,6 +561,8 @@ def test_finalize_frontier_lag_result_returns_payload_without_pause():
     app._pause.assert_not_called()
     assert result == {
         "arcs_advanced": 1,
+        "arcs_skipped": 0,
+        "arc_units_processed": 1,
         "total_manuscripts": 3,
         "requested_arc_limit": 2,
         "requested_limit_hit": False,
@@ -610,14 +612,22 @@ def test_frontier_lag_arc_step_helper_returns_continue_on_stage3_skip():
         sys.modules,
         {"modules.core.stage2_context": fake_stage2, "modules.core.stage3_context": fake_stage3},
     ):
-        result = SovereignApp._run_frontier_lag_arc_step(app, current_arc_no=1, total_arcs=2)
+        result = SovereignApp._run_frontier_lag_arc_step(
+            app,
+            current_arc_no=1,
+            total_arcs=2,
+            stage3_failure_policy="skip",
+        )
 
     app._stage_4_v2_chief_writer.assert_not_called()
     assert result == {
-        "arcs_advanced_delta": 1,
+        "arcs_advanced_delta": 0,
+        "arcs_skipped_delta": 1,
         "manuscripts_delta": 0,
         "status": "continue",
         "stop_reason": None,
+        "stage3_failure_policy": "skip",
+        "skip_reason": "stage3_generation_failed",
     }
 
 
@@ -676,6 +686,32 @@ def test_run_frontier_lag_stage4_sync_blocks_when_backlog_has_no_progress():
     }
 
 
+def test_run_frontier_lag_stage4_sync_blocks_when_partial_progress_misses_target():
+    app = _build_frontier_app(
+        total_arcs=2,
+        batch_size=1,
+        stage3_results=[{"success_count": 1, "fail_count": 0}],
+        plans=[],
+        manuscripts_after=[1, 3],
+    )
+
+    result = SovereignApp._run_frontier_lag_stage4_sync(
+        app,
+        frontier_plan={
+            "stage4_target": 4,
+            "stage4_alignment": "backlog",
+        },
+    )
+
+    app._stage_4_v2_chief_writer.assert_called_once_with(target_ep=4, skip_pause=True)
+    assert result == {
+        "arcs_advanced_delta": 0,
+        "manuscripts_delta": 2,
+        "status": "stop",
+        "stop_reason": "stage4_target_not_reached",
+    }
+
+
 def test_frontier_lag_keeps_stage3_abort_prompt():
     app = _build_frontier_app(
         total_arcs=2,
@@ -706,7 +742,7 @@ def test_frontier_lag_keeps_stage3_abort_prompt():
         {"modules.core.stage2_context": fake_stage2, "modules.core.stage3_context": fake_stage3},
     ):
         with patch("builtins.input", return_value="2") as mocked_input:
-            result = SovereignApp._one_stop_pipeline_frontier_lag(app)
+            result = SovereignApp._one_stop_pipeline_frontier_lag(app, stage3_failure_policy="operator_prompt")
 
     app._get_int_input.assert_called_once_with(
         "👉 이번 실행에서 몇 개 Arc를 처리할까요? (1~2, 기본: 2): ",
@@ -720,6 +756,46 @@ def test_frontier_lag_keeps_stage3_abort_prompt():
     app._ui_service.pause.assert_called_once_with("[Enter] 메뉴로 돌아가기", prompt_id="frontier_lag_return_to_menu")
     app._stage_4_v2_chief_writer.assert_not_called()
     assert result["stop_reason"] == "stage3_user_abort"
+
+
+def test_frontier_lag_stage3_failure_defaults_to_strict_stop():
+    app = _build_frontier_app(
+        total_arcs=2,
+        batch_size=1,
+        stage3_results=[{"success_count": 0, "fail_count": 1}],
+        plans=[
+            {
+                "true_final_arc_no": 2,
+                "designed_frontier_arc_no": 1,
+                "frontier_ep_start": 1,
+                "frontier_ep_end": 3,
+                "stage3_target": 2,
+                "stage4_target": 1,
+                "stage3_alignment": "backlog",
+                "stage4_alignment": "backlog",
+                "bp_max": 0,
+                "ms_max": 0,
+            }
+        ],
+        manuscripts_after=[0, 0],
+    )
+
+    fake_stage2 = _make_stage_context_module("Stage2Context")
+    fake_stage3 = _make_stage_context_module("Stage3Context")
+
+    with patch.dict(
+        sys.modules,
+        {"modules.core.stage2_context": fake_stage2, "modules.core.stage3_context": fake_stage3},
+    ):
+        with patch("builtins.input") as mocked_input:
+            result = SovereignApp._one_stop_pipeline_frontier_lag(app, wait_for_menu_return=False)
+
+    mocked_input.assert_not_called()
+    app._ui_service.get_choice_input.assert_not_called()
+    app._stage_4_v2_chief_writer.assert_not_called()
+    assert result["arcs_advanced"] == 0
+    assert result["arcs_skipped"] == 0
+    assert result["stop_reason"] == "stage3_strict_failure_stop"
 
 
 def test_frontier_lag_blocks_arc_advance_when_stage4_backlog_makes_no_progress():
@@ -821,7 +897,7 @@ def test_frontier_lag_requested_arc_limit_stops_mid_auto_continue():
                 "ms_max": 12,
             },
         ],
-        manuscripts_after=[0, 0, 0, 0, 0, 0, 0, 0],
+        manuscripts_after=[0, 1, 1, 4, 4, 7, 7, 12],
     )
 
     fake_stage2 = _make_stage_context_module("Stage2Context")
