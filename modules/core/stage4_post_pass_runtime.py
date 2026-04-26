@@ -1184,11 +1184,20 @@ class Stage4PostPassRuntime:
         try:
             self.ctx.current_project.db.save_episode_bible(next_ep, bible_delta)
         except Exception as bible_save_err:
-            self.ctx.ui.log(f"      ⚠️ Episode Bible DB 저장 실패 (bible_delta 구성은 성공): {str(bible_save_err)[:50]}")
+            self.ctx.ui.log(f"      ⚠️ Episode Bible DB 저장 실패 (bible_delta 구성은 성공): {bible_save_err}")
             logging.error("[S4-001] save_episode_bible 실패 ep=%d: %s", next_ep, bible_save_err)
             if callable(getattr(self.ctx, "audit_event", None)):
-                self.ctx.audit_event("episode_bible_save_failed", "save_episode_bible 실패", {"ep": next_ep})
+                self.ctx.audit_event(
+                    "episode_bible_save_failed",
+                    "save_episode_bible 실패",
+                    {"ep": next_ep, "error": str(bible_save_err)},
+                )
             meta_save_failed = True
+            return {
+                "bible_delta": bible_delta,
+                "state_truth_owner_contract": state_truth_owner_contract,
+                "meta_save_failed": meta_save_failed,
+            }
 
         self._sync_world_state_positions(next_ep=next_ep, key_npcs=key_npcs)
         self._persist_manager_causal_side_effects(next_ep=next_ep, causal_links=causal_links)
