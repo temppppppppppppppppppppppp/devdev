@@ -516,6 +516,11 @@ class TestBridgeServerWiring:
         payload = _build_run_exit_payload(runner, 2)
 
         assert payload["returncode"] == 2
+        assert payload["process_exit_status"] == "process_exit_nonzero"
+        assert payload["completion_claim_scope"] == "subprocess_exit_only"
+        assert payload["semantic_completion_status"] == "not_asserted_by_bridge"
+        assert payload["canonical_truth_status"] == "not_asserted_by_bridge"
+        assert "subprocess lifecycle events" in payload["authority_note"]
         assert payload["key"] == "4"
         assert payload["failure_phase"] == "prompt:confirm_api"
         assert payload["stdout_tail"][-1] == "last stdout"

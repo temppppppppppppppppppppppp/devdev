@@ -326,7 +326,7 @@ class Stage4PostProcessor:
             "attempt_key": attempt_key,
             "settlement_status": status,
             "artifact_path": self._relativize_artifact_path(Path(artifact_path)) if artifact_path else "",
-            "detail": str(detail or "")[:1000],
+            "detail": str(detail or ""),
             "authority_note": "fully_settled is the only authoritative PASS settlement state",
             **flags,
         }
@@ -1266,13 +1266,32 @@ class Stage4PostProcessor:
         except Exception as chain_link_err:
             self.ctx.ui.log(f"   Chain link save failed: {str(chain_link_err)[:50]}")
 
-        self.post_pass_runtime._save_world_state_atomic(
+        atomic_metadata_result = self.post_pass_runtime._save_world_state_atomic(
             next_ep=next_ep,
             actual_truth=delta["actual_truth"],
             final_state_updates=final_state_updates,
             bible_delta=bible_delta,
             arc_data=arc_data,
         )
+        atomic_metadata_saved = True
+        atomic_metadata_failure_detail = ""
+        if isinstance(atomic_metadata_result, dict):
+            atomic_metadata_saved = bool(atomic_metadata_result.get("atomic_metadata_saved", True))
+            atomic_metadata_failure_detail = str(atomic_metadata_result.get("atomic_metadata_failure_detail", "") or "")
+        elif atomic_metadata_result is False:
+            atomic_metadata_saved = False
+            atomic_metadata_failure_detail = "atomic metadata save returned False"
+
+        if not atomic_metadata_saved:
+            return {
+                "actual_truth": delta["actual_truth"],
+                "bible_delta": bible_delta,
+                "state_truth_owner_contract": delta.get("state_truth_owner_contract", {}),
+                "meta_save_failed": True,
+                "atomic_metadata_save_failed": True,
+                "metadata_failure_detail": atomic_metadata_failure_detail,
+            }
+
         self.post_pass_runtime._run_post_pass_advisories(
             next_ep=next_ep,
             final_manuscript=final_manuscript,
@@ -1291,6 +1310,8 @@ class Stage4PostProcessor:
             "bible_delta": bible_delta,
             "state_truth_owner_contract": delta.get("state_truth_owner_contract", {}),
             "meta_save_failed": delta["meta_save_failed"],
+            "atomic_metadata_save_failed": False,
+            "metadata_failure_detail": "",
         }
 
     def _run_pass_result_post_settlement_side_effects(
@@ -1387,6 +1408,32 @@ class Stage4PostProcessor:
             self.ctx.perf_timer.reset()
         except Exception as perf_err:
             logging.debug("[PerfTimer] s4 summary/reset: %s", perf_err)
+
+    def _handle_post_pass_meta_failure(
+        self,
+        *,
+        post_pass_payload: dict,
+        settlement_status_context: dict,
+        next_ep: int,
+        arc_data: dict,
+    ) -> bool:
+        logging.error("[S4-001] _meta_save_failed=True → process_pass_result 반환 False")
+        self._emit_stage4_settlement_status(
+            status="primary_persisted_meta_failed",
+            detail=str(post_pass_payload.get("metadata_failure_detail", "") or ""),
+            **settlement_status_context,
+        )
+        self.ctx.ui.log(
+            "   ❌ 후처리 메타 저장 실패: 원고 본문은 저장됐지만 PASS 정산을 성공으로 확정하지 않습니다.",
+            stage="stage4",
+            component="post_pass_settlement",
+            ep_num=next_ep,
+            arc_num=arc_data.get("arc_no", 0) if isinstance(arc_data, dict) else 0,
+            event_kind="result",
+            level="error",
+            meta={"result": "meta_save_failed"},
+        )
+        return False
 
     def _prepare_pass_result_settlement_inputs(
         self,
@@ -1492,19 +1539,12 @@ class Stage4PostProcessor:
         # [S4-001] Episode Bible 저장 실패 시 오케스트레이터에 실패 신호 전달
         # WARNING: early return below skips remaining sinks. Manuscript is already persisted.
         if _meta_save_failed:
-            logging.error("[S4-001] _meta_save_failed=True → process_pass_result 반환 False")
-            self._emit_stage4_settlement_status(status="primary_persisted_meta_failed", **settlement_status_context)
-            self.ctx.ui.log(
-                "   ❌ 후처리 메타 저장 실패: 원고 본문은 저장됐지만 PASS 정산을 성공으로 확정하지 않습니다.",
-                stage="stage4",
-                component="post_pass_settlement",
-                ep_num=next_ep,
-                arc_num=arc_data.get("arc_no", 0) if isinstance(arc_data, dict) else 0,
-                event_kind="result",
-                level="error",
-                meta={"result": "meta_save_failed"},
+            return self._handle_post_pass_meta_failure(
+                post_pass_payload=post_pass_payload,
+                settlement_status_context=settlement_status_context,
+                next_ep=next_ep,
+                arc_data=arc_data,
             )
-            return False
 
         settlement_packet_path = None
         try:

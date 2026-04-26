@@ -8097,6 +8097,8 @@ class TestLane2DirectorSemantics:
         gate_semantics = kw["advisory_warnings"]["gate_semantics"]
         assert gate_semantics["director_verdict"] == "PASS_WITH_FIX"
         assert gate_semantics["final_verdict"] == "REJECT"
+        assert gate_semantics["runtime_route_verdict"] == "REJECT"
+        assert gate_semantics["verdict_contract_version"] == "verdict-layer-v1"
         assert gate_semantics["gate_basis"] == "quality_floor_fail"
         repair_contract = kw["advisory_warnings"]["repair_contract"]
         assert repair_contract["subtype"] == "movement"
@@ -8117,6 +8119,9 @@ class TestLane2DirectorSemantics:
         assert gate_semantics["final_judgment_authority"] == "director_llm"
         assert gate_semantics["runtime_gate_authority"] == "python_runtime_routing_gate"
         assert gate_semantics["runtime_gate_role"] == "route_or_block_automatic_progress"
+        assert gate_semantics["verdict_layers"]["director_verdict"] == "PASS_WITH_FIX"
+        assert gate_semantics["verdict_layers"]["runtime_route_verdict"] == "REJECT"
+        assert gate_semantics["verdict_layers"]["verdict_contract_version"] == "verdict-layer-v1"
         assert gate_semantics["verdict_layers"]["director_quality_authority"] == "director_llm"
         assert gate_semantics["verdict_layers"]["runtime_gate_authority"] == "python_runtime_routing_gate"
         assert gate_semantics["verdict_layers"]["runtime_gate_role"] == "route_or_block_automatic_progress"

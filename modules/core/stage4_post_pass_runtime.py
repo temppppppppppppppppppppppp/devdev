@@ -978,11 +978,16 @@ class Stage4PostPassRuntime:
             "inventory_count_deltas": inventory_count_deltas,
         }
 
-    def _merge_manager_key_npcs_into_master_bible(self, *, next_ep: int, key_npcs: list) -> None:
+    def _merge_manager_key_npcs_into_master_bible(self, *, next_ep: int, key_npcs: list) -> dict:
+        result = {
+            "appended_count": 0,
+            "proposed_delta_count": 0,
+            "authority": "manager_proposal_requires_director_fact_commit",
+        }
         try:
             master_bible = getattr(self.ctx.current_project, "master_bible", None)
             if not master_bible or not isinstance(master_bible, dict) or not key_npcs:
-                return
+                return result
 
             master_bible_root = master_bible.get("MasterBible", master_bible)
             assets = master_bible_root.setdefault("AssetLibrary", {})
@@ -997,7 +1002,6 @@ class Stage4PostPassRuntime:
                     if existing_name:
                         npc_by_name[existing_name] = index
 
-            merged_count = 0
             for new_npc in key_npcs:
                 if not isinstance(new_npc, dict):
                     continue
@@ -1006,28 +1010,59 @@ class Stage4PostPassRuntime:
                     continue
                 if npc_name in npc_by_name:
                     existing_index = npc_by_name[npc_name]
+                    existing_npc = existing_npcs[existing_index]
+                    proposed_changes = []
                     for key, value in new_npc.items():
                         if key in ("name", "Name"):
                             continue
-                        if value and (
-                            not existing_npcs[existing_index].get(key)
-                            or str(value) != str(existing_npcs[existing_index].get(key))
-                        ):
-                            existing_npcs[existing_index][key] = value
-                    merged_count += 1
+                        if not value:
+                            continue
+                        existing_value = existing_npc.get(key)
+                        if str(value) == str(existing_value):
+                            continue
+                        proposed_changes.append(
+                            {
+                                "field": key,
+                                "existing_value": existing_value,
+                                "proposed_value": value,
+                                "conflict": bool(existing_value),
+                            }
+                        )
+                    if proposed_changes:
+                        proposals_root = master_bible_root.setdefault("FactCommitProposals", {})
+                        proposal_list = proposals_root.setdefault("ManagerKeyNPCDeltas", [])
+                        proposal_list.append(
+                            {
+                                "ep": next_ep,
+                                "npc": npc_name,
+                                "source": "manager_new_lore",
+                                "authority_status": "proposed_only_requires_director_fact_commit",
+                                "changes": proposed_changes,
+                            }
+                        )
+                        result["proposed_delta_count"] += 1
                 else:
                     existing_npcs.append(new_npc)
                     npc_by_name[npc_name] = len(existing_npcs) - 1
-                    merged_count += 1
+                    result["appended_count"] += 1
 
-            if merged_count > 0:
+            if result["appended_count"] > 0:
                 assets["KeyNPCs"] = existing_npcs
-                logging.debug("[CON-2-FIX] master_bible.KeyNPCs 병합: %d건 (ep=%d)", merged_count, next_ep)
+            if result["appended_count"] > 0 or result["proposed_delta_count"] > 0:
+                logging.debug(
+                    "[CON-2-FIX] master_bible.KeyNPCs 신규=%d / 기존 NPC 제안=%d (ep=%d)",
+                    result["appended_count"],
+                    result["proposed_delta_count"],
+                    next_ep,
+                )
+            return result
         except Exception as master_bible_merge_err:
             logging.warning(
                 "[CON-2-FIX] master_bible NPC 병합 실패 (비치명): %s",
-                str(master_bible_merge_err)[:80],
+                str(master_bible_merge_err),
             )
+            result["error"] = str(master_bible_merge_err)
+            return result
 
     def _build_manager_delta_collections(
         self,
@@ -1682,9 +1717,10 @@ class Stage4PostPassRuntime:
         if fact_ledger_snapshot is not None and self.ctx.fact_ledger and not fact_ledger_restored_via_rollback:
             self.ctx.fact_ledger._ledger = fact_ledger_snapshot
 
+        failure_detail = str(meta_err)
         self._report_soft_failure(
             operation="save_world_state_atomic",
-            message="world state/fact ledger atomic save failed and was rolled back",
+            message="world state/fact ledger atomic save failed and Stage4 settlement was blocked",
             exc=meta_err,
             ep_num=next_ep,
             extra={
@@ -1693,13 +1729,20 @@ class Stage4PostPassRuntime:
                 "persisted_rollbacks": persisted_rollbacks,
             },
         )
-        self.ctx.ui.log(f"   ⚠️ [TF-C10] 메타데이터 원자적 저장 실패 (비차단): {str(meta_err)[:60]}")
+        self.ctx.ui.log(f"   ❌ [TF-C10] 메타데이터 원자적 저장 실패 (정산 차단): {failure_detail}")
+        return {
+            "atomic_metadata_saved": False,
+            "atomic_metadata_failure_detail": failure_detail,
+            "rolled_back": True,
+            "sequential_mode": sequential_mode,
+            "persisted_rollbacks": persisted_rollbacks,
+        }
 
     def _save_world_state_atomic(self, *, next_ep, actual_truth, final_state_updates, bible_delta, arc_data=None):
         """[B-1-9a:A4] WorldState + FactLedger 원자적 갱신 + 롤백.
 
-        Void return. On failure raises → caught by caller's
-        _handle_atomic_metadata_failure which sets meta_save_failed.
+        Returns a settlement-blocking status payload. If either durable truth store
+        fails, the caller must treat the PASS settlement as not fully settled.
         """
         meta_db = getattr(self.ctx.current_project, "db", None)
         payloads = self._build_atomic_state_payloads(
@@ -1735,8 +1778,14 @@ class Stage4PostPassRuntime:
                     fact_ledger_changes=payloads["fact_ledger_changes"],
                     bible_delta=bible_delta,
                 )
+            return {
+                "atomic_metadata_saved": True,
+                "world_state_persisted": world_state_persisted,
+                "fact_ledger_persisted": fact_ledger_persisted,
+                "sequential_mode": sequential_mode,
+            }
         except Exception as meta_err:
-            self._handle_atomic_metadata_failure(
+            return self._handle_atomic_metadata_failure(
                 next_ep=next_ep,
                 meta_err=meta_err,
                 sequential_mode=sequential_mode,

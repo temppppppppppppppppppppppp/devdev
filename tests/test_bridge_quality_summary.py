@@ -480,6 +480,11 @@ def test_quality_dashboard_endpoint_surfaces_proof_status_and_sink_alignment(tmp
     assert data["proof_status"]["status"] == "ok"
     assert data["proof_status"]["sink_alignment_status"] == "ok"
     assert data["proof_status"]["runtime_summary_status"] == "ok"
+    assert data["proof_status"]["completion_claim_scope"] == "proof_artifact_alignment_only"
+    assert data["proof_status"]["semantic_completion_status"] == "proof_evidence_aligned"
+    assert data["proof_status"]["canonical_truth_status"] == "not_asserted_by_dashboard"
+    assert "companion dashboard summary" in data["proof_status"]["authority_note"]
+    assert "canonical truth" in data["proof_status"]["summary"]
     assert data["sink_alignment_summary"]["available"] is True
     assert data["sink_alignment_summary"]["stages"]["stage3"]["coverage"]["session_decisions"] == 1
     assert data["sink_alignment_summary"]["stages"]["stage4"]["coverage"]["session_decisions"] == 1
