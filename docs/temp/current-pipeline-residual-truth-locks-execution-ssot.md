@@ -281,6 +281,7 @@ Completed tranches:
 - `direct-runner-archive-exit-truth`: direct supervised semantic exit now returns non-zero when archive-enabled payloads contain `benchmark_archive.status` other than `ok`.
 - `stage4-settlement-side-effect-containment`: `_persist_manager_delta_outputs()` now stops before WorldState, causal-link, state-log, karma, summary, numeric-authority, and contract-signal side effects when the primary `save_episode_bible` write fails; the audit payload preserves the full exception text.
 - `benchmark-archive-reproducibility-truth`: benchmark manifests and index rows now mark archive backing evidence as `local_ignored_snapshot` / `local_only_non_reproducible`, with README guidance that ignored snapshot directories are local-only unless separately exported or tracked.
+- `legacy-cache-lineage-auditability`: cached-context missing/stale lineage bypasses now write `context_cache_attempts` rows with `cache_outcome=bypassed` and a specific lineage reason instead of only emitting a warning before direct fallback.
 
 Focused verification completed so far:
 - `python -m pytest tests/test_stage4_post_processor.py -k "collect_manager_and_build_delta_fails_closed_on_manager_exception or returns_false_and_logs_when_meta_save_fails or returns_true_on_success or settlement_failure_demotes" -q`: 4 passed.
@@ -290,14 +291,17 @@ Focused verification completed so far:
 - `python -m pytest tests/test_stage4_context_builder.py -k "stale" -q`: 1 passed.
 - `python -m pytest tests/test_direct_supervised_semantic_exit.py tests/test_run_stage2_direct_supervised.py tests/test_run_stage3_direct_supervised.py tests/test_run_stage4_direct_supervised.py -q`: 8 passed.
 - `python -m pytest tests/test_archive_benchmark_record.py tests/test_failure_analyzer.py -q`: 55 passed.
+- `python -m pytest tests/test_base_agent.py -k "cached_context_missing_lineage_bypasses_cache or cached_context_stale_model_lineage_bypasses_cache or cached_context_success_logs_cache_lineage or cached_context_failure_evicts_cache_by_name_and_logs_lineage or context_cache_hit_logs_direct_attempt" -q`: 5 passed.
 
 Static and hygiene verification completed:
 - `python -m ruff check modules/core/stage4_post_pass_runtime.py modules/core/stage0_handoff.py modules/core/stage2_orchestrator.py scripts/direct_supervised_semantic_exit.py tests/test_stage4_post_processor.py tests/test_stage2_orchestrator.py tests/test_direct_supervised_semantic_exit.py`: passed.
 - `python -m ruff check modules/core/stage4_post_pass_runtime.py tests/test_stage4_post_processor.py`: passed.
 - `python -m ruff check scripts/archive_benchmark_record.py tests/test_archive_benchmark_record.py`: passed.
+- `python -m ruff check modules/domain/agents/base_agent.py tests/test_base_agent.py`: passed.
 - `python -m py_compile modules/core/stage4_post_pass_runtime.py modules/core/stage0_handoff.py modules/core/stage2_orchestrator.py scripts/direct_supervised_semantic_exit.py tests/test_stage4_post_processor.py tests/test_stage2_orchestrator.py tests/test_direct_supervised_semantic_exit.py`: passed.
 - `python -m py_compile modules/core/stage4_post_pass_runtime.py tests/test_stage4_post_processor.py`: passed.
 - `python -m py_compile scripts/archive_benchmark_record.py tests/test_archive_benchmark_record.py`: passed.
+- `python -m py_compile modules/domain/agents/base_agent.py tests/test_base_agent.py`: passed.
 - `python scripts/check_utf8_hygiene.py <touched files>`: passed.
 
 Complexity recount:
@@ -305,14 +309,14 @@ Complexity recount:
 - `modules/core/stage0_handoff.py`: touched `cached_arcs_source_lineage_matches` is 13 LOC; 120+ and 180+ function counts remain 0.
 - `modules/core/stage2_orchestrator.py`: touched `_save_stage2_arcs_source_lineage` is 10 LOC and `_stage2_cached_arcs_lineage_ready` is 19 LOC; file 180+ function count remains 0.
 - `scripts/direct_supervised_semantic_exit.py`: touched functions are 5 LOC each; 120+ and 180+ function counts remain 0.
+- `modules/domain/agents/base_agent.py`: touched `_context_cache_lineage_bypass_reason` is 13 LOC, `_log_context_cache_lineage_bypass` is 34 LOC, `_fallback_after_context_cache_lineage_bypass` is 28 LOC, and `_ask_with_cached_context` is 177 LOC; file 180+ function count remains at the pre-change count of 1.
 
 Remaining queue:
-- `legacy-cache-lineage-auditability`
 - `doc-and-ci-consistency-cleanup`
 
 Progress update 3-pass audit:
 - Pass 1 - structure/scope: update remains inside the active execution SSOT and only changes implementation progress for accepted tranches.
-- Pass 2 - evidence/consistency: new Stage4 side-effect and benchmark archive claims are backed by focused pytest shards plus ruff/py_compile checks above; remaining queue no longer lists completed Stage4 containment or benchmark archive tranches.
-- Pass 3 - execution/readability: next actionable queue is legacy cache auditability, then doc/CI cleanup.
+- Pass 2 - evidence/consistency: new Stage4 side-effect, benchmark archive, and legacy cache lineage claims are backed by focused pytest shards plus ruff/py_compile checks above; remaining queue no longer lists completed Stage4 containment, benchmark archive, or legacy cache tranches.
+- Pass 3 - execution/readability: next actionable queue is doc/CI cleanup, then closure if no residual queue remains.
 
 Estimated confidence after progress update: 96%.
