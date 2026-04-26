@@ -106,6 +106,64 @@ def _to_snake_case(name: str) -> str:
     return re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
 
+def _sanitize_context_cache_token(value: object) -> str:
+    return re.sub(r"[^0-9A-Za-z_.-]+", "_", str(value or "")).strip("_.")
+
+
+def _context_cache_client_text_attr(client: object | None, attr_name: str) -> str:
+    value = getattr(client, attr_name, "") if client is not None else ""
+    return value.strip().lower() if isinstance(value, str) else ""
+
+
+def _context_cache_provider_token(client: object | None, primary_model: str) -> str:
+    provider_prefix, _ = _split_provider_prefixed_model(str(primary_model or ""))
+    provider_parts = [
+        provider_prefix.rstrip(":/").lower(),
+        _context_cache_client_text_attr(client, "_geuldobi_provider_mode"),
+        _context_cache_client_text_attr(client, "_geuldobi_vertex_auth_mode"),
+    ]
+    provider_token = ".".join(_sanitize_context_cache_token(part) for part in provider_parts if part)
+    return provider_token or "provider_unknown"
+
+
+def _context_cache_model_token(primary_model: str) -> str:
+    _, model_name = _split_provider_prefixed_model(str(primary_model or ""))
+    return _sanitize_context_cache_token(model_name) or "model_unknown"
+
+
+def _build_context_cache_key(
+    cache_type: str,
+    project_name: str,
+    content_hash: str,
+    *,
+    client: object | None,
+    primary_model: str,
+) -> str:
+    tokens = [
+        _sanitize_context_cache_token(cache_type) or "cache",
+        _sanitize_context_cache_token(project_name) or "project",
+        _context_cache_provider_token(client, primary_model),
+        _context_cache_model_token(primary_model),
+        _sanitize_context_cache_token(content_hash) or "hash",
+    ]
+    return "_".join(tokens)
+
+
+def _context_cache_lineage_is_current(
+    cache_lineage: dict,
+    *,
+    client: object | None,
+    primary_model: str,
+) -> bool:
+    if not cache_lineage.get("cache_key") or not cache_lineage.get("content_hash"):
+        return False
+    if str(cache_lineage.get("model") or "") != str(primary_model or ""):
+        return False
+    if str(cache_lineage.get("provider") or "") != _context_cache_provider_token(client, primary_model):
+        return False
+    return True
+
+
 def _get_agent_default_model(agent_key: str) -> str | None:
     config = _load_model_config()
     agents = config.get("agents", {})
@@ -2203,7 +2261,7 @@ class BaseAgent:
     # 클래스 변수: 캐시 저장소
     @staticmethod
     def _sanitize_context_cache_token(value: object) -> str:
-        return re.sub(r"[^0-9A-Za-z_.-]+", "_", str(value or "")).strip("_.")
+        return _sanitize_context_cache_token(value)
 
     @staticmethod
     def _resolve_context_cache_client_skip_reason(client: object | None) -> str:
@@ -2242,7 +2300,7 @@ class BaseAgent:
                 tokens.append(token)
         return "_".join(tokens)[:80]
 
-    _context_caches = {}  # {cache_key: {"name": str, "created_at": float, "content_hash": str}}
+    _context_caches = {}  # {cache_key: {"name": str, "created_at": float, "content_hash": str, ...}}
     _cache_lock = threading.Lock()  # [INF-P1-8] _context_caches 동시 접근 보호
     _CONTEXT_CACHE_MAX = int(_SYSTEM_CFG.get("cache", {}).get("context_max_entries", 50))
     _MIN_CACHE_CONTENT = int(_SYSTEM_CFG.get("cache", {}).get("min_content_chars", 50000))
@@ -2258,6 +2316,8 @@ class BaseAgent:
                         "cache_key": cache_key,
                         "cache_name": cache_name,
                         "content_hash": str(info.get("content_hash") or ""),
+                        "model": str(info.get("model") or ""),
+                        "provider": str(info.get("provider") or ""),
                     }
         return {"cache_name": cache_name, "content_hash": ""}
 
@@ -2301,7 +2361,13 @@ class BaseAgent:
 
         # 콘텐츠 해시 생성
         content_hash = hashlib.md5(content.encode("utf-8"), usedforsecurity=False).hexdigest()[:16]
-        cache_key = f"{cache_type}_{project_name}_{content_hash}"
+        cache_key = _build_context_cache_key(
+            cache_type,
+            project_name,
+            content_hash,
+            client=self.client,
+            primary_model=self.primary_model,
+        )
         content_chars = len(content or "")
 
         current_time = time.time()
@@ -2383,6 +2449,8 @@ class BaseAgent:
                     "name": cache.name,
                     "created_at": current_time,
                     "content_hash": content_hash,
+                    "model": self.primary_model or "",
+                    "provider": _context_cache_provider_token(self.client, self.primary_model),
                 }
                 # [I-20] list() 스냅샷 1회로 TOCTOU 제거
                 if len(self._context_caches) > self._CONTEXT_CACHE_MAX:
@@ -2502,6 +2570,16 @@ class BaseAgent:
 
         cache_lineage = self._context_cache_lineage_by_name(cache_name)
         cache_content_hash = str(cache_lineage.get("content_hash") or "")
+        if not _context_cache_lineage_is_current(
+            cache_lineage,
+            client=self.client,
+            primary_model=self.primary_model,
+        ):
+            logging.warning("[V61.7] cached-context bypassed due to missing/stale lineage: %s", cache_name)
+            fallback_prompt = full_prompt_fallback if full_prompt_fallback else prompt
+            return self.ask(
+                fallback_prompt, temperature=temperature, thinking_level=thinking_level, response_schema=response_schema
+            )
         try:
             self._reset_usage_tracking()
             wrapped_prompt, config = self._build_cached_context_request(

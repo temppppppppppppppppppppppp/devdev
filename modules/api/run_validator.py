@@ -5,6 +5,8 @@
 
 오류코드:
     INVALID_KEY            400  허용되지 않은 menu key
+    INVALID_INPUTS         400  inputs 가 JSON object 가 아님
+    STDIN_LINES_NOT_ALLOWED 403 public /run 에서 raw stdin override 전달
     SUB_KEY_REQUIRED       400  key=0 인데 sub_key 누락
     SUB_KEY_NOT_ALLOWED    400  key!=0 인데 sub_key 전달
     INVALID_SUB_KEY        400  key=0 의 sub_key 가 허용 범위 밖
@@ -32,9 +34,11 @@ ALLOWED_KEYS: frozenset[str] = PUBLIC_RUN_KEYS
 ALLOWED_SUB_KEYS: frozenset[str] = ALLOWED_STAGE0_SUB_KEYS
 RISK_KEYS: frozenset[str] = CONTROL_PLANE_RISK_KEYS
 ACTIVE_RUN_STATES: frozenset[str] = frozenset({"starting", "running", "stopping"})
+FORBIDDEN_PUBLIC_INPUT_KEYS: frozenset[str] = frozenset({"stdin_lines"})
 
 
 # ─── 결과 타입 ───────────────────────────────────────────────────────────────
+
 
 @dataclass(frozen=True)
 class ValidationResult:
@@ -52,6 +56,7 @@ def _err(http_status: int, code: str, message: str) -> ValidationResult:
 
 
 # ─── 검증 함수 ───────────────────────────────────────────────────────────────
+
 
 def validate_run_request(
     key: str,
@@ -91,5 +96,30 @@ def validate_run_request(
     if runner_state in ACTIVE_RUN_STATES:
         logger.warning("RUN_ALREADY_ACTIVE key=%r", key)
         return _err(409, "RUN_ALREADY_ACTIVE", "Another run is already active.")
+
+    return _OK
+
+
+def validate_run_inputs(inputs: object) -> ValidationResult:
+    """POST /run 의 public inputs shape 를 검증한다.
+
+    ProcessRunner has an internal ``stdin_lines`` escape hatch for direct test and
+    harness use. Public /run must not expose that authority because key/sub_key
+    validation happens before the runner builds stdin.
+    """
+    if inputs is None:
+        return _OK
+    if not isinstance(inputs, dict):
+        logger.warning("INVALID_INPUTS inputs_type=%r", type(inputs).__name__)
+        return _err(400, "INVALID_INPUTS", "inputs must be a JSON object.")
+
+    forbidden = sorted(FORBIDDEN_PUBLIC_INPUT_KEYS.intersection(inputs))
+    if forbidden:
+        logger.warning("STDIN_LINES_NOT_ALLOWED forbidden_inputs=%r", forbidden)
+        return _err(
+            403,
+            "STDIN_LINES_NOT_ALLOWED",
+            "inputs.stdin_lines is not allowed on public /run.",
+        )
 
     return _OK

@@ -9,9 +9,7 @@
 """
 
 import json
-from datetime import datetime, timedelta, timezone
-
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -56,6 +54,7 @@ def _gate(tmp_path: Path, record: ApprovalRecord | None = None) -> RiskApprovalG
 
 # ─── RISK_APPROVAL_REQUIRED ──────────────────────────────────────────────────
 
+
 def test_missing_approval_id_returns_403(tmp_path: Path) -> None:
     gate = _gate(tmp_path)
     result = gate.validate(key="44", approval_id=None, operator="op1")
@@ -78,7 +77,21 @@ def test_unknown_approval_id_returns_403(tmp_path: Path) -> None:
     assert result.code == "RISK_APPROVAL_REQUIRED"
 
 
+def test_approval_key_mismatch_returns_403(tmp_path: Path) -> None:
+    rec = _record(key="44")
+    gate = _gate(tmp_path, rec)
+    result = gate.validate(key="77", approval_id=rec.approval_id, operator="op1")
+    assert not result.ok
+    assert result.http_status == 403
+    assert result.code == "RISK_APPROVAL_KEY_MISMATCH"
+
+    entry = json.loads((tmp_path / "audit.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert entry["key"] == "77"
+    assert entry["record_key"] == "44"
+
+
 # ─── RISK_APPROVAL_EXPIRED ───────────────────────────────────────────────────
+
 
 def test_expired_approval_returns_403(tmp_path: Path) -> None:
     rec = _record(expires_at=_PAST)
@@ -91,8 +104,9 @@ def test_expired_approval_returns_403(tmp_path: Path) -> None:
 
 # ─── RISK_APPROVAL_DUAL_CONTROL_REQUIRED ─────────────────────────────────────
 
+
 def test_same_approver_returns_403(tmp_path: Path) -> None:
-    rec = _record(primary="alice", secondary="alice")
+    rec = _record(key="99", primary="alice", secondary="alice")
     gate = _gate(tmp_path, rec)
     result = gate.validate(key="99", approval_id=rec.approval_id, operator="op1")
     assert not result.ok
@@ -101,6 +115,7 @@ def test_same_approver_returns_403(tmp_path: Path) -> None:
 
 
 # ─── 정상 통과 ───────────────────────────────────────────────────────────────
+
 
 @pytest.mark.parametrize("key", ["44", "77", "88", "99"])
 def test_valid_approval_passes_all_risk_keys(tmp_path: Path, key: str) -> None:
@@ -112,7 +127,19 @@ def test_valid_approval_passes_all_risk_keys(tmp_path: Path, key: str) -> None:
     assert result.code == "OK"
 
 
+def test_successful_approval_is_single_use(tmp_path: Path) -> None:
+    rec = _record(key="44")
+    gate = _gate(tmp_path, rec)
+    first = gate.validate(key="44", approval_id=rec.approval_id, operator="op1")
+    second = gate.validate(key="44", approval_id=rec.approval_id, operator="op1")
+    assert first.ok
+    assert not second.ok
+    assert second.http_status == 403
+    assert second.code == "RISK_APPROVAL_USED"
+
+
 # ─── 감사 로그 ───────────────────────────────────────────────────────────────
+
 
 def test_audit_log_written_on_success(tmp_path: Path) -> None:
     rec = _record()
@@ -128,6 +155,8 @@ def test_audit_log_written_on_success(tmp_path: Path) -> None:
     assert entry["ok"] is True
     assert entry["verdict"] == "OK"
     assert entry["operator"] == "op_audit"
+    assert entry["record_key"] == rec.key
+    assert entry["approval_status"] == "approved"
     assert "ticket_id" in entry
     assert "approved_by_primary" in entry
     assert "approved_by_secondary" in entry
@@ -147,7 +176,7 @@ def test_audit_log_written_on_failure(tmp_path: Path) -> None:
 def test_audit_log_accumulates_multiple_entries(tmp_path: Path) -> None:
     rec = _record()
     gate = _gate(tmp_path, rec)
-    gate.validate(key="44", approval_id=None, operator="op1")           # fail
+    gate.validate(key="44", approval_id=None, operator="op1")  # fail
     gate.validate(key="44", approval_id=rec.approval_id, operator="op2")  # pass
 
     log_path = tmp_path / "audit.jsonl"
@@ -158,7 +187,7 @@ def test_audit_log_accumulates_multiple_entries(tmp_path: Path) -> None:
 
 
 def test_expired_approval_logged(tmp_path: Path) -> None:
-    rec = _record(expires_at=_PAST)
+    rec = _record(key="77", expires_at=_PAST)
     gate = _gate(tmp_path, rec)
     gate.validate(key="77", approval_id=rec.approval_id, operator="op1", _now=_NOW)
 

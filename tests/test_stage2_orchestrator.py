@@ -3,7 +3,8 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from modules.core.constants import VolumeSettings
-from modules.core.stage2_orchestrator import Stage2Orchestrator
+from modules.core.stage0_handoff import build_plot_roadmap_lineage
+from modules.core.stage2_orchestrator import STAGE2_ARCS_SOURCE_LINEAGE_ANCHOR, Stage2Orchestrator
 
 
 def _make_ctx(arcs, calculate_arc_from_episode=None):
@@ -127,7 +128,7 @@ def test_stage2_failure_report_source_normalizes_constraints_before_reporting():
     assert 'constraint_db.generate_constraint_block(global_arc_no) if constraint_db else "N/A"' in src
 
 
-def test_bootstrap_stage2_arc_pipeline_surfaces_stage0_contract(monkeypatch):
+def _install_stage2_bootstrap_dummies(monkeypatch):
     class DummyConstraintDB:
         def __init__(self, _project):
             self.arc_states = {}
@@ -154,6 +155,10 @@ def test_bootstrap_stage2_arc_pipeline_surfaces_stage0_contract(monkeypatch):
     monkeypatch.setattr("modules.core.constraint_db.ConstraintDB", DummyConstraintDB)
     monkeypatch.setattr("modules.domain.agents.state_tracker.StateTracker", DummyStateTracker)
 
+
+def test_bootstrap_stage2_arc_pipeline_surfaces_stage0_contract(monkeypatch):
+    _install_stage2_bootstrap_dummies(monkeypatch)
+
     ctx = _make_bootstrap_ctx()
     orch = Stage2Orchestrator(app=MagicMock(), context=ctx)
 
@@ -165,3 +170,66 @@ def test_bootstrap_stage2_arc_pipeline_surfaces_stage0_contract(monkeypatch):
     assert any("stage2_consumer_mode=db_anchor_first" in message for message in log_messages)
     assert any("projection_source=treatment.blocks" in message for message in log_messages)
     assert any("force_sync_bridge=compatibility_bridge" in message for message in log_messages)
+
+
+def test_bootstrap_stage2_arc_pipeline_persists_plot_roadmap_lineage_on_first_run(monkeypatch):
+    _install_stage2_bootstrap_dummies(monkeypatch)
+
+    ctx = _make_bootstrap_ctx()
+    orch = Stage2Orchestrator(app=MagicMock(), context=ctx)
+
+    result = orch._bootstrap_stage2_arc_pipeline(target_arc_count=1)
+
+    assert result["ready"] is True
+    lineage_calls = [
+        call
+        for call in ctx.current_project.save_v20_anchor.call_args_list
+        if call.args[0] == STAGE2_ARCS_SOURCE_LINEAGE_ANCHOR
+    ]
+    assert len(lineage_calls) == 1
+    lineage = lineage_calls[0].args[1]
+    assert lineage["schema"] == "stage0.plot_roadmap_lineage.v1"
+    assert lineage["block_count"] == 1
+    assert len(lineage["fingerprint"]) == 64
+
+
+def test_bootstrap_stage2_arc_pipeline_rejects_stale_cached_arc_lineage(monkeypatch):
+    _install_stage2_bootstrap_dummies(monkeypatch)
+
+    stale_lineage = build_plot_roadmap_lineage(
+        [
+            {
+                "block_no": 1,
+                "title": "Old Block 1",
+                "content": {
+                    "context": "old ctx",
+                    "event_villain": "old villain",
+                    "solution": "old solve",
+                    "reward": "old reward",
+                },
+            }
+        ]
+    )
+
+    ctx = _make_bootstrap_ctx()
+
+    def load_anchor(name):
+        if name == "volumes":
+            return []
+        if name == "arcs":
+            return [{"arc_no": 1, "title": "cached arc from old roadmap"}]
+        if name == STAGE2_ARCS_SOURCE_LINEAGE_ANCHOR:
+            return stale_lineage
+        return {}
+
+    ctx.current_project.db.load_anchor.side_effect = load_anchor
+    orch = Stage2Orchestrator(app=MagicMock(), context=ctx)
+
+    result = orch._bootstrap_stage2_arc_pipeline(target_arc_count=1)
+
+    assert result == {"ready": False}
+    log_messages = [call.args[0] for call in ctx.ui.log.call_args_list if call.args]
+    assert any("cached arcs source lineage differs" in message for message in log_messages)
+    assert not any(
+        call.args[0] == STAGE2_ARCS_SOURCE_LINEAGE_ANCHOR for call in ctx.current_project.save_v20_anchor.call_args_list
+    )

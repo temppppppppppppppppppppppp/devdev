@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import re
@@ -1211,13 +1212,38 @@ class FailureAnalyzer:
         return True
 
     def _artifact_file_exists(self, artifact_path: str) -> bool | None:
+        resolved = self._resolve_artifact_path(artifact_path)
+        if resolved is None:
+            return None
+        try:
+            return resolved.exists()
+        except Exception:
+            return None
+
+    def _resolve_artifact_path(self, artifact_path: str) -> Path | None:
         normalized = str(artifact_path or "").strip()
         if not normalized or self.project_path is None:
             return None
         try:
-            return (self.project_path / normalized).exists()
+            path = Path(normalized)
+            return path if path.is_absolute() else self.project_path / path
         except Exception:
             return None
+
+    def _artifact_file_sha256(self, artifact_path: str) -> str | None:
+        resolved = self._resolve_artifact_path(artifact_path)
+        if resolved is None:
+            return None
+        try:
+            if not resolved.is_file():
+                return None
+            return hashlib.sha256(resolved.read_bytes()).hexdigest()
+        except Exception:
+            return None
+
+    @staticmethod
+    def _is_sha256_hex(value: str) -> bool:
+        return bool(re.fullmatch(r"[0-9a-fA-F]{64}", str(value or "").strip()))
 
     @staticmethod
     def _final_verdict_from_monitor(row: dict) -> str:
@@ -2283,6 +2309,7 @@ class FailureAnalyzer:
             "candidate_key_mismatches": [],
             "selection_candidate_key_mismatches": [],
             "content_hash_mismatches": [],
+            "artifact_content_hash_mismatches": [],
             "artifact_path_mismatches": [],
             "artifact_metadata_missing": [],
             "artifact_missing_files": [],
@@ -2339,6 +2366,26 @@ class FailureAnalyzer:
                 if file_exists is False:
                     results["artifact_missing_files"].append(
                         {"attempt_key": attempt_key, "sink": sink_name, "artifact_path": artifact_path}
+                    )
+                    continue
+                if file_exists is not True:
+                    continue
+                actual_content_hash = self._artifact_file_sha256(artifact_path)
+                expected_content_hash = str(payload.get("content_hash", "") or "").strip()
+                if (
+                    actual_content_hash
+                    and expected_content_hash
+                    and self._is_sha256_hex(expected_content_hash)
+                    and actual_content_hash != expected_content_hash
+                ):
+                    results["artifact_content_hash_mismatches"].append(
+                        {
+                            "attempt_key": attempt_key,
+                            "sink": sink_name,
+                            "artifact_path": artifact_path,
+                            "content_hash": expected_content_hash,
+                            "actual_content_hash": actual_content_hash,
+                        }
                     )
 
         companion_status = str((authority_row or {}).get("selection_companion_status") or "").strip()
@@ -2527,6 +2574,7 @@ class FailureAnalyzer:
             "candidate_key_mismatches": [],
             "selection_candidate_key_mismatches": [],
             "content_hash_mismatches": [],
+            "artifact_content_hash_mismatches": [],
             "artifact_path_mismatches": [],
             "artifact_metadata_missing": [],
             "selection_reason_mismatches": [],
@@ -2636,6 +2684,7 @@ class FailureAnalyzer:
         consistency_results = {
             "comparison_notes_mismatches": [],
             "selected_candidate_advisory_mismatches": [],
+            "artifact_content_hash_mismatches": [],
             **dict(consistency_results or {}),
         }
         session_scoped_attempts = sum(
@@ -2729,6 +2778,7 @@ class FailureAnalyzer:
                 "candidate_key_mismatches",
                 "selection_candidate_key_mismatches",
                 "content_hash_mismatches",
+                "artifact_content_hash_mismatches",
                 "artifact_path_mismatches",
                 "artifact_metadata_missing",
                 "selection_reason_mismatches",
@@ -2789,6 +2839,7 @@ class FailureAnalyzer:
                 consistency_results["candidate_key_mismatches"],
                 consistency_results["selection_candidate_key_mismatches"],
                 consistency_results["content_hash_mismatches"],
+                consistency_results["artifact_content_hash_mismatches"],
                 consistency_results["artifact_path_mismatches"],
                 consistency_results["artifact_metadata_missing"],
                 consistency_results["selection_reason_mismatches"],
@@ -2861,6 +2912,7 @@ class FailureAnalyzer:
             "candidate_key_mismatches": consistency_results["candidate_key_mismatches"][:10],
             "selection_candidate_key_mismatches": consistency_results["selection_candidate_key_mismatches"][:10],
             "content_hash_mismatches": consistency_results["content_hash_mismatches"][:10],
+            "artifact_content_hash_mismatches": consistency_results["artifact_content_hash_mismatches"][:10],
             "artifact_path_mismatches": consistency_results["artifact_path_mismatches"][:10],
             "artifact_metadata_missing": consistency_results["artifact_metadata_missing"][:10],
             "selection_reason_mismatches": consistency_results["selection_reason_mismatches"][:10],

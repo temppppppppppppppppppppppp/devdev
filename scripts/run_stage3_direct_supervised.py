@@ -23,6 +23,7 @@ from modules.core.stage3_context import Stage3Context  # noqa: E402
 from modules.domain.agents.three_phase_blueprint_runtime import ThreePhaseBlueprintRuntime  # noqa: E402
 from scripts.benchmark_archive_runtime import safe_archive_benchmark_record  # noqa: E402
 from scripts.canary_path_utils import project_name_from_path, resolve_workspace_project_dir  # noqa: E402
+from scripts.direct_supervised_semantic_exit import semantic_exit_code  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:
@@ -50,7 +51,7 @@ def main() -> int:
         operational_attempt_cap=args.operational_attempt_cap,
     )
     print(json.dumps(payload, ensure_ascii=False, indent=2))
-    return 0
+    return semantic_exit_code(payload)
 
 
 def run_direct_stage3(project_name: str, *, target_ep: int, operational_attempt_cap: int) -> dict:

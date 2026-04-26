@@ -130,6 +130,44 @@ def test_save_stage_attempt_respects_outer_transaction_rollback(db):
     assert row["cnt"] == 0
 
 
+def test_mark_stage4_attempt_settlement_failed_demotes_pass_attempt(db):
+    db.save_stage_attempt(
+        stage=4,
+        verdict="PASS",
+        attempt_num=1,
+        ep_num=7,
+        arc_num=1,
+        score=97,
+        attempt_key="s4:ep7:arc1:a1:sess",
+        failure_category="",
+        reject_reason="",
+    )
+
+    changed = db.mark_stage4_attempt_settlement_failed(
+        attempt_key="s4:ep7:arc1:a1:sess",
+        settlement_status="primary_db_failed",
+        detail="primary database write failed",
+    )
+
+    assert changed is True
+    row = db.conn.execute(
+        """
+        SELECT verdict, score, failure_category, reject_reason, primary_failure_layer,
+               director_quality_passed, downstream_override_applied
+          FROM stage_attempts
+         WHERE attempt_key = ?
+        """,
+        ("s4:ep7:arc1:a1:sess",),
+    ).fetchone()
+    assert row["verdict"] == "SETTLEMENT_FAILED"
+    assert row["score"] == 0
+    assert row["failure_category"] == "primary_db_failed"
+    assert row["reject_reason"] == "primary database write failed"
+    assert row["primary_failure_layer"] == "primary_db_failed"
+    assert row["director_quality_passed"] == 0
+    assert row["downstream_override_applied"] == 0
+
+
 def test_save_llm_call_respects_outer_transaction_rollback(db):
     with pytest.raises(DBError):
         with db.transaction():
@@ -712,6 +750,35 @@ def test_get_stage_attempts_for_arc_returns_rich_rationale_and_artifact_fields(d
     assert "Advisory digest" in row["runtime_advisory"]
     assert row["retry_directives"] == "Do not repeat the previous ending beat verbatim."
     assert row["advisory_flags"] == {}
+
+
+def test_get_stage_attempts_for_arc_can_filter_by_session_id(db):
+    db.save_stage_attempt(
+        stage=4,
+        verdict="REJECT",
+        attempt_num=1,
+        ep_num=2,
+        arc_num=1,
+        session_id="sess-old",
+        attempt_key="s4:ep2:arc1:a1:sess-old",
+        reject_reason="old session reject",
+    )
+    db.save_stage_attempt(
+        stage=4,
+        verdict="REJECT",
+        attempt_num=1,
+        ep_num=2,
+        arc_num=1,
+        session_id="sess-current",
+        attempt_key="s4:ep2:arc1:a1:sess-current",
+        reject_reason="current session reject",
+    )
+
+    attempts = db.get_stage_attempts_for_arc(1, stages=(4,), session_id="sess-current", limit=5)
+
+    assert [row["attempt_key"] for row in attempts] == ["s4:ep2:arc1:a1:sess-current"]
+    assert attempts[0]["session_id"] == "sess-current"
+    assert attempts[0]["reject_reason"] == "current session reject"
 
 
 def test_save_stage_attempt_and_director_selection_persist_attempt_key(db):

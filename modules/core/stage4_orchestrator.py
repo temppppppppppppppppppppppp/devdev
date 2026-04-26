@@ -548,6 +548,7 @@ class Stage4Orchestrator:
         self._post_processor = None  # [B-1-1] lazy init
         self._context_builder = None  # [B-1-2] lazy init
         self._interview_round = None  # [B-1-3] lazy init
+        self._stage4_completion_blocked = False
         self.outcome_runtime = Stage4OutcomeRuntime(self)
 
     def get_stage4_policy_value(self, *path: str, default=None):
@@ -1531,6 +1532,7 @@ JSON으로 출력:
             output_dir=output_dir,
             v50_modules_available=v50_modules_available,
         ):
+            self._stage4_completion_blocked = True
             return _EpisodeLoopDisposition(should_break=True)
 
         return _EpisodeLoopDisposition()
@@ -2801,12 +2803,13 @@ JSON으로 출력:
         """
         try:
             ctx = self.ctx
+            self._stage4_completion_blocked = False
             session = self._prepare_stage4_session(limit_mode=limit_mode, target_ep=target_ep)
             if session is None:
                 return
             # 5. Episode production loop
             _should_return = self._run_interview_loop(session, skip_pause=skip_pause)
-            if _should_return:
+            if _should_return or self._stage4_completion_blocked:
                 return
             _audit_event = getattr(ctx, "audit_event", None)
             if callable(_audit_event):

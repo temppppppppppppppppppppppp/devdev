@@ -2782,14 +2782,16 @@ class DBManager:
         stages: tuple[int, ...] = (3, 4),
         verdict: str | None = None,
         limit: int = 20,
+        session_id: str | None = None,
     ) -> list[dict]:
         """특정 Arc의 stage_attempts 조회."""
         if not stages:
             return []
 
         placeholders = ", ".join("?" for _ in stages)
+        session_id = str(session_id or "").strip()
         sql = (
-            "SELECT stage, ep_num, arc_num, attempt_num, attempt_key, verdict, score, failure_category, reject_reason, "
+            "SELECT stage, session_id, ep_num, arc_num, attempt_num, attempt_key, verdict, score, failure_category, reject_reason, "
             "advisory_flags, prompt_version, fix_scope, candidate_key, content_hash, artifact_path, selection_reason, "
             "verdict_reason, open_review, fix_scope_reasoning, runtime_advisory, retry_directives, "
             "director_quality_passed, downstream_override_applied, primary_failure_layer "
@@ -2799,6 +2801,9 @@ class DBManager:
         if verdict:
             sql += " AND verdict = ?"
             params.append(verdict)
+        if session_id:
+            sql += " AND session_id = ?"
+            params.append(session_id)
         sql += " ORDER BY id DESC LIMIT ?"
         params.append(limit)
 
@@ -3413,6 +3418,63 @@ class DBManager:
             with self._lock:
                 self._rollback_if_own_transaction(nested)
             logging.debug("[stage_attempts] save_stage_attempt failed (non-blocking): %s", _e)
+            return False
+
+    def mark_stage4_attempt_settlement_failed(
+        self,
+        *,
+        attempt_key: str,
+        settlement_status: str,
+        detail: str = "",
+    ) -> bool:
+        """Demote a pre-settlement Stage 4 PASS attempt when PASS settlement fails."""
+        attempt_key = str(attempt_key or "").strip()
+        if not attempt_key:
+            return False
+        nested = False
+        try:
+            if not self.accepts_runtime_telemetry_writes:
+                return False
+            failure_status = str(settlement_status or "settlement_failed").strip() or "settlement_failed"
+            reason = str(detail or failure_status).strip()
+            with self._lock:
+                if not self.accepts_runtime_telemetry_writes:
+                    return False
+                nested = self.conn.in_transaction
+                cur = self.conn.cursor()
+                try:
+                    cur.execute(
+                        """
+                        UPDATE stage_attempts
+                           SET verdict = ?,
+                               score = 0,
+                               failure_category = ?,
+                               reject_reason = ?,
+                               director_quality_passed = 0,
+                               downstream_override_applied = 0,
+                               primary_failure_layer = ?
+                         WHERE stage = 4
+                           AND attempt_key = ?
+                           AND verdict IN ('PASS', 'PASS_WITH_FIX')
+                        """,
+                        (
+                            "SETTLEMENT_FAILED",
+                            failure_status,
+                            reason[:1000],
+                            failure_status,
+                            attempt_key,
+                        ),
+                    )
+                    changed = cur.rowcount > 0
+                finally:
+                    cur.close()
+                if not nested:
+                    self.conn.commit()
+            return changed
+        except Exception as _e:
+            with self._lock:
+                self._rollback_if_own_transaction(nested)
+            logging.debug("[stage_attempts] settlement demotion failed (non-blocking): %s", _e)
             return False
 
     def save_attempt_raw_rationale(

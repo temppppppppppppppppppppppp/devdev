@@ -4,11 +4,13 @@ from modules.core.response_schemas import (
 )
 from modules.core.stage0_handoff import (
     STAGE0_RUNTIME_HANDOFF_KEY,
+    build_plot_roadmap_lineage,
     build_stage0_runtime_handoff_summary,
     canonicalize_bible_payload,
     canonicalize_treatment_payload,
     normalize_bible_to_canonical_view,
     normalize_treatment_to_canonical_view,
+    plot_roadmap_lineage_matches,
     resolve_stage0_bible_contract,
 )
 
@@ -234,3 +236,51 @@ def test_stage0_runtime_handoff_summary_distinguishes_owner_from_projection_sour
     assert summary["stage2_consumer_mode"] == "db_anchor_first"
     assert summary["projection_source"] == "treatment.blocks"
     assert summary["compatibility_bridges"]["force_sync_v25_dna"] == "compatibility_bridge"
+
+
+def test_plot_roadmap_lineage_matches_same_source_and_rejects_changed_content():
+    roadmap = [
+        {
+            "block_no": "1",
+            "title": "Block 1",
+            "content": {
+                "context": "ctx",
+                "event_villain": "villain",
+                "solution": "solve",
+                "reward": "reward",
+            },
+        }
+    ]
+    same_roadmap = [
+        {
+            "title": "Block 1",
+            "block_no": 1,
+            "content": {
+                "reward": "reward",
+                "solution": "solve",
+                "event_villain": "villain",
+                "context": "ctx",
+            },
+        }
+    ]
+    changed_roadmap = [
+        {
+            "block_no": 1,
+            "title": "Block 1",
+            "content": {
+                "context": "ctx",
+                "event_villain": "villain",
+                "solution": "solve",
+                "reward": "changed reward",
+            },
+        }
+    ]
+
+    lineage = build_plot_roadmap_lineage(roadmap)
+    same_lineage = build_plot_roadmap_lineage(same_roadmap)
+    changed_lineage = build_plot_roadmap_lineage(changed_roadmap)
+
+    assert lineage["schema"] == "stage0.plot_roadmap_lineage.v1"
+    assert lineage["block_count"] == 1
+    assert plot_roadmap_lineage_matches(lineage, same_lineage) is True
+    assert plot_roadmap_lineage_matches(lineage, changed_lineage) is False
