@@ -510,6 +510,10 @@ def _format_episode_state_packet_lines(packet: dict | None) -> list[str]:
     location = str(opening_truth.get("location", "") or "").strip()
     if location:
         packet_lines.append(f"  - opening.location: {_fit_compact_context(location, 120)}")
+        packet_lines.append(
+            "    JSON start_location and scene_breakdown.scene_1.location must equal opening.location exactly; "
+            "move elsewhere only after an explicit transition inside scene_1 or a later scene."
+        )
     location_source = str(opening_truth.get("location_source", "") or "").strip()
     if location_source:
         packet_lines.append(f"    source: {_fit_compact_context(location_source, 100)}")
