@@ -1564,12 +1564,144 @@ class ChiefWriter(BaseAgent):
         feedback = str(director_feedback or "")
         if not feedback:
             return ""
+        if self._is_scene_header_patch_feedback(feedback):
+            return "scene_header"
         for focus, keywords in self._STRUCTURAL_PATCH_LOCAL_HINTS.items():
             if any(keyword in feedback for keyword in keywords):
                 return focus
         if any(keyword in feedback for keyword in self._STRUCTURAL_PATCH_GLOBAL_HINTS):
             return "global"
         return ""
+
+    @staticmethod
+    def _is_scene_header_patch_feedback(feedback: str) -> bool:
+        text = str(feedback or "")
+        if not text:
+            return False
+        return any(
+            marker in text
+            for marker in (
+                "씬 헤더",
+                "씬 구분",
+                "### 씬",
+                "scene header",
+                "Scene header",
+                "헤더가 원고에 누락",
+                "모든 씬을 헤더",
+            )
+        )
+
+    @staticmethod
+    def _scene_header_title(scene_id: str, scene_data: object, scene_index: int) -> str:
+        raw_title = ""
+        if isinstance(scene_data, dict):
+            for key in ("title", "scene_title", "name", "header"):
+                raw_title = str(scene_data.get(key, "") or "").strip()
+                if raw_title:
+                    break
+            if not raw_title:
+                for key in ("summary", "description", "goal", "objective"):
+                    raw_title = str(scene_data.get(key, "") or "").strip()
+                    if raw_title:
+                        break
+        elif scene_data:
+            raw_title = str(scene_data).strip()
+
+        title = " ".join(raw_title.split())
+        title = re.sub(r"^\s*#{1,6}\s*", "", title).strip()
+        title = re.sub(r"^\s*씬\s*\d+\s*[:\-]\s*", "", title).strip()
+        if not title:
+            title = str(scene_id or f"scene_{scene_index}").strip() or f"scene_{scene_index}"
+        return title[:40]
+
+    def _attempt_scene_header_insertion_patch(
+        self,
+        *,
+        original_manuscript: str,
+        director_feedback: str,
+        blueprint: dict | None,
+    ) -> list[dict] | None:
+        if not self._is_scene_header_patch_feedback(director_feedback):
+            return None
+        if not isinstance(blueprint, dict):
+            return None
+
+        scene_breakdown = blueprint.get("scene_breakdown", {})
+        if not isinstance(scene_breakdown, dict) or len(scene_breakdown) < 2:
+            return None
+
+        expected_count = len(scene_breakdown)
+        existing_headers = re.findall(
+            r"^\s*#{1,6}\s*씬\s*\d+\s*[:\-]",
+            str(original_manuscript or ""),
+            flags=re.MULTILINE,
+        )
+        if len({header.strip() for header in existing_headers}) >= expected_count:
+            return None
+
+        blocks, separator = self._split_manuscript_into_structural_blocks(
+            original_manuscript,
+            expected_blocks=expected_count,
+        )
+        if len(blocks) != expected_count:
+            return None
+
+        scene_items = list(scene_breakdown.items())
+        patched_blocks: list[str] = []
+        repair_trace: list[dict] = []
+        changed = False
+        header_re = re.compile(r"^\s*#{1,6}\s*씬\s*\d+\s*[:\-]", re.MULTILINE)
+        for idx, ((scene_id, scene_data), block) in enumerate(zip(scene_items, blocks, strict=False), start=1):
+            text = str(block or "").strip()
+            if header_re.search(text[:160]):
+                patched_blocks.append(text)
+                continue
+
+            title = self._scene_header_title(scene_id, scene_data, idx)
+            header = f"### 씬 {idx}: {title}"
+            patched_blocks.append(f"{header}\n\n{text}".strip())
+            changed = True
+            repair_trace.append(
+                {
+                    "target": str(scene_id or f"scene_{idx}"),
+                    "target_kind": "scene_header",
+                    "old_excerpt": text[:160],
+                    "new_excerpt": header,
+                    "why_changed": "insert missing manuscript scene header",
+                }
+            )
+
+        if not changed:
+            return None
+
+        merged_manuscript = str(separator or "\n\n").join(patched_blocks).strip()
+        if len(merged_manuscript) < 2000:
+            return None
+
+        _, patch_target_records = normalize_patch_target_records(
+            [scene_id for scene_id, _scene_data in scene_items],
+            stage="stage4",
+            container_kind="manuscript",
+            default_target_kind="scene_header",
+        )
+        self._set_last_inplace_patch_trace(
+            patch_strategy="inplace_patch_scene_headers",
+            patch_targets=[scene_id for scene_id, _scene_data in scene_items],
+            fallback_reason="",
+            focus="scene_header",
+            structural_attempted=True,
+            target_kind="scene_header",
+            patch_target_records=patch_target_records,
+            repair_trace=repair_trace,
+        )
+        return [
+            {
+                "manuscript": merged_manuscript,
+                "strategy": "inplace_patch_scene_headers",
+                "state_updates": {},
+                "patch_targets": [scene_id for scene_id, _scene_data in scene_items],
+            }
+        ]
 
     def _split_manuscript_into_structural_blocks(
         self,
@@ -1917,6 +2049,14 @@ class ChiefWriter(BaseAgent):
         scene_breakdown = blueprint.get("scene_breakdown", {}) if isinstance(blueprint, dict) else {}
         structural_attempted = False
         fallback_reason = ""
+
+        scene_header_result = self._attempt_scene_header_insertion_patch(
+            original_manuscript=original_manuscript,
+            director_feedback=director_feedback,
+            blueprint=blueprint,
+        )
+        if scene_header_result:
+            return scene_header_result, "scene_header", "", True
 
         if normalized_fix_pack.get("patch_targets"):
             self._set_last_inplace_patch_trace(
