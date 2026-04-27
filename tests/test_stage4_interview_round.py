@@ -3087,6 +3087,7 @@ class TestRecordS4Attempt:
 
     def test_hydrate_persisted_stage4_previous_attempt_reads_db_envelope_and_artifact(self, tmp_path):
         ctx = _make_ctx()
+        ctx.current_project.metrics_session_id = "sess-stage4"
         ctx.current_project.paths = SimpleNamespace(root=tmp_path)
         ir = Stage4InterviewRound(ctx)
 
@@ -3319,6 +3320,63 @@ class TestRecordS4Attempt:
             limit=12,
             session_id="sess-current",
         )
+
+    def test_hydrate_persisted_stage4_previous_attempt_skips_sessioned_rows_without_session(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        stale_row = {
+            "ep_num": 2,
+            "arc_num": 1,
+            "session_id": "sess-old",
+            "attempt_key": "s4:ep2:arc1:a1:sess-old",
+            "verdict": "REJECT",
+            "advisory_flags": {},
+        }
+        ctx.current_project.db.get_stage_attempts_for_arc.return_value = [stale_row]
+
+        hydrated = ir.hydrate_persisted_stage4_previous_attempt(
+            next_ep=2,
+            arc_num=1,
+            previous_attempt=None,
+        )
+
+        assert hydrated == {}
+        ctx.current_project.db.get_stage_attempts_for_arc.assert_called_once_with(
+            1,
+            stages=(4,),
+            limit=12,
+        )
+
+    def test_hydrate_persisted_stage4_previous_attempt_allows_legacy_unsessioned_rows(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        sessioned_row = {
+            "ep_num": 2,
+            "arc_num": 1,
+            "session_id": "sess-old",
+            "attempt_key": "s4:ep2:arc1:a2:sess-old",
+            "verdict": "REJECT",
+            "reject_reason": "stale session feedback",
+            "advisory_flags": {},
+        }
+        legacy_row = {
+            "ep_num": 2,
+            "arc_num": 1,
+            "attempt_key": "s4:ep2:arc1:a1",
+            "verdict": "REJECT",
+            "reject_reason": "legacy feedback",
+            "advisory_flags": {},
+        }
+        ctx.current_project.db.get_stage_attempts_for_arc.return_value = [sessioned_row, legacy_row]
+
+        hydrated = ir.hydrate_persisted_stage4_previous_attempt(
+            next_ep=2,
+            arc_num=1,
+            previous_attempt=None,
+        )
+
+        assert hydrated["attempt_key"] == "s4:ep2:arc1:a1"
+        assert hydrated["rejection_reason"] == "legacy feedback"
 
     def test_hydrate_persisted_stage4_previous_attempt_pins_post_select_scope_to_full(self):
         ctx = _make_ctx()
