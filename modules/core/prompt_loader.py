@@ -34,9 +34,12 @@ class PromptLoader:
         return cls._instance
 
     def __init__(self) -> None:
+        prompts_dir = self._find_prompts_dir()
         if hasattr(self, "_initialized"):
+            if self._prompts_dir != prompts_dir:
+                self._prompts_dir = prompts_dir
             return
-        self._prompts_dir = self._find_prompts_dir()
+        self._prompts_dir = prompts_dir
         self._initialized = True
 
     def _find_prompts_dir(self) -> Path:
