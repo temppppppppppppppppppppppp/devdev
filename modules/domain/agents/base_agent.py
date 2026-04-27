@@ -2352,6 +2352,10 @@ class BaseAgent:
         return _sanitize_context_cache_token(value)
 
     @staticmethod
+    def _context_cache_provider_token(client: object | None, primary_model: str) -> str:
+        return _context_cache_provider_token(client, primary_model)
+
+    @staticmethod
     def _resolve_context_cache_client_skip_reason(client: object | None) -> str:
         provider_mode = str(getattr(client, "_geuldobi_provider_mode", "") or "").strip().lower()
         vertex_auth_mode = str(getattr(client, "_geuldobi_vertex_auth_mode", "") or "").strip().lower()
@@ -2422,6 +2426,51 @@ class BaseAgent:
             for cache_key in stale_keys:
                 cls._context_caches.pop(cache_key, None)
         return len(stale_keys)
+
+    @classmethod
+    def _register_context_cache_lineage(
+        cls,
+        *,
+        cache_type: str,
+        project_name: str,
+        cache_name: str,
+        content_hash: str,
+        client: object | None,
+        primary_model: str,
+        created_at: float | None = None,
+    ) -> str:
+        if not cache_name or not content_hash:
+            return ""
+
+        cache_key = _build_context_cache_key(
+            cache_type,
+            project_name,
+            content_hash,
+            client=client,
+            primary_model=primary_model,
+        )
+        with cls._cache_lock:
+            cls._context_caches[cache_key] = {
+                "name": cache_name,
+                "created_at": created_at if created_at is not None else time.time(),
+                "content_hash": content_hash,
+                "model": primary_model or "",
+                "provider": _context_cache_provider_token(client, primary_model),
+            }
+            if len(cls._context_caches) > cls._CONTEXT_CACHE_MAX:
+                snapshot = list(cls._context_caches.items())
+                snapshot.sort(key=lambda kv: kv[1].get("created_at", 0))
+                for old_key, _ in snapshot[: len(snapshot) - cls._CONTEXT_CACHE_MAX]:
+                    cls._context_caches.pop(old_key, None)
+        return cache_key
+
+    def _context_cache_lineage_bypass_reason_for_name(self, cache_name: str) -> str:
+        cache_lineage = self._context_cache_lineage_by_name(cache_name)
+        return _context_cache_lineage_bypass_reason(
+            cache_lineage,
+            client=self.client,
+            primary_model=self.primary_model,
+        )
 
     def _get_or_create_context_cache(
         self, cache_type: str, content: str, ttl_seconds: int = 1800, project_name: str = ""
