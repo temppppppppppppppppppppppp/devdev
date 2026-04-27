@@ -594,6 +594,84 @@ def test_quality_dashboard_endpoint_surfaces_stage4_warn_issue59_counts(tmp_path
     assert "warning_issue_counts" in proof_status["summary"]
 
 
+def test_dashboard_marks_runtime_summary_stale_for_later_stage4_attempts(tmp_path, monkeypatch):
+    monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
+    project_dir = tmp_path / "projects" / "demo"
+    logs_dir = project_dir / "logs"
+    logs_dir.mkdir(parents=True)
+    (logs_dir / "runtime_audit_summary.json").write_text(
+        json.dumps(
+            {
+                "tag": "stage3_complete",
+                "timestamp": "2026-04-27 12:00:00",
+                "summary_role": "runtime_heartbeat_with_proof_digest",
+                "proof_digest": {"available": True, "status": "ok", "stages": {}},
+                "run_scope": {
+                    "status": "scoped",
+                    "summary_tag": "stage3_complete",
+                    "summary_timestamp": "2026-04-27 12:00:00",
+                    "latest_session_id": "sess-stage3",
+                    "basis": ["proof_digest.latest_session_id"],
+                },
+                "freshness": {
+                    "status": "scoped",
+                    "basis": ["proof_digest.latest_session_id"],
+                    "engine_run_id_present": False,
+                    "latest_session_id_present": True,
+                    "operator_guidance_only": True,
+                },
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    db = DBManager(project_dir / "project_data.db")
+    db.save_stage_attempt(
+        stage=4,
+        verdict="PASS",
+        attempt_num=1,
+        ep_num=7,
+        arc_num=1,
+        score=94,
+        session_id="sess-stage4",
+        attempt_key="s4:ep7:arc1:a1:sess-stage4",
+        candidate_key="A|balanced",
+        content_hash="hash-stage4",
+    )
+    db.cursor.execute(
+        "UPDATE stage_attempts SET ts = ? WHERE attempt_key = ?",
+        ("2026-04-27T12:05:00", "s4:ep7:arc1:a1:sess-stage4"),
+    )
+    db.conn.commit()
+    db.close()
+
+    response = asyncio.run(bridge_server.quality_dashboard_endpoint(project="demo", lookback=5))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert payload["ok"] is True
+    freshness = payload["data"]["runtime_audit_summary"]["freshness"]
+    assert freshness["status"] == "stale_for_stage4"
+    assert freshness["scope_status"] == "pre_stage4_or_partial"
+    assert freshness["summary_tag"] == "stage3_complete"
+    assert freshness["latest_stage4_attempt_ts"] == "2026-04-27T12:05:00"
+    assert freshness["latest_stage4_attempt_session_id_present"] is True
+    assert freshness["stage4_attempt_count"] == 1
+    assert set(freshness["stale_reasons"]) == {
+        "summary_tag_stage3_complete",
+        "later_stage4_attempt_exists",
+    }
+
+    proof_status = payload["data"]["proof_status"]
+    assert proof_status["status"] == "warn"
+    assert proof_status["runtime_summary_status"] == "ok"
+    assert proof_status["runtime_summary_freshness_status"] == "stale_for_stage4"
+    assert proof_status["semantic_completion_status"] == "proof_evidence_warning"
+    assert proof_status["canonical_truth_status"] == "not_asserted_by_dashboard"
+
+
 def test_quality_dashboard_endpoint_surfaces_gate_repair_summary(tmp_path, monkeypatch):
     monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
     project_dir = tmp_path / "projects" / "demo"

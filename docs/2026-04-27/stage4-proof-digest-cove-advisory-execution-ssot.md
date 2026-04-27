@@ -2,14 +2,14 @@
 
 Date: 2026-04-27
 Track: system
-Status: partially-realized (#59 bridge/dashboard parity and CoVe test hardening)
+Status: partially-realized (#59 bridge/dashboard parity, CoVe test hardening, runtime-summary Stage4 freshness guard)
 Canonical Path: `docs/2026-04-27/stage4-proof-digest-cove-advisory-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage4-proof-digest-cove-advisory-execution-ssot.md`
 Commit State:
 - Baseline Commit: `26b05fcd34c0d841a140613ed414bac840c9a596`
 - Baseline Dirty Summary: only documentation intake work was untracked while synthesizing #59; no tracked source edits were made for this document.
-- Resume Commit: same-as-baseline
-- Resume Drift Summary: all ten #59 terminal reports are present under `docs/2026-04-27/issue-59-stage4-proof-digest-cove-advisory-parallel-investigation/`; the earlier T10 readiness memo is superseded by `terminal-10-final-synthesis-readiness.md`.
+- Resume Commit: `4a14b4f1f49813101520f7640aec84f7ca253198`
+- Resume Drift Summary: all ten #59 terminal reports are present under `docs/2026-04-27/issue-59-stage4-proof-digest-cove-advisory-parallel-investigation/`; the earlier T10 readiness memo is superseded by `terminal-10-final-synthesis-readiness.md`; #58 has been retired from the active temp queue, so #59 is now roadmap rank 1/front-active.
 GitHub Issue:
 - #59 `[Stage4] Close proof-digest warn residues and CoVe advisory review`
 Source Survey Docs:
@@ -40,7 +40,7 @@ execution_meta:
   github_issue: 59
   status: in_progress
   queue_role: front_active
-  roadmap_rank: 7
+  roadmap_rank: 1
   depends_on: []
   tranches:
     - id: bridge-dashboard-warn-field-parity
@@ -209,8 +209,8 @@ Synthesis decision:
 
 ## 12. Temp Queue Notes
 
-- temp status: pending
-- queue role: parked future wave
+- temp status: in_progress
+- queue role: front active
 - cleanup condition: remove `docs/temp/stage4-proof-digest-cove-advisory-execution-ssot.md` after all #59 tranches are realized, verified, canonical closure is recorded, and any GitHub issue update is made.
 - roadmap dependency: no formal dependency edge is declared. Operationally, #59 should be considered before any fresh clean terminal 5-arc proof claim or Issue #62 benchmark comparison claim.
 
@@ -264,7 +264,7 @@ Validation caveat:
 
 Residual open work:
 - This does not close #59.
-- Runtime-summary Stage4 staleness detection is not fully implemented; the dashboard now exposes the existing freshness object and warning counts, but it does not yet compare later Stage4 attempt evidence against a stale `stage3_complete` summary.
+- Runtime-summary Stage4 staleness detection is addressed by Section 16; producer taxonomy and benchmark packet work remain open.
 - Producer-owned typed warning taxonomy and phase-aware rationale semantics remain open.
 - Benchmark `stage4_diagnostic_packet` remains open.
 - Desktop/frontend rendering of `proof_status.warning_issue_counts` remains open if a separate UI surface needs it.
@@ -277,5 +277,42 @@ Explorer follow-up notes:
 - Pass 1 - scope: PASS. The patch is limited to bridge/dashboard field forwarding and CoVe regression hardening.
 - Pass 2 - evidence: PASS. The patch directly implements the T06/T09 first-tranche gap and preserves T04/T05 CoVe role separation.
 - Pass 3 - readiness: PASS for a partial #59 PR. Residual stale-summary, taxonomy, benchmark, and frontend-display work remains explicit.
+
+Estimated operational confidence for this partial realization: 96%.
+
+## 16. Realization Ledger - 2026-04-27 Runtime Summary Stage4 Freshness Guard
+
+Scope realized:
+- Tranche: `bridge-dashboard-warn-field-parity`, freshness-label residual.
+- Branch: `codex/issue59-runtime-summary-freshness`.
+- Implemented the T07/T09 stale-summary guard after #58 queue retirement promoted #59 to the front-active item.
+
+Code changes:
+- `modules/api/bridge_server.py` now inspects the latest DB-backed Stage4 attempt context while building the quality dashboard payload.
+- Runtime audit summaries with tag/run-scope `stage3_complete`, or with a summary timestamp older than the latest Stage4 attempt timestamp, are marked `freshness.status="stale_for_stage4"` and `freshness.scope_status="pre_stage4_or_partial"`.
+- The freshness payload keeps operator-facing basis fields, stale reasons, latest Stage4 attempt timestamp, session-id presence, attempt key, verdict, and Stage4 attempt count.
+- `proof_status.runtime_summary_freshness_status` now forwards the freshness status. A stale-for-Stage4 summary escalates companion `proof_status.status` to `warn` while preserving the original `runtime_summary_status`.
+- `tests/test_bridge_quality_summary.py` adds a regression for a `stage3_complete` runtime summary followed by a later Stage4 attempt row.
+
+Validation completed:
+- `python -m py_compile modules/api/bridge_server.py` -> PASS.
+- `python -m py_compile modules/api/bridge_server.py tests/test_bridge_quality_summary.py` -> PASS.
+- `python -m pytest tests/test_bridge_quality_summary.py -k "stale_for_later_stage4_attempts or stage4_warn_issue59_counts or proof_status" -q` -> 3 passed, 19 deselected.
+- `python -m pytest tests/test_bridge_quality_summary.py -q` -> 22 passed.
+
+Complexity note:
+- `_build_quality_dashboard_payload` is a bounded dashboard aggregation shell and was already a long orchestrating function; this patch adds one narrow freshness-classification call without moving authority or persistence ownership.
+- New helper functions are local to the bridge/dashboard companion surface and do not write DB, logs, or artifacts.
+
+Residual open work:
+- This does not close #59.
+- Producer-owned typed warning taxonomy and phase-aware rationale semantics remain open.
+- Benchmark `stage4_diagnostic_packet` remains open.
+- Desktop/frontend rendering of `proof_status`, `warning_issue_counts`, and freshness fields remains open if a separate visible UI panel is required.
+
+3-pass realization audit:
+- Pass 1 - scope: PASS. The patch is limited to dashboard/runtime-summary freshness labeling and does not modify runtime settlement or Director authority.
+- Pass 2 - evidence: PASS. The regression proves a stale `stage3_complete` summary can no longer masquerade as current Stage4 proof when a later Stage4 attempt exists.
+- Pass 3 - readiness: PASS for a partial #59 PR. Residual taxonomy, benchmark, and optional frontend rendering remain explicit.
 
 Estimated operational confidence for this partial realization: 96%.
