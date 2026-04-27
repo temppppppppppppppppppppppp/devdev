@@ -314,6 +314,8 @@ class Stage4RetryRuntime:
     @staticmethod
     def _should_bypass_duplicate_suppression_due_to_reuse_contract(previous_attempt: dict | None) -> bool:
         previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
+        if str(previous_attempt.get("best_manuscript_blocked_reason", "") or "").strip():
+            return False
         reuse_contract = previous_attempt.get("reuse_contract")
         if not isinstance(reuse_contract, dict) or not reuse_contract:
             return False
