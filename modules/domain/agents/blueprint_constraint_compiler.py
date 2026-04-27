@@ -647,6 +647,22 @@ def _collect_fact_lock_person_anchors(
         "의사",
     )
     role_re = re.compile(r"([가-힣]{2,4})\s*(" + "|".join(re.escape(s) for s in role_suffixes) + r")")
+    false_role_names = {
+        "나는",
+        "나도",
+        "제가",
+        "저는",
+        "저도",
+        "그는",
+        "그가",
+        "그의",
+        "그녀",
+        "우리는",
+        "우리",
+        "하지만",
+        "그리고",
+        "내일은",
+    }
 
     texts: list[str] = [ms_text]
     if isinstance(bp, dict):
@@ -668,6 +684,8 @@ def _collect_fact_lock_person_anchors(
         for match in role_re.finditer(str(raw_text or "")):
             name = match.group(1).strip()
             role = match.group(2).strip()
+            if name in false_role_names:
+                continue
             key = (name, role)
             if key in seen:
                 continue
