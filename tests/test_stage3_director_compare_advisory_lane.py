@@ -1,3 +1,5 @@
+from modules.core.constants import GenreTypes
+from modules.domain.agents.blueprint_ensemble import build_genre_strategy_contract
 from modules.domain.agents.director_ensemble import (
     _collect_compare_candidate_advisories,
     _format_compare_python_warning_block,
@@ -62,3 +64,23 @@ def test_collect_compare_candidate_advisories_surfaces_advisory_fix_pack():
     assert advisories[0]["advisory_target_kind"] == "local_sentence"
     assert advisories[0]["advisory_fix_pack"]["patch_targets"] == ["integrated_scenario"]
     assert advisories[0]["advisory_fix_pack"]["evidence_summary"] == "anchor_count=0"
+
+
+def test_collect_compare_candidate_advisories_surfaces_genre_strategy_contract_summary():
+    contract = build_genre_strategy_contract(GenreTypes.INVESTMENT, "action_focused")
+
+    advisories = _collect_compare_candidate_advisories(
+        [
+            {
+                "_ensemble_meta": {
+                    "strategy": "action_focused",
+                    "genre_strategy_contract": contract,
+                }
+            }
+        ]
+    )
+
+    summary = advisories[0]["genre_strategy_contract"]
+    assert summary["contract_id"] == "investment_business_power.action_focused.v1"
+    assert summary["contract_hash"] == contract["contract_hash"]
+    assert summary["authority_level"] == "route"

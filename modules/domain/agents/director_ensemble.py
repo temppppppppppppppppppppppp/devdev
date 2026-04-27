@@ -14,7 +14,7 @@ from modules.core.constants import ContextLimits, ManuscriptLimits, smart_trunca
 from modules.core.prompt_loader import PromptLoader
 from modules.core.tactical_utils import extract_episode_tactical
 from modules.domain.agents.scene_cardinality_contract import evaluate_stage3_scene_cardinality
-from modules.domain.agents.unified_blueprint_validator import BLUEPRINT_MIN_CHARS, _BINDING_PREVALIDATION_CATEGORIES
+from modules.domain.agents.unified_blueprint_validator import _BINDING_PREVALIDATION_CATEGORIES, BLUEPRINT_MIN_CHARS
 from modules.validation.threshold_helper import _threshold
 
 
@@ -42,6 +42,32 @@ def _prompt_snippet(text: str, *, cap_name: str, default: int, head_ratio: float
         return ""
     head_chars = min(cap, max(0, int(cap * head_ratio)))
     return smart_truncate(raw, max_chars=cap, head_chars=head_chars)
+
+
+def _format_genre_strategy_contract_block(blueprint: dict) -> str:
+    if not isinstance(blueprint, dict):
+        return ""
+    meta = blueprint.get("_ensemble_meta")
+    if not isinstance(meta, dict):
+        return ""
+    contract = meta.get("genre_strategy_contract")
+    if not isinstance(contract, dict) or not contract:
+        return ""
+    contract_id = str(contract.get("contract_id") or "").strip()
+    authority_level = str(contract.get("authority_level") or "advisory").strip()
+    if authority_level == "verdict":
+        authority_level = "advisory"
+    action_semantics = ", ".join(str(item) for item in contract.get("action_semantics", []) if item)
+    tension_semantics = ", ".join(str(item) for item in contract.get("tension_semantics", []) if item)
+    forbidden_defaults = ", ".join(str(item) for item in contract.get("forbidden_defaults", []) if item)
+    return f"""
+[Genre Strategy Contract - Director-visible advisory]
+- contract_id: {contract_id or "unknown"}
+- authority_level: {authority_level}; this is selection context, not Python verdict authority.
+- action_focused should be read as: {action_semantics or "genre-specific execution pressure"}.
+- tension should be read as: {tension_semantics or "genre-specific pressure"}.
+- wrong-kind action to scrutinize: {forbidden_defaults or "physical-action defaults unsupported by source material"}.
+""".strip()
 
 
 _CANONICAL_SCORE_KEYS = (
@@ -445,9 +471,7 @@ def _synthesize_firewall_fix_pack(
     fix_pack["do_not_regress"] = do_not_regress[:4]
     if not str(fix_pack.get("success_condition", "") or "").strip():
         type_label = ", ".join(contradiction_types[:2]) or "local contradiction"
-        fix_pack["success_condition"] = (
-            f"{type_label} contradiction가 사라지고, 선택 후보의 핵심 장면 흐름은 유지된다"
-        )
+        fix_pack["success_condition"] = f"{type_label} contradiction가 사라지고, 선택 후보의 핵심 장면 흐름은 유지된다"
     if not str(fix_pack.get("target_kind", "") or "").strip():
         fix_pack["target_kind"] = "local_sentence"
     if contradiction_types and not str(fix_pack.get("subtype", "") or "").strip():
@@ -580,6 +604,13 @@ def _collect_compare_candidate_advisories(candidates: list) -> list[dict]:
             "issue_count": _safe_int(meta.get("prevalidation_issue_count", 0), 0),
             "quality_risk": bool(meta.get("quality_risk", False)),
         }
+        genre_strategy_contract = meta.get("genre_strategy_contract")
+        if isinstance(genre_strategy_contract, dict) and genre_strategy_contract:
+            item["genre_strategy_contract"] = {
+                "contract_id": _short_text(genre_strategy_contract.get("contract_id", ""), 120),
+                "contract_hash": _short_text(genre_strategy_contract.get("contract_hash", ""), 40),
+                "authority_level": _short_text(genre_strategy_contract.get("authority_level", "advisory"), 40),
+            }
         warning_entries = _normalize_python_warning_entries(meta.get("python_warnings", []), limit=3)
         if warning_entries:
             item["python_warnings"] = warning_entries
@@ -1420,6 +1451,13 @@ class DirectorEnsembleSelector:
         digest_esc = self._d._escape_braces(episode_digest) if episode_digest else "(episode digest unavailable)"
         ending_esc = self._d._escape_braces(previous_ending if previous_ending else "")
         prev_manuscripts_esc = self._d._escape_braces(prev_manuscripts)
+        genre_strategy_contract_block = _format_genre_strategy_contract_block(blueprint)
+        if genre_strategy_contract_block:
+            story_context = (
+                f"{story_context}\n\n{genre_strategy_contract_block}".strip()
+                if story_context
+                else genre_strategy_contract_block
+            )
         story_context_esc = self._d._escape_braces(story_context) if story_context else "(story context unavailable)"
 
         prompt_packs = _normalize_director_prompt_packs(
@@ -1486,6 +1524,14 @@ class DirectorEnsembleSelector:
                 candidate_evidence=candidate_evidence_esc,
                 reference_appendix=reference_appendix_esc,
             )
+
+        advisory_anchor = "Genre Strategy Contract - Director-visible advisory"
+        if genre_strategy_contract_block:
+            genre_strategy_contract_esc = self._d._escape_braces(genre_strategy_contract_block)
+            if variable_prompt and advisory_anchor not in variable_prompt:
+                variable_prompt = f"{variable_prompt}\n\n{genre_strategy_contract_esc}"
+            if fallback_prompt and advisory_anchor not in fallback_prompt:
+                fallback_prompt = f"{fallback_prompt}\n\n{genre_strategy_contract_esc}"
 
         return _EnsemblePromptRequest(
             combined_context=combined_context,
@@ -2231,6 +2277,7 @@ class DirectorEnsembleSelector:
             scene_count = meta.get("scene_count", len(blueprint.get("scene_breakdown", {})))
             length = meta.get("length", len(blueprint.get("integrated_scenario", "")))
             advisory_block = _format_compare_python_warning_block(meta)
+            genre_strategy_contract_block = _format_genre_strategy_contract_block(blueprint)
             opening_transition_type = _extract_opening_transition_type(blueprint)
             protagonist_state_shape = _format_protagonist_state_shape_signature(blueprint)
             binding_badges = _collect_binding_advisory_badges(meta)
@@ -2251,6 +2298,15 @@ class DirectorEnsembleSelector:
 - protagonist_state shape: {protagonist_state_shape}
 - binding_advisories: {binding_badge_text}
 - 엔딩 훅: {str(blueprint.get("ending_hook") or "?")[:100]}
+{
+                f'''
+
+[Genre Strategy Contract]
+{genre_strategy_contract_block}
+'''
+                if genre_strategy_contract_block
+                else ""
+            }
 {
                 f'''
 

@@ -1,5 +1,7 @@
 """[TF-29] open_review 전파 테스트 — Director 자유 리뷰가 CW에 전달되는 경로 검증."""
 
+from modules.core.constants import GenreTypes
+from modules.domain.agents.blueprint_ensemble import build_genre_strategy_contract
 from modules.domain.agents.director_ensemble import DirectorEnsembleSelector
 
 # ===========================================================================
@@ -14,6 +16,7 @@ class _FakeDirector:
     MAX_CONTEXT_CHARS = 700_000
 
     def ask(self, prompt, temperature=0.1, thinking_level=None):
+        self.last_prompt = prompt
         return self._response
 
     def _extract_json_robust(self, response):
@@ -27,8 +30,11 @@ class _FakeDirector:
     def _escape_braces(self, text):
         return str(text) if text else ""
 
-    def apply_adaptive_decision(self, score, original_decision, arc_pos, total_eps, retry_count):
+    def apply_adaptive_decision(self, score, original_decision, arc_pos, total_eps, retry_count, **_kwargs):
         return {"decision": original_decision, "threshold_used": 65, "reason": ""}
+
+    def _operator_log(self, *_args, **_kwargs):
+        return None
 
 
 def _make_ensemble_response(
@@ -194,3 +200,27 @@ class TestOpenReviewPropagation:
         review = result.get("open_review", "")
         assert review.startswith("[V60.97 교체 전 후보 리뷰]"), f"expected swap prefix, got: {review}"
         assert "감정선 전환 급격" in review
+
+    def test_director_prompt_receives_genre_strategy_contract_as_advisory(self):
+        director = _FakeDirector()
+        director._response = _make_ensemble_response(open_review="투자 장르 계약 반영")
+        selector = DirectorEnsembleSelector(director)
+        contract = build_genre_strategy_contract(GenreTypes.INVESTMENT, "action_focused")
+
+        result = selector.select_and_judge_ensemble(
+            ep_num=10,
+            candidates=_make_candidates(),
+            validation_results=[{"warnings": []}] * 3,
+            blueprint={
+                "integrated_scenario": "시나리오",
+                "_ensemble_meta": {"genre_strategy_contract": contract},
+            },
+            previous_ending="이전 엔딩",
+            story_context="기존 작품 맥락",
+        )
+
+        assert result["open_review"] == "투자 장르 계약 반영"
+        assert "Genre Strategy Contract - Director-visible advisory" in director.last_prompt
+        assert "selection context, not Python verdict authority" in director.last_prompt
+        assert "capital exposure" in director.last_prompt
+        assert "vehicle attack" in director.last_prompt

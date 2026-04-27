@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from unittest.mock import patch
 
 from modules.core.db_manager import DBManager
 from modules.core.stage4_canary_tools import (
@@ -200,6 +201,28 @@ def test_prepare_stage34_canary_project_resets_blueprints_and_stage3_stage4_outp
     assert (target / "plans" / "blueprints" / "ep_0001.json").exists() is False
     assert (target / "plans" / "blueprints" / "blueprint_0001.txt").exists() is False
     assert sorted(p.name for p in (target / "logs").iterdir()) == ["stage34_canary_prep.json"]
+
+
+def test_canary_remove_path_retries_transient_windows_permission_error(tmp_path):
+    from modules.core import stage4_canary_tools
+
+    target = tmp_path / "locked_dir"
+    target.mkdir()
+    (target / "artifact.json").write_text("{}", encoding="utf-8")
+    calls = {"count": 0}
+    real_rmtree = stage4_canary_tools.shutil.rmtree
+
+    def flaky_rmtree(path, *args, **kwargs):
+        calls["count"] += 1
+        if calls["count"] == 1:
+            raise PermissionError("transient lock")
+        return real_rmtree(path, *args, **kwargs)
+
+    with patch.object(stage4_canary_tools.shutil, "rmtree", side_effect=flaky_rmtree):
+        stage4_canary_tools._remove_path(target)
+
+    assert calls["count"] == 2
+    assert target.exists() is False
 
 
 def test_build_stage4_canary_summary_surfaces_warn_gates(tmp_path):
