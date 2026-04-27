@@ -104,6 +104,7 @@ class TestDirectorCaching:
         assert caching_manager._cached_manuscript_count == 0
         assert caching_manager._cached_manuscript_content_hash == ""
         assert caching_manager._cached_manuscript_model == ""
+        assert caching_manager._cached_manuscript_provider == ""
 
     def test_build_manuscript_history_empty_db(self, caching_manager):
         """2. build_manuscript_history_for_check returns empty when no manuscripts exist."""
@@ -164,6 +165,7 @@ class TestDirectorCaching:
         assert refreshed.get("incarnation_type") == "회귀자"
         assert director._caching._cached_manuscript_content_hash == ""
         assert director._caching._cached_manuscript_model == ""
+        assert director._caching._cached_manuscript_provider == ""
 
     def test_create_manuscript_cache_disabled(self, caching_manager):
         """7. create_manuscript_cache returns None when disabled."""
@@ -215,6 +217,30 @@ class TestDirectorCaching:
         assert caching_manager._cached_manuscript_count == 2
         assert caching_manager._cached_manuscript_content_hash
         assert caching_manager._cached_manuscript_model == "gemini-2.5-flash"
+        assert caching_manager._cached_manuscript_provider
+
+    def test_create_manuscript_cache_registers_base_agent_lineage(self, caching_manager, monkeypatch):
+        from modules.domain.agents.base_agent import BaseAgent
+
+        self._install_fake_genai(monkeypatch)
+        db = self._manuscript_db(
+            {
+                1: {"content": "A" * 2000, "title": "제1화"},
+                2: {"content": "B" * 2000, "title": "제2화"},
+            }
+        )
+        caching_manager.client.caches.create.return_value = types.SimpleNamespace(name="cache/lineage")
+
+        try:
+            cache_name = caching_manager.create_manuscript_cache(db, current_ep=3)
+            lineage = BaseAgent._context_cache_lineage_by_name(cache_name)
+
+            assert lineage["cache_name"] == "cache/lineage"
+            assert lineage["content_hash"] == caching_manager._cached_manuscript_content_hash
+            assert lineage["model"] == caching_manager.primary_model
+            assert lineage["provider"] == caching_manager._cached_manuscript_provider
+        finally:
+            BaseAgent._context_caches.clear()
 
     def test_create_manuscript_cache_rebuilds_when_content_changes_with_same_count(
         self, caching_manager, monkeypatch
@@ -263,6 +289,32 @@ class TestDirectorCaching:
         assert second == "cache/v2"
         assert caching_manager.client.caches.create.call_count == 2
         assert caching_manager._cached_manuscript_model == "gemini-2.5-pro"
+
+    def test_create_manuscript_cache_rebuilds_when_provider_changes_with_same_content(
+        self, caching_manager, monkeypatch
+    ):
+        self._install_fake_genai(monkeypatch)
+        db = self._manuscript_db(
+            {
+                1: {"content": "A" * 2000, "title": "제1화"},
+                2: {"content": "B" * 2000, "title": "제2화"},
+            }
+        )
+        caching_manager.client._geuldobi_provider_mode = "google_genai"
+        caching_manager.client.caches.create.side_effect = [
+            types.SimpleNamespace(name="cache/v1"),
+            types.SimpleNamespace(name="cache/v2"),
+        ]
+
+        first = caching_manager.create_manuscript_cache(db, current_ep=3)
+        caching_manager.client._geuldobi_provider_mode = "vertex_ai"
+        caching_manager.client._geuldobi_vertex_auth_mode = "adc"
+        second = caching_manager.create_manuscript_cache(db, current_ep=3)
+
+        assert first == "cache/v1"
+        assert second == "cache/v2"
+        assert caching_manager.client.caches.create.call_count == 2
+        assert caching_manager._cached_manuscript_provider == "vertex_ai.adc"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -987,44 +1039,62 @@ class TestDirectorContinuity:
 # ═══════════════════════════════════════════════════════════════
 
 
-def test_check_manuscript_history_with_cache_preserves_tail_context(director, monkeypatch):
+def test_check_manuscript_history_with_cache_preserves_tail_context(director):
+    from modules.domain.agents.base_agent import BaseAgent
+
     director._caching.manuscript_cache_name = "cache-token"
+    BaseAgent._register_context_cache_lineage(
+        cache_type="director_manuscript_history",
+        project_name="test_project_director_manuscript_ep_5",
+        cache_name="cache-token",
+        content_hash="hash-director-history",
+        client=director.client,
+        primary_model=director.primary_model,
+    )
     director._extract_json_robust = MagicMock(return_value={"decision": "PASS", "conflicts": [], "summary": "ok"})
-
-    genai_mod = types.ModuleType("google.genai")
-    types_mod = types.ModuleType("google.genai.types")
-
-    class _FakeGenerateContentConfig:
-        def __init__(self, **kwargs):
-            self.kwargs = kwargs
-
-    types_mod.GenerateContentConfig = _FakeGenerateContentConfig
-    genai_mod.types = types_mod
-    monkeypatch.setitem(sys.modules, "google.genai", genai_mod)
-    monkeypatch.setitem(sys.modules, "google.genai.types", types_mod)
 
     captured = {}
 
-    def _fake_router(**kwargs):
-        captured["prompt"] = kwargs["contents"]
-        return MagicMock(text='{"decision":"PASS","conflicts":[],"summary":"ok"}')
+    def _fake_cached_context(cache_name, prompt, **kwargs):
+        captured["cache_name"] = cache_name
+        captured["prompt"] = prompt
+        captured["kwargs"] = kwargs
+        return '{"decision":"PASS","conflicts":[],"summary":"ok"}'
 
-    monkeypatch.setattr("modules.domain.agents.director_continuity.generate_content_via_router", _fake_router)
+    director._ask_with_cached_context = MagicMock(side_effect=_fake_cached_context)
 
-    result = director.check_manuscript_history_with_cache(
-        ep_num=5,
-        current_manuscript="HEAD-CACHED-MS\n" + ("M" * 40000) + "\nTAIL-CACHED-MS",
-    )
+    try:
+        result = director.check_manuscript_history_with_cache(
+            ep_num=5,
+            current_manuscript="HEAD-CACHED-MS\n" + ("M" * 40000) + "\nTAIL-CACHED-MS",
+        )
+    finally:
+        BaseAgent._context_caches.clear()
 
     assert result["decision"] == "PASS"
+    assert captured["cache_name"] == "cache-token"
+    assert captured["kwargs"]["thinking_level"] == "low"
     assert "HEAD-CACHED-MS" in captured["prompt"]
     assert "TAIL-CACHED-MS" in captured["prompt"]
     assert captured["prompt"].count("M") < 40000
 
 
+def test_check_manuscript_history_with_cache_missing_lineage_requests_fallback(director):
+    director._caching.manuscript_cache_name = "cache-token-without-lineage"
+    director._ask_with_cached_context = MagicMock()
+
+    result = director.check_manuscript_history_with_cache(ep_num=5, current_manuscript="원고")
+
+    assert result["needs_fallback"] is True
+    assert result["cache_used"] is False
+    assert result["cache_bypass_reason"] == "missing_lineage"
+    director._ask_with_cached_context.assert_not_called()
+
+
 def test_check_manuscript_history_with_cache_source_has_no_legacy_head_cut():
     src = Path("modules/domain/agents/director_continuity.py").read_text(encoding="utf-8")
     assert "current_manuscript[:36000]" not in src
+    assert "generate_content_via_router(" not in src
 
 
 def test_check_manuscript_history_conflicts_summary_fallback_preserves_tail_context(director):

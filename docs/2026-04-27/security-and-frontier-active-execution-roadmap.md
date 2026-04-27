@@ -107,8 +107,8 @@ Working order:
 ### stage4-post-select-conflict
 
 - goal: reduce repeated Stage4 `POST_SELECT_CONFLICT` carryover drift without weakening the post-select firewall.
-- prerequisites: all ten #58 terminal reports are present; current-state re-audit completed for the first retry-hydration bug-risk patch.
-- execution notes: preserve Director authority, treat memory/cache as helpers, and avoid claiming clean 5-arc readiness from tests alone. First patch targets T06 F5 stale `scope_authority.fix_scope` shadowing runtime full-rewrite widening.
+- prerequisites: all ten #58 terminal reports are present; current-state re-audit is required before each narrow bug-risk patch.
+- execution notes: preserve Director authority, treat memory/cache as helpers, and avoid claiming clean 5-arc readiness from tests alone. Landed narrow patches cover T06 retry/hydration containment and T07 Director manuscript cache lineage/routing; broader #58 tranches remain open.
 - completion signal: targeted regressions and fresh proof evidence show the named bug shapes are contained, then #58 receives a status update.
 - temp cleanup action: remove `docs/temp/stage4-post-select-conflict-execution-ssot.md` after closure.
 
@@ -138,7 +138,7 @@ Working order:
 | `security-secrets-config` | pending | 2026-04-27 | external credential rotation/history decision may block closure |
 | `security-runtime-settings-vertex` | pending | 2026-04-27 | depends on `security-secrets-config`; path policy decision required |
 | `security-desktop-release-guardrails` | pending | 2026-04-27 | depends on first two security items; access-control product model may remain residual |
-| `stage4-post-select-conflict` | in_progress | 2026-04-27 | partial T06 F5 mitigation implemented; remaining #58 tranches and fresh proof still required |
+| `stage4-post-select-conflict` | in_progress | 2026-04-27 | partial T06 retry/hydration and T07 Director cache mitigations implemented; remaining #58 tranches and fresh proof still required |
 | `stage3-stage4-genre-alignment` | pending | 2026-04-27 | current-state re-audit required; #56 T01-T10 artifacts were not locally/GitHub-readable during synthesis |
 
 ## 8. Queue Cleanup Rule
@@ -170,4 +170,4 @@ Estimated operational confidence: 96%.
 
 ## 10. Operator Promotion Note - 2026-04-27
 
-The operator promoted `stage4-post-select-conflict` ahead of the prior Frontier Lag default with the instruction to reduce bug risk first. This roadmap now treats #58 as the active item for the narrow retry-hydration bug-risk patch. This does not close #58 or authorize a clean 5-arc readiness claim; it only records the current execution order while the partial mitigation is in flight.
+The operator promoted `stage4-post-select-conflict` ahead of the prior Frontier Lag default with the instruction to reduce bug risk first. This roadmap now treats #58 as the active item for narrow retry/cache bug-risk patches. This does not close #58 or authorize a clean 5-arc readiness claim; it only records the current execution order while partial mitigation is in flight.

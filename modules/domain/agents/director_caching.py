@@ -40,6 +40,7 @@ class DirectorCachingManager:
         self._cached_manuscript_count = 0
         self._cached_manuscript_content_hash = ""
         self._cached_manuscript_model = ""
+        self._cached_manuscript_provider = ""
 
         # [V60.89] protagonist_config 캐싱
         self._protagonist_config = None
@@ -67,6 +68,27 @@ class DirectorCachingManager:
             logging.warning(f" [V60.87] 원고 역사 로드 실패: {e}")
 
         return history
+
+    def _manuscript_cache_project_name(self, current_ep: int) -> str:
+        current_project = getattr(self.context, "current_project", None) if self.context is not None else None
+        project_token = (
+            BaseAgent._sanitize_context_cache_token(getattr(current_project, "work_id", None))
+            or BaseAgent._sanitize_context_cache_token(getattr(current_project, "name", None))
+            or BaseAgent._sanitize_context_cache_token(getattr(self.context, "project_name", None))
+            or BaseAgent._sanitize_context_cache_token(getattr(self.context, "genre", None))
+            or "project"
+        )
+        return f"{project_token}_director_manuscript_ep_{current_ep}"
+
+    def _register_manuscript_cache_lineage(self, *, current_ep: int, cache_name: str, content_hash: str) -> None:
+        BaseAgent._register_context_cache_lineage(
+            cache_type="director_manuscript_history",
+            project_name=self._manuscript_cache_project_name(current_ep),
+            cache_name=cache_name,
+            content_hash=content_hash,
+            client=self.client,
+            primary_model=self.primary_model,
+        )
 
     def create_manuscript_cache(self, db_manager, current_ep: int, ttl_seconds: int = 3600) -> str:
         """
@@ -120,6 +142,7 @@ class DirectorCachingManager:
 """
             compiled_hash = hashlib.sha256(compiled_text.encode("utf-8")).hexdigest()
             cache_model = strip_vertex_prefix(self.primary_model)
+            cache_provider = BaseAgent._context_cache_provider_token(self.client, self.primary_model)
 
             # 3. 캐시 최소 크기 체크 (1024 토큰 ≈ 1500자)
             if total_chars < 1500:
@@ -137,7 +160,13 @@ class DirectorCachingManager:
                 and self._cached_manuscript_count == len(manuscripts_compiled)
                 and self._cached_manuscript_content_hash == compiled_hash
                 and self._cached_manuscript_model == cache_model
+                and self._cached_manuscript_provider == cache_provider
             ):
+                self._register_manuscript_cache_lineage(
+                    current_ep=current_ep,
+                    cache_name=self.manuscript_cache_name,
+                    content_hash=compiled_hash,
+                )
                 logging.warning(f" [V60.88] 기존 캐시 재사용 ({self._cached_manuscript_count}화)")
                 return self.manuscript_cache_name
 
@@ -158,6 +187,12 @@ class DirectorCachingManager:
             self._cached_manuscript_count = len(manuscripts_compiled)
             self._cached_manuscript_content_hash = compiled_hash
             self._cached_manuscript_model = cache_model
+            self._cached_manuscript_provider = cache_provider
+            self._register_manuscript_cache_lineage(
+                current_ep=current_ep,
+                cache_name=cache.name,
+                content_hash=compiled_hash,
+            )
 
             logging.info(f"✅ [V60.88] 원고 캐시 생성 완료: {cache.name}")
             logging.info(f"- 총 {len(manuscripts_compiled)}화 / {total_chars:,}자 캐싱됨")
@@ -177,6 +212,7 @@ class DirectorCachingManager:
             self._cached_manuscript_count = 0
             self._cached_manuscript_content_hash = ""
             self._cached_manuscript_model = ""
+            self._cached_manuscript_provider = ""
             return None
 
     def get_protagonist_config(self) -> dict:
