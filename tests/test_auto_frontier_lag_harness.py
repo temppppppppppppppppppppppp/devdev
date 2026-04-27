@@ -114,6 +114,42 @@ def test_classify_poll_transition_allows_recoverable_reject_glyph_tail():
     assert idle == 0
 
 
+def test_classify_poll_transition_treats_provider_response_wait_as_active():
+    previous = {
+        "process_exit_code": None,
+        "process_alive": True,
+        "session_log_tail": ["[DEBUG] [httpcore.http11] receive_response_headers.started request=<Request [b'POST']>"],
+        "session_log_size": 221745,
+        "blueprint_count": 1,
+        "draft_count": 0,
+        "stage3_attempts": 1,
+        "stage4_attempts": 0,
+        "director_stage3_rows": 1,
+        "director_stage4_rows": 0,
+        "runtime_audit_total_events": 3,
+        "harness_phase": "frontier_running",
+        "prompt_blocked": False,
+    }
+    current = dict(previous)
+
+    status, idle = harness.classify_poll_transition(previous, current, 1)
+
+    assert status == "provider_wait"
+    assert idle == 0
+
+
+def test_detect_provider_response_wait_clears_after_response_complete():
+    assert (
+        harness.detect_provider_response_wait(
+            [
+                "[DEBUG] [httpcore.http11] receive_response_headers.started request=<Request [b'POST']>",
+                "[DEBUG] [httpcore.http11] receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [])",
+            ]
+        )
+        is False
+    )
+
+
 def test_detect_budget_breach_reports_first_exceeded_cap():
     snapshot = {
         "runtime_elapsed_seconds": 61,
