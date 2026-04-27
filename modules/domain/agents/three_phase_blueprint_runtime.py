@@ -1765,6 +1765,15 @@ class ThreePhaseBlueprintRuntime:
                 text = str(guidance or "").strip()
                 if text:
                     lines.append(f"- {text}")
+            lines.extend(
+                [
+                    "[Positive continuation recipe]",
+                    "- Begin scene_1 at the previous ending location with carryover characters already present.",
+                    "- Spend at most one bridge beat acknowledging the previous episode result.",
+                    "- Immediately advance into the current must_focus action, decision, or pressure change.",
+                    "- Do not restage the prior confrontation as a new arrival, briefing, or repeated debate.",
+                ]
+            )
         if has_lawful_window and lawful_window.get("mode") == "allow_escalated_repeat":
             lines.append("[Lawful repetition window]")
             if lawful_window.get("allow_same_location_if_goal_changes"):
