@@ -688,6 +688,34 @@ class Stage4RetryRuntime:
             fix_pack=fix_pack,
         )
 
+    @staticmethod
+    def _empty_local_patch_marker(attempt: object) -> tuple[bool, tuple[str, tuple[str, ...]]]:
+        if not isinstance(attempt, dict):
+            return False, ("", ())
+        trace = attempt.get("patch_trace") if isinstance(attempt.get("patch_trace"), dict) else {}
+        guard = trace.get("guard_result") if isinstance(trace.get("guard_result"), dict) else {}
+        failure_key = str(
+            attempt.get("local_patch_failure_key")
+            or trace.get("local_patch_failure_key")
+            or trace.get("failure_key")
+            or guard.get("failure_key")
+            or ""
+        ).strip()
+        if failure_key != "empty_patch":
+            return False, ("", ())
+        target_kind = str(trace.get("target_kind") or attempt.get("target_kind") or "").strip()
+        raw_targets = trace.get("patch_targets") or attempt.get("patch_targets") or []
+        targets = tuple(sorted(str(item).strip() for item in raw_targets if str(item or "").strip()))
+        return True, (target_kind, targets)
+
+    @staticmethod
+    def _same_empty_patch_family(left: tuple[str, tuple[str, ...]], right: tuple[str, tuple[str, ...]]) -> bool:
+        left_kind, left_targets = left
+        right_kind, right_targets = right
+        if left_targets and right_targets and set(left_targets).intersection(right_targets):
+            return True
+        return bool(left_kind and right_kind and left_kind == right_kind)
+
     def _run_pass_with_fix_patch_attempt(
         self,
         *,
@@ -715,40 +743,40 @@ class Stage4RetryRuntime:
             )
             patched_ms = patched[0].get("manuscript", "") if patched else ""
             patch_trace = dict(getattr(chief_writer, "_last_inplace_patch_trace", {}) or {})
-            if patched:
-                patch_trace["patch_strategy"] = str(
-                    patch_trace.get("patch_strategy") or patched[0].get("strategy", "") or "inplace_patch"
+            patched_candidate = patched[0] if patched and isinstance(patched[0], dict) else {}
+            patch_trace["patch_strategy"] = str(
+                patch_trace.get("patch_strategy") or patched_candidate.get("strategy", "") or "inplace_patch"
+            )
+            patch_trace["patch_round"] = fix_index + 1
+            if not patch_trace.get("patch_targets"):
+                patch_trace["patch_targets"] = list(
+                    patched_candidate.get("patch_targets") or fix_pack.get("patch_targets") or []
                 )
-                patch_trace["patch_round"] = fix_index + 1
-                if not patch_trace.get("patch_targets"):
-                    patch_trace["patch_targets"] = list(
-                        patched[0].get("patch_targets") or fix_pack.get("patch_targets") or []
-                    )
-                if not patch_trace.get("target_kind"):
-                    patch_trace["target_kind"] = str(
-                        patch_trace.get("target_kind")
-                        or patched[0].get("target_kind", "")
-                        or fix_pack.get("target_kind", "")
-                        or ""
-                    ).strip()
-                if not patch_trace.get("patch_target_records"):
-                    patch_trace["patch_target_records"] = list(
-                        patch_trace.get("patch_target_records")
-                        or patched[0].get("patch_target_records")
-                        or fix_pack.get("patch_target_records")
-                        or []
-                    )
-                if not patch_trace.get("repair_trace"):
-                    patch_trace["repair_trace"] = list(
-                        patch_trace.get("repair_trace") or patched[0].get("repair_trace") or []
-                    )
-                patch_trace["partial_fix_eval"] = build_partial_fix_eval(
-                    patch_round=patch_trace.get("patch_round"),
-                    is_patch_attempt=True,
-                    patch_target_records=list(patch_trace.get("patch_target_records") or []),
-                    target_kind=str(patch_trace.get("target_kind", "") or ""),
-                    fallback_reason=str(patch_trace.get("fallback_reason", "") or ""),
+            if not patch_trace.get("target_kind"):
+                patch_trace["target_kind"] = str(
+                    patch_trace.get("target_kind")
+                    or patched_candidate.get("target_kind", "")
+                    or fix_pack.get("target_kind", "")
+                    or ""
+                ).strip()
+            if not patch_trace.get("patch_target_records"):
+                patch_trace["patch_target_records"] = list(
+                    patch_trace.get("patch_target_records")
+                    or patched_candidate.get("patch_target_records")
+                    or fix_pack.get("patch_target_records")
+                    or []
                 )
+            if not patch_trace.get("repair_trace"):
+                patch_trace["repair_trace"] = list(
+                    patch_trace.get("repair_trace") or patched_candidate.get("repair_trace") or []
+                )
+            patch_trace["partial_fix_eval"] = build_partial_fix_eval(
+                patch_round=patch_trace.get("patch_round"),
+                is_patch_attempt=True,
+                patch_target_records=list(patch_trace.get("patch_target_records") or []),
+                target_kind=str(patch_trace.get("target_kind", "") or ""),
+                fallback_reason=str(patch_trace.get("fallback_reason", "") or ""),
+            )
             return _PassWithFixPatchAttemptPayload(
                 should_abort=False,
                 patched_candidates=patched or [],
@@ -815,6 +843,8 @@ class Stage4RetryRuntime:
                     "failure_key": failure_key,
                 }
             )
+            patch_trace["local_patch_failure_key"] = failure_key
+            patch_trace["failed_patch_len"] = len(patched_ms or "")
             if isinstance(patch_trace.get("partial_fix_eval"), dict):
                 patch_trace["partial_fix_eval"] = {
                     **dict(patch_trace.get("partial_fix_eval") or {}),
@@ -1218,9 +1248,17 @@ class Stage4RetryRuntime:
             else ""
         )
         patch_enabled = bool(_threshold("feature_flags.enable_patch_mode", True))
-        # [TF-4] missing_patch_targets 연속 시 patch 강제 해제 → full rewrite로 escalation
+        # [TF-4] missing_patch_targets/empty local patch 연속 시 patch 강제 해제 → full rewrite로 escalation
         _prior_attempts = previous_attempt.get("prior_attempts", []) if isinstance(previous_attempt, dict) else []
-        _consecutive_empty_patch = (
+
+        _current_empty_local_patch, _current_empty_family = self._empty_local_patch_marker(previous_attempt)
+        _consecutive_runtime_empty_patch = _current_empty_local_patch and any(
+            _prior_empty and self._same_empty_patch_family(_current_empty_family, _prior_family)
+            for _prior_empty, _prior_family in (
+                self._empty_local_patch_marker(pa) for pa in _prior_attempts[-2:] if isinstance(pa, dict)
+            )
+        )
+        _consecutive_missing_targets_patch = (
             not fix_pack_contract.get("ready")
             and fix_pack_contract.get("reason") == "missing_patch_targets"
             and any(
@@ -1228,16 +1266,28 @@ class Stage4RetryRuntime:
                 for pa in _prior_attempts[-2:]
             )
         )
+        _consecutive_empty_patch = _consecutive_missing_targets_patch or _consecutive_runtime_empty_patch
         if _consecutive_empty_patch:
-            logging.warning("[TF-4] missing_patch_targets 연속 감지 → patch 해제, full rewrite escalation")
+            fix_scope = "full"
+            logging.warning("[TF-4] local patch failure 연속 감지 → patch 해제, full rewrite escalation")
+            reroute_message = (
+                "   [TF-4] local patch 연속 실패 → full rewrite로 전환"
+                if _consecutive_runtime_empty_patch
+                else "   [TF-4] patch_targets 연속 부재 → full rewrite로 전환"
+            )
             owner.ctx.ui.log(
-                "   [TF-4] patch_targets 연속 부재 → full rewrite로 전환",
+                reroute_message,
                 stage="stage4",
                 component="retry_lane",
                 ep_num=ep_num,
                 round_num=round_num,
                 attempt_key=attempt_key,
                 event_kind="policy",
+                meta={
+                    "reason": "empty_patch" if _consecutive_runtime_empty_patch else "missing_patch_targets",
+                    "target_kind": _current_empty_family[0],
+                    "patch_targets": list(_current_empty_family[1]),
+                },
             )
 
         bounded_post_select_patch = (

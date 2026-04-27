@@ -1205,6 +1205,21 @@ class Stage4OutcomeRuntime:
         pathology_source = str(previous_attempt.get("retry_pathology_source", "") or "").strip()
         fix_scope_reasoning = str(previous_attempt.get("fix_scope_reasoning", "") or "").strip()
         open_review = str(previous_attempt.get("open_review", "") or "").strip()
+        local_patch_failure_key = str(previous_attempt.get("local_patch_failure_key", "") or "").strip()
+        patch_failure_reason = str(previous_attempt.get("patch_failure_reason", "") or "").strip()
+        patch_trace = (
+            previous_attempt.get("patch_trace") if isinstance(previous_attempt.get("patch_trace"), dict) else {}
+        )
+        if not local_patch_failure_key and isinstance(patch_trace, dict):
+            guard_result = patch_trace.get("guard_result") if isinstance(patch_trace.get("guard_result"), dict) else {}
+            local_patch_failure_key = str(
+                patch_trace.get("local_patch_failure_key")
+                or patch_trace.get("failure_key")
+                or guard_result.get("failure_key")
+                or ""
+            ).strip()
+        if not patch_failure_reason and isinstance(patch_trace, dict):
+            patch_failure_reason = str(patch_trace.get("fallback_reason") or "").strip()
         firewall_triggered = bool(previous_attempt.get("firewall_triggered", False))
         cove_fail_closed = bool(previous_attempt.get("cove_fail_closed", False))
         cove_runtime_failure = bool(previous_attempt.get("cove_runtime_failure", False))
@@ -1225,6 +1240,8 @@ class Stage4OutcomeRuntime:
             tags.append("cove_fail_closed")
         if cove_runtime_failure:
             tags.append("cove_runtime_failure")
+        if local_patch_failure_key:
+            tags.append(f"local_patch:{local_patch_failure_key}")
         tags.append(
             "fix_pack_ready"
             if bool(fix_pack_contract.get("ready"))
@@ -1258,6 +1275,8 @@ class Stage4OutcomeRuntime:
             "score": int(previous_attempt.get("score", 0) or 0),
             "fix_scope_reasoning": fix_scope_reasoning,
             "open_review": open_review,
+            "local_patch_failure_key": local_patch_failure_key,
+            "patch_failure_reason": patch_failure_reason,
         }
         if contradiction_types:
             payload["contradiction_types"] = contradiction_types

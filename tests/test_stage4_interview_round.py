@@ -5101,6 +5101,70 @@ class TestRecordS4Attempt:
         assert payload.use_inplace is False
         assert payload.force_patch is False
 
+    def test_resolve_retry_lane_routing_escalates_repeated_empty_local_patch_to_full(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._resolve_retry_lane_routing(
+            previous_attempt={
+                "score": 82,
+                "fix_scope": "inplace",
+                "fix_pack": _local_fix_pack("opening_location_name", target_kind="entity_ref"),
+                "local_patch_failure_key": "empty_patch",
+                "patch_trace": {
+                    "patch_strategy": "inplace_patch",
+                    "patch_targets": ["opening_location_name"],
+                    "target_kind": "entity_ref",
+                    "guard_result": {"status": "fail", "failure_key": "empty_patch"},
+                },
+                "prior_attempts": [
+                    {
+                        "local_patch_failure_key": "empty_patch",
+                        "patch_trace": {
+                            "patch_targets": ["opening_location_name"],
+                            "target_kind": "entity_ref",
+                            "guard_result": {"status": "fail", "failure_key": "empty_patch"},
+                        },
+                    }
+                ],
+            },
+            prev_manuscript="원고",
+            round_num=3,
+            ep_num=4,
+        )
+
+        assert payload.fix_scope == "full"
+        assert payload.use_inplace is False
+        assert payload.use_patch is False
+        assert any("local patch 연속 실패" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
+
+    def test_resolve_retry_lane_routing_allows_single_empty_local_patch_once(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._resolve_retry_lane_routing(
+            previous_attempt={
+                "score": 82,
+                "fix_scope": "inplace",
+                "fix_pack": _local_fix_pack("opening_location_name", target_kind="entity_ref"),
+                "local_patch_failure_key": "empty_patch",
+                "patch_trace": {
+                    "patch_strategy": "inplace_patch",
+                    "patch_targets": ["opening_location_name"],
+                    "target_kind": "entity_ref",
+                    "guard_result": {"status": "fail", "failure_key": "empty_patch"},
+                },
+                "prior_attempts": [],
+            },
+            prev_manuscript="원고",
+            round_num=2,
+            ep_num=4,
+        )
+
+        assert payload.fix_scope == "inplace"
+        assert payload.use_inplace is True
+        assert not any("local patch 연속 실패" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
+
     def test_build_retry_regenerate_kwargs_reduces_strategy_budget_for_constraint_violation(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
@@ -6472,6 +6536,33 @@ class TestRecordS4Attempt:
         assert round_ctx.chief_writer._inplace_patch_blueprint is None
         assert round_ctx.chief_writer._inplace_patch_genre_name == ""
 
+    def test_run_pass_with_fix_patch_attempt_backfills_trace_for_empty_patch_result(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.inplace_patch.return_value = []
+
+        payload = ir.retry_runtime._run_pass_with_fix_patch_attempt(
+            chief_writer=round_ctx.chief_writer,
+            round_ctx=round_ctx,
+            current_ms="original manuscript " * 50,
+            current_feedback="tighten opening",
+            fix_index=1,
+            style_guide=round_ctx.style_guide,
+            fix_pack=_local_fix_pack("opening_location_name", target_kind="entity_ref"),
+            current_audit_result={"verdict": "PASS_WITH_FIX", "fix_scope": "inplace"},
+            director_feedback="director feedback",
+            last_patch_trace={},
+        )
+
+        assert payload.should_abort is False
+        assert payload.patched_manuscript == ""
+        assert payload.patch_trace["patch_strategy"] == "inplace_patch"
+        assert payload.patch_trace["patch_round"] == 2
+        assert payload.patch_trace["patch_targets"] == ["opening_location_name"]
+        assert payload.patch_trace["target_kind"] == "entity_ref"
+        assert payload.patch_trace["partial_fix_eval"]["is_patch_attempt"] is True
+
     def test_run_pass_with_fix_patch_attempt_marks_exception_fail_closed(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
@@ -6533,6 +6624,25 @@ class TestRecordS4Attempt:
         assert payload.current_audit_result["gate_basis"] == "min_patched_length"
         assert payload.patch_trace["failure_key"] == "min_patched_length"
         assert mocked_fail.call_args.kwargs["failure_key"] == "min_patched_length"
+
+    def test_run_pass_with_fix_patch_guards_records_empty_patch_failure_metadata(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._run_pass_with_fix_patch_guards(
+            current_ms="original manuscript " * 200,
+            patched_ms="",
+            current_audit_result={"verdict": "PASS_WITH_FIX", "fix_scope": "inplace"},
+            director_feedback="director feedback",
+            patch_trace={"patch_strategy": "inplace_patch", "patch_targets": ["opening_location_name"]},
+        )
+
+        assert payload.should_abort is True
+        assert payload.current_audit_result["local_patch_failure_key"] == "empty_patch"
+        assert payload.current_audit_result["patch_failure_reason"]
+        assert payload.patch_trace["local_patch_failure_key"] == "empty_patch"
+        assert payload.patch_trace["failed_patch_len"] == 0
+        assert payload.patch_trace["guard_result"]["failure_key"] == "empty_patch"
 
     def test_run_pass_with_fix_patch_guards_rejects_low_preserve_ratio(self):
         ctx = _make_ctx()
@@ -9636,6 +9746,33 @@ class TestLane2DirectorSemantics:
         assert payload["authoritative_fix_scope_violation"] == {"type": "blank_authoritative_fix_scope"}
         assert payload["fix_pack_reason"] == "missing_fix_pack"
         assert payload["conflict_contract"]["contract_type"] == "post_select_conflict"
+
+    def test_retry_pathology_payload_includes_local_patch_failure_key(self):
+        from modules.core.stage4_outcome_runtime import Stage4OutcomeRuntime
+
+        owner = MagicMock()
+        owner.interview_round = MagicMock()
+        owner.interview_round._evaluate_fix_pack_contract.return_value = {
+            "ready": True,
+            "reason": "",
+            "fix_pack": _local_fix_pack("opening_location_name", target_kind="entity_ref"),
+        }
+        runtime = Stage4OutcomeRuntime(owner)
+
+        payload = runtime.build_retry_pathology_payload(
+            ep_num=2,
+            round_num=3,
+            previous_attempt={
+                "fix_scope": "inplace",
+                "local_patch_failure_key": "empty_patch",
+                "patch_failure_reason": "empty local patch output",
+                "fix_pack": _local_fix_pack("opening_location_name", target_kind="entity_ref"),
+            },
+        )
+
+        assert payload["local_patch_failure_key"] == "empty_patch"
+        assert payload["patch_failure_reason"] == "empty local patch output"
+        assert "local_patch:empty_patch" in payload["pathology_fingerprint"]
 
     def test_post_select_conflict_snapshot_preserves_high_score_downgraded_pass_rationale(self):
         ctx = _make_ctx()
