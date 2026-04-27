@@ -173,6 +173,11 @@ def load_benchmark_record(
 
     runtime_summary = manifest.get("runtime_summary", {}) if isinstance(manifest, dict) else {}
     workspace_git = manifest.get("workspace_git", {}) if isinstance(manifest, dict) else {}
+    stage4_diagnostic_packet = _resolve_record_stage4_diagnostic_packet(
+        manifest=manifest,
+        runtime_audit_summary=runtime_audit_summary,
+        companion_evidence=companion_evidence,
+    )
     run_id = _pick_first_nonempty(
         manifest.get("run_id") if isinstance(manifest, dict) else None,
         index_row.get("run_id"),
@@ -236,6 +241,7 @@ def load_benchmark_record(
             index_row.get("notes"),
         ),
         "runtime_audit_summary": runtime_audit_summary,
+        "stage4_diagnostic_packet": stage4_diagnostic_packet,
         "companion_links": companion_links,
         "companion_evidence": companion_evidence,
         "companion_merge_audit": companion_merge_audit,
@@ -449,6 +455,7 @@ def _load_runtime_audit_summary(record_root: Path) -> dict[str, Any]:
             "stage4_target_ep_reached": False,
             "stage4_complete_emitted": False,
             "stage4_post_pass_contract_signal_count": 0,
+            "stage4_diagnostic_packet": {},
         }
     payload = _load_json(summary_path)
     proof_digest = payload.get("proof_digest", {}) if isinstance(payload, dict) else {}
@@ -489,6 +496,7 @@ def _load_runtime_audit_summary(record_root: Path) -> dict[str, Any]:
             if isinstance(stage4_live_session, dict)
             else 0
         ),
+        "stage4_diagnostic_packet": _extract_stage4_diagnostic_packet_from_runtime_summary(payload),
     }
 
 
@@ -625,7 +633,200 @@ def _load_companion_evidence(
         "gate_repair_status": (
             str(gate_repair.get("status", "") or "") if isinstance(gate_repair, dict) else ""
         ),
+        "stage4_diagnostic_packet": _normalize_stage4_diagnostic_packet(
+            payload.get("stage4_diagnostic_packet", {}) if isinstance(payload, dict) else {}
+        ),
     }
+
+
+def _resolve_record_stage4_diagnostic_packet(
+    *,
+    manifest: dict[str, Any],
+    runtime_audit_summary: dict[str, Any],
+    companion_evidence: dict[str, Any],
+) -> dict[str, Any]:
+    runtime_summary = manifest.get("runtime_summary", {}) if isinstance(manifest, dict) else {}
+    candidates = [
+        manifest.get("stage4_diagnostic_packet", {}) if isinstance(manifest, dict) else {},
+        runtime_summary.get("stage4_diagnostic_packet", {}) if isinstance(runtime_summary, dict) else {},
+        runtime_audit_summary.get("stage4_diagnostic_packet", {}) if isinstance(runtime_audit_summary, dict) else {},
+        companion_evidence.get("stage4_diagnostic_packet", {}) if isinstance(companion_evidence, dict) else {},
+    ]
+    for candidate in candidates:
+        packet = _normalize_stage4_diagnostic_packet(candidate)
+        if packet:
+            return packet
+    return {}
+
+
+def _extract_stage4_diagnostic_packet_from_runtime_summary(payload: object) -> dict[str, Any]:
+    if not isinstance(payload, dict):
+        return {}
+    explicit = _normalize_stage4_diagnostic_packet(payload.get("stage4_diagnostic_packet", {}))
+    if explicit:
+        return explicit
+
+    proof_digest = payload.get("proof_digest", {})
+    proof_digest = proof_digest if isinstance(proof_digest, dict) else {}
+    operational = proof_digest.get("operational_metadata", {})
+    operational = operational if isinstance(operational, dict) else {}
+    explicit = _normalize_stage4_diagnostic_packet(operational.get("stage4_diagnostic_packet", {}))
+    if explicit:
+        return explicit
+
+    stage4_live_session = operational.get("stage4_live_session", {})
+    stage4_live_session = stage4_live_session if isinstance(stage4_live_session, dict) else {}
+    explicit = _normalize_stage4_diagnostic_packet(stage4_live_session.get("diagnostic_packet", {}))
+    if explicit:
+        return explicit
+
+    stages = proof_digest.get("stages", {})
+    stage4_digest = stages.get("stage4", {}) if isinstance(stages, dict) else {}
+    stage4_digest = stage4_digest if isinstance(stage4_digest, dict) else {}
+    freshness = payload.get("freshness", {}) if isinstance(payload.get("freshness", {}), dict) else {}
+    issue_counts = _positive_int_dict(stage4_digest.get("issue_counts", {}))
+    taxonomy_counts = _positive_int_dict(stage4_digest.get("warning_taxonomy_counts", {}))
+    freshness_status = str(freshness.get("status", "") or "")
+    scope_status = str(freshness.get("scope_status", "") or "")
+    proof_digest_status = str(proof_digest.get("status", "") or "")
+    proof_stage4_status = str(stage4_digest.get("status", "") or "")
+    has_derived_signal = (
+        bool(issue_counts)
+        or bool(taxonomy_counts)
+        or freshness_status in {"stale", "stale_for_stage4"}
+        or scope_status == "pre_stage4_or_partial"
+        or bool(proof_stage4_status and proof_stage4_status != "ok")
+        or bool(proof_digest_status and proof_digest_status != "ok")
+    )
+    if not has_derived_signal:
+        return {}
+    derived = {
+        "schema_version": "stage4_diagnostic_packet_v1",
+        "authority_role": "runtime_audit_summary_derived",
+        "operator_guidance_only": True,
+        "runtime_summary_freshness_status": freshness_status,
+        "runtime_summary_scope_status": scope_status,
+        "proof_digest_status": proof_digest_status,
+        "proof_stage4_status": proof_stage4_status,
+        "proof_issue_counts": issue_counts,
+        "proof_warning_taxonomy_counts": taxonomy_counts,
+        "runtime_advisory_warn_count": _coerce_int(
+            taxonomy_counts.get("runtime_advisory_warn")
+            or issue_counts.get("runtime_advisory_mismatches")
+            or 0
+        ),
+    }
+    return _normalize_stage4_diagnostic_packet(derived)
+
+
+def _normalize_stage4_diagnostic_packet(value: object) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    proof_issue_counts = _positive_int_dict(value.get("proof_issue_counts", {}))
+    proof_warning_taxonomy_counts = _positive_int_dict(value.get("proof_warning_taxonomy_counts", {}))
+    source_counts = _positive_int_dict(value.get("source_counts", {}))
+    packet = {
+        "schema_version": str(value.get("schema_version", "") or ""),
+        "authority_role": str(value.get("authority_role", "") or ""),
+        "operator_guidance_only": bool(value.get("operator_guidance_only", False)),
+        "status": str(value.get("status", "") or ""),
+        "stage4_attempt_count": _coerce_int(value.get("stage4_attempt_count")),
+        "stage4_pass_like_count": _coerce_int(value.get("stage4_pass_like_count")),
+        "stage4_reject_count": _coerce_int(value.get("stage4_reject_count")),
+        "runtime_summary_freshness_status": str(value.get("runtime_summary_freshness_status", "") or ""),
+        "runtime_summary_scope_status": str(value.get("runtime_summary_scope_status", "") or ""),
+        "proof_digest_status": str(value.get("proof_digest_status", "") or ""),
+        "proof_stage4_status": str(value.get("proof_stage4_status", "") or ""),
+        "proof_issue_counts": proof_issue_counts,
+        "proof_warning_taxonomy_counts": proof_warning_taxonomy_counts,
+        "runtime_advisory_warn_count": _coerce_int(value.get("runtime_advisory_warn_count")),
+        "cove_runtime_advisory_count": _coerce_int(value.get("cove_runtime_advisory_count")),
+        "pass_preserved_cove_advisory_count": _coerce_int(value.get("pass_preserved_cove_advisory_count")),
+        "cove_semantic_fail_closed_count": _coerce_int(value.get("cove_semantic_fail_closed_count")),
+        "post_select_conflict_count": _coerce_int(value.get("post_select_conflict_count")),
+        "settled_director_divergence_count": _coerce_int(value.get("settled_director_divergence_count")),
+        "source_counts": source_counts,
+    }
+    return packet if _stage4_diagnostic_packet_has_signal(packet) else {}
+
+
+def _positive_int_dict(value: object) -> dict[str, int]:
+    if not isinstance(value, dict):
+        return {}
+    result: dict[str, int] = {}
+    for key, raw_count in value.items():
+        count = _coerce_int(raw_count)
+        if count > 0:
+            result[str(key)] = count
+    return result
+
+
+def _stage4_diagnostic_packet_has_signal(packet: dict[str, Any]) -> bool:
+    if not isinstance(packet, dict) or not packet:
+        return False
+    text_fields = (
+        "schema_version",
+        "authority_role",
+        "status",
+        "runtime_summary_freshness_status",
+        "runtime_summary_scope_status",
+        "proof_digest_status",
+        "proof_stage4_status",
+    )
+    if any(str(packet.get(field, "") or "") for field in text_fields):
+        return True
+    count_fields = (
+        "stage4_attempt_count",
+        "stage4_pass_like_count",
+        "stage4_reject_count",
+        "runtime_advisory_warn_count",
+        "cove_runtime_advisory_count",
+        "pass_preserved_cove_advisory_count",
+        "cove_semantic_fail_closed_count",
+        "post_select_conflict_count",
+        "settled_director_divergence_count",
+    )
+    if any(_coerce_int(packet.get(field)) > 0 for field in count_fields):
+        return True
+    return bool(packet.get("proof_issue_counts") or packet.get("proof_warning_taxonomy_counts") or packet.get("source_counts"))
+
+
+def _stage4_diagnostic_total_proof_warn(packet: dict[str, Any]) -> int:
+    taxonomy = packet.get("proof_warning_taxonomy_counts", {}) if isinstance(packet, dict) else {}
+    if not isinstance(taxonomy, dict):
+        return 0
+    return sum(_coerce_int(value) for value in taxonomy.values())
+
+
+def _stage4_diagnostic_count_summary(packet: dict[str, Any]) -> dict[str, int]:
+    if not isinstance(packet, dict):
+        return {}
+    return {
+        "cove_runtime_advisory": _coerce_int(packet.get("cove_runtime_advisory_count")),
+        "pass_preserved_advisory": _coerce_int(packet.get("pass_preserved_cove_advisory_count")),
+        "semantic_retry": _coerce_int(packet.get("cove_semantic_fail_closed_count")),
+        "post_select_conflict": _coerce_int(packet.get("post_select_conflict_count")),
+        "proof_warn": _stage4_diagnostic_total_proof_warn(packet),
+        "settled_director_divergence": _coerce_int(packet.get("settled_director_divergence_count")),
+    }
+
+
+def _stage4_diagnostic_packet_attention_status(packet: dict[str, Any]) -> str:
+    if not isinstance(packet, dict):
+        return ""
+    for key in ("status", "proof_stage4_status", "proof_digest_status"):
+        status = str(packet.get(key, "") or "").strip()
+        if status and status not in {"ok", "clean", "available", "unavailable"}:
+            return status
+    return ""
+
+
+def _stage4_diagnostic_packet_is_stale(packet: dict[str, Any]) -> bool:
+    if not isinstance(packet, dict):
+        return False
+    freshness_status = str(packet.get("runtime_summary_freshness_status", "") or "").strip()
+    scope_status = str(packet.get("runtime_summary_scope_status", "") or "").strip()
+    return freshness_status in {"stale", "stale_for_stage4"} or scope_status == "pre_stage4_or_partial"
 
 
 def _load_companion_merge_audit(
@@ -1668,6 +1869,41 @@ def _build_watchpoints(
                         scope="stage4",
                         side=side,
                         message=f"{side} stage4 post_pass_contract_signal_count is {contract_signal_count}",
+                    )
+                )
+        stage4_diagnostic_packet = record.get("stage4_diagnostic_packet", {})
+        if isinstance(stage4_diagnostic_packet, dict) and stage4_diagnostic_packet:
+            packet_status = _stage4_diagnostic_packet_attention_status(stage4_diagnostic_packet)
+            if packet_status:
+                watchpoints.append(
+                    _watchpoint(
+                        "stage4_diagnostic_packet_attention",
+                        severity="warn",
+                        scope="stage4_diagnostic_packet",
+                        side=side,
+                        message=f"{side} stage4 diagnostic packet status is {packet_status}",
+                    )
+                )
+            if _stage4_diagnostic_packet_is_stale(stage4_diagnostic_packet):
+                watchpoints.append(
+                    _watchpoint(
+                        "stage4_diagnostic_packet_stale",
+                        severity="warn",
+                        scope="stage4_diagnostic_packet",
+                        side=side,
+                        message=f"{side} stage4 diagnostic packet reports stale runtime summary",
+                    )
+                )
+            diagnostic_counts = _stage4_diagnostic_count_summary(stage4_diagnostic_packet)
+            if any(count > 0 for count in diagnostic_counts.values()):
+                counts_text = ", ".join(f"{key}={value}" for key, value in diagnostic_counts.items())
+                watchpoints.append(
+                    _watchpoint(
+                        "stage4_diagnostic_packet_counts_recorded",
+                        severity="info",
+                        scope="stage4_diagnostic_packet",
+                        side=side,
+                        message=f"{side} stage4 diagnostic packet counts: {counts_text}",
                     )
                 )
         companion_evidence = record.get("companion_evidence", {})

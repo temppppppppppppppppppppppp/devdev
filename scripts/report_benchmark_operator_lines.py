@@ -238,6 +238,26 @@ def _build_compare_native_proof_signal_summary(diff: dict[str, Any]) -> str:
             )
             if contract_signal_count > 0:
                 fragments.append(f"contracts={contract_signal_count}")
+        stage4_diagnostic_packet = side_record.get("stage4_diagnostic_packet", {})
+        if isinstance(stage4_diagnostic_packet, dict):
+            packet_status = _stage4_diagnostic_attention_status(stage4_diagnostic_packet)
+            if packet_status:
+                fragments.append(f"diag={packet_status}")
+            if _stage4_diagnostic_is_stale(stage4_diagnostic_packet):
+                fragments.append("stale_summary")
+            cove_advisory_count = _coerce_positive_int(
+                stage4_diagnostic_packet.get("cove_runtime_advisory_count")
+            )
+            if cove_advisory_count > 0:
+                fragments.append(f"cove_advisory={cove_advisory_count}")
+            semantic_retry_count = _coerce_positive_int(
+                stage4_diagnostic_packet.get("cove_semantic_fail_closed_count")
+            )
+            if semantic_retry_count > 0:
+                fragments.append(f"semantic_retry={semantic_retry_count}")
+            proof_warn_count = _stage4_diagnostic_total_proof_warn(stage4_diagnostic_packet)
+            if proof_warn_count > 0:
+                fragments.append(f"proof_warn={proof_warn_count}")
 
         progress_signals = _select_native_progress_signal_source(side_record)
         if isinstance(progress_signals, dict):
@@ -269,6 +289,27 @@ def _build_compare_native_proof_signal_summary(diff: dict[str, Any]) -> str:
         if fragments:
             side_bits.append(f"{side}:{','.join(fragments)}")
     return "; ".join(side_bits)
+
+
+def _stage4_diagnostic_attention_status(packet: dict[str, Any]) -> str:
+    for key in ("status", "proof_stage4_status", "proof_digest_status"):
+        status = str(packet.get(key, "") or "").strip()
+        if status and status not in {"ok", "clean", "available", "unavailable"}:
+            return status
+    return ""
+
+
+def _stage4_diagnostic_is_stale(packet: dict[str, Any]) -> bool:
+    freshness_status = str(packet.get("runtime_summary_freshness_status", "") or "").strip()
+    scope_status = str(packet.get("runtime_summary_scope_status", "") or "").strip()
+    return freshness_status in {"stale", "stale_for_stage4"} or scope_status == "pre_stage4_or_partial"
+
+
+def _stage4_diagnostic_total_proof_warn(packet: dict[str, Any]) -> int:
+    taxonomy = packet.get("proof_warning_taxonomy_counts", {}) if isinstance(packet, dict) else {}
+    if not isinstance(taxonomy, dict):
+        return 0
+    return sum(_coerce_positive_int(value) for value in taxonomy.values())
 
 
 def _coerce_positive_int(value: object) -> int:
@@ -307,8 +348,10 @@ def _build_compare_proof_highlights(diff: dict[str, Any]) -> list[str]:
         "stage4_child_exit_nonzero": 1,
         "stage4_target_gap_remaining": 2,
         "stage4_guarded_summary_stale_reference": 3,
+        "stage4_diagnostic_packet_stale": 4,
         "stage4_live_session_attention": 4,
         "runtime_operational_status_attention": 5,
+        "stage4_diagnostic_packet_attention": 5,
         "proof_digest_attention": 6,
         "stage4_target_ep_not_reached": 7,
         "stage4_complete_signal_missing": 8,
@@ -386,6 +429,8 @@ def _summarize_native_proof_highlight(watchpoint: dict[str, Any]) -> str:
         return f"{side_prefix}target gap remaining".strip()
     if watchpoint_id == "stage4_guarded_summary_stale_reference":
         return f"{side_prefix}guarded summary stale".strip()
+    if watchpoint_id == "stage4_diagnostic_packet_stale":
+        return f"{side_prefix}diagnostic summary stale".strip()
     if watchpoint_id == "stage4_live_session_attention":
         status = message.split()[-1] if message else ""
         suffix = f"live session {status}".strip()
@@ -393,6 +438,10 @@ def _summarize_native_proof_highlight(watchpoint: dict[str, Any]) -> str:
     if watchpoint_id == "runtime_operational_status_attention":
         status = message.split()[-1] if message else ""
         suffix = f"operational status {status}".strip()
+        return f"{side_prefix}{suffix}".strip()
+    if watchpoint_id == "stage4_diagnostic_packet_attention":
+        status = message.split()[-1] if message else ""
+        suffix = f"diagnostic packet {status}".strip()
         return f"{side_prefix}{suffix}".strip()
     if watchpoint_id == "proof_digest_attention":
         status = message.split()[-1] if message else ""

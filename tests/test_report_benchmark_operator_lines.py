@@ -34,7 +34,13 @@ def _load_report_module():
     return module
 
 
-def _write_record(workspace: Path, *, run_id: str, status: str) -> Path:
+def _write_record(
+    workspace: Path,
+    *,
+    run_id: str,
+    status: str,
+    stage4_diagnostic_packet: dict | None = None,
+) -> Path:
     record_root = workspace / "benchmarks" / "golden-canary" / run_id
     record_root.mkdir(parents=True, exist_ok=True)
     manifest = {
@@ -94,6 +100,8 @@ def _write_record(workspace: Path, *, run_id: str, status: str) -> Path:
             },
         },
     }
+    if stage4_diagnostic_packet is not None:
+        manifest["stage4_diagnostic_packet"] = stage4_diagnostic_packet
     (record_root / "manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -379,7 +387,22 @@ def test_build_benchmark_operator_line_report_falls_back_to_native_proof_signals
     run_a = "20260423_120000__stage4-supervised__target-ep15__aaaa1111"
     run_b = "20260423_130000__stage4-supervised__target-ep15__bbbb2222"
     left_root = _write_record(tmp_path, run_id=run_a, status="operational_failure")
-    right_root = _write_record(tmp_path, run_id=run_b, status="operational_failure")
+    right_root = _write_record(
+        tmp_path,
+        run_id=run_b,
+        status="operational_failure",
+        stage4_diagnostic_packet={
+            "schema_version": "stage4_diagnostic_packet_v1",
+            "authority_role": "manifest",
+            "operator_guidance_only": True,
+            "proof_stage4_status": "warn",
+            "proof_warning_taxonomy_counts": {
+                "runtime_advisory_warn": 2,
+            },
+            "cove_runtime_advisory_count": 2,
+            "cove_semantic_fail_closed_count": 1,
+        },
+    )
     _write_guarded_result(
         left_root,
         {
@@ -417,7 +440,9 @@ def test_build_benchmark_operator_line_report_falls_back_to_native_proof_signals
 
     compare_entry = payload["compare_report_lines"][0]
     assert compare_entry["proof_signal_summary"] == (
-        "left:exit=120,gap=5; right:monitor=stage4_round_limit_exceeded,exit=1,advance=+1,gap=4"
+        "left:exit=120,gap=5; "
+        "right:diag=warn,cove_advisory=2,semantic_retry=1,proof_warn=2,"
+        "monitor=stage4_round_limit_exceeded,exit=1,advance=+1,gap=4"
     )
     assert compare_entry["proof_highlights"] == [
         "right monitor termination",
@@ -426,7 +451,8 @@ def test_build_benchmark_operator_line_report_falls_back_to_native_proof_signals
     text = module.format_report_text(payload)
     assert (
         "proof_signals=left:exit=120,gap=5; "
-        "right:monitor=stage4_round_limit_exceeded,exit=1,advance=+1,gap=4"
+        "right:diag=warn,cove_advisory=2,semantic_retry=1,proof_warn=2,"
+        "monitor=stage4_round_limit_exceeded,exit=1,advance=+1,gap=4"
     ) in text
     assert "proof_highlights=right monitor termination || left child exit 120" in text
 
