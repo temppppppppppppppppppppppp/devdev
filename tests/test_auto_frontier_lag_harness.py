@@ -138,6 +138,30 @@ def test_classify_poll_transition_treats_provider_response_wait_as_active():
     assert idle == 0
 
 
+def test_classify_poll_transition_extends_frontier_preflight_idle_grace():
+    previous = {
+        "process_exit_code": None,
+        "process_alive": True,
+        "session_log_tail": ["      ✅ [Preflight] arc_drive 완료"],
+        "session_log_size": 708394,
+        "blueprint_count": 3,
+        "draft_count": 2,
+        "stage3_attempts": 3,
+        "stage4_attempts": 6,
+        "director_stage3_rows": 3,
+        "director_stage4_rows": 6,
+        "runtime_audit_total_events": 22,
+        "harness_phase": "frontier_running",
+        "prompt_blocked": False,
+    }
+    current = dict(previous)
+
+    status, idle = harness.classify_poll_transition(previous, current, 1)
+
+    assert status == "stall-candidate"
+    assert idle == 2
+
+
 def test_detect_provider_response_wait_clears_after_response_complete():
     assert (
         harness.detect_provider_response_wait(
