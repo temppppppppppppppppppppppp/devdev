@@ -232,6 +232,10 @@ def test_build_regeneration_feedback_includes_reuse_contract_and_structured_conf
                     }
                 ],
                 "rewrite_required_reasons": ["proper_noun_group_truth_drift"],
+                "completed_event_replay": True,
+                "completed_event_replay_evidence": [
+                    "History Conflict: 직전 화에서 이미 완료된 father-funds contact를 opening에서 다시 재연함"
+                ],
             },
         },
         director_feedback="revise now",
@@ -245,6 +249,9 @@ def test_build_regeneration_feedback_includes_reuse_contract_and_structured_conf
     assert "type=continuity" in feedback
     assert "[Authoritative Truth Pins" in feedback
     assert "keep `대한그룹`; do not drift to `유성그룹`" in feedback
+    assert "[Completed Prior Event Replay Ban" in feedback
+    assert "Do not restage the completed event" in feedback
+    assert "이미 완료된 father-funds contact" in feedback
     assert "[Stored Near-pass Manuscript Baseline]" in feedback
     assert "baseline manuscript body" in feedback
 

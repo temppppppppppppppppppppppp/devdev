@@ -114,6 +114,24 @@ def _format_retry_truth_pins_block(conflict_contract: object) -> str:
     return "\n".join(lines) if len(lines) > 1 else ""
 
 
+def _format_completed_event_replay_block(conflict_contract: object) -> str:
+    if not isinstance(conflict_contract, dict) or not conflict_contract.get("completed_event_replay"):
+        return ""
+
+    lines = [
+        "[Completed Prior Event Replay Ban — hard rewrite constraint]",
+        "- Treat the rejected opening/live objective as a replay of an already completed prior event.",
+        "- Do not restage the completed event as the current scene objective; continue its aftermath or declare a new transition.",
+    ]
+    evidence = conflict_contract.get("completed_event_replay_evidence")
+    if isinstance(evidence, list):
+        for item in evidence[:3]:
+            line = str(item or "").strip()
+            if line:
+                lines.append(f"- evidence={line}")
+    return "\n".join(lines)
+
+
 def _build_retry_reuse_feedback_block(previous_attempt: dict | None) -> str:
     if not isinstance(previous_attempt, dict):
         return ""
@@ -146,6 +164,9 @@ def _build_retry_reuse_feedback_block(previous_attempt: dict | None) -> str:
     truth_pin_block = _format_retry_truth_pins_block(previous_attempt.get("conflict_contract"))
     if truth_pin_block:
         lines.append(truth_pin_block)
+    completed_replay_block = _format_completed_event_replay_block(previous_attempt.get("conflict_contract"))
+    if completed_replay_block:
+        lines.append(completed_replay_block)
 
     lines.append("[Stored Near-pass Manuscript Baseline]")
     lines.append(smart_truncate(baseline_manuscript, max_chars=20000, head_chars=6000))

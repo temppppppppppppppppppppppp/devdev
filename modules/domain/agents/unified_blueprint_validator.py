@@ -2903,6 +2903,122 @@ class UnifiedBlueprintValidator:
         return issues
 
     @staticmethod
+    def _collect_completed_prior_event_replays(
+        *,
+        scenes: dict,
+        completed_prior_events: list,
+        lawful_window: dict,
+        opening_transition_expectation: str,
+        normalized_transition_type: str,
+    ) -> list[str]:
+        scene_one = scenes.get("scene_1") if isinstance(scenes, dict) else None
+        if not isinstance(scene_one, dict) or not isinstance(completed_prior_events, list):
+            return []
+        expectation = str(opening_transition_expectation or "").casefold()
+        if "do not declare direct_continuation" in expectation:
+            return []
+        if normalized_transition_type in {"explicit_transition", "jump_opening"} and (
+            "explicit_transition" in expectation or "jump_opening" in expectation
+        ):
+            return []
+
+        def _scene_goal_text(scene: dict) -> str:
+            key_events = scene.get("key_events", [])
+            event_text = ""
+            if isinstance(key_events, list):
+                event_text = " ".join(str(item or "").strip() for item in key_events if str(item or "").strip())
+            return " ".join(
+                part
+                for part in (
+                    str(scene.get("title", "") or "").strip(),
+                    str(scene.get("goal", "") or "").strip(),
+                    str(scene.get("summary", "") or "").strip(),
+                    event_text,
+                    str(scene.get("type", "") or "").strip(),
+                )
+                if part
+            ).casefold()
+
+        def _event_tokens(raw: object) -> set[str]:
+            text = str(raw or "").casefold()
+            if not text:
+                return set()
+            tokens = re.findall(r"[\w가-힣A-Za-z]{3,}", text)
+            stop_tokens = {
+                "scene",
+                "summary",
+                "goal",
+                "직전",
+                "이전",
+                "이번",
+                "장면",
+                "한다",
+                "했다",
+                "되는",
+                "에서",
+                "으로",
+                "에게",
+            }
+            return {token for token in tokens if token not in stop_tokens}
+
+        def _has_lawful_escalation(scene_text: str) -> bool:
+            if lawful_window.get("mode") != "allow_escalated_repeat":
+                return False
+            escalation_tokens = [
+                str(token or "").strip().casefold()
+                for token in lawful_window.get("escalation_tokens", []) or []
+                if str(token or "").strip()
+            ]
+            if escalation_tokens and any(token in scene_text for token in escalation_tokens):
+                return True
+            return any(
+                token in scene_text
+                for token in (
+                    "단언",
+                    "예언",
+                    "결정",
+                    "확정",
+                    "압박",
+                    "경고",
+                    "조정",
+                    "하락",
+                    "돌파",
+                    "진입",
+                    "매수",
+                    "매도",
+                    "체결",
+                    "직통",
+                    "격상",
+                    "권한",
+                    "역전",
+                )
+            )
+
+        scene_text = _scene_goal_text(scene_one)
+        scene_tokens = _event_tokens(scene_text)
+        if not scene_tokens or _has_lawful_escalation(scene_text):
+            return []
+
+        replays: list[str] = []
+        for event_row in completed_prior_events[:4]:
+            if not isinstance(event_row, dict):
+                continue
+            location = str(event_row.get("location", "") or "").strip()
+            events = [str(item or "").strip() for item in (event_row.get("events") or []) if str(item or "").strip()]
+            for event_text in events[:3]:
+                event_tokens = _event_tokens(event_text)
+                if not event_tokens:
+                    continue
+                overlap = scene_tokens & event_tokens
+                required = 2 if len(event_tokens) <= 4 else 3
+                if len(overlap) >= required:
+                    replays.append(
+                        f"scene_1 completed_event_replay ({location or 'unknown'}; overlap={sorted(overlap)[:5]})"
+                    )
+                    break
+        return replays
+
+    @staticmethod
     def _collect_episode_progression_issues(
         *,
         blueprint: dict,
@@ -2918,7 +3034,12 @@ class UnifiedBlueprintValidator:
         if not isinstance(progression_packet, dict):
             return []
         blocked_families = progression_packet.get("blocked_scene_families", [])
-        if not isinstance(blocked_families, list) or not blocked_families:
+        completed_prior_events = progression_packet.get("completed_prior_events", [])
+        if not isinstance(blocked_families, list):
+            blocked_families = []
+        if not isinstance(completed_prior_events, list):
+            completed_prior_events = []
+        if not blocked_families and not completed_prior_events:
             return []
 
         scenes = blueprint.get("scene_breakdown", {})
@@ -3113,6 +3234,13 @@ class UnifiedBlueprintValidator:
         matched_families: list[str] = []
         seen_family_keys: set[str] = set()
         opening_direct_replay = False
+        completed_event_replays = UnifiedBlueprintValidator._collect_completed_prior_event_replays(
+            scenes=scenes,
+            completed_prior_events=completed_prior_events,
+            lawful_window=lawful_window,
+            opening_transition_expectation=opening_transition_expectation,
+            normalized_transition_type=normalized_transition_type,
+        )
 
         for scene_key, scene_value in scenes.items():
             if not isinstance(scene_value, dict):
@@ -3169,21 +3297,29 @@ class UnifiedBlueprintValidator:
                 seen_family_keys.add(family_key)
                 break
 
-        if len(matched_families) < 2 and not opening_direct_replay:
+        if not completed_event_replays and len(matched_families) < 2 and not opening_direct_replay:
             return []
 
         must_focus_excerpt = must_focus[:160] if must_focus else "(must_focus unavailable)"
         issue_prefix = (
-            "direct_continuation opening이 직전 화에서 이미 소비한 scene family를 다시 시작함"
-            if opening_direct_replay
-            else "직전 화에서 이미 소비한 scene family를 이번 화에서 다시 재연함"
+            "scene_1이 직전 화에서 이미 완료된 사건을 live objective로 다시 재연함"
+            if completed_event_replays
+            else (
+                "direct_continuation opening이 직전 화에서 이미 소비한 scene family를 다시 시작함"
+                if opening_direct_replay
+                else "직전 화에서 이미 소비한 scene family를 이번 화에서 다시 재연함"
+            )
         )
+        evidence_items = completed_event_replays or matched_families[:3]
         return [
             {
                 "severity": "CRITICAL",
                 "category": "episode_progression",
-                "issue": f"{issue_prefix}: {'; '.join(matched_families[:3])}",
-                "evidence": f"matched_replay_families={matched_families[:3]}; must_focus={must_focus_excerpt}",
+                "issue": f"{issue_prefix}: {'; '.join(evidence_items)}",
+                "evidence": (
+                    f"completed_event_replays={completed_event_replays}; "
+                    f"matched_replay_families={matched_families[:3]}; must_focus={must_focus_excerpt}"
+                ),
                 "fix_hint": (
                     "직전 화의 opening carryover를 다시 열지 말고, 이미 현장에 있는 인물/상태에서 바로 이어서 전진하거나 "
                     "필요하면 explicit_transition/jump_opening으로 새 전환을 선언하라. "

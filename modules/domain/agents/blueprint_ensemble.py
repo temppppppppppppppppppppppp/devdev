@@ -1929,6 +1929,22 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 progression_lines.append(
                     "  - MUST_FOCUS의 새 사건 축으로 전진하고 직전 대치 장면을 길게 반복하지 말 것"
                 )
+            completed_events = progression_pkt.get("completed_prior_events", [])
+            if isinstance(completed_events, list) and completed_events:
+                progression_lines.append(
+                    "  - 직전 화에서 이미 완료된 사건을 scene_1/live objective로 다시 재연하지 말 것"
+                )
+                for event_row in completed_events[:3]:
+                    if not isinstance(event_row, dict):
+                        continue
+                    location = str(event_row.get("location", "") or "").strip()
+                    events = [
+                        str(item or "").strip() for item in (event_row.get("events") or []) if str(item or "").strip()
+                    ]
+                    if not events:
+                        continue
+                    prefix = f"장소:{_fit_compact_context(location, 50)} | " if location else ""
+                    progression_lines.append(f"    · {prefix}{_fit_compact_context('; '.join(events[:2]), 120)}")
             next_gate_strength = progression_pkt.get("next_gate_strength_mode", {})
             if isinstance(next_gate_strength, dict) and next_gate_strength.get("mode") == "foreshadow_only":
                 introduced = ", ".join(
