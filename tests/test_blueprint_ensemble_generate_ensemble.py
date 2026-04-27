@@ -1235,6 +1235,70 @@ def test_sanitize_blueprint_candidate_allows_progressive_opening_bridge():
     assert result == candidate
 
 
+def test_sanitize_blueprint_candidate_allows_explicit_progressive_opening_shift():
+    agent = _make_agent()
+    candidate = {
+        "opening_transition": {"type": "explicit_transition", "signals": ["location_shift"]},
+        "protagonist_state": {"mood": "집중"},
+        "integrated_scenario": "A" * 900,
+        "start_location": "서울 성북동 본가 저택, 아버지의 서재 앞 복도",
+        "scene_breakdown": {
+            "scene_1": {
+                "title": "서재 앞",
+                "goal": "아버지 한정호의 서재로 이동해 독립 투자 법인 선언을 준비한다.",
+                "summary": "한시우가 집사의 안내로 자신의 방 앞 복도를 벗어나 아버지의 서재 앞에 도착한다.",
+                "characters": ["한시우"],
+                "key_events": [
+                    "한시우가 집사의 안내를 받으며 아버지의 서재 앞 복도에 선다.",
+                    "한시우는 투자 법인 설립 선언을 차분히 정리한다.",
+                ],
+                "location": "서울 성북동 본가 저택, 아버지의 서재 앞 복도",
+            },
+            "scene_2": {
+                "title": "선언",
+                "goal": "아버지 한정호에게 그룹 경영 불참과 독립 투자 법인 설립 의사를 밝힌다.",
+                "summary": "한시우가 서재 안에서 독립 투자 법인을 세우겠다고 선언한다.",
+                "characters": ["한시우", "한정호"],
+                "key_events": ["한시우가 독립 투자 법인 설립 의사를 밝힌다."],
+                "location": "서울 성북동 본가 저택, 한정호의 서재",
+            },
+        },
+    }
+
+    result = agent._sanitize_blueprint_candidate(
+        candidate,
+        strategy_name="action_focused",
+        genre=GenreTypes.INVESTMENT,
+        prev_blueprint={
+            "scene_breakdown": {
+                "scene_4": {"location": "서울 성북동 본가 저택, 자신의 방 앞 복도", "characters": ["한시우"]},
+            }
+        },
+        constraint_block={
+            "must_focus": {"content": "아버지 한정호의 서재에 불려가 독립 투자 법인 설립 의사를 밝힌다."},
+            "episode_progression_packet": {
+                "blocked_scene_families": [
+                    {
+                        "scene_key": "scene_4",
+                        "label": "아버지 호출",
+                        "location": "서울 성북동 본가 저택, 자신의 방 앞 복도",
+                        "location_variants": ["서울 성북동 본가 저택, 자신의 방 앞 복도", "복도"],
+                        "characters": ["한시우"],
+                    }
+                ],
+                "completed_prior_events": [
+                    {
+                        "location": "서울 성북동 본가 저택, 자신의 방 앞 복도",
+                        "events": ["한시우가 집사에게 회장님이 찾는다는 말을 듣는다."],
+                    }
+                ],
+            },
+        },
+    )
+
+    assert result == candidate
+
+
 def test_format_constraints_surfaces_episode_progression_guardrails_for_producer_prompt():
     agent = _make_agent()
 
