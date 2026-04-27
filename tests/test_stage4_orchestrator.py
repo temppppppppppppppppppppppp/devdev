@@ -3363,6 +3363,54 @@ class TestHandleRoundOutcomeRetryPathology:
         assert escalation_kwargs["content_hash"] == "hash-123"
         assert escalation_kwargs["artifact_path"].endswith("patched.json")
 
+    def test_stage4_to_3_reverse_feedback_appends_completed_event_replay_contract(self, orch_with_ctx):
+        orch = orch_with_ctx
+        orch._ctx.generate_reverse_feedback_stage4_to_3 = MagicMock(return_value="[S4->S3] base hint")
+
+        feedback = orch._build_stage4_to_3_reverse_feedback(
+            director_feedback="[V67] History Conflict: already completed admission scene was replayed",
+            previous_attempt={
+                "rejection_reason": "completed_event_replay",
+                "open_review": "do not use the old event as scene_1 again",
+            },
+        )
+
+        assert feedback.startswith("[Completed prior event replay contract]")
+        assert "must not become the next episode's scene_1/opening event again" in feedback
+        assert "continue from its aftermath, consequence, or a new decision/action" in feedback
+        assert "[S4->S3] base hint" in feedback
+
+    def test_stage4_to_3_reverse_feedback_returns_completed_event_contract_without_callback(self, orch_with_ctx):
+        orch = orch_with_ctx
+        orch._ctx.generate_reverse_feedback_stage4_to_3 = None
+
+        feedback = orch._build_stage4_to_3_reverse_feedback(
+            director_feedback="History Conflict: completed event replay",
+            previous_attempt={},
+        )
+
+        assert feedback.startswith("[Completed prior event replay contract]")
+        assert "Regenerate scene_breakdown.scene_1.title" in feedback
+
+    def test_stage4_to_3_reverse_feedback_detects_structured_korean_history_conflict(self, orch_with_ctx):
+        orch = orch_with_ctx
+        orch._ctx.generate_reverse_feedback_stage4_to_3 = MagicMock(return_value="")
+
+        feedback = orch._build_stage4_to_3_reverse_feedback(
+            director_feedback="이전 화에서 이미 완료된 입단 선언을 4화 opening에서 다시 중복 묘사했습니다.",
+            previous_attempt={
+                "reject_bucket": "post_select_conflict",
+                "contradiction_types": ["history", "continuity"],
+                "conflict_contract": {
+                    "completed_event_replay": True,
+                    "contradiction_types": ["history"],
+                },
+            },
+        )
+
+        assert feedback.startswith("[Completed prior event replay contract]")
+        assert "must not become the next episode's scene_1/opening event again" in feedback
+
     def test_run_v75d_patch_attempt_keeps_state_when_patch_returns_empty(
         self,
         orch_with_ctx,
@@ -3493,7 +3541,7 @@ class TestHandleRoundOutcomeRetryPathology:
         orch._ctx.agents["three_phase_bp"] = bp_agent
         orch._build_stage4_to_3_reverse_feedback = MagicMock(return_value="[S4->S3] hint")
         orch._merge_blueprint_feedback = MagicMock(
-            return_value="merged blueprint feedback\ncontinuity replay\nflashback"
+            return_value="merged blueprint feedback\ncontinuity replay\nflashback\nhistory conflict\nalready completed"
         )
         minimal_round_ctx = dataclasses.replace(
             minimal_round_ctx,
@@ -3530,6 +3578,8 @@ class TestHandleRoundOutcomeRetryPathology:
 
         patch_feedback = bp_agent._inplace_patch_blueprint.call_args.kwargs["director_feedback"]
         assert "[V75-D correction contract]" in patch_feedback
+        assert "[Completed prior event replay contract]" in patch_feedback
+        assert "must not become the next episode's scene_1/opening event again" in patch_feedback
         assert "scene_breakdown.scene_1.summary" in patch_feedback
         assert "EP1에서 이미 완료된 전화/행동을 EP2 opening에서 회상·재연 장면으로 다시 쓰지 마세요." in patch_feedback
         assert "authoritative opening location은 '본가 저택 서재 앞 복도'" in patch_feedback

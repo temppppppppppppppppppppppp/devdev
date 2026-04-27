@@ -206,6 +206,8 @@ class Stage4RetryRuntime:
         effective_types = contradiction_types | contract_conflict_types
         if "proper_noun" in effective_types or "history" in effective_types:
             return False
+        if "opening_action_continuity" in effective_types:
+            return False
 
         evidence_summary = str(fix_pack.get("evidence_summary", "") or "").strip().lower()
         if "flashback continuity backfill" in evidence_summary:
@@ -217,7 +219,6 @@ class Stage4RetryRuntime:
                     "location",
                     "facing",
                     "dialogue",
-                    "opening_action_continuity",
                 }
             )
 
@@ -229,7 +230,6 @@ class Stage4RetryRuntime:
                 "location",
                 "facing",
                 "dialogue",
-                "opening_action_continuity",
             }
         )
 

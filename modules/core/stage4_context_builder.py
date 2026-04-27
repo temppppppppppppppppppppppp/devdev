@@ -1043,6 +1043,11 @@ class Stage4ContextBuilder:
         soft_carryover_fields = self._extract_chain_link_soft_fields(chain_link_section)
         soft_pending_actions = soft_carryover_fields.get("pending_actions", "")
         soft_physical_state = soft_carryover_fields.get("physical_state", "")
+        opening_continuity_pins = [
+            item
+            for item in (blueprint.get("_continuity_pins") or [])
+            if isinstance(item, dict) and str(item.get("type", "") or "").strip() == "opening_action_continuity_pin"
+        ]
         genre_type = self._resolve_stage4_genre_type(s4_genre_type)
         non_wuxia_genre = not is_wuxia(genre_type)
 
@@ -1063,6 +1068,7 @@ class Stage4ContextBuilder:
                 carryover_time_marker,
                 soft_pending_actions,
                 soft_physical_state,
+                opening_continuity_pins,
             ]
         ):
             return ""
@@ -1134,6 +1140,19 @@ class Stage4ContextBuilder:
                 lines.append(f"- soft carryover pending_actions reference: {soft_pending_actions}")
             if soft_physical_state:
                 lines.append(f"- soft physical_state reference: {soft_physical_state}")
+        for pin in opening_continuity_pins[:3]:
+            before = str(pin.get("before", "") or "").strip()
+            expected = str(pin.get("expected", "") or "").strip()
+            observed = str(pin.get("observed", "") or "").strip()
+            if before:
+                lines.append(f"- opening continuity pin previous action/state before retry: {before}")
+            if expected:
+                lines.append(f"- opening continuity pin expected action: {expected}")
+            if observed:
+                lines.append(f"- invalid opening action to avoid/replay: {observed}")
+            lines.append(
+                "- do not replay observed invalid opening actions; rebuild the opening scene model from the expected action."
+            )
 
         lines.extend(
             [
