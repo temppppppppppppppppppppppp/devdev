@@ -70,6 +70,17 @@ def test_write_native_post_run_evidence_links_backfilled_json(tmp_path):
                     },
                 },
             },
+            "stage4_diagnostic_packet": {
+                "schema_version": "stage4_diagnostic_packet_v1",
+                "authority_role": "runtime_audit_summary",
+                "operator_guidance_only": True,
+                "proof_stage4_status": "warn",
+                "proof_warning_taxonomy_counts": {
+                    "runtime_advisory_warn": 2,
+                },
+                "cove_runtime_advisory_count": 2,
+                "pass_preserved_cove_advisory_count": 2,
+            },
         },
     )
     _write_guarded_result(
@@ -121,6 +132,12 @@ def test_write_native_post_run_evidence_links_backfilled_json(tmp_path):
     assert payload["archive_native_summary"]["guarded_termination_reason"] == "stage4_round_limit_exceeded"
     assert payload["archive_native_summary"]["guarded_child_exit_code"] == 1
     assert payload["archive_native_summary"]["note_markers"]["target_ep"] is None
+    assert payload["stage4_diagnostic_packet"]["proof_stage4_status"] == "warn"
+    assert payload["stage4_diagnostic_packet"]["cove_runtime_advisory_count"] == 2
+    assert payload["stage4_diagnostic_packet"]["pass_preserved_cove_advisory_count"] == 2
+    assert payload["stage4_diagnostic_packet"]["proof_warning_taxonomy_counts"] == {
+        "runtime_advisory_warn": 2,
+    }
 
     links_path = record_root / "benchmark_companion_links.json"
     links_payload = json.loads(links_path.read_text(encoding="utf-8"))

@@ -137,6 +137,11 @@ def build_native_post_run_evidence_payload(record: dict[str, Any]) -> dict[str, 
         "record_root": str(record.get("record_root", "") or ""),
         "runtime_terminal_state": runtime_terminal_state,
         "archive_native_summary": archive_native_summary,
+        "stage4_diagnostic_packet": (
+            record.get("stage4_diagnostic_packet", {})
+            if isinstance(record.get("stage4_diagnostic_packet", {}), dict)
+            else {}
+        ),
     }
 
 

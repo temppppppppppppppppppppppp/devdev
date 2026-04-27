@@ -181,6 +181,12 @@ def archive_benchmark_record(
         runtime_summary_window = runtime_summary.get("summary_window", {}) if isinstance(runtime_summary, dict) else {}
         runtime_run_scope = _extract_runtime_run_scope(runtime_summary, latest_session_id=latest_session_id)
         runtime_freshness = _extract_runtime_freshness(runtime_summary, run_scope=runtime_run_scope)
+        stage4_diagnostic_packet = _build_stage4_diagnostic_packet(
+            project_root=project_root,
+            runtime_summary=runtime_summary,
+            runtime_freshness=runtime_freshness,
+            stage4_metrics=stage_metrics["stage4"],
+        )
         effective_status = _resolve_benchmark_status(
             status=status,
             target_ep=target_ep,
@@ -225,6 +231,7 @@ def archive_benchmark_record(
                 "run_scope": runtime_run_scope,
                 "freshness": runtime_freshness,
             },
+            "stage4_diagnostic_packet": stage4_diagnostic_packet,
             "workspace_git": {
                 "branch": git_info["branch"],
                 "head": git_info["head"],
@@ -683,6 +690,116 @@ def _extract_runtime_freshness(
         "latest_session_id_present": bool(run_scope.get("latest_session_id")),
         "operator_guidance_only": True,
     }
+
+
+def _build_stage4_diagnostic_packet(
+    *,
+    project_root: Path,
+    runtime_summary: dict[str, Any] | list[Any],
+    runtime_freshness: dict[str, Any],
+    stage4_metrics: StageAggregate,
+) -> dict[str, Any]:
+    episode_rows = _load_jsonl(project_root / "logs" / "episode_production.jsonl")
+    runtime_audit_rows = _load_jsonl(project_root / "logs" / "runtime_audit.jsonl")
+    proof_digest = runtime_summary.get("proof_digest", {}) if isinstance(runtime_summary, dict) else {}
+    stage4_digest = {}
+    if isinstance(proof_digest, dict):
+        stages = proof_digest.get("stages", {})
+        if isinstance(stages, dict):
+            stage4_digest = stages.get("stage4", {}) if isinstance(stages.get("stage4", {}), dict) else {}
+
+    issue_counts = _positive_int_dict(stage4_digest.get("issue_counts", {}))
+    warning_taxonomy_counts = _positive_int_dict(stage4_digest.get("warning_taxonomy_counts", {}))
+    episode_cove_advisory_count = _count_rows_by_event(episode_rows, "STAGE4_COVE_RUNTIME_ADVISORY")
+    runtime_audit_cove_advisory_count = _count_rows_by_type(runtime_audit_rows, "stage4_cove_runtime_advisory")
+    cove_fail_closed_count = _count_stage4_retry_pathology(
+        episode_rows,
+        pathology_source="cove_fail_closed",
+        flag_name="cove_fail_closed",
+    )
+    post_select_conflict_count = _count_stage4_retry_pathology(
+        episode_rows,
+        pathology_source="post_select_conflict",
+    )
+    settled_director_divergence_count = (
+        int(issue_counts.get("final_verdict_mismatches", 0) or 0)
+        + int(issue_counts.get("director_verdict_mismatches", 0) or 0)
+    )
+    return {
+        "schema_version": "stage4_diagnostic_packet_v1",
+        "authority_role": "benchmark_companion_snapshot",
+        "operator_guidance_only": True,
+        "stage4_attempt_count": int(stage4_metrics.attempt_count),
+        "stage4_pass_like_count": int(stage4_metrics.pass_like_count),
+        "stage4_reject_count": int(stage4_metrics.reject_count),
+        "runtime_summary_freshness_status": str(runtime_freshness.get("status", "") or ""),
+        "runtime_summary_scope_status": str(runtime_freshness.get("scope_status", "") or ""),
+        "proof_digest_status": str(proof_digest.get("status", "") or "") if isinstance(proof_digest, dict) else "",
+        "proof_stage4_status": str(stage4_digest.get("status", "") or ""),
+        "proof_issue_counts": issue_counts,
+        "proof_warning_taxonomy_counts": warning_taxonomy_counts,
+        "runtime_advisory_warn_count": int(warning_taxonomy_counts.get("runtime_advisory_warn", 0) or 0),
+        "cove_runtime_advisory_count": max(episode_cove_advisory_count, runtime_audit_cove_advisory_count),
+        "pass_preserved_cove_advisory_count": _count_pass_preserved_cove_advisories(episode_rows),
+        "cove_semantic_fail_closed_count": cove_fail_closed_count,
+        "post_select_conflict_count": post_select_conflict_count,
+        "settled_director_divergence_count": settled_director_divergence_count,
+        "source_counts": {
+            "episode_cove_runtime_advisory": episode_cove_advisory_count,
+            "runtime_audit_cove_runtime_advisory": runtime_audit_cove_advisory_count,
+            "episode_cove_semantic_fail_closed": cove_fail_closed_count,
+            "episode_post_select_conflict": post_select_conflict_count,
+        },
+    }
+
+
+def _positive_int_dict(value: object) -> dict[str, int]:
+    if not isinstance(value, dict):
+        return {}
+    result: dict[str, int] = {}
+    for key, raw_count in value.items():
+        count = _safe_int(raw_count)
+        if count > 0:
+            result[str(key)] = count
+    return result
+
+
+def _count_rows_by_event(rows: list[dict[str, Any]], event_name: str) -> int:
+    expected = str(event_name or "").strip().upper()
+    return sum(1 for row in rows if str(row.get("event", "") or "").strip().upper() == expected)
+
+
+def _count_rows_by_type(rows: list[dict[str, Any]], event_type: str) -> int:
+    expected = str(event_type or "").strip()
+    return sum(1 for row in rows if str(row.get("type", "") or "").strip() == expected)
+
+
+def _count_pass_preserved_cove_advisories(rows: list[dict[str, Any]]) -> int:
+    count = 0
+    for row in rows:
+        if str(row.get("event", "") or "").strip().upper() != "STAGE4_COVE_RUNTIME_ADVISORY":
+            continue
+        if row.get("director_pass_preserved") is False:
+            continue
+        count += 1
+    return count
+
+
+def _count_stage4_retry_pathology(
+    rows: list[dict[str, Any]],
+    *,
+    pathology_source: str,
+    flag_name: str | None = None,
+) -> int:
+    expected_source = str(pathology_source or "").strip()
+    count = 0
+    for row in rows:
+        if str(row.get("event", "") or "").strip().upper() != "STAGE4_RETRY_PATHOLOGY":
+            continue
+        row_source = str(row.get("pathology_source") or row.get("retry_pathology_source") or "").strip()
+        if row_source == expected_source or (flag_name and bool(row.get(flag_name))):
+            count += 1
+    return count
 
 
 def _dedupe_attempt_rows(rows: Any) -> list[dict[str, Any]]:
