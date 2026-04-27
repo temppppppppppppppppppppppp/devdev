@@ -3173,6 +3173,65 @@ class UnifiedBlueprintValidator:
                 if part
             ).casefold()
 
+        def _progression_tokens(raw: object) -> set[str]:
+            text = str(raw or "").casefold()
+            if not text:
+                return set()
+            return {
+                token
+                for token in re.findall(r"[0-9A-Za-z가-힣]{2,}", text)
+                if token
+                and token
+                not in {
+                    "이번",
+                    "직전",
+                    "장면",
+                    "현재",
+                    "화의",
+                    "에서",
+                    "으로",
+                    "한다",
+                    "있는",
+                    "없는",
+                    "다시",
+                    "이미",
+                }
+            }
+
+        def _is_progressive_opening_bridge(scene_key: str, scene: dict) -> bool:
+            if str(scene_key or "").strip().casefold() != "scene_1" or not isinstance(scene, dict):
+                return False
+            if normalized_transition_type != "direct_continuation":
+                return False
+            scene_text = " ".join(
+                part
+                for part in (
+                    str(scene.get("location", "") or "").strip(),
+                    _scene_goal_text(scene),
+                )
+                if part
+            ).casefold()
+            if not scene_text:
+                return False
+            movement_markers = (
+                "향",
+                "이동",
+                "걸어",
+                "걷",
+                "나서",
+                "도착",
+                "문 앞",
+                "복도",
+                "안내",
+                "들어선",
+                "자리에서 일어",
+            )
+            if not any(marker in scene_text for marker in movement_markers):
+                return False
+            must_focus_tokens = _progression_tokens(must_focus)
+            scene_tokens = _progression_tokens(scene_text)
+            return bool(must_focus_tokens and scene_tokens and len(must_focus_tokens & scene_tokens) >= 2)
+
         def _is_authorized_opening_shift(scene_key: str) -> bool:
             if str(scene_key or "").strip().casefold() != "scene_1":
                 return False
@@ -3285,6 +3344,8 @@ class UnifiedBlueprintValidator:
         matched_families: list[str] = []
         seen_family_keys: set[str] = set()
         opening_direct_replay = False
+        scene_one = scenes.get("scene_1")
+        opening_bridge = _is_progressive_opening_bridge("scene_1", scene_one if isinstance(scene_one, dict) else {})
         completed_event_replays = UnifiedBlueprintValidator._collect_completed_prior_event_replays(
             scenes=scenes,
             completed_prior_events=completed_prior_events,
@@ -3292,6 +3353,8 @@ class UnifiedBlueprintValidator:
             opening_transition_expectation=opening_transition_expectation,
             normalized_transition_type=normalized_transition_type,
         )
+        if opening_bridge:
+            completed_event_replays = []
 
         for scene_key, scene_value in scenes.items():
             if not isinstance(scene_value, dict):
@@ -3333,6 +3396,8 @@ class UnifiedBlueprintValidator:
 
                 family_label = str(family.get("label", "") or family.get("location", "") or family_key).strip()
                 family_location = str(family.get("location", "") or "").strip()
+                if opening_bridge and scene_key.strip().casefold() == "scene_1":
+                    continue
                 if _is_authorized_opening_shift(scene_key):
                     continue
                 if must_focus and any(token and token in must_focus for token in (family_label, family_location)):
