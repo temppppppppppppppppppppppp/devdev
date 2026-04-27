@@ -608,6 +608,9 @@ class TestBlueprintPatchIntegration:
         assert "Next-gate strength modulator" in reject_reason
         assert "새 타깃 handoff는 foreshadow 수준" in reject_reason
         assert "Replay reroute guidance" in reject_reason
+        assert "Positive continuation recipe" in reject_reason
+        assert "Begin scene_1 at the previous ending location" in reject_reason
+        assert "Immediately advance into the current must_focus action" in reject_reason
         assert "lawful repetition이나 authority escalation surface 자체를 막는 지시는 아닙니다" in reject_reason
         assert "직전 대치의 결과 이후 단계로 이동" in reject_reason
         assert "Lawful repetition window" in reject_reason
