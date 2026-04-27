@@ -271,3 +271,35 @@ Residual open work:
 - Pass 3 - readiness: PASS for a narrow PR. Residual #58 closure requires further tranches and fresh proof.
 
 Estimated operational confidence for this partial realization: 96%.
+
+## 16. Realization Ledger - 2026-04-27 Sessionless Hydration Fail-Safe
+
+Scope realized:
+- Tranche: `retry-hydration-and-patch-containment`.
+- Branch: `codex/bugrisk-stage4-sessionless-hydration`.
+- Implemented the T06 F7 mitigation after the F5 shadow-scope patch because missing session ids could still let previous-attempt hydration select a rejected row from another session by matching only `ep_num`.
+
+Code changes:
+- `Stage4InterviewRound.hydrate_persisted_stage4_previous_attempt` now fail-safes sessionless hydration by ignoring rows that carry a non-empty `session_id` when the current project has no resolved logging session id.
+- Legacy rows without `session_id` remain eligible in the no-session branch, preserving backward-compatible recovery for older unsessioned attempt history.
+- `tests/test_stage4_interview_round.py` adds regressions for both sides of that boundary and makes the artifact/envelope hydration test declare its active session explicitly.
+
+Validation completed:
+- `python -m py_compile modules/core/stage4_interview_round.py` -> PASS.
+- `python -m pytest tests/test_stage4_interview_round.py -k "hydrate_persisted_stage4_previous_attempt" -q` -> 6 passed, 321 deselected.
+- `python -m pytest tests/test_stage4_interview_round.py -k "hydrate or retry or previous_attempt" -q` -> 49 passed, 278 deselected.
+- `python scripts/check_utf8_hygiene.py docs/2026-04-27/stage4-post-select-conflict-execution-ssot.md docs/temp/stage4-post-select-conflict-execution-ssot.md modules/core/stage4_interview_round.py tests/test_stage4_interview_round.py` -> PASS.
+- `git diff --check` -> PASS.
+- `python scripts/ops_validator.py --strict` -> PASS.
+
+Residual open work:
+- This does not close #58.
+- Rejected manuscript body rehydration, loop-exhaustion adoption, cache lineage, Stage3/Stage4 lineage, continuity authority symmetry, and artifact-backed bug-shape regressions remain open.
+- No clean 5-arc readiness claim is made from this patch.
+
+3-pass realization audit:
+- Pass 1 - scope: PASS. The patch only changes previous-attempt row eligibility when no current session id is available.
+- Pass 2 - evidence: PASS. The targeted tests prove sessioned stale rows are skipped while legacy unsessioned rows remain recoverable.
+- Pass 3 - readiness: PASS for a narrow PR. Residual #58 closure still requires the remaining tranches and fresh proof.
+
+Estimated operational confidence for this partial realization: 96%.
