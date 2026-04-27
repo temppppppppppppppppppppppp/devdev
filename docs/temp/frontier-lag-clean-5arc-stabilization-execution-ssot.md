@@ -956,3 +956,65 @@ Rejected next step:
 - `python scripts/ops_validator.py --strict` -> passed
 
 Estimated operational confidence: 96%.
+
+## 9.8 Fresh Strict 2-Arc Diagnostic Result
+
+Date: 2026-04-28
+Baseline: `30f2c38b92e18d4647d2f8f037ca95a778db0d3f`
+Target project: `projects/auto_frontier_reaudit_probe_20260427_2arc`
+Run id: `20260427_234252_bab4eaf0df`
+Benchmark archive id: `20260428_000311__auto-frontier-lag-2arc__target-open__30f2c38b`
+
+### Result
+
+The fresh strict 2-arc diagnostic did not produce a success proof.
+
+- judgment: `stalled`
+- root_cause: `watchdog_stalled_after_two_idle_windows`
+- objective_root_cause: `requested_arc_boundary_not_reached`
+- boundary_reached: `False`
+- Stage 3 attempts recorded: `1`
+- Stage 4 attempts recorded: `0`
+- Stage 3 current-session sink alignment: `ok`
+- Stage 4 current-session sink alignment: `missing`
+- continuity canary status: `not_available`
+- strict evidence gaps: none
+- generated runtime SSOT: `docs/2026-04-28/auto-frontier-lag-2arc-runtime-analysis-ssot.md`
+
+### 3-Pass Post-Run Audit
+
+Pass 1 - fact extraction: PASS.
+
+- The runtime analyzer classified the run as `stalled`, not successful.
+- The worker did not reach the requested 2-arc boundary.
+- The latest durable benchmark metadata records the run as `interrupted` with notes naming the watchdog stall and requested-boundary miss.
+
+Pass 2 - contradiction check: PASS.
+
+- The result is consistent with the earlier bounded-run requirement: the run was diagnostic only and does not authorize a strict fresh 5-arc clean-run claim.
+- The Stage 3 sink-alignment surface was clean for the single recorded final attempt, so the immediate blocker is not sink persistence drift.
+- The failed frontier was still in Stage 3 before any Stage 4 manuscript attempt, so post-select proof digest and Stage 4 manuscript closure are not the next active blocker.
+
+Pass 3 - execution decision audit: PASS.
+
+- Do not repeat the same 2-arc or 5-arc proof command until the harness watchdog stops classifying provider HTTP response waits as stalls.
+- After watchdog hardening, rerun the same bounded 2-arc diagnostic. If it still fails at Stage 3, then target the Stage 3 blueprint continuation/replay reroute path that kept regenerating episode 2 candidates from the wrong scene-family continuation.
+- Keep `frontier-lag-clean-5arc-stabilization` active in the queue; the item is not closed.
+
+Estimated operational confidence: 97% for the post-run status and next-step selection.
+
+### Watchdog Hardening Follow-Up
+
+Implementation status: realized in `scripts/run_auto_frontier_lag_harness.py`.
+
+- The watchdog now treats an in-flight provider HTTP response wait as active work when the session tail ends after `receive_response_headers.started` and before a matching response completion marker.
+- This prevents the 2-arc diagnostic pattern from being killed only because no new log bytes were written while the provider request was still pending.
+- Stage 3 continuation/replay-reroute remains the next content-side suspect if the bounded rerun reaches a real Stage 3 terminal failure after this harness fix.
+
+Validation:
+
+- `python -m py_compile scripts/run_auto_frontier_lag_harness.py` -> passed
+- `python -m pytest -q tests/test_auto_frontier_lag_harness.py::test_classify_poll_transition_marks_stalled_after_two_idle_windows tests/test_auto_frontier_lag_harness.py::test_classify_poll_transition_treats_provider_response_wait_as_active tests/test_auto_frontier_lag_harness.py::test_detect_provider_response_wait_clears_after_response_complete tests/test_auto_frontier_lag_harness.py::test_classify_poll_transition_allows_recoverable_reject_glyph_tail` -> 4 passed
+- `python -m pytest -q tests/test_auto_frontier_lag_harness.py` -> 41 passed
+- `python -X utf8 scripts/check_utf8_hygiene.py scripts/run_auto_frontier_lag_harness.py tests/test_auto_frontier_lag_harness.py docs/2026-04-28/auto-frontier-lag-2arc-runtime-analysis-ssot.md docs/2026-04-26/frontier-lag-clean-5arc-stabilization-execution-ssot.md docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md docs/2026-04-27/security-and-frontier-active-execution-roadmap.md docs/temp/execution-roadmap.md benchmarks/benchmark_index.csv` -> passed
+- `git diff --check -- scripts/run_auto_frontier_lag_harness.py tests/test_auto_frontier_lag_harness.py docs/2026-04-28/auto-frontier-lag-2arc-runtime-analysis-ssot.md docs/2026-04-26/frontier-lag-clean-5arc-stabilization-execution-ssot.md docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md docs/2026-04-27/security-and-frontier-active-execution-roadmap.md docs/temp/execution-roadmap.md benchmarks/benchmark_index.csv` -> passed

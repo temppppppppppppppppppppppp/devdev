@@ -68,6 +68,12 @@ FATAL_TAIL_MARKERS = (
     "crash_dump.log",
     "AUTO_FRONTIER_LAG_FATAL",
 )
+PROVIDER_RESPONSE_WAIT_STARTED_MARKER = "receive_response_headers.started"
+PROVIDER_RESPONSE_WAIT_END_MARKERS = (
+    "receive_response_headers.complete",
+    "HTTP Request:",
+    "response_closed.complete",
+)
 
 
 @dataclass(slots=True)
@@ -1251,6 +1257,19 @@ def detect_prompt_blocked(log_tail: list[str]) -> bool:
     return any(marker in merged for marker in PROMPT_WAIT_MARKERS)
 
 
+def detect_provider_response_wait(log_tail: list[str]) -> bool:
+    """Return true when the session tail is inside a provider HTTP response wait."""
+    last_start_index = -1
+    last_end_index = -1
+    for index, raw_line in enumerate(log_tail[-20:]):
+        line = str(raw_line or "")
+        if PROVIDER_RESPONSE_WAIT_STARTED_MARKER in line:
+            last_start_index = index
+        if any(marker in line for marker in PROVIDER_RESPONSE_WAIT_END_MARKERS):
+            last_end_index = index
+    return last_start_index >= 0 and last_start_index > last_end_index
+
+
 def detect_attempt_overflow(log_tail: list[str], cap: int) -> dict[str, Any]:
     for raw_line in reversed(log_tail):
         line = str(raw_line or "")
@@ -1299,6 +1318,8 @@ def classify_poll_transition(previous: dict[str, Any], current: dict[str, Any], 
         return "progressing", 0
     if current.get("prompt_blocked"):
         return "waiting_prompt", 0
+    if detect_provider_response_wait(current.get("session_log_tail", [])):
+        return "provider_wait", 0
     if current.get("process_alive"):
         idle_windows += 1
         if idle_windows >= 2:
