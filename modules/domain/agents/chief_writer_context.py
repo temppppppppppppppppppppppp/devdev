@@ -275,8 +275,12 @@ class ChiefWriterContextBuilder:
             ending_hook_section=self.host._escape_braces(ending_hook) if ending_hook else "",
             emotional_beat_section=self.host._escape_braces(emotional_beat_section) if emotional_beat_section else "",
             satisfaction_guide_section=get_satisfaction_guide_section(),  # [D-Step2]
-            opening_anchor_section=self.host._escape_braces(opening_anchor_section) if opening_anchor_section else "",  # [TF-2]
-            immutable_fact_section=self.host._escape_braces(immutable_fact_section) if immutable_fact_section else "",  # [IFC]
+            opening_anchor_section=self.host._escape_braces(opening_anchor_section)
+            if opening_anchor_section
+            else "",  # [TF-2]
+            immutable_fact_section=self.host._escape_braces(immutable_fact_section)
+            if immutable_fact_section
+            else "",  # [IFC]
             integrated_scenario_advisory_section=self.host._escape_braces(integrated_scenario_advisory)
             if integrated_scenario_advisory
             else "",
@@ -320,8 +324,13 @@ class ChiefWriterContextBuilder:
         _s1_title = _scene_1.get("title", "")
         _s1_summary = _scene_1.get("summary", "") or _scene_1.get("goal", "")
         _s1_location = _scene_1.get("location", "")
+        _opening_continuity_pins = [
+            item
+            for item in (blueprint.get("_continuity_pins") or [])
+            if isinstance(item, dict) and str(item.get("type", "") or "").strip() == "opening_action_continuity_pin"
+        ]
 
-        if _start_loc or _time_flow or _s1_title:
+        if _start_loc or _time_flow or _s1_title or _opening_continuity_pins:
             anchor_parts = ["### ⚓ [TF-2] 이 화의 시작 계약 (불변)"]
             anchor_parts.append("이 화의 첫 씬은 아래 조건을 반드시 지켜야 한다. 임의로 바꾸면 불합격이다.")
             if _start_loc:
@@ -334,6 +343,19 @@ class ChiefWriterContextBuilder:
                 anchor_parts.append(f"- 첫 씬 제목/목표: {_s1_title}")
             if _s1_summary:
                 anchor_parts.append(f"- 첫 씬 요약: {_s1_summary[:200]}")
+            for _pin in _opening_continuity_pins[:3]:
+                _before = str(_pin.get("before", "") or "").strip()
+                _expected = str(_pin.get("expected", "") or "").strip()
+                _observed = str(_pin.get("observed", "") or "").strip()
+                if _before:
+                    anchor_parts.append(f"- opening continuity pin previous action/state before retry: {_before}")
+                if _expected:
+                    anchor_parts.append(f"- opening continuity pin expected action: {_expected}")
+                if _observed:
+                    anchor_parts.append(f"- invalid opening action to avoid/replay: {_observed}")
+                anchor_parts.append(
+                    "- do not replay observed invalid opening actions; rebuild the opening scene model from the expected action."
+                )
             anchor_parts.append(
                 "다른 장소/시간 또는 다른 시점 opening이 필요하면 전환 문장이나 `* * *` 후 1~2문장 안에 "
                 "바뀐 장소/시간/행동 상태를 명시하고, 다른 시점이면 작품 POV 정책을 어기지 마라."
