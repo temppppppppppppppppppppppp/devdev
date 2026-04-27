@@ -2,9 +2,9 @@
 
 Date: 2026-04-27
 Track: system
-Status: in_progress (operator-promoted compact survey -> tranche A/B execution)
+Status: completed (PR #84 merged; GitHub #56 closed)
 Canonical Path: `docs/2026-04-27/stage3-stage4-genre-alignment-execution-ssot.md`
-Temp Mirror Path: `docs/temp/stage3-stage4-genre-alignment-execution-ssot.md`
+Temp Mirror Path: removed from active queue on 2026-04-27 after closure
 Commit State:
 - Baseline Commit: `a3d826978d530ab61d3765e5e095890fa6533ea7`
 - Baseline Dirty Summary: documentation-only untracked paths were already present under `docs/2026-04-27/` and `docs/temp/`; `docs/temp/queue-state.json` was modified before this SSOT; no production code was edited while preparing this document.
@@ -35,8 +35,8 @@ execution_meta:
   schema_version: execution-meta-block-v1
   topic: stage3-stage4-genre-alignment
   github_issue: 56
-  status: in_progress
-  queue_role: front_active
+  status: completed
+  queue_role: historical_backing
   roadmap_rank: 2
   depends_on: []
   tranches:
@@ -64,6 +64,14 @@ execution_meta:
 Close the root cause behind #56: in an investment/business-power work, Stage3 and Stage4 must interpret "action", "tension", "peak", and "cliffhanger" as business conflict, institutional pressure, deal timing, capital risk, negotiation leverage, governance threat, public proof, private receipt, and next legal/structural gate.
 
 This execution item must not merely add more physical-intrusion block words. The existing tactical guard is useful as a fail-closed safety net, but it is a symptom guard. The root fix is a genre-aware strategy contract that reaches both Stage3 blueprint generation and Stage4 Director selection.
+
+## Closure Note - 2026-04-27
+
+- PR #84 merged to `main` as `8d4bcd2a84b1b44b69bc3dab217f35d8122767c5`.
+- GitHub issue #56 is closed as completed.
+- GitHub CI passed: `desktop-contract`, `lint`, `syntax-check`, and `test (3.12)`.
+- The bounded r5 Stage3 -> Stage4 live proof remains the proof anchor for this compact tranche.
+- This SSOT is retained as canonical historical backing; the temp mirror is removed from the active queue.
 
 ## 2. Adversarial 3-Pass Audit
 

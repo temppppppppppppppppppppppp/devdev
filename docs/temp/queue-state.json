@@ -1,8 +1,8 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-27T10:04:44.671369+00:00",
+  "generated_at": "2026-04-27T14:22:25.703321+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 6,
+  "active_item_count": 4,
   "roadmap": {
     "temp_path": "docs/temp/execution-roadmap.md",
     "canonical_path": "docs/2026-04-27/security-and-frontier-active-execution-roadmap.md",
@@ -10,34 +10,12 @@
   },
   "items": [
     {
-      "topic": "stage4-proof-digest-cove-advisory",
-      "temp_path": "docs/temp/stage4-proof-digest-cove-advisory-execution-ssot.md",
-      "canonical_path": "docs/2026-04-27/stage4-proof-digest-cove-advisory-execution-ssot.md",
-      "status": "in_progress",
-      "queue_role": "front_active",
-      "roadmap_rank": 1,
-      "depends_on": [],
-      "mirror_present": true,
-      "canonical_present": true
-    },
-    {
-      "topic": "stage3-stage4-genre-alignment",
-      "temp_path": "docs/temp/stage3-stage4-genre-alignment-execution-ssot.md",
-      "canonical_path": "docs/2026-04-27/stage3-stage4-genre-alignment-execution-ssot.md",
-      "status": "pending",
-      "queue_role": "parked_future_wave",
-      "roadmap_rank": 2,
-      "depends_on": [],
-      "mirror_present": true,
-      "canonical_present": true
-    },
-    {
       "topic": "frontier-lag-clean-5arc-stabilization",
       "temp_path": "docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md",
       "canonical_path": "docs/2026-04-26/frontier-lag-clean-5arc-stabilization-execution-ssot.md",
       "status": "pending",
-      "queue_role": "parked_future_wave",
-      "roadmap_rank": 3,
+      "queue_role": "front_active",
+      "roadmap_rank": 1,
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
@@ -48,7 +26,7 @@
       "canonical_path": "docs/2026-04-27/security-secrets-config-execution-ssot.md",
       "status": "pending",
       "queue_role": "parked_future_wave",
-      "roadmap_rank": 4,
+      "roadmap_rank": 2,
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
@@ -59,7 +37,7 @@
       "canonical_path": "docs/2026-04-27/security-runtime-settings-vertex-execution-ssot.md",
       "status": "pending",
       "queue_role": "parked_future_wave",
-      "roadmap_rank": 5,
+      "roadmap_rank": 3,
       "depends_on": [
         "security-secrets-config"
       ],
@@ -72,7 +50,7 @@
       "canonical_path": "docs/2026-04-27/security-desktop-release-guardrails-execution-ssot.md",
       "status": "pending",
       "queue_role": "parked_future_wave",
-      "roadmap_rank": 6,
+      "roadmap_rank": 4,
       "depends_on": [
         "security-secrets-config",
         "security-runtime-settings-vertex"
