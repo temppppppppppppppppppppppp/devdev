@@ -41,6 +41,8 @@ DEFAULT_ROADMAP_FILE = "golden_canary_deepclone_probe_a_fullblock_v1_tr_block_07
 DEFAULT_BATCH_SIZE = 1
 DEFAULT_POLL_INTERVAL_SECONDS = 30 * 60
 PROCESS_CHECK_INTERVAL_SECONDS = 5
+DEFAULT_STALL_IDLE_WINDOWS = 2
+ACTIVE_FRONTIER_STALL_IDLE_WINDOWS = 10
 DEFAULT_OPERATIONAL_ATTEMPT_CAP = 5
 DEFAULT_MAX_RUNTIME_SECONDS = 0
 DEFAULT_MAX_TOTAL_TOKENS = 0
@@ -73,6 +75,12 @@ PROVIDER_RESPONSE_WAIT_END_MARKERS = (
     "receive_response_headers.complete",
     "HTTP Request:",
     "response_closed.complete",
+)
+ACTIVE_FRONTIER_WAIT_MARKERS = (
+    "[Preflight] 병렬 분석 시작",
+    "[Preflight] arc_drive 완료",
+    "[Stage 2] Arc",
+    "전술 설계 중",
 )
 
 
@@ -1270,6 +1278,16 @@ def detect_provider_response_wait(log_tail: list[str]) -> bool:
     return last_start_index >= 0 and last_start_index > last_end_index
 
 
+def detect_active_frontier_wait(snapshot: dict[str, Any]) -> bool:
+    """Return true for known long-running frontier phases that can be quiet between logs."""
+    if not snapshot.get("process_alive"):
+        return False
+    if str(snapshot.get("harness_phase", "") or "") != "frontier_running":
+        return False
+    merged = "\n".join(str(line or "") for line in snapshot.get("session_log_tail", [])[-20:])
+    return any(marker in merged for marker in ACTIVE_FRONTIER_WAIT_MARKERS)
+
+
 def detect_attempt_overflow(log_tail: list[str], cap: int) -> dict[str, Any]:
     for raw_line in reversed(log_tail):
         line = str(raw_line or "")
@@ -1322,7 +1340,10 @@ def classify_poll_transition(previous: dict[str, Any], current: dict[str, Any], 
         return "provider_wait", 0
     if current.get("process_alive"):
         idle_windows += 1
-        if idle_windows >= 2:
+        idle_limit = (
+            ACTIVE_FRONTIER_STALL_IDLE_WINDOWS if detect_active_frontier_wait(current) else DEFAULT_STALL_IDLE_WINDOWS
+        )
+        if idle_windows >= idle_limit:
             return "stalled", idle_windows
         return "stall-candidate", idle_windows
     return "idle", idle_windows
