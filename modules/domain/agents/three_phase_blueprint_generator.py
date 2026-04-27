@@ -23,14 +23,18 @@ import logging
 from modules.core.constants import AIModels
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.models.blueprint import validate_blueprint
-from modules.validation.threshold_helper import _threshold
 
-from .base_agent import AgentErrorType, BaseAgent, _get_sub_component_models
+from .base_agent import BaseAgent, _get_sub_component_models
 from .blueprint_constraint_compiler import BlueprintConstraintCompiler
 from .blueprint_ensemble import BlueprintEnsembleGenerator
-from .stage3_blueprint_patch_ir import apply_blueprint_patch_ir, build_blueprint_patch_packet, supports_blueprint_patch_ir
-from .unified_blueprint_validator import UnifiedBlueprintValidator
+from .stage3_blueprint_patch_ir import (
+    apply_blueprint_patch_ir,
+    build_blueprint_patch_packet,
+    explain_blueprint_patch_packet_failure,
+    supports_blueprint_patch_ir,
+)
 from .three_phase_blueprint_runtime import ThreePhaseBlueprintRuntime
+from .unified_blueprint_validator import UnifiedBlueprintValidator
 
 
 class ThreePhaseBlueprintGenerator(BaseAgent):
@@ -122,7 +126,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         director=None,
         arc_idx: int = 0,
         entity_registry: dict | None = None,
-        protagonist_name: str = "\uC8FC\uC778\uACF5",
+        protagonist_name: str = "\uc8fc\uc778\uacf5",
         protagonist_config: dict | None = None,
         state_tracker=None,
         db=None,
@@ -204,8 +208,11 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         patch_contract = normalized_fix_pack if isinstance(normalized_fix_pack, dict) else {}
         patch_packet: dict = {}
         use_patch_ir = False
+        self._last_blueprint_patch_failure_reason = ""
+        self._last_blueprint_patch_failure_meta = {}
         if normalized_fix_pack is not None and isinstance(normalized_fix_pack, dict) and not patch_contract:
             logging.info("[InPlace] empty Stage3 fix_pack -> full regenerate fallback")
+            self._last_blueprint_patch_failure_reason = "empty_fix_pack"
             return None
         if supports_blueprint_patch_ir(patch_contract):
             patch_packet = build_blueprint_patch_packet(
@@ -213,7 +220,20 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 normalized_fix_pack=patch_contract,
             )
             if not patch_packet:
-                logging.info("[InPlace] Blueprint structured patch packet unavailable; full regenerate fallback")
+                failure_reason = explain_blueprint_patch_packet_failure(
+                    original_blueprint=original_blueprint,
+                    normalized_fix_pack=patch_contract,
+                )
+                self._last_blueprint_patch_failure_reason = failure_reason or "unknown_packet_failure"
+                self._last_blueprint_patch_failure_meta = {
+                    "reason": self._last_blueprint_patch_failure_reason,
+                    "target_kind": str(patch_contract.get("target_kind", "") or "").strip().lower(),
+                    "patch_targets": list(patch_contract.get("patch_targets") or [])[:6],
+                }
+                logging.info(
+                    "[InPlace] Blueprint structured patch packet unavailable (%s); full regenerate fallback",
+                    self._last_blueprint_patch_failure_reason,
+                )
                 return None
             use_patch_ir = True
 
@@ -250,6 +270,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 response = self.ensemble.ask(prompt, temperature=0.2, thinking_level="medium")
                 patch_payload = self.ensemble._extract_json_robust(response)
                 if not isinstance(patch_payload, dict):
+                    self._last_blueprint_patch_failure_reason = "invalid_patch_payload"
                     return None
                 result = apply_blueprint_patch_ir(
                     original_blueprint=original_blueprint,
@@ -257,13 +278,16 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                     patch_payload=patch_payload,
                 )
                 if not isinstance(result, dict):
+                    self._last_blueprint_patch_failure_reason = "patch_ir_apply_failed"
                     return None
                 result.setdefault("episode_number", ep_num)
                 result = validate_blueprint(result)
                 logging.info(f"✅ [InPlace] Blueprint 제{ep_num}화 patch-IR 수정 완료")
                 return result
 
-            response = self.ensemble.ask(prompt, temperature=0.3, response_schema=BLUEPRINT_SCHEMA, thinking_level="medium")
+            response = self.ensemble.ask(
+                prompt, temperature=0.3, response_schema=BLUEPRINT_SCHEMA, thinking_level="medium"
+            )
             result = self.ensemble._extract_json_robust(response)
             if not isinstance(result, dict):
                 return None
