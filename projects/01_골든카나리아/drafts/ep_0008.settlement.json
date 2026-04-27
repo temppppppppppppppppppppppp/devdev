@@ -1,0 +1,457 @@
+{
+  "arc_no": 2,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0008.txt",
+    "settlement_packet_path": "drafts/ep_0008.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 8,
+  "ep_num": 8,
+  "manuscript": {
+    "char_count": 5104,
+    "content_hash": "156f653bd78e3cab5d130d8fe0e74c50fb0f52bc72a248df0effccb499d9a096",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0008.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "open_review": "특이사항 없음. 이전 피드백이 완벽하게 반영되어 훌륭한 퀄리티의 원고가 완성되었습니다.",
+      "repair_scope": "inplace",
+      "score": 90,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 10,
+        "quality_engagement": 20
+      },
+      "selection_reason": "유일한 후보이며, 이전 심사에서 지적된 산술적 오류(23억 -> 26억)가 완벽하게 수정되었습니다. 시장의 폭발적인 변동성과 주인공의 육체적 한계가 교차하는 긴장감이 훌륭하게 묘사되었으며, Blueprint의 모든 요구사항을 충실히 이행했습니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [],
+      "ai_slop_score": 0.0,
+      "burstiness": 20.12,
+      "ced_score": 0.0,
+      "complexity": 56.03,
+      "compression_ratio": 0.4536,
+      "signal_summary": {
+        "ai_slop_total_hits": 0,
+        "burstiness": 20.12,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 56.03,
+        "compression_ratio": 0.4536,
+        "sentence_count": 124
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "횡단보",
+            "한가운데서",
+            "시야",
+            "기괴하게",
+            "일그러지"
+          ],
+          "source": "ending_hook",
+          "text": "횡단보도 한가운데서 시야가 기괴하게 일그러지는 순간, 한시우는 피가 터질 듯한 귓가를 부여잡으며 아스팔트 위로 무릎을 꺾었다."
+        }
+      ],
+      "capital": 2300000000,
+      "connections": "박성호 PB (맹목적인 복종 상태)",
+      "current_objective": "증권사로 돌아가 26억 총자산 확정 및 신체적 반동 극복",
+      "equipment": [
+        "구형 휴대폰",
+        "두꺼운 가죽 노트",
+        "만년필",
+        "해외 선물 계좌 보안카드"
+      ],
+      "inventory_counts": {
+        "구형 휴대폰": 1,
+        "두꺼운 가죽 노트": 1,
+        "만년필": 1,
+        "법인 서류": 1,
+        "법인 인감": 1,
+        "해외 선물 계좌 보안카드": 1
+      },
+      "market_insight": "공급망 붕괴(이란 사태, 나이지리아 피격)로 인한 유가 폭등 완벽 예측 및 적중",
+      "reputation": "시장의 파동을 지배하는 완벽한 통제력을 지닌 승부사",
+      "status": "WTI 65달러 돌파로 3억 수익 달성, 그러나 미래 정보 사용에 대한 신체적 반동으로 쓰러짐",
+      "stocks": [
+        {
+          "amount": 1500000000,
+          "leverage": "3x (총 노출 45억)",
+          "name": "WTI 원유 선물 6월물",
+          "position": "매수(Long)",
+          "status": "WTI 65달러 돌파, 미실현 수익 3억 원 돌파"
+        }
+      ],
+      "total_assets": 2601450000,
+      "wealth": 2601450000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "횡단보",
+            "한가운데서",
+            "시야",
+            "기괴하게",
+            "일그러지"
+          ],
+          "source": "ending_hook",
+          "text": "횡단보도 한가운데서 시야가 기괴하게 일그러지는 순간, 한시우는 피가 터질 듯한 귓가를 부여잡으며 아스팔트 위로 무릎을 꺾었다."
+        }
+      ],
+      "causal_links": [
+        {
+          "cause": "나이지리아 석유 시설 피격 및 미 원유 재고 감소",
+          "effect": "WTI 65달러 돌파 및 미실현 수익 3억 원 달성"
+        },
+        {
+          "cause": "미래 정보 활용 및 극도의 교감신경 과진장",
+          "effect": "극심한 편두통, 이명, 시야 일그러짐 등 신체적 반동 발생"
+        }
+      ],
+      "inventory_count_deltas": [],
+      "inventory_counts": {
+        "구형 휴대폰": 1,
+        "두꺼운 가죽 노트": 1,
+        "만년필": 1,
+        "법인 서류": 1,
+        "법인 인감": 1,
+        "해외 선물 계좌 보안카드": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 80,
+          "target": "박성호",
+          "value": 100
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [],
+        "new_witnesses": [
+          "박성호"
+        ]
+      },
+      "lost_items": [],
+      "new_items": [],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "집착80/오해100"
+        }
+      ],
+      "reveals": [],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "횡단보",
+              "한가운데서",
+              "시야",
+              "기괴하게",
+              "일그러지"
+            ],
+            "source": "ending_hook",
+            "text": "횡단보도 한가운데서 시야가 기괴하게 일그러지는 순간, 한시우는 피가 터질 듯한 귓가를 부여잡으며 아스팔트 위로 무릎을 꺾었다."
+          }
+        ],
+        "capital": 2300000000,
+        "connections": "박성호 PB (맹목적인 복종 상태)",
+        "current_objective": "증권사로 돌아가 26억 총자산 확정 및 신체적 반동 극복",
+        "equipment": [
+          "구형 휴대폰",
+          "두꺼운 가죽 노트",
+          "만년필",
+          "해외 선물 계좌 보안카드"
+        ],
+        "inventory_counts": {
+          "구형 휴대폰": 1,
+          "두꺼운 가죽 노트": 1,
+          "만년필": 1,
+          "법인 서류": 1,
+          "법인 인감": 1,
+          "해외 선물 계좌 보안카드": 1
+        },
+        "market_insight": "공급망 붕괴(이란 사태, 나이지리아 피격)로 인한 유가 폭등 완벽 예측 및 적중",
+        "reputation": "시장의 파동을 지배하는 완벽한 통제력을 지닌 승부사",
+        "status": "WTI 65달러 돌파로 3억 수익 달성, 그러나 미래 정보 사용에 대한 신체적 반동으로 쓰러짐",
+        "stocks": [
+          {
+            "amount": 1500000000,
+            "leverage": "3x (총 노출 45억)",
+            "name": "WTI 원유 선물 6월물",
+            "position": "매수(Long)",
+            "status": "WTI 65달러 돌파, 미실현 수익 3억 원 돌파"
+          }
+        ],
+        "total_assets": 2601450000,
+        "wealth": 2601450000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "location",
+              "protagonist_status",
+              "relationship_changes"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ]
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "26억 원",
+      "director_score": 90,
+      "location": "여의도 H&T 증권 본사 앞 횡단보도",
+      "protagonist_status": "교감신경 과진장으로 인한 극심한 편두통 및 신체적 붕괴 위기",
+      "relationship_changes": [
+        {
+          "from_state": "명령에 억지로 복종하는 두려움",
+          "target": "박성호",
+          "to_state": "압도적 성과에 대한 절대적 맹신과 강렬한 집착"
+        }
+      ]
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "location",
+            "protagonist_status",
+            "relationship_changes"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ]
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "title": "폭발"
+}

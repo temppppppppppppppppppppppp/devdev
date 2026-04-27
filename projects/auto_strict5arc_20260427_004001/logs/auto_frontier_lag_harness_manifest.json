@@ -1,0 +1,33 @@
+{
+  "summary_role": "auto_frontier_lag_harness_manifest",
+  "created_at": "2026-04-27T00:40:09",
+  "run_id": "20260427_004003_4c250d9fc0",
+  "status": "frontier_running",
+  "target_project": "auto_strict5arc_20260427_004001",
+  "project_locator": "projects/auto_strict5arc_20260427_004001",
+  "arc_count": 5,
+  "batch_size": 1,
+  "seed_profile": "00_20260314",
+  "reuse_existing_project": false,
+  "reuse_reset_after_ep": null,
+  "stage3_failure_policy": "strict",
+  "manual_profile_doc": "docs/2026-03-14/main-a-manual-stage0-selection-harness-00_20260314.md",
+  "harness_ssot_doc": "docs/2026-03-14/auto-frontier-lag-n-arc-test-harness-ssot.md",
+  "profile": {
+    "seed_profile": "00_20260314",
+    "genre_type": "investment",
+    "genre_name": "투자 (Investment Fiction)",
+    "bible_file": "0_bi_golden_canary_deepclone_probe_a_fullblock_v1.json",
+    "roadmap_file": "golden_canary_deepclone_probe_a_fullblock_v1_tr_block_070_draft.json",
+    "treatment_auto_condense": "n",
+    "protagonist_config": {
+      "world_origin": "원시인",
+      "incarnation_type": "회귀자",
+      "pov": "혼합",
+      "external_pov_insert_policy": "적극 허용"
+    },
+    "style_analysis_mode": "use",
+    "style_analysis_confirm": "y"
+  },
+  "updated_at": "2026-04-27T00:40:09"
+}

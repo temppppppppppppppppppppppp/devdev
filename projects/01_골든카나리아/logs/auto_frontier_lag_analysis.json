@@ -1,0 +1,1181 @@
+{
+  "summary_role": "auto_frontier_lag_runtime_analysis",
+  "generated_at": "2026-04-27T06:55:53",
+  "project": "01_골든카나리아",
+  "project_locator": "projects/01_골든카나리아",
+  "arc_count": 5,
+  "run_id": "20260427_063608_4ae67b3b85",
+  "manifest_run_id": "20260427_063608_4ae67b3b85",
+  "worker_run_id": "20260427_063608_4ae67b3b85",
+  "expected_run_id": "20260427_063608_4ae67b3b85",
+  "run_id_mismatch": false,
+  "watchdog_status": "progressing",
+  "termination_reason": "",
+  "worker_status": "success",
+  "process_status": "success",
+  "process_success": true,
+  "objective_status": "failed",
+  "objective_success": false,
+  "objective_root_cause": "stage3_strict_failure_stop",
+  "strict_evidence_gaps": [],
+  "boundary_reached": false,
+  "frontier_result": {
+    "arcs_advanced": 0,
+    "arcs_skipped": 0,
+    "arc_units_processed": 0,
+    "total_manuscripts": 0,
+    "requested_arc_limit": 5,
+    "requested_limit_hit": false,
+    "stop_reason": "stage3_strict_failure_stop",
+    "final_plan": {
+      "frontier_ep_start": 21,
+      "frontier_ep_end": 24,
+      "designed_frontier_arc_no": 6,
+      "true_final_arc_no": 60,
+      "is_true_final_frontier": false,
+      "stage3_target": 23,
+      "stage4_target": 22,
+      "bp_max": 16,
+      "ms_max": 3,
+      "stage3_alignment": "backlog",
+      "stage4_alignment": "backlog"
+    }
+  },
+  "runtime_audit_summary": {
+    "tag": "shutdown_final",
+    "timestamp": "2026-04-27 06:55:50",
+    "summary_role": "runtime_heartbeat_with_proof_digest",
+    "total_events": 14,
+    "counts": {
+      "v60_10_state_extracted": 2,
+      "v60_25_auto_correct": 1,
+      "field_repair": 1,
+      "db_commit": 5,
+      "blueprint_success": 4,
+      "blueprint_fail": 1
+    },
+    "latest_event_type": "blueprint_fail",
+    "recent_events": [
+      {
+        "type": "v60_10_state_extracted",
+        "message": "StateExtractor generated context"
+      },
+      {
+        "type": "db_commit",
+        "message": "데이터베이스 저장 완료"
+      },
+      {
+        "type": "blueprint_success",
+        "message": "ep_13_blueprint_generated"
+      },
+      {
+        "type": "db_commit",
+        "message": "데이터베이스 저장 완료"
+      },
+      {
+        "type": "blueprint_success",
+        "message": "ep_14_blueprint_generated"
+      },
+      {
+        "type": "db_commit",
+        "message": "데이터베이스 저장 완료"
+      },
+      {
+        "type": "blueprint_success",
+        "message": "ep_15_blueprint_generated"
+      },
+      {
+        "type": "db_commit",
+        "message": "데이터베이스 저장 완료"
+      },
+      {
+        "type": "blueprint_success",
+        "message": "ep_16_blueprint_generated"
+      },
+      {
+        "type": "blueprint_fail",
+        "message": "ep_17_all_retries_exhausted"
+      }
+    ],
+    "contract": {
+      "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
+      "attempt_truth_authoritative": false,
+      "authoritative_attempt_sinks": [
+        "stage_attempts",
+        "pass_rate_monitor",
+        "session_decisions",
+        "episode_production",
+        "director_selections"
+      ],
+      "proof_digest_truth_scope": "committed_persistence_only",
+      "operational_metadata_scope": "latest_structured_session_plus_runtime_audit_events_and_session_sinks",
+      "authoritative_attempt_truth_note": "Use DB/JSONL/artifact sink join for authoritative attempt truth.",
+      "operational_metadata_note": "Operational metadata is best-effort run interpretation and does not override persisted attempt truth."
+    },
+    "summary_window": {
+      "count_window_size": 200,
+      "counted_events": 14,
+      "counts_truncated": false,
+      "recent_event_window_size": 10,
+      "recent_events_returned": 10,
+      "event_window_truncated": true
+    },
+    "proof_digest": {
+      "available": true,
+      "status": "warn",
+      "artifacts": {
+        "db_available": true,
+        "session_decisions_exists": true,
+        "ui_events_jsonl_exists": true,
+        "pass_rate_monitor_exists": true,
+        "episode_production_exists": true,
+        "runtime_audit_jsonl_exists": true,
+        "ui_events_db_available": true,
+        "ui_events_count": 2063,
+        "ui_event_coverage_status": "ok"
+      },
+      "stages": {
+        "stage2": {
+          "status": "ok",
+          "attempts_considered": 1,
+          "complete_final_attempts": 1,
+          "complete_lifecycle_attempts": 0,
+          "legacy_key_attempts": 0,
+          "session_scoped_attempts": 1,
+          "coverage": {
+            "stage_attempts": 1,
+            "pass_rate_monitor": 1,
+            "director_selections": 1,
+            "episode_production": 0,
+            "session_decisions": 1,
+            "attempt_raw_rationale": 0
+          },
+          "issue_counts": {}
+        },
+        "stage3": {
+          "status": "warn",
+          "attempts_considered": 5,
+          "complete_final_attempts": 5,
+          "complete_lifecycle_attempts": 0,
+          "legacy_key_attempts": 0,
+          "session_scoped_attempts": 5,
+          "coverage": {
+            "stage_attempts": 5,
+            "pass_rate_monitor": 5,
+            "director_selections": 5,
+            "episode_production": 0,
+            "session_decisions": 5,
+            "attempt_raw_rationale": 0
+          },
+          "issue_counts": {
+            "artifact_metadata_missing": 2
+          }
+        }
+      },
+      "session_lineage": {
+        "plain_log_token": "20260427_063609",
+        "structured_session_id": "20260427_063610",
+        "status": "split_mapped"
+      },
+      "operational_metadata": {
+        "status": "ok",
+        "latest_session_id": "20260427_063610",
+        "stage2_live_session": {
+          "status": "ok",
+          "attempt_count": 1,
+          "episode_count": 1,
+          "episodes": [
+            6
+          ],
+          "latest_ep": 6,
+          "latest_final_verdict": "PASS",
+          "session_decision_count": 3,
+          "ui_event_count": 3,
+          "attempt_key_coverage": {
+            "present": 1,
+            "total": 1,
+            "status": "ok"
+          },
+          "artifact_path_coverage": {
+            "present": 1,
+            "total": 1,
+            "status": "ok"
+          },
+          "selection_reason_coverage": {
+            "present": 1,
+            "total": 1,
+            "status": "ok"
+          },
+          "verdict_reason_coverage": {
+            "present": 1,
+            "total": 1,
+            "status": "ok"
+          },
+          "decision_attempt_key_coverage": {
+            "present": 3,
+            "total": 3,
+            "status": "ok"
+          },
+          "decision_artifact_path_coverage": {
+            "present": 1,
+            "total": 3,
+            "status": "partial"
+          },
+          "carryover_authority_event_count": 1,
+          "latest_carryover_authority": {
+            "start_location": "서울 강남 SW인베스트먼트 오피스",
+            "start_inventory_count": 5,
+            "start_inventory_preview": [
+              "구형 휴대폰",
+              "SW인베스트먼트 법인 서류",
+              "해외 선물 계좌 보안카드"
+            ],
+            "end_location": "서울 여의도 SW인베스트먼트 대표실, 심리 상태: 거대한 전쟁을 앞둔 완벽한 통제감",
+            "end_inventory_count": 8,
+            "end_inventory_preview": [
+              "['구형 휴대폰'",
+              "'SW인베스트먼트 법인 서류'",
+              "'해외 선물 계좌 보안카드'"
+            ],
+            "cross_stage_authority_packet_present": 1,
+            "cross_stage_authority_packet_version": "cross_stage_authority_packet.v1"
+          }
+        },
+        "stage3_live_session": {
+          "status": "ok",
+          "attempt_count": 5,
+          "episode_count": 5,
+          "episodes": [
+            13,
+            14,
+            15,
+            16,
+            17
+          ],
+          "latest_ep": 17,
+          "latest_final_verdict": "FAILED",
+          "session_decision_count": 5,
+          "ui_event_count": 35,
+          "attempt_key_coverage": {
+            "present": 5,
+            "total": 5,
+            "status": "ok"
+          },
+          "artifact_path_coverage": {
+            "present": 4,
+            "total": 5,
+            "status": "partial"
+          },
+          "selection_reason_coverage": {
+            "present": 4,
+            "total": 5,
+            "status": "partial"
+          },
+          "verdict_reason_coverage": {
+            "present": 4,
+            "total": 5,
+            "status": "partial"
+          },
+          "decision_attempt_key_coverage": {
+            "present": 5,
+            "total": 5,
+            "status": "ok"
+          },
+          "decision_artifact_path_coverage": {
+            "present": 4,
+            "total": 5,
+            "status": "partial"
+          },
+          "source_anchor_summary_count": 5,
+          "source_anchor_ui_event_count": 5,
+          "latest_source_anchor_summary": {
+            "blueprint_window_count": 16,
+            "previous_blueprint_ep": 16,
+            "previous_blueprint_end_location": "서울 강남 도심 도로",
+            "previous_blueprint_opening_transition_type": "direct_continuation",
+            "semantic_carryover_keys": [
+              "relationship_rationale",
+              "growth_justification",
+              "foreshadow_anchors",
+              "continuity_checkpoints"
+            ],
+            "continuity_checkpoint_count": 4,
+            "anchor_surfaces": [
+              "prev_blueprint_end_location",
+              "prev_blueprint_opening_transition",
+              "semantic_carryover"
+            ]
+          }
+        },
+        "stage4_live_session": {
+          "status": "absent",
+          "attempt_count": 0,
+          "episode_count": 0,
+          "episodes": [],
+          "latest_ep": null,
+          "latest_final_verdict": "",
+          "retry_exercised": false,
+          "patch_exercised": false,
+          "patch_attempt_count": 0,
+          "fallback_patch_count": 0,
+          "pass_count": 0,
+          "session_scope": {},
+          "target_ep_reached": false,
+          "stage4_complete_emitted": false,
+          "post_pass_contract_signal_count": 0,
+          "non_exercised_reasons": []
+        }
+      }
+    },
+    "run_scope": {
+      "status": "scoped",
+      "engine_run_id": "",
+      "latest_session_id": "20260427_063610",
+      "summary_tag": "shutdown_final",
+      "summary_timestamp": "2026-04-27 06:55:50",
+      "basis": [
+        "proof_digest.latest_session_id"
+      ],
+      "authority_role": "companion_snapshot"
+    },
+    "freshness": {
+      "status": "scoped",
+      "basis": [
+        "proof_digest.latest_session_id"
+      ],
+      "engine_run_id_present": false,
+      "latest_session_id_present": true,
+      "operator_guidance_only": true
+    }
+  },
+  "pass_rate_monitor_exists": true,
+  "stage3_attempts": 17,
+  "stage4_attempts": 5,
+  "stage3_latest_session_id": "20260427_063610",
+  "stage4_latest_session_id": "20260427_022220",
+  "shared_session_id": "",
+  "stage3_current_session_sink_alignment_summary": {
+    "stage": 3,
+    "session_filter": "20260427_022220",
+    "attempts_considered": 8,
+    "coverage": {
+      "stage_attempts": 3,
+      "pass_rate_monitor": 8,
+      "director_selections": 3,
+      "episode_production": 0,
+      "session_decisions": 8,
+      "attempt_raw_rationale": 0
+    },
+    "raw_rationale_summary": {
+      "attempts_with_raw_rationale": 0,
+      "attempts_with_projected_payloads": 0,
+      "payload_kinds_present": [],
+      "record_families_present": [],
+      "surfaces_present": [],
+      "projected_payload_kinds_present": [],
+      "payload_kind_attempt_counts": {},
+      "record_family_attempt_counts": {},
+      "surface_attempt_counts": {},
+      "projected_payload_attempt_counts": {},
+      "payload_kind_examples": {},
+      "record_family_examples": {},
+      "surface_examples": {},
+      "projected_payload_examples": {}
+    },
+    "raw_rationale_health": {},
+    "raw_rationale_watchlist": [],
+    "raw_rationale_watchlist_headline": {},
+    "raw_rationale_operator_summary": "",
+    "coverage_gap_count": 10,
+    "structured_issue_count": 10,
+    "raw_issue_count": 0,
+    "top_issue_headline": {
+      "headline": "P1 sink_coverage_gap x10",
+      "priority": "P1",
+      "focus": "sink_coverage_gap",
+      "count": 10,
+      "next_action": "Inspect final/lifecycle sink coverage gaps and blank attempt-key rows before trusting parity."
+    },
+    "complete_final_attempts": 3,
+    "director_lifecycle_attempts": 0,
+    "complete_lifecycle_attempts": 0,
+    "final_sink_missing": {
+      "stage_attempts": {
+        "count": 5,
+        "examples": [
+          "s3:ep4:arc1:a8:20260427_022220",
+          "s3:ep5:arc2:a2:20260427_022220",
+          "s3:ep6:arc2:a5:20260427_022220",
+          "s3:ep7:arc2:a1:20260427_022220",
+          "s3:ep8:arc2:a1:20260427_022220"
+        ]
+      },
+      "director_selections": {
+        "count": 5,
+        "examples": [
+          "s3:ep4:arc1:a8:20260427_022220",
+          "s3:ep5:arc2:a2:20260427_022220",
+          "s3:ep6:arc2:a5:20260427_022220",
+          "s3:ep7:arc2:a1:20260427_022220",
+          "s3:ep8:arc2:a1:20260427_022220"
+        ]
+      }
+    },
+    "lifecycle_sink_missing": {},
+    "lifecycle_missing_in_final_sinks": {},
+    "final_verdict_mismatches": [],
+    "final_score_mismatches": [],
+    "initial_verdict_mismatches": [],
+    "director_verdict_mismatches": [],
+    "gate_basis_mismatches": [],
+    "repair_scope_mismatches": [],
+    "fix_pack_target_kind_mismatches": [],
+    "fix_pack_patch_targets_mismatches": [],
+    "retry_budget_axes_mismatches": [],
+    "repair_contract_subtype_mismatches": [],
+    "repair_contract_provenance_mismatches": [],
+    "scope_authority_fix_scope_mismatches": [],
+    "scope_authority_authoritative_fix_scope_mismatches": [],
+    "scope_authority_widened_mismatches": [],
+    "patch_strategy_mismatches": [],
+    "candidate_key_mismatches": [],
+    "selection_candidate_key_mismatches": [],
+    "content_hash_mismatches": [],
+    "artifact_content_hash_mismatches": [
+      {
+        "attempt_key": "s3:ep8:arc2:a1:20260427_022220",
+        "sink": "pass_rate_monitor",
+        "artifact_path": "logs/artifacts/stage3/ep_0008/attempt_01/final_blueprint__action_focused.json",
+        "content_hash": "a525c8358465ed47a305574a465634eb8a44b380e0f2e7ffc4609e94b3fd9147",
+        "actual_content_hash": "8a7f20012cef412da40e414d76fcfeff24a4b8f9e6a2496283d7d65b7f4d2481"
+      },
+      {
+        "attempt_key": "s3:ep8:arc2:a1:20260427_022220",
+        "sink": "session_decisions",
+        "artifact_path": "logs/artifacts/stage3/ep_0008/attempt_01/final_blueprint__action_focused.json",
+        "content_hash": "a525c8358465ed47a305574a465634eb8a44b380e0f2e7ffc4609e94b3fd9147",
+        "actual_content_hash": "8a7f20012cef412da40e414d76fcfeff24a4b8f9e6a2496283d7d65b7f4d2481"
+      }
+    ],
+    "artifact_path_mismatches": [],
+    "artifact_metadata_missing": [],
+    "selection_reason_mismatches": [],
+    "verdict_reason_mismatches": [],
+    "comparison_notes_mismatches": [],
+    "selected_candidate_advisory_mismatches": [],
+    "fix_scope_mismatches": [],
+    "runtime_advisory_mismatches": [],
+    "retry_directives_mismatches": [],
+    "gate_repair_metadata_missing": [],
+    "rationale_metadata_missing": [],
+    "artifact_missing_files": [
+      {
+        "attempt_key": "s3:ep4:arc1:a8:20260427_022220",
+        "sink": "pass_rate_monitor",
+        "artifact_path": "logs/artifacts/stage3/ep_0004/attempt_08/final_blueprint__dialogue_focused.json"
+      },
+      {
+        "attempt_key": "s3:ep4:arc1:a8:20260427_022220",
+        "sink": "session_decisions",
+        "artifact_path": "logs/artifacts/stage3/ep_0004/attempt_08/final_blueprint__dialogue_focused.json"
+      },
+      {
+        "attempt_key": "s3:ep5:arc2:a2:20260427_022220",
+        "sink": "pass_rate_monitor",
+        "artifact_path": "logs/artifacts/stage3/ep_0005/attempt_02/final_blueprint__action_focused.json"
+      },
+      {
+        "attempt_key": "s3:ep5:arc2:a2:20260427_022220",
+        "sink": "session_decisions",
+        "artifact_path": "logs/artifacts/stage3/ep_0005/attempt_02/final_blueprint__action_focused.json"
+      },
+      {
+        "attempt_key": "s3:ep6:arc2:a5:20260427_022220",
+        "sink": "pass_rate_monitor",
+        "artifact_path": "logs/artifacts/stage3/ep_0006/attempt_05/final_blueprint__action_focused.json"
+      },
+      {
+        "attempt_key": "s3:ep6:arc2:a5:20260427_022220",
+        "sink": "session_decisions",
+        "artifact_path": "logs/artifacts/stage3/ep_0006/attempt_05/final_blueprint__action_focused.json"
+      },
+      {
+        "attempt_key": "s3:ep7:arc2:a1:20260427_022220",
+        "sink": "pass_rate_monitor",
+        "artifact_path": "logs/artifacts/stage3/ep_0007/attempt_01/final_blueprint__emotion_focused.json"
+      },
+      {
+        "attempt_key": "s3:ep7:arc2:a1:20260427_022220",
+        "sink": "session_decisions",
+        "artifact_path": "logs/artifacts/stage3/ep_0007/attempt_01/final_blueprint__emotion_focused.json"
+      }
+    ],
+    "raw_rationale_missing": [],
+    "raw_rationale_kind_missing": [],
+    "raw_rationale_family_missing": [],
+    "raw_rationale_surface_mismatches": [],
+    "raw_rationale_contract_mismatches": [],
+    "raw_rationale_feedback_mismatches": [],
+    "raw_rationale_patch_trace_mismatches": [],
+    "raw_rationale_retry_chain_mismatches": [],
+    "selection_companion_pre_final_rows": [],
+    "selection_companion_missing_rows": [],
+    "final_authority_contract": {},
+    "session_scoped_attempts": 8,
+    "legacy_key_attempts": 0,
+    "stage_attempt_rows_without_attempt_key": 0,
+    "session_decision_rows_without_attempt_key": 0,
+    "status": "warn",
+    "operator_summary": "Stage3 sink alignment warn: 8 attempt(s), final 3/8, lifecycle 0/0, coverage gaps 10, sink issues 10. Top issue: P1 sink_coverage_gap x10. Next: Inspect final/lifecycle sink coverage gaps and blank attempt-key rows before trusting parity."
+  },
+  "stage4_current_session_sink_alignment_summary": {
+    "stage": 4,
+    "session_filter": "20260427_022220",
+    "attempts_considered": 8,
+    "coverage": {
+      "stage_attempts": 5,
+      "pass_rate_monitor": 3,
+      "director_selections": 5,
+      "episode_production": 8,
+      "session_decisions": 8,
+      "attempt_raw_rationale": 8
+    },
+    "raw_rationale_summary": {
+      "attempts_with_raw_rationale": 8,
+      "attempts_with_projected_payloads": 8,
+      "payload_kinds_present": [
+        "advisory_warnings_raw",
+        "contract_snapshot_raw",
+        "feedback_provenance_raw",
+        "patch_trace_raw",
+        "reject_retry_snapshot_raw",
+        "retry_pathology_raw",
+        "selection_contract_snapshot_raw",
+        "selection_surface_raw"
+      ],
+      "record_families_present": [
+        "advisory_bundle",
+        "contract_snapshot",
+        "feedback_provenance",
+        "patch_trace",
+        "reject_retry_snapshot",
+        "retry_pathology",
+        "selection_surface"
+      ],
+      "surfaces_present": [
+        "advisory_warnings_raw",
+        "contract_snapshot_raw",
+        "feedback_provenance_raw",
+        "patch_trace_raw",
+        "reject_retry_snapshot_raw",
+        "retry_pathology_raw",
+        "selection_contract_snapshot_raw",
+        "selection_surface_raw"
+      ],
+      "projected_payload_kinds_present": [
+        "contract_snapshot_raw",
+        "feedback_provenance_raw",
+        "patch_trace_raw",
+        "reject_retry_snapshot_raw",
+        "retry_pathology_raw",
+        "selection_contract_snapshot_raw",
+        "selection_surface_raw"
+      ],
+      "payload_kind_attempt_counts": {
+        "advisory_warnings_raw": 8,
+        "contract_snapshot_raw": 8,
+        "feedback_provenance_raw": 8,
+        "patch_trace_raw": 8,
+        "reject_retry_snapshot_raw": 3,
+        "retry_pathology_raw": 3,
+        "selection_contract_snapshot_raw": 8,
+        "selection_surface_raw": 8
+      },
+      "record_family_attempt_counts": {
+        "advisory_bundle": 8,
+        "contract_snapshot": 8,
+        "feedback_provenance": 8,
+        "patch_trace": 8,
+        "reject_retry_snapshot": 3,
+        "retry_pathology": 3,
+        "selection_surface": 8
+      },
+      "surface_attempt_counts": {
+        "advisory_warnings_raw": 8,
+        "contract_snapshot_raw": 8,
+        "feedback_provenance_raw": 8,
+        "patch_trace_raw": 8,
+        "reject_retry_snapshot_raw": 3,
+        "retry_pathology_raw": 3,
+        "selection_contract_snapshot_raw": 8,
+        "selection_surface_raw": 8
+      },
+      "projected_payload_attempt_counts": {
+        "contract_snapshot_raw": 8,
+        "feedback_provenance_raw": 8,
+        "patch_trace_raw": 8,
+        "reject_retry_snapshot_raw": 3,
+        "retry_pathology_raw": 3,
+        "selection_contract_snapshot_raw": 8,
+        "selection_surface_raw": 8
+      },
+      "payload_kind_examples": {
+        "advisory_warnings_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "contract_snapshot_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "feedback_provenance_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "patch_trace_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "reject_retry_snapshot_raw": [
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep3:arc1:a1:20260427_022220",
+          "s4:ep5:arc2:a1:20260427_022220"
+        ],
+        "retry_pathology_raw": [
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep3:arc1:a1:20260427_022220",
+          "s4:ep5:arc2:a1:20260427_022220"
+        ],
+        "selection_contract_snapshot_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "selection_surface_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ]
+      },
+      "record_family_examples": {
+        "advisory_bundle": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "contract_snapshot": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "feedback_provenance": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "patch_trace": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "reject_retry_snapshot": [
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep3:arc1:a1:20260427_022220",
+          "s4:ep5:arc2:a1:20260427_022220"
+        ],
+        "retry_pathology": [
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep3:arc1:a1:20260427_022220",
+          "s4:ep5:arc2:a1:20260427_022220"
+        ],
+        "selection_surface": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ]
+      },
+      "surface_examples": {
+        "advisory_warnings_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "contract_snapshot_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "feedback_provenance_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "patch_trace_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "reject_retry_snapshot_raw": [
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep3:arc1:a1:20260427_022220",
+          "s4:ep5:arc2:a1:20260427_022220"
+        ],
+        "retry_pathology_raw": [
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep3:arc1:a1:20260427_022220",
+          "s4:ep5:arc2:a1:20260427_022220"
+        ],
+        "selection_contract_snapshot_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "selection_surface_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ]
+      },
+      "projected_payload_examples": {
+        "contract_snapshot_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "feedback_provenance_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "patch_trace_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "reject_retry_snapshot_raw": [
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep3:arc1:a1:20260427_022220",
+          "s4:ep5:arc2:a1:20260427_022220"
+        ],
+        "retry_pathology_raw": [
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep3:arc1:a1:20260427_022220",
+          "s4:ep5:arc2:a1:20260427_022220"
+        ],
+        "selection_contract_snapshot_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ],
+        "selection_surface_raw": [
+          "s4:ep1:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a1:20260427_022220",
+          "s4:ep2:arc1:a2:20260427_022220"
+        ]
+      }
+    },
+    "raw_rationale_health": {
+      "status": "warn",
+      "attempts_with_raw_rationale": 8,
+      "attempts_with_projected_payloads": 8,
+      "projection_gap": 0,
+      "payload_kinds_present": [
+        "advisory_warnings_raw",
+        "contract_snapshot_raw",
+        "feedback_provenance_raw",
+        "patch_trace_raw",
+        "reject_retry_snapshot_raw",
+        "retry_pathology_raw",
+        "selection_contract_snapshot_raw",
+        "selection_surface_raw"
+      ],
+      "record_families_present": [
+        "advisory_bundle",
+        "contract_snapshot",
+        "feedback_provenance",
+        "patch_trace",
+        "reject_retry_snapshot",
+        "retry_pathology",
+        "selection_surface"
+      ],
+      "surfaces_present": [
+        "advisory_warnings_raw",
+        "contract_snapshot_raw",
+        "feedback_provenance_raw",
+        "patch_trace_raw",
+        "reject_retry_snapshot_raw",
+        "retry_pathology_raw",
+        "selection_contract_snapshot_raw",
+        "selection_surface_raw"
+      ],
+      "issue_counts": {
+        "contract_mismatches": 1
+      },
+      "issue_examples": {
+        "contract_mismatches": [
+          "s4:ep3:arc1:a2:20260427_022220"
+        ]
+      }
+    },
+    "raw_rationale_watchlist": [
+      {
+        "priority": "P1",
+        "focus": "raw_contract_drift",
+        "count": 1,
+        "next_action": "Raw contract snapshots disagree with structured sinks; reconcile repair-contract and scope-authority projections.",
+        "examples": [
+          "s4:ep3:arc1:a2:20260427_022220"
+        ]
+      }
+    ],
+    "raw_rationale_watchlist_headline": {
+      "headline": "P1 raw_contract_drift x1",
+      "priority": "P1",
+      "focus": "raw_contract_drift",
+      "count": 1,
+      "next_action": "Raw contract snapshots disagree with structured sinks; reconcile repair-contract and scope-authority projections.",
+      "examples": [
+        "s4:ep3:arc1:a2:20260427_022220"
+      ]
+    },
+    "raw_rationale_operator_summary": "Stage4 raw rationale warn: 8 attempt(s), 8 projected, 7 family(s), 8 surface(s). Top watchlist: P1 raw_contract_drift x1. Next: Raw contract snapshots disagree with structured sinks; reconcile repair-contract and scope-authority projections.",
+    "coverage_gap_count": 17,
+    "structured_issue_count": 18,
+    "raw_issue_count": 1,
+    "top_issue_headline": {
+      "headline": "P1 sink_coverage_gap x17",
+      "priority": "P1",
+      "focus": "sink_coverage_gap",
+      "count": 17,
+      "next_action": "Inspect final/lifecycle sink coverage gaps and blank attempt-key rows before trusting parity."
+    },
+    "complete_final_attempts": 5,
+    "director_lifecycle_attempts": 8,
+    "complete_lifecycle_attempts": 5,
+    "final_sink_missing": {
+      "stage_attempts": {
+        "count": 3,
+        "examples": [
+          "s4:ep4:arc1:a1:20260427_022220",
+          "s4:ep5:arc2:a1:20260427_022220",
+          "s4:ep5:arc2:a2:20260427_022220"
+        ]
+      },
+      "pass_rate_monitor": {
+        "count": 5,
+        "examples": [
+          "s4:ep3:arc1:a1:20260427_022220",
+          "s4:ep3:arc1:a2:20260427_022220",
+          "s4:ep4:arc1:a1:20260427_022220",
+          "s4:ep5:arc2:a1:20260427_022220",
+          "s4:ep5:arc2:a2:20260427_022220"
+        ]
+      },
+      "director_selections": {
+        "count": 3,
+        "examples": [
+          "s4:ep4:arc1:a1:20260427_022220",
+          "s4:ep5:arc2:a1:20260427_022220",
+          "s4:ep5:arc2:a2:20260427_022220"
+        ]
+      }
+    },
+    "lifecycle_sink_missing": {
+      "director_selections": {
+        "count": 3,
+        "examples": [
+          "s4:ep4:arc1:a1:20260427_022220",
+          "s4:ep5:arc2:a1:20260427_022220",
+          "s4:ep5:arc2:a2:20260427_022220"
+        ]
+      }
+    },
+    "lifecycle_missing_in_final_sinks": {
+      "stage_attempts": {
+        "count": 3,
+        "examples": [
+          "s4:ep4:arc1:a1:20260427_022220",
+          "s4:ep5:arc2:a1:20260427_022220",
+          "s4:ep5:arc2:a2:20260427_022220"
+        ]
+      }
+    },
+    "final_verdict_mismatches": [],
+    "final_score_mismatches": [],
+    "initial_verdict_mismatches": [],
+    "director_verdict_mismatches": [],
+    "gate_basis_mismatches": [],
+    "repair_scope_mismatches": [],
+    "fix_pack_target_kind_mismatches": [],
+    "fix_pack_patch_targets_mismatches": [
+      {
+        "attempt_key": "s4:ep3:arc1:a2:20260427_022220",
+        "stage_attempts": "[\"박성호 relation_to_protag 관계 서술 문장\"]",
+        "session_decisions": "[\"박성호 relation_to_protag 관계 서술 문장\"]",
+        "episode_production": "[\"위약금과 세금을 떼고도 정확히 목표했던 금액이 개인 통장에 꽂혀 있었다.\"]"
+      }
+    ],
+    "retry_budget_axes_mismatches": [],
+    "repair_contract_subtype_mismatches": [],
+    "repair_contract_provenance_mismatches": [],
+    "scope_authority_fix_scope_mismatches": [],
+    "scope_authority_authoritative_fix_scope_mismatches": [],
+    "scope_authority_widened_mismatches": [],
+    "patch_strategy_mismatches": [],
+    "candidate_key_mismatches": [],
+    "selection_candidate_key_mismatches": [],
+    "content_hash_mismatches": [],
+    "artifact_content_hash_mismatches": [],
+    "artifact_path_mismatches": [],
+    "artifact_metadata_missing": [],
+    "selection_reason_mismatches": [
+      {
+        "attempt_key": "s4:ep1:arc1:a1:20260427_022220",
+        "stage_attempts": "이전 지시사항이었던 씬 헤더(### 씬 N: 제목) 삽입이 모든 씬에 걸쳐 완벽하게 적용되었으며, 서사의 흐름과 긴장감이 훌륭하게 유지되었습니다.",
+        "director_selections": "주인공의 냉혹한 성격 변화와 미래 지식을 활용한 주도적인 행동(PB 압박 등)이 투자물의 장르적 쾌감을 잘 살렸으며, 씬 간의 연결과 심리 묘사가 가장 우수합니다.",
+        "session_decisions": "이전 지시사항이었던 씬 헤더(### 씬 N: 제목) 삽입이 모든 씬에 걸쳐 완벽하게 적용되었으며, 서사의 흐름과 긴장감이 훌륭하게 유지되었습니다.",
+        "episode_production": "이전 지시사항이었던 씬 헤더(### 씬 N: 제목) 삽입이 모든 씬에 걸쳐 완벽하게 적용되었으며, 서사의 흐름과 긴장감이 훌륭하게 유지되었습니다."
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260427_022220",
+        "stage_attempts": "이전 화와의 연속성이 완벽하며, Blueprint의 지시사항을 충실히 이행했습니다. 특히 이전 화에서 확립된 설정(한태성 회장, 20억 자본금, 박성호 PB와의 관계)을 정확하게 이어받아 긴장감 있는 전개를 보여주었습니다.",
+        "director_selections": "이전 화에서 확립된 아버지의 이름(한태성)과 PB와의 통화 맥락(이미 1화에서 현금화 지시를 내렸고, 이번 화에서는 법인 설립 추가 지시를 내림)을 완벽하게 유지하여 연속성 모순이 전혀 없습니다. 반면 후보 A는 아버지 이름을 '한정호'로 잘못 표기하는 치명적 모순이 발생했습니다.",
+        "session_decisions": "이전 화와의 연속성이 완벽하며, Blueprint의 지시사항을 충실히 이행했습니다. 특히 이전 화에서 확립된 설정(한태성 회장, 20억 자본금, 박성호 PB와의 관계)을 정확하게 이어받아 긴장감 있는 전개를 보여주었습니다.",
+        "episode_production": "이전 화와의 연속성이 완벽하며, Blueprint의 지시사항을 충실히 이행했습니다. 특히 이전 화에서 확립된 설정(한태성 회장, 20억 자본금, 박성호 PB와의 관계)을 정확하게 이어받아 긴장감 있는 전개를 보여주었습니다."
+      },
+      {
+        "attempt_key": "s4:ep3:arc1:a2:20260427_022220",
+        "stage_attempts": "이전 피드백(20억 원 입금의 개연성 보강)이 완벽하게 반영되었으며, 이전 화와의 연속성 및 Blueprint의 모든 씬이 훌륭하게 구현되었습니다.",
+        "director_selections": "후보 A는 Blueprint의 씬 구성과 타겟 비트를 가장 충실하게 구현했으며, 직전 화(EP 2) 엔딩의 전화 통화 직후 상황을 자연스럽게 이어받아 완벽한 연속성을 보여줍니다. 박성호 PB를 압박하는 과정에서 정확한 약관(제4조 2항)을 근거로 제시하여 주인공의 전문성과 냉혹함을 잘 살렸고, 긴장감 넘치는 대화와 심리 묘사의 밸런스가 훌륭합니다. 분량 또한 가장 안정적입니다.",
+        "session_decisions": "이전 피드백(20억 원 입금의 개연성 보강)이 완벽하게 반영되었으며, 이전 화와의 연속성 및 Blueprint의 모든 씬이 훌륭하게 구현되었습니다.",
+        "episode_production": "이전 피드백(20억 원 입금의 개연성 보강)이 완벽하게 반영되었으며, 이전 화와의 연속성 및 Blueprint의 모든 씬이 훌륭하게 구현되었습니다."
+      }
+    ],
+    "verdict_reason_mismatches": [
+      {
+        "attempt_key": "s4:ep1:arc1:a1:20260427_022220",
+        "stage_attempts": "이전 지시사항이었던 씬 헤더(### 씬 N: 제목) 삽입이 모든 씬에 걸쳐 완벽하게 적용되었으며, 서사의 흐름과 긴장감이 훌륭하게 유지되었습니다.",
+        "director_selections": "Blueprint에 지정된 씬 헤더(### 씬 N: 제목)가 원고에 누락됨",
+        "session_decisions": "이전 지시사항이었던 씬 헤더(### 씬 N: 제목) 삽입이 모든 씬에 걸쳐 완벽하게 적용되었으며, 서사의 흐름과 긴장감이 훌륭하게 유지되었습니다.",
+        "episode_production": "이전 지시사항이었던 씬 헤더(### 씬 N: 제목) 삽입이 모든 씬에 걸쳐 완벽하게 적용되었으며, 서사의 흐름과 긴장감이 훌륭하게 유지되었습니다."
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260427_022220",
+        "stage_attempts": "이전 화와의 연속성이 완벽하며, Blueprint의 지시사항을 충실히 이행했습니다. 특히 이전 화에서 확립된 설정(한태성 회장, 20억 자본금, 박성호 PB와의 관계)을 정확하게 이어받아 긴장감 있는 전개를 보여주었습니다.",
+        "director_selections": "이전 화에서 확립된 아버지의 이름(한태성)과 PB와의 통화 맥락(이미 1화에서 현금화 지시를 내렸고, 이번 화에서는 법인 설립 추가 지시를 내림)을 완벽하게 유지하여 연속성 모순이 전혀 없습니다. 반면 후보 A는 아버지 이름을 '한정호'로 잘못 표기하는 치명적 모순이 발생했습니다.",
+        "session_decisions": "이전 화와의 연속성이 완벽하며, Blueprint의 지시사항을 충실히 이행했습니다. 특히 이전 화에서 확립된 설정(한태성 회장, 20억 자본금, 박성호 PB와의 관계)을 정확하게 이어받아 긴장감 있는 전개를 보여주었습니다.",
+        "episode_production": "이전 화와의 연속성이 완벽하며, Blueprint의 지시사항을 충실히 이행했습니다. 특히 이전 화에서 확립된 설정(한태성 회장, 20억 자본금, 박성호 PB와의 관계)을 정확하게 이어받아 긴장감 있는 전개를 보여주었습니다."
+      },
+      {
+        "attempt_key": "s4:ep3:arc1:a2:20260427_022220",
+        "stage_attempts": "이전 피드백(20억 원 입금의 개연성 보강)이 완벽하게 반영되었으며, 이전 화와의 연속성 및 Blueprint의 모든 씬이 훌륭하게 구현되었습니다.",
+        "director_selections": "후보 A는 Blueprint의 씬 구성과 타겟 비트를 가장 충실하게 구현했으며, 직전 화(EP 2) 엔딩의 전화 통화 직후 상황을 자연스럽게 이어받아 완벽한 연속성을 보여줍니다. 박성호 PB를 압박하는 과정에서 정확한 약관(제4조 2항)을 근거로 제시하여 주인공의 전문성과 냉혹함을 잘 살렸고, 긴장감 넘치는 대화와 심리 묘사의 밸런스가 훌륭합니다. 분량 또한 가장 안정적입니다.",
+        "session_decisions": "이전 피드백(20억 원 입금의 개연성 보강)이 완벽하게 반영되었으며, 이전 화와의 연속성 및 Blueprint의 모든 씬이 훌륭하게 구현되었습니다.",
+        "episode_production": "이전 피드백(20억 원 입금의 개연성 보강)이 완벽하게 반영되었으며, 이전 화와의 연속성 및 Blueprint의 모든 씬이 훌륭하게 구현되었습니다."
+      }
+    ],
+    "comparison_notes_mismatches": [],
+    "selected_candidate_advisory_mismatches": [],
+    "fix_scope_mismatches": [
+      {
+        "attempt_key": "s4:ep3:arc1:a1:20260427_022220",
+        "stage_attempts": "full",
+        "director_selections": "inplace",
+        "session_decisions": "full"
+      }
+    ],
+    "runtime_advisory_mismatches": [
+      {
+        "attempt_key": "s4:ep2:arc1:a1:20260427_022220",
+        "stage_attempts": "[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 7.00 (python warnings 7건) / - [후보 A] dialogue_ratio 13% > style target 0% / - [후보 B] ced_score 10.00 (python warnings 10건) / - [후보 B] dialogue_ratio 18% > style target 0% / - [후보 C] ced_score 7.00 (python warnings 7건) / - [후보 C] dialogue_ratio 15% > style target 0%",
+        "session_decisions": "[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 7.00 (python warnings 7건) / - [후보 A] dialogue_ratio 13% > style target 0% / - [후보 B] ced_score 10.00 (python warnings 10건) / - [후보 B] dialogue_ratio 18% > style target 0% / - [후보 C] ced_score 7.00 (python warnings 7건) / - [후보 C] dialogue_ratio 15% > style target 0%\n[Repair scope authority] runtime scope matches authoritative=partial. (origin=director_authoritative, provenance=director_authored)"
+      },
+      {
+        "attempt_key": "s4:ep3:arc1:a1:20260427_022220",
+        "stage_attempts": "[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 7.00 (python warnings 7건) / - [후보 A] dialogue_ratio 24% > style target 0% / - [후보 B] ced_score 7.00 (python warnings 7건) / - [후보 B] dialogue_ratio 31% > style target 0% / - [후보 C] ced_score 6.00 (python warnings 6건) / - [후보 C] dialogue_ratio 28% > style target 0%\n- [INFO] [NumericConsistency — Python 수치 검증 결과. 각 항목에 대해 numeric_consistency_review에서 AGREE/DISMISS 판정 필수] / - [NC-1][후보 C][MAJOR] [수치 불일치] 원고 '펀드 8억 원' (8.0억) vs FactLedger 'capital'=20.0억 (차이 12.0억, 60%)\n- [MAJOR · NpcDrift] [NpcDriftAdvisor — NPC 속성 표류 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 A][MAJOR] NPC '박성호' relation_to_protag: 기대='집착80/오해-50 (주인공에 대한 높은 집착과 낮은 오해/정확한 파악)' → 원고='주인공을 '금융의 금자도 모르는 풋내기', '철없는 막내 도련님'으로 심각하게 오해하고 얕잡아보며, 집착적인 태도 없이 그저 자신의 실적을 위한 수단으로만 취급함' / - [후보 B][MAJOR] NPC '박성호' relation_to_protag: 기대='집착80/오해-50 (주인공에 대한 강한 집착과 낮은 오해/높은 이해도)' → 원고='주인공을 '철없는 투정'을 부리는 막내로 무시하고 귀찮아하며, 주인공의 의도를 전혀 파악하지 못하고 오해하는 오만한 관리자의 모습으로 묘사됨. 집착이나 긍정적 이해의 프레이밍이 전혀 보이지 않음.' / - [후보 C][MAJOR] NPC '박성호' relation_to_protag: 기대='집착80/오해-50 (주인공에 대한 강한 집착과 낮은 오해/정확한 파악)' → 원고='주인공의 요구를 '관리하기 귀찮은 업무'로 여기고 '스포츠카 카탈로그를 보고 떼를 쓴다'며 철없는 도련님으로 심하게 오해하고 있으며, 협박을 받은 후에도 공포와 체념에 굴복할 뿐 주인공에 대한 어떠한 집착적 태도도 보이지 않음.'\n- [MAJOR · Flashback] [FlashbackVerifier — 회상 오염 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 C][MAJOR] '과거의': 회상 장면에서는 박성호가 한시우와 직접 대면하여 대화를 나누는 것('눈앞에 서 있는', '눈빛이 박성호를 꿰뚫고')으로 묘사되나, 과거 에피소드(EP 2)의 맥락에 따르면 해당 대화는 한시우가 본가 정문 앞에서 전화를 걸어 이루어진 통화('수화기 너머로 당황한 목소리')였습니다. 대면 상황과 전화 통화 상황이 모순됩니다.",
+        "session_decisions": "[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 7.00 (python warnings 7건) / - [후보 A] dialogue_ratio 24% > style target 0% / - [후보 B] ced_score 7.00 (python warnings 7건) / - [후보 B] dialogue_ratio 31% > style target 0% / - [후보 C] ced_score 6.00 (python warnings 6건) / - [후보 C] dialogue_ratio 28% > style target 0%\n- [INFO] [NumericConsistency — Python 수치 검증 결과. 각 항목에 대해 numeric_consistency_review에서 AGREE/DISMISS 판정 필수] / - [NC-1][후보 C][MAJOR] [수치 불일치] 원고 '펀드 8억 원' (8.0억) vs FactLedger 'capital'=20.0억 (차이 12.0억, 60%)\n- [MAJOR · NpcDrift] [NpcDriftAdvisor — NPC 속성 표류 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 A][MAJOR] NPC '박성호' relation_to_protag: 기대='집착80/오해-50 (주인공에 대한 높은 집착과 낮은 오해/정확한 파악)' → 원고='주인공을 '금융의 금자도 모르는 풋내기', '철없는 막내 도련님'으로 심각하게 오해하고 얕잡아보며, 집착적인 태도 없이 그저 자신의 실적을 위한 수단으로만 취급함' / - [후보 B][MAJOR] NPC '박성호' relation_to_protag: 기대='집착80/오해-50 (주인공에 대한 강한 집착과 낮은 오해/높은 이해도)' → 원고='주인공을 '철없는 투정'을 부리는 막내로 무시하고 귀찮아하며, 주인공의 의도를 전혀 파악하지 못하고 오해하는 오만한 관리자의 모습으로 묘사됨. 집착이나 긍정적 이해의 프레이밍이 전혀 보이지 않음.' / - [후보 C][MAJOR] NPC '박성호' relation_to_protag: 기대='집착80/오해-50 (주인공에 대한 강한 집착과 낮은 오해/정확한 파악)' → 원고='주인공의 요구를 '관리하기 귀찮은 업무'로 여기고 '스포츠카 카탈로그를 보고 떼를 쓴다'며 철없는 도련님으로 심하게 오해하고 있으며, 협박을 받은 후에도 공포와 체념에 굴복할 뿐 주인공에 대한 어떠한 집착적 태도도 보이지 않음.'\n- [MAJOR · Flashback] [FlashbackVerifier — 회상 오염 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 C][MAJOR] '과거의': 회상 장면에서는 박성호가 한시우와 직접 대면하여 대화를 나누는 것('눈앞에 서 있는', '눈빛이 박성호를 꿰뚫고')으로 묘사되나, 과거 에피소드(EP 2)의 맥락에 따르면 해당 대화는 한시우가 본가 정문 앞에서 전화를 걸어 이루어진 통화('수화기 너머로 당황한 목소리')였습니다. 대면 상황과 전화 통화 상황이 모순됩니다.\n[Repair scope authority] runtime scope widened from authoritative=inplace to runtime=full. (origin=post_select_conflict_override, provenance=director_authored)"
+      }
+    ],
+    "retry_directives_mismatches": [],
+    "gate_repair_metadata_missing": [],
+    "rationale_metadata_missing": [
+      {
+        "attempt_key": "s4:ep2:arc1:a1:20260427_022220",
+        "field": "retry_directives",
+        "sinks": [
+          "stage_attempts"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep3:arc1:a1:20260427_022220",
+        "field": "retry_directives",
+        "sinks": [
+          "stage_attempts"
+        ]
+      }
+    ],
+    "artifact_missing_files": [
+      {
+        "attempt_key": "s4:ep4:arc1:a1:20260427_022220",
+        "sink": "session_decisions",
+        "artifact_path": "logs/artifacts/stage4/ep_0004/attempt_01/patched_after_fix__A_InPlace.txt"
+      },
+      {
+        "attempt_key": "s4:ep4:arc1:a1:20260427_022220",
+        "sink": "episode_production",
+        "artifact_path": "logs/artifacts/stage4/ep_0004/attempt_01/patched_after_fix__A_InPlace.txt"
+      },
+      {
+        "attempt_key": "s4:ep5:arc2:a1:20260427_022220",
+        "sink": "session_decisions",
+        "artifact_path": "logs/artifacts/stage4/ep_0005/attempt_01/rejected_best__C_narrative.txt"
+      },
+      {
+        "attempt_key": "s4:ep5:arc2:a1:20260427_022220",
+        "sink": "episode_production",
+        "artifact_path": "logs/artifacts/stage4/ep_0005/attempt_01/rejected_best__C_narrative.txt"
+      },
+      {
+        "attempt_key": "s4:ep5:arc2:a2:20260427_022220",
+        "sink": "session_decisions",
+        "artifact_path": "logs/artifacts/stage4/ep_0005/attempt_02/patched_after_fix__A_InPlace.txt"
+      },
+      {
+        "attempt_key": "s4:ep5:arc2:a2:20260427_022220",
+        "sink": "episode_production",
+        "artifact_path": "logs/artifacts/stage4/ep_0005/attempt_02/patched_after_fix__A_InPlace.txt"
+      }
+    ],
+    "raw_rationale_missing": [],
+    "raw_rationale_kind_missing": [],
+    "raw_rationale_family_missing": [],
+    "raw_rationale_surface_mismatches": [],
+    "raw_rationale_contract_mismatches": [
+      {
+        "attempt_key": "s4:ep3:arc1:a2:20260427_022220",
+        "payload_kind": "contract_snapshot_raw",
+        "mismatched_fields": {
+          "fix_pack_patch_targets": {
+            "contract_snapshot_raw": [
+              "위약금과 세금을 떼고도 정확히 목표했던 금액이 개인 통장에 꽂혀 있었다."
+            ],
+            "stage_attempts": [
+              "박성호 relation_to_protag 관계 서술 문장"
+            ],
+            "session_decisions": [
+              "박성호 relation_to_protag 관계 서술 문장"
+            ]
+          }
+        }
+      }
+    ],
+    "raw_rationale_feedback_mismatches": [],
+    "raw_rationale_patch_trace_mismatches": [],
+    "raw_rationale_retry_chain_mismatches": [],
+    "selection_companion_pre_final_rows": [
+      {
+        "attempt_key": "s4:ep1:arc1:a1:20260427_022220",
+        "ep_num": 1,
+        "attempt_num": 1,
+        "selection_artifact_path": "logs/artifacts/stage4/ep_0001/attempt_01/selected_before_fix__C.txt",
+        "final_artifact_path": "logs/artifacts/stage4/ep_0001/attempt_01/patched_after_fix__A_InPlace.txt",
+        "selection_content_hash": "91e1a44a3370c57887018ee09d2c4ba8a77e8530fb86232af9b7c335fa40e5df",
+        "final_content_hash": "eaf11f0d901021c85d5cc841b896b65442c9cb981a0fd17857f9daac775e4382",
+        "diff_fields": [
+          "content_hash",
+          "artifact_path"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a1:20260427_022220",
+        "ep_num": 2,
+        "attempt_num": 1,
+        "selection_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_01/rejected_best__A.txt",
+        "final_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_01/rejected_best__A_balanced.txt",
+        "selection_content_hash": "678f85f80aa31671982896751e577d16ba8cb7a595b23ced6b7d7eb7e8febe75",
+        "final_content_hash": "678f85f80aa31671982896751e577d16ba8cb7a595b23ced6b7d7eb7e8febe75",
+        "diff_fields": [
+          "artifact_path"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260427_022220",
+        "ep_num": 2,
+        "attempt_num": 2,
+        "selection_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_02/selected_before_fix__B.txt",
+        "final_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_02/patched_after_fix__A_InPlace.txt",
+        "selection_content_hash": "215f258a4dc88ba47a368183d30dfc82b52d9b48ebbee4b8b4e36a900da161ae",
+        "final_content_hash": "215f258a4dc88ba47a368183d30dfc82b52d9b48ebbee4b8b4e36a900da161ae",
+        "diff_fields": [
+          "artifact_path"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep3:arc1:a1:20260427_022220",
+        "ep_num": 3,
+        "attempt_num": 1,
+        "selection_artifact_path": "logs/artifacts/stage4/ep_0003/attempt_01/selected_before_fix__A.txt",
+        "final_artifact_path": "logs/artifacts/stage4/ep_0003/attempt_01/rejected_best__A_balanced.txt",
+        "selection_content_hash": "d82b2b16ccc09229e963d3247e5939371ca308e7cdced8c6eaa4ed48f4786aca",
+        "final_content_hash": "d82b2b16ccc09229e963d3247e5939371ca308e7cdced8c6eaa4ed48f4786aca",
+        "diff_fields": [
+          "artifact_path"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep3:arc1:a2:20260427_022220",
+        "ep_num": 3,
+        "attempt_num": 2,
+        "selection_artifact_path": "logs/artifacts/stage4/ep_0003/attempt_02/selected_before_fix__A.txt",
+        "final_artifact_path": "logs/artifacts/stage4/ep_0003/attempt_02/patched_after_fix__A_InPlace.txt",
+        "selection_content_hash": "cbc0f9cc473cae3ce77771112faf6981a38cbf747d7c849da53a06dd4d964944",
+        "final_content_hash": "f0dcd1e8383a6583f1c89fb98805a3ace789adff5f63e1b271548779813aec2b",
+        "diff_fields": [
+          "content_hash",
+          "artifact_path"
+        ]
+      }
+    ],
+    "selection_companion_missing_rows": [],
+    "final_authority_contract": {
+      "status": "ok",
+      "final_authority_sink": "stage_attempts",
+      "selection_role": "historical_companion",
+      "rows_considered": 5,
+      "aligned_selection_rows": 0,
+      "pre_final_selection_rows": 5,
+      "missing_selection_rows": 0,
+      "note": "Stage 4 final authority resolves from stage_attempts. director_selections remains companion review history and may point to pre-final artifacts."
+    },
+    "session_scoped_attempts": 8,
+    "legacy_key_attempts": 0,
+    "stage_attempt_rows_without_attempt_key": 0,
+    "session_decision_rows_without_attempt_key": 0,
+    "status": "warn",
+    "operator_summary": "Stage4 sink alignment warn: 8 attempt(s), final 5/8, lifecycle 5/8, coverage gaps 17, sink issues 18, evidence issues 1. Top issue: P1 sink_coverage_gap x17. Next: Inspect final/lifecycle sink coverage gaps and blank attempt-key rows before trusting parity. Evidence: Stage4 raw rationale warn: 8 attempt(s), 8 projected, 7 family(s), 8 surface(s). Top watchlist: P1 raw_contract_drift x1. Next: Raw contract snapshots disagree with structured sinks; reconcile repair-contract and scope-authority projections."
+  },
+  "continuity_canary_report": {
+    "schema_version": "continuity-canary-v1",
+    "status": "not_available",
+    "finding_count": 0,
+    "findings": []
+  },
+  "judgment": "failed",
+  "root_cause": "stage3_strict_failure_stop",
+  "poll_count": 21,
+  "poll_history_path": "C:\\Users\\PC\\Desktop\\글도비\\projects\\01_골든카나리아\\logs\\auto_frontier_lag_poll_history.jsonl",
+  "three_pass_audit": {
+    "passes": {
+      "pass1_fact_extraction": true,
+      "pass2_contradiction_check": true,
+      "pass3_decision_audit": true
+    },
+    "confidence": 90,
+    "finalized": false
+  },
+  "ssot_path": "C:\\Users\\PC\\Desktop\\글도비\\docs\\2026-04-27\\auto-frontier-lag-5arc-runtime-analysis-ssot.md"
+}

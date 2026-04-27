@@ -1,0 +1,10 @@
+{
+  "generated_at": "2026-04-26T21:39:24",
+  "project_locator": "projects/auto_t8_smoke_20260426_213918_1arc",
+  "judgment": "failed",
+  "root_cause": "stage0 existing-file replay did not persist bible/plot_roadmap",
+  "watchdog_status": "progressing",
+  "process_status": "failed",
+  "objective_status": "not_evaluated_process_failed",
+  "objective_root_cause": "stage0 existing-file replay did not persist bible/plot_roadmap"
+}

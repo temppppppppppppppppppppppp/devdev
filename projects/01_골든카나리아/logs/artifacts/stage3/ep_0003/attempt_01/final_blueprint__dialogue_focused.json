@@ -1,0 +1,264 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "dialogue_focused",
+    "content_hash": "d4fe95b86c78e3bee4cc7064f6a6d3897cb6babeca9ab88bf6b0a01f3eac7b38"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=4; sample_anchors=더듬거리, T 증권, 교체하고 자금을 타 증권",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 1,
+    "disqualified": [
+      [
+        "action_focused",
+        5,
+        628
+      ]
+    ],
+    "length": 1518,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 7683,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 992317,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 3689,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 3411,
+          "lane": "constraints"
+        },
+        {
+          "chars": 388,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 185,
+        "constraints": 3411,
+        "feedback_context": 388,
+        "hud_context": 10,
+        "prev_info": 3689
+      },
+      "shared_context_chars": 7295,
+      "total_chars": 7683
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 5,
+    "strategy": "dialogue_focused",
+    "total_candidates": 2
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "last_score": 92,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "core_tension": "박성호의 만류를 꺾고 20억 원의 자산을 당일 현금화할 수 있는가",
+  "end_location": "H&T 증권 VIP 접견실",
+  "ending_hook": "모니터 구석에서 붉은빛을 명멸하는 WTI 원유 선물 티커를 향해, 한시우의 시선이 조용히 꽂혔다.",
+  "ending_state": {
+    "location": "H&T 증권 VIP 접견실",
+    "protagonist_status": "20억 원의 현금을 확보하고 다음 단계인 선물 시장 진입을 구상하는 상태",
+    "timeline": {
+      "expression": "2006년 1월 2일 오후"
+    }
+  },
+  "ep_num": 3,
+  "episode_number": 3,
+  "expected_ending": "현금 20억 원을 확보하고 본격적인 투자를 준비함",
+  "integrated_scenario": "익숙한 통화 연결음이 멎고 수화기 너머로 당황한 목소리가 들려온 순간, 한시우의 입가에 서늘한 호선이 그려졌다. 성북동 본가의 정문 앞, 살을 에듯 차가운 겨울 바람 속에서도 한시우의 머릿속은 놀랍도록 차분했다. 전화기 너머의 박성호는 갑작스러운 연락에 더듬거리며 의례적인 안부를 물으려 했으나, 한시우는 그 가벼운 인사를 단칼에 잘라냈다. 한시우는 1시간 뒤 H&T 증권 본사 VIP 접견실에서 보자는 일방적인 통보만을 남기고 전화를 끊었다. 택시를 잡아타고 여의도로 향하는 내내, 2024년의 트라우마가 남긴 편두통이 옅게 박동했지만 한시우는 이를 교감신경을 벼리는 촉매로 삼으며 눈을 감았다.\n\n같은 시각, 여의도 H&T 증권 VIP 접견실. 박성호는 급작스러운 한시우의 방문 예고에 미간을 찌푸리며 전산망을 띄웠다. 모니터에 나타난 한시우의 자산은 할아버지가 남긴 용돈 성격의 증여금과 승마 스폰서 수익금 등을 합쳐 도합 20억 원 규모였다. 결코 적은 돈은 아니었으나, 그룹의 후계 구도에서 완전히 배제된 막내의 자금이라는 점에서 박성호에게는 그저 관리하기 편한 '죽은 돈'에 불과했다. 박성호는 한시우가 또 어디서 외제차 카탈로그라도 보고 와서 떼를 쓰는 것이라 지레짐작하며, 만기 미도래와 중도 해지 페널티를 무기로 단호하게 방어할 논리를 머릿속으로 조립했다.\n\n그러나 접견실 문이 열리고 한시우가 들어선 순간, 박성호가 준비했던 모든 대본은 휴지조각이 되었다. 한시우는 자리에 앉기도 전에 테이블 위로 서류를 밀어내며 모든 펀드와 신탁 계좌의 전면 해지를 명령했다. 당황한 박성호가 원금 손실과 수수료를 운운하며 만류하려 했지만, 한시우는 오히려 박성호의 말을 끊고 각 상품의 약관에 숨겨진 즉시 해지 특례 조항을 정확하게 읊어냈다. 박성호는 자신이 알던 철없는 막내 도련님이 맞는지 의심하며 식은땀을 흘렸다.\n\n궁지에 몰린 박성호가 은연중에 한정호 회장의 의중을 들먹이며 본가의 승인이 필요하다는 식으로 시간을 끌려 하자, 한시우의 태도가 돌변했다. 한시우는 서늘하게 가라앉은 눈빛으로 박성호를 똑바로 응시하며, 내 자산을 통제하는 것은 나 자신뿐이라고 못 박았다. 한시우는 당장 10분 안에 20억 원의 현금화가 증명되지 않으면 즉시 PB를 교체하고 자금을 타 증권사로 빼버리겠다는 최후통첩을 날렸다. 그 서늘한 기세와 완벽한 논리에 완전히 짓눌린 박성호는 결국 체념한 듯 마우스를 쥐고 전산망에 일괄 해지 코드를 입력할 수밖에 없었다.\n\n잠시 후, 한시우의 주머니에서 구형 휴대폰이 짧게 진동했다. 화면에 선명하게 찍힌 20억 원의 입금 내역. 가문의 통제에서 벗어난 첫 번째 실탄이 완벽하게 장전되는 순간이었다. 한시우는 넋이 나간 박성호에게 오늘 자금 이동에 대한 본가 보고를 내일 오후로 지연시키라는 묵직한 경고를 남겼다. 박성호가 홀린 듯 고개를 끄덕이자, 한시우는 천천히 몸을 돌렸다. 한시우의 시선이 접견실 한쪽 벽면을 채운 대형 모니터로 향했다. 붉은빛을 띠며 명멸하는 WTI 원유 선물 가격표를 바라보는 한시우의 눈동자에는 다가올 거대한 폭풍을 향한 지독한 갈증이 서려 있었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부 전화 통화로 빠른 템포를 잡고, 접견실에서의 대화 씬에서 점진적으로 텐션을 끌어올려 한시우가 박성호를 완전히 제압하는 순간에 최고조에 달하게 함.",
+  "protagonist_state": {
+    "equipment": [
+      "2006년형 구형 휴대폰",
+      "메모장과 펜"
+    ],
+    "injuries": "2024년 트라우마로 인한 일시적 편두통 및 교감신경 과진장",
+    "mood": "실탄 확보로 인한 만족감과 다가올 투자에 대한 차가운 흥분"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "한시우를 철없는 애완견 취급하는 관리자",
+      "justification": "한시우가 상품 구조를 완벽히 꿰뚫고 PB 교체라는 권한을 무기로 박성호의 방어를 논리적, 심리적으로 완벽히 붕괴시킴",
+      "target": "박성호",
+      "to_state": "한시우의 압도적인 기세와 지식에 굴복한 실무자"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "박성호(전화)"
+      ],
+      "content": "익숙한 통화 연결음이 멎고 수화기 너머로 당황한 목소리가 들려온 순간, 한시우의 입가에 서늘한 호선이 그려졌다. 박성호가 더듬거리며 인사를 건네기도 전에 한시우는 용건만을 잘라 말했다. 1시간 뒤 H&T 증권 본사 VIP 접견실. 그 한마디만 남긴 채 한시우는 미련 없이 통화를 종료했다.",
+      "description": "전화기 너머로 들려오는 박성호의 의례적인 안부 인사를 끊어내고, 한시우가 자신의 요구사항만 명확히 전달한 뒤 택시에 오르는 장면.",
+      "goal": "PB 박성호에게 만남을 강제하여 주도권 확보",
+      "key_events": [
+        "한시우가 수화기 너머 박성호의 당황한 목소리를 차갑게 끊어냄",
+        "한시우가 H&T 증권 본사 VIP 접견실로 1시간 내에 준비할 것을 일방적으로 통보함",
+        "한시우가 택시를 잡아타고 여의도로 향하며 편두통을 갈무리함"
+      ],
+      "location": "서울 성북동 본가 정문 앞",
+      "summary": "본가 정문 앞에서 한시우는 당황한 박성호의 질문을 자르고 즉각적인 만남을 지시한다.",
+      "tension_level": 5,
+      "title": "일방적인 통보",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "박성호"
+      ],
+      "content": "박성호는 모니터에 띄워진 한시우의 포트폴리오를 보며 혀를 찼다. 할아버지가 남긴 용돈 성격의 증여금과 승마 스폰서십 명목으로 쌓인 20억 원. 모두 만기가 한참 남은 안전 자산이었다. 박성호는 한시우가 또 어디서 비싼 차라도 보고 와서 떼를 쓰는 것이라 짐작하며, 페널티를 근거로 단호하게 거절할 멘트를 준비했다.",
+      "description": "H&T 증권 VIP 접견실에서 박성호가 한시우의 자산 명세서를 띄워놓고, 해지 방어율을 지키기 위한 설득 멘트를 연습하는 장면.",
+      "goal": "한시우의 자산 규모와 박성호의 기존 인식을 독자에게 노출",
+      "key_events": [
+        "박성호가 한시우 명의로 묶인 할아버지의 증여금과 승마 스폰서 수익금 내역을 확인함",
+        "총액 20억 원에 달하는 자산이 대부분 장기 안전 상품에 묶여 있음을 재확인함",
+        "박성호가 한시우의 갑작스러운 방문을 새 스포츠카 구매나 유흥비 마련을 위한 투정으로 단정 지음"
+      ],
+      "location": "H&T 증권 VIP 접견실",
+      "summary": "박성호는 한시우의 계좌를 확인하며 철없는 막내의 변덕으로 치부하고 방어 논리를 준비한다.",
+      "tension_level": 4,
+      "title": "관리자의 착각",
+      "type": "side_glimpse"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "접견실 문이 열리고 들어선 한시우는 인사치레조차 생략했다. 한시우는 테이블 위 서류를 밀어내며 명확한 어조로 모든 펀드와 신탁의 즉각적인 해지를 명령했다. 박성호가 당황하며 중도 해지 페널티를 언급했지만, 한시우는 오히려 상품별 특례 조항을 짚어내며 박성호의 핑계를 원천 차단했다.",
+      "description": "가벼운 설득으로 상황을 무마하려던 박성호에게 한시우가 정확한 금융 지식과 단호한 태도로 압박을 가하는 장면.",
+      "goal": "자산의 전면 현금화를 요구하며 기존의 위계를 무너뜨림",
+      "key_events": [
+        "한시우가 접견실에 들어서자마자 자리에 앉기도 전에 전면 해지 및 현금화를 지시함",
+        "박성호가 중도 해지 수수료와 원금 손실을 운운하며 한시우를 만류함",
+        "한시우가 박성호의 말을 끊고 각 상품의 약관상 즉시 해지 가능 조항을 정확히 읊어냄"
+      ],
+      "location": "H&T 증권 VIP 접견실",
+      "summary": "접견실에 도착한 한시우가 박성호의 예상을 깨고 전 계좌의 즉각적인 현금화를 명령한다.",
+      "tension_level": 7,
+      "title": "전면 유동화 지시",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "박성호가 회장님의 의중을 들먹이며 선을 넘자, 한시우의 눈빛이 차갑게 가라앉았다. 한시우는 내 돈을 굴리는 데 가문의 허락은 필요 없다며, 10분 안에 현금화가 증명되지 않으면 당장 PB를 교체하고 자금을 타 증권사로 빼겠다고 선언했다. 한시우가 내뿜는 포식자 같은 기세에 압도된 박성호는 결국 떨리는 손으로 마우스를 쥐고 전산망에 해지 코드를 입력했다.",
+      "description": "한정호(아버지)의 눈치를 보며 결제를 주저하는 박성호에게 한시우가 자신의 자산 통제권이 오직 자신에게 있음을 각인시키는 장면.",
+      "goal": "권력 위계를 완전히 뒤집고 20억 원의 현금을 확보",
+      "key_events": [
+        "박성호가 본가의 허락이 필요하다는 뉘앙스를 풍기며 시간을 끌려 함",
+        "한시우가 서늘한 눈빛으로 박성호를 응시하며 당장 실행하지 않으면 관리자를 교체하겠다고 압박함",
+        "박성호가 한시우의 기세에 짓눌려 결국 해지 서류에 승인 도장을 찍고 전산 처리를 시작함"
+      ],
+      "location": "H&T 증권 VIP 접견실",
+      "summary": "한시우는 머뭇거리는 박성호를 향해 PB 교체 카드까지 꺼내 들며 완벽히 굴복시킨다.",
+      "tension_level": 9,
+      "title": "포식자의 이빨",
+      "type": "action_peak"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "구형 휴대폰이 짧게 진동했다. 화면에 뜬 20억이라는 숫자를 확인한 한시우는 그제야 옅은 미소를 지었다. 한시우는 땀을 쥐고 있는 박성호에게 본가 보고는 내일 장 마감 이후로 미루라는 지시를 남겼다. 한시우가 천천히 고개를 돌려 접견실 벽면의 대형 모니터를 바라보았다.",
+      "description": "계좌에 찍힌 숫자를 확인한 한시우가 첫 번째 실탄 장전을 마치고, 본격적인 사냥을 앞둔 맹수처럼 모니터를 응시하는 장면.",
+      "goal": "현금 확보 완료 및 다음 목표 암시",
+      "key_events": [
+        "한시우가 구형 휴대폰의 문자로 20억 원의 현금 입금 알림을 확인함",
+        "한시우가 박성호에게 오늘 일에 대해 본가에 보고하는 시점을 하루 늦추라고 지시함",
+        "한시우의 시선이 접견실 벽면 모니터에서 붉게 깜빡이는 WTI 원유 선물 가격표에 머묾"
+      ],
+      "location": "H&T 증권 VIP 접견실",
+      "summary": "20억 원이 입금된 것을 확인한 한시우가 박성호에게 입단속을 시킨 뒤 시장을 주시한다.",
+      "tension_level": 8,
+      "title": "장전된 총알",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 본가 정문 앞",
+  "target_beat": "자산 유동화 지시 및 실행 완료",
+  "time_flow": "2006년 1월 2일 오전 -> 2006년 1월 2일 오후",
+  "title": "자산 유동화"
+}

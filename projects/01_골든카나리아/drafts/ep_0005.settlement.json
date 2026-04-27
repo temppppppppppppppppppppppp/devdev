@@ -1,0 +1,501 @@
+{
+  "arc_no": 2,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0005.txt",
+    "settlement_packet_path": "drafts/ep_0005.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 5,
+  "ep_num": 5,
+  "manuscript": {
+    "char_count": 7221,
+    "content_hash": "663e3ab468b675d1154094db7e389a111bcdbcea8623a7f5291e746a10c44097",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0005.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "open_review": "특이사항 없음. 직전 화의 마지막 대사를 자연스럽게 이어받아 오프닝을 구성한 점과, Blueprint의 오류(한미증권)를 H&T 증권으로 자체 교정한 점이 매우 훌륭합니다. 자금의 분배(15억 투자, 8억 MMF 보관)를 통해 주인공의 리스크 관리 능력과 냉철함을 동시에 보여준 점도 돋보입니다.",
+      "repair_scope": "inplace",
+      "score": 95,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 7,
+        "quality_engagement": 18
+      },
+      "selection_reason": "세 후보 모두 이전 화와의 연속성을 위해 Blueprint의 '한미증권' 오류를 'H&T 증권'으로 올바르게 수정하였습니다. 그중 후보 C는 포지션 청산과 현금 확보 과정을 가장 명확하게 서술하여 자금 흐름의 개연성을 높였으며, 인물 간의 기싸움과 시장의 폭력적인 변동성을 묘사하는 문장력과 긴장감이 가장 우수합니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 2,
+          "pattern": "순식간에"
+        }
+      ],
+      "ai_slop_score": 2.0,
+      "burstiness": 25.08,
+      "ced_score": 0.0,
+      "complexity": 72.63,
+      "compression_ratio": 0.4355,
+      "signal_summary": {
+        "ai_slop_total_hits": 2,
+        "burstiness": 25.08,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 72.63,
+        "compression_ratio": 0.4355,
+        "sentence_count": 147
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "대형",
+            "모니터",
+            "붉은",
+            "숫자들",
+            "폭포수"
+          ],
+          "source": "ending_hook",
+          "text": "대형 모니터의 붉은 숫자들이 폭포수처럼 쏟아져 내리는 가운데, 한시우가 손에 쥔 펜을 부러질 듯 꽉 틀어쥐며 서늘한 눈동자를 번뜩였다."
+        },
+        {
+          "cue_terms": [
+            "시장",
+            "폭력적인",
+            "변동성",
+            "속에서",
+            "한시우"
+          ],
+          "source": "expected_ending",
+          "text": "시장의 폭력적인 변동성 속에서 한시우가 다음 사냥을 위한 출격 준비를 마치며 긴장감 최고조"
+        }
+      ],
+      "capital": 2300000000,
+      "connections": "박성호 PB (맹목적 복종, VIP 예외 승인선 확보)",
+      "current_objective": "WTI 6월물 레버리지 베팅을 통한 폭발적 자본 증식 및 제도권 금융 인프라 통제",
+      "equipment": [
+        "구형 휴대폰",
+        "법인 서류",
+        "법인 인감",
+        "해외 선물 계좌 보안카드",
+        "두꺼운 가죽 노트",
+        "만년필"
+      ],
+      "inventory_counts": {
+        "SW인베스트먼트 사업자등록증": 1,
+        "구형 휴대폰": 1,
+        "두꺼운 가죽 노트": 1,
+        "만년필": 1,
+        "법인 인감": 1,
+        "해외 선물 계좌 전용 OTP 보안카드": 1
+      },
+      "market_insight": "지정학적 리스크(이란 핵 위기) 발발 타이밍 완벽 예측 및 변동성 장세에서의 3배 레버리지 승부수",
+      "reputation": "시장의 파동을 지배하는 완벽한 통제력을 지닌 승부사",
+      "status": "총자산 23억 달성, WTI 6월물 3배 레버리지 진입 대기 및 증권사 시스템 장악 시작",
+      "stocks": [
+        {
+          "amount": 800000000,
+          "leverage": "1x",
+          "name": "MMF",
+          "position": "안전 자산 예치"
+        },
+        {
+          "amount": 1500000000,
+          "leverage": "3x (총 노출 45억)",
+          "name": "WTI 원유 선물 6월물",
+          "position": "매수(Long)"
+        }
+      ],
+      "total_assets": 2300000000,
+      "wealth": 2300000000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "대형",
+            "모니터",
+            "붉은",
+            "숫자들",
+            "폭포수"
+          ],
+          "source": "ending_hook",
+          "text": "대형 모니터의 붉은 숫자들이 폭포수처럼 쏟아져 내리는 가운데, 한시우가 손에 쥔 펜을 부러질 듯 꽉 틀어쥐며 서늘한 눈동자를 번뜩였다."
+        },
+        {
+          "cue_terms": [
+            "시장",
+            "폭력적인",
+            "변동성",
+            "속에서",
+            "한시우"
+          ],
+          "source": "expected_ending",
+          "text": "시장의 폭력적인 변동성 속에서 한시우가 다음 사냥을 위한 출격 준비를 마치며 긴장감 최고조"
+        }
+      ],
+      "causal_links": [
+        "WTI 2월물 20억 매수 및 이란 우라늄 농축 재개(2월 1일) 발발 -> 단 보름 만에 3억 원 미실현 수익 달성 및 전량 청산 (총자산 23억 확보)",
+        "총자산 23억 확보 -> 8억 MMF 예치 및 15억 WTI 6월물 3배 레버리지(45억 노출) 매수 지시",
+        "한시우의 압도적 수익률 증명 및 수수료 2배 제안 -> 박성호 PB의 맹목적 굴복 및 H&T 증권 내부 VIP 예외 승인선(Exception Lane) 강제 개설"
+      ],
+      "inventory_count_deltas": [],
+      "inventory_counts": {
+        "SW인베스트먼트 사업자등록증": 1,
+        "구형 휴대폰": 1,
+        "두꺼운 가죽 노트": 1,
+        "만년필": 1,
+        "법인 인감": 1,
+        "해외 선물 계좌 전용 OTP 보안카드": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 60,
+          "target": "박성호",
+          "value": 85
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [
+          "H&T 증권 리스크팀 (한시우의 정밀한 계산을 단순한 고위험 투기꾼의 자살 행위로 오해할 가능성)"
+        ],
+        "new_witnesses": [
+          "박성호 (한시우의 압도적인 시장 예측력과 통제력을 직접 목격하고 맹목적인 경외감을 느낌)"
+        ]
+      },
+      "lost_items": [],
+      "new_items": [],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호 (한시우의 압도적인 시장 예측력과 통제력을 직접 목격하고 맹목적인 경외감을 느낌)",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "H&T 증권 리스크팀 (한시우의 정밀한 계산을 단순한 고위험 투기꾼의 자살 행위로 오해할 가능성)",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "집착60/오해85"
+        }
+      ],
+      "reveals": [
+        "expected_ending"
+      ],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "대형",
+              "모니터",
+              "붉은",
+              "숫자들",
+              "폭포수"
+            ],
+            "source": "ending_hook",
+            "text": "대형 모니터의 붉은 숫자들이 폭포수처럼 쏟아져 내리는 가운데, 한시우가 손에 쥔 펜을 부러질 듯 꽉 틀어쥐며 서늘한 눈동자를 번뜩였다."
+          },
+          {
+            "cue_terms": [
+              "시장",
+              "폭력적인",
+              "변동성",
+              "속에서",
+              "한시우"
+            ],
+            "source": "expected_ending",
+            "text": "시장의 폭력적인 변동성 속에서 한시우가 다음 사냥을 위한 출격 준비를 마치며 긴장감 최고조"
+          }
+        ],
+        "capital": 2300000000,
+        "connections": "박성호 PB (맹목적 복종, VIP 예외 승인선 확보)",
+        "current_objective": "WTI 6월물 레버리지 베팅을 통한 폭발적 자본 증식 및 제도권 금융 인프라 통제",
+        "equipment": [
+          "구형 휴대폰",
+          "법인 서류",
+          "법인 인감",
+          "해외 선물 계좌 보안카드",
+          "두꺼운 가죽 노트",
+          "만년필"
+        ],
+        "inventory_counts": {
+          "SW인베스트먼트 사업자등록증": 1,
+          "구형 휴대폰": 1,
+          "두꺼운 가죽 노트": 1,
+          "만년필": 1,
+          "법인 인감": 1,
+          "해외 선물 계좌 전용 OTP 보안카드": 1
+        },
+        "market_insight": "지정학적 리스크(이란 핵 위기) 발발 타이밍 완벽 예측 및 변동성 장세에서의 3배 레버리지 승부수",
+        "reputation": "시장의 파동을 지배하는 완벽한 통제력을 지닌 승부사",
+        "status": "총자산 23억 달성, WTI 6월물 3배 레버리지 진입 대기 및 증권사 시스템 장악 시작",
+        "stocks": [
+          {
+            "amount": 800000000,
+            "leverage": "1x",
+            "name": "MMF",
+            "position": "안전 자산 예치"
+          },
+          {
+            "amount": 1500000000,
+            "leverage": "3x (총 노출 45억)",
+            "name": "WTI 원유 선물 6월물",
+            "position": "매수(Long)"
+          }
+        ],
+        "total_assets": 2300000000,
+        "wealth": 2300000000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "promoted_fields": [
+              "capital"
+            ],
+            "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+            "promotion_sources": {
+              "capital": "actual_truth"
+            },
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ]
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "23억 원 (15억 원 WTI 6월물 롱 포지션 진입, 8억 원 MMF 보관)",
+      "director_score": 95
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "promoted_fields": [
+            "capital"
+          ],
+          "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+          "promotion_sources": {
+            "capital": "actual_truth"
+          },
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ]
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 90,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "revision_required": false
+  },
+  "title": "제5화: 출격 준비"
+}

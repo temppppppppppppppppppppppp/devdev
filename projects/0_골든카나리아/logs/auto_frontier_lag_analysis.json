@@ -1,0 +1,968 @@
+{
+  "summary_role": "auto_frontier_lag_runtime_analysis",
+  "generated_at": "2026-04-26T18:49:03",
+  "project": "0_골든카나리아",
+  "project_locator": "projects/0_골든카나리아",
+  "arc_count": 5,
+  "watchdog_status": "progressing",
+  "termination_reason": "",
+  "worker_status": "success",
+  "boundary_reached": false,
+  "frontier_result": {
+    "arcs_advanced": 1,
+    "total_manuscripts": 2,
+    "requested_arc_limit": 5,
+    "requested_limit_hit": false,
+    "stop_reason": "stage3_user_abort",
+    "final_plan": {
+      "frontier_ep_start": 5,
+      "frontier_ep_end": 9,
+      "designed_frontier_arc_no": 2,
+      "true_final_arc_no": 60,
+      "is_true_final_frontier": false,
+      "stage3_target": 8,
+      "stage4_target": 7,
+      "bp_max": 3,
+      "ms_max": 2,
+      "stage3_alignment": "backlog",
+      "stage4_alignment": "backlog"
+    }
+  },
+  "runtime_audit_summary": {
+    "tag": "shutdown_final",
+    "timestamp": "2026-04-26 18:48:59",
+    "summary_role": "runtime_heartbeat_with_proof_digest",
+    "total_events": 24,
+    "counts": {
+      "v60_25_auto_correct": 2,
+      "field_repair": 1,
+      "db_commit": 5,
+      "v60_10_state_extracted": 3,
+      "blueprint_success": 3,
+      "stage4_session_scope": 1,
+      "stage4_post_pass_contract_signal": 2,
+      "stage4_pass_settlement_status": 2,
+      "stage4_retry_pathology_signal": 1,
+      "target_ep_reached": 1,
+      "stage4_complete": 1,
+      "s4_to_s2_feedback": 1,
+      "blueprint_fail": 1
+    },
+    "latest_event_type": "blueprint_fail",
+    "recent_events": [
+      {
+        "type": "stage4_post_pass_contract_signal",
+        "message": "stage4 post-pass contract persisted"
+      },
+      {
+        "type": "stage4_pass_settlement_status",
+        "message": "stage4 pass settlement status recorded"
+      },
+      {
+        "type": "target_ep_reached",
+        "message": "stage4 target episode reached"
+      },
+      {
+        "type": "stage4_complete",
+        "message": "stage4 production completed"
+      },
+      {
+        "type": "v60_10_state_extracted",
+        "message": "StateExtractor generated context"
+      },
+      {
+        "type": "s4_to_s2_feedback",
+        "message": "Arc difficulty feedback injected"
+      },
+      {
+        "type": "v60_25_auto_correct",
+        "message": "arc auto-corrected"
+      },
+      {
+        "type": "db_commit",
+        "message": "데이터베이스 저장 완료"
+      },
+      {
+        "type": "v60_10_state_extracted",
+        "message": "StateExtractor generated context"
+      },
+      {
+        "type": "blueprint_fail",
+        "message": "ep_4_all_retries_exhausted"
+      }
+    ],
+    "contract": {
+      "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
+      "attempt_truth_authoritative": false,
+      "authoritative_attempt_sinks": [
+        "stage_attempts",
+        "pass_rate_monitor",
+        "session_decisions",
+        "episode_production",
+        "director_selections"
+      ],
+      "proof_digest_truth_scope": "committed_persistence_only",
+      "operational_metadata_scope": "latest_structured_session_plus_runtime_audit_events_and_session_sinks",
+      "authoritative_attempt_truth_note": "Use DB/JSONL/artifact sink join for authoritative attempt truth.",
+      "operational_metadata_note": "Operational metadata is best-effort run interpretation and does not override persisted attempt truth."
+    },
+    "summary_window": {
+      "count_window_size": 200,
+      "counted_events": 24,
+      "counts_truncated": false,
+      "recent_event_window_size": 10,
+      "recent_events_returned": 10,
+      "event_window_truncated": true
+    },
+    "proof_digest": {
+      "available": true,
+      "status": "warn",
+      "artifacts": {
+        "db_available": true,
+        "session_decisions_exists": true,
+        "ui_events_jsonl_exists": true,
+        "pass_rate_monitor_exists": true,
+        "episode_production_exists": true,
+        "runtime_audit_jsonl_exists": true,
+        "ui_events_db_available": true,
+        "ui_events_count": 707,
+        "ui_event_coverage_status": "ok"
+      },
+      "stages": {
+        "stage2": {
+          "status": "ok",
+          "attempts_considered": 2,
+          "complete_final_attempts": 2,
+          "complete_lifecycle_attempts": 0,
+          "legacy_key_attempts": 0,
+          "session_scoped_attempts": 2,
+          "coverage": {
+            "stage_attempts": 2,
+            "pass_rate_monitor": 2,
+            "director_selections": 2,
+            "episode_production": 0,
+            "session_decisions": 2,
+            "attempt_raw_rationale": 0
+          },
+          "issue_counts": {}
+        },
+        "stage3": {
+          "status": "warn",
+          "attempts_considered": 4,
+          "complete_final_attempts": 4,
+          "complete_lifecycle_attempts": 0,
+          "legacy_key_attempts": 0,
+          "session_scoped_attempts": 4,
+          "coverage": {
+            "stage_attempts": 4,
+            "pass_rate_monitor": 4,
+            "director_selections": 4,
+            "episode_production": 0,
+            "session_decisions": 4,
+            "attempt_raw_rationale": 0
+          },
+          "issue_counts": {
+            "artifact_metadata_missing": 2
+          }
+        },
+        "stage4": {
+          "status": "warn",
+          "attempts_considered": 3,
+          "complete_final_attempts": 3,
+          "complete_lifecycle_attempts": 3,
+          "legacy_key_attempts": 0,
+          "session_scoped_attempts": 3,
+          "coverage": {
+            "stage_attempts": 3,
+            "pass_rate_monitor": 3,
+            "director_selections": 3,
+            "episode_production": 3,
+            "session_decisions": 3,
+            "attempt_raw_rationale": 3
+          },
+          "issue_counts": {
+            "selection_reason_mismatches": 1,
+            "verdict_reason_mismatches": 1,
+            "runtime_advisory_mismatches": 1,
+            "rationale_metadata_missing": 4
+          },
+          "numeric_consistency_summary": {
+            "status": "ok",
+            "stage": 4,
+            "session_filter": "20260426_171126",
+            "attempt_rows_considered": 3,
+            "attempts_with_signals": 0,
+            "signal_count": 0,
+            "category_counts": {},
+            "severity_counts": {},
+            "ledger_field_counts": {},
+            "signal_examples": [],
+            "observability_note": "Numeric consistency summary surfaces persisted NC advisory text only; owner classification remains external to this summary."
+          }
+        }
+      },
+      "session_lineage": {
+        "plain_log_token": "20260426_171125",
+        "structured_session_id": "20260426_171126",
+        "status": "split_mapped"
+      },
+      "operational_metadata": {
+        "status": "ok",
+        "latest_session_id": "20260426_171126",
+        "stage2_live_session": {
+          "status": "ok",
+          "attempt_count": 2,
+          "episode_count": 2,
+          "episodes": [
+            1,
+            2
+          ],
+          "latest_ep": 2,
+          "latest_final_verdict": "PASS",
+          "session_decision_count": 6,
+          "ui_event_count": 6,
+          "attempt_key_coverage": {
+            "present": 2,
+            "total": 2,
+            "status": "ok"
+          },
+          "artifact_path_coverage": {
+            "present": 2,
+            "total": 2,
+            "status": "ok"
+          },
+          "selection_reason_coverage": {
+            "present": 2,
+            "total": 2,
+            "status": "ok"
+          },
+          "verdict_reason_coverage": {
+            "present": 2,
+            "total": 2,
+            "status": "ok"
+          },
+          "decision_attempt_key_coverage": {
+            "present": 6,
+            "total": 6,
+            "status": "ok"
+          },
+          "decision_artifact_path_coverage": {
+            "present": 2,
+            "total": 6,
+            "status": "partial"
+          },
+          "carryover_authority_event_count": 2,
+          "latest_carryover_authority": {
+            "start_location": "서울 성북동 본가 침실",
+            "start_inventory_count": 4,
+            "start_inventory_preview": [
+              "스마트폰(2006년형)",
+              "20억 원 규모의 자산 이체 및 통합 내역서",
+              "1인 투자 법인 'SW인베스트먼트' 설립 신청 서류 가안"
+            ],
+            "end_location": "SW인베스트먼트 대표실",
+            "end_inventory_count": 6,
+            "end_inventory_preview": [
+              "스마트폰(2006년형)",
+              "20억 원 규모의 자산 이체 및 통합 내역서",
+              "개인 수첩(2006년 매크로 이벤트 타임라인 암호화)"
+            ],
+            "start_total_assets": "20억원",
+            "start_capital": "20억원",
+            "start_portfolio_position": "현금 20억원 보유",
+            "end_total_assets": "23억원",
+            "end_capital": "5억원",
+            "end_portfolio_position": "WTI 6월물 15억원 3배 레버리지 매수 (미실현 수익 3억원)",
+            "investment_calc_final_total_assets": 2300000000,
+            "investment_calc_final_cash": 500000000,
+            "semantic_carryover_keys": [
+              "relationship_rationale",
+              "growth_justification",
+              "foreshadow_anchors",
+              "continuity_checkpoints"
+            ],
+            "continuity_checkpoint_count": 3,
+            "cross_stage_authority_packet_present": 1,
+            "cross_stage_authority_packet_version": "cross_stage_authority_packet.v1"
+          }
+        },
+        "stage3_live_session": {
+          "status": "ok",
+          "attempt_count": 4,
+          "episode_count": 4,
+          "episodes": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "latest_ep": 4,
+          "latest_final_verdict": "FAILED",
+          "session_decision_count": 4,
+          "ui_event_count": 37,
+          "attempt_key_coverage": {
+            "present": 4,
+            "total": 4,
+            "status": "ok"
+          },
+          "artifact_path_coverage": {
+            "present": 3,
+            "total": 4,
+            "status": "partial"
+          },
+          "selection_reason_coverage": {
+            "present": 4,
+            "total": 4,
+            "status": "ok"
+          },
+          "verdict_reason_coverage": {
+            "present": 4,
+            "total": 4,
+            "status": "ok"
+          },
+          "decision_attempt_key_coverage": {
+            "present": 4,
+            "total": 4,
+            "status": "ok"
+          },
+          "decision_artifact_path_coverage": {
+            "present": 3,
+            "total": 4,
+            "status": "partial"
+          },
+          "source_anchor_summary_count": 4,
+          "source_anchor_ui_event_count": 4,
+          "latest_source_anchor_summary": {
+            "blueprint_window_count": 3,
+            "previous_blueprint_ep": 3,
+            "previous_blueprint_end_location": "강남 비즈니스 카페 프라이빗 룸",
+            "previous_blueprint_opening_transition_type": "direct_continuation",
+            "anchor_surfaces": [
+              "prev_blueprint_end_location",
+              "prev_blueprint_opening_transition"
+            ]
+          }
+        },
+        "stage4_live_session": {
+          "status": "ok",
+          "attempt_count": 3,
+          "episode_count": 2,
+          "episodes": [
+            1,
+            2
+          ],
+          "latest_ep": 2,
+          "latest_final_verdict": "PASS",
+          "retry_exercised": true,
+          "patch_exercised": true,
+          "patch_attempt_count": 2,
+          "fallback_patch_count": 0,
+          "pass_count": 2,
+          "session_scope": {
+            "session_id": "20260426_171126",
+            "start_ep": 1,
+            "target_ep": 2,
+            "total_planned_ep": 3
+          },
+          "target_ep_reached": true,
+          "stage4_complete_emitted": true,
+          "post_pass_contract_signal_count": 2,
+          "non_exercised_reasons": []
+        }
+      }
+    },
+    "run_scope": {
+      "status": "scoped",
+      "engine_run_id": "",
+      "latest_session_id": "20260426_171126",
+      "summary_tag": "shutdown_final",
+      "summary_timestamp": "2026-04-26 18:48:59",
+      "basis": [
+        "proof_digest.latest_session_id"
+      ],
+      "authority_role": "companion_snapshot"
+    },
+    "freshness": {
+      "status": "scoped",
+      "basis": [
+        "proof_digest.latest_session_id"
+      ],
+      "engine_run_id_present": false,
+      "latest_session_id_present": true,
+      "operator_guidance_only": true
+    }
+  },
+  "pass_rate_monitor_exists": true,
+  "stage3_attempts": 4,
+  "stage4_attempts": 3,
+  "stage3_latest_session_id": "20260426_171126",
+  "stage4_latest_session_id": "20260426_171126",
+  "shared_session_id": "20260426_171126",
+  "stage3_current_session_sink_alignment_summary": {
+    "stage": 3,
+    "session_filter": "20260426_171126",
+    "attempts_considered": 4,
+    "coverage": {
+      "stage_attempts": 4,
+      "pass_rate_monitor": 4,
+      "director_selections": 4,
+      "episode_production": 0,
+      "session_decisions": 4,
+      "attempt_raw_rationale": 0
+    },
+    "raw_rationale_summary": {
+      "attempts_with_raw_rationale": 0,
+      "attempts_with_projected_payloads": 0,
+      "payload_kinds_present": [],
+      "record_families_present": [],
+      "surfaces_present": [],
+      "projected_payload_kinds_present": [],
+      "payload_kind_attempt_counts": {},
+      "record_family_attempt_counts": {},
+      "surface_attempt_counts": {},
+      "projected_payload_attempt_counts": {},
+      "payload_kind_examples": {},
+      "record_family_examples": {},
+      "surface_examples": {},
+      "projected_payload_examples": {}
+    },
+    "raw_rationale_health": {},
+    "raw_rationale_watchlist": [],
+    "raw_rationale_watchlist_headline": {},
+    "raw_rationale_operator_summary": "",
+    "coverage_gap_count": 0,
+    "structured_issue_count": 2,
+    "raw_issue_count": 0,
+    "top_issue_headline": {
+      "headline": "P2 structured_sink_drift x2",
+      "priority": "P2",
+      "focus": "structured_sink_drift",
+      "count": 2,
+      "next_action": "Inspect structured sink mismatches before trusting cross-sink contract parity."
+    },
+    "complete_final_attempts": 4,
+    "director_lifecycle_attempts": 0,
+    "complete_lifecycle_attempts": 0,
+    "final_sink_missing": {},
+    "lifecycle_sink_missing": {},
+    "lifecycle_missing_in_final_sinks": {},
+    "final_verdict_mismatches": [],
+    "final_score_mismatches": [],
+    "initial_verdict_mismatches": [],
+    "director_verdict_mismatches": [],
+    "gate_basis_mismatches": [],
+    "repair_scope_mismatches": [],
+    "fix_pack_target_kind_mismatches": [],
+    "fix_pack_patch_targets_mismatches": [],
+    "retry_budget_axes_mismatches": [],
+    "repair_contract_subtype_mismatches": [],
+    "repair_contract_provenance_mismatches": [],
+    "scope_authority_fix_scope_mismatches": [],
+    "scope_authority_authoritative_fix_scope_mismatches": [],
+    "scope_authority_widened_mismatches": [],
+    "patch_strategy_mismatches": [],
+    "candidate_key_mismatches": [],
+    "selection_candidate_key_mismatches": [],
+    "content_hash_mismatches": [],
+    "artifact_content_hash_mismatches": [],
+    "artifact_path_mismatches": [],
+    "artifact_metadata_missing": [
+      {
+        "attempt_key": "s3:ep4:arc1:a10:20260426_171126",
+        "field": "content_hash",
+        "sinks": [
+          "stage_attempts",
+          "pass_rate_monitor",
+          "session_decisions"
+        ]
+      },
+      {
+        "attempt_key": "s3:ep4:arc1:a10:20260426_171126",
+        "field": "artifact_path",
+        "sinks": [
+          "stage_attempts",
+          "pass_rate_monitor",
+          "session_decisions"
+        ]
+      }
+    ],
+    "selection_reason_mismatches": [],
+    "verdict_reason_mismatches": [],
+    "comparison_notes_mismatches": [],
+    "selected_candidate_advisory_mismatches": [],
+    "fix_scope_mismatches": [],
+    "runtime_advisory_mismatches": [],
+    "retry_directives_mismatches": [],
+    "gate_repair_metadata_missing": [],
+    "rationale_metadata_missing": [],
+    "artifact_missing_files": [],
+    "raw_rationale_missing": [],
+    "raw_rationale_kind_missing": [],
+    "raw_rationale_family_missing": [],
+    "raw_rationale_surface_mismatches": [],
+    "raw_rationale_contract_mismatches": [],
+    "raw_rationale_feedback_mismatches": [],
+    "raw_rationale_patch_trace_mismatches": [],
+    "raw_rationale_retry_chain_mismatches": [],
+    "selection_companion_pre_final_rows": [],
+    "selection_companion_missing_rows": [],
+    "final_authority_contract": {},
+    "session_scoped_attempts": 4,
+    "legacy_key_attempts": 0,
+    "stage_attempt_rows_without_attempt_key": 0,
+    "session_decision_rows_without_attempt_key": 0,
+    "status": "warn",
+    "operator_summary": "Stage3 sink alignment warn: 4 attempt(s), final 4/4, lifecycle 0/0, coverage gaps 0, sink issues 2. Top issue: P2 structured_sink_drift x2. Next: Inspect structured sink mismatches before trusting cross-sink contract parity."
+  },
+  "stage4_current_session_sink_alignment_summary": {
+    "stage": 4,
+    "session_filter": "20260426_171126",
+    "attempts_considered": 3,
+    "coverage": {
+      "stage_attempts": 3,
+      "pass_rate_monitor": 3,
+      "director_selections": 3,
+      "episode_production": 3,
+      "session_decisions": 3,
+      "attempt_raw_rationale": 3
+    },
+    "raw_rationale_summary": {
+      "attempts_with_raw_rationale": 3,
+      "attempts_with_projected_payloads": 3,
+      "payload_kinds_present": [
+        "advisory_warnings_raw",
+        "contract_snapshot_raw",
+        "feedback_provenance_raw",
+        "patch_trace_raw",
+        "reject_retry_snapshot_raw",
+        "retry_pathology_raw",
+        "selection_contract_snapshot_raw",
+        "selection_surface_raw"
+      ],
+      "record_families_present": [
+        "advisory_bundle",
+        "contract_snapshot",
+        "feedback_provenance",
+        "patch_trace",
+        "reject_retry_snapshot",
+        "retry_pathology",
+        "selection_surface"
+      ],
+      "surfaces_present": [
+        "advisory_warnings_raw",
+        "contract_snapshot_raw",
+        "feedback_provenance_raw",
+        "patch_trace_raw",
+        "reject_retry_snapshot_raw",
+        "retry_pathology_raw",
+        "selection_contract_snapshot_raw",
+        "selection_surface_raw"
+      ],
+      "projected_payload_kinds_present": [
+        "contract_snapshot_raw",
+        "feedback_provenance_raw",
+        "patch_trace_raw",
+        "reject_retry_snapshot_raw",
+        "retry_pathology_raw",
+        "selection_contract_snapshot_raw",
+        "selection_surface_raw"
+      ],
+      "payload_kind_attempt_counts": {
+        "advisory_warnings_raw": 3,
+        "contract_snapshot_raw": 3,
+        "feedback_provenance_raw": 3,
+        "patch_trace_raw": 3,
+        "reject_retry_snapshot_raw": 1,
+        "retry_pathology_raw": 1,
+        "selection_contract_snapshot_raw": 3,
+        "selection_surface_raw": 3
+      },
+      "record_family_attempt_counts": {
+        "advisory_bundle": 3,
+        "contract_snapshot": 3,
+        "feedback_provenance": 3,
+        "patch_trace": 3,
+        "reject_retry_snapshot": 1,
+        "retry_pathology": 1,
+        "selection_surface": 3
+      },
+      "surface_attempt_counts": {
+        "advisory_warnings_raw": 3,
+        "contract_snapshot_raw": 3,
+        "feedback_provenance_raw": 3,
+        "patch_trace_raw": 3,
+        "reject_retry_snapshot_raw": 1,
+        "retry_pathology_raw": 1,
+        "selection_contract_snapshot_raw": 3,
+        "selection_surface_raw": 3
+      },
+      "projected_payload_attempt_counts": {
+        "contract_snapshot_raw": 3,
+        "feedback_provenance_raw": 3,
+        "patch_trace_raw": 3,
+        "reject_retry_snapshot_raw": 1,
+        "retry_pathology_raw": 1,
+        "selection_contract_snapshot_raw": 3,
+        "selection_surface_raw": 3
+      },
+      "payload_kind_examples": {
+        "advisory_warnings_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "contract_snapshot_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "feedback_provenance_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "patch_trace_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "reject_retry_snapshot_raw": [
+          "s4:ep2:arc1:a1:20260426_171126"
+        ],
+        "retry_pathology_raw": [
+          "s4:ep2:arc1:a1:20260426_171126"
+        ],
+        "selection_contract_snapshot_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "selection_surface_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ]
+      },
+      "record_family_examples": {
+        "advisory_bundle": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "contract_snapshot": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "feedback_provenance": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "patch_trace": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "reject_retry_snapshot": [
+          "s4:ep2:arc1:a1:20260426_171126"
+        ],
+        "retry_pathology": [
+          "s4:ep2:arc1:a1:20260426_171126"
+        ],
+        "selection_surface": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ]
+      },
+      "surface_examples": {
+        "advisory_warnings_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "contract_snapshot_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "feedback_provenance_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "patch_trace_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "reject_retry_snapshot_raw": [
+          "s4:ep2:arc1:a1:20260426_171126"
+        ],
+        "retry_pathology_raw": [
+          "s4:ep2:arc1:a1:20260426_171126"
+        ],
+        "selection_contract_snapshot_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "selection_surface_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ]
+      },
+      "projected_payload_examples": {
+        "contract_snapshot_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "feedback_provenance_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "patch_trace_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "reject_retry_snapshot_raw": [
+          "s4:ep2:arc1:a1:20260426_171126"
+        ],
+        "retry_pathology_raw": [
+          "s4:ep2:arc1:a1:20260426_171126"
+        ],
+        "selection_contract_snapshot_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ],
+        "selection_surface_raw": [
+          "s4:ep1:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a1:20260426_171126",
+          "s4:ep2:arc1:a2:20260426_171126"
+        ]
+      }
+    },
+    "raw_rationale_health": {
+      "status": "ok",
+      "attempts_with_raw_rationale": 3,
+      "attempts_with_projected_payloads": 3,
+      "projection_gap": 0,
+      "payload_kinds_present": [
+        "advisory_warnings_raw",
+        "contract_snapshot_raw",
+        "feedback_provenance_raw",
+        "patch_trace_raw",
+        "reject_retry_snapshot_raw",
+        "retry_pathology_raw",
+        "selection_contract_snapshot_raw",
+        "selection_surface_raw"
+      ],
+      "record_families_present": [
+        "advisory_bundle",
+        "contract_snapshot",
+        "feedback_provenance",
+        "patch_trace",
+        "reject_retry_snapshot",
+        "retry_pathology",
+        "selection_surface"
+      ],
+      "surfaces_present": [
+        "advisory_warnings_raw",
+        "contract_snapshot_raw",
+        "feedback_provenance_raw",
+        "patch_trace_raw",
+        "reject_retry_snapshot_raw",
+        "retry_pathology_raw",
+        "selection_contract_snapshot_raw",
+        "selection_surface_raw"
+      ],
+      "issue_counts": {},
+      "issue_examples": {}
+    },
+    "raw_rationale_watchlist": [],
+    "raw_rationale_watchlist_headline": {},
+    "raw_rationale_operator_summary": "Stage4 raw rationale ok: 3 attempt(s), 3 projected, 7 family(s), 8 surface(s)",
+    "coverage_gap_count": 0,
+    "structured_issue_count": 10,
+    "raw_issue_count": 0,
+    "top_issue_headline": {
+      "headline": "P2 structured_sink_drift x10",
+      "priority": "P2",
+      "focus": "structured_sink_drift",
+      "count": 10,
+      "next_action": "Inspect structured sink mismatches before trusting cross-sink contract parity."
+    },
+    "complete_final_attempts": 3,
+    "director_lifecycle_attempts": 3,
+    "complete_lifecycle_attempts": 3,
+    "final_sink_missing": {},
+    "lifecycle_sink_missing": {},
+    "lifecycle_missing_in_final_sinks": {},
+    "final_verdict_mismatches": [],
+    "final_score_mismatches": [],
+    "initial_verdict_mismatches": [],
+    "director_verdict_mismatches": [],
+    "gate_basis_mismatches": [],
+    "repair_scope_mismatches": [],
+    "fix_pack_target_kind_mismatches": [],
+    "fix_pack_patch_targets_mismatches": [],
+    "retry_budget_axes_mismatches": [],
+    "repair_contract_subtype_mismatches": [],
+    "repair_contract_provenance_mismatches": [],
+    "scope_authority_fix_scope_mismatches": [],
+    "scope_authority_authoritative_fix_scope_mismatches": [],
+    "scope_authority_widened_mismatches": [],
+    "patch_strategy_mismatches": [],
+    "candidate_key_mismatches": [],
+    "selection_candidate_key_mismatches": [],
+    "content_hash_mismatches": [],
+    "artifact_content_hash_mismatches": [],
+    "artifact_path_mismatches": [],
+    "artifact_metadata_missing": [],
+    "selection_reason_mismatches": [
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260426_171126",
+        "stage_attempts": "직전 화의 엔딩(전화 연결음)에서 완벽하게 이어지며, Blueprint에 제시된 모든 씬(전화 압박, 대면 기싸움, 논리적 굴복, 시스템 경고 엔딩)을 밀도 있고 긴장감 넘치게 구현했습니다. 모순이나 설정 오류가 전혀 없는 훌륭한 원고입니다.",
+        "director_selections": "직전 화의 엔딩(전화 연결음)에서 지연 없이 완벽하게 이어지며, 주인공의 차갑고 단호한 태도가 매우 잘 표현되었습니다. PB 센터장 박성호를 압박하는 과정에서 법적 근거와 타사 이관이라는 현실적인 위협을 사용하여 긴장감을 훌륭하게 끌어올렸으며, 마지막 시스템 경고 팝업으로 끝나는 절벽걸기(Cliffhanger) 연출도 몰입도를 극대화합니다. 이전 피드백(상황에 맞지 않는 에스프레소 향기 묘사 삭제)도 정확히 반영되었습니다.",
+        "session_decisions": "직전 화의 엔딩(전화 연결음)에서 완벽하게 이어지며, Blueprint에 제시된 모든 씬(전화 압박, 대면 기싸움, 논리적 굴복, 시스템 경고 엔딩)을 밀도 있고 긴장감 넘치게 구현했습니다. 모순이나 설정 오류가 전혀 없는 훌륭한 원고입니다.",
+        "episode_production": "직전 화의 엔딩(전화 연결음)에서 완벽하게 이어지며, Blueprint에 제시된 모든 씬(전화 압박, 대면 기싸움, 논리적 굴복, 시스템 경고 엔딩)을 밀도 있고 긴장감 넘치게 구현했습니다. 모순이나 설정 오류가 전혀 없는 훌륭한 원고입니다."
+      }
+    ],
+    "verdict_reason_mismatches": [
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260426_171126",
+        "stage_attempts": "직전 화의 엔딩(전화 연결음)에서 완벽하게 이어지며, Blueprint에 제시된 모든 씬(전화 압박, 대면 기싸움, 논리적 굴복, 시스템 경고 엔딩)을 밀도 있고 긴장감 넘치게 구현했습니다. 모순이나 설정 오류가 전혀 없는 훌륭한 원고입니다.",
+        "director_selections": "직전 화의 엔딩(전화 연결음)에서 지연 없이 완벽하게 이어지며, 주인공의 차갑고 단호한 태도가 매우 잘 표현되었습니다. PB 센터장 박성호를 압박하는 과정에서 법적 근거와 타사 이관이라는 현실적인 위협을 사용하여 긴장감을 훌륭하게 끌어올렸으며, 마지막 시스템 경고 팝업으로 끝나는 절벽걸기(Cliffhanger) 연출도 몰입도를 극대화합니다. 이전 피드백(상황에 맞지 않는 에스프레소 향기 묘사 삭제)도 정확히 반영되었습니다.",
+        "session_decisions": "직전 화의 엔딩(전화 연결음)에서 완벽하게 이어지며, Blueprint에 제시된 모든 씬(전화 압박, 대면 기싸움, 논리적 굴복, 시스템 경고 엔딩)을 밀도 있고 긴장감 넘치게 구현했습니다. 모순이나 설정 오류가 전혀 없는 훌륭한 원고입니다.",
+        "episode_production": "직전 화의 엔딩(전화 연결음)에서 완벽하게 이어지며, Blueprint에 제시된 모든 씬(전화 압박, 대면 기싸움, 논리적 굴복, 시스템 경고 엔딩)을 밀도 있고 긴장감 넘치게 구현했습니다. 모순이나 설정 오류가 전혀 없는 훌륭한 원고입니다."
+      }
+    ],
+    "comparison_notes_mismatches": [],
+    "selected_candidate_advisory_mismatches": [],
+    "fix_scope_mismatches": [],
+    "runtime_advisory_mismatches": [
+      {
+        "attempt_key": "s4:ep2:arc1:a1:20260426_171126",
+        "stage_attempts": "[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 5.00 (python warnings 5건) / - [후보 A] dialogue_ratio 44% > style target 0% / - [후보 B] ced_score 6.00 (python warnings 6건) / - [후보 B] dialogue_ratio 27% > style target 0% / - [후보 C] ai_slop score 2.00 (recent median 1.00) / hits=입을 열었다x1, 침을 삼켰다x1 / - [후보 C] ced_score 5.00 (python warnings 5건) / - [후보 C] dialogue_ratio 24% > style target 0%\n- [MAJOR · NpcDrift] [NpcDriftAdvisor — NPC 속성 표류 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 B][MAJOR] NPC '한정호' relation_to_protag: 기대='목격자' → 원고='주인공의 아버지이자 그룹 회장으로 묘사됨 ('한정호 회장의 이름을 꺼냈다. 아버지를 방패 삼아...')'\n- [MAJOR · Flashback] [FlashbackVerifier — 회상 오염 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 B][MAJOR] '과거의': 1화의 배경 장소는 '서울 성북동 본가 침실'이었으나, 현재 씬에서는 어젯밤 '차가운 원룸 바닥'에서 죽었다고 서술하여 장소 설정에 모순이 발생합니다.",
+        "session_decisions": "[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 5.00 (python warnings 5건) / - [후보 A] dialogue_ratio 44% > style target 0% / - [후보 B] ced_score 6.00 (python warnings 6건) / - [후보 B] dialogue_ratio 27% > style target 0% / - [후보 C] ai_slop score 2.00 (recent median 1.00) / hits=입을 열었다x1, 침을 삼켰다x1 / - [후보 C] ced_score 5.00 (python warnings 5건) / - [후보 C] dialogue_ratio 24% > style target 0%\n- [MAJOR · NpcDrift] [NpcDriftAdvisor — NPC 속성 표류 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 B][MAJOR] NPC '한정호' relation_to_protag: 기대='목격자' → 원고='주인공의 아버지이자 그룹 회장으로 묘사됨 ('한정호 회장의 이름을 꺼냈다. 아버지를 방패 삼아...')'\n- [MAJOR · Flashback] [FlashbackVerifier — 회상 오염 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 B][MAJOR] '과거의': 1화의 배경 장소는 '서울 성북동 본가 침실'이었으나, 현재 씬에서는 어젯밤 '차가운 원룸 바닥'에서 죽었다고 서술하여 장소 설정에 모순이 발생합니다.\n[Repair scope authority] runtime scope widened from authoritative=inplace to runtime=inplace. (origin=runtime_widened, provenance=director_authored)"
+      }
+    ],
+    "retry_directives_mismatches": [],
+    "gate_repair_metadata_missing": [],
+    "rationale_metadata_missing": [
+      {
+        "attempt_key": "s4:ep1:arc1:a1:20260426_171126",
+        "field": "runtime_advisory",
+        "sinks": [
+          "director_selections"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a1:20260426_171126",
+        "field": "runtime_advisory",
+        "sinks": [
+          "director_selections"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a1:20260426_171126",
+        "field": "retry_directives",
+        "sinks": [
+          "stage_attempts",
+          "director_selections"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260426_171126",
+        "field": "runtime_advisory",
+        "sinks": [
+          "director_selections"
+        ]
+      }
+    ],
+    "artifact_missing_files": [],
+    "raw_rationale_missing": [],
+    "raw_rationale_kind_missing": [],
+    "raw_rationale_family_missing": [],
+    "raw_rationale_surface_mismatches": [],
+    "raw_rationale_contract_mismatches": [],
+    "raw_rationale_feedback_mismatches": [],
+    "raw_rationale_patch_trace_mismatches": [],
+    "raw_rationale_retry_chain_mismatches": [],
+    "selection_companion_pre_final_rows": [
+      {
+        "attempt_key": "s4:ep1:arc1:a1:20260426_171126",
+        "ep_num": 1,
+        "attempt_num": 1,
+        "selection_artifact_path": "logs/artifacts/stage4/ep_0001/attempt_01/selected_candidate__B.txt",
+        "final_artifact_path": "logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__B.txt",
+        "selection_content_hash": "d6dee36696608dd68eb8ffe74f477a8e0c1f8baf3fda565de96fdb56294e7d92",
+        "final_content_hash": "d6dee36696608dd68eb8ffe74f477a8e0c1f8baf3fda565de96fdb56294e7d92",
+        "diff_fields": [
+          "artifact_path"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a1:20260426_171126",
+        "ep_num": 2,
+        "attempt_num": 1,
+        "selection_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_01/rejected_best__A.txt",
+        "final_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_01/rejected_best__A_balanced.txt",
+        "selection_content_hash": "629ff15e8e1cf17df5815fdb50141494e1007db9f660ec3502e5d459a30ec7ac",
+        "final_content_hash": "629ff15e8e1cf17df5815fdb50141494e1007db9f660ec3502e5d459a30ec7ac",
+        "diff_fields": [
+          "artifact_path"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260426_171126",
+        "ep_num": 2,
+        "attempt_num": 2,
+        "selection_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_02/selected_before_fix__A.txt",
+        "final_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_02/patched_after_fix__A_InPlace.txt",
+        "selection_content_hash": "9558c7659f0d79a15249464c5d93305e3a8a6c977643b4cbfd59ec84524e4462",
+        "final_content_hash": "b00986c0295fe9aaa4a978d557b5ca4c601fea10a1b749e9530efb0eb80492c4",
+        "diff_fields": [
+          "content_hash",
+          "artifact_path"
+        ]
+      }
+    ],
+    "selection_companion_missing_rows": [],
+    "final_authority_contract": {
+      "status": "ok",
+      "final_authority_sink": "stage_attempts",
+      "selection_role": "historical_companion",
+      "rows_considered": 3,
+      "aligned_selection_rows": 0,
+      "pre_final_selection_rows": 3,
+      "missing_selection_rows": 0,
+      "note": "Stage 4 final authority resolves from stage_attempts. director_selections remains companion review history and may point to pre-final artifacts."
+    },
+    "session_scoped_attempts": 3,
+    "legacy_key_attempts": 0,
+    "stage_attempt_rows_without_attempt_key": 0,
+    "session_decision_rows_without_attempt_key": 0,
+    "status": "warn",
+    "operator_summary": "Stage4 sink alignment warn: 3 attempt(s), final 3/3, lifecycle 3/3, coverage gaps 0, sink issues 10, evidence issues 0. Top issue: P2 structured_sink_drift x10. Next: Inspect structured sink mismatches before trusting cross-sink contract parity. Evidence: Stage4 raw rationale ok: 3 attempt(s), 3 projected, 7 family(s), 8 surface(s)"
+  },
+  "judgment": "failed",
+  "root_cause": "requested_arc_boundary_not_reached",
+  "poll_count": 21,
+  "poll_history_path": "C:\\Users\\PC\\Desktop\\글도비\\projects\\0_골든카나리아\\logs\\auto_frontier_lag_poll_history.jsonl",
+  "three_pass_audit": {
+    "passes": {
+      "pass1_fact_extraction": true,
+      "pass2_contradiction_check": true,
+      "pass3_decision_audit": true
+    },
+    "confidence": 90,
+    "finalized": false
+  }
+}

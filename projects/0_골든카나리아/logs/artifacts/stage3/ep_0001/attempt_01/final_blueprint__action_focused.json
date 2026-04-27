@@ -1,0 +1,244 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "action_focused",
+    "content_hash": "2eb629f9da659c1b2f6790e313e5df4df0fc0e71f366c8483a2818dc3de6430a"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=4; sample_anchors=이내 무관, 아버지 한정호 회장의 서재, 무언의 압박이 서재",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 2,
+    "disqualified": [],
+    "length": 1529,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 2262,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 997738,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 1912,
+          "lane": "constraints"
+        },
+        {
+          "chars": 139,
+          "lane": "arc_focus"
+        },
+        {
+          "chars": 133,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 139,
+        "constraints": 1912,
+        "feedback_context": 133,
+        "hud_context": 10,
+        "prev_info": 68
+      },
+      "shared_context_chars": 2129,
+      "total_chars": 2262
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "action_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "core_tension": "과거의 무력했던 자신을 벗어던지고 그룹의 거대한 위압감을 이겨낼 수 있는가",
+  "end_location": "서울 성북동 본가 침실",
+  "ending_hook": "그는 거침없이 단축 번호를 눌렀다. 뚜-, 뚜-. 건조한 연결음이 고요한 방안을 차갑게 울렸다.",
+  "ending_state": {
+    "location": "서울 성북동 본가 침실",
+    "protagonist_status": "아버지를 상대로 독립 선언을 마친 후 본격적인 자산 현금화를 위해 PB센터에 연락을 취하기 직전의 상태",
+    "timeline": {
+      "표현": "2006년 1월 1일 오전"
+    }
+  },
+  "ep_num": 1,
+  "episode_number": 1,
+  "expected_ending": "가족들의 의심이나 무시 속에서도 꿋꿋하게 자산 현금화의 첫 단추를 끼우는 상황",
+  "integrated_scenario": "2024년의 매서운 겨울, 빚쟁이들의 구둣발 소리와 함께 차가운 원룸 바닥에서 의식을 잃었던 한시우는 허억, 하는 거친 숨을 토해내며 몸을 일으켰다. 온몸을 짓누르던 통증과 추위는 온데간데없고, 등 뒤로는 최고급 구스다운 이불의 부드러운 감촉이 느껴졌다. 땀에 젖은 앞머리를 쓸어올리며 주변을 둘러본 그의 시선이 탁상달력에 꽂혔다. 2006년 1월 1일. 성북동 본가의 자신의 침실이었다. 시우는 떨리는 손을 꽉 쥐었다. 죽음의 문턱에서 기적처럼 과거로 돌아온 것이다. 거울 앞에 선 그는 창백하지만 앳된, 상처 하나 없는 20대의 얼굴을 마주했다. 현대 사회의 비참한 밑바닥을 경험했던 2024년의 기억이 선명하게 뇌리를 스쳤다. 그는 두 번 다시 그 무력한 죽음을 반복하지 않겠다고 다짐하며 차갑게 가라앉은 눈빛으로 방문을 나섰다.\n\n1층으로 내려가는 계단에서 큰형 한태준과 마주쳤다. 후계 구도의 선두를 달리는 태준은 평소처럼 막내인 시우를 투명 인간 취급하며 지나치려 했다. 예전 같으면 어떻게든 형의 눈에 들기 위해 굽실거렸을 시우지만, 지금은 달랐다. 시우는 걸음을 멈추지 않고 건조한 목소리로 짧은 인사만 남긴 채 태준을 스쳐 지나갔다. 태준의 미간이 미세하게 좁혀졌으나, 이내 무관심하게 고개를 돌렸다. 막내가 무슨 바람이 불었든 자신의 대권 가도에는 티끌만 한 영향도 없다는 오만함이었다. 시우 역시 형의 반응에 연연하지 않았다. 그의 목적지는 오직 하나, 아버지 한정호 회장의 서재였다.\n\n육중한 마호가니 문을 열고 들어가자, 서류를 검토하던 한정호가 안경 너머로 매서운 눈빛을 쏘아보냈다. 그룹의 제왕이 뿜어내는 압도적인 위압감. 과거의 시우라면 숨조차 제대로 쉬지 못했을 그 공기 속에서, 시우는 당당하게 걸어 들어가 책상 앞에 섰다. '새해 첫날부터 무슨 소란이냐.' 정호의 낮은 음성에 시우는 단도직입적으로 입을 열었다. 그룹의 경영 수업이나 계열사 자리 따위는 필요 없으며, 자신 명의로 된 신탁과 증여 자산을 완전히 독립적으로 운용하겠다는 선언이었다. 정호의 눈동자에 이채가 돌았다. 늘 징징대며 용돈이나 좋은 타이틀을 요구하던 막내의 입에서 나온 말이라고는 믿기지 않을 만큼 논리적이고 단호했다. 정호는 턱을 괸 채 시우를 뚫어지게 응시했다. 무언의 압박이 서재의 공기를 짓눌렀지만, 시우는 한 치의 흔들림 없이 아버지의 시선을 마주 받았다. 팽팽한 대치 끝에, 정호의 입가에 흥미롭다는 듯한 옅은 미소가 번졌다. '네 맘대로 해보거라. 단, 그룹의 이름에 먹칠을 한다면 그 알량한 자산마저 회수할 테니.'\n\n서재를 나선 시우의 등 뒤로 식은땀이 흘렀지만, 그의 입꼬리는 호선을 그리고 있었다. 첫 번째 관문을 넘었다. 방으로 돌아온 그는 창밖으로 보이는 2006년 서울의 전경을 내려다보며 머릿속으로 당장 움직여야 할 계획을 세웠다. 가장 먼저 해야 할 일은 묶여 있는 자산을 현금화하는 것. 그는 책상 서랍을 열어 오래전 기억 속에 묻혀 있던 담당 PB 박성호의 연락처를 짚었다. 망설임 없이 수화기를 들어 올린 시우의 손끝에서, 거대한 자본 시장을 집어삼킬 첫 번째 반격이 시작되려 하고 있었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "no_prev_anchor"
+    ],
+    "type": "jump_opening"
+  },
+  "pacing_notes": "초반부 회귀의 충격에서 빠르게 벗어나 단호한 행동으로 이어지는 속도감 있는 전개 유지. 서재 씬에서 긴장감을 최고조로 끌어올린 후 차분하게 다음 스텝을 밟는 구조.",
+  "protagonist_state": {
+    "equipment": [
+      "개인 수첩"
+    ],
+    "injuries": "없음",
+    "mood": "냉철하고 단호함"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "기대 제로의 철없는 막내",
+      "justification": "경영권 욕심 없이 독립을 선언하며 기세에 눌리지 않는 모습을 보여줌",
+      "target": "한정호",
+      "to_state": "미세한 관심과 흥미"
+    },
+    {
+      "from_state": "무관심",
+      "justification": "평소와 다른 차가운 태도를 보였으나 아직 위협으로 느끼지 않음",
+      "target": "한태준",
+      "to_state": "무관심 유지 (약간의 의아함)"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "2024년의 차가운 원룸에서 빚쟁이들에게 쫓기며 쓸쓸히 눈을 감았던 한시우는 거친 숨을 내쉬며 번쩍 눈을 뜬다. 온몸을 짓누르던 통증 대신 푹신한 구스다운 이불의 감촉이 느껴진다. 탁상달력의 2006년 1월 1일이라는 글자를 확인한 그는 거울 앞 자신의 상처 없는 앳된 얼굴을 보며 두 번 다시 무력하게 죽지 않겠다고 다짐한다.",
+      "description": "최고급 침구의 감촉과 거울에 비친 젊은 자신의 모습을 통해 죽음의 고통이 사라지고 과거로 돌아왔음을 깨닫는 과정.",
+      "goal": "2006년으로의 회귀 사실을 확인하고 과거의 트라우마를 떨쳐낸다.",
+      "key_events": [
+        "숨을 헐떡이며 침대에서 깨어남",
+        "탁상달력의 2006년 1월 1일 날짜 확인",
+        "거울을 보며 상처 없는 20대의 몸 상태 확인 및 회귀 현실 수용"
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "2024년 빚쟁이들에게 쫓기다 죽음을 맞이한 한시우가 2006년 성북동 본가 침대에서 깨어나 상황을 파악한다.",
+      "tension_level": 7,
+      "title": "회귀의 아침",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "한태준"
+      ],
+      "content": "방을 나선 한시우는 1층 복도에서 큰형 한태준과 마주친다. 평소처럼 막내를 투명 인간 취급하며 지나치려는 태준에게, 시우는 예전처럼 눈치를 보거나 굽실거리지 않고 건조한 목소리로 짧은 인사만 남긴 채 걸음을 옮긴다. 태준은 미세하게 미간을 좁히지만 이내 무관심하게 고개를 돌린다.",
+      "description": "후계 구도 1순위인 큰형과의 짧은 조우를 통해 한시우의 내면적 변화를 시각적으로 보여주는 장면.",
+      "goal": "가족 앞에서의 달라진 태도를 보여주어 긴장감을 조성한다.",
+      "key_events": [
+        "계단에서 한태준과 조우",
+        "한태준의 무시하는 듯한 시선과 언사",
+        "주눅 들지 않고 건조한 눈빛으로 응수하며 스쳐 지나가는 한시우"
+      ],
+      "location": "성북동 본가 1층 복도",
+      "summary": "1층으로 내려가던 중 마주친 큰형 한태준에게 과거와 달리 굽실거리지 않고 차갑게 대응한다.",
+      "tension_level": 6,
+      "title": "스쳐 지나가는 오만",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "한정호"
+      ],
+      "content": "서재 문을 열고 들어간 한시우는 한정호 회장의 매서운 눈빛과 압도적인 위압감을 정면으로 마주한다. 시우는 단도직입적으로 그룹의 경영 수업이나 계열사 자리를 거절하고, 자신 명의의 신탁 자산을 온전히 독립적으로 운용하겠다고 선언한다. 정호는 흥미롭다는 듯 무언의 압박을 가하지만, 시우가 끝내 흔들리지 않자 알 수 없는 미소를 지으며 이를 묵인한다.",
+      "description": "한정호의 묵직한 압박과 이를 정면으로 받아내는 한시우의 팽팽한 기싸움.",
+      "goal": "아버지 한정호에게 그룹 지원 거절 및 재정적 독립을 선언한다.",
+      "key_events": [
+        "한정호의 서재 입장 및 묵직한 공기 대면",
+        "경영 수업과 계열사 임원직 거절 선언",
+        "개인 명의 신탁 및 증여 자산의 독립적 통제권 요구",
+        "한정호의 기세 압박을 흔들림 없이 버텨내는 한시우"
+      ],
+      "location": "성북동 본가 한정호의 서재",
+      "summary": "회장 서재에 들어간 한시우가 한정호의 위압감을 이겨내고 자신의 신탁 자산에 대한 독립적 운용을 요구한다.",
+      "tension_level": 8,
+      "title": "서재의 대결",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "서재에서 무사히 빠져나온 한시우는 자신의 방으로 돌아와 창밖의 2006년 서울 전경을 내려다본다. 머릿속으로 거대한 자본 증식의 타임라인을 그린 그는 책상 서랍에서 수첩을 꺼내 담당 PB 박성호의 연락처를 찾는다. 그리고 망설임 없이 수화기를 들어 단축 번호를 누른다.",
+      "description": "결전을 앞둔 차분한 상태에서 실질적인 첫 물리적 행동(전화)을 취하는 장면.",
+      "goal": "자산 현금화를 위한 첫 행동을 시작하며 다음 화에 대한 기대감을 높인다.",
+      "key_events": [
+        "서재에서 나와 방으로 복귀",
+        "수첩에서 PB센터 박성호의 연락처 확인",
+        "망설임 없이 수화기를 들어 번호를 누름"
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "방으로 돌아온 한시우가 담당 PB에게 전화를 걸며 본격적인 자본 시장 진입을 준비한다.",
+      "tension_level": 7,
+      "title": "첫 번째 방아쇠",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 본가 침실",
+  "target_beat": "회귀 확인 및 가문으로부터의 독립적 자산 운용 권리 획득",
+  "time_flow": "2006년 1월 1일 아침",
+  "title": "2006년의 아침"
+}
