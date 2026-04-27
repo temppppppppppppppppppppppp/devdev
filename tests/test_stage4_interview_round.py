@@ -1844,7 +1844,7 @@ class TestInterviewRoundRun:
                 "score": 70,
                 "best_manuscript": "원고",
                 "fix_scope": "partial",
-                "reject_bucket": "post_select_conflict",
+                "reject_bucket": "quality_issue",
                 "fix_pack": _local_fix_pack(),
             },
             round_ctx=round_ctx,
@@ -3320,6 +3320,44 @@ class TestRecordS4Attempt:
             session_id="sess-current",
         )
 
+    def test_hydrate_persisted_stage4_previous_attempt_pins_post_select_scope_to_full(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        row = {
+            "ep_num": 2,
+            "arc_num": 1,
+            "session_id": "sess-stage4",
+            "attempt_key": "s4:ep2:arc1:a1:sess-stage4",
+            "verdict": "REJECT",
+            "fix_scope": "full",
+            "failure_category": "POST_SELECT_CONTINUITY_CONFLICT",
+            "advisory_flags": {
+                "gate_semantics": {
+                    "gate_basis": "post_select_conflict",
+                    "repair_scope": "full",
+                    "authoritative_fix_scope": "inplace",
+                    "scope_authority": {
+                        "fix_scope": "inplace",
+                        "repair_scope": "full",
+                        "authoritative_fix_scope": "inplace",
+                    },
+                },
+                "scope_authority": {
+                    "fix_scope": "inplace",
+                    "repair_scope": "full",
+                    "authoritative_fix_scope": "inplace",
+                },
+            },
+        }
+
+        hydrated = ir._hydrate_stage4_previous_attempt_from_row(row)
+
+        assert hydrated["reject_bucket"] == "post_select_conflict"
+        assert hydrated["fix_scope"] == "full"
+        assert hydrated["authoritative_fix_scope"] == "inplace"
+        assert hydrated["scope_authority"]["fix_scope"] == "inplace"
+
     def test_build_final_selection_advisory_payload_reuses_contract_packet(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
@@ -4438,7 +4476,7 @@ class TestRecordS4Attempt:
                 "score": 70,
                 "best_manuscript": "원고",
                 "fix_scope": "partial",
-                "reject_bucket": "post_select_conflict",
+                "reject_bucket": "quality_issue",
                 "fix_pack": _local_fix_pack(),
             },
             round_ctx=round_ctx,
@@ -4477,7 +4515,7 @@ class TestRecordS4Attempt:
                 "score": 70,
                 "best_manuscript": "draft",
                 "fix_scope": "partial",
-                "reject_bucket": "post_select_conflict",
+                "reject_bucket": "quality_issue",
                 "fix_pack": _local_fix_pack(),
             },
             round_ctx=round_ctx,
@@ -4513,7 +4551,7 @@ class TestRecordS4Attempt:
                 "score": 70,
                 "best_manuscript": "원고",
                 "fix_scope": "partial",
-                "reject_bucket": "post_select_conflict",
+                "reject_bucket": "quality_issue",
                 "fix_pack": _local_fix_pack(),
             },
             round_ctx=round_ctx,
@@ -4801,6 +4839,28 @@ class TestRecordS4Attempt:
         assert payload.prev_score == 98
         assert payload.reject_bucket == "post_select_conflict"
         assert payload.selected_strategy_key == "tension"
+        assert payload.force_patch is False
+        assert payload.use_inplace is False
+        assert payload.use_patch is False
+
+    def test_resolve_retry_lane_routing_coerces_post_select_shadow_scope_to_full(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._resolve_retry_lane_routing(
+            previous_attempt={
+                "score": "98",
+                "fix_scope": "inplace",
+                "gate_basis": "post_select_conflict",
+                "reject_bucket": "post_select_conflict",
+                "selected_strategy_key": "tension",
+                "fix_pack": _local_fix_pack("opening_location_name", target_kind="local_sentence"),
+            },
+            prev_manuscript="original manuscript",
+            round_num=1,
+        )
+
+        assert payload.fix_scope == "full"
         assert payload.force_patch is False
         assert payload.use_inplace is False
         assert payload.use_patch is False

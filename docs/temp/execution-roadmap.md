@@ -27,11 +27,11 @@ This roadmap governs queue ordering only. It does not authorize implementation b
 
 | Item | Canonical Path | Temp Path | Status | Notes |
 | --- | --- | --- | --- | --- |
-| `frontier-lag-clean-5arc-stabilization` | `docs/2026-04-26/frontier-lag-clean-5arc-stabilization-execution-ssot.md` | `docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md` | pending | Existing queue item retained as front-active unless operator explicitly reprioritizes. |
+| `frontier-lag-clean-5arc-stabilization` | `docs/2026-04-26/frontier-lag-clean-5arc-stabilization-execution-ssot.md` | `docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md` | pending | Existing queue item parked while the operator-promoted #58 bug-risk patch is in progress. |
 | `security-secrets-config` | `docs/2026-04-27/security-secrets-config-execution-ssot.md` | `docs/temp/security-secrets-config-execution-ssot.md` | pending | Security P0 substrate; parked future wave. |
 | `security-runtime-settings-vertex` | `docs/2026-04-27/security-runtime-settings-vertex-execution-ssot.md` | `docs/temp/security-runtime-settings-vertex-execution-ssot.md` | pending | Depends on `security-secrets-config`; parked future wave. |
 | `security-desktop-release-guardrails` | `docs/2026-04-27/security-desktop-release-guardrails-execution-ssot.md` | `docs/temp/security-desktop-release-guardrails-execution-ssot.md` | pending | Depends on both prior security SSOTs; parked future wave. |
-| `stage4-post-select-conflict` | `docs/2026-04-27/stage4-post-select-conflict-execution-ssot.md` | `docs/temp/stage4-post-select-conflict-execution-ssot.md` | pending | #58 Stage4 carryover drift remediation; parked future wave pending operator promotion. |
+| `stage4-post-select-conflict` | `docs/2026-04-27/stage4-post-select-conflict-execution-ssot.md` | `docs/temp/stage4-post-select-conflict-execution-ssot.md` | in_progress | #58 Stage4 carryover drift remediation; operator-promoted bug-risk patch. |
 | `stage3-stage4-genre-alignment` | `docs/2026-04-27/stage3-stage4-genre-alignment-execution-ssot.md` | `docs/temp/stage3-stage4-genre-alignment-execution-ssot.md` | pending | #56 investment/business-power action/tension semantics remediation; parked future wave pending operator promotion. |
 
 ## 3. Dependency Graph
@@ -63,11 +63,11 @@ Priority basis:
 
 Working order:
 
-1. `frontier-lag-clean-5arc-stabilization` (front active; existing queue item)
-2. `security-secrets-config` (parked future wave; security P0 substrate)
-3. `security-runtime-settings-vertex` (parked future wave; depends on `security-secrets-config`)
-4. `security-desktop-release-guardrails` (parked future wave; depends on `security-secrets-config` and `security-runtime-settings-vertex`)
-5. `stage4-post-select-conflict` (parked future wave; #58 carryover remediation before any new clean 5-arc proof claim)
+1. `stage4-post-select-conflict` (in progress; operator-promoted bug-risk patch before any new clean 5-arc proof claim)
+2. `frontier-lag-clean-5arc-stabilization` (parked while #58 bug-risk patch is in progress; existing queue item)
+3. `security-secrets-config` (parked future wave; security P0 substrate)
+4. `security-runtime-settings-vertex` (parked future wave; depends on `security-secrets-config`)
+5. `security-desktop-release-guardrails` (parked future wave; depends on `security-secrets-config` and `security-runtime-settings-vertex`)
 6. `stage3-stage4-genre-alignment` (parked future wave; #56 genre semantics remediation before any new clean 5-arc proof claim)
 
 ## 5. Per-Item Plan
@@ -107,8 +107,8 @@ Working order:
 ### stage4-post-select-conflict
 
 - goal: reduce repeated Stage4 `POST_SELECT_CONFLICT` carryover drift without weakening the post-select firewall.
-- prerequisites: all ten #58 terminal reports are present; current-state re-audit required before implementation.
-- execution notes: preserve Director authority, treat memory/cache as helpers, and avoid claiming clean 5-arc readiness from tests alone.
+- prerequisites: all ten #58 terminal reports are present; current-state re-audit completed for the first retry-hydration bug-risk patch.
+- execution notes: preserve Director authority, treat memory/cache as helpers, and avoid claiming clean 5-arc readiness from tests alone. First patch targets T06 F5 stale `scope_authority.fix_scope` shadowing runtime full-rewrite widening.
 - completion signal: targeted regressions and fresh proof evidence show the named bug shapes are contained, then #58 receives a status update.
 - temp cleanup action: remove `docs/temp/stage4-post-select-conflict-execution-ssot.md` after closure.
 
@@ -134,11 +134,11 @@ Working order:
 
 | Item | Status | Last Update | Blocker |
 | --- | --- | --- | --- |
-| `frontier-lag-clean-5arc-stabilization` | pending | 2026-04-27 | none recorded in this roadmap; requires current-state re-audit before implementation |
+| `frontier-lag-clean-5arc-stabilization` | pending | 2026-04-27 | parked while #58 operator-promoted bug-risk patch is in progress |
 | `security-secrets-config` | pending | 2026-04-27 | external credential rotation/history decision may block closure |
 | `security-runtime-settings-vertex` | pending | 2026-04-27 | depends on `security-secrets-config`; path policy decision required |
 | `security-desktop-release-guardrails` | pending | 2026-04-27 | depends on first two security items; access-control product model may remain residual |
-| `stage4-post-select-conflict` | pending | 2026-04-27 | current-state re-audit required; do not claim clean 5-arc readiness without fresh proof |
+| `stage4-post-select-conflict` | in_progress | 2026-04-27 | partial T06 F5 mitigation implemented; remaining #58 tranches and fresh proof still required |
 | `stage3-stage4-genre-alignment` | pending | 2026-04-27 | current-state re-audit required; #56 T01-T10 artifacts were not locally/GitHub-readable during synthesis |
 
 ## 8. Queue Cleanup Rule
@@ -159,7 +159,7 @@ Pass 2 - evidence and consistency:
 - PASS. Existing Frontier Lag mirror is preserved and not silently removed.
 - PASS. Security dependencies match execution metadata blocks in the new SSOTs.
 - PASS. Security items are marked as parked future wave, preventing accidental front-active interpretation.
-- PASS. Stage4 #58 item is marked as parked future wave and does not silently reorder the existing Frontier Lag front-active item.
+- PASS. Stage4 #58 item is explicitly operator-promoted for bug-risk reduction, and Frontier Lag is parked rather than silently reordered.
 - PASS. Stage3/Stage4 #56 item is marked as parked future wave and explicitly records the missing local/GitHub-readable T01-T10 artifact limitation.
 
 Pass 3 - execution readiness:
@@ -167,3 +167,7 @@ Pass 3 - execution readiness:
 - PASS. Cleanup behavior is explicit.
 
 Estimated operational confidence: 96%.
+
+## 10. Operator Promotion Note - 2026-04-27
+
+The operator promoted `stage4-post-select-conflict` ahead of the prior Frontier Lag default with the instruction to reduce bug risk first. This roadmap now treats #58 as the active item for the narrow retry-hydration bug-risk patch. This does not close #58 or authorize a clean 5-arc readiness claim; it only records the current execution order while the partial mitigation is in flight.

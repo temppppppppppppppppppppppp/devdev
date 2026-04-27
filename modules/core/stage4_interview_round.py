@@ -2287,6 +2287,11 @@ class Stage4InterviewRound:
             failure_category=attempt_row.get("failure_category"),
             primary_failure_layer=attempt_row.get("primary_failure_layer"),
         )
+        hydrated_fix_scope = str(
+            scope_authority.get("fix_scope") or attempt_row.get("fix_scope") or retry_surface.get("fix_scope") or ""
+        ).strip()
+        if reject_bucket == "post_select_conflict":
+            hydrated_fix_scope = "full"
         validation_warnings = self._merge_stage4_resume_warning_lines(
             advisory_flags.get("coverage_warnings"),
             advisory_flags.get("candidate_warnings"),
@@ -2337,9 +2342,7 @@ class Stage4InterviewRound:
             "_tot_used": dict(contract_packet.retry_budget_axes or {}).get("escalation") == "tot",
             "_mad_used": dict(contract_packet.retry_budget_axes or {}).get("escalation") == "mad",
             "state_updates": {},
-            "fix_scope": str(
-                scope_authority.get("fix_scope") or attempt_row.get("fix_scope") or retry_surface.get("fix_scope") or ""
-            ).strip(),
+            "fix_scope": hydrated_fix_scope,
             "authoritative_fix_scope": str(
                 scope_authority.get("authoritative_fix_scope")
                 or gate_semantics.get("authoritative_fix_scope")
