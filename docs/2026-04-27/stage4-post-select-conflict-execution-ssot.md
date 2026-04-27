@@ -272,6 +272,42 @@ Residual open work:
 
 Estimated operational confidence for this partial realization: 96%.
 
+## 18. Realization Ledger - 2026-04-27 Director Manuscript Cache Lineage Guard
+
+Scope realized:
+- Tranche: `cache-lineage-and-memory-suppression`.
+- Branch: `codex/bugrisk-director-manuscript-cache-lineage`.
+- Implemented the T07 F2/R1 mitigation first because Director-global manuscript history cache reuse was count-only and bypassed the richer BaseAgent cache lineage gate.
+
+Code changes:
+- `DirectorCachingManager.create_manuscript_cache` now computes a SHA-256 hash of the compiled prior-manuscript cache body and records the normalized cache model alongside the cached manuscript count.
+- Director manuscript history cache reuse now requires all three lineage signals to match: prior manuscript count, compiled body hash, and normalized model.
+- `Director.invalidate_caches` clears the new manuscript cache lineage fields together with the existing cache name/count.
+- `tests/test_director_modules.py` adds regressions proving same count/content/model reuses the cache, same count with changed prior manuscript content rebuilds it, and same content with changed model rebuilds it.
+
+Validation completed:
+- `python -m py_compile modules/domain/agents/director_caching.py modules/domain/agents/director.py` -> PASS.
+- `python -m pytest tests/test_director_modules.py -k "DirectorCaching or create_manuscript_cache or invalidate_caches" -q` -> 12 passed, 119 deselected.
+- `python -m pytest tests/test_director_modules.py -q` -> 131 passed.
+- `python -m pytest tests/test_base_agent.py -k "cached_context_stale_model_lineage or context_cache" -q` -> 6 passed, 94 deselected.
+- `python -m pytest tests/test_main_a_rollback.py tests/test_sweep4.py -q` -> 12 passed.
+
+Validation note:
+- `python -m pytest tests/test_sweep35.py -q` has an unrelated pre-existing source-string sentinel failure: `test_base_agent_source_has_inner_network_retry_loop` expects `while attempt < MAX_CONTINUATIONS:` in `modules/domain/agents/base_agent.py`, which this patch does not touch.
+
+Residual open work:
+- This does not close #58.
+- Director history cache still calls `generate_content_via_router` directly with `cached_content`; routing it through the full BaseAgent lineage/eviction path remains a larger T07 item.
+- Stage3/Stage4 lineage gates, continuity authority symmetry, and artifact-backed bug-shape regressions remain open.
+- No clean 5-arc readiness claim is made from this patch.
+
+3-pass realization audit:
+- Pass 1 - scope: PASS. The patch only tightens Director manuscript cache reuse eligibility and cache invalidation fields.
+- Pass 2 - evidence: PASS. Tests prove the formerly count-only reuse path now rebuilds on content or model drift while preserving reuse for stable lineage.
+- Pass 3 - readiness: PASS for a narrow PR. Residual T07 work still requires direct cached-content routing/eviction and broader Stage3/Stage4 lineage proof.
+
+Estimated operational confidence for this partial realization: 96%.
+
 ## 17. Realization Ledger - 2026-04-27 Rejected Artifact Rehydration Guard
 
 Scope realized:
