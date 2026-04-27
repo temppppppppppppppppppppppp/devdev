@@ -13,6 +13,7 @@ utf8-hygiene: allow-file -- legacy Korean prompt text in this generator predates
 2. 상세화 (integrated_scenario)
 """
 
+import hashlib
 import json
 import logging
 import re
@@ -53,6 +54,92 @@ try:
     PRIMITIVE_GUARD_AVAILABLE = True
 except ImportError:
     PRIMITIVE_GUARD_AVAILABLE = False
+
+
+GENRE_STRATEGY_CONTRACT_SCHEMA_VERSION = "genre-strategy-contract-v1"
+
+
+def _normalize_genre_value(value: object) -> str:
+    return str(value or "").strip().lower()
+
+
+def _is_investment_business_power_genre(genre: object) -> bool:
+    normalized = _normalize_genre_value(genre)
+    return normalized in {
+        GenreTypes.INVESTMENT,
+        "investment",
+        "invest",
+        "투자",
+        "투자물",
+        "business-power",
+        "business_power",
+        "investment_family_office_control",
+    }
+
+
+def build_genre_strategy_contract(genre: object, strategy_name: object) -> dict:
+    """Build a route-level genre strategy contract without judging narrative quality."""
+    normalized_genre = _normalize_genre_value(genre)
+    normalized_strategy = str(strategy_name or "").strip() or "unknown"
+    if not (_is_investment_business_power_genre(normalized_genre) and normalized_strategy == "action_focused"):
+        return {}
+
+    contract = {
+        "schema_version": GENRE_STRATEGY_CONTRACT_SCHEMA_VERSION,
+        "contract_id": "investment_business_power.action_focused.v1",
+        "authority_level": "route",
+        "authority_source": "stage3_genre_strategy_contract",
+        "genre_type": GenreTypes.INVESTMENT,
+        "genre_family": "investment_business_power",
+        "strategy_name": normalized_strategy,
+        "factsheet_mutation": False,
+        "material_mutation": False,
+        "director_visible": True,
+        "action_semantics": [
+            "decisive business move",
+            "capital exposure",
+            "institutional pressure",
+            "governance or legal next gate",
+        ],
+        "tension_semantics": [
+            "deadline pressure",
+            "counterparty risk",
+            "liquidity or margin limit",
+            "reputation and access risk",
+        ],
+        "forbidden_defaults": [
+            "combat",
+            "chase",
+            "intruder",
+            "vehicle attack",
+            "physical crisis",
+            "thriller infiltration",
+        ],
+    }
+    payload = json.dumps(contract, ensure_ascii=False, sort_keys=True)
+    contract["contract_hash"] = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+    return contract
+
+
+def format_genre_strategy_contract_prompt(contract: dict) -> str:
+    if not contract:
+        return ""
+    return f"""
+[Genre Strategy Contract - {contract.get("contract_id")}]
+- contract_hash: {contract.get("contract_hash")}
+- authority_level: route; Director-visible advisory context only, not Python verdict authority.
+- action_focused means business execution pressure: position entry/exit, capital exposure, institutional confrontation, governance/legal gate, proof/receipt, and next decision gate.
+- tension means deadline pressure, counterparty risk, liquidity/margin limits, reputation/access risk, and family or institutional control pressure.
+- ending_hook should turn on deal break, approval hold, reputation exposure, capital freeze, legal next gate, or counterparty condition change.
+- Do not default to combat, chase, intruder, vehicle attack, physical crisis, or thriller infiltration unless the tactical authority explicitly supports it.
+""".strip()
+
+
+def _build_strategy_directive_for_genre(strategy: dict, *, genre: str, extra_directive: str) -> tuple[str, dict]:
+    strategy_name = strategy.get("name", "")
+    contract = build_genre_strategy_contract(genre, strategy_name)
+    directive = format_genre_strategy_contract_prompt(contract) if contract else strategy["directive"]
+    return directive + AI_TELL_BLUEPRINT_GUARDRAIL + extra_directive, contract
 
 
 # Blueprint 생성 전략
@@ -315,7 +402,7 @@ SCENE_PRESETS = {
     "opening_hook": "화 시작, 독자 유입용. 시각 중심, 임팩트 있는 오프닝.",
     "daily_routine": "일상 묘사, 세계관 노출. 여유로운 호흡.",
     "tension_build": "긴장감 축적. 불안한 분위기, 짧은 문장.",
-    "action_peak": "전투/액션 클라이맥스. 빠른 호흡, 시각 중심, 대사 최소.",
+    "action_peak": "장르별 고강도 실행/압박 클라이맥스. 핵심 선택과 결과를 선명하게 제시.",
     "emotional_reveal": "감정 폭발, 내면 묘사. 느린 호흡, 대사/독백 중심.",
     "dialogue_duel": "설전/협상/대립. 대사 중심, 긴장감 있는 대화.",
     "villain_scheme": "★악역 시점 전환★ 음모/계략 노출. 독자에게 위협 암시.",
@@ -945,10 +1032,14 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 "disqualified": disqualified,
                 "prompt_envelope": dict(prompt_envelope_meta or {}),
             }
+            genre_strategy_contract = candidate.get("_genre_strategy_contract")
+            if isinstance(genre_strategy_contract, dict) and genre_strategy_contract:
+                candidate["_ensemble_meta"]["genre_strategy_contract"] = dict(genre_strategy_contract)
             candidate.pop("_strategy", None)
             candidate.pop("_qualified", None)
             candidate.pop("_scene_count", None)
             candidate.pop("_length", None)
+            candidate.pop("_genre_strategy_contract", None)
 
         return qualified_candidates[0], qualified_candidates
 
@@ -1023,6 +1114,18 @@ class BlueprintEnsembleGenerator(BaseAgent):
         strategy_feedback_chars = len(str(strategy_specific_feedback or ""))
         if strategy_feedback_chars > 0:
             prompt_envelope_meta["strategy_feedback_chars"] = strategy_feedback_chars
+        genre_strategy_contracts = [
+            {
+                "strategy_name": contract.get("strategy_name"),
+                "contract_id": contract.get("contract_id"),
+                "contract_hash": contract.get("contract_hash"),
+                "authority_level": contract.get("authority_level"),
+            }
+            for strategy in active_strategies
+            if (contract := build_genre_strategy_contract(context_bundle["genre"], strategy.get("name", "")))
+        ]
+        if genre_strategy_contracts:
+            prompt_envelope_meta["genre_strategy_contracts"] = genre_strategy_contracts
         top_lanes = ", ".join(
             f"{item['lane']}={item['chars']}" for item in (prompt_envelope_meta.get("dominant_lanes") or [])[:3]
         )
@@ -1130,7 +1233,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 genre=genre,
             )
             reader_feedback = self._build_reader_feedback_context(ep_num)
-            prompt, full_prompt_fallback = self._build_blueprint_prompt_bundle(
+            prompt_bundle = self._build_blueprint_prompt_bundle(
                 ep_num=ep_num,
                 arc_focus=arc_focus,
                 constraints_str=constraints_str,
@@ -1143,7 +1246,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 pov_constraint=pov_constraint,
                 reader_feedback=reader_feedback,
                 cache_name=cache_name,
+                genre=genre,
             )
+            prompt, full_prompt_fallback = prompt_bundle[:2]
+            genre_strategy_contract = prompt_bundle[2] if len(prompt_bundle) > 2 else {}
             if not prompt:
                 return None, AgentErrorType.UNKNOWN
 
@@ -1158,6 +1264,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 full_prompt_fallback=full_prompt_fallback,
                 strategy_name=strategy_name,
                 genre=genre,
+                genre_strategy_contract=genre_strategy_contract,
                 tactical_excerpt=tactical_excerpt,
                 prev_blueprint=prev_blueprint,
                 constraint_block=constraint_block,
@@ -1184,7 +1291,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
         pov_constraint: str,
         reader_feedback: str,
         cache_name: str,
-    ) -> tuple[str | None, str]:
+        genre: str = GenreTypes.WUXIA,
+    ) -> tuple[str | None, str, dict]:
         work_retrieval_contract = ""
         try:
             guard = getattr(self.context, "guard", None)
@@ -1195,11 +1303,13 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         use_cached_context = bool(cache_name)
         cached_context_stub = "[context cached: refer to cached_content]"
+        directive_text, genre_strategy_contract = _build_strategy_directive_for_genre(
+            strategy,
+            genre=genre,
+            extra_directive=extra_directive,
+        )
         strategy_directive = self._escape_braces(
-            strategy["directive"]
-            + AI_TELL_BLUEPRINT_GUARDRAIL
-            + extra_directive
-            + (f"\n\n{work_retrieval_contract}" if work_retrieval_contract else "")
+            directive_text + (f"\n\n{work_retrieval_contract}" if work_retrieval_contract else "")
         )
         prompt = self._prompt_loader.load(
             "ensemble",
@@ -1241,7 +1351,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 full_prompt_fallback = prompt
         if not prompt:
             logging.warning("[BPEnsemble] BLUEPRINT_GENERATION_PROMPT not found in prompt loader")
-        return prompt, full_prompt_fallback or ""
+        return prompt, full_prompt_fallback or "", genre_strategy_contract
 
     def _request_blueprint_generation(
         self,
@@ -1251,6 +1361,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         full_prompt_fallback: str,
         strategy_name: str,
         genre: str,
+        genre_strategy_contract: dict | None = None,
         tactical_excerpt: str = "",
         prev_blueprint: dict | None = None,
         constraint_block: dict | None = None,
@@ -1292,7 +1403,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             return None, AgentErrorType.SCHEMA_INCOMPATIBLE
         if "scene_breakdown" not in result or "integrated_scenario" not in result:
             return None, AgentErrorType.SCHEMA_INCOMPATIBLE
-        return self._sanitize_blueprint_candidate(
+        sanitized = self._sanitize_blueprint_candidate(
             result,
             strategy_name=strategy_name,
             genre=genre,
@@ -1300,6 +1411,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
             prev_blueprint=prev_blueprint,
             constraint_block=constraint_block,
         )
+        if isinstance(sanitized, dict) and genre_strategy_contract:
+            sanitized["_genre_strategy_contract"] = dict(genre_strategy_contract)
+        return sanitized
 
     @staticmethod
     def _is_blueprint_schema_numeric_overflow(error: Exception) -> bool:

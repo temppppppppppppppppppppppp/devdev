@@ -196,9 +196,7 @@ class TestDirectorCaching:
         assert result is None
         caching_manager.client.caches.create.assert_not_called()
 
-    def test_create_manuscript_cache_reuses_when_count_content_and_model_match(
-        self, caching_manager, monkeypatch
-    ):
+    def test_create_manuscript_cache_reuses_when_count_content_and_model_match(self, caching_manager, monkeypatch):
         self._install_fake_genai(monkeypatch)
         db = self._manuscript_db(
             {
@@ -242,9 +240,7 @@ class TestDirectorCaching:
         finally:
             BaseAgent._context_caches.clear()
 
-    def test_create_manuscript_cache_rebuilds_when_content_changes_with_same_count(
-        self, caching_manager, monkeypatch
-    ):
+    def test_create_manuscript_cache_rebuilds_when_content_changes_with_same_count(self, caching_manager, monkeypatch):
         self._install_fake_genai(monkeypatch)
         manuscripts = {
             1: {"content": "A" * 2000, "title": "제1화"},
@@ -266,9 +262,7 @@ class TestDirectorCaching:
         assert caching_manager.client.caches.create.call_count == 2
         assert caching_manager._cached_manuscript_content_hash != first_hash
 
-    def test_create_manuscript_cache_rebuilds_when_model_changes_with_same_content(
-        self, caching_manager, monkeypatch
-    ):
+    def test_create_manuscript_cache_rebuilds_when_model_changes_with_same_content(self, caching_manager, monkeypatch):
         self._install_fake_genai(monkeypatch)
         db = self._manuscript_db(
             {
@@ -595,6 +589,9 @@ class TestDirectorEnsemble:
         assert result["selected_blueprint"] == candidates[1]
 
     def test_build_blueprint_compare_prompt_includes_prev_ending_and_advisory_block(self, director):
+        from modules.core.constants import GenreTypes
+        from modules.domain.agents.blueprint_ensemble import build_genre_strategy_contract
+
         prompt = director._ensemble._build_blueprint_compare_prompt(
             candidates=[
                 {
@@ -608,6 +605,9 @@ class TestDirectorEnsemble:
                     "ending_hook": "다음 화 떡밥",
                     "_ensemble_meta": {
                         "strategy": "steady",
+                        "genre_strategy_contract": build_genre_strategy_contract(
+                            GenreTypes.INVESTMENT, "action_focused"
+                        ),
                         "python_warnings": [
                             {
                                 "severity": "MINOR",
@@ -630,6 +630,9 @@ class TestDirectorEnsemble:
         assert "opening_transition.type: direct_continuation" in prompt
         assert "protagonist_state shape: mood:set, equipment:list[2]" in prompt
         assert "binding_advisories: none" in prompt
+        assert "Genre Strategy Contract - Director-visible advisory" in prompt
+        assert "selection context, not Python verdict authority" in prompt
+        assert "capital exposure" in prompt
         assert "[시나리오 전문]" in prompt
 
     def test_build_blueprint_compare_prompt_includes_binding_advisory_badges(self, director):

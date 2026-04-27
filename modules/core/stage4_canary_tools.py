@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
+import stat
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -2062,10 +2065,32 @@ def _extract_ep_num(filename: str) -> int | None:
 
 
 def _remove_path(path: Path) -> None:
-    if path.is_dir():
-        shutil.rmtree(path)
-        return
-    path.unlink(missing_ok=True)
+    last_error: Exception | None = None
+    for attempt in range(5):
+        try:
+            if path.is_dir():
+                shutil.rmtree(path, onerror=_chmod_and_retry_remove)
+                return
+            path.unlink(missing_ok=True)
+            return
+        except PermissionError as exc:
+            last_error = exc
+            _make_path_writable(path)
+            time.sleep(0.2 * (attempt + 1))
+    if last_error is not None:
+        raise last_error
+
+
+def _chmod_and_retry_remove(func, path: str, _exc_info) -> None:
+    _make_path_writable(Path(path))
+    func(path)
+
+
+def _make_path_writable(path: Path) -> None:
+    try:
+        os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
+    except OSError:
+        pass
 
 
 def _validate_canary_target_boundary(source: Path, target: Path) -> None:
