@@ -1199,11 +1199,15 @@ class Stage4RetryRuntime:
             prev_score = int(previous_attempt.get("score", 0)) if previous_attempt else 0
         except (ValueError, TypeError):
             prev_score = 0
-        fix_scope = previous_attempt.get("fix_scope", "") if previous_attempt else ""
+        reject_bucket = str(previous_attempt.get("reject_bucket", "") or "") if previous_attempt else ""
+        fix_scope = str(previous_attempt.get("fix_scope", "") if previous_attempt else "").strip()
+        if reject_bucket == "post_select_conflict" and fix_scope != "full":
+            previous_attempt = dict(previous_attempt or {})
+            previous_attempt["fix_scope"] = "full"
+            fix_scope = "full"
         fix_pack_contract = owner._evaluate_fix_pack_contract(
             previous_attempt.get("fix_pack") if isinstance(previous_attempt, dict) else None
         )
-        reject_bucket = str(previous_attempt.get("reject_bucket", "") or "") if previous_attempt else ""
         selected_strategy_key = (
             str(previous_attempt.get("selected_strategy_key", "") or previous_attempt.get("selected_strategy", ""))
             if previous_attempt

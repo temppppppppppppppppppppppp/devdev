@@ -2,14 +2,14 @@
 
 Date: 2026-04-27
 Track: system
-Status: execution-ready (parked future wave)
+Status: partially-realized (retry-hydration bug-risk patch)
 Canonical Path: `docs/2026-04-27/stage4-post-select-conflict-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage4-post-select-conflict-execution-ssot.md`
 Commit State:
 - Baseline Commit: `a3d826978d530ab61d3765e5e095890fa6533ea7`
 - Baseline Dirty Summary: documentation-only untracked paths were present: `docs/2026-04-27/security-parallel-investigation/`, `docs/2026-04-27/stage4-post-select-conflict-parallel-investigation/`, and pre-existing `docs/2026-04-27/issue-56-ensemble-genre-alignment-10terminal-order.md`
-- Resume Commit: same-as-baseline
-- Resume Drift Summary: no tracked source edits made while creating this SSOT
+- Resume Commit: `bc6abb7cd1e79400e3414b804575fae401371e5f`
+- Resume Drift Summary: operator promoted #58 ahead of the roadmap default for bug-risk reduction; current branch touches `modules/core/stage4_interview_round.py`, `modules/core/stage4_retry_runtime.py`, and `tests/test_stage4_interview_round.py`
 GitHub Issue:
 - #58 `[Stage4] Reduce POST_SELECT_CONFLICT carryover drift in 5-arc runs`
 Source Survey Docs:
@@ -37,9 +37,9 @@ execution_meta:
   schema_version: execution-meta-block-v1
   topic: stage4-post-select-conflict
   github_issue: 58
-  status: pending
-  queue_role: parked_future_wave
-  roadmap_rank: 5
+  status: in_progress
+  queue_role: front_active
+  roadmap_rank: 1
   depends_on: []
   tranches:
     - id: postselect-specificity-and-evidence-lock
@@ -204,8 +204,8 @@ Implement in narrow, test-first tranches:
 
 ## 12. Temp Queue Notes
 
-- temp status: pending
-- queue role: parked future wave
+- temp status: in_progress
+- queue role: front active by operator promotion for bug-risk reduction
 - cleanup condition: remove `docs/temp/stage4-post-select-conflict-execution-ssot.md` after realization, verification, canonical closure update, and any #58 GitHub status update.
 - roadmap dependency: no formal dependency edge is declared to avoid silently reordering the existing Frontier Lag queue item; however, this SSOT should be considered before any fresh claim of terminal clean 5-arc proof.
 
@@ -233,3 +233,41 @@ Pass 3 - execution readiness:
 
 Estimated operational confidence: 96%.
 
+## 15. Realization Ledger - 2026-04-27 Bug-Risk Patch
+
+Scope realized:
+- Tranche: `retry-hydration-and-patch-containment`.
+- Branch: `codex/bugrisk-stage4-post-select-conflict`.
+- Implemented the T06 F5 mitigation first because it is the highest-confidence route from post-select REJECT to stale patch replay.
+
+Code changes:
+- `Stage4InterviewRound._hydrate_stage4_previous_attempt_from_row` now treats hydrated `post_select_conflict` attempts as active `fix_scope="full"` even when preserved `scope_authority.fix_scope` still records the pre-widening Director value.
+- `Stage4RetryRuntime._resolve_retry_lane_routing` coerces stale `post_select_conflict` retry inputs to `fix_scope="full"` before inplace/patch routing, so stale `inplace` or `partial` values cannot force patch replay.
+- `tests/test_stage4_interview_round.py` adds regressions for hydrated shadow-scope coercion and retry-lane coercion.
+
+Validation completed:
+- `python -m pytest tests/test_stage4_interview_round.py -k "hydrate or retry or previous_attempt" -q` -> 47 passed, 278 deselected.
+- `python -m pytest tests/test_stage4_context_builder.py tests/test_stage2_stage3_episode_boundary_guardrail.py -q` -> 143 passed.
+- `python -m pytest tests/test_continuity_canary.py tests/test_continuity_pin_guard.py -q` -> 6 passed.
+- `python -m pytest tests/test_stage4_orchestrator.py -k "post_select or retry_pathology or best_manuscript" -q` -> 5 passed, 160 deselected.
+- `python -m pytest tests/test_stage4_handoff_carryover_guardrail.py tests/test_stage4_advisory_escalation_seam.py tests/test_stage4_ep9_remediation.py -q` -> 48 passed.
+- `python -m pytest tests/test_stage4_interview_round.py -q --tb=short` -> 325 passed.
+- `python -m py_compile modules/core/stage4_interview_round.py modules/core/stage4_retry_runtime.py` -> PASS.
+- `python scripts/check_utf8_hygiene.py docs/2026-04-27/security-and-frontier-active-execution-roadmap.md docs/2026-04-27/stage4-post-select-conflict-execution-ssot.md docs/temp/execution-roadmap.md docs/temp/queue-state.json docs/temp/stage4-post-select-conflict-execution-ssot.md modules/core/stage4_interview_round.py modules/core/stage4_retry_runtime.py tests/test_stage4_interview_round.py` -> PASS.
+- `git diff --check` -> PASS.
+- `python scripts/ops_validator.py --strict` -> PASS.
+
+Complexity note:
+- Touched production functions were already above the 180 LOC band at baseline (`_hydrate_stage4_previous_attempt_from_row`: 228 LOC; `_resolve_retry_lane_routing`: 185 LOC). Current counts are 231 and 194 LOC. This patch is a bounded routing/sink correction and does not add new same-class helper pressure.
+
+Residual open work:
+- This does not close #58.
+- Rejected manuscript body rehydration, missing-session fallback, loop-exhaustion adoption, cache lineage, Stage3/Stage4 lineage, continuity authority symmetry, and artifact-backed bug-shape regressions remain open.
+- No clean 5-arc readiness claim is made from this patch.
+
+3-pass realization audit:
+- Pass 1 - scope: PASS. The patch only targets retry hydration and patch containment, preserving the post-select firewall.
+- Pass 2 - evidence: PASS. The change directly implements T06 F5 and is covered by targeted hydration/routing regressions plus adjacent post-select shards.
+- Pass 3 - readiness: PASS for a narrow PR. Residual #58 closure requires further tranches and fresh proof.
+
+Estimated operational confidence for this partial realization: 96%.
