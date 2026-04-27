@@ -1,0 +1,187 @@
+{
+  "tag": "shutdown_final",
+  "timestamp": "2026-04-26 21:39:24",
+  "summary_role": "runtime_heartbeat_with_proof_digest",
+  "total_events": 1,
+  "counts": {
+    "dna_sync_failed": 1
+  },
+  "latest_event_type": "dna_sync_failed",
+  "recent_events": [
+    {
+      "type": "dna_sync_failed",
+      "message": "force_sync_v25_dna returned False"
+    }
+  ],
+  "contract": {
+    "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
+    "attempt_truth_authoritative": false,
+    "authoritative_attempt_sinks": [
+      "stage_attempts",
+      "pass_rate_monitor",
+      "session_decisions",
+      "episode_production",
+      "director_selections"
+    ],
+    "proof_digest_truth_scope": "committed_persistence_only",
+    "operational_metadata_scope": "latest_structured_session_plus_runtime_audit_events_and_session_sinks",
+    "authoritative_attempt_truth_note": "Use DB/JSONL/artifact sink join for authoritative attempt truth.",
+    "operational_metadata_note": "Operational metadata is best-effort run interpretation and does not override persisted attempt truth."
+  },
+  "summary_window": {
+    "count_window_size": 200,
+    "counted_events": 1,
+    "counts_truncated": false,
+    "recent_event_window_size": 10,
+    "recent_events_returned": 1,
+    "event_window_truncated": false
+  },
+  "proof_digest": {
+    "available": false,
+    "status": "unavailable",
+    "artifacts": {
+      "db_available": true,
+      "session_decisions_exists": false,
+      "ui_events_jsonl_exists": true,
+      "pass_rate_monitor_exists": true,
+      "episode_production_exists": false,
+      "runtime_audit_jsonl_exists": true,
+      "ui_events_db_available": true,
+      "ui_events_count": 100,
+      "ui_event_coverage_status": "ok"
+    },
+    "stages": {},
+    "session_lineage": {
+      "plain_log_token": "20260426_213921",
+      "structured_session_id": "20260426_213922",
+      "status": "split_mapped"
+    },
+    "operational_metadata": {
+      "status": "ok",
+      "latest_session_id": "20260426_213922",
+      "stage2_live_session": {
+        "status": "absent",
+        "attempt_count": 0,
+        "episode_count": 0,
+        "episodes": [],
+        "latest_ep": null,
+        "latest_final_verdict": "",
+        "session_decision_count": 0,
+        "ui_event_count": 0,
+        "attempt_key_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "artifact_path_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "selection_reason_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "verdict_reason_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "decision_attempt_key_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "decision_artifact_path_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "carryover_authority_event_count": 0,
+        "latest_carryover_authority": {}
+      },
+      "stage3_live_session": {
+        "status": "absent",
+        "attempt_count": 0,
+        "episode_count": 0,
+        "episodes": [],
+        "latest_ep": null,
+        "latest_final_verdict": "",
+        "session_decision_count": 0,
+        "ui_event_count": 0,
+        "attempt_key_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "artifact_path_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "selection_reason_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "verdict_reason_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "decision_attempt_key_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "decision_artifact_path_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "source_anchor_summary_count": 0,
+        "source_anchor_ui_event_count": 0,
+        "latest_source_anchor_summary": {}
+      },
+      "stage4_live_session": {
+        "status": "absent",
+        "attempt_count": 0,
+        "episode_count": 0,
+        "episodes": [],
+        "latest_ep": null,
+        "latest_final_verdict": "",
+        "retry_exercised": false,
+        "patch_exercised": false,
+        "patch_attempt_count": 0,
+        "fallback_patch_count": 0,
+        "pass_count": 0,
+        "session_scope": {},
+        "target_ep_reached": false,
+        "stage4_complete_emitted": false,
+        "post_pass_contract_signal_count": 0,
+        "non_exercised_reasons": []
+      }
+    }
+  },
+  "run_scope": {
+    "status": "scoped",
+    "engine_run_id": "",
+    "latest_session_id": "20260426_213922",
+    "summary_tag": "shutdown_final",
+    "summary_timestamp": "2026-04-26 21:39:24",
+    "basis": [
+      "proof_digest.latest_session_id"
+    ],
+    "authority_role": "companion_snapshot"
+  },
+  "freshness": {
+    "status": "scoped",
+    "basis": [
+      "proof_digest.latest_session_id"
+    ],
+    "engine_run_id_present": false,
+    "latest_session_id_present": true,
+    "operator_guidance_only": true
+  }
+}

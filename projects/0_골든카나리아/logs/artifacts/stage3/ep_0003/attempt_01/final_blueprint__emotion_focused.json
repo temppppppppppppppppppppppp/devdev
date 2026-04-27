@@ -1,0 +1,210 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "285884e7472895f6c252395de14def1c5327477ea5d5661a8d6cf037f3be6751"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 1,
+    "disqualified": [],
+    "length": 1145,
+    "prevalidation_issue_count": 0,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 6580,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 993420,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 3395,
+          "lane": "constraints"
+        },
+        {
+          "chars": 2897,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 145,
+          "lane": "arc_focus"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 145,
+        "constraints": 3395,
+        "feedback_context": 133,
+        "hud_context": 10,
+        "prev_info": 2897
+      },
+      "shared_context_chars": 6447,
+      "total_chars": 6580
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "core_tension": "가문의 감시망을 역이용하여 간섭 없는 독립 법인을 세울 수 있는가",
+  "end_location": "강남 비즈니스 카페 프라이빗 룸",
+  "ending_hook": "서류 위로 떨어진 잉크 자국을 조용히 응시하던 그의 입가에 묘한 조소가 번졌다. 완벽한 버림받음, 그것이 그가 원하던 가장 견고한 방패였다.",
+  "ending_state": {
+    "location": "강남 비즈니스 카페 프라이빗 룸",
+    "protagonist_status": "자본금 20억의 1인 법인 설립 서류 작성을 마치고 다음 계획을 준비하는 상태",
+    "timeline": {
+      "표현": "2006년 1월 1일 늦은 오후"
+    }
+  },
+  "ep_num": 3,
+  "episode_number": 3,
+  "expected_ending": "가족들의 철저한 무관심 속에서 법인 설립 서류를 완성하며 씁쓸함과 해방감을 동시에 느낌",
+  "integrated_scenario": "VIP 접견실의 서늘한 공기를 가르는 모니터의 붉은 불빛. '대주주 일가 대규모 자금 이동 추가 승인 요망'. 화면을 가득 채운 경고창 앞에서 박성호의 손가락이 굳어버렸다. 그가 변명거리를 찾으려 입을 떼는 순간, 한시우의 건조한 목소리가 먼저 공간을 갈랐다. 신탁 약관 제14조 3항. 본인이 직접 내방하여 요구할 경우, 내부 관리자 권한으로 즉각 해지할 수 있다는 예외 조항이었다. 수첩조차 확인하지 않고 토씨 하나 틀리지 않게 규정을 읊어대는 한시우의 서늘한 눈빛에 압도된 박성호는 결국 떨리는 손으로 강제 승인 키를 누른다. 출력기에서 20억 원의 자산 이체 및 통합 내역서가 뱉어지는 소리만이 고요한 방안을 채운다.\n\n내역서를 챙겨 든 한시우는 지체 없이 PB센터를 빠져나와 강남의 한 프라이빗 비즈니스 카페로 향한다. 미리 연락을 받고 대기 중이던 법무법인 대리인은 한시우가 자리에 앉자마자 쏟아내는 지시사항에 내심 혀를 내두른다. 'SW인베스트먼트'. 자본금 20억 원의 1인 투자 법인. 지분 구조와 이사회 구성 요건, 정관의 세부 사항까지 막힘없이 설계해 나가는 한시우의 태도는 이제 갓 스물을 넘긴 재벌가 막내의 치기 어린 장난이 아니었다.\n\n서류의 초안이 거의 완성되어 갈 무렵, 한시우의 휴대폰이 울린다. 발신자는 큰형 한태준의 비서실. 20억 원이라는 적지 않은 자금이 움직인 것에 대한 형식적인 확인 절차였다. 한시우는 서류의 페이지를 넘기며 건조하게 답한다. 개인 투자 회사를 세워볼까 한다고. 수화기 너머에서는 찰나의 침묵 뒤에 안도감 섞인 미세한 비웃음이 흘러나왔다. 후계 구도를 위협할 그룹 지분 매입도, 유력 인사와의 접촉도 아닌 그저 돈 장난. 그들은 한시우의 행보를 완벽히 궤도 밖의 일탈로 치부했다. 통화가 끊어지고, 한시우는 대리인이 내민 SW인베스트먼트 설립 신청 서류 가안에 거침없이 서명한다.\n\n대리인이 떠나고 넓은 프라이빗 룸에 홀로 남은 한시우. 테이블 위에는 20억 원의 이체 내역서와 법인 설립 서류가 나란히 놓여 있다. 과거, 철저히 버림받고 빚쟁이들에게 쫓기며 무력하게 죽어갔던 기억의 파편들이 서류 위로 겹쳐진다. 형들의 무관심과 가문의 방치는 과거엔 그를 옭아매는 독이었지만, 지금은 그 무엇보다 견고하고 안전한 방패였다. 한시우는 서류 위 자신의 서명을 손가락으로 가볍게 쓸어내렸다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor",
+      "scene_transition_cue"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부 경고창 상황을 한시우의 지식과 결단력으로 빠르게 해소하여 사이다를 제공하고, 이후 법인 설립과 가족의 무관심을 교차시켜 내면의 감정선을 깊이 있게 다룬다.",
+  "protagonist_state": {
+    "equipment": [
+      "개인 수첩",
+      "20억 원 이체 내역서",
+      "SW인베스트먼트 설립 신청 서류 가안"
+    ],
+    "injuries": "없음",
+    "mood": "차분함 속 미세한 고독과 성취감"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "형식적 존중과 내심 무시",
+      "justification": "한시우가 예외 조항을 완벽히 숙지하고 시스템 경고를 무력화시키는 모습에 압도됨",
+      "target": "박성호",
+      "to_state": "규칙을 통제하는 실력에 대한 두려움과 복종"
+    },
+    {
+      "from_state": "무관심",
+      "justification": "막내가 1인 법인을 세워 개인 투자 놀이를 한다고 착각하여 후계 구도에서 완전히 논외로 침",
+      "target": "한태준",
+      "to_state": "경계 해제 및 완벽한 배제"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "시스템 경고창 앞에서 굳어버린 박성호를 향해 한시우가 차갑게 약관을 짚으며 이체를 완료시키는 장면.",
+      "description": "VIP 접견실의 서늘한 공기를 가르는 모니터의 붉은 불빛. 박성호가 멈칫하지만, 한시우는 개인 수첩을 보지도 않고 신탁 약관의 특정 조항을 짚어낸다. 한시우의 완벽한 규정 숙지와 차가운 눈빛에 박성호는 결국 승인 키를 누른다.",
+      "goal": "PB센터 시스템의 추가 승인 경고를 돌파하고 20억 이체 완료하기",
+      "key_events": [
+        "모니터에 뜬 '대주주 일가 대규모 자금 이동 추가 승인 요망' 경고 확인",
+        "한시우가 지체 없이 약관 제14조 3항의 '본인 직접 내방 시 즉각 해지' 조항을 읊으며 압박",
+        "박성호가 식은땀을 닦으며 관리자 권한으로 강제 승인 처리",
+        "20억 원의 자산 이체 및 통합 내역서 출력 및 획득"
+      ],
+      "location": "PB센터 VIP 접견실",
+      "summary": "붉은 경고창에 당황한 박성호를 향해 한시우가 가문의 예외 조항을 읊으며 이체를 강제한다.",
+      "tension_level": 6,
+      "title": "경고창의 의미",
+      "type": "resolution"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "법무법인 대리인"
+      ],
+      "content": "강남 비즈니스 카페에서 법무법인 대리인을 만나 SW인베스트먼트의 뼈대를 세우는 장면.",
+      "description": "한시우는 PB센터를 나와 곧바로 강남의 프라이빗 비즈니스 카페로 향한다. 미리 연락해둔 법무법인 대리인이 도착하고, 한시우는 준비해둔 1인 법인 구조와 정관 요건을 빠르고 정확하게 지시한다. 대리인은 스물 남짓한 청년의 전문성에 내심 놀란다.",
+      "goal": "개인 투자 법인 설립을 위한 대리인 미팅 진행",
+      "key_events": [
+        "강남 비즈니스 카페의 프라이빗 룸에 자리 잡는 한시우",
+        "법무법인 대리인에게 'SW인베스트먼트'라는 사명과 20억 자본금 규모의 설립 서류 작성 지시",
+        "지분 구조와 이사회 구성 요건을 막힘없이 설정하는 한시우의 모습에 대리인이 감탄함"
+      ],
+      "location": "강남 비즈니스 카페",
+      "summary": "강남 비즈니스 카페로 이동한 한시우가 법무법인 대리인을 만나 SW인베스트먼트 설립을 지시한다.",
+      "tension_level": 4,
+      "title": "새로운 껍데기",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "한태준의 비서(전화)"
+      ],
+      "content": "가족 측의 확인 전화가 오지만, 오히려 무관심을 확인하며 법인 설립 서류를 마무리하는 장면.",
+      "description": "서류 작업 중 한시우의 휴대폰이 울린다. 큰형 한태준의 비서실이다. 거액이 인출된 것에 대한 형식적인 확인 절차. 한시우가 '개인 투자 회사를 세워볼까 한다'고 건조하게 답하자, 수화기 너머에서는 안도 섞인 비웃음이 미세하게 흘러나온다. 후계 구도에 위협이 되지 않는 짓거리라 판단한 그들의 무관심을 한시우는 조용히 즐긴다.",
+      "goal": "가족들의 무관심을 확인하고 이를 역이용하여 서류를 완성하기",
+      "key_events": [
+        "한태준 비서실의 자금 이동 확인 전화 수신",
+        "한시우가 1인 법인 설립 목적을 밝힘",
+        "상대방이 경계를 풀고 형식적인 인사만 남긴 채 통화 종료",
+        "한시우가 씁쓸함과 동시에 완벽한 자유를 확신하며 서류에 서명함"
+      ],
+      "location": "강남 비즈니스 카페 프라이빗 룸",
+      "summary": "큰형 한태준 측의 확인 전화가 오지만, 단순한 장난으로 치부되며 철저한 무관심 속에 방치된다.",
+      "tension_level": 5,
+      "title": "철저한 무관심",
+      "type": "side_glimpse"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "홀로 남아 서류를 바라보며, 철저한 무관심이 만들어준 완벽한 방패 뒤에서 묘한 감정에 휩싸이는 장면.",
+      "description": "대리인이 떠나고 룸에 홀로 남은 한시우. 테이블 위에는 20억 원의 이체 내역서와 SW인베스트먼트 설립 신청 서류 가안이 나란히 놓여 있다. 과거 빚에 쫓기며 무력하게 죽어갔던 기억과, 지금 스스로 쥐어낸 거대한 실탄의 무게가 교차한다.",
+      "goal": "서류 작성을 마친 후 과거의 굴레에서 벗어난 감정적 여운 느끼기",
+      "key_events": [
+        "홀로 남아 테이블 위의 두 서류를 번갈아 응시함",
+        "과거 가문에서 버림받았던 기억이 짧게 스쳐 지나감",
+        "서류의 잉크 자국을 손가락으로 쓸어내리며 차가운 미소를 지음"
+      ],
+      "location": "강남 비즈니스 카페 프라이빗 룸",
+      "summary": "완성된 SW인베스트먼트 설립 서류를 응시하며 한시우가 과거의 상처와 현재의 해방감을 동시에 느낀다.",
+      "tension_level": 6,
+      "title": "독립의 무게",
+      "type": "emotional_reveal"
+    }
+  },
+  "start_location": "PB센터 VIP 접견실",
+  "target_beat": "20억 자금 확보 완료 및 SW인베스트먼트 법인 설립 서류 작성 완료",
+  "time_flow": "2006년 1월 1일 낮 -> 오후",
+  "title": "완벽한 방패"
+}
