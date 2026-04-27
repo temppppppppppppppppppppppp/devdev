@@ -444,6 +444,7 @@ def _quality_dashboard_runtime_defaults(lookback: int) -> dict[str, Any]:
             "status": "unavailable",
             "sink_alignment_status": "unavailable",
             "runtime_summary_status": "unavailable",
+            "runtime_summary_freshness_status": "unavailable",
             "completion_claim_scope": "proof_artifact_alignment_only",
             "semantic_completion_status": "unavailable",
             "canonical_truth_status": "not_asserted_by_dashboard",
@@ -2238,6 +2239,123 @@ def _classify_runtime_summary_freshness(runtime_audit_summary: dict) -> dict:
     }
 
 
+def _parse_dashboard_timestamp(value: Any) -> datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    candidates = [text, text.replace(" ", "T", 1)]
+    for candidate in candidates:
+        try:
+            parsed = datetime.fromisoformat(candidate.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if parsed.tzinfo is not None:
+            parsed = parsed.astimezone(UTC).replace(tzinfo=None)
+        return parsed
+    return None
+
+
+def _latest_stage4_attempt_context(db: DBManager) -> dict[str, Any]:
+    context: dict[str, Any] = {
+        "available": False,
+        "attempt_count": 0,
+        "latest_ts": "",
+        "latest_session_id": "",
+        "latest_attempt_key": "",
+        "latest_ep_num": None,
+        "latest_arc_num": None,
+        "latest_verdict": "",
+    }
+    try:
+        count_row = db.cursor.execute("SELECT COUNT(*) AS count FROM stage_attempts WHERE stage = 4").fetchone()
+        context["attempt_count"] = int(count_row["count"] if hasattr(count_row, "keys") else count_row[0])
+        row = db.cursor.execute(
+            """
+            SELECT ts, session_id, attempt_key, ep_num, arc_num, verdict
+            FROM stage_attempts
+            WHERE stage = 4
+            ORDER BY ts DESC, id DESC
+            LIMIT 1
+            """
+        ).fetchone()
+    except Exception as exc:
+        logger.debug("stage4 attempt freshness context unavailable: %s", exc)
+        return context
+    if row is None:
+        return context
+
+    def _row_value(key: str, index: int) -> Any:
+        try:
+            return row[key]
+        except (KeyError, TypeError, IndexError):
+            return row[index]
+
+    context.update(
+        {
+            "available": True,
+            "latest_ts": str(_row_value("ts", 0) or ""),
+            "latest_session_id": str(_row_value("session_id", 1) or ""),
+            "latest_attempt_key": str(_row_value("attempt_key", 2) or ""),
+            "latest_ep_num": _row_value("ep_num", 3),
+            "latest_arc_num": _row_value("arc_num", 4),
+            "latest_verdict": str(_row_value("verdict", 5) or ""),
+        }
+    )
+    return context
+
+
+def _mark_runtime_summary_freshness_against_stage4(runtime_audit_summary: dict, stage4_context: dict[str, Any]) -> None:
+    if not isinstance(runtime_audit_summary, dict) or not runtime_audit_summary.get("available"):
+        return
+    if not isinstance(stage4_context, dict) or not stage4_context.get("available"):
+        return
+
+    freshness = runtime_audit_summary.get("freshness", {})
+    if not isinstance(freshness, dict):
+        freshness = _classify_runtime_summary_freshness(runtime_audit_summary)
+
+    tag = str(runtime_audit_summary.get("tag", "") or "").strip()
+    run_scope = runtime_audit_summary.get("run_scope", {})
+    run_scope = run_scope if isinstance(run_scope, dict) else {}
+    summary_timestamp = str(
+        runtime_audit_summary.get("timestamp") or run_scope.get("summary_timestamp") or ""
+    ).strip()
+    latest_stage4_ts = str(stage4_context.get("latest_ts") or "").strip()
+    summary_dt = _parse_dashboard_timestamp(summary_timestamp)
+    latest_stage4_dt = _parse_dashboard_timestamp(latest_stage4_ts)
+    later_stage4_attempt = bool(summary_dt and latest_stage4_dt and latest_stage4_dt > summary_dt)
+    stage3_scoped = tag == "stage3_complete" or str(run_scope.get("summary_tag", "") or "") == "stage3_complete"
+
+    if not (stage3_scoped or later_stage4_attempt):
+        runtime_audit_summary["freshness"] = freshness
+        return
+
+    basis = list(freshness.get("basis") or [])
+    if "stage_attempts.stage4" not in basis:
+        basis.append("stage_attempts.stage4")
+    stale_reasons = []
+    if stage3_scoped:
+        stale_reasons.append("summary_tag_stage3_complete")
+    if later_stage4_attempt:
+        stale_reasons.append("later_stage4_attempt_exists")
+
+    runtime_audit_summary["freshness"] = {
+        **freshness,
+        "status": "stale_for_stage4",
+        "scope_status": "pre_stage4_or_partial",
+        "basis": basis,
+        "operator_guidance_only": True,
+        "stale_reasons": stale_reasons,
+        "summary_tag": tag,
+        "summary_timestamp": summary_timestamp,
+        "latest_stage4_attempt_ts": latest_stage4_ts,
+        "latest_stage4_attempt_session_id_present": bool(stage4_context.get("latest_session_id")),
+        "latest_stage4_attempt_key": str(stage4_context.get("latest_attempt_key") or ""),
+        "latest_stage4_attempt_verdict": str(stage4_context.get("latest_verdict") or ""),
+        "stage4_attempt_count": int(stage4_context.get("attempt_count") or 0),
+    }
+
+
 def _build_dashboard_proof_status(*, sink_alignment_summary: dict, runtime_audit_summary: dict) -> dict:
     sink_stages = sink_alignment_summary.get("stages", {}) if isinstance(sink_alignment_summary, dict) else {}
     sink_stage_statuses = [
@@ -2256,13 +2374,22 @@ def _build_dashboard_proof_status(*, sink_alignment_summary: dict, runtime_audit
     runtime_summary_status = str(proof_digest.get("status", "") or "")
     if not runtime_summary_status:
         runtime_summary_status = "unavailable"
+    runtime_freshness = runtime_audit_summary.get("freshness", {}) if isinstance(runtime_audit_summary, dict) else {}
+    runtime_freshness = runtime_freshness if isinstance(runtime_freshness, dict) else {}
+    runtime_summary_freshness_status = str(runtime_freshness.get("status", "") or "")
+    if not runtime_summary_freshness_status:
+        runtime_summary_freshness_status = "unavailable"
     warning_issue_counts = {
         "sink_alignment": _extract_proof_warning_issue_counts(sink_alignment_summary),
         "runtime_summary": _extract_proof_warning_issue_counts(proof_digest),
     }
 
     available = sink_alignment_status != "unavailable" or runtime_summary_status != "unavailable"
-    if sink_alignment_status == "warn" or runtime_summary_status == "warn":
+    if (
+        sink_alignment_status == "warn"
+        or runtime_summary_status == "warn"
+        or runtime_summary_freshness_status == "stale_for_stage4"
+    ):
         status = "warn"
     elif available:
         status = "ok"
@@ -2285,6 +2412,7 @@ def _build_dashboard_proof_status(*, sink_alignment_summary: dict, runtime_audit
         "authority_role": _authority_role_for("proof_status"),
         "sink_alignment_status": sink_alignment_status,
         "runtime_summary_status": runtime_summary_status,
+        "runtime_summary_freshness_status": runtime_summary_freshness_status,
         "completion_claim_scope": "proof_artifact_alignment_only",
         "semantic_completion_status": semantic_status_map.get(status, "unavailable"),
         "canonical_truth_status": "not_asserted_by_dashboard",
@@ -2382,6 +2510,10 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
     gate_repair_snapshot: dict[str, Any] | None = None
     try:
         calibration_health = inspect_quality_sidecar_health(project_dir, db)
+        _mark_runtime_summary_freshness_against_stage4(
+            payload["runtime_audit_summary"],
+            _latest_stage4_attempt_context(db),
+        )
         analyzer = FailureAnalyzer(db, project_path=project_dir)
         sink_alignment = {
             "available": False,
