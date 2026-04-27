@@ -2218,7 +2218,6 @@ class Stage4InterviewRound:
         selected_label, selected_strategy_key = self._parse_stage4_candidate_key(candidate_key)
         artifact_path = str(attempt_row.get("artifact_path") or candidate_surface.get("artifact_path") or "").strip()
         content_hash = str(attempt_row.get("content_hash") or candidate_surface.get("content_hash") or "").strip()
-        best_manuscript = self._load_stage4_attempt_artifact_text(artifact_path)
         fix_pack = dict(contract_packet.fix_pack or {})
         repair_contract = dict(contract_packet.repair_contract or {})
         scope_authority = dict(contract_packet.scope_authority or {})
@@ -2287,6 +2286,13 @@ class Stage4InterviewRound:
             failure_category=attempt_row.get("failure_category"),
             primary_failure_layer=attempt_row.get("primary_failure_layer"),
         )
+        artifact_name = Path(artifact_path).name.lower() if artifact_path else ""
+        body_blocked_reason = ""
+        if reject_bucket == "post_select_conflict" and artifact_name.startswith("rejected_best"):
+            best_manuscript = ""
+            body_blocked_reason = "post_select_rejected_artifact"
+        else:
+            best_manuscript = self._load_stage4_attempt_artifact_text(artifact_path)
         hydrated_fix_scope = str(
             scope_authority.get("fix_scope") or attempt_row.get("fix_scope") or retry_surface.get("fix_scope") or ""
         ).strip()
@@ -2389,6 +2395,8 @@ class Stage4InterviewRound:
             payload["conflict_contract"] = conflict_contract
         if reuse_contract:
             payload["reuse_contract"] = reuse_contract
+        if body_blocked_reason:
+            payload["best_manuscript_blocked_reason"] = body_blocked_reason
         if fix_pack_origin:
             payload["fix_pack_origin"] = fix_pack_origin
         if scope_origin:
