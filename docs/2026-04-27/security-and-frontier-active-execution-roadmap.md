@@ -1,7 +1,7 @@
 # Security and Frontier Active Execution Roadmap
 
 Date: 2026-04-27
-Status: active (#56/#59 completed; Frontier Lag is next queued item)
+Status: active (#56/#59 completed; Frontier Lag remains front-active after 2026-04-28 strict 2-arc diagnostic exposed a watchdog provider-wait stall)
 Canonical Path: `docs/2026-04-27/security-and-frontier-active-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Commit State:
@@ -25,7 +25,7 @@ This roadmap governs queue ordering only. It does not authorize implementation b
 
 | Item | Canonical Path | Temp Path | Status | Notes |
 | --- | --- | --- | --- | --- |
-| `frontier-lag-clean-5arc-stabilization` | `docs/2026-04-26/frontier-lag-clean-5arc-stabilization-execution-ssot.md` | `docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md` | pending | Existing terminal proof queue item; now next after #59/#56 landed, but current-state 3-pass re-audit is required before any fresh proof run. |
+| `frontier-lag-clean-5arc-stabilization` | `docs/2026-04-26/frontier-lag-clean-5arc-stabilization-execution-ssot.md` | `docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md` | active | 2026-04-28 fresh strict 2-arc diagnostic stalled while waiting on provider response; watchdog provider-wait hardening is implemented, so next step is bounded 2-arc rerun. |
 | `security-secrets-config` | `docs/2026-04-27/security-secrets-config-execution-ssot.md` | `docs/temp/security-secrets-config-execution-ssot.md` | pending | Security P0 substrate; parked future wave. |
 | `security-runtime-settings-vertex` | `docs/2026-04-27/security-runtime-settings-vertex-execution-ssot.md` | `docs/temp/security-runtime-settings-vertex-execution-ssot.md` | pending | Depends on `security-secrets-config`; parked future wave. |
 | `security-desktop-release-guardrails` | `docs/2026-04-27/security-desktop-release-guardrails-execution-ssot.md` | `docs/temp/security-desktop-release-guardrails-execution-ssot.md` | pending | Depends on both prior security SSOTs; parked future wave. |
@@ -57,7 +57,7 @@ Priority basis:
 
 Working order:
 
-1. `frontier-lag-clean-5arc-stabilization` (next queued item after #59/#56 landed; current-state 3-pass re-audit required before code or proof execution)
+1. `frontier-lag-clean-5arc-stabilization` (front-active; provider-wait watchdog hardening implemented, rerun bounded strict 2-arc diagnostic)
 2. `security-secrets-config` (parked future wave; security P0 substrate)
 3. `security-runtime-settings-vertex` (parked future wave; depends on `security-secrets-config`)
 4. `security-desktop-release-guardrails` (parked future wave; depends on `security-secrets-config` and `security-runtime-settings-vertex`)
@@ -67,7 +67,7 @@ Working order:
 ### frontier-lag-clean-5arc-stabilization
 
 - goal: preserve the existing active stabilization queue item and do not silently demote it during security document intake.
-- prerequisites: current-state re-audit before further implementation or proof execution. #59 warning taxonomy and #56 genre semantics have landed on `main`, so the remaining gate is fresh re-audit plus bounded proof/run planning.
+- prerequisites: current-state re-audit completed, bounded 2-arc diagnostic run completed as `stalled`, and watchdog provider-wait classification hardening implemented. Next proof step is bounded 2-arc rerun.
 - execution notes: unrelated to security remediation except for shared queue mechanics.
 - completion signal: canonical closure update and removal of temp mirror via closure harness.
 - temp cleanup action: remove only `docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md` after realized and closed.
@@ -110,7 +110,7 @@ Working order:
 
 | Item | Status | Last Update | Blocker |
 | --- | --- | --- | --- |
-| `frontier-lag-clean-5arc-stabilization` | pending | 2026-04-27 | #59/#56 have landed; current-state 3-pass re-audit required before next implementation or proof run |
+| `frontier-lag-clean-5arc-stabilization` | active | 2026-04-28 | watchdog provider-wait classification hardened; rerun bounded strict 2-arc diagnostic |
 | `security-secrets-config` | pending | 2026-04-27 | external credential rotation/history decision may block closure |
 | `security-runtime-settings-vertex` | pending | 2026-04-27 | depends on `security-secrets-config`; path policy decision required |
 | `security-desktop-release-guardrails` | pending | 2026-04-27 | depends on first two security items; access-control product model may remain residual |
