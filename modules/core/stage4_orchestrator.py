@@ -748,8 +748,6 @@ class Stage4Orchestrator:
 
     def _build_stage4_to_3_reverse_feedback(self, *, director_feedback: str, previous_attempt: dict | None) -> str:
         callback = getattr(self.ctx, "generate_reverse_feedback_stage4_to_3", None)
-        if not callable(callback):
-            return ""
 
         reason_parts: list[str] = []
         if director_feedback:
@@ -759,12 +757,27 @@ class Stage4Orchestrator:
                 value = str(previous_attempt.get(key, "") or "").strip()
                 if value and value not in reason_parts:
                     reason_parts.append(value)
+            for key in ("reject_bucket", "gate_basis", "dominant_contradiction_type"):
+                value = str(previous_attempt.get(key, "") or "").strip()
+                if value:
+                    reason_parts.append(f"{key}={value}")
+            contradiction_types = previous_attempt.get("contradiction_types", [])
+            if isinstance(contradiction_types, list) and contradiction_types:
+                reason_parts.append("contradiction_types=" + ",".join(str(item) for item in contradiction_types[:5]))
+            conflict_contract = previous_attempt.get("conflict_contract", {})
+            if isinstance(conflict_contract, dict):
+                if conflict_contract.get("completed_event_replay"):
+                    reason_parts.append("completed_event_replay=True")
+                contract_types = conflict_contract.get("contradiction_types", [])
+                if isinstance(contract_types, list) and contract_types:
+                    reason_parts.append("conflict_contract.types=" + ",".join(str(item) for item in contract_types[:5]))
             action_items = previous_attempt.get("action_items", [])
             if isinstance(action_items, list) and action_items:
                 reason_parts.append(" / ".join(str(item) for item in action_items[:3]))
         reject_reason = "\n".join(part for part in reason_parts if part).strip()
         if not reject_reason:
             return ""
+        completed_event_contract = Stage4Orchestrator._build_completed_event_replay_contract(reject_reason)
 
         pre_checklist_result = None
         if isinstance(previous_attempt, dict):
@@ -772,8 +785,11 @@ class Stage4Orchestrator:
             if isinstance(checklist, dict) and checklist:
                 pre_checklist_result = checklist
 
+        reverse_feedback = ""
+        if not callable(callback):
+            return completed_event_contract
         try:
-            return (
+            reverse_feedback = (
                 callback(
                     writer_reject_reason=reject_reason,
                     pre_checklist_result=pre_checklist_result,
@@ -782,7 +798,49 @@ class Stage4Orchestrator:
             )
         except Exception as exc:
             logging.warning("[Stage4->3] reverse feedback helper 실패: %s", exc)
+        if completed_event_contract and completed_event_contract not in reverse_feedback:
+            return f"{completed_event_contract}\n\n{reverse_feedback}".strip()
+        return reverse_feedback
+
+    @staticmethod
+    def _build_completed_event_replay_contract(feedback: str) -> str:
+        feedback_lower = str(feedback or "").lower()
+        if not any(
+            signal in feedback_lower
+            for signal in (
+                "completed_event_replay",
+                "completed event",
+                "already completed",
+                "history conflict",
+                "continuity replay",
+                "replay",
+                "contradiction_types=history",
+                "contradiction_types=continuity",
+                "conflict_contract.types=history",
+                "conflict_contract.types=continuity",
+                "post_select_conflict",
+                "이미 완료",
+                "이전 회차",
+                "이전 화",
+                "중복 묘사",
+                "반복",
+                "재연",
+                "다시",
+                "이미 끝난",
+                "완료 사건",
+                "타임라인",
+            )
+        ):
             return ""
+        return "\n".join(
+            [
+                "[Completed prior event replay contract]",
+                "- A completed prior-episode event must not become the next episode's scene_1/opening event again.",
+                "- Treat the rejected event as already executed historical state; continue from its aftermath, consequence, or a new decision/action.",
+                "- If the blueprint must mention the old event, mention it as remembered context or causal pressure, not as the live scene objective.",
+                "- Regenerate scene_breakdown.scene_1.title, summary, key_events, integrated_scenario, and expected_ending so they advance after the prior event.",
+            ]
+        )
 
     @staticmethod
     def _merge_blueprint_feedback(director_feedback: str, reverse_feedback: str) -> str:
@@ -824,7 +882,18 @@ class Stage4Orchestrator:
 
         combined_feedback = "\n".join(part for part in feedback_parts if part).lower()
         opening_signals = ("continuity", "연속성", "시작 장소", "start location", "전화 통화", "서재 앞 복도", "현관")
-        replay_signals = ("flashback", "회상", "replay", "재연", "과거의", "continuity replay")
+        replay_signals = (
+            "flashback",
+            "회상",
+            "replay",
+            "재연",
+            "과거의",
+            "continuity replay",
+            "history conflict",
+            "completed event",
+            "already completed",
+            "completed_event_replay",
+        )
         numeric_signals = ("20억", "22억", "수치", "신탁 자산", "현금화 금액", "페널티")
         if not any(signal in combined_feedback for signal in (*opening_signals, *replay_signals, *numeric_signals)):
             return ""
@@ -872,6 +941,9 @@ class Stage4Orchestrator:
                     "- jump_opening이면 direct continuation처럼 위장하지 말고 새 장소/시간/상태를 첫 비트에서 바로 선언하세요."
                 )
         if any(signal in combined_feedback for signal in replay_signals):
+            completed_event_contract = Stage4Orchestrator._build_completed_event_replay_contract(combined_feedback)
+            if completed_event_contract:
+                lines.append(completed_event_contract)
             lines.extend(
                 [
                     "- EP1에서 이미 완료된 전화/행동을 EP2 opening에서 회상·재연 장면으로 다시 쓰지 마세요.",
