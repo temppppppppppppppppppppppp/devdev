@@ -661,6 +661,30 @@ class TestFactLockDriftDetection:
         )
         assert [i for i in issues if i["category"] == "fact_lock_location"] == []
 
+    def test_opening_truth_arc_start_location_does_not_bind_regression_prologue(self):
+        constraint_block = {
+            "episode_state_packet": {
+                "opening_truth": {
+                    "location": "2006년 서울 성북동 본가",
+                    "location_source": "arc_data.state_constraints.arc_start_state.location",
+                }
+            }
+        }
+        blueprint = {
+            "start_location": "2024년, 허름한 원룸",
+            "scene_breakdown": {
+                "scene_1": {
+                    "location": "2024년, 허름한 원룸",
+                }
+            },
+        }
+        issues = UnifiedBlueprintValidator._collect_fact_lock_drift_issues(
+            blueprint=blueprint,
+            integrated="2024년 허름한 원룸에서 죽음을 맞고 2006년으로 회귀한다.",
+            constraint_block=constraint_block,
+        )
+        assert [i for i in issues if i["category"] == "fact_lock_location"] == []
+
     def test_item_storage_drift_detected(self):
         constraint_block = {
             "fact_lock_packet": {

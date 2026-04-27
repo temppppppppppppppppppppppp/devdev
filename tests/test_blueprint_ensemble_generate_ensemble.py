@@ -1362,6 +1362,25 @@ def test_format_constraints_does_not_hard_bind_placeholder_opening_location():
     assert "must equal opening.location exactly" not in formatted
 
 
+def test_format_constraints_does_not_hard_bind_arc_start_opening_location():
+    agent = _make_agent()
+
+    formatted = agent._format_constraints(
+        {
+            "episode_state_packet": {
+                "opening_truth": {
+                    "location": "2006년 서울 성북동 본가",
+                    "location_source": "arc_data.state_constraints.arc_start_state.location",
+                },
+            },
+        },
+        genre=GenreTypes.INVESTMENT,
+    )
+
+    assert "opening.location: 2006년 서울 성북동 본가" in formatted
+    assert "must equal opening.location exactly" not in formatted
+
+
 def test_format_constraints_surfaces_opening_transition_expectation():
     agent = _make_agent()
 

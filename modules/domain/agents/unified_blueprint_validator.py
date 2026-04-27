@@ -361,6 +361,16 @@ def _is_concrete_opening_location(location: str) -> bool:
     return normalized not in placeholder_locations
 
 
+def _should_hard_bind_opening_location(opening_truth: dict) -> bool:
+    if not isinstance(opening_truth, dict):
+        return False
+    location = str(opening_truth.get("location", "") or "").strip()
+    if not _is_concrete_opening_location(location):
+        return False
+    source = str(opening_truth.get("location_source", "") or "").strip()
+    return source.startswith("prev_blueprint") or "cross_stage_authority_packet" in source
+
+
 class UnifiedBlueprintValidator:
     """
     [V60.80] 통합 Blueprint 검증기
@@ -2260,7 +2270,7 @@ class UnifiedBlueprintValidator:
             else {}
         )
         opening_location = str(opening_truth.get("location", "") or "").strip()
-        if _is_concrete_opening_location(opening_location):
+        if _should_hard_bind_opening_location(opening_truth):
             bp_start = str(blueprint.get("start_location", blueprint.get("location", "")) or "").strip()
             scenes = blueprint.get("scene_breakdown", {})
             scene_one = scenes.get("scene_1") if isinstance(scenes, dict) else None
