@@ -8,8 +8,8 @@ Temp Mirror Path: `docs/temp/frontier-lag-clean-5arc-stabilization-execution-sso
 Commit State:
 - Baseline Commit: `a76689ec6c7d1ff6a55686d9889be15009ebb4b7`
 - Baseline Dirty Summary: dirty before this document: `M 0_temp.txt`, untracked lane/report/project artifacts
-- Resume Commit: same-as-baseline
-- Resume Drift Summary: none observed for source code during document creation
+- Resume Commit: `7dc668c524501dd27db156bdf2c7342e55b791e9`
+- Resume Drift Summary: #56/#59 landed and were retired from the active temp queue by PR #85; Frontier Lag is now queue rank 1/front-active. Current-state re-audit on 2026-04-27 confirmed T0-T9/T6/T7 source and targeted regression evidence still match this SSOT, with strict fresh multi-arc proof still pending.
 Source Survey Docs:
 - `docs/2026-04-26/frontier-lag-clean-5arc-lane-a-failure-forensics.md`
 - `docs/2026-04-26/frontier-lag-clean-5arc-lane-b-memory-cache-audit.md`
@@ -892,3 +892,67 @@ T9-D implementation micro-audit:
 - Pass 1 evidence completeness: PASS. The remaining gap was not provider `http_options` injection, but the parent watchdog waiting for the long poll cadence before checking runtime caps.
 - Pass 2 operational safety: PASS. The change preserves the existing worker process model and does not introduce unpicklable per-call child execution. It only shortens the watchdog sleep to the runtime deadline and terminates the worker when the cap is exceeded.
 - Pass 3 false-success risk: PASS. Runtime-cap termination produces `termination_reason = budget_runtime_seconds_exceeded`, which `derive_root_cause` already treats as a failed objective root cause.
+
+## 9.7 Current-State Re-Audit After #56/#59 Closure
+
+Date: 2026-04-27
+Baseline: `7dc668c524501dd27db156bdf2c7342e55b791e9`
+Queue state: Frontier Lag is rank 1/front-active after #56 and #59 landed, passed CI, were closed, and were removed from active temp queue by PR #85.
+
+### Pass 1 - Structure and Scope
+
+Result: PASS.
+
+- This SSOT remains the governing execution artifact for Frontier Lag clean 5-arc stabilization.
+- The active queue and roadmap now point to this item first; the three security SSOTs remain parked behind it.
+- This re-audit does not authorize a strict fresh 5-arc clean-run claim. It only clears the document/current-state gate needed before the next bounded diagnostic step.
+
+### Pass 2 - Evidence and Consistency
+
+Result: PASS.
+
+Current source still supports the major implementation claims recorded above:
+
+- T0/T1 authority split and diagnostic evidence are present in `modules/domain/agents/unified_blueprint_validator.py`, `modules/domain/agents/three_phase_blueprint_runtime.py`, and Stage3 terminal failure diagnostic paths.
+- T2/T3/T4/T9 harness claims are present in `scripts/run_auto_frontier_lag_harness.py` and `main_a.py`: process/objective split, strict Stage3 skip behavior, Stage4 target-reached advancement, runtime budget caps, poll history flushing, run-id freshness, strict evidence gaps, and artifact completeness gates.
+- T6/T7 claims are present in `modules/core/db_bootstrap_runtime.py`, `modules/core/db_manager.py`, `modules/core/authoritative_continuity_projection.py`, `modules/core/continuity_canary.py`, `modules/core/stage3_orchestrator.py`, `modules/core/stage4_context_builder.py`, and `modules/core/session_memory_envelope.py`.
+- #56/#59 are now historical backing, not active blockers; their fixes reduce genre-strategy drift and proof/advisory ambiguity before Frontier Lag reentry.
+
+Residual watch item:
+
+- `final_verdict` remains a compatibility/objective field and is still consumed across Stage3 surfaces. Targeted authority-regression tests passed in this re-audit, so this is not a pre-proof blocker, but any future refactor must keep `director_verdict` and runtime route fields distinct.
+
+### Pass 3 - Execution Readiness
+
+Result: PASS WITH BOUNDED RUN REQUIREMENT.
+
+Recommended next proof step:
+
+- Run a fresh strict 2-arc diagnostic, not a 5-arc clean-run claim.
+- Use a new target project, no reuse, `--stage3-failure-policy strict`, and explicit runtime/token/cost/project-size caps.
+- Treat the result as a diagnostic/proof packet for multi-arc continuity projection and canary behavior.
+
+Recommended command shape:
+
+```powershell
+python scripts/run_auto_frontier_lag_harness.py run --arc-count 2 --target-project auto_frontier_reaudit_probe_20260427_2arc --trigger frontier_reaudit_probe_after_56_59 --stage3-failure-policy strict --poll-interval-seconds 60 --operational-attempt-cap 5 --max-runtime-seconds 10800 --max-total-tokens 2500000 --max-total-cost-usd 8 --max-project-bytes 800000000
+```
+
+Rejected next step:
+
+- Do not start with a strict fresh 5-arc unattended clean-run claim. Fresh multi-arc proof is still pending, and per-call SDK child-process isolation is still not implemented; the hard runtime boundary remains the parent-owned worker process cap.
+
+### Validation Run During Re-Audit
+
+- `python -m py_compile scripts/run_auto_frontier_lag_harness.py modules/core/db_manager.py modules/core/db_bootstrap_runtime.py modules/core/authoritative_continuity_projection.py modules/core/continuity_canary.py modules/core/stage3_orchestrator.py modules/core/stage4_context_builder.py modules/core/stage4_interview_round.py modules/core/stage4_retry_runtime.py modules/core/session_memory_envelope.py` -> passed
+- `python -m pytest -q tests/test_auto_frontier_lag_harness.py tests/test_one_stop_frontier_lag_auto_continue.py` -> 57 passed
+- `python -m pytest -q tests/test_authoritative_continuity_projection.py tests/test_continuity_canary.py tests/test_session_memory_envelope.py tests/test_stage4_context_builder.py::TestAuthoritativeContinuityProjection` -> 11 passed
+- `python -m pytest -q tests/test_db_manager.py::test_continuity_bridge_proposal_store_is_director_pending_by_default tests/test_db_manager.py::test_continuity_bridge_adjudication_records_director_decision_without_auto_apply` -> 2 passed
+- `python -m pytest -q tests/test_stage4_interview_round.py::TestRecordS4Attempt::test_save_stage4_db_attempt_hard_fails_when_success_authority_write_returns_false` -> 1 passed
+- `python -m pytest -q tests/test_session_memory_envelope.py` -> 5 passed
+- `python -m pytest -q tests/test_blueprint_patch_mode.py::TestBlueprintPatchIntegration::test_finalize_terminal_failure_blocks_emergency_fallback_with_binding_issue tests/test_unified_blueprint_validator_lane_c.py::test_lane_c_build_director_validation_result_escalates_binding_issue_to_pass_with_fix tests/test_stage3_orchestrator_handle_success_lane_c.py tests/test_db_manager.py::test_continuity_bridge_proposal_store_is_director_pending_by_default tests/test_authoritative_continuity_projection.py tests/test_session_memory_envelope.py::test_build_stage4_session_memory_envelope_preserves_authoritative_continuity_projection tests/test_auto_frontier_lag_harness.py::test_analyze_project_fails_success_when_continuity_canary_requires_review` -> 11 passed
+- `python scripts/run_auto_frontier_lag_harness.py plan --arc-count 2 --target-project auto_frontier_reaudit_probe_2arc --batch-size 1 --operational-attempt-cap 24 --max-runtime-seconds 5400 --max-total-tokens 1800000 --max-total-cost-usd 6 --max-project-bytes 500000000 --stage3-failure-policy strict` -> plan rendered
+- `python scripts/run_auto_frontier_lag_harness.py plan --arc-count 5 --target-project auto_frontier_reaudit_probe_5arc --batch-size 1 --operational-attempt-cap 72 --max-runtime-seconds 14400 --max-total-tokens 5000000 --max-total-cost-usd 15 --max-project-bytes 1000000000 --stage3-failure-policy strict` -> plan rendered
+- `python scripts/ops_validator.py --strict` -> passed
+
+Estimated operational confidence: 96%.
