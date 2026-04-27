@@ -1,9 +1,13 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-26T11:52:28.354356+00:00",
-  "queue_mode": "single",
-  "active_item_count": 1,
-  "roadmap": null,
+  "generated_at": "2026-04-27T04:34:01.0291789Z",
+  "queue_mode": "aggregate",
+  "active_item_count": 6,
+  "roadmap": {
+    "temp_path": "docs/temp/execution-roadmap.md",
+    "canonical_path": "docs/2026-04-27/security-and-frontier-active-execution-roadmap.md",
+    "status": "active"
+  },
   "items": [
     {
       "topic": "frontier-lag-clean-5arc-stabilization",
@@ -11,7 +15,67 @@
       "canonical_path": "docs/2026-04-26/frontier-lag-clean-5arc-stabilization-execution-ssot.md",
       "status": "pending",
       "queue_role": "front_active",
-      "roadmap_rank": null,
+      "roadmap_rank": 1,
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "security-secrets-config",
+      "temp_path": "docs/temp/security-secrets-config-execution-ssot.md",
+      "canonical_path": "docs/2026-04-27/security-secrets-config-execution-ssot.md",
+      "status": "pending",
+      "queue_role": "parked_future_wave",
+      "roadmap_rank": 2,
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "security-runtime-settings-vertex",
+      "temp_path": "docs/temp/security-runtime-settings-vertex-execution-ssot.md",
+      "canonical_path": "docs/2026-04-27/security-runtime-settings-vertex-execution-ssot.md",
+      "status": "pending",
+      "queue_role": "parked_future_wave",
+      "roadmap_rank": 3,
+      "depends_on": [
+        "security-secrets-config"
+      ],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "security-desktop-release-guardrails",
+      "temp_path": "docs/temp/security-desktop-release-guardrails-execution-ssot.md",
+      "canonical_path": "docs/2026-04-27/security-desktop-release-guardrails-execution-ssot.md",
+      "status": "pending",
+      "queue_role": "parked_future_wave",
+      "roadmap_rank": 4,
+      "depends_on": [
+        "security-secrets-config",
+        "security-runtime-settings-vertex"
+      ],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "stage4-post-select-conflict",
+      "temp_path": "docs/temp/stage4-post-select-conflict-execution-ssot.md",
+      "canonical_path": "docs/2026-04-27/stage4-post-select-conflict-execution-ssot.md",
+      "status": "pending",
+      "queue_role": "parked_future_wave",
+      "roadmap_rank": 5,
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "stage3-stage4-genre-alignment",
+      "temp_path": "docs/temp/stage3-stage4-genre-alignment-execution-ssot.md",
+      "canonical_path": "docs/2026-04-27/stage3-stage4-genre-alignment-execution-ssot.md",
+      "status": "pending",
+      "queue_role": "parked_future_wave",
+      "roadmap_rank": 6,
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
