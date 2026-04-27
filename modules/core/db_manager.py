@@ -1975,9 +1975,9 @@ class DBManager:
                 self.cursor.execute("DELETE FROM npc_history WHERE episode_no >= ?", (target_ep,))
                 self.cursor.execute("DELETE FROM episode_sentence_hashes WHERE episode_number >= ?", (target_ep,))
                 self.cursor.execute("DELETE FROM episode_satisfaction_tags WHERE ep_num >= ?", (target_ep,))
-                _stage4_selections = self._director_stage_predicate(4)
+                _stage34_selections = f"(stage = 3 OR {self._director_stage_predicate(4)})"
                 self.cursor.execute(
-                    "DELETE FROM director_selections WHERE ep_num >= ? AND " + _stage4_selections,
+                    "DELETE FROM director_selections WHERE ep_num >= ? AND " + _stage34_selections,
                     (target_ep,),
                 )
                 self.cursor.execute("DELETE FROM episode_pacing WHERE ep_num >= ?", (target_ep,))
@@ -2044,9 +2044,9 @@ class DBManager:
             )
             impact["satisfaction_tags"] = cur.fetchone()["cnt"]
 
-            _stage4_selections = self._director_stage_predicate(4)
+            _stage34_selections = f"(stage = 3 OR {self._director_stage_predicate(4)})"
             cur = self.cursor.execute(
-                "SELECT COUNT(*) as cnt FROM director_selections WHERE ep_num >= ? AND " + _stage4_selections,
+                "SELECT COUNT(*) as cnt FROM director_selections WHERE ep_num >= ? AND " + _stage34_selections,
                 (target_ep,),
             )
             impact["director_selections"] = cur.fetchone()["cnt"]

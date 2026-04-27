@@ -18,6 +18,13 @@ from modules.core.response_schemas import DIRECTOR_AUDIT_SCHEMA
 @pytest.fixture(autouse=True)
 def _clear_provider_mode_env(monkeypatch):
     monkeypatch.delenv("GEULDOBI_PROVIDER_MODE", raising=False)
+    monkeypatch.delenv("GEULDOBI_FORCE_GOOGLE_MODEL", raising=False)
+    monkeypatch.delenv("GEULDOBI_VERTEX_AUTH_MODE", raising=False)
+    monkeypatch.delenv("VERTEX_API_KEY", raising=False)
+    monkeypatch.delenv("VERTEX_PROJECT_ID", raising=False)
+    monkeypatch.delenv("VERTEX_LOCATION", raising=False)
+    monkeypatch.delenv("GOOGLE_CLOUD_PROJECT", raising=False)
+    monkeypatch.delenv("GOOGLE_CLOUD_LOCATION", raising=False)
 
 
 def test_repo_models_yaml_reflects_canonical_vertex_core_roles():
@@ -43,6 +50,25 @@ def test_load_models_yaml_rewrites_to_gemini_direct_when_env_forced(monkeypatch)
     assert payload["agents"]["chief_writer"] == "gemini-3.1-pro-preview"
     assert payload["agents"]["director"] == "gemini-3.1-pro-preview"
     assert payload["fallback_chain"]["claude-sonnet-4-6"] == "gemini-3.1-pro-preview"
+
+
+def test_load_models_yaml_force_google_model_pins_runtime_roles(monkeypatch):
+    monkeypatch.setenv("GEULDOBI_PROVIDER_MODE", "vertex_ai")
+    monkeypatch.setenv("GEULDOBI_FORCE_GOOGLE_MODEL", "gemini-3.1-pro-preview")
+
+    payload = load_models_yaml()
+
+    forced = "vertexai:gemini-3.1-pro-preview"
+    assert payload["agents"]["analyst"] == forced
+    assert payload["agents"]["manager"] == forced
+    assert payload["agents"]["writer"] == forced
+    assert payload["sub_components"]["four_phase_arc_generator"]["preflight"] == forced
+    assert payload["role_constants"]["flash_main"] == forced
+    assert payload["role_constants"]["emergency"] == forced
+    assert payload["fallback_chain"]["claude-sonnet-4-6"] == forced
+    assert payload["fallback_chain"][forced] == forced
+    assert "vertexai:gemini-2.5-pro" not in str(payload["fallback_chain"])
+    assert "vertexai:gemini-2.5-flash" not in str(payload["fallback_chain"])
 
 
 def test_router_resolves_gemini_models():

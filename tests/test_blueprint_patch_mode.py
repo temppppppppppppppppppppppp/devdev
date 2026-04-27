@@ -524,7 +524,7 @@ class TestBlueprintPatchIntegration:
 
         assert resolved == compiled
         call_kwargs = blueprint_generator.constraint_compiler.compile.call_args.kwargs
-        assert call_kwargs["prev_manuscript_ending"] == manuscript_tail[-500:]
+        assert call_kwargs["prev_manuscript_ending"] == manuscript_tail[-1600:]
         assert pipeline["phases"]["constraint"]["cached"] is False
 
     def test_phase2_generation_failure_breaks_on_schema_incompatible(self, blueprint_generator, sample_arc_data):
@@ -1065,6 +1065,172 @@ class TestBlueprintPatchIntegration:
             "reason": "low_yield_advisory_local_patch",
         }
         blueprint_generator.runtime._run_pass_with_fix_loop.assert_not_called()
+
+    def test_resolve_retry_cycle_result_accepts_actionless_pass_with_fix_as_warning(
+        self, blueprint_generator, sample_arc_data
+    ):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        pipeline_result = {"phases": {"validate": {}}}
+        blueprint_generator.runtime._run_pass_with_fix_loop = MagicMock(side_effect=AssertionError("unexpected"))
+
+        result = blueprint_generator.runtime._resolve_retry_cycle_result(
+            ep_num=6,
+            arc_data=sample_arc_data,
+            constraint_block={},
+            prev_blueprint=None,
+            best_blueprint={"ep_num": 6, "integrated_scenario": "scenario"},
+            validation_result={
+                "issues": [],
+                "contradictions": [],
+                "contradiction_count": 0,
+                "quality_risk": False,
+                "binding_prevalidation_issue_count": 0,
+                "feedback": "Arc 지시사항을 완벽히 반영",
+                "fix_scope": "inplace",
+            },
+            verdict="PASS_WITH_FIX",
+            score=95,
+            selected_strategy="dialogue",
+            director=MagicMock(),
+            arc_idx=1,
+            entity_registry=None,
+            state_tracker=None,
+            prev_hud=None,
+            initial_feedback="",
+            feedback="",
+            retry_state=_ThreePhaseRetryState(),
+            pipeline_result=pipeline_result,
+            retry=3,
+            max_retries=10,
+        )
+
+        _, resolved_pipeline = result.final_result
+        assert resolved_pipeline["final_verdict"] == "PASS_WITH_WARNING"
+        assert resolved_pipeline["phases"]["validate"]["actionless_pass_with_fix_acceptance"] == {
+            "decision": "promote_to_pass_with_warning",
+            "reason": "director_pass_with_fix_without_actionable_fix_payload",
+        }
+        blueprint_generator.runtime._run_pass_with_fix_loop.assert_not_called()
+
+    def test_resolve_retry_cycle_result_routes_structural_binding_pass_with_fix_to_regenerate(
+        self, blueprint_generator, sample_arc_data
+    ):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        retry_state = _ThreePhaseRetryState()
+        pipeline_result = {"phases": {"generate": {}, "validate": {}}}
+        blueprint_generator.runtime._run_pass_with_fix_loop = MagicMock(side_effect=AssertionError("unexpected"))
+
+        result = blueprint_generator.runtime._resolve_retry_cycle_result(
+            ep_num=4,
+            arc_data=sample_arc_data,
+            constraint_block={},
+            prev_blueprint=None,
+            best_blueprint={"ep_num": 4, "integrated_scenario": "candidate"},
+            validation_result={
+                "issues": [
+                    {
+                        "severity": "MAJOR",
+                        "category": "arc_timeline",
+                        "issue": "timeline exceeds arc date window",
+                    }
+                ],
+                "binding_prevalidation_issue_count": 1,
+                "binding_prevalidation_categories": ["arc_timeline"],
+                "feedback": "timeline repair required",
+                "fix_scope": "inplace",
+                "fix_scope_reasoning": "Director suggested a local fix, but binding is structural.",
+            },
+            verdict="PASS_WITH_FIX",
+            score=88,
+            selected_strategy="dialogue",
+            director=MagicMock(),
+            arc_idx=1,
+            entity_registry=None,
+            state_tracker=None,
+            prev_hud=None,
+            initial_feedback="timeline repair required",
+            feedback="timeline repair required",
+            retry_state=retry_state,
+            pipeline_result=pipeline_result,
+            retry=2,
+            max_retries=9,
+        )
+
+        assert result.should_continue is True
+        assert result.final_result is None
+        assert retry_state.prev_reject_origin == "binding_prevalidation_reopen"
+        assert retry_state.prev_binding_issue_count == 1
+        assert retry_state.prev_fix_scope == "full"
+        assert "arc_timeline" in retry_state.prev_reject_feedback
+        validate_phase = pipeline_result["phases"]["validate"]
+        assert validate_phase["director_verdict"] == "PASS_WITH_FIX"
+        assert validate_phase["runtime_route_verdict"] == "REJECT"
+        assert validate_phase["runtime_gate_basis"] == "binding_prevalidation_reopen"
+        assert validate_phase["runtime_route_action"] == "full_regenerate_retry"
+        assert validate_phase["fix_scope"] == "full"
+        assert validate_phase["binding_regenerate_only_categories"] == ["arc_timeline"]
+        blueprint_generator.runtime._run_pass_with_fix_loop.assert_not_called()
+
+    def test_resolve_retry_cycle_result_keeps_opening_transition_alias_in_pass_with_fix_loop(
+        self, blueprint_generator, sample_arc_data
+    ):
+        from modules.domain.agents.three_phase_blueprint_runtime import (
+            _ThreePhasePassWithFixResult,
+            _ThreePhaseRetryState,
+        )
+
+        retry_state = _ThreePhaseRetryState()
+        pipeline_result = {"phases": {"generate": {}, "validate": {}}}
+        patched_blueprint = {"ep_num": 8, "integrated_scenario": "patched"}
+        blueprint_generator.runtime._run_pass_with_fix_loop = MagicMock(
+            return_value=_ThreePhasePassWithFixResult(best_blueprint=patched_blueprint, should_continue=True)
+        )
+
+        result = blueprint_generator.runtime._resolve_retry_cycle_result(
+            ep_num=8,
+            arc_data=sample_arc_data,
+            constraint_block={},
+            prev_blueprint={"end_location": "VIP룸"},
+            best_blueprint={"ep_num": 8, "integrated_scenario": "candidate"},
+            validation_result={
+                "issues": [
+                    {
+                        "severity": "MAJOR",
+                        "category": "opening_transition",
+                        "issue": "opening_transition.type alias mismatch",
+                    }
+                ],
+                "binding_prevalidation_issue_count": 1,
+                "binding_prevalidation_categories": ["opening_transition"],
+                "feedback": "opening transition alias normalization required",
+                "fix_scope": "inplace",
+                "fix_scope_reasoning": (
+                    "Opening-transition alias mismatch is the sole binding category; "
+                    "routing to inplace alias normalization instead of full regenerate."
+                ),
+            },
+            verdict="PASS_WITH_FIX",
+            score=91,
+            selected_strategy="dialogue",
+            director=MagicMock(),
+            arc_idx=1,
+            entity_registry=None,
+            state_tracker=None,
+            prev_hud=None,
+            initial_feedback="opening transition alias normalization required",
+            feedback="opening transition alias normalization required",
+            retry_state=retry_state,
+            pipeline_result=pipeline_result,
+            retry=0,
+            max_retries=9,
+        )
+
+        assert result.should_continue is True
+        assert result.best_blueprint == patched_blueprint
+        assert retry_state.prev_reject_origin == ""
+        blueprint_generator.runtime._run_pass_with_fix_loop.assert_called_once()
 
     def test_refresh_phase3_validate_phase_after_reaudit_replaces_stale_binding_reason(self, blueprint_generator):
         pipeline_result = {
@@ -1821,6 +1987,8 @@ class TestBlueprintPatchIntegration:
 
         assert "binding_regenerate_only:" in payload
         assert "opening_anchor: opening anchor drift" in payload
+        assert "arc_timeline: timeline exceeds arc" in payload
+        assert "2006-01-15" in payload
         assert "temporal_deictic: ending hook invents a far-future memory anchor" in payload
 
     def test_apply_validation_reject_state_tracks_inplace_plateau_counters(self, blueprint_generator):

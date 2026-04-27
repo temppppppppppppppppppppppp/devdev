@@ -5,7 +5,12 @@ from pathlib import Path
 
 import yaml
 
-from modules.core.provider_mode import apply_provider_mode_to_models_payload, get_env_provider_mode
+from modules.core.provider_mode import (
+    apply_provider_mode_to_models_payload,
+    get_env_provider_mode,
+    is_gemini_model,
+    rewrite_google_model_for_mode,
+)
 
 # Runtime fallback SSOT.
 # `config/models.yaml` is authoritative when present, and these defaults are the
@@ -43,6 +48,65 @@ DEFAULT_MODEL_FALLBACK_CHAIN = {
     DEFAULT_FLASH_MODEL: DEFAULT_FLASH_MODEL,
 }
 
+FORCE_GOOGLE_MODEL_ENV = "GEULDOBI_FORCE_GOOGLE_MODEL"
+
+
+def _force_google_mapping_values(mapping: dict, forced_model: str) -> dict:
+    rewritten = {}
+    for key, value in mapping.items():
+        if isinstance(value, str):
+            rewritten[key] = forced_model if is_gemini_model(value) else value
+        elif isinstance(value, dict):
+            rewritten[key] = _force_google_mapping_values(value, forced_model)
+        else:
+            rewritten[key] = value
+    return rewritten
+
+
+def _force_google_fallback_chain(mapping: dict, forced_model: str) -> dict:
+    rewritten = {}
+    for key, value in mapping.items():
+        new_key = forced_model if isinstance(key, str) and is_gemini_model(key) else key
+        new_value = forced_model if isinstance(value, str) and is_gemini_model(value) else value
+        rewritten[new_key] = new_value
+    rewritten[forced_model] = forced_model
+    return rewritten
+
+
+def apply_forced_google_model_to_models_payload(
+    payload: dict,
+    *,
+    forced_model: str | None,
+    provider_mode: str | None,
+) -> dict:
+    """Optionally pin every Gemini/Vertex-Gemini runtime role to one model.
+
+    This is a run-scope escape hatch for high-rigor validation runs where silent
+    fallback to a lower model tier would invalidate the evidence.
+    """
+
+    normalized = str(forced_model or "").strip()
+    if not normalized or not is_gemini_model(normalized):
+        return payload
+
+    forced = rewrite_google_model_for_mode(normalized, provider_mode)
+    result = dict(payload or {})
+
+    for section in ("agents", "role_constants"):
+        entry = result.get(section)
+        if isinstance(entry, dict):
+            result[section] = _force_google_mapping_values(entry, forced)
+
+    sub_components = result.get("sub_components")
+    if isinstance(sub_components, dict):
+        result["sub_components"] = _force_google_mapping_values(sub_components, forced)
+
+    fallback_chain = result.get("fallback_chain")
+    if isinstance(fallback_chain, dict):
+        result["fallback_chain"] = _force_google_fallback_chain(fallback_chain, forced)
+
+    return result
+
 
 def resolve_models_yaml_path() -> Path:
     """Return the authoritative `config/models.yaml` path.
@@ -67,7 +131,13 @@ def load_models_yaml(*, path: Path | None = None, apply_provider_mode: bool = Tr
                 data = yaml.safe_load(f) or {}
             if isinstance(data, dict):
                 if apply_provider_mode:
-                    return apply_provider_mode_to_models_payload(data, get_env_provider_mode())
+                    provider_mode = get_env_provider_mode()
+                    payload = apply_provider_mode_to_models_payload(data, provider_mode)
+                    return apply_forced_google_model_to_models_payload(
+                        payload,
+                        forced_model=os.getenv(FORCE_GOOGLE_MODEL_ENV),
+                        provider_mode=provider_mode,
+                    )
                 return data
     except (OSError, yaml.YAMLError):
         pass

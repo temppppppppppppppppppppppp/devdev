@@ -2699,6 +2699,7 @@ class BaseAgent:
                 contents=[{"role": "user", "parts": [{"text": wrapped_prompt}]}],
                 config=config,
             )
+            self._accumulate_last_llm_usage()
             _cached_api_elapsed_ms = int((time.monotonic() - _cached_api_t0) * 1000)  # [TM-1]
 
             # [TF-28] thinking content 추출 (캐시 경로)

@@ -287,6 +287,27 @@ def test_reset_after_commit_false_keeps_changes_uncommitted(db):
     db.conn.rollback()
 
 
+def test_reset_after_clears_stage3_and_stage4_director_selections(db):
+    db.conn.execute(
+        "INSERT INTO director_selections (stage, ep_num, round_num, selected_label, verdict) VALUES (?, ?, ?, ?, ?)",
+        (3, 4, 1, "A", "PASS"),
+    )
+    db.conn.execute(
+        "INSERT INTO director_selections (stage, ep_num, round_num, selected_label, verdict) VALUES (?, ?, ?, ?, ?)",
+        (4, 4, 1, "B", "PASS"),
+    )
+    db.conn.execute(
+        "INSERT INTO director_selections (stage, ep_num, round_num, selected_label, verdict) VALUES (?, ?, ?, ?, ?)",
+        (2, 4, 1, "", "PASS"),
+    )
+    db.conn.commit()
+
+    db.reset_after(4)
+
+    rows = db.conn.execute("SELECT stage, ep_num FROM director_selections ORDER BY id").fetchall()
+    assert [(row["stage"], row["ep_num"]) for row in rows] == [(2, 4)]
+
+
 def test_close_then_query_raises_connection_error(tmp_path):
     manager = DBManager(tmp_path / "closed.db")
     manager.close()

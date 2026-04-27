@@ -817,6 +817,19 @@ def test_reuse_existing_project_refuses_failed_stage_state(tmp_path):
 def test_reuse_existing_project_reset_guard_allows_after_reset(tmp_path):
     project_root = tmp_path / "projects" / "reuse_reset"
     (project_root / "logs").mkdir(parents=True, exist_ok=True)
+    (project_root / "drafts").mkdir(parents=True, exist_ok=True)
+    (project_root / "drafts" / "ep_0001.txt").write_text("stale manuscript", encoding="utf-8")
+    (project_root / "drafts" / "ep_0001.settlement.json").write_text("{}", encoding="utf-8")
+    (project_root / "drafts" / "emergency_ep_0001.txt").write_text("emergency stale", encoding="utf-8")
+    (project_root / "plans" / "blueprints").mkdir(parents=True, exist_ok=True)
+    (project_root / "plans" / "blueprints" / "blueprint_0001.txt").write_text("bp stale", encoding="utf-8")
+    (project_root / "plans" / "blueprints" / "ep_0001.json").write_text("{}", encoding="utf-8")
+    stale_stage3 = project_root / "logs" / "artifacts" / "stage3" / "ep_0001"
+    stale_stage4 = project_root / "logs" / "artifacts" / "stage4" / "ep_0001"
+    stale_stage3.mkdir(parents=True, exist_ok=True)
+    stale_stage4.mkdir(parents=True, exist_ok=True)
+    (stale_stage3 / "final_blueprint__x.json").write_text("{}", encoding="utf-8")
+    (stale_stage4 / "patched_after_fix__x.txt").write_text("stale", encoding="utf-8")
     conn = _build_reuse_db(failed=True)
 
     def load_anchor(key):
@@ -878,13 +891,25 @@ def test_reuse_existing_project_reset_guard_allows_after_reset(tmp_path):
     assert manifest["reuse_reset_applied"] is True
     assert manifest["reuse_allowed"] is True
     assert manifest["reuse_post_failed_state_count"] == 0
+    assert manifest["reuse_reset_filesystem_archive_applied"] is True
+    assert manifest["reuse_reset_filesystem_archived_count"] == 7
+    assert not (project_root / "drafts" / "ep_0001.txt").exists()
+    assert not (project_root / "drafts" / "emergency_ep_0001.txt").exists()
+    assert not (project_root / "plans" / "blueprints" / "blueprint_0001.txt").exists()
+    assert not stale_stage3.exists()
+    archive_root = project_root / manifest["reuse_reset_filesystem_archive_root"]
+    assert (archive_root / "drafts" / "ep_0001.txt").exists()
+    assert (archive_root / "plans" / "blueprints" / "blueprint_0001.txt").exists()
+    assert (archive_root / "logs" / "artifacts" / "stage4" / "ep_0001" / "patched_after_fix__x.txt").exists()
 
 
 # ── Soak Profile Override Contract ───────────────────────────────────────
 
 
-def test_default_soak_profile_uses_flash_and_reduced_lengths():
+def test_default_soak_profile_uses_flash_and_reduced_lengths(monkeypatch):
     """default_soak_profile returns a well-formed profile with all-flash + lower lengths."""
+    monkeypatch.delenv("GEULDOBI_FORCE_GOOGLE_MODEL", raising=False)
+
     soak = harness.default_soak_profile()
     assert soak.stage2_model is not None
     assert "flash" in soak.stage2_model.lower()
@@ -895,6 +920,16 @@ def test_default_soak_profile_uses_flash_and_reduced_lengths():
     assert soak.manuscript_target_length is not None
     assert soak.manuscript_target_length < 5000
     assert soak.heavy_path_toggles.get("post_pass_advisories") is False
+
+
+def test_default_soak_profile_respects_forced_google_model(monkeypatch):
+    monkeypatch.setenv("GEULDOBI_PROVIDER_MODE", "vertex_ai")
+    monkeypatch.setenv("GEULDOBI_FORCE_GOOGLE_MODEL", "gemini-3.1-pro-preview")
+
+    soak = harness.default_soak_profile()
+
+    assert soak.stage2_model == "vertexai:gemini-3.1-pro-preview"
+    assert soak.stage4_model == "vertexai:gemini-3.1-pro-preview"
 
 
 def test_resolve_soak_profile_returns_none_for_empty():

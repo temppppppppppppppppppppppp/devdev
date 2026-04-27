@@ -27,6 +27,20 @@ import modules.domain.agents.base_agent as base_agent_module
 from modules.core.llm_provider import LLMResponse
 from modules.domain.agents.base_agent import AgentErrorType, BaseAgent
 
+
+@pytest.fixture(autouse=True)
+def _isolate_model_env_for_base_agent_unit_tests(monkeypatch):
+    """Keep root .env run pins from leaking into BaseAgent unit contracts."""
+
+    monkeypatch.delenv("GEULDOBI_PROVIDER_MODE", raising=False)
+    monkeypatch.delenv("GEULDOBI_FORCE_GOOGLE_MODEL", raising=False)
+    BaseAgent.refresh_runtime_provider_state()
+    yield
+    monkeypatch.delenv("GEULDOBI_PROVIDER_MODE", raising=False)
+    monkeypatch.delenv("GEULDOBI_FORCE_GOOGLE_MODEL", raising=False)
+    BaseAgent.refresh_runtime_provider_state()
+
+
 # ══════════════════════════════════════════════════════════════
 # Fixtures
 # ══════════════════════════════════════════════════════════════
@@ -982,13 +996,27 @@ class TestContextCacheEviction:
         cache_key = seed_context_cache(agent, cache_name="cached/ctx-success", content_hash="hash-lineage-success")
         response = MagicMock()
         response.text = json.dumps({"content": "cached"})
-        agent._generate_content = MagicMock(return_value=response)
+
+        def _generate_with_usage(**_kwargs):
+            agent._last_llm_usage = {
+                "prompt_token_count": 123,
+                "candidates_token_count": 45,
+                "cached_content_token_count": 100,
+                "thoughts_token_count": 7,
+            }
+            return response
+
+        agent._generate_content = MagicMock(side_effect=_generate_with_usage)
         agent._log_llm_call_to_db = MagicMock()
 
         try:
             result = agent._ask_with_cached_context(cache_name="cached/ctx-success", prompt="prompt")
 
             assert json.loads(result)["content"] == "cached"
+            assert agent._call_usage_totals["prompt_token_count"] == 123
+            assert agent._call_usage_totals["candidates_token_count"] == 45
+            assert agent._call_usage_totals["cached_content_token_count"] == 100
+            assert agent._call_usage_totals["thoughts_token_count"] == 7
             kwargs = agent._log_llm_call_to_db.call_args.kwargs
             assert kwargs["context_cache_name"] == "cached/ctx-success"
             assert kwargs["context_cache_content_hash"] == "hash-lineage-success"

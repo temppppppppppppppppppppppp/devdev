@@ -554,7 +554,8 @@ def _collect_fact_lock_institution_anchors(
         if isinstance(state, dict):
             arc_start = state.get("arc_start_state", {})
             if isinstance(arc_start, dict):
-                arc_texts.append(str(arc_start.get("relationship", "") or ""))
+                for key in ("location", "location_detail", "venue", "institution", "relationship"):
+                    arc_texts.append(str(arc_start.get(key, "") or ""))
         arc_texts.append(
             str(
                 extract_episode_tactical(
@@ -568,22 +569,116 @@ def _collect_fact_lock_institution_anchors(
         )
     arc_institution_names = _collect_names(arc_texts)
 
-    institution_names = set(manuscript_institution_names)
-    institution_names.update(filtered_blueprint_location_names)
-    institution_names.update(filtered_blueprint_narrative_names)
-    filtered_arc_names = _filter_competing_institution_names(
-        preferred_names=institution_names,
-        candidate_names=arc_institution_names,
-        suffixes=_inst_suffixes_ordered,
-    )
-    ordered_names = _merge_authority_ordered_names(
-        manuscript_institution_names,
-        filtered_blueprint_location_names,
-        filtered_blueprint_narrative_names,
-        filtered_arc_names,
-        limit=4,
-    )
+    is_arc_opening = _is_arc_opening_episode(arc_data=arc_data, ep_num=ep_num)
+    if is_arc_opening and arc_institution_names:
+        # At an arc boundary, current Arc authority must outrank a prior
+        # Stage3-only institution invention unless accepted manuscript canon
+        # already established the prior name.
+        filtered_arc_names = _filter_competing_institution_names(
+            preferred_names=manuscript_institution_names,
+            candidate_names=arc_institution_names,
+            suffixes=_inst_suffixes_ordered,
+        )
+        arc_preferred_names = manuscript_institution_names | filtered_arc_names
+        filtered_blueprint_location_names = _filter_competing_institution_names(
+            preferred_names=arc_preferred_names,
+            candidate_names=blueprint_location_names,
+            suffixes=_inst_suffixes_ordered,
+        )
+        filtered_blueprint_narrative_names = _filter_competing_institution_names(
+            preferred_names=arc_preferred_names | filtered_blueprint_location_names,
+            candidate_names=blueprint_narrative_names,
+            suffixes=_inst_suffixes_ordered,
+        )
+        ordered_names = _merge_authority_ordered_names(
+            manuscript_institution_names,
+            filtered_arc_names,
+            filtered_blueprint_location_names,
+            filtered_blueprint_narrative_names,
+            limit=4,
+        )
+    else:
+        institution_names = set(manuscript_institution_names)
+        institution_names.update(filtered_blueprint_location_names)
+        institution_names.update(filtered_blueprint_narrative_names)
+        filtered_arc_names = _filter_competing_institution_names(
+            preferred_names=institution_names,
+            candidate_names=arc_institution_names,
+            suffixes=_inst_suffixes_ordered,
+        )
+        ordered_names = _merge_authority_ordered_names(
+            manuscript_institution_names,
+            filtered_blueprint_location_names,
+            filtered_blueprint_narrative_names,
+            filtered_arc_names,
+            limit=4,
+        )
     return [{"category": "기관", "fact": f"확정 기관/장소: {inst_name}"} for inst_name in ordered_names]
+
+
+def _collect_fact_lock_person_anchors(
+    *,
+    bp: dict,
+    ms_text: str,
+) -> list[dict]:
+    """Lock settled person-role labels from accepted prior canon.
+
+    This is deliberately narrow: it only locks explicit Korean name + durable
+    role/title pairs such as "한태성 회장" or "박성호 PB". It does not infer
+    whether a name is wrong; it gives the LLM/validator the prior-canon label
+    that already appeared in accepted output.
+    """
+    role_suffixes = (
+        "회장",
+        "대표",
+        "사장",
+        "부회장",
+        "전무",
+        "상무",
+        "이사",
+        "실장",
+        "팀장",
+        "부장",
+        "PB",
+        "변호사",
+        "검사",
+        "판사",
+        "교수",
+        "의사",
+    )
+    role_re = re.compile(r"([가-힣]{2,4})\s*(" + "|".join(re.escape(s) for s in role_suffixes) + r")")
+
+    texts: list[str] = [ms_text]
+    if isinstance(bp, dict):
+        for key in ("integrated_scenario", "core_tension", "expected_ending", "ending_hook", "time_flow"):
+            texts.append(str(bp.get(key, "") or ""))
+        scenes = bp.get("scene_breakdown", {})
+        if isinstance(scenes, dict):
+            for scene in scenes.values():
+                if isinstance(scene, dict):
+                    texts.append(str(scene.get("summary", "") or ""))
+                    texts.append(str(scene.get("description", "") or ""))
+                    chars = scene.get("characters", [])
+                    if isinstance(chars, list):
+                        texts.append(" ".join(str(item or "") for item in chars))
+
+    ordered: list[tuple[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for raw_text in texts:
+        for match in role_re.finditer(str(raw_text or "")):
+            name = match.group(1).strip()
+            role = match.group(2).strip()
+            key = (name, role)
+            if key in seen:
+                continue
+            seen.add(key)
+            ordered.append(key)
+            if len(ordered) >= 4:
+                break
+        if len(ordered) >= 4:
+            break
+
+    return [{"category": "인물", "fact": f"확정 인물/직함: {name} {role}"} for name, role in ordered]
 
 
 class BlueprintConstraintCompiler:
@@ -1437,7 +1532,10 @@ class BlueprintConstraintCompiler:
                 if len(anchors) >= 12:
                     break
 
-        # ── 6. NPC/Institution authority anchor [NPC-CF] ──
+        # ── 6. Person/Institution authority anchor [NPC-CF] ──
+        # Prevent stale seed/arc names from outranking accepted prior manuscript canon.
+        anchors.extend(_collect_fact_lock_person_anchors(bp=bp, ms_text=ms_text))
+
         # Prevent downstream blueprints from rewriting canonical institution/venue names
         anchors.extend(
             _collect_fact_lock_institution_anchors(
