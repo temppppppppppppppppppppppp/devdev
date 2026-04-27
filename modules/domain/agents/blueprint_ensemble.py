@@ -497,6 +497,23 @@ def _append_constraint_section(lines: list[str], header: str, band_lines: list[s
     lines.append("")
 
 
+def _is_concrete_opening_location(location: str) -> bool:
+    normalized = str(location or "").strip().casefold()
+    if not normalized:
+        return False
+    placeholder_locations = {
+        "n/a",
+        "none",
+        "unknown",
+        "미정",
+        "불명",
+        "서사 시작",
+        "서사 시작점",
+        "시작점",
+    }
+    return normalized not in placeholder_locations
+
+
 def _format_episode_state_packet_lines(packet: dict | None) -> list[str]:
     payload = packet if isinstance(packet, dict) else {}
     if not payload:
@@ -510,10 +527,11 @@ def _format_episode_state_packet_lines(packet: dict | None) -> list[str]:
     location = str(opening_truth.get("location", "") or "").strip()
     if location:
         packet_lines.append(f"  - opening.location: {_fit_compact_context(location, 120)}")
-        packet_lines.append(
-            "    JSON start_location and scene_breakdown.scene_1.location must equal opening.location exactly; "
-            "move elsewhere only after an explicit transition inside scene_1 or a later scene."
-        )
+        if _is_concrete_opening_location(location):
+            packet_lines.append(
+                "    JSON start_location and scene_breakdown.scene_1.location must equal opening.location exactly; "
+                "move elsewhere only after an explicit transition inside scene_1 or a later scene."
+            )
     location_source = str(opening_truth.get("location_source", "") or "").strip()
     if location_source:
         packet_lines.append(f"    source: {_fit_compact_context(location_source, 100)}")
