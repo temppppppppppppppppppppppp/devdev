@@ -373,6 +373,43 @@ def _count_issue_rows(
     return total
 
 
+def _build_proof_warning_taxonomy_counts(
+    *,
+    coverage_gap_count: int,
+    consistency_results: dict[str, object],
+    raw_issue_count: int,
+) -> dict[str, int]:
+    counts = {
+        "coverage_warn": max(0, int(coverage_gap_count or 0)),
+        "rationale_drift_warn": _count_issue_rows(
+            consistency_results,
+            (
+                "selection_reason_mismatches",
+                "verdict_reason_mismatches",
+                "comparison_notes_mismatches",
+                "selected_candidate_advisory_mismatches",
+            ),
+        ),
+        "runtime_advisory_warn": _count_issue_rows(
+            consistency_results,
+            (
+                "runtime_advisory_mismatches",
+                "retry_directives_mismatches",
+            ),
+        ),
+        "metadata_gap_warn": _count_issue_rows(
+            consistency_results,
+            (
+                "gate_repair_metadata_missing",
+                "rationale_metadata_missing",
+                "artifact_metadata_missing",
+            ),
+        ),
+        "raw_contract_warn": max(0, int(raw_issue_count or 0)),
+    }
+    return {key: value for key, value in counts.items() if value > 0}
+
+
 def _build_sink_alignment_top_issue_headline(
     *,
     stage: int,
@@ -2811,6 +2848,11 @@ class FailureAnalyzer:
                 "raw_rationale_retry_chain_mismatches",
             ),
         )
+        warning_taxonomy_counts = _build_proof_warning_taxonomy_counts(
+            coverage_gap_count=coverage_gap_count,
+            consistency_results=consistency_results,
+            raw_issue_count=raw_issue_count,
+        )
         top_issue_headline = _build_sink_alignment_top_issue_headline(
             stage=stage,
             coverage_gap_count=coverage_gap_count,
@@ -2888,6 +2930,7 @@ class FailureAnalyzer:
             "coverage_gap_count": coverage_gap_count,
             "structured_issue_count": structured_issue_count,
             "raw_issue_count": raw_issue_count,
+            "warning_taxonomy_counts": warning_taxonomy_counts,
             "top_issue_headline": top_issue_headline,
             "complete_final_attempts": complete_final_attempts,
             "director_lifecycle_attempts": len(lifecycle_union),

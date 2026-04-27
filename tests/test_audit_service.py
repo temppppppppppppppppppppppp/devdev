@@ -541,6 +541,7 @@ class TestWriteAuditSummary:
             assert stage3["issue_counts"]["selection_reason_mismatches"] == 1
             assert stage3["issue_counts"]["verdict_reason_mismatches"] == 1
             assert stage3["issue_counts"]["fix_scope_mismatches"] == 1
+            assert stage3["warning_taxonomy_counts"]["rationale_drift_warn"] == 2
         finally:
             db.close()
 
@@ -560,6 +561,7 @@ class TestWriteAuditSummary:
                 "scope_authority_authoritative_fix_scope_mismatches": [{"attempt_key": "a1"}],
                 "scope_authority_widened_mismatches": [{"attempt_key": "a1"}],
                 "gate_repair_metadata_missing": [{"attempt_key": "a1", "field": "repair_contract_subtype"}],
+                "warning_taxonomy_counts": {"metadata_gap_warn": 1},
             }
         )
 
@@ -570,6 +572,7 @@ class TestWriteAuditSummary:
         assert compact["issue_counts"]["scope_authority_authoritative_fix_scope_mismatches"] == 1
         assert compact["issue_counts"]["scope_authority_widened_mismatches"] == 1
         assert compact["issue_counts"]["gate_repair_metadata_missing"] == 1
+        assert compact["warning_taxonomy_counts"]["metadata_gap_warn"] == 1
 
     def test_write_summary_proof_digest_uses_committed_snapshot_only(self, runtime_audit, tmp_project):
         db = DBManager(tmp_project.root / "project_data.db")

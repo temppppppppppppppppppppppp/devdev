@@ -155,6 +155,14 @@ class AuditService:
         session_rows_without_attempt_key = int(summary.get("session_decision_rows_without_attempt_key", 0) or 0)
         if session_rows_without_attempt_key > 0:
             issue_counts["session_decision_rows_without_attempt_key"] = session_rows_without_attempt_key
+        warning_taxonomy_counts: dict[str, int] = {}
+        for key, value in dict(summary.get("warning_taxonomy_counts") or {}).items():
+            try:
+                count = int(value or 0)
+            except (TypeError, ValueError):
+                continue
+            if count > 0:
+                warning_taxonomy_counts[str(key)] = count
         return {
             "status": str(summary.get("status", "") or ""),
             "attempts_considered": int(summary.get("attempts_considered", 0) or 0),
@@ -164,6 +172,7 @@ class AuditService:
             "session_scoped_attempts": int(summary.get("session_scoped_attempts", 0) or 0),
             "coverage": dict(summary.get("coverage") or {}),
             "issue_counts": issue_counts,
+            "warning_taxonomy_counts": warning_taxonomy_counts,
         }
 
     def _resolve_proof_digest_db(self, db_path) -> tuple[Any, bool]:
