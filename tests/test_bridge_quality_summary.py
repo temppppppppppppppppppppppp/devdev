@@ -502,6 +502,98 @@ def test_quality_dashboard_endpoint_surfaces_proof_status_and_sink_alignment(tmp
     assert data["runtime_audit_summary"]["proof_digest"]["stages"]["stage4"]["coverage"]["session_decisions"] == 1
 
 
+def test_bridge_compact_sink_alignment_summary_preserves_issue59_warn_counts():
+    compact = bridge_server._compact_sink_alignment_summary(
+        {
+            "stage": 4,
+            "status": "warn",
+            "attempts_considered": 4,
+            "complete_final_attempts": 4,
+            "complete_lifecycle_attempts": 4,
+            "coverage": {"stage_attempts": 4},
+            "selection_reason_mismatches": [{"attempt_key": "a1"}],
+            "verdict_reason_mismatches": [{"attempt_key": "a2"}],
+            "runtime_advisory_mismatches": [{"attempt_key": "a3"}, {"attempt_key": "a4"}],
+            "retry_directives_mismatches": [{"attempt_key": "a3"}],
+            "rationale_metadata_missing": [{"attempt_key": "a4"}],
+            "gate_repair_metadata_missing": [{"attempt_key": "a5", "field": "repair_contract_subtype"}],
+        }
+    )
+
+    assert compact["status"] == "warn"
+    assert compact["issue_counts"] == {
+        "gate_repair_metadata_missing": 1,
+        "selection_reason_mismatches": 1,
+        "verdict_reason_mismatches": 1,
+        "runtime_advisory_mismatches": 2,
+        "retry_directives_mismatches": 1,
+        "rationale_metadata_missing": 1,
+    }
+
+
+def test_quality_dashboard_endpoint_surfaces_stage4_warn_issue59_counts(tmp_path, monkeypatch):
+    monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
+    project_dir = tmp_path / "projects" / "demo"
+    logs_dir = project_dir / "logs"
+    logs_dir.mkdir(parents=True)
+    (logs_dir / "runtime_audit_summary.json").write_text(
+        json.dumps(
+            {
+                "tag": "proof_snapshot",
+                "timestamp": "2026-04-27 12:00:00",
+                "summary_role": "runtime_heartbeat_with_proof_digest",
+                "proof_digest": {
+                    "available": True,
+                    "status": "warn",
+                    "stages": {
+                        "stage4": {
+                            "status": "warn",
+                            "issue_counts": {
+                                "selection_reason_mismatches": 4,
+                                "verdict_reason_mismatches": 4,
+                                "runtime_advisory_mismatches": 10,
+                                "retry_directives_mismatches": 4,
+                                "rationale_metadata_missing": 6,
+                                "gate_repair_metadata_missing": 4,
+                                "final_sink_missing": 15,
+                            },
+                        }
+                    },
+                },
+                "freshness": {
+                    "status": "scoped",
+                    "basis": ["proof_digest.latest_session_id"],
+                    "engine_run_id_present": False,
+                    "latest_session_id_present": True,
+                    "operator_guidance_only": True,
+                },
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    response = asyncio.run(bridge_server.quality_dashboard_endpoint(project="demo", lookback=5))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert payload["ok"] is True
+    proof_status = payload["data"]["proof_status"]
+    assert proof_status["status"] == "warn"
+    assert proof_status["semantic_completion_status"] == "proof_evidence_warning"
+    assert proof_status["canonical_truth_status"] == "not_asserted_by_dashboard"
+    assert proof_status["warning_issue_counts"]["runtime_summary"]["stage4"] == {
+        "selection_reason_mismatches": 4,
+        "verdict_reason_mismatches": 4,
+        "runtime_advisory_mismatches": 10,
+        "retry_directives_mismatches": 4,
+        "rationale_metadata_missing": 6,
+        "gate_repair_metadata_missing": 4,
+    }
+    assert "warning_issue_counts" in proof_status["summary"]
+
+
 def test_quality_dashboard_endpoint_surfaces_gate_repair_summary(tmp_path, monkeypatch):
     monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
     project_dir = tmp_path / "projects" / "demo"
