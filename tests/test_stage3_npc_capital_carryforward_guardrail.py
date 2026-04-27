@@ -1183,6 +1183,28 @@ class TestEpisodeStatePacket:
         assert any("2006년 5월" in truth for truth in time_truths)
         assert not any("2006년 4월" in truth for truth in time_truths)
 
+    def test_episode_progression_packet_carries_completed_prior_events(self):
+        packet = BlueprintConstraintCompiler._build_episode_progression_packet(
+            prev_blueprint={
+                "scene_breakdown": {
+                    "scene_3": {
+                        "location": "한정호 회장의 서재",
+                        "summary": "한시우가 아버지 앞에서 독립 선언을 마친다.",
+                        "key_events": ["아버지 자금 지원 연락처를 받아 챙긴다."],
+                    }
+                }
+            },
+            arc_data={},
+            ep_num=4,
+        )
+
+        completed_events = packet.get("completed_prior_events", [])
+
+        assert completed_events
+        assert completed_events[0]["location"] == "한정호 회장의 서재"
+        assert any("아버지 자금 지원 연락처" in item for item in completed_events[0]["events"])
+        assert any("독립 선언" in item for item in completed_events[0]["events"])
+
     def test_episode_progression_packet_prefers_arc_end_month_over_future_next_gate_month_on_final_immediate_continuation(
         self,
     ):

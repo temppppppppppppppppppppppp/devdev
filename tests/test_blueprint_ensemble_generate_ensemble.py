@@ -1190,6 +1190,12 @@ def test_format_constraints_surfaces_episode_progression_guardrails_for_producer
                         "type": "tension_build",
                     }
                 ],
+                "completed_prior_events": [
+                    {
+                        "location": "한미증권 청담동 지점 15층 VIP룸",
+                        "events": ["박성호가 WTI 포지션 진입 승인을 이미 내렸다."],
+                    }
+                ],
                 "next_gate_strength_mode": {
                     "mode": "foreshadow_only",
                     "introduced_target_families": ["gold"],
@@ -1225,6 +1231,8 @@ def test_format_constraints_surfaces_episode_progression_guardrails_for_producer
     assert "lawful repetition으로 전진 가능" in formatted
     assert "다음 화 reserved beat 선소비 금지" in formatted
     assert "카페로 이동해 차트를 모니터링" in formatted
+    assert "이미 완료된 사건을 scene_1/live objective로 다시 재연하지 말 것" in formatted
+    assert "WTI 포지션 진입 승인을 이미 내렸다" in formatted
 
 
 def test_format_constraints_surfaces_episode_state_packet_authority_and_dropped_conflicts():
