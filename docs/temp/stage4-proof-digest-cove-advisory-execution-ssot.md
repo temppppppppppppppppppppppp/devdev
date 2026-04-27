@@ -2,7 +2,7 @@
 
 Date: 2026-04-27
 Track: system
-Status: partially-realized (#59 bridge/dashboard parity, CoVe test hardening, runtime-summary Stage4 freshness guard)
+Status: partially-realized (#59 bridge/dashboard parity, CoVe test hardening, runtime-summary Stage4 freshness guard, proof warning taxonomy counts)
 Canonical Path: `docs/2026-04-27/stage4-proof-digest-cove-advisory-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage4-proof-digest-cove-advisory-execution-ssot.md`
 Commit State:
@@ -306,7 +306,7 @@ Complexity note:
 
 Residual open work:
 - This does not close #59.
-- Producer-owned typed warning taxonomy and phase-aware rationale semantics remain open.
+- Producer-owned typed warning taxonomy counts are addressed by Section 17; deeper phase-aware rationale semantics remain open.
 - Benchmark `stage4_diagnostic_packet` remains open.
 - Desktop/frontend rendering of `proof_status`, `warning_issue_counts`, and freshness fields remains open if a separate visible UI panel is required.
 
@@ -314,5 +314,49 @@ Residual open work:
 - Pass 1 - scope: PASS. The patch is limited to dashboard/runtime-summary freshness labeling and does not modify runtime settlement or Director authority.
 - Pass 2 - evidence: PASS. The regression proves a stale `stage3_complete` summary can no longer masquerade as current Stage4 proof when a later Stage4 attempt exists.
 - Pass 3 - readiness: PASS for a partial #59 PR. Residual taxonomy, benchmark, and optional frontend rendering remain explicit.
+
+Estimated operational confidence for this partial realization: 96%.
+
+## 17. Realization Ledger - 2026-04-27 Producer-Owned Proof Warning Taxonomy Counts
+
+Scope realized:
+- Tranche: `proof-digest-taxonomy-phase-semantics`, additive taxonomy-count slice.
+- Branch: local continuation after PR #80 merge.
+- Implemented the smallest safe producer-owned split so bridge/dashboard and benchmark follow-ups can consume typed warn buckets without inventing taxonomy at the display layer.
+
+Code changes:
+- `modules/core/failure_analyzer.py` now emits `warning_taxonomy_counts` from the sink-alignment producer:
+  - `coverage_warn`
+  - `rationale_drift_warn`
+  - `runtime_advisory_warn`
+  - `metadata_gap_warn`
+  - `raw_contract_warn`
+- `modules/core/services/audit_service.py` preserves producer-owned `warning_taxonomy_counts` in compact proof digest stage summaries.
+- `modules/api/bridge_server.py` forwards `warning_taxonomy_counts` into `proof_status.warning_taxonomy_counts`, split by `sink_alignment` and `runtime_summary`.
+- Tests cover producer emission, audit compact preservation, bridge compact preservation, and dashboard runtime-summary forwarding.
+
+Validation completed:
+- `python -m py_compile modules/core/failure_analyzer.py modules/core/services/audit_service.py modules/api/bridge_server.py` -> PASS.
+- `python -m pytest tests/test_failure_analyzer.py -k "runtime_rationale_mismatch" -q` -> 2 passed, 50 deselected.
+- `python -m pytest tests/test_audit_service.py -k "rationale_mismatch_issue_counts or compact_sink_alignment_summary_counts_gate_repair_contract_issues" -q` -> 2 passed, 21 deselected.
+- `python -m pytest tests/test_bridge_quality_summary.py -k "stage4_warn_issue59_counts or compact_sink_alignment_summary_preserves_issue59_warn_counts" -q` -> 2 passed, 20 deselected.
+- `python -m pytest tests/test_bridge_quality_summary.py -q` -> 22 passed.
+- `python -m pytest tests/test_audit_service.py -q` -> 23 passed.
+- `python -m pytest tests/test_failure_analyzer.py -q` -> 52 passed.
+
+Complexity note:
+- The patch adds bounded taxonomy helper logic and does not move final authority, settlement, DB schema, or runtime retry behavior.
+- `_build_sink_alignment_summary_payload` remains the producer aggregation shell; this patch adds one derived count payload beside existing `coverage_gap_count`, `structured_issue_count`, and `raw_issue_count`.
+
+Residual open work:
+- This does not close #59.
+- Deeper phase-aware rationale semantics remain open, especially distinguishing expected Director-selection versus settled/post-fix rationale drift from actual corruption.
+- Benchmark `stage4_diagnostic_packet` remains open.
+- Desktop/frontend rendering of proof/freshness/taxonomy fields remains open if a separate visible UI panel is required.
+
+3-pass realization audit:
+- Pass 1 - scope: PASS. The patch adds taxonomy counts only; it does not suppress warn evidence or alter verdict authority.
+- Pass 2 - evidence: PASS. Producer, audit compact, and bridge/dashboard tests prove counts originate from `FailureAnalyzer` and are forwarded without display-layer reclassification.
+- Pass 3 - readiness: PASS for a partial #59 PR. Benchmark packet and optional frontend rendering remain explicit.
 
 Estimated operational confidence for this partial realization: 96%.

@@ -517,6 +517,11 @@ def test_bridge_compact_sink_alignment_summary_preserves_issue59_warn_counts():
             "retry_directives_mismatches": [{"attempt_key": "a3"}],
             "rationale_metadata_missing": [{"attempt_key": "a4"}],
             "gate_repair_metadata_missing": [{"attempt_key": "a5", "field": "repair_contract_subtype"}],
+            "warning_taxonomy_counts": {
+                "rationale_drift_warn": 2,
+                "runtime_advisory_warn": 3,
+                "metadata_gap_warn": 2,
+            },
         }
     )
 
@@ -528,6 +533,11 @@ def test_bridge_compact_sink_alignment_summary_preserves_issue59_warn_counts():
         "runtime_advisory_mismatches": 2,
         "retry_directives_mismatches": 1,
         "rationale_metadata_missing": 1,
+    }
+    assert compact["warning_taxonomy_counts"] == {
+        "rationale_drift_warn": 2,
+        "runtime_advisory_warn": 3,
+        "metadata_gap_warn": 2,
     }
 
 
@@ -556,6 +566,12 @@ def test_quality_dashboard_endpoint_surfaces_stage4_warn_issue59_counts(tmp_path
                                 "rationale_metadata_missing": 6,
                                 "gate_repair_metadata_missing": 4,
                                 "final_sink_missing": 15,
+                            },
+                            "warning_taxonomy_counts": {
+                                "coverage_warn": 15,
+                                "rationale_drift_warn": 8,
+                                "runtime_advisory_warn": 14,
+                                "metadata_gap_warn": 10,
                             },
                         }
                     },
@@ -590,6 +606,12 @@ def test_quality_dashboard_endpoint_surfaces_stage4_warn_issue59_counts(tmp_path
         "retry_directives_mismatches": 4,
         "rationale_metadata_missing": 6,
         "gate_repair_metadata_missing": 4,
+    }
+    assert proof_status["warning_taxonomy_counts"]["runtime_summary"]["stage4"] == {
+        "coverage_warn": 15,
+        "rationale_drift_warn": 8,
+        "runtime_advisory_warn": 14,
+        "metadata_gap_warn": 10,
     }
     assert "warning_issue_counts" in proof_status["summary"]
 
