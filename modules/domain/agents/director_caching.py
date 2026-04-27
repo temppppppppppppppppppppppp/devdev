@@ -5,6 +5,7 @@ Director God Object 분해의 첫 번째 단계.
 원고 캐시 생성, 원고 역사 구성, protagonist_config 캐싱을 담당.
 """
 
+import hashlib
 import logging
 
 from modules.core.provider_mode import strip_vertex_prefix
@@ -37,6 +38,8 @@ class DirectorCachingManager:
         self.manuscript_cache_name = None
         self.manuscript_cache_enabled = True
         self._cached_manuscript_count = 0
+        self._cached_manuscript_content_hash = ""
+        self._cached_manuscript_model = ""
 
         # [V60.89] protagonist_config 캐싱
         self._protagonist_config = None
@@ -115,6 +118,8 @@ class DirectorCachingManager:
 
 {"".join(manuscripts_compiled)}
 """
+            compiled_hash = hashlib.sha256(compiled_text.encode("utf-8")).hexdigest()
+            cache_model = strip_vertex_prefix(self.primary_model)
 
             # 3. 캐시 최소 크기 체크 (1024 토큰 ≈ 1500자)
             if total_chars < 1500:
@@ -126,8 +131,13 @@ class DirectorCachingManager:
                 logging.info(" [V60.88] 원고 캐시 create 스킵: %s", client_skip_reason)
                 return None
 
-            # 4. 기존 캐시가 유효하고 원고 수가 동일하면 재사용
-            if self.manuscript_cache_name and self._cached_manuscript_count == len(manuscripts_compiled):
+            # 4. 기존 캐시가 유효하고 원고 수/내용/model lineage가 동일하면 재사용
+            if (
+                self.manuscript_cache_name
+                and self._cached_manuscript_count == len(manuscripts_compiled)
+                and self._cached_manuscript_content_hash == compiled_hash
+                and self._cached_manuscript_model == cache_model
+            ):
                 logging.warning(f" [V60.88] 기존 캐시 재사용 ({self._cached_manuscript_count}화)")
                 return self.manuscript_cache_name
 
@@ -135,7 +145,7 @@ class DirectorCachingManager:
             logging.info(f" [V60.88] 원고 캐시 생성 중... ({len(manuscripts_compiled)}화, {total_chars:,}자)")
 
             cache = self.client.caches.create(
-                model=strip_vertex_prefix(self.primary_model),
+                model=cache_model,
                 config=types.CreateCachedContentConfig(
                     display_name=f"MANUSCRIPT_HISTORY_EP{current_ep}",
                     system_instruction="원고 연속성 전문가 (Manuscript Continuity Expert)",
@@ -146,6 +156,8 @@ class DirectorCachingManager:
 
             self.manuscript_cache_name = cache.name
             self._cached_manuscript_count = len(manuscripts_compiled)
+            self._cached_manuscript_content_hash = compiled_hash
+            self._cached_manuscript_model = cache_model
 
             logging.info(f"✅ [V60.88] 원고 캐시 생성 완료: {cache.name}")
             logging.info(f"- 총 {len(manuscripts_compiled)}화 / {total_chars:,}자 캐싱됨")
@@ -162,6 +174,9 @@ class DirectorCachingManager:
             else:
                 logging.warning(f"❌ [V60.88] 원고 캐시 생성 실패: {e}")
             self.manuscript_cache_name = None
+            self._cached_manuscript_count = 0
+            self._cached_manuscript_content_hash = ""
+            self._cached_manuscript_model = ""
             return None
 
     def get_protagonist_config(self) -> dict:
