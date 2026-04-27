@@ -2,7 +2,7 @@
 
 Date: 2026-04-27
 Track: system
-Status: partially-realized (#59 bridge/dashboard parity, CoVe test hardening, runtime-summary Stage4 freshness guard, proof warning taxonomy counts, benchmark diagnostic packet)
+Status: partially-realized (#59 bridge/dashboard parity, CoVe test hardening, runtime-summary Stage4 freshness guard, proof warning taxonomy counts, phase-aware rationale drift classification, benchmark diagnostic packet, desktop proof-status rendering)
 Canonical Path: `docs/2026-04-27/stage4-proof-digest-cove-advisory-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage4-proof-digest-cove-advisory-execution-ssot.md`
 Commit State:
@@ -390,12 +390,93 @@ Complexity note:
 
 Residual open work:
 - This does not close #59 by itself.
-- Deeper phase-aware rationale semantics remain open, especially distinguishing expected Director-selection versus settled/post-fix rationale drift from actual corruption.
 - Desktop/frontend rendering of proof/freshness/taxonomy/diagnostic fields remains open if a separate visible UI panel is required.
 
 3-pass realization audit:
 - Pass 1 - scope: PASS. The packet is additive benchmark metadata and does not reinterpret runtime verdicts.
 - Pass 2 - evidence: PASS. The packet keeps CoVe runtime advisory, PASS-preserved advisory, semantic fail-closed retry, proof taxonomy, post-select conflict, and settled-versus-Director divergence as separate fields.
 - Pass 3 - readiness: PASS for a partial #59 PR. Targeted benchmark/archive/compare/operator tests passed, and #59 residual work remains explicit.
+
+Estimated operational confidence for this partial realization: 96%.
+
+## 19. Realization Ledger - 2026-04-27 Phase-Aware Stage4 Rationale Drift Classification
+
+Scope realized:
+- Tranche: `proof-digest-taxonomy-phase-semantics`, phase-aware rationale semantics slice.
+- Branch: local continuation after Sections 16-18.
+- Implemented the remaining core #59 distinction between expected Director-selection companion drift and real cross-sink rationale corruption.
+
+Code changes:
+- `modules/core/failure_analyzer.py` now emits `phase_drift_rationale_warnings` when Stage4 `director_selections` is explicitly marked `selection_companion_status: pre_final_candidate` and the final sinks agree on the settled selection/verdict rationale.
+- Generic `selection_reason_mismatches` and `verdict_reason_mismatches` remain for true contradictions where final sinks disagree or the Director row is not a pre-final companion.
+- `warning_taxonomy_counts.rationale_drift_warn` includes `phase_drift_rationale_warnings`, so proof warnings remain visible instead of disappearing.
+- `modules/core/services/audit_service.py` preserves `phase_drift_rationale_warnings` in compact sink-alignment `issue_counts`.
+- Tests cover the pre-final Director companion classification, the existing runtime mismatch guard, full failure analyzer coverage, and audit-service compact forwarding.
+
+Validation completed:
+- `python -m pytest tests/test_failure_analyzer.py -k "prefinal_director_rationale_drift or runtime_rationale_mismatch" -q` -> PASS, 3 tests.
+- `python -m pytest tests/test_failure_analyzer.py -q` -> PASS, 53 tests.
+- `python -m pytest tests/test_audit_service.py -q` -> PASS, 24 tests.
+- `python -m pytest tests/test_bridge_quality_summary.py -k "compact_sink_alignment_summary_preserves_issue59_warn_counts or stage4_warn_issue59_counts or stale_for_later_stage4_attempts" -q` -> PASS, 3 tests.
+- `python -m pytest tests/test_stage4_orchestrator.py -k "cove and not NpcOverexposureHook" -q` -> PASS, 31 tests.
+- `python -m pytest tests/test_archive_benchmark_record.py tests/test_compare_benchmark_records.py tests/test_backfill_benchmark_native_post_run_evidence.py tests/test_report_benchmark_operator_lines.py -q` -> PASS, 34 tests.
+- `python -m py_compile modules/core/failure_analyzer.py modules/core/services/audit_service.py` -> PASS.
+- `python scripts/check_utf8_hygiene.py modules/core/failure_analyzer.py modules/core/services/audit_service.py tests/test_failure_analyzer.py tests/test_audit_service.py` -> PASS.
+- `git diff --check -- modules/core/failure_analyzer.py modules/core/services/audit_service.py tests/test_failure_analyzer.py tests/test_audit_service.py` -> PASS.
+- `python scripts/ops_validator.py --strict` -> PASS after canonical/temp mirror sync and queue-state regeneration.
+
+Complexity note:
+- `_collect_sink_alignment_rationale_results`: 159 LOC. Classification: bounded sink-comparison aggregation shell; this patch classifies one Stage4 authority-role exception and does not change DB writes, runtime settlement, retry behavior, or Director authority.
+- `_is_stage4_prefinal_rationale_phase_drift` is a small predicate helper.
+- `_build_sink_alignment_summary_payload`: 308 LOC pre-existing bounded proof-summary aggregation shell; this patch only forwards the new issue family through existing counters.
+- `_compact_sink_alignment_summary`: 67 LOC.
+
+Residual open work:
+- This does not close #59 by itself.
+- Canonical closure and GitHub #59 status/closure handling remain pending.
+
+3-pass realization audit:
+- Pass 1 - scope: PASS. The patch is limited to producer/audit classification of Stage4 rationale drift.
+- Pass 2 - evidence: PASS. Expected pre-final Director companion rationale drift is itemized separately, while real mismatch guards still pass.
+- Pass 3 - readiness: PASS for a partial #59 continuation. Core backend #59 semantics are now covered; optional desktop visibility and closure handling remain explicit.
+
+Estimated operational confidence for this partial realization: 96%.
+
+## 20. Realization Ledger - 2026-04-27 Desktop Quality Proof Rendering
+
+Scope realized:
+- Tranche: `desktop-proof-status-visible-surface`.
+- Branch: local continuation after Sections 16-19.
+- Implemented the remaining operator-facing desktop visibility slice so the dashboard does not rely on bridge/API payload inspection alone.
+
+Code changes:
+- `geuldobi-desktop/src/index.html` now seeds the dashboard fallback with top-level `proof_status` fields including status, freshness, semantic completion, canonical truth posture, warning issue counts, warning taxonomy counts, authority note, and summary.
+- `geuldobi-desktop/src/quality_page_bootstrap.js` now nested-merges `proof_status` in `mergeDashboardData`, preventing partial payloads from dropping fallback proof fields.
+- `renderResultSummarySection` now prepends proof-status alert chips to the existing recent-result signal-alert row: proof status, freshness, semantic completion, truth posture, issue total, and taxonomy total.
+- `renderFailureWatchSection` now prepends compact proof diagnostic pattern rows that preserve producer-owned issue/taxonomy count labels instead of reducing proof warnings to a bare `warn`.
+- `geuldobi-desktop/src/quality_react_helpers.js` preserves optional pattern `meta` text so proof count labels render in React islands and fallback DOM paths.
+- `tests/test_desktop_direct_surface_contract.py` adds static contract checks for proof-status bootstrap helpers, fallback data, result-summary wiring, Failure Watch wiring, and warning count fields.
+
+Validation completed:
+- `node --check geuldobi-desktop/src/quality_page_bootstrap.js; node --check geuldobi-desktop/src/quality_react_helpers.js` -> PASS.
+- `python -m pytest -q tests/test_desktop_direct_surface_contract.py tests/test_frontend_frontier_lag_wiring.py tests/test_ui_renderer_sanitization.py` -> PASS, 13 tests.
+- `node tests/test_desktop_preload_bridge_behavior.js; node tests/test_desktop_material_offline_behavior.js; node tests/test_splash_runtime_behavior.js` -> PASS.
+- `python -m pytest -q tests/test_bridge_quality_summary.py -k "stage4_warn_issue59_counts or stale_for_later_stage4_attempts or proof_status"` -> PASS, 3 tests, 19 deselected.
+- `python -m pytest -q tests/test_failure_analyzer.py tests/test_audit_service.py` -> PASS, 77 tests.
+- `python scripts/check_utf8_hygiene.py geuldobi-desktop/src/quality_page_bootstrap.js geuldobi-desktop/src/quality_react_helpers.js geuldobi-desktop/src/index.html tests/test_desktop_direct_surface_contract.py` -> PASS.
+- `git diff --check -- geuldobi-desktop/src/quality_page_bootstrap.js geuldobi-desktop/src/quality_react_helpers.js geuldobi-desktop/src/index.html tests/test_desktop_direct_surface_contract.py` -> PASS.
+
+Complexity note:
+- The touched JavaScript helpers are bounded display-formatting helpers and do not change runtime settlement, DB writes, bridge authority, retry policy, or Director authority.
+- The new proof chips consume producer/bridge-owned fields only; the desktop layer does not invent new warning taxonomy.
+
+Residual open work:
+- This does not close #59 by itself.
+- Canonical closure and GitHub #59 status/closure handling remain pending.
+
+3-pass realization audit:
+- Pass 1 - scope: PASS. The patch is limited to desktop/dashboard visibility for existing proof-status companion fields.
+- Pass 2 - evidence: PASS. Static desktop contracts, Node syntax checks, bridge proof-status tests, and backend producer/audit regressions all pass.
+- Pass 3 - readiness: PASS for a #59 desktop rendering continuation. The previously open desktop/frontend visibility residual is addressed; closure handling remains explicit.
 
 Estimated operational confidence for this partial realization: 96%.

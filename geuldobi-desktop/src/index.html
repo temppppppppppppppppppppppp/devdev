@@ -3674,6 +3674,20 @@
             by_stage: [],
             by_episode_range: [],
           },
+          proof_status: {
+            available: false,
+            status: "unavailable",
+            sink_alignment_status: "unavailable",
+            runtime_summary_status: "unavailable",
+            runtime_summary_freshness_status: "unavailable",
+            completion_claim_scope: "not_asserted_by_dashboard",
+            semantic_completion_status: "unavailable",
+            canonical_truth_status: "not_asserted_by_dashboard",
+            warning_issue_counts: { sink_alignment: {}, runtime_summary: {} },
+            warning_taxonomy_counts: { sink_alignment: {}, runtime_summary: {} },
+            authority_note: "Proof status is a companion dashboard summary, not canonical PASS settlement authority.",
+            summary: "",
+          },
           calibration: {
             available: false,
             lookback: 5,
@@ -5318,6 +5332,9 @@
       }
 
       function renderResultSummary() {
+        const insight = officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project);
+        const result = insight.result_summary || createEmptyQualityDashboard(projectConfig.project).result_summary;
+        const proofStatus = insight.proof_status || {};
         if (window.GeuldobiQualityPageBootstrap?.renderResultSummarySection) {
           return window.GeuldobiQualityPageBootstrap.renderResultSummarySection({
             resultSummaryTitle,
@@ -5332,9 +5349,8 @@
             resultIssueList,
             resultNextAction,
             project: projectConfig.project,
-            result:
-              (officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project)).result_summary ||
-              createEmptyQualityDashboard(projectConfig.project).result_summary,
+            result,
+            proofStatus,
             renderResultSummaryCopyReact,
             renderResultSignalAlertsReact,
             renderResultActionGridReact,
@@ -5343,8 +5359,6 @@
             appendInsightEmpty,
           });
         }
-        const insight = officeState.qualityInsights || createEmptyQualityDashboard(projectConfig.project);
-        const result = insight.result_summary || createEmptyQualityDashboard(projectConfig.project).result_summary;
         resultSummaryTitle.textContent = projectConfig.project ? `${projectConfig.project} · 최근 심사 결과` : "최근 심사 결과";
         resultSummaryMeta.textContent = result.available
           ? `ep ${result.ep_num || "-"} 기준 verdict · 즉시 행동 가이드`
@@ -5402,7 +5416,8 @@
           resultSummaryReason.textContent = result.selection_reason || result.open_review || "Director selection reason이 아직 없습니다.";
         }
 
-        const alerts = result.signal_alerts || [];
+        const proofAlertChips = window.GeuldobiQualityPageBootstrap?.buildProofStatusAlertChips?.(proofStatus) || [];
+        const alerts = [...proofAlertChips, ...(result.signal_alerts || [])];
         if (!renderResultSignalAlertsReact(alerts)) {
           resultSignalAlerts.innerHTML = "";
         }
@@ -5703,6 +5718,7 @@
         const stageStats = insight.stage_stats || [];
         const failurePatterns = insight.failure_patterns || {};
         const commonViolations = insight.common_violations || [];
+        const proofStatus = insight.proof_status || {};
         if (window.GeuldobiQualityPageBootstrap?.renderFailureWatchSection) {
           return window.GeuldobiQualityPageBootstrap.renderFailureWatchSection({
             failureWatchMeta,
@@ -5712,6 +5728,7 @@
             stageStats,
             failurePatterns,
             commonViolations,
+            proofStatus,
             renderFailureStageStatsGridReact,
             renderFailurePatternListReact,
             renderFailureRangeListReact,
@@ -5745,7 +5762,12 @@
         }
 
         failurePatternList.innerHTML = "";
-        const topTypes = failurePatterns.top_types?.length ? failurePatterns.top_types : commonViolations;
+        const proofDiagnosticItems =
+          window.GeuldobiQualityPageBootstrap?.buildProofDiagnosticPatternItems?.(proofStatus) || [];
+        const topTypes = [
+          ...proofDiagnosticItems,
+          ...((failurePatterns.top_types?.length ? failurePatterns.top_types : commonViolations) || []),
+        ];
         if (!renderFailurePatternListReact(topTypes || [], "주요 실패 패턴이 아직 충분히 쌓이지 않았습니다.")) {
           failurePatternList.innerHTML = "";
         }
@@ -5756,9 +5778,10 @@
             const node = document.createElement("div");
             node.className = "pattern-item";
             const typeLabel = escapeHtml(item.type || "unknown");
+            const metaLabel = escapeHtml(item.meta || `누적 ${item.count || 0}회`);
             node.innerHTML = `
               <div class="pattern-item-title">${typeLabel}</div>
-              <div class="pattern-item-meta">누적 ${item.count || 0}회</div>
+              <div class="pattern-item-meta">${metaLabel}</div>
             `;
             failurePatternList.appendChild(node);
           }
