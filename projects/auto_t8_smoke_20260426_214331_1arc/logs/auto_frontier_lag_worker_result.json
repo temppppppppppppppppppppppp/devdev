@@ -1,0 +1,37 @@
+{
+  "summary_role": "auto_frontier_lag_worker_result",
+  "created_at": "2026-04-26T22:18:31",
+  "status": "success",
+  "process_status": "success",
+  "process_success": true,
+  "objective_status": "success",
+  "objective_success": true,
+  "objective_root_cause": "",
+  "project": "auto_t8_smoke_20260426_214331_1arc",
+  "project_locator": "projects/auto_t8_smoke_20260426_214331_1arc",
+  "arc_count": 1,
+  "batch_size": 1,
+  "stage3_failure_policy": "strict",
+  "frontier_result": {
+    "arcs_advanced": 1,
+    "arcs_skipped": 0,
+    "arc_units_processed": 1,
+    "total_manuscripts": 2,
+    "requested_arc_limit": 1,
+    "requested_limit_hit": true,
+    "stop_reason": "requested_arc_limit_reached",
+    "final_plan": {
+      "frontier_ep_start": 1,
+      "frontier_ep_end": 4,
+      "designed_frontier_arc_no": 1,
+      "true_final_arc_no": 60,
+      "is_true_final_frontier": false,
+      "stage3_target": 3,
+      "stage4_target": 2,
+      "bp_max": 3,
+      "ms_max": 2,
+      "stage3_alignment": "aligned",
+      "stage4_alignment": "aligned"
+    }
+  }
+}

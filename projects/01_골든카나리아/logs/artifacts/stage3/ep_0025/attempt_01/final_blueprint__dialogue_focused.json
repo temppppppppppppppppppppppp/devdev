@@ -1,0 +1,201 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "dialogue_focused",
+    "content_hash": "7ad3221a9d613a9b1fa416c2997366c944938154c3545f88d64e68c841d1b6b7"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1077,
+    "prevalidation_issue_count": 0,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 15955,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": true,
+        "raw_chars": 15955
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 61420,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 938580,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 56025,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4398,
+          "lane": "constraints"
+        },
+        {
+          "chars": 767,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 220,
+        "constraints": 4398,
+        "feedback_context": 767,
+        "hud_context": 10,
+        "prev_info": 56025
+      },
+      "shared_context_chars": 60653,
+      "total_chars": 61420
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "dialogue_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "core_tension": "90억 원 전면 청산과 달러 환전을 둘러싼 한시우와 박성호의 심리적 대립",
+  "end_location": "서울 여의도 SW인베스트먼트 대표실",
+  "ending_hook": "통화가 끊어진 구형 휴대폰을 쥔 한시우의 눈동자에는, 이미 바다 건너 홍콩의 마천루를 집어삼킬 거대한 탐욕의 불길이 일렁이고 있었다.",
+  "ending_state": {
+    "location": "서울 여의도 SW인베스트먼트 대표실",
+    "protagonist_status": "국내 주식 90억 원 전량 청산 및 달러 환전을 지시하고 홍콩행을 준비함",
+    "timeline": {
+      "표현": "2007년 4월"
+    }
+  },
+  "ep_num": 25,
+  "episode_number": 25,
+  "expected_ending": "90억 원의 실탄을 달러로 장전하고 글로벌 IB와의 본격적인 대결 준비 완료",
+  "integrated_scenario": "한시우의 손끝에 닿은 글로벌 IB 우선 회신 명단 통지서는 단순한 종이 쪼가리가 아니었다. 그것은 곧 다가올 거대한 파멸의 장에 입장할 수 있는 유일한 티켓이었다. 시우는 서류를 책상 위에 내려놓고, 굳은 표정으로 대형 모니터를 응시했다. 화면 하단에 붉은색 긴급 속보가 타전되기 시작했다. '미국 서브프라임 모기지 대출업체 뉴센추리 파이낸셜, 파산 보호 신청.' 완벽하게 계산된 붕괴의 첫 번째 도미노가 쓰러지는 순간이었다. 시우는 낡은 메모장을 펼쳐 '뉴센추리 파이낸셜 파산'이라는 글자 위에 굵은 선을 그으며 차가운 미소를 지었다. \n\n지체할 시간이 없었다. 시우는 주머니에서 2006년형 구형 휴대폰을 꺼내 박성호 PB에게 전화를 걸었다. 수화기 너머로 연결음이 울리자마자 시우는 단도직입적으로 명령했다. \"현재 코스피 시장에 들어가 있는 우리 법인 명의의 주식, 지금 당장 전량 시장가로 던지세요.\" 박성호는 코스피가 연일 최고점을 갱신하는 호황장 속에서 전량 청산이라는 지시에 경악하며 극구 만류했다. 하지만 시우는 대중의 탐욕이 극에 달한 지금이 완벽한 엑시트 타이밍임을 서늘하게 일깨우며, 단 1초의 망설임도 허락하지 않았다. \n\n여의도 한미증권 본사에서 박성호는 시우의 얼음장 같은 목소리에 짓눌려 결국 마우스를 쥔 손을 떨며 일괄 매도 버튼을 클릭했다. 전산망을 거쳐 체결 완료 메시지가 쏟아지고, SW인베스트먼트 계좌에는 자그마치 90억 원이라는 막대한 현금이 찍혔다. 박성호는 남들이 환희에 젖어 있을 때 가장 먼저 빠져나오는 시우의 냉혹한 결단력에 뼛속 깊은 공포와 경외를 느꼈다.\n\n청산 완료를 보고하는 박성호의 떨리는 목소리를 들으며, 시우는 곧바로 다음 지시를 하달했다. \"방금 확보한 90억, 1원도 남기지 말고 전액 달러로 환전해서 해외 선물 계좌로 쏘세요.\" 박성호가 환율 변동 리스크를 운운하려 했지만, 시우는 이를 단칼에 잘라냈다. 이것은 단순한 자산 이동이 아니라, 바다 건너 월가의 거물들과 피 튀기는 숏 베팅 전쟁을 치르기 위한 90억 달러어치의 실탄 장전이었다. 시우는 전화를 끊고, 창밖으로 펼쳐진 여의도의 빌딩 숲 너머, 다가올 홍콩에서의 거대한 전장을 향해 시선을 고정했다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "빠른 템포의 대화와 결단. 90억이라는 숫자가 주는 무게감과 이를 통제하는 한시우의 냉철함 대비 강조.",
+  "protagonist_state": {
+    "equipment": [
+      "2006년형 구형 휴대폰",
+      "메모장과 펜",
+      "SW인베스트먼트 법인 인감",
+      "해외 선물 계좌 보안카드"
+    ],
+    "injuries": "극심한 편두통 완화 및 신체 통제권 회복",
+    "mood": "다가올 파멸을 앞둔 차가운 지배욕과 내면의 깊은 해방감"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "코스피 상승장에 미련을 버리지 못하는 관리자",
+      "justification": "90억 원이라는 막대한 자산을 고점에서 완벽하게 현금화하는 결단력을 목격했기 때문",
+      "target": "박성호",
+      "to_state": "한시우의 압도적인 타이밍 포착에 전율하며 절대 복종하는 수족"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "24화 엔딩 직후, 한시우가 얇은 종이를 내려놓고 모니터로 시선을 돌린다. 화면에는 뉴센추리 파이낸셜의 파산 보호 신청 뉴스가 붉은 글씨로 타전되고 있다.",
+      "goal": "뉴센추리 파이낸셜 파산 뉴스 확인 및 붕괴의 시작 인지",
+      "key_events": [
+        "한시우가 모니터에 뜬 뉴센추리 파이낸셜 파산 속보를 눈으로 좇음",
+        "서브프라임 모기지 사태의 첫 번째 도미노가 쓰러졌음을 확인하고 차가운 미소를 지음",
+        "메모장의 '뉴센추리 파이낸셜 파산' 글자 위에 굵은 밑줄을 그음"
+      ],
+      "location": "서울 여의도 SW인베스트먼트 대표실",
+      "summary": "한시우가 대표실 모니터를 통해 뉴센추리 파이낸셜의 파산 속보를 확인하며 거대한 붕괴장의 시작을 직감한다.",
+      "tension_level": 6,
+      "title": "파멸의 서막",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호(전화)"
+      ],
+      "content": "",
+      "description": "한시우가 구형 휴대폰으로 박성호에게 전화를 걸어, 호황을 누리고 있는 국내 주식 포지션을 현재가로 전량 던지라고 명령한다.",
+      "goal": "박성호에게 국내 주식 전량 매도 지시",
+      "key_events": [
+        "한시우가 박성호에게 즉각적인 국내 주식 전량 매도를 지시함",
+        "코스피 상승장에 취해 있던 박성호가 막대한 기회비용을 운운하며 극구 만류함",
+        "한시우가 시장의 광기를 비웃으며 단 1초의 지체 없이 주문을 집행할 것을 서늘하게 압박함"
+      ],
+      "location": "서울 여의도 SW인베스트먼트 대표실",
+      "summary": "한시우가 박성호에게 전화를 걸어 코스피 시장에 묶여 있는 국내 주식 전량 청산을 강압적으로 지시한다.",
+      "tension_level": 7,
+      "title": "전면 청산 지시",
+      "type": "dialogue_duel"
+    },
+    "scene_3": {
+      "characters": [
+        "박성호"
+      ],
+      "content": "",
+      "description": "여의도 한미증권에서 박성호가 덜덜 떨리는 손으로 매도 버튼을 누른다. 계좌에 90억 원의 현금이 찍히는 것을 보며 한시우의 결단력에 전율한다.",
+      "goal": "박성호의 매도 집행과 90억 자산 확인",
+      "key_events": [
+        "박성호가 한시우의 명령을 거역하지 못하고 전량 시장가 매도 주문을 전송함",
+        "SW인베스트먼트 법인 계좌에 총자산 90억 원이 확정 수익으로 찍힘",
+        "박성호가 최고점에서 정확히 빠져나오는 한시우의 타이밍에 경외감과 공포를 느낌"
+      ],
+      "location": "여의도 한미증권",
+      "summary": "한미증권의 박성호가 한시우의 압도적인 기세에 눌려 90억 원 규모의 매도 주문을 체결하고 경악한다.",
+      "tension_level": 8,
+      "title": "90억의 증명",
+      "type": "side_glimpse"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호(전화)"
+      ],
+      "content": "",
+      "description": "통화가 끊기기 전, 한시우가 박성호에게 방금 확보한 90억 원을 전액 달러로 환전하라는 추가 지시를 내린다. 월가와의 전면전을 예고한다.",
+      "goal": "90억 원 전액 달러 환전 지시 및 다음 사냥 준비",
+      "key_events": [
+        "박성호가 90억 원 청산 완료를 보고하자마자, 한시우가 전액 달러 환전을 명령함",
+        "박성호가 환헤지 리스크를 언급하려 하지만, 한시우가 글로벌 IB와의 전쟁을 위한 실탄임을 선언하며 입을 막음",
+        "한시우가 달러화된 자본을 무기로 홍콩행을 머릿속에 그리며 전화를 끊음"
+      ],
+      "location": "서울 여의도 SW인베스트먼트 대표실",
+      "summary": "한시우가 90억 원 전액을 달러로 환전하라고 지시하며 본격적인 글로벌 숏 베팅을 위한 실탄 장전을 마친다.",
+      "tension_level": 9,
+      "title": "국경을 넘는 자본",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 여의도 SW인베스트먼트 대표실",
+  "target_beat": "국내 시장의 성공적인 엑시트와 90억 현금의 달러화",
+  "time_flow": "2007년 4월 장중",
+  "title": "90억의 실탄"
+}

@@ -1,0 +1,445 @@
+{
+  "arc_no": 1,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0001.txt",
+    "settlement_packet_path": "drafts/ep_0001.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 1,
+  "ep_num": 1,
+  "manuscript": {
+    "char_count": 4446,
+    "content_hash": "ee4687bac8e0803f6997de58a4d1d19763ca9ef9e6386e6a24c9d69456b74ebb",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0001.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "open_review": "특이사항 없음. 회귀 직후의 상황 파악과 가족들과의 기싸움이 팽팽하게 잘 묘사되었습니다. 특히 아버지 한정호와의 대면 씬에서 주인공의 단호한 태도가 돋보입니다.",
+      "repair_scope": "inplace",
+      "score": 96,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 8,
+        "quality_engagement": 18
+      },
+      "selection_reason": "Blueprint의 씬 구성과 Ending Hook을 가장 정확하게 구현했으며, 회귀 직후 주인공의 서늘한 결의와 긴장감을 밀도 있는 문장으로 잘 표현했습니다. 분량도 적절하며, 각 씬의 목표를 충실히 달성했습니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 1,
+          "pattern": "시선을 돌렸다"
+        }
+      ],
+      "ai_slop_score": 1.0,
+      "burstiness": 15.58,
+      "ced_score": 0.0,
+      "complexity": 45.77,
+      "compression_ratio": 0.4658,
+      "signal_summary": {
+        "ai_slop_total_hits": 1,
+        "burstiness": 15.58,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 45.77,
+        "compression_ratio": 0.4658,
+        "sentence_count": 120
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "그는",
+            "거침없",
+            "단축",
+            "번호",
+            "눌렀다"
+          ],
+          "source": "ending_hook",
+          "text": "그는 거침없이 단축 번호를 눌렀다. 뚜-, 뚜-. 건조한 연결음이 고요한 방안을 차갑게 울렸다."
+        }
+      ],
+      "capital": 2000000000,
+      "connections": "가족 (한정호, 한태준), 박성호 PB (예정)",
+      "current_objective": "개인 자산 현금화 및 SW인베스트먼트 설립을 통한 독립적인 투자 기반 마련",
+      "equipment": [
+        "두꺼운 가죽 수첩",
+        "펜",
+        "휴대폰"
+      ],
+      "inventory_counts": {
+        "두꺼운 가죽 수첩": 1,
+        "펜": 1,
+        "휴대폰": 1
+      },
+      "market_insight": "18년 치 미래 경제 흐름에 대한 완벽한 통찰력",
+      "reputation": "가족 내 한량으로 인식되나, 미래 시장에 대한 완벽한 통찰력을 지님",
+      "status": "회귀 후 독립적인 투자 활동 준비 중",
+      "stocks": [],
+      "total_assets": 2000000000,
+      "wealth": 2000000000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "그는",
+            "거침없",
+            "단축",
+            "번호",
+            "눌렀다"
+          ],
+          "source": "ending_hook",
+          "text": "그는 거침없이 단축 번호를 눌렀다. 뚜-, 뚜-. 건조한 연결음이 고요한 방안을 차갑게 울렸다."
+        }
+      ],
+      "causal_links": [
+        {
+          "cause": "한시우의 2024년 비참한 고독사 기억",
+          "effect": "2006년으로 회귀 후 과거의 무력함을 벗어나 독립적인 삶과 투자 활동을 결심"
+        },
+        {
+          "cause": "한시우가 아버지 한정호에게 그룹 경영 수업 및 지원 거부 선언",
+          "effect": "할아버지 증여 자산 및 신탁 자산에 대한 통제권 확보"
+        },
+        {
+          "cause": "가족들의 한시우에 대한 맹목적인 무관심과 경계 해제",
+          "effect": "자본 시장에서 움직일 때 완벽한 방패막이 확보"
+        },
+        {
+          "cause": "한시우의 미래 경제 흐름에 대한 통찰력 (18년 치 경제 캘린더)",
+          "effect": "원자재 시장 등 초기 투자 전략 수립 및 SW인베스트먼트 설립 계획 구체화"
+        }
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "두꺼운 가죽 수첩",
+          "to": 1
+        },
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "펜",
+          "to": 1
+        },
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "휴대폰",
+          "to": 1
+        }
+      ],
+      "inventory_counts": {
+        "두꺼운 가죽 수첩": 1,
+        "펜": 1,
+        "휴대폰": 1
+      },
+      "karma_matrix": [],
+      "knowledge_map": {
+        "new_misled": [],
+        "new_witnesses": [
+          "한태준",
+          "한정호"
+        ]
+      },
+      "lost_items": [],
+      "new_items": [
+        "두꺼운 가죽 수첩",
+        "펜",
+        "휴대폰"
+      ],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "한태준",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "한정호",
+          "to": "목격자"
+        }
+      ],
+      "reveals": [],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "그는",
+              "거침없",
+              "단축",
+              "번호",
+              "눌렀다"
+            ],
+            "source": "ending_hook",
+            "text": "그는 거침없이 단축 번호를 눌렀다. 뚜-, 뚜-. 건조한 연결음이 고요한 방안을 차갑게 울렸다."
+          }
+        ],
+        "capital": 2000000000,
+        "connections": "가족 (한정호, 한태준), 박성호 PB (예정)",
+        "current_objective": "개인 자산 현금화 및 SW인베스트먼트 설립을 통한 독립적인 투자 기반 마련",
+        "equipment": [
+          "두꺼운 가죽 수첩",
+          "펜",
+          "휴대폰"
+        ],
+        "inventory_counts": {
+          "두꺼운 가죽 수첩": 1,
+          "펜": 1,
+          "휴대폰": 1
+        },
+        "market_insight": "18년 치 미래 경제 흐름에 대한 완벽한 통찰력",
+        "reputation": "가족 내 한량으로 인식되나, 미래 시장에 대한 완벽한 통찰력을 지님",
+        "status": "회귀 후 독립적인 투자 활동 준비 중",
+        "stocks": [],
+        "total_assets": 2000000000,
+        "wealth": 2000000000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "location",
+              "protagonist_status",
+              "timeline"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "약 20억 원 (신탁 및 증여 자산, 현금화 예정)",
+      "director_score": 96,
+      "location": "서울 성북동 본가 침실",
+      "protagonist_status": "아버지를 상대로 독립 선언을 마친 후 본격적인 자산 현금화를 위해 PB센터에 연락을 취하기 직전의 상태",
+      "timeline": {
+        "표현": "2006년 1월 1일 낮"
+      }
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "location",
+            "protagonist_status",
+            "timeline"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "title": "제1화"
+}

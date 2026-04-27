@@ -1,0 +1,521 @@
+{
+  "arc_no": 2,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0006.txt",
+    "settlement_packet_path": "drafts/ep_0006.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 6,
+  "ep_num": 6,
+  "manuscript": {
+    "char_count": 7595,
+    "content_hash": "45d92fb803c7e20345a950e68487edc88bedc5a21c786146d4aaba87b877671a",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0006.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "open_review": "특이사항 없음. 이전 피드백이 정확히 반영되었으며, 주인공의 압도적인 통제력과 시장의 변동성이 맞부딪히는 씬의 묘사가 매우 훌륭합니다.",
+      "repair_scope": "inplace",
+      "score": 90,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 10,
+        "quality_engagement": 20
+      },
+      "selection_reason": "이전 피드백에서 지적된 '한미증권 -> H&T 증권', '지점장 -> PB' 수정 지시사항이 완벽하게 반영되었습니다. 직전 화 엔딩의 긴장감을 그대로 이어받아 주문 집행의 텐션을 극대화했으며, 주인공의 냉철한 심리 묘사와 시장의 폭력적인 변동성이 훌륭하게 표현되었습니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 1,
+          "pattern": "고개를 끄덕였다"
+        },
+        {
+          "count": 1,
+          "pattern": "그야말로"
+        },
+        {
+          "count": 1,
+          "pattern": "순식간에"
+        }
+      ],
+      "ai_slop_score": 3.0,
+      "burstiness": 21.56,
+      "ced_score": 0.0,
+      "complexity": 61.95,
+      "compression_ratio": 0.4335,
+      "signal_summary": {
+        "ai_slop_total_hits": 3,
+        "burstiness": 21.56,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 61.95,
+        "compression_ratio": 0.4335,
+        "sentence_count": 175
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "박성호",
+            "절규",
+            "vip룸",
+            "찢어놓",
+            "가운데"
+          ],
+          "source": "ending_hook",
+          "text": "박성호의 절규가 VIP룸을 찢어놓는 가운데, 시퍼렇게 질린 화면을 응시하는 한시우의 입가에 기괴할 정도로 차가운 미소가 번져갔다."
+        },
+        {
+          "cue_terms": [
+            "시장",
+            "급격한",
+            "폭락",
+            "앞에서",
+            "흔들림"
+          ],
+          "source": "expected_ending",
+          "text": "시장의 급격한 폭락 앞에서도 흔들림 없는 주인공의 통제력 과시"
+        }
+      ],
+      "capital": 2300000000,
+      "connections": "박성호 PB (맹목적 복종, VIP 예외 승인선 확보 및 전용 라인 구축)",
+      "current_objective": "WTI 6월물 레버리지 베팅을 통한 폭발적 자본 증식 및 제도권 금융 인프라 통제",
+      "equipment": "[\"해외 선물 계좌 보안카드\", \"만년필\"]",
+      "inventory_counts": {
+        "구형 휴대폰": 1,
+        "두꺼운 가죽 노트": 1,
+        "만년필": 1,
+        "법인 서류": 1,
+        "법인 인감": 1,
+        "해외 선물 계좌 보안카드": 1
+      },
+      "market_insight": "2006년 2월 1일 뉴욕장 초반 15분간의 언더슈팅(롱스퀴즈 유도 패턴) 완벽 예측 및 통제",
+      "reputation": "시장의 파동을 지배하는 완벽한 통제력을 지닌 승부사",
+      "status": "WTI 6월물 3배 레버리지 진입 완료, 언더슈팅 구간에서 미실현 손실 -2.1억 돌파 중이나 완벽한 통제 유지",
+      "stocks": [
+        {
+          "amount": 800000000,
+          "leverage": "1x",
+          "name": "MMF",
+          "position": "안전 자산 예치"
+        },
+        {
+          "amount": 1500000000,
+          "leverage": "3x (총 노출 45억)",
+          "name": "WTI 원유 선물 6월물",
+          "position": "매수(Long)",
+          "status": "미실현 손실 -2.1억 진행 중 (언더슈팅 구간)"
+        }
+      ],
+      "total_assets": 2300000000,
+      "wealth": 2300000000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "박성호",
+            "절규",
+            "vip룸",
+            "찢어놓",
+            "가운데"
+          ],
+          "source": "ending_hook",
+          "text": "박성호의 절규가 VIP룸을 찢어놓는 가운데, 시퍼렇게 질린 화면을 응시하는 한시우의 입가에 기괴할 정도로 차가운 미소가 번져갔다."
+        },
+        {
+          "cue_terms": [
+            "시장",
+            "급격한",
+            "폭락",
+            "앞에서",
+            "흔들림"
+          ],
+          "source": "expected_ending",
+          "text": "시장의 급격한 폭락 앞에서도 흔들림 없는 주인공의 통제력 과시"
+        }
+      ],
+      "causal_links": [
+        "한시우의 3배 레버리지 매수 주문 실행 -> 뉴욕장 개장과 함께 15분간의 언더슈팅 발생 -> 미실현 손실 -2.1억 돌파 -> 박성호의 패닉 및 강제 청산 시도 -> 한시우의 완벽한 통제 및 롱스퀴즈 예측으로 홀딩 유지"
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "SW인베스트먼트 사업자등록증",
+          "to": 0
+        },
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "법인 서류",
+          "to": 1
+        },
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "해외 선물 계좌 보안카드",
+          "to": 1
+        },
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "해외 선물 계좌 전용 OTP 보안카드",
+          "to": 0
+        }
+      ],
+      "inventory_counts": {
+        "구형 휴대폰": 1,
+        "두꺼운 가죽 노트": 1,
+        "만년필": 1,
+        "법인 서류": 1,
+        "법인 인감": 1,
+        "해외 선물 계좌 보안카드": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 50,
+          "target": "박성호",
+          "value": 80
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [],
+        "new_witnesses": [
+          "박성호 (폭락장 속에서도 흔들림 없는 한시우의 기괴할 정도의 침착함과 시장 통제력을 목격)"
+        ]
+      },
+      "lost_items": [
+        "해외 선물 계좌 전용 OTP 보안카드",
+        "SW인베스트먼트 사업자등록증"
+      ],
+      "new_items": [
+        "법인 서류",
+        "해외 선물 계좌 보안카드"
+      ],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호 (폭락장 속에서도 흔들림 없는 한시우의 기괴할 정도의 침착함과 시장 통제력을 목격)",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "집착50/오해80"
+        }
+      ],
+      "reveals": [],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "박성호",
+              "절규",
+              "vip룸",
+              "찢어놓",
+              "가운데"
+            ],
+            "source": "ending_hook",
+            "text": "박성호의 절규가 VIP룸을 찢어놓는 가운데, 시퍼렇게 질린 화면을 응시하는 한시우의 입가에 기괴할 정도로 차가운 미소가 번져갔다."
+          },
+          {
+            "cue_terms": [
+              "시장",
+              "급격한",
+              "폭락",
+              "앞에서",
+              "흔들림"
+            ],
+            "source": "expected_ending",
+            "text": "시장의 급격한 폭락 앞에서도 흔들림 없는 주인공의 통제력 과시"
+          }
+        ],
+        "capital": 2300000000,
+        "connections": "박성호 PB (맹목적 복종, VIP 예외 승인선 확보 및 전용 라인 구축)",
+        "current_objective": "WTI 6월물 레버리지 베팅을 통한 폭발적 자본 증식 및 제도권 금융 인프라 통제",
+        "equipment": "[\"해외 선물 계좌 보안카드\", \"만년필\"]",
+        "inventory_counts": {
+          "구형 휴대폰": 1,
+          "두꺼운 가죽 노트": 1,
+          "만년필": 1,
+          "법인 서류": 1,
+          "법인 인감": 1,
+          "해외 선물 계좌 보안카드": 1
+        },
+        "market_insight": "2006년 2월 1일 뉴욕장 초반 15분간의 언더슈팅(롱스퀴즈 유도 패턴) 완벽 예측 및 통제",
+        "reputation": "시장의 파동을 지배하는 완벽한 통제력을 지닌 승부사",
+        "status": "WTI 6월물 3배 레버리지 진입 완료, 언더슈팅 구간에서 미실현 손실 -2.1억 돌파 중이나 완벽한 통제 유지",
+        "stocks": [
+          {
+            "amount": 800000000,
+            "leverage": "1x",
+            "name": "MMF",
+            "position": "안전 자산 예치"
+          },
+          {
+            "amount": 1500000000,
+            "leverage": "3x (총 노출 45억)",
+            "name": "WTI 원유 선물 6월물",
+            "position": "매수(Long)",
+            "status": "미실현 손실 -2.1억 진행 중 (언더슈팅 구간)"
+          }
+        ],
+        "total_assets": 2300000000,
+        "wealth": 2300000000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "investment_status",
+              "market_status",
+              "protagonist_status",
+              "relationship_changes"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ]
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "23억 원 (MMF 8억 원 + 증거금 15억 원)",
+      "director_score": 90,
+      "investment_status": "WTI 원유 6월물 15억 원 3배 레버리지 매수 진입 완료",
+      "market_status": "진입 직후 15분간의 언더슈팅(폭락) 발생 중",
+      "protagonist_status": "극심한 편두통을 통제하며 15억 원 3배 레버리지 매수 포지션 유지 중",
+      "relationship_changes": [
+        {
+          "from_state": "위험한 투자를 만류하려는 관리자",
+          "target": "박성호",
+          "to_state": "한시우의 압도적인 기세와 통제력에 완벽히 굴복한 하수인"
+        }
+      ]
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "investment_status",
+            "market_status",
+            "protagonist_status",
+            "relationship_changes"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ]
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 90,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "revision_required": false
+  },
+  "title": "제6화: 강제 진입"
+}

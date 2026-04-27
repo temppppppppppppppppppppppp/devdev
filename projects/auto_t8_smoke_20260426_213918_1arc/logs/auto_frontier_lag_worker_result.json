@@ -1,0 +1,17 @@
+{
+  "summary_role": "auto_frontier_lag_worker_result",
+  "created_at": "2026-04-26T21:39:23",
+  "status": "failed",
+  "process_status": "failed",
+  "process_success": false,
+  "objective_status": "not_evaluated_process_failed",
+  "objective_success": false,
+  "objective_root_cause": "stage0 existing-file replay did not persist bible/plot_roadmap",
+  "project": "auto_t8_smoke_20260426_213918_1arc",
+  "project_locator": "projects/auto_t8_smoke_20260426_213918_1arc",
+  "arc_count": 1,
+  "batch_size": 1,
+  "stage3_failure_policy": "strict",
+  "error": "stage0 existing-file replay did not persist bible/plot_roadmap",
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\PC\\Desktop\\글도비\\scripts\\run_auto_frontier_lag_harness.py\", line 624, in run_worker\n    _apply_stage0_existing_profile(app, profile)\n  File \"C:\\Users\\PC\\Desktop\\글도비\\scripts\\run_auto_frontier_lag_harness.py\", line 725, in _apply_stage0_existing_profile\n    raise RuntimeError(\"stage0 existing-file replay did not persist bible/plot_roadmap\")\nRuntimeError: stage0 existing-file replay did not persist bible/plot_roadmap\n"
+}

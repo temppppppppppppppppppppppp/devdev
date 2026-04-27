@@ -1,0 +1,300 @@
+{
+  "_director_compare_meta": {
+    "comparison_notes": "후보 1은 분량 미달(3000자 미만) 및 금지된 수치화된 능력치('내공') 사용으로 탈락. 후보 2 역시 '내공' 수치를 사용하여 제약 조건을 위반함. 반면 후보 3은 금지된 능력치 표현을 배제하고, 이전 Arc의 상태(위치, 소지품)를 완벽히 계승하였으며, 에콰도르 쇼크와 절반 익절, 예외 계좌 승인 등 블록 DNA의 핵심 사건을 밀도 있게 서사화하여 가장 우수함.",
+    "director_decision": "PASS",
+    "feedback": "전체적인 서사 흐름과 수치적 정합성이 우수하여 별도의 재설계가 필요하지 않음.",
+    "fix_scope": "inplace",
+    "quality_gate_reasons": [],
+    "quality_gate_triggered": false,
+    "selection_reason": "제약 조건(내공 등 수치 배제, 분량 3000자 이상) 완벽 준수 및 DNA 반영 우수"
+  },
+  "_ensemble_meta": {
+    "all_scores": [
+      [
+        "creative",
+        78
+      ],
+      [
+        "conservative",
+        78
+      ],
+      [
+        "balanced",
+        74
+      ]
+    ],
+    "best_score": 74,
+    "best_strategy": "balanced",
+    "candidate_index": 2,
+    "diversity": {
+      "high_similarity_pairs": [],
+      "max_similarity": 0.27,
+      "pairwise": [
+        {
+          "pair": "A-B",
+          "similarity": 0.25
+        },
+        {
+          "pair": "A-C",
+          "similarity": 0.27
+        },
+        {
+          "pair": "B-C",
+          "similarity": 0.26
+        }
+      ],
+      "warning": ""
+    },
+    "score": 74,
+    "strategy": "balanced",
+    "total_candidates": 3
+  },
+  "_strategy": "balanced",
+  "arc_drive": {
+    "narrative_drive": {
+      "active_villainy": {
+        "foreshadowed_threat": "이번 성공으로 인해 여의도 증권가에 '재벌가 막내가 원유로 대박을 쳤다'는 소문이 돌기 시작하며, 이 찌라시가 본가의 형들에게 흘러 들어가 향후 본격적이고 거대한 자본적 견제를 부르는 트리거가 됨.",
+        "reaction_plan": "회사 내부 리스크 한도 규정을 근거로 한시우의 오버나잇 포지션을 강제 청산하려 하거나, 박성호 PB를 앞세워 '지금이 고점이며 더 이상의 욕심은 파멸'이라며 끊임없이 익절을 종용해 주인공의 투자 통제권을 빼앗으려 압박함.",
+        "villain": "증권사 리스크관리팀 및 시장의 고점론자들"
+      },
+      "lack_resolution_strategy": "기관의 보수적인 시스템과 규정이 주인공의 수익 극대화를 방해하는 상황(권위의 일시적 제약)에서, 완벽한 예측과 홀딩 배짱으로 리스크팀의 항복을 받아낸다. 이를 통해 자신을 억압하던 규정을 '예외 처리'로 바꾸어 금융기관 내 실질적인 통제권(Authority)을 강화한다.",
+      "scene_pacing": {
+        "core_ratio": 70,
+        "reasoning": "유가 70달러 횡보장에서 쏟아지는 익절 압박과 군중 심리의 흔들림을 텐션 빌드업(30%)으로 배치하고, 에콰도르 사태 발발과 동시에 포지션을 청산하며 리스크팀의 태도가 굴복으로 돌변하는 카타르시스(70%)에 집중하여 사이다 전개를 극대화한다.",
+        "transition_ratio": 30
+      },
+      "short_term_goal": "에콰도르 옥시덴탈 계약 해지 사태를 정확한 타이밍에 타격하여 원유 선물에서 5억 원의 확정 수익을 챙기고, 증권사 리스크관리팀의 통제를 무력화하여 VIP 예외 계좌(Exception Account) 권한을 쟁취한다.",
+      "target_reward": [
+        "5억 원의 실현 수익 (부분 익절을 통한 시드머니 증식)",
+        "증권사 내부 규정상 'Exception Account(예외 계좌)' 승인 문서 사본",
+        "PB 박성호의 완벽한 맹종 (단순 담당자에서 주인공의 선구안을 기록하는 Witness로의 진화)"
+      ]
+    },
+    "short_term_objective": "서사적 긴장감 고조",
+    "status": "LOCKED"
+  },
+  "arc_no": 3,
+  "beat_sequence": [
+    "제 10화: 유가 70달러 도달 및 언론의 고점론 보도 속에서 한시우가 PB와 리스크팀의 익절 압박을 단호히 거절함",
+    "제 11화: 강남 소규모 오피스에서 3배 레버리지의 압박을 견디며 에콰도르 사태라는 운명의 날짜를 고독하게 기다림",
+    "제 12화: 에콰도르 옥시덴탈 계약 강제 해지 속보 타전 직후, 단기 고점에서 포지션 절반을 시장가로 청산하여 5억 수익을 확정함",
+    "제 13화: 압도적인 예측력 증명으로 한미증권 리스크관리팀의 공식 예외 승인 계좌 통지서를 수령하며 실무 파트너십을 구축함"
+  ],
+  "constraint_summary": "█                   [V60.28] 절대 금지 - 위반 시 즉시 REJECT                    █\n🚨🚨🚨 다음 아이템은 절대 획득하지 마세요! 🚨🚨🚨\n❌ '구형 휴대폰' - Arc 1에서 이미 획득함 → 다시 획득 금지!\n❌ 'SW인베스트먼트 법인 서류' - Arc 1에서 이미 획득함 → 다시 획득 금지!\n❌ '해외 선물 계좌 보안카드' - Arc 1에서 이미 획득함 → 다시 획득 금지!\n│ 🚫 MUST NOT DO (절대 금지 - 위반 시 즉시 REJECT)                               │\n│ [아이템 획득 금지 - 이미 보유 중]                                                │\n│   (수여물 금지 목록 없음)                                                     │\n│ □ protagonist_items(legacy alias: items_acquired)에 금지 목록 아이템 없는가?    │\n|  [X] 획득 금지 - 이미 보유 중인 아이템:                        |",
+  "cross_stage_authority_packet": {
+    "contract_version": "cross_stage_authority_packet.v1",
+    "numeric_carryover": {
+      "investment_calc_final_total_assets": 3000000000,
+      "investment_calc_final_total_assets_source": "state_constraints.investment_calc.final_total_assets",
+      "total_assets": "30억 원",
+      "total_assets_source": "state_constraints.arc_end_state.total_assets"
+    },
+    "opening_carryover": {
+      "location": "서울 강남 SW인베스트먼트 오피스",
+      "location_source": "state_constraints.arc_end_state.location",
+      "world_joint": "WTI 원유 75달러 돌파 및 중남미 자원 국유화 리스크의 글로벌 시장 반영 완료. 한미증권 내 한시우 계좌의 리스크 모니터링 등급 하향 및 다이렉트 주문 라인 개통.",
+      "world_joint_source": "joint_docs.world_joint"
+    },
+    "protagonist_carryover": {
+      "equipment": [
+        "구형 휴대폰",
+        "SW인베스트먼트 법인 서류",
+        "해외 선물 계좌 보안카드",
+        "예외 승인 계좌(Exception Account) 분류 통지서 사본"
+      ],
+      "equipment_source": "state_constraints.arc_end_state.equipment",
+      "injuries": "없음",
+      "injuries_source": "state_constraints.arc_end_state.injuries"
+    },
+    "provenance": {
+      "arc_no": 3,
+      "emitted_by": "Stage2Finalizer",
+      "ep_end": 13,
+      "ep_start": 10,
+      "legacy_summary_surface": "advisory_flags.carryover_authority",
+      "legacy_text_surface": "[Carryover Authority Packet]",
+      "stage": 2
+    },
+    "source_precedence": {
+      "numeric_carryover": [
+        "state_constraints.arc_end_state.capital",
+        "state_constraints.arc_end_state.total_assets",
+        "state_constraints.arc_end_state.portfolio_position",
+        "state_constraints.investment_calc.final_cash",
+        "state_constraints.investment_calc.final_total_assets"
+      ],
+      "opening_carryover": [
+        "state_constraints.arc_end_state.location",
+        "joint_docs.final_location",
+        "joint_docs.world_joint"
+      ],
+      "protagonist_carryover": [
+        "state_constraints.arc_end_state.equipment",
+        "joint_docs.physical_inventory",
+        "state_constraints.arc_end_state.injuries",
+        "state_constraints.arc_end_state.internal_energy"
+      ]
+    }
+  },
+  "ep_count": 4,
+  "ep_end": 13,
+  "ep_start": 10,
+  "episode_details": [
+    {
+      "details": [
+        "서울 성북동 본가 침실 — 유가 70달러 횡보 및 언론의 고점론 보도 확인",
+        "전화 통화 — 박성호 PB와 리스크팀의 익절 압박을 단호히 거절하며 에콰도르 언급"
+      ],
+      "ep_num": 10
+    },
+    {
+      "details": [
+        "서울 강남 SW인베스트먼트 오피스 — 3대의 모니터 앞에서 3배 레버리지 포지션 유지 및 심리전",
+        "오피스 내부 — 금 가격 상승세 뉴스 확인 및 7월 중동 리스크에 대한 독백"
+      ],
+      "ep_num": 11
+    },
+    {
+      "details": [
+        "서울 강남 SW인베스트먼트 오피스 — 5월 16일 에콰도르 옥시덴탈 계약 강제 해지 속보 타전 및 유가 75달러 돌파",
+        "전화 통화 — 단기 고점에서 포지션 절반 시장가 청산 지시 및 5억 수익 확정"
+      ],
+      "ep_num": 12
+    },
+    {
+      "details": [
+        "여의도 증권가 — 재벌가 막내의 원유 베팅 소문 확산 및 박성호 PB의 완전한 태도 변화",
+        "서울 강남 SW인베스트먼트 오피스 — 한미증권 리스크관리팀의 예외 승인 계좌 통지서 수령 및 총자산 30억 달성 확인"
+      ],
+      "ep_num": 13
+    }
+  ],
+  "global_arc_no": 3,
+  "hybrid_composition": {
+    "mixing_logic": "기본",
+    "primary": "standard",
+    "secondary": []
+  },
+  "joint_docs": {
+    "final_location": "서울 강남 SW인베스트먼트 오피스",
+    "physical_inventory": [
+      "구형 휴대폰",
+      "SW인베스트먼트 법인 서류",
+      "해외 선물 계좌 보안카드",
+      "예외 승인 계좌(Exception Account) 분류 통지서 사본"
+    ],
+    "world_joint": "WTI 원유 75달러 돌파 및 중남미 자원 국유화 리스크의 글로벌 시장 반영 완료. 한미증권 내 한시우 계좌의 리스크 모니터링 등급 하향 및 다이렉트 주문 라인 개통."
+  },
+  "pacing_decision": {
+    "density_focus": "초반부는 70달러 횡보장 속 리스크팀과 PB의 심리적 압박을 촘촘하게 묘사하고, 후반부는 뉴스 타전 직후의 기계적인 부분 익절과 권력 구도 역전에 밀도를 집중함.",
+    "ep_count_reasoning": "시장의 횡보와 심리적 압박을 빌드업하고, 에콰도르 사태라는 촉매를 통해 폭발적인 익절과 제도권의 태도 변화를 이끌어내기 위해 4화의 표준 호흡이 적합함.",
+    "pace_mode": "standard"
+  },
+  "rationale_digest": "",
+  "seed_injection": null,
+  "seeds": null,
+  "semantic_carryover": {},
+  "state_changes": {
+    "major_items": [
+      {
+        "action": "획득",
+        "episode": 12,
+        "name": "절반이 청산된 원유 선물 거래 내역서"
+      },
+      {
+        "action": "획득",
+        "episode": 13,
+        "name": "예외 승인 계좌(Exception Account) 분류 통지서 사본"
+      }
+    ],
+    "npc_deaths": [],
+    "npc_introductions": [],
+    "npc_martial_state_changes": [],
+    "relationship_changes": [
+      {
+        "episode": 13,
+        "from": "반신반의 및 조급함",
+        "npc": "박성호",
+        "to": "맹목적인 경외"
+      },
+      {
+        "episode": 13,
+        "from": "경고 및 압박",
+        "npc": "한미증권 리스크관리팀",
+        "to": "예외 분류 승인 및 실무 파트너"
+      },
+      {
+        "episode": null,
+        "from": "당혹, 반신반의",
+        "justification": "",
+        "npc": "박성호 (담당 PB)",
+        "to": "경외. '이 사람은 뭔가 다르다'를 넘어서 예외 처리의 witness가 된다",
+        "trigger": ""
+      },
+      {
+        "episode": null,
+        "from": "경고, 압박",
+        "justification": "",
+        "npc": "증권사 리스크관리팀",
+        "to": "경고 대신 예외 분류를 승인. 이제는 막는 부서가 아니라 규정 옆자리를 여는 부서가 된다",
+        "trigger": ""
+      }
+    ],
+    "resolved_plots": [],
+    "skill_acquisitions": [],
+    "timeline": {
+      "end": {
+        "day": 20,
+        "description": "2006년 5월 하순",
+        "month": 5,
+        "year": 2006
+      },
+      "start": {
+        "day": 1,
+        "description": "2006년 4월 초",
+        "month": 4,
+        "year": 2006
+      }
+    }
+  },
+  "state_constraints": {
+    "arc_end_state": {
+      "equipment": [
+        "구형 휴대폰",
+        "SW인베스트먼트 법인 서류",
+        "해외 선물 계좌 보안카드",
+        "예외 승인 계좌(Exception Account) 분류 통지서 사본"
+      ],
+      "injuries": "없음",
+      "location": "서울 강남 SW인베스트먼트 오피스",
+      "total_assets": "30억 원"
+    },
+    "arc_start_state": {
+      "equipment": [
+        "구형 휴대폰",
+        "SW인베스트먼트 법인 서류",
+        "해외 선물 계좌 보안카드"
+      ],
+      "injuries": "없음",
+      "location": "서울 성북동 본가 침실",
+      "total_assets": "23억 원"
+    },
+    "investment_calc": {
+      "final_total_assets": 3000000000
+    },
+    "items_acquired": [],
+    "items_consumed": []
+  },
+  "status_shadow": {
+    "expected_injuries": "없음",
+    "internal_energy_loss": "변동 없음",
+    "item_consumption": [
+      "초기 투입 증거금 중 7.5억 원에 해당하는 원유 선물 롱 포지션 절반 (청산되어 현금으로 전환됨)",
+      "박성호 PB의 의구심 (완전히 소모되어 맹신과 우선 응답권으로 전환됨)"
+    ],
+    "key_stat_change": "변동 없음"
+  },
+  "tactical_doc": "제 10화: 흔들리는 70달러\n[시작 상태] 위치: 서울 성북동 본가 침실, 부상: 없음, 소지품: [\"구형 휴대폰\", \"SW인베스트먼트 법인 서류\", \"해외 선물 계좌 보안카드\"], 총자산: 23억 원\n2006년 4월 초, 이전 시기 종료로부터 약 한 달이 지났다. 글로벌 원유 시장은 폭풍 전야의 고요함에 휩싸여 있었다. WTI 유가는 배럴당 70달러 선에 도달한 뒤 지루한 횡보세를 이어갔다. 언론과 월가의 분석가들은 연일 '유가 고점론'과 '조정 임박'을 알리는 리포트를 쏟아냈다. 한시우는 본가 침실에서 구형 휴대폰으로 쏟아지는 비관론 뉴스를 확인하며 조용히 미소 지었다. 그때, 한미증권의 박성호 PB에게서 다급한 전화가 걸려왔다. \"대표님, 이제 그만 익절하시죠? 이미 40%가 넘는 엄청난 수익입니다. 본사 리스크관리팀에서도 이 정도면 대성공이니 제발 욕심부리지 말고 청산하라는 압박이 심합니다.\" 박성호의 목소리에는 거액의 레버리지가 무너질까 두려워하는 조급함이 가득했다. 하지만 한시우는 얼음장처럼 차가운 목소리로 단호하게 거절했다. \"아직입니다. 진짜 촉매는 터지지도 않았어요. 에콰도르가 터질 겁니다.\" 수화기 너머로 박성호가 멍한 목소리로 반문했다. \"네? 갑자기 에콰도르요?\" 한시우는 더 이상의 설명을 생략한 채 전화를 끊고, 본격적인 시장 모니터링을 위해 강남에 임대해둔 SW인베스트먼트 소규모 원룸 오피스로 발걸음을 옮겼다.\n[종료 상태] 위치: 서울 강남 SW인베스트먼트 오피스, 부상: 없음, 소지품: [\"구형 휴대폰\", \"SW인베스트먼트 법인 서류\", \"해외 선물 계좌 보안카드\"]\n\n제 11화: 고립된 롱 포지션\n[시작 상태] 위치: 서울 강남 SW인베스트먼트 오피스, 부상: 없음, 소지품: [\"구형 휴대폰\", \"SW인베스트먼트 법인 서류\", \"해외 선물 계좌 보안카드\"]\n4월 중순부터 5월 초까지, 시장의 심리전은 극에 달했다. 한시우는 강남의 좁은 원룸 오피스에 설치된 3대의 모니터 앞에 앉아 밤낮없이 글로벌 자금 흐름을 추적했다. 화면 한편에는 '금 가격 상승세 뚜렷'이라는 뉴스가 조용히 흘러가고 있었다. 유가가 70달러 아래로 일시적으로 밀릴 때마다 HTS 창에는 한미증권 리스크관리팀이 보내는 붉은색 경고 팝업이 빗발쳤다. 3배 레버리지가 걸린 15억 원의 포지션은 호가창의 미세한 떨림에도 수천만 원의 평가손익을 요동치게 만들었다. 너무 일찍 팔면 거대한 파도를 놓치게 되고, 너무 늦게 팔면 되돌림에 물려 모든 것을 잃을 수 있는 팽팽한 긴장감이 오피스를 채웠다. 하지만 한시우는 흔들림 없이 과거의 궤적을 복기했다. '7월에 중동이 다시 터진다. 유가는 연내 80달러를 가볍게 돌파할 거다.' 그는 나지막이 독백하며 추가 상승의 복선을 머릿속에 그렸다. 그러나 지금 당장 시장의 공포를 극대화할 뇌관은 중남미에 있었다. 그는 5월 16일이라는 운명의 날짜를 기다리며, 거대한 자본의 파도를 탈 완벽한 타이밍을 노렸다.\n[종료 상태] 위치: 서울 강남 SW인베스트먼트 오피스, 부상: 없음, 소지품: [\"구형 휴대폰\", \"SW인베스트먼트 법인 서류\", \"해외 선물 계좌 보안카드\"]\n\n제 12화: 에콰도르 쇼크\n[시작 상태] 위치: 서울 강남 SW인베스트먼트 오피스, 부상: 없음, 소지품: [\"구형 휴대폰\", \"SW인베스트먼트 법인 서류\", \"해외 선물 계좌 보안카드\"]\n2006년 5월 16일, 마침내 세계 경제를 뒤흔드는 긴급 속보가 타전되었다. 에콰도르 정부가 외국 석유사인 옥시덴탈 페트롤리엄의 운영 계약을 강제로 해지하고 자산을 압류했다는 뉴스였다. 일일 10만 배럴의 원유가 시장에서 즉각 증발한다는 소식과 함께, 베네수엘라와 볼리비아에 이은 중남미 자원 국유화 도미노 공포가 글로벌 시장을 강타했다. 70달러 부근에서 억눌려 있던 WTI 유가는 순식간에 강력한 저항선을 뚫고 75달러를 향해 미친 듯이 치솟았다. 전 세계 트레이더들의 패닉 바잉이 절정에 달한 바로 그 순간, 한시우는 지체 없이 박성호에게 전화를 걸었다. \"지금입니다. 포지션 절반, 시장가로 전량 청산하세요.\" 15억 원의 투입 증거금 중 7.5억 원어치의 물량이 정확히 단기 고점에서 팔려나갔다. 이 단 한 번의 냉철한 부분 익절로 그는 5억 원의 순수익을 완벽하게 확정 지었다. 앞서 박성호에게 무심코 던졌던 '에콰도르'라는 단어가 소름 돋는 예언으로 입증되며, 이전의 복선이 완벽하게 회수되는 순간이었다.\n[종료 상태] 위치: 서울 강남 SW인베스트먼트 오피스, 부상: 없음, 소지품: [\"구형 휴대폰\", \"SW인베스트먼트 법인 서류\", \"해외 선물 계좌 보안카드\", \"절반이 청산된 원유 선물 거래 내역서\"]\n\n제 13화: 예외 승인\n[시작 상태] 위치: 서울 강남 SW인베스트먼트 오피스, 부상: 없음, 소지품: [\"구형 휴대폰\", \"SW인베스트먼트 법인 서류\", \"해외 선물 계좌 보안카드\", \"절반이 청산된 원유 선물 거래 내역서\"]\n절반의 포지션을 성공적으로 청산한 다음 날, 한미증권 내부의 기류는 180도 달라져 있었다. 박성호 PB는 떨리는 목소리로 전화를 걸어와 \"대표님, 도대체 에콰도르 사태를 어떻게 정확히 아셨습니까?\"라며 맹목적인 경외심을 표했다. 더 이상 얄팍한 시황을 들이밀며 익절을 종용하던 조급한 게이트키퍼는 존재하지 않았다. 깐깐하게 굴던 본사 리스크관리팀 역시 압도적인 수익률과 예측력 앞에 완전히 입을 다물었다. 여의도 증권가에는 '재벌가 막내가 원유로 수십억을 찍어 눌렀다'는 소문이 은밀하게 돌기 시작했다. 며칠 뒤, 한시우의 오피스 팩스기로 서류 한 장이 도착했다. 한미증권 리스크관리팀 직인이 선명하게 찍힌 '예외 승인 계좌(Exception Account) 분류 통지서'였다. 단순한 PB 차원의 영업적 우대를 넘어, 증권사 본사 차원에서 그의 거래를 선확인 대상으로 공식 격상시킨 것이다. 이제 그들은 한시우를 막아서는 자들이 아니라, 그의 지시를 가장 먼저 받아 적는 실무 파트너이자 목격자로 변모했다. 확정 수익 5억 원과 미실현 수익을 합쳐 총자산 30억 원을 달성한 한시우는, 남은 절반의 포지션을 여유롭게 홀딩하며 다음 사냥감인 금 시장과 다가올 금융위기를 향한 거대한 밑그림을 완성해 나갔다.\n[종료 상태] 위치: 서울 강남 SW인베스트먼트 오피스, 부상: 없음, 소지품: [\"구형 휴대폰\", \"SW인베스트먼트 법인 서류\", \"해외 선물 계좌 보안카드\", \"절반이 청산된 원유 선물 거래 내역서\", \"예외 승인 계좌(Exception Account) 분류 통지서 사본\"]\n- 위치: 서울 강남 SW인베스트먼트 오피스\n- 소지품: [\"구형 휴대폰\", \"SW인베스트먼트 법인 서류\", \"해외 선물 계좌 보안카드\", \"예외 승인 계좌(Exception Account) 분류 통지서 사본\"]\n- 총자산: 30억 원",
+  "title": "중동의 불씨",
+  "volume_no": 0
+}

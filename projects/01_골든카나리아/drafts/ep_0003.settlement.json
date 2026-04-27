@@ -1,0 +1,502 @@
+{
+  "arc_no": 1,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0003.txt",
+    "settlement_packet_path": "drafts/ep_0003.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 3,
+  "ep_num": 3,
+  "manuscript": {
+    "char_count": 4977,
+    "content_hash": "bcdc0d9b0d3873c4ffe430b4ff97d9c52bbf091572268df2f374af6f79e66873",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0003.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "open_review": "특이사항 없음. 이전 피드백이었던 '20억 원 입금의 개연성 보강'이 잔여 MMF 계좌 예수금 활용이라는 논리적인 설명으로 훌륭하게 반영되었습니다. 주인공의 냉혹한 감정선과 엔딩 훅도 잘 유지되었습니다.",
+      "repair_scope": "inplace",
+      "score": 90,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 10,
+        "quality_engagement": 20
+      },
+      "selection_reason": "이전 피드백(20억 원 입금의 개연성 보강)이 완벽하게 반영되었으며, 이전 화와의 연속성 및 Blueprint의 모든 씬이 훌륭하게 구현되었습니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 2,
+          "pattern": "입을 열었다"
+        },
+        {
+          "count": 1,
+          "pattern": "고개를 끄덕였다"
+        }
+      ],
+      "ai_slop_score": 3.0,
+      "burstiness": 22.15,
+      "ced_score": 0.0,
+      "complexity": 65.54,
+      "compression_ratio": 0.4561,
+      "signal_summary": {
+        "ai_slop_total_hits": 3,
+        "burstiness": 22.15,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 65.54,
+        "compression_ratio": 0.4561,
+        "sentence_count": 107
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "모니터",
+            "구석",
+            "붉은빛",
+            "명멸하",
+            "wti"
+          ],
+          "source": "ending_hook",
+          "text": "모니터 구석에서 붉은빛을 명멸하는 WTI 원유 선물 티커를 향해, 한시우의 시선이 조용히 꽂혔다."
+        },
+        {
+          "cue_terms": [
+            "현금",
+            "20억",
+            "원을",
+            "확보하고",
+            "본격적인"
+          ],
+          "source": "expected_ending",
+          "text": "현금 20억 원을 확보하고 본격적인 투자를 준비함"
+        }
+      ],
+      "capital": 2000000000,
+      "connections": "박성호 PB (완벽한 통제하에 법인 설립 대행 중)",
+      "current_objective": "WTI 원유 선물 투자를 통한 본격적인 자본 증식",
+      "equipment": [
+        "구형 휴대폰"
+      ],
+      "inventory_counts": {
+        "두꺼운 가죽 노트": 1,
+        "만년필": 1,
+        "묵직한 금속 재질의 구형 휴대폰": 1
+      },
+      "market_insight": "WTI 원유 선물 투자 타이밍 포착",
+      "reputation": "가문의 감시망에서 완벽하게 벗어남",
+      "status": "20억 원 현금화 완료, SW인베스트먼트 법인 설립 및 해외 선물 계좌 개설 진행 중",
+      "stocks": [],
+      "total_assets": 2000000000,
+      "wealth": 2000000000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "모니터",
+            "구석",
+            "붉은빛",
+            "명멸하",
+            "wti"
+          ],
+          "source": "ending_hook",
+          "text": "모니터 구석에서 붉은빛을 명멸하는 WTI 원유 선물 티커를 향해, 한시우의 시선이 조용히 꽂혔다."
+        },
+        {
+          "cue_terms": [
+            "현금",
+            "20억",
+            "원을",
+            "확보하고",
+            "본격적인"
+          ],
+          "source": "expected_ending",
+          "text": "현금 20억 원을 확보하고 본격적인 투자를 준비함"
+        }
+      ],
+      "causal_links": [
+        "한시우의 금감원 고발 협박 -> 박성호의 굴복 및 20억 원 펀드/신탁 강제 해지 -> 한시우 개인 통장으로 20억 원 입금 완료",
+        "20억 원 현금 확보 -> SW인베스트먼트 법인 설립 자본금 납입 및 해외 선물 계좌 개설 지시",
+        "WTI 원유 선물 티커 확인 -> 다음 투자 타겟이 WTI 원유 선물임을 암시"
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "탁상달력",
+          "to": 0
+        }
+      ],
+      "inventory_counts": {
+        "두꺼운 가죽 노트": 1,
+        "만년필": 1,
+        "묵직한 금속 재질의 구형 휴대폰": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 80,
+          "target": "박성호",
+          "value": -50
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [
+          "한태성 회장 및 가문 (자금 이동을 VIP 고객의 단순 변심에 의한 포트폴리오 재편으로 보고받을 예정)"
+        ],
+        "new_witnesses": [
+          "박성호 (한시우의 냉혹한 결단력과 통제력을 직접 겪고 굴복함)"
+        ]
+      },
+      "lost_items": [
+        "탁상달력"
+      ],
+      "new_items": [
+        "SW인베스트먼트 법인 설립 서류",
+        "해외 선물 계좌 보안카드"
+      ],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호 (한시우의 냉혹한 결단력과 통제력을 직접 겪고 굴복함)",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "한태성 회장 및 가문 (자금 이동을 VIP 고객의 단순 변심에 의한 포트폴리오 재편으로 보고받을 예정)",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "집착80/오해-50"
+        }
+      ],
+      "reveals": [
+        "expected_ending"
+      ],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "모니터",
+              "구석",
+              "붉은빛",
+              "명멸하",
+              "wti"
+            ],
+            "source": "ending_hook",
+            "text": "모니터 구석에서 붉은빛을 명멸하는 WTI 원유 선물 티커를 향해, 한시우의 시선이 조용히 꽂혔다."
+          },
+          {
+            "cue_terms": [
+              "현금",
+              "20억",
+              "원을",
+              "확보하고",
+              "본격적인"
+            ],
+            "source": "expected_ending",
+            "text": "현금 20억 원을 확보하고 본격적인 투자를 준비함"
+          }
+        ],
+        "capital": 2000000000,
+        "connections": "박성호 PB (완벽한 통제하에 법인 설립 대행 중)",
+        "current_objective": "WTI 원유 선물 투자를 통한 본격적인 자본 증식",
+        "equipment": [
+          "구형 휴대폰"
+        ],
+        "inventory_counts": {
+          "두꺼운 가죽 노트": 1,
+          "만년필": 1,
+          "묵직한 금속 재질의 구형 휴대폰": 1
+        },
+        "market_insight": "WTI 원유 선물 투자 타이밍 포착",
+        "reputation": "가문의 감시망에서 완벽하게 벗어남",
+        "status": "20억 원 현금화 완료, SW인베스트먼트 법인 설립 및 해외 선물 계좌 개설 진행 중",
+        "stocks": [],
+        "total_assets": 2000000000,
+        "wealth": 2000000000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "characters",
+              "director_score",
+              "items",
+              "location",
+              "protagonist_status",
+              "timeline"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ]
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "20억 원",
+      "characters": {
+        "박성호": "한시우의 압도적인 기세와 치밀한 금융 지식에 완전히 장악되어 절대 복종하는 상태"
+      },
+      "director_score": 90,
+      "items": [
+        "2006년형 구형 휴대폰"
+      ],
+      "location": "H&T 증권 VIP 접견실",
+      "protagonist_status": "20억 원의 현금을 확보하고 다음 단계인 선물 시장 진입을 구상하는 상태",
+      "timeline": "2006년 1월 2일 오후"
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "characters",
+            "director_score",
+            "items",
+            "location",
+            "protagonist_status",
+            "timeline"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ]
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "last_score": 92,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "title": "제3화: 자산 유동화"
+}

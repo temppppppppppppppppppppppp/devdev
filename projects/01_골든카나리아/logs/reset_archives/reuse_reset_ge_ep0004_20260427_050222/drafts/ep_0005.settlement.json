@@ -1,0 +1,440 @@
+{
+  "arc_no": 2,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0005.txt",
+    "settlement_packet_path": "drafts/ep_0005.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 5,
+  "ep_num": 5,
+  "manuscript": {
+    "char_count": 3962,
+    "content_hash": "44b94b5d5f0df12fa808e8568972b8c4d428f7f111e06fea5d94acca044787a7",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0005.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "open_review": "특이사항 없음. 이전 피드백이 완벽하게 반영되어 도입부가 매끄럽게 이어집니다. 주인공의 냉혹한 승부사 기질과 시장의 광기가 잘 어우러져 몰입감이 뛰어납니다.",
+      "repair_scope": "inplace",
+      "score": 90,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 10,
+        "quality_engagement": 20
+      },
+      "selection_reason": "이전 심사에서 지적된 도입부 중복 서술 문제가 완벽하게 수정되었으며, 직전 화 엔딩에서 매끄럽게 이어지는 긴장감 넘치는 전개가 돋보입니다. Blueprint의 모든 씬이 충실하게 구현되었습니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 1,
+          "pattern": "침을 삼켰다"
+        }
+      ],
+      "ai_slop_score": 1.0,
+      "burstiness": 21.97,
+      "ced_score": 0.0,
+      "complexity": 72.74,
+      "compression_ratio": 0.4668,
+      "signal_summary": {
+        "ai_slop_total_hits": 1,
+        "burstiness": 21.97,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 72.74,
+        "compression_ratio": 0.4668,
+        "sentence_count": 81
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "모니터",
+            "붉은",
+            "빛이",
+            "그의",
+            "창백한"
+          ],
+          "source": "ending_hook",
+          "text": "모니터의 붉은 빛이 그의 창백한 얼굴을 비추는 가운데, 마우스 위로 올라간 손가락이 미세하게 힘을 모았다."
+        }
+      ],
+      "capital": 2000000000,
+      "connections": "박성호 PB, 한미증권 VIP 채널",
+      "current_objective": "WTI 원유 선물 폭등 랠리에서 극대화된 수익 창출",
+      "equipment": [
+        "SW인베스트먼트 법인 서류",
+        "금속 질감의 보안카드"
+      ],
+      "inventory_counts": {
+        "HTS 법인 공인인증서(금속 USB)": 1,
+        "SW인베스트먼트 법인 서류": 1,
+        "금속 질감의 보안카드": 1,
+        "두꺼운 가죽 노트": 1,
+        "만년필": 1,
+        "묵직한 금속 재질의 구형 휴대폰": 1,
+        "해외 선물 계좌 접속용 OTP 보안카드": 1
+      },
+      "market_insight": "극단적 변동성 속 투매 물량을 받아내는 완벽한 바닥 타점 포착 및 한미증권 최대 레버리지 활용",
+      "reputation": "SW인베스트먼트 설립",
+      "status": "한미증권 VIP룸으로 플랫폼 이동, WTI 원유 선물 최대 레버리지 매수 진입 직전",
+      "stocks": [
+        "WTI 원유 선물 매수 진입 대기 (한미증권 최대 레버리지)"
+      ],
+      "total_assets": 2000000000,
+      "wealth": 2000000000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "모니터",
+            "붉은",
+            "빛이",
+            "그의",
+            "창백한"
+          ],
+          "source": "ending_hook",
+          "text": "모니터의 붉은 빛이 그의 창백한 얼굴을 비추는 가운데, 마우스 위로 올라간 손가락이 미세하게 힘을 모았다."
+        }
+      ],
+      "causal_links": [
+        {
+          "cause": "H&T 증권 시스템의 리스크 관리 기준 초과로 인한 주문 거부",
+          "effect": "한시우가 더 높은 수압을 견딜 수 있는 한미증권 VIP룸으로 플랫폼을 이동함"
+        },
+        {
+          "cause": "투기 세력들의 로스컷 물량 연쇄 출회로 60달러 지지선 붕괴",
+          "effect": "한시우가 이를 완벽한 진입 타이밍으로 판단하고 최대 레버리지 매수 방아쇠를 당길 준비를 함"
+        }
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "SW인베스트먼트 법인 서류",
+          "to": 1
+        },
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "금속 질감의 보안카드",
+          "to": 1
+        }
+      ],
+      "inventory_counts": {
+        "HTS 법인 공인인증서(금속 USB)": 1,
+        "SW인베스트먼트 법인 서류": 1,
+        "금속 질감의 보안카드": 1,
+        "두꺼운 가죽 노트": 1,
+        "만년필": 1,
+        "묵직한 금속 재질의 구형 휴대폰": 1,
+        "해외 선물 계좌 접속용 OTP 보안카드": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 40,
+          "target": "박성호",
+          "value": 20
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [
+          "박성호 (한시우의 정밀한 타점 포착을 단순한 자살행위 및 도박으로 오해함)"
+        ],
+        "new_witnesses": []
+      },
+      "lost_items": [],
+      "new_items": [
+        "금속 질감의 보안카드",
+        "SW인베스트먼트 법인 서류"
+      ],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호 (한시우의 정밀한 타점 포착을 단순한 자살행위 및 도박으로 오해함)",
+          "to": "오해 대상"
+        }
+      ],
+      "reveals": [],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "모니터",
+              "붉은",
+              "빛이",
+              "그의",
+              "창백한"
+            ],
+            "source": "ending_hook",
+            "text": "모니터의 붉은 빛이 그의 창백한 얼굴을 비추는 가운데, 마우스 위로 올라간 손가락이 미세하게 힘을 모았다."
+          }
+        ],
+        "capital": 2000000000,
+        "connections": "박성호 PB, 한미증권 VIP 채널",
+        "current_objective": "WTI 원유 선물 폭등 랠리에서 극대화된 수익 창출",
+        "equipment": [
+          "SW인베스트먼트 법인 서류",
+          "금속 질감의 보안카드"
+        ],
+        "inventory_counts": {
+          "HTS 법인 공인인증서(금속 USB)": 1,
+          "SW인베스트먼트 법인 서류": 1,
+          "금속 질감의 보안카드": 1,
+          "두꺼운 가죽 노트": 1,
+          "만년필": 1,
+          "묵직한 금속 재질의 구형 휴대폰": 1,
+          "해외 선물 계좌 접속용 OTP 보안카드": 1
+        },
+        "market_insight": "극단적 변동성 속 투매 물량을 받아내는 완벽한 바닥 타점 포착 및 한미증권 최대 레버리지 활용",
+        "reputation": "SW인베스트먼트 설립",
+        "status": "한미증권 VIP룸으로 플랫폼 이동, WTI 원유 선물 최대 레버리지 매수 진입 직전",
+        "stocks": [
+          "WTI 원유 선물 매수 진입 대기 (한미증권 최대 레버리지)"
+        ],
+        "total_assets": 2000000000,
+        "wealth": 2000000000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "location",
+              "protagonist_status"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ]
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "20억 원 (WTI 원유 선물 최대 레버리지 매수 진입 상태)",
+      "director_score": 90,
+      "location": "여의도 한미증권 VIP룸",
+      "protagonist_status": "한미증권 시스템을 통해 추가 레버리지 진입을 준비 중"
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "location",
+            "protagonist_status"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ]
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 92,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "revision_required": true
+  },
+  "title": "출격 준비"
+}

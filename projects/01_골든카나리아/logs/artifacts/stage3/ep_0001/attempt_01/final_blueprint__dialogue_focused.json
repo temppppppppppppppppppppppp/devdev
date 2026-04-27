@@ -1,0 +1,257 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "dialogue_focused",
+    "content_hash": "0f86bb8f38ced2d49f5eb9363dc68fa80ca2a28e4ae284b9ae2fd2049f610a2f"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=4; sample_anchors=비틀거리, 웅웅거리, 지금의 시우는 그 무관",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 1,
+    "disqualified": [],
+    "length": 1442,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 2527,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 997473,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 2133,
+          "lane": "constraints"
+        },
+        {
+          "chars": 183,
+          "lane": "arc_focus"
+        },
+        {
+          "chars": 133,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 183,
+        "constraints": 2133,
+        "feedback_context": 133,
+        "hud_context": 10,
+        "prev_info": 68
+      },
+      "shared_context_chars": 2394,
+      "total_chars": 2527
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 5,
+    "strategy": "dialogue_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "core_tension": "미래의 지식을 바탕으로 가문의 통제를 벗어날 첫 단추를 어떻게 꿰어야 하는가",
+  "end_location": "서울 성북동 본가 침실",
+  "ending_hook": "\"금방 가죠.\" 인터폰 너머 집사의 호출에 건조하게 응답하며, 펜을 내려놓는 상황 반전 컷.",
+  "ending_state": {
+    "location": "서울 성북동 본가 침실",
+    "protagonist_status": "아버지와의 대면을 앞두고 심리적 무장을 마친 상태",
+    "timeline": {
+      "표현": "2006년 1월 2일 오전"
+    }
+  },
+  "ep_num": 1,
+  "episode_number": 1,
+  "expected_ending": "아버지의 호출을 받으며 본격적인 궤도 이탈을 준비함",
+  "integrated_scenario": "차가운 바닥에서 스며들던 2024년의 죽음의 한기가 거짓말처럼 흩어졌다. 한시우는 폐부를 찢을 듯한 숨을 들이켜며 눈을 번쩍 떴다. 시야에 들어온 것은 곰팡이 핀 단칸방의 얼룩진 천장이 아니라, 은은한 샹들리에가 빛을 발하는 성북동 본가의 고급스러운 침실 천장이었다. 심장이 미친 듯이 요동치고, 육체와 기억의 괴리에서 오는 극심한 편두통이 그의 관자놀이를 강타했다. 시우는 식은땀으로 흠뻑 젖은 이불을 걷어차고 비틀거리며 일어났다. 거울 속에 비친 것은 병색이 완연한 40대의 실패자가 아닌, 피부에 생기가 도는 20대의 청년 한시우였다. 그는 떨리는 손으로 책상 위의 달력을 확인했다. 2006년 1월 2일. 모든 것을 잃고 가문에서 버려지기 전, 가장 어리석고 순진했던 시절로 돌아온 것이다.\n\n두통이 서서히 잦아들자 시우의 눈빛이 차갑게 가라앉았다. 그는 더 이상 과거의 비참한 전철을 밟지 않겠다고 뼈에 새기듯 다짐했다. 곧장 책상 앞의 컴퓨터 전원을 켰다. 구형 모니터가 웅웅거리며 켜지고, 포털 사이트 메인 화면에 뜬 뉴스 헤드라인이 그의 시선을 사로잡았다. [이란 핵 위기 고조, 국제 사회 긴장감 팽배]. 시우의 입가에 서늘한 미소가 번졌다. 2006년 초입, 세계 경제를 뒤흔들고 유가를 폭등시켰던 바로 그 뇌관이었다. 그는 머릿속에 파편처럼 흩어져 있던 미래의 금융 지표들을 빠르게 조합하기 시작했다. 이것은 단순한 뉴스가 아니라, 가문의 그늘에서 벗어나 완벽한 독립을 이룰 거대한 시드머니의 시작점이었다.\n\n타는 목을 축이기 위해 방문을 열고 복도로 나선 시우는 외출 채비를 마친 둘째 형, 한태민과 마주쳤다. 한태민은 시우를 마치 투명 인간 취급하듯 눈길조차 주지 않고 지나치려 했다. 예전 같았으면 어떻게든 형의 관심을 끌려 애썼겠지만, 지금의 시우는 그 무관심이 얼마나 큰 무기인지 알고 있었다. \"다녀오세요, 형님.\" 시우의 건조한 인사에 한태민이 멈칫하며 돌아보았지만, 이내 코웃음을 치며 멀어졌다. 후계 구도에서 완전히 배제된 철부지 막내. 그 완벽한 오해가 시우에게는 가장 자유로운 은신처이자 기만책이었다.\n\n방으로 돌아온 시우는 책상에 앉아 노트에 이란 핵 위기와 WTI 원유 선물 가격의 변동 추이를 빼곡히 적어 내려갔다. 타이밍, 진입점, 그리고 빠져나올 출구까지. 남들이 위기라 부르며 몸을 사릴 때, 그는 정확한 이득의 구조를 설계하고 있었다. 돈을 단순한 숫자가 아닌, 자신의 운명을 통제할 권력과 방화벽으로 바꾸기 위한 첫 번째 톱니바퀴가 맞물리는 순간이었다. 그때, 정적을 깨고 인터폰이 날카롭게 울렸다. 버튼을 누르자 집사의 정중하지만 기계적인 목소리가 흘러나왔다. \"막내 도련님, 회장님께서 서재로 부르십니다.\" 아버지가 자신의 진로를 묻고, 그룹의 변방으로 쫓아내려 했던 바로 그 순간의 시작. 시우는 쥐고 있던 펜을 조용히 내려놓았다. \"금방 가죠.\" 굳게 닫힌 방문을 응시하는 그의 목소리에는 한 치의 흔들림도 없었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "no_prev_anchor"
+    ],
+    "type": "jump_opening"
+  },
+  "pacing_notes": "초반부는 죽음과 회귀의 충격이 교차하며 빠르고 강렬한 템포로 시작된다. 중반부 뉴스를 확인하고 계획을 세우는 과정에서 템포를 늦춰 밀도 있는 내면 묘사를 진행하고, 짧은 조우를 통해 긴장감을 살짝 돋운다. 마지막 인터폰 소리와 대답으로 텐션을 끌어올리며 다음 화로 넘어간다.",
+  "protagonist_state": {
+    "equipment": [
+      "2006년형 구형 휴대폰",
+      "메모장과 펜"
+    ],
+    "injuries": "2024년 트라우마로 인한 일시적 편두통 및 교감신경 과진장",
+    "mood": "냉철함, 단호함, 과거에 대한 분노를 억누름"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "무관심",
+      "justification": "시우의 건조하고 당당해진 인사 태도에 일시적인 낯섦을 느낌",
+      "target": "한태민",
+      "to_state": "무관심 유지 및 미세한 위화감"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "죽음의 고통에서 벗어나 2006년으로 회귀했음을 깨닫는 과정",
+      "description": "죽음의 감각이 생생한 가운데 눈을 뜬 한시우. 곰팡내 나는 단칸방이 아닌 고급스러운 성북동 본가의 샹들리에를 보며 혼란에 빠진다.",
+      "goal": "회귀 사실 자각 및 현 상황 파악",
+      "key_events": [
+        "한시우가 숨을 헐떡이며 침대에서 깨어남",
+        "2024년의 환상통과 2006년 육체의 괴리로 인한 편두통 발생",
+        "탁상 달력과 구형 핸드폰을 통해 2006년 1월 2일임을 확인"
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "2024년의 고독사 직후, 한시우가 극심한 두통과 함께 2006년 본가 침실에서 깨어난다.",
+      "tension_level": 7,
+      "title": "낯선 천장, 익숙한 고통",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "미래 지식을 바탕으로 첫 번째 자본 증식 계획을 세우는 내면 묘사",
+      "description": "컴퓨터를 켜고 포털 사이트 뉴스를 확인한 한시우는 이란 핵 위기 기사를 보며 유가 폭등의 기억을 떠올린다.",
+      "goal": "시대적 배경 확인 및 투자 기회 포착",
+      "key_events": [
+        "과거 가문에서 버려졌던 기억을 떠올리며 복수와 생존을 다짐함",
+        "인터넷 뉴스에서 '이란 핵 위기 고조' 헤드라인 발견",
+        "미래의 금융 지표와 유가 폭등 시나리오를 머릿속으로 재구성함"
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "과거의 비참한 삶을 반복하지 않겠다고 다짐하며 뉴스를 통해 이란 핵 위기 소식을 접한다.",
+      "tension_level": 5,
+      "title": "이란 핵 위기와 반격의 서막",
+      "type": "emotional_reveal"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "한태민"
+      ],
+      "content": "가족들의 멸시를 당연하게 받아들이며 자신의 무기로 삼는 한시우의 심리",
+      "description": "복도에서 외출하려는 한태민과 마주치지만, 한태민은 시우를 철저히 무시한다. 시우는 굽실거리지 않고 담담하게 반응한다.",
+      "goal": "가족 내 한시우의 현재 위치와 변화된 태도 노출",
+      "key_events": [
+        "방문을 나선 한시우가 복도에서 한태민과 마주침",
+        "한태민이 투명 인간 취급하며 지나치려 하자, 시우가 건조하게 인사를 건넴",
+        "한태민이 낯선 태도에 멈칫하지만 이내 코웃음 치며 사라짐",
+        "시우가 후계 구도에서 배제된 현재의 '무관심'이 완벽한 은신처임을 깨달음"
+      ],
+      "location": "본가 2층 복도",
+      "summary": "물을 마시러 나갔다가 둘째 형 한태민과 마주치고, 그의 무관심을 오히려 기회로 여긴다.",
+      "tension_level": 4,
+      "title": "무관심의 온도",
+      "type": "side_glimpse"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "행동에 나서기 전 치밀하게 계산하고 리스크를 통제하려는 이성적인 모습",
+      "description": "책상에 앉아 노트에 WTI 원유 선물 가격 변동 추이와 진입/청산 타이밍을 빼곡히 기록하며 머리를 식힌다.",
+      "goal": "구체적인 행동 계획 수립",
+      "key_events": [
+        "노트에 2006년 상반기 유가 변동 그래프를 간략히 스케치함",
+        "개인 자산 유동화의 필요성과 가문 자금과의 방화벽 구축을 목표로 설정",
+        "남들이 위기라 부를 때 이득 구조를 선점하는 자신감 표출"
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "방으로 돌아와 원유 선물 투자를 위한 타임라인과 시드머니 확보 계획을 메모한다.",
+      "tension_level": 6,
+      "title": "설계도 작성",
+      "type": "tension_build"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우",
+        "집사(목소리)"
+      ],
+      "content": "과거의 굴레를 벗어던질 첫 번째 관문을 맞이하는 긴장감",
+      "description": "계획을 마무리하던 찰나, 정적을 깨고 인터폰이 울린다. 과거 자신을 내쳤던 아버지와의 대면이 임박했음을 알린다.",
+      "goal": "다음 화 핵심 사건(독립 선언)을 위한 방아쇠 당기기",
+      "key_events": [
+        "날카로운 인터폰 소리가 방 안의 정적을 깸",
+        "집사가 회장님(아버지)의 서재 호출을 전달함",
+        "한시우가 펜을 내려놓고 흔들림 없는 목소리로 짧게 대답하며 통신을 끊음"
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "인터폰이 울리고, 아버지가 서재로 부른다는 집사의 전언에 한시우가 담담히 응답한다.",
+      "tension_level": 8,
+      "title": "운명의 호출",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 본가 침실",
+  "target_beat": "과거의 실패를 반복하지 않겠다는 각성과 첫 번째 투자 기회(이란 핵 위기)의 포착.",
+  "time_flow": "2006년 1월 2일 아침",
+  "title": "깨어난 겨울밤"
+}
