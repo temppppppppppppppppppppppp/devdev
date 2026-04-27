@@ -1252,6 +1252,60 @@ def test_lane_c_python_pre_validate_flags_direct_opening_single_replay_family():
     assert any(issue["category"] == "episode_progression" for issue in pre_result["issues"])
 
 
+def test_lane_c_python_pre_validate_flags_completed_prior_event_replay_in_scene_1():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "opening_transition": {"type": "direct_continuation"},
+            "start_location": "한정호 회장의 서재",
+            "time_flow": "직후",
+            "core_tension": "독립 선언 이후의 후폭풍으로 전진해야 한다.",
+            "expected_ending": "새 외부 변수로 이어진다.",
+            "target_beat": "완료된 아버지 자금 지원 연락처 수령을 반복하지 않는다.",
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "아버지 연락처를 다시 받는다",
+                    "goal": "한시우가 아버지 앞에서 자금 지원 연락처를 다시 받아 챙긴다.",
+                    "summary": "직전 화에서 끝난 독립 선언과 아버지 자금 지원 연락처 수령을 다시 재연한다.",
+                    "characters": ["한시우", "한정호"],
+                    "key_events": ["아버지 자금 지원 연락처를 다시 받아 챙긴다."],
+                    "location": "한정호 회장의 서재",
+                    "type": "dialogue_duel",
+                }
+            },
+            "integrated_scenario": "아버지 자금 지원 연락처를 다시 받아 챙긴다. " * 40,
+        },
+        constraint_block={
+            "must_focus": {"content": "독립 선언 이후 외부 자금 라인과 새 법인 설립으로 전진해야 한다."},
+            "episode_progression_packet": {
+                "completed_prior_events": [
+                    {
+                        "location": "한정호 회장의 서재",
+                        "events": ["한시우가 독립 선언을 마친다.", "아버지 자금 지원 연락처를 받아 챙긴다."],
+                    }
+                ]
+            },
+        },
+        prev_blueprint={
+            "scene_breakdown": {
+                "scene_3": {
+                    "location": "한정호 회장의 서재",
+                    "characters": ["한시우", "한정호"],
+                }
+            }
+        },
+        state_tracker=None,
+        arc_data={},
+    )
+
+    episode_issues = [issue for issue in pre_result["issues"] if issue["category"] == "episode_progression"]
+
+    assert episode_issues
+    assert "이미 완료된 사건" in episode_issues[0]["issue"]
+    assert "completed_event_replays" in episode_issues[0]["evidence"]
+
+
 def test_lane_c_python_pre_validate_allows_lawful_repetition_when_goal_escalates():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
 
