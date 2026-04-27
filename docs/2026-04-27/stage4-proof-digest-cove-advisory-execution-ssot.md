@@ -2,7 +2,7 @@
 
 Date: 2026-04-27
 Track: system
-Status: partially-realized (#59 bridge/dashboard parity, CoVe test hardening, runtime-summary Stage4 freshness guard, proof warning taxonomy counts)
+Status: partially-realized (#59 bridge/dashboard parity, CoVe test hardening, runtime-summary Stage4 freshness guard, proof warning taxonomy counts, benchmark diagnostic packet)
 Canonical Path: `docs/2026-04-27/stage4-proof-digest-cove-advisory-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage4-proof-digest-cove-advisory-execution-ssot.md`
 Commit State:
@@ -264,9 +264,8 @@ Validation caveat:
 
 Residual open work:
 - This does not close #59.
-- Runtime-summary Stage4 staleness detection is addressed by Section 16; producer taxonomy and benchmark packet work remain open.
-- Producer-owned typed warning taxonomy and phase-aware rationale semantics remain open.
-- Benchmark `stage4_diagnostic_packet` remains open.
+- Runtime-summary Stage4 staleness detection is addressed by Section 16; producer taxonomy is addressed by Section 17; benchmark packet work is addressed by Section 18.
+- Deeper phase-aware rationale semantics remain open.
 - Desktop/frontend rendering of `proof_status.warning_issue_counts` remains open if a separate UI surface needs it.
 
 Explorer follow-up notes:
@@ -357,6 +356,46 @@ Residual open work:
 3-pass realization audit:
 - Pass 1 - scope: PASS. The patch adds taxonomy counts only; it does not suppress warn evidence or alter verdict authority.
 - Pass 2 - evidence: PASS. Producer, audit compact, and bridge/dashboard tests prove counts originate from `FailureAnalyzer` and are forwarded without display-layer reclassification.
-- Pass 3 - readiness: PASS for a partial #59 PR. Benchmark packet and optional frontend rendering remain explicit.
+- Pass 3 - readiness: PASS for a partial #59 PR. Benchmark packet is addressed by Section 18; optional frontend rendering remains explicit.
+
+Estimated operational confidence for this partial realization: 96%.
+
+## 18. Realization Ledger - 2026-04-27 Benchmark Stage4 Diagnostic Packet
+
+Scope realized:
+- Tranche: `benchmark-stage4-diagnostic-packet`.
+- Branch: `codex/issue59-stage4-benchmark-diagnostic-packet`.
+- Implemented the compact benchmark packet requested by T08/T10 so April-baseline versus current runs can compare Stage4 runtime advisory, semantic retry, proof taxonomy, stale-summary, post-select, and settled-versus-Director divergence signals without collapsing them into a generic reject rate.
+
+Code changes:
+- `scripts/archive_benchmark_record.py` now writes `manifest.stage4_diagnostic_packet` with Stage4 attempt/pass/reject counts, runtime-summary freshness, proof digest status, Stage4 proof issue/taxonomy counts, CoVe runtime advisory counts, PASS-preserved CoVe advisory counts, semantic CoVe fail-closed retry counts, post-select conflict counts, and settled-versus-Director divergence counts.
+- `scripts/compare_benchmark_records.py` now loads the packet from manifest, runtime summary, or linked native post-run evidence and emits dedicated watchpoints for packet status, stale runtime summaries, and nonzero diagnostic counts.
+- `scripts/backfill_benchmark_native_post_run_evidence.py` now preserves the packet as top-level native post-run evidence.
+- `scripts/report_benchmark_operator_lines.py` now includes compact operator fragments such as `diag=warn`, `stale_summary`, `cove_advisory=N`, `semantic_retry=N`, and `proof_warn=N`.
+- Tests cover archive creation, compare watchpoints, native evidence fallback, backfill preservation, and operator-line rendering.
+
+Validation completed:
+- `python -m py_compile scripts/archive_benchmark_record.py scripts/compare_benchmark_records.py scripts/backfill_benchmark_native_post_run_evidence.py scripts/report_benchmark_operator_lines.py` -> PASS.
+- `python -m pytest tests/test_archive_benchmark_record.py -q` -> 6 passed.
+- `python -m pytest tests/test_compare_benchmark_records.py -k "stage4_runtime_watchpoints or companion_post_run_evidence_watchpoints" -q` -> 2 passed, 14 deselected.
+- `python -m pytest tests/test_backfill_benchmark_native_post_run_evidence.py -q` -> 2 passed.
+- `python -m pytest tests/test_report_benchmark_operator_lines.py -k "native_proof_signals or proof_signal_summary" -q` -> 2 passed, 8 deselected.
+- `python -m pytest tests/test_compare_benchmark_records.py -q` -> 16 passed.
+- `python -m pytest tests/test_report_benchmark_operator_lines.py -q` -> 10 passed.
+- `python -m pytest tests/test_backfill_benchmark_native_post_run_evidence.py tests/test_archive_benchmark_record.py tests/test_compare_benchmark_records.py tests/test_report_benchmark_operator_lines.py -q` -> 34 passed.
+
+Complexity note:
+- The archive helper is a bounded benchmark aggregation shell: it reads existing JSON/JSONL proof surfaces and writes a companion snapshot only.
+- The compare/report helpers add additive read-only watchpoints and do not change benchmark verdict ranking, runtime settlement, retry behavior, DB schema, or Director authority.
+
+Residual open work:
+- This does not close #59 by itself.
+- Deeper phase-aware rationale semantics remain open, especially distinguishing expected Director-selection versus settled/post-fix rationale drift from actual corruption.
+- Desktop/frontend rendering of proof/freshness/taxonomy/diagnostic fields remains open if a separate visible UI panel is required.
+
+3-pass realization audit:
+- Pass 1 - scope: PASS. The packet is additive benchmark metadata and does not reinterpret runtime verdicts.
+- Pass 2 - evidence: PASS. The packet keeps CoVe runtime advisory, PASS-preserved advisory, semantic fail-closed retry, proof taxonomy, post-select conflict, and settled-versus-Director divergence as separate fields.
+- Pass 3 - readiness: PASS for a partial #59 PR. Targeted benchmark/archive/compare/operator tests passed, and #59 residual work remains explicit.
 
 Estimated operational confidence for this partial realization: 96%.
