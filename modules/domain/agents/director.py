@@ -110,10 +110,12 @@ class Director(BaseAgent):
     def invalidate_caches(self) -> None:
         """[I-16] 캐시 전량 무효화 (rollback/rewind 시 호출)."""
         if hasattr(self, "_caching"):
+            self._evict_context_cache_by_name(self._caching.manuscript_cache_name)
             self._caching.manuscript_cache_name = None
             self._caching._cached_manuscript_count = 0
             self._caching._cached_manuscript_content_hash = ""
             self._caching._cached_manuscript_model = ""
+            self._caching._cached_manuscript_provider = ""
             self._caching._protagonist_config = None
         if hasattr(self, "_continuity"):
             self._continuity._cached_manuscript_ep = None

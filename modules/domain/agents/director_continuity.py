@@ -10,7 +10,6 @@ import logging
 import re
 
 from modules.core.constants import ContextLimits, smart_truncate
-from modules.core.llm_generate import generate_content_via_router
 from modules.core.prompt_loader import PromptLoader
 from modules.core.scene_obligation_heuristics import measure_manuscript_scene_materialization
 
@@ -760,8 +759,6 @@ class DirectorContinuityValidator:
             return {"decision": "PASS", "conflicts": [], "summary": "캐시 미생성 - 스킵"}
 
         try:
-            from google.genai import types
-
             prompt = f"""[V60.88 원고 충돌 검사]
 
 ### 📋 검사 대상: 제{ep_num}화 신규 원고
@@ -788,23 +785,31 @@ class DirectorContinuityValidator:
 }}
 """
 
-            response = generate_content_via_router(
-                client=self._d.client,
-                model=self._d.primary_model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    cached_content=self._d._caching.manuscript_cache_name,
-                    temperature=0.1,
-                    max_output_tokens=4096,
-                    response_mime_type="application/json",
-                ),
-            )
+            cache_name = self._d._caching.manuscript_cache_name
+            cache_lineage = self._d._context_cache_lineage_by_name(cache_name)
+            bypass_reason = self._d._context_cache_lineage_bypass_reason_for_name(cache_name)
+            if bypass_reason:
+                self._d._log_context_cache_lineage_bypass(
+                    cache_name=cache_name,
+                    cache_lineage=cache_lineage,
+                    cache_reason=bypass_reason,
+                    prompt=prompt,
+                )
+                return {
+                    "decision": "PASS",
+                    "conflicts": [],
+                    "summary": f"캐시 lineage 불일치로 fallback 필요: {bypass_reason}",
+                    "needs_fallback": True,
+                    "cache_used": False,
+                    "cache_bypass_reason": bypass_reason,
+                }
 
-            # [V70] response.text가 ValueError 발생 가능 (safety filter, 빈 응답)
-            try:
-                _resp_text = response.text
-            except (ValueError, AttributeError):
-                _resp_text = None
+            _resp_text = self._d._ask_with_cached_context(
+                cache_name,
+                prompt,
+                temperature=0.1,
+                thinking_level="low",
+            )
             if not _resp_text:
                 return {
                     "decision": "REJECT",

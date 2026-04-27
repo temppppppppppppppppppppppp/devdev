@@ -2,7 +2,7 @@
 
 Date: 2026-04-27
 Track: system
-Status: partially-realized (retry-hydration bug-risk patch)
+Status: partially-realized (#58 retry/cache bug-risk patches)
 Canonical Path: `docs/2026-04-27/stage4-post-select-conflict-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage4-post-select-conflict-execution-ssot.md`
 Commit State:
@@ -297,7 +297,7 @@ Validation note:
 
 Residual open work:
 - This does not close #58.
-- Director history cache still calls `generate_content_via_router` directly with `cached_content`; routing it through the full BaseAgent lineage/eviction path remains a larger T07 item.
+- The direct cached-content routing residual is addressed by Section 19; broader cache/memory helper suppression remains open.
 - Stage3/Stage4 lineage gates, continuity authority symmetry, and artifact-backed bug-shape regressions remain open.
 - No clean 5-arc readiness claim is made from this patch.
 
@@ -305,6 +305,46 @@ Residual open work:
 - Pass 1 - scope: PASS. The patch only tightens Director manuscript cache reuse eligibility and cache invalidation fields.
 - Pass 2 - evidence: PASS. Tests prove the formerly count-only reuse path now rebuilds on content or model drift while preserving reuse for stable lineage.
 - Pass 3 - readiness: PASS for a narrow PR. Residual T07 work still requires direct cached-content routing/eviction and broader Stage3/Stage4 lineage proof.
+
+Estimated operational confidence for this partial realization: 96%.
+
+## 19. Realization Ledger - 2026-04-27 Director Cached-Content Routing Guard
+
+Scope realized:
+- Tranche: `cache-lineage-and-memory-suppression`.
+- Branch: `codex/bugrisk-director-cache-routing-lineage`.
+- Implemented the next T07 residual because Director manuscript-history conflict checks still called `generate_content_via_router` directly with `cached_content`, bypassing the BaseAgent cached-context lineage, bypass logging, and failure eviction path.
+
+Code changes:
+- `BaseAgent` now exposes a bounded external cache-lineage registration helper and a by-name lineage-bypass reason helper for cache producers that create Gemini cached content outside `_get_or_create_context_cache`.
+- `DirectorCachingManager.create_manuscript_cache` now registers created/reused manuscript-history caches in the BaseAgent context-cache lineage registry.
+- Director manuscript cache reuse now also requires provider lineage to match, so a provider/auth-mode drift cannot silently reuse the same normalized model cache.
+- `Director.invalidate_caches` evicts the registered manuscript cache lineage entry before clearing Director-local cache fields.
+- `DirectorContinuityValidator.check_manuscript_history_with_cache` now refuses missing/stale lineage with `needs_fallback=True` instead of issuing a direct cached-content router call.
+- The same check now uses `_ask_with_cached_context`, so successful cached calls share the BaseAgent lineage/logging/failure-eviction path.
+- `tests/test_director_modules.py` adds regressions for BaseAgent lineage registration, provider drift rebuild, missing-lineage fallback, and the routed cached-context call path.
+
+Validation completed:
+- `python -m py_compile modules/domain/agents/base_agent.py modules/domain/agents/director.py modules/domain/agents/director_caching.py modules/domain/agents/director_continuity.py` -> PASS.
+- `python -m pytest tests/test_director_modules.py -k "create_manuscript_cache or check_manuscript_history_with_cache or invalidate_caches" -q` -> 13 passed, 121 deselected.
+- `python -m pytest tests/test_base_agent.py -k "context_cache or cached_context" -q` -> 13 passed, 87 deselected.
+- `python -m pytest tests/test_director_modules.py -q` -> 134 passed.
+- `python -m pytest tests/test_director_auditor_pre_llm_lane.py tests/test_director_continuity_sc5.py tests/test_validator_bypass_chain.py -q` -> 20 passed.
+- `python -m pytest tests/test_base_agent.py -q` -> 100 passed.
+- `python scripts/check_utf8_hygiene.py docs/2026-04-27/security-and-frontier-active-execution-roadmap.md docs/2026-04-27/stage4-post-select-conflict-execution-ssot.md docs/temp/execution-roadmap.md docs/temp/queue-state.json docs/temp/stage4-post-select-conflict-execution-ssot.md modules/domain/agents/base_agent.py modules/domain/agents/director.py modules/domain/agents/director_caching.py modules/domain/agents/director_continuity.py tests/test_director_modules.py` -> PASS.
+- `git diff --check` -> PASS.
+- `python scripts/ops_validator.py --strict` -> PASS.
+
+Residual open work:
+- This does not close #58.
+- Broader cache/memory helper suppression remains open where rejected or partially settled content may be written/retrieved outside this Director manuscript-history path.
+- Stage3/Stage4 lineage gates, continuity authority symmetry, and artifact-backed bug-shape regressions remain open.
+- No clean 5-arc readiness claim is made from this patch.
+
+3-pass realization audit:
+- Pass 1 - scope: PASS. The patch only routes Director manuscript-history cached checks through the existing BaseAgent cache lineage path and records provider lineage.
+- Pass 2 - evidence: PASS. Tests prove created Director manuscript caches are registered, provider drift rebuilds, missing lineage requests fallback, and cached conflict checks no longer use the direct router call.
+- Pass 3 - readiness: PASS for a narrow PR. Residual #58 work still requires broader helper-memory containment, Stage3/Stage4 lineage proof, and artifact-backed bug-shape coverage.
 
 Estimated operational confidence for this partial realization: 96%.
 
