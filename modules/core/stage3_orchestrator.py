@@ -81,6 +81,297 @@ _STAGE3_UI_OBSERVABILITY_LABELS = {
     "planned_slots_count": "planned_slots",
     "work_focus_present": "work_focus",
 }
+_STAGE3_PERSON_ROLE_TITLES = (
+    "회장",
+    "PB",
+    "대표",
+    "비서",
+    "실장",
+    "본부장",
+    "팀장",
+    "부장",
+    "사장",
+    "전무",
+    "상무",
+    "변호사",
+)
+_STAGE3_PERSON_ROLE_PATTERN = _re.compile(
+    r"(?<![가-힣])([가-힣]{2,4})\s*(" + "|".join(_re.escape(t) for t in _STAGE3_PERSON_ROLE_TITLES) + r")"
+)
+_STAGE3_INSTITUTION_SUFFIXES = (
+    "투자증권",
+    "자산운용",
+    "인베스트먼트",
+    "PB센터",
+    "증권",
+    "은행",
+    "캐피탈",
+    "보험",
+    "병원",
+    "센터",
+    "그룹",
+    "재단",
+    "협회",
+    "연구소",
+    "본사",
+    "지점",
+    "사무실",
+)
+_STAGE3_INSTITUTION_PATTERN = _re.compile(
+    r"([\w가-힣A-Za-z&]{2,20}\s*(?:" + "|".join(_re.escape(s) for s in _STAGE3_INSTITUTION_SUFFIXES) + r"))"
+)
+
+
+def _stage3_text_from_value(value) -> str:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        return "\n".join(_stage3_text_from_value(v) for v in value.values() if v)
+    if isinstance(value, list | tuple):
+        return "\n".join(_stage3_text_from_value(v) for v in value if v)
+    return str(value) if value else ""
+
+
+def _collect_stage3_person_role_mentions(text: str) -> dict[str, set[str]]:
+    mentions: dict[str, set[str]] = {}
+    if not isinstance(text, str) or not text:
+        return mentions
+    for match in _STAGE3_PERSON_ROLE_PATTERN.finditer(text):
+        name = str(match.group(1) or "").strip()
+        title = str(match.group(2) or "").strip()
+        if not name or not title:
+            continue
+        mentions.setdefault(title, set()).add(name)
+    return mentions
+
+
+def _normalize_stage3_entity_name(name: object) -> str:
+    return _re.sub(r"\s+", "", str(name or "")).strip()
+
+
+def _stage3_institution_suffix_class(name: object) -> str:
+    normalized = _normalize_stage3_entity_name(name)
+    for suffix in _STAGE3_INSTITUTION_SUFFIXES:
+        if normalized.endswith(suffix):
+            return suffix
+    return ""
+
+
+def _collect_stage3_institution_mentions(text: str) -> dict[str, set[str]]:
+    mentions: dict[str, set[str]] = {}
+    if not isinstance(text, str) or not text:
+        return mentions
+    for match in _STAGE3_INSTITUTION_PATTERN.finditer(text):
+        name = str(match.group(1) or "").strip()
+        suffix_class = _stage3_institution_suffix_class(name)
+        if not name or not suffix_class:
+            continue
+        mentions.setdefault(suffix_class, set()).add(_normalize_stage3_entity_name(name))
+    return mentions
+
+
+def _collect_stage3_arc_person_role_mentions(arcs: list[dict] | None) -> dict[str, set[str]]:
+    mentions: dict[str, set[str]] = {}
+    for arc in arcs or []:
+        if not isinstance(arc, dict):
+            continue
+        text = "\n".join(
+            part
+            for part in (
+                _stage3_text_from_value(arc.get("tactical_doc")),
+                _stage3_text_from_value(arc.get("joint_docs")),
+                _stage3_text_from_value(arc.get("beat_sequence")),
+            )
+            if part
+        )
+        for title, names in _collect_stage3_person_role_mentions(text).items():
+            mentions.setdefault(title, set()).update(names)
+    return mentions
+
+
+def _collect_stage3_current_arc_institution_mentions(arcs: list[dict] | None) -> dict[str, set[str]]:
+    if not arcs or not isinstance(arcs[-1], dict):
+        return {}
+    arc = arcs[-1]
+    text = "\n".join(
+        part
+        for part in (
+            _stage3_text_from_value(arc.get("tactical_doc")),
+            _stage3_text_from_value(arc.get("joint_docs")),
+            _stage3_text_from_value(arc.get("beat_sequence")),
+            _stage3_text_from_value(arc.get("state_constraints")),
+            _stage3_text_from_value(arc.get("episode_details")),
+        )
+        if part
+    )
+    return _collect_stage3_institution_mentions(text)
+
+
+def _collect_stage3_draft_person_role_anchors(project) -> dict[str, dict[str, int]]:
+    drafts_path = getattr(getattr(project, "paths", None), "drafts", None)
+    if drafts_path is None or not getattr(drafts_path, "exists", lambda: False)():
+        return {}
+
+    anchors: dict[str, dict[str, int]] = {}
+    try:
+        draft_files = sorted(drafts_path.glob("ep_*.txt"))
+    except Exception:
+        return {}
+
+    for draft_path in draft_files:
+        try:
+            text = draft_path.read_text(encoding="utf-8")
+        except Exception:
+            continue
+        for title, names in _collect_stage3_person_role_mentions(text).items():
+            title_anchors = anchors.setdefault(title, {})
+            for name in names:
+                title_anchors[name] = title_anchors.get(name, 0) + 1
+    return anchors
+
+
+def _merge_stage3_registry_rows(existing, incoming):
+    if not isinstance(existing, dict) or not isinstance(incoming, dict):
+        return existing
+    merged = dict(existing)
+    aliases = []
+    for source in (existing.get("aliases", []), incoming.get("aliases", [])):
+        if isinstance(source, list):
+            aliases.extend(str(item) for item in source if item)
+    if aliases:
+        deduped_aliases = []
+        seen = set()
+        for alias in aliases:
+            if alias in seen or alias == merged.get("name"):
+                continue
+            seen.add(alias)
+            deduped_aliases.append(alias)
+        if deduped_aliases:
+            merged["aliases"] = deduped_aliases
+    for key, value in incoming.items():
+        if key not in merged and value:
+            merged[key] = value
+    return merged
+
+
+def _reconcile_stage3_entity_registry_with_draft_authority(
+    entity_registry: dict | None,
+    *,
+    arcs: list[dict] | None,
+    project,
+) -> dict | None:
+    if not isinstance(entity_registry, dict):
+        return entity_registry
+
+    reconciled = dict(entity_registry)
+    corrections = []
+
+    draft_anchors = _collect_stage3_draft_person_role_anchors(project)
+    role_authority = {
+        title: next(iter(names)) for title, names in draft_anchors.items() if len(names) == 1 and next(iter(names), "")
+    }
+    if role_authority:
+        arc_mentions = _collect_stage3_arc_person_role_mentions(arcs)
+        characters = entity_registry.get("characters")
+        if isinstance(characters, list):
+            updated_characters = []
+            for raw_item in characters:
+                item = dict(raw_item) if isinstance(raw_item, dict) else {"name": str(raw_item or "").strip()}
+                name = str(item.get("name", "") or "").strip()
+                if not name:
+                    continue
+
+                replacement_name = ""
+                replacement_title = ""
+                for title, canonical_name in role_authority.items():
+                    if name == canonical_name:
+                        break
+                    if name in arc_mentions.get(title, set()):
+                        replacement_name = canonical_name
+                        replacement_title = title
+                        break
+
+                if replacement_name:
+                    old_name = name
+                    item["name"] = replacement_name
+                    item["role_anchor"] = replacement_title
+                    item["authority_source"] = "accepted_runtime_draft"
+                    item["replaced_stale_name"] = old_name
+                    aliases = item.get("aliases", [])
+                    if isinstance(aliases, list):
+                        item["aliases"] = [
+                            alias for alias in aliases if str(alias or "").strip() not in {old_name, replacement_name}
+                        ]
+                    corrections.append(f"{old_name}->{replacement_name}/{replacement_title}")
+                updated_characters.append(item)
+
+            deduped: dict[str, dict] = {}
+            passthrough = []
+            for item in updated_characters:
+                name = str(item.get("name", "") or "").strip()
+                if not name:
+                    continue
+                if name in deduped:
+                    deduped[name] = _merge_stage3_registry_rows(deduped[name], item)
+                else:
+                    deduped[name] = item
+                    passthrough.append(name)
+
+            reconciled["characters"] = [deduped[name] for name in passthrough if name in deduped]
+
+    current_arc_institutions = {
+        suffix: next(iter(names))
+        for suffix, names in _collect_stage3_current_arc_institution_mentions(arcs).items()
+        if len(names) == 1 and next(iter(names), "")
+    }
+    organizations = entity_registry.get("organizations")
+    if current_arc_institutions and isinstance(organizations, list):
+        updated_organizations = []
+        for raw_item in organizations:
+            item = dict(raw_item) if isinstance(raw_item, dict) else {"name": str(raw_item or "").strip()}
+            name = str(item.get("name", "") or "").strip()
+            if not name:
+                continue
+            suffix_class = _stage3_institution_suffix_class(name)
+            replacement_name = current_arc_institutions.get(suffix_class, "")
+            if replacement_name and _normalize_stage3_entity_name(name) != replacement_name:
+                old_name = name
+                old_name_normalized = _normalize_stage3_entity_name(old_name)
+                item["name"] = replacement_name
+                item["authority_source"] = "current_arc_material"
+                item["replaced_stale_name"] = old_name
+                aliases = item.get("aliases", [])
+                if isinstance(aliases, list):
+                    item["aliases"] = [
+                        alias
+                        for alias in aliases
+                        if _normalize_stage3_entity_name(alias) not in {old_name_normalized, replacement_name}
+                    ]
+                corrections.append(f"{old_name}->{replacement_name}/{suffix_class}")
+            updated_organizations.append(item)
+
+        deduped_orgs: dict[str, dict] = {}
+        org_order = []
+        for item in updated_organizations:
+            name = str(item.get("name", "") or "").strip()
+            if not name:
+                continue
+            normalized = _normalize_stage3_entity_name(name)
+            if normalized in deduped_orgs:
+                deduped_orgs[normalized] = _merge_stage3_registry_rows(deduped_orgs[normalized], item)
+            else:
+                deduped_orgs[normalized] = item
+                org_order.append(normalized)
+        reconciled["organizations"] = [deduped_orgs[name] for name in org_order if name in deduped_orgs]
+
+    if corrections:
+        _logging.warning(
+            "[Stage3] Entity Registry draft-authority reconciliation: %s",
+            ", ".join(corrections[:6]),
+        )
+    return reconciled
+
+
 _STAGE3_AUTHORITY_ACCEPTED_VERDICTS = {"PASS", "PASS_WITH_WARNING", "PASS_WITH_FIX"}
 
 
@@ -1595,6 +1886,11 @@ class Stage3Orchestrator:
                                 self._cached_entity_registry = ctx.fix_entity_registry_protagonist(
                                     self._cached_entity_registry, stage3_protag
                                 )
+                            self._cached_entity_registry = _reconcile_stage3_entity_registry_with_draft_authority(
+                                self._cached_entity_registry,
+                                arcs=all_arcs_for_entity,
+                                project=ctx.current_project,
+                            )
                             total_entities = sum(
                                 len(v) for v in self._cached_entity_registry.values() if isinstance(v, list)
                             )

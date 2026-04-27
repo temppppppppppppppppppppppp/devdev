@@ -45,7 +45,10 @@ def _build_frontier_app(
             return arcs
         raise AssertionError(f"unexpected anchor key: {key}")
 
-    db = SimpleNamespace(load_anchor=MagicMock(side_effect=_load_anchor))
+    db = SimpleNamespace(
+        load_anchor=MagicMock(side_effect=_load_anchor),
+        get_latest_blueprint_number=MagicMock(return_value=999999),
+    )
     app.current_project = SimpleNamespace(
         master_bible={
             "MasterBible": {
@@ -796,6 +799,84 @@ def test_frontier_lag_stage3_failure_defaults_to_strict_stop():
     assert result["arcs_advanced"] == 0
     assert result["arcs_skipped"] == 0
     assert result["stop_reason"] == "stage3_strict_failure_stop"
+
+
+def test_frontier_lag_stage3_partial_failure_defaults_to_strict_stop():
+    app = _build_frontier_app(
+        total_arcs=2,
+        batch_size=1,
+        stage3_results=[{"success_count": 6, "fail_count": 1}],
+        plans=[
+            {
+                "true_final_arc_no": 2,
+                "designed_frontier_arc_no": 1,
+                "frontier_ep_start": 1,
+                "frontier_ep_end": 3,
+                "stage3_target": 2,
+                "stage4_target": 1,
+                "stage3_alignment": "backlog",
+                "stage4_alignment": "backlog",
+                "bp_max": 0,
+                "ms_max": 0,
+            }
+        ],
+        manuscripts_after=[0, 0],
+    )
+
+    fake_stage2 = _make_stage_context_module("Stage2Context")
+    fake_stage3 = _make_stage_context_module("Stage3Context")
+
+    with patch.dict(
+        sys.modules,
+        {"modules.core.stage2_context": fake_stage2, "modules.core.stage3_context": fake_stage3},
+    ):
+        with patch("builtins.input") as mocked_input:
+            result = SovereignApp._one_stop_pipeline_frontier_lag(app, wait_for_menu_return=False)
+
+    mocked_input.assert_not_called()
+    app._ui_service.get_choice_input.assert_not_called()
+    app._stage_4_v2_chief_writer.assert_not_called()
+    assert result["arcs_advanced"] == 0
+    assert result["arcs_skipped"] == 0
+    assert result["stop_reason"] == "stage3_strict_failure_stop"
+
+
+def test_frontier_lag_blocks_stage4_when_stage3_target_not_reached():
+    app = _build_frontier_app(
+        total_arcs=2,
+        batch_size=1,
+        stage3_results=[{"success_count": 1, "fail_count": 0}],
+        plans=[
+            {
+                "true_final_arc_no": 2,
+                "designed_frontier_arc_no": 1,
+                "frontier_ep_start": 1,
+                "frontier_ep_end": 3,
+                "stage3_target": 6,
+                "stage4_target": 1,
+                "stage3_alignment": "backlog",
+                "stage4_alignment": "backlog",
+                "bp_max": 0,
+                "ms_max": 0,
+            }
+        ],
+        manuscripts_after=[0, 0],
+    )
+    app.current_project.db.get_latest_blueprint_number.return_value = 5
+
+    fake_stage2 = _make_stage_context_module("Stage2Context")
+    fake_stage3 = _make_stage_context_module("Stage3Context")
+
+    with patch.dict(
+        sys.modules,
+        {"modules.core.stage2_context": fake_stage2, "modules.core.stage3_context": fake_stage3},
+    ):
+        result = SovereignApp._one_stop_pipeline_frontier_lag(app, wait_for_menu_return=False)
+
+    app._stage_4_v2_chief_writer.assert_not_called()
+    assert result["arcs_advanced"] == 0
+    assert result["arcs_skipped"] == 0
+    assert result["stop_reason"] == "stage3_target_not_reached_strict_stop"
 
 
 def test_frontier_lag_blocks_arc_advance_when_stage4_backlog_makes_no_progress():

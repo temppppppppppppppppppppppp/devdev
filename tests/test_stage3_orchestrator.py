@@ -322,6 +322,107 @@ class TestGetEntityRegistry:
         assert result is None
         assert orch._entity_cache_arc_idx == 0  # [P0] 실패한 arc_idx 캐싱 — 동일 arc 무한 재시도 방지
 
+    def test_reconciles_stale_arc_person_name_with_accepted_draft_authority(self, orch, app_mock, tmp_path):
+        drafts_dir = tmp_path / "drafts"
+        drafts_dir.mkdir()
+        (drafts_dir / "ep_0001.txt").write_text(
+            "서재 안쪽에서 한태성 회장이 막내아들을 바라보았다. 박성호 PB는 전화로 대기했다.",
+            encoding="utf-8",
+        )
+        app_mock.current_project.paths = SimpleNamespace(drafts=drafts_dir)
+        app_mock.current_project.arcs = [
+            {
+                "arc_no": 1,
+                "ep_start": 1,
+                "ep_end": 4,
+                "tactical_doc": "막내는 아버지 한정호 회장의 서재로 향한다. 박성호 PB를 호출한다.",
+                "joint_docs": {},
+            }
+        ]
+        app_mock._fix_entity_registry_protagonist.side_effect = lambda registry, _name: registry
+        app_mock.agents["state_extractor"].extract_cumulative_state.return_value = {
+            "entity_registry": {
+                "characters": [
+                    {"name": "한정호", "role": "extracted"},
+                    {"name": "박성호", "role": "extracted"},
+                ],
+                "organizations": [],
+                "locations": [],
+                "objects": [],
+                "concepts": [],
+            }
+        }
+
+        result = orch._get_entity_registry(arc_idx=0)
+
+        character_names = [item["name"] for item in result["characters"]]
+        assert "한태성" in character_names
+        assert "한정호" not in character_names
+        taesung = next(item for item in result["characters"] if item["name"] == "한태성")
+        assert taesung["authority_source"] == "accepted_runtime_draft"
+        assert taesung["replaced_stale_name"] == "한정호"
+        assert "박성호" in character_names
+
+    def test_reconciles_stale_organization_name_with_current_arc_authority(self, orch, app_mock):
+        app_mock.current_project.arcs = [
+            {
+                "arc_no": 1,
+                "ep_start": 5,
+                "ep_end": 9,
+                "tactical_doc": "한시우는 여의도 한미증권 VIP룸에서 박성호 PB와 매수 지시를 논의한다.",
+                "joint_docs": {},
+            }
+        ]
+        app_mock._fix_entity_registry_protagonist.side_effect = lambda registry, _name: registry
+        app_mock.agents["state_extractor"].extract_cumulative_state.return_value = {
+            "entity_registry": {
+                "characters": [],
+                "organizations": [
+                    {"name": "H&T 증권", "role": "extracted"},
+                    {"name": "SW인베스트먼트", "role": "extracted"},
+                ],
+                "locations": [],
+                "objects": [],
+                "concepts": [],
+            }
+        }
+
+        result = orch._get_entity_registry(arc_idx=0)
+
+        organization_names = [item["name"] for item in result["organizations"]]
+        assert "한미증권" in organization_names
+        assert "H&T 증권" not in organization_names
+        hanmi = next(item for item in result["organizations"] if item["name"] == "한미증권")
+        assert hanmi["authority_source"] == "current_arc_material"
+        assert hanmi["replaced_stale_name"] == "H&T 증권"
+        assert "SW인베스트먼트" in organization_names
+
+    def test_does_not_reconcile_organization_when_current_arc_authority_is_ambiguous(self, orch, app_mock):
+        app_mock.current_project.arcs = [
+            {
+                "arc_no": 1,
+                "ep_start": 5,
+                "ep_end": 9,
+                "tactical_doc": "한미증권과 대일증권 사이에서 박성호 PB의 조건을 비교한다.",
+                "joint_docs": {},
+            }
+        ]
+        app_mock._fix_entity_registry_protagonist.side_effect = lambda registry, _name: registry
+        app_mock.agents["state_extractor"].extract_cumulative_state.return_value = {
+            "entity_registry": {
+                "characters": [],
+                "organizations": [{"name": "H&T 증권", "role": "extracted"}],
+                "locations": [],
+                "objects": [],
+                "concepts": [],
+            }
+        }
+
+        result = orch._get_entity_registry(arc_idx=0)
+
+        organization_names = [item["name"] for item in result["organizations"]]
+        assert organization_names == ["H&T 증권"]
+
 
 # ── Blueprint Helpers ────────────────────────────────────────
 

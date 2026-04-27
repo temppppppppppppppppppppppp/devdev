@@ -37,6 +37,7 @@ _STAGE3_REGENERATE_ONLY_BINDING_CATEGORIES = {
     "fact_lock_item",
     "fact_lock_location",
     "fact_lock_provenance",
+    "fact_lock_person",
     "opening_anchor",
     "mission_clarity",
     "timeline_specificity",
@@ -65,6 +66,14 @@ _STAGE3_RETRY_DIRECTIVE_LIBRARY = {
             "scene_jump",
         ],
         "example": "opening_transition.type=direct_continuation when the opening stays on the prior end-location with no real time jump",
+    },
+    "arc_timeline": {
+        "allowed_values": [
+            "arc authority date/window",
+            "episode-local time progression",
+            "no earlier/later date invention",
+        ],
+        "example": "If Arc authority says ep4 is 2006-01-15, every timeline/start/end field must stay inside 2006-01-15 unless the Arc explicitly authorizes a transition.",
     },
     "protagonist_state": {
         "allowed_values": ["mood", "injuries", "equipment", "objective"],
@@ -519,6 +528,26 @@ def _is_stage3_inplace_alias_reaudit_eligible(
 
     reasoning = str(validation_result.get("fix_scope_reasoning", "") or "").strip()
     return "Opening-transition alias mismatch is the sole binding category" in reasoning
+
+
+def _extract_stage3_pass_with_fix_regenerate_binding_categories(validation_result: dict | None) -> list[str]:
+    categories = _extract_stage3_regenerate_only_binding_categories(validation_result)
+    if not categories:
+        return []
+
+    requested_fix_scope = str((validation_result or {}).get("fix_scope", "") or "").strip()
+    local_patch_gate = (validation_result or {}).get("local_patch_gate", {})
+    resolved_fix_scope = ""
+    if isinstance(local_patch_gate, dict):
+        resolved_fix_scope = str(local_patch_gate.get("resolved_fix_scope", "") or "").strip()
+
+    if _is_stage3_inplace_alias_reaudit_eligible(
+        validation_result,
+        requested_fix_scope=requested_fix_scope,
+        resolved_fix_scope=resolved_fix_scope or requested_fix_scope,
+    ):
+        return []
+    return categories
 
 
 def _build_stage3_regenerate_only_binding_reason(categories: list[str]) -> str:
@@ -1501,10 +1530,12 @@ class ThreePhaseBlueprintRuntime:
                 meta={"phase": "constraint", "retry_index": retry + 1, "cached": True},
             )
         else:
-            # [pre-rerun] 직전 원고 말미 500자를 시간 진실 소스로 전달
+            # [pre-rerun] 직전 원고 말미를 compact canon source로 전달.
+            # 500자는 이름/직함 확정 문장이 바로 앞 단락에 있어도 잘릴 수 있어
+            # Stage3 fact-lock이 stale seed 권위를 다시 승격시키는 위험이 있었다.
             prev_manuscript_ending = ""
             if prev_manuscripts_text:
-                prev_manuscript_ending = prev_manuscripts_text.strip()[-500:]
+                prev_manuscript_ending = prev_manuscripts_text.strip()[-1600:]
             constraint_block = self._call_with_operator_heartbeat(
                 title="[Phase 1] 제약 수집",
                 meta={
@@ -2237,6 +2268,52 @@ class ThreePhaseBlueprintRuntime:
             return False, []
         low_yield_categories = {"scenario_density"}
         return set(categories).issubset(low_yield_categories), categories
+
+    @staticmethod
+    def _is_actionless_pass_with_fix(validation_result: dict | None) -> bool:
+        """Detect Director PWF frames that carry no actionable fix payload.
+
+        Some Director responses preserve the PASS_WITH_FIX label while the
+        structured frame has zero contradictions and no issue/fix payload. In
+        that case Python should not invent a patch obligation; it should only
+        normalize the route and preserve the Director's non-reject judgment.
+        """
+        if not isinstance(validation_result, dict):
+            return False
+        if validation_result.get("quality_risk"):
+            return False
+
+        for count_key in (
+            "contradiction_count",
+            "binding_prevalidation_issue_count",
+            "blocking_failure_count",
+        ):
+            try:
+                if int(validation_result.get(count_key, 0) or 0) > 0:
+                    return False
+            except (TypeError, ValueError):
+                return False
+
+        for list_key in (
+            "issues",
+            "contradictions",
+            "critical_issues",
+            "major_issues",
+            "binding_prevalidation_categories",
+            "binding_regenerate_only_categories",
+        ):
+            value = validation_result.get(list_key, [])
+            if isinstance(value, list) and value:
+                return False
+
+        for payload_key in ("fix_pack", "normalized_fix_pack", "repair_contract", "advisory_fix_pack"):
+            value = validation_result.get(payload_key)
+            if isinstance(value, dict) and value:
+                return False
+            if isinstance(value, list) and value:
+                return False
+
+        return True
 
     def _apply_phase3_quality_gate(self, *, verdict: str, score: int, validation_result: dict | None = None) -> str:
         return self.validation_boundary.apply_phase3_quality_gate(
@@ -3193,6 +3270,98 @@ class ThreePhaseBlueprintRuntime:
         max_retries: int,
     ) -> _ThreePhaseRetryCycleResult:
         owner = self.owner
+        pass_with_fix_regenerate_categories = (
+            _extract_stage3_pass_with_fix_regenerate_binding_categories(validation_result)
+            if verdict == "PASS_WITH_FIX"
+            else []
+        )
+        if pass_with_fix_regenerate_categories:
+            routed_validation = dict(validation_result)
+            existing_reasoning = str(routed_validation.get("fix_scope_reasoning", "") or "").strip()
+            route_reason = (
+                "Structural binding prevalidation cannot be repaired by local patch; "
+                "routing PASS_WITH_FIX to full regenerate before artifact adoption."
+            )
+            try:
+                binding_issue_count = int(routed_validation.get("binding_prevalidation_issue_count", 0) or 0)
+            except (TypeError, ValueError):
+                binding_issue_count = 0
+            routed_validation.update(
+                {
+                    "director_verdict": routed_validation.get("director_verdict") or verdict,
+                    "reject_origin": "binding_prevalidation_reopen",
+                    "fix_scope": "full",
+                    "fix_scope_reasoning": (
+                        f"{existing_reasoning}\n{route_reason}" if existing_reasoning else route_reason
+                    ),
+                    "binding_prevalidation_issue_count": max(
+                        binding_issue_count,
+                        len(pass_with_fix_regenerate_categories),
+                    ),
+                    "binding_regenerate_only_categories": list(pass_with_fix_regenerate_categories),
+                    "binding_regenerate_only_reason": _build_stage3_regenerate_only_binding_reason(
+                        pass_with_fix_regenerate_categories
+                    ),
+                    "runtime_route_verdict": "REJECT",
+                    "verdict_contract_version": "verdict-layer-v1",
+                    "final_judgment_authority": "director_llm",
+                    "runtime_gate_authority": "python_runtime_routing_gate",
+                    "runtime_gate_role": "route_or_block_automatic_progress",
+                    "runtime_gate_basis": "binding_prevalidation_reopen",
+                    "runtime_route_action": "full_regenerate_retry",
+                    "runtime_route_reason": route_reason,
+                }
+            )
+            self._refresh_phase3_validate_phase_after_reaudit(
+                pipeline_result=pipeline_result,
+                validation_result=routed_validation,
+            )
+            pipeline_result.update(
+                {
+                    key: routed_validation[key]
+                    for key in (
+                        "runtime_route_verdict",
+                        "verdict_contract_version",
+                        "final_judgment_authority",
+                        "runtime_gate_authority",
+                        "runtime_gate_role",
+                        "runtime_gate_basis",
+                        "runtime_route_action",
+                        "runtime_route_reason",
+                    )
+                }
+            )
+            owner.stats["phase3_reject"] += 1
+            logging.warning(
+                "[TF-33B] PASS_WITH_FIX binding categories require full regenerate: %s",
+                ", ".join(pass_with_fix_regenerate_categories),
+            )
+            owner._operator_log(
+                "[TF-33B] PASS_WITH_FIX routed to full regenerate",
+                level="warning",
+                meta={
+                    "phase": "validate",
+                    "runtime_gate_basis": "binding_prevalidation_reopen",
+                    "binding_regenerate_only_categories": list(pass_with_fix_regenerate_categories),
+                },
+            )
+            self._handle_validation_reject(
+                validation_result=routed_validation,
+                retry_state=retry_state,
+                score=score,
+                selected_strategy=selected_strategy,
+                best_blueprint=best_blueprint,
+                ep_num=ep_num,
+                arc_data=arc_data,
+                retry=retry,
+                max_retries=max_retries,
+            )
+            return _ThreePhaseRetryCycleResult(
+                best_blueprint=best_blueprint,
+                feedback=retry_state.prev_reject_feedback or feedback,
+                should_continue=True,
+            )
+
         if verdict in ("PASS", "PASS_WITH_FIX", "PASS_WITH_WARNING"):
             owner.stats["phase3_pass"] += 1
             pipeline_result["final_verdict"] = verdict
@@ -3208,6 +3377,38 @@ class ThreePhaseBlueprintRuntime:
             )
 
             if verdict == "PASS_WITH_FIX":
+                if score >= int(_threshold("scoring.quality_gate_score", 90)) and self._is_actionless_pass_with_fix(
+                    validation_result
+                ):
+                    logging.warning(
+                        "[TF-35B] actionless PASS_WITH_FIX (score=%d) -> accept PASS_WITH_WARNING without patch reopen",
+                        score,
+                    )
+                    self._log_operator_retry_context(
+                        title="[TF-35B] actionless PASS_WITH_FIX -> accept PASS_WITH_WARNING",
+                        level="warning",
+                        meta={
+                            "phase": "validate",
+                            "verdict": verdict,
+                            "score": score,
+                            "error_category": "actionless_pass_with_fix_acceptance",
+                        },
+                        feedback=validation_result.get("verdict_reason", "") or validation_result.get("feedback", ""),
+                        issues=validation_result.get("issues", []),
+                        fix_scope=str(validation_result.get("fix_scope", "") or ""),
+                    )
+                    validate_phase = pipeline_result.setdefault("phases", {}).setdefault("validate", {})
+                    validate_phase["actionless_pass_with_fix_acceptance"] = {
+                        "decision": "promote_to_pass_with_warning",
+                        "reason": "director_pass_with_fix_without_actionable_fix_payload",
+                    }
+                    pipeline_result["final_verdict"] = "PASS_WITH_WARNING"
+                    best_blueprint = validate_blueprint(best_blueprint)
+                    return _ThreePhaseRetryCycleResult(
+                        best_blueprint=best_blueprint,
+                        feedback=feedback,
+                        final_result=(best_blueprint, pipeline_result),
+                    )
                 low_yield_advisory_only, advisory_categories = self._has_only_low_yield_advisory_residuals(
                     validation_result
                 )

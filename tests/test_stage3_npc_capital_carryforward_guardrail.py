@@ -157,6 +157,36 @@ class TestInstitutionFactLockAnchor:
         assert len(inst_issues) >= 1
         assert "한미증권" in inst_issues[0]["issue"]
 
+    def test_person_role_from_manuscript_truth_for_validator(self):
+        packet = BlueprintConstraintCompiler._build_fact_lock_packet(
+            prev_blueprint={"end_location": "성북동 본가 서재"},
+            prev_manuscript_ending=(
+                "아버지. 한태성 회장. 피도 눈물도 없는 철혈의 사업가. 그 서늘한 눈빛 앞에서도 한시우는 물러서지 않았다."
+            ),
+            arc_data={},
+            ep_num=2,
+        )
+
+        person_anchors = [a for a in packet.get("anchors", []) if a["category"] == "인물"]
+        assert any("한태성 회장" in a["fact"] for a in person_anchors)
+
+        no_issue = UnifiedBlueprintValidator._collect_fact_lock_drift_issues(
+            blueprint={},
+            integrated="한시우는 한태성 회장의 서재에서 다시 거래 조건을 말했다.",
+            constraint_block={"fact_lock_packet": packet},
+        )
+        assert [i for i in no_issue if i["category"] == "fact_lock_person"] == []
+
+        yes_issue = UnifiedBlueprintValidator._collect_fact_lock_drift_issues(
+            blueprint={},
+            integrated="한시우는 한정호 회장의 서재에서 다시 거래 조건을 말했다.",
+            constraint_block={"fact_lock_packet": packet},
+        )
+        person_issues = [i for i in yes_issue if i["category"] == "fact_lock_person"]
+        assert len(person_issues) == 1
+        assert "한태성 회장" in person_issues[0]["issue"]
+        assert "한정호 회장" in person_issues[0]["issue"]
+
     def test_manuscript_institution_survives_anchor_truncation_priority(self):
         bp = {
             "end_location": "Alpha증권",
@@ -201,6 +231,58 @@ class TestInstitutionFactLockAnchor:
         names = [a["fact"] for a in result.get("anchors", []) if a["category"] == "기관"]
         assert any("한미증권" in name for name in names), names
         assert not any("대일증권" in name for name in names), names
+
+    def test_arc_opening_institution_outranks_prior_blueprint_when_no_manuscript_truth(self):
+        bp = {
+            "end_location": "H&T증권 VIP 접견실",
+            "scene_breakdown": {
+                "scene_1": {"location": "H&T증권 VIP 접견실"},
+                "scene_2": {"location": "H&T증권 VIP 접견실"},
+            },
+            "integrated_scenario": "박성호는 H&T증권 VIP 접견실에서 서류를 정리했다.",
+        }
+        arc_data = {
+            "ep_start": 5,
+            "state_constraints": {
+                "arc_start_state": {
+                    "location": "서울 여의도 한미증권 VIP룸",
+                }
+            },
+            "tactical_doc": "한시우는 여의도 한미증권 본사 VIP룸으로 향한다.",
+        }
+
+        result = BlueprintConstraintCompiler._build_fact_lock_packet(
+            prev_blueprint=bp,
+            prev_manuscript_ending="",
+            arc_data=arc_data,
+            ep_num=5,
+        )
+
+        names = [a["fact"] for a in result.get("anchors", []) if a["category"] == "기관"]
+        assert any("한미증권" in name for name in names), names
+        assert not any("H&T증권" in name for name in names), names
+
+    def test_manuscript_institution_still_outranks_arc_opening_institution(self):
+        bp = {
+            "end_location": "HMC투자증권 VVIP PB센터",
+            "scene_breakdown": {"scene_1": {"location": "HMC투자증권 VVIP PB센터"}},
+        }
+        arc_data = {
+            "ep_start": 5,
+            "state_constraints": {"arc_start_state": {"location": "서울 여의도 한미증권 VIP룸"}},
+            "tactical_doc": "한시우는 여의도 한미증권 본사 VIP룸으로 향한다.",
+        }
+
+        result = BlueprintConstraintCompiler._build_fact_lock_packet(
+            prev_blueprint=bp,
+            prev_manuscript_ending="김도진은 HMC투자증권 VVIP PB센터에서 미팅을 마쳤다.",
+            arc_data=arc_data,
+            ep_num=5,
+        )
+
+        names = [a["fact"] for a in result.get("anchors", []) if a["category"] == "기관"]
+        assert any("HMC투자증권" in name for name in names), names
+        assert not any("한미증권" in name for name in names), names
 
 
 # ============================================================

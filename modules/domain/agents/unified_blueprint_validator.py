@@ -70,6 +70,7 @@ _BINDING_PREVALIDATION_CATEGORIES = {
     "fact_lock_item",
     "fact_lock_location",
     "fact_lock_provenance",
+    "fact_lock_person",
     "opening_anchor",
     "mission_clarity",
     "timeline_specificity",
@@ -658,6 +659,80 @@ class UnifiedBlueprintValidator:
         return _merge_stage3_fix_packs(issue_packs)
 
     @staticmethod
+    def _build_v61_entity_fix_pack(director_result: dict) -> dict:
+        if not isinstance(director_result, dict):
+            return {}
+        entity_check = director_result.get("v61_entity_check")
+        if not isinstance(entity_check, dict):
+            return {}
+        mismatches = entity_check.get("mismatches")
+        if not isinstance(mismatches, list):
+            return {}
+
+        target_records: list[dict] = []
+        must_fix: list[str] = []
+        seen: set[tuple[str, str]] = set()
+        for mismatch in mismatches:
+            if not isinstance(mismatch, dict):
+                continue
+            registered = str(mismatch.get("registered_name", "") or "").strip()
+            variant = str(mismatch.get("found_variant", "") or "").strip()
+            if not registered or not variant or registered == variant:
+                continue
+            pair = (variant, registered)
+            if pair in seen:
+                continue
+            seen.add(pair)
+            target_records.append(
+                {
+                    "summary": f"{variant}->{registered}",
+                    "target_kind": "entity_ref",
+                    "text_anchor": {"old_text": variant},
+                }
+            )
+            must_fix.append(f"Replace Entity Registry variant '{variant}' with canonical '{registered}'.")
+
+        if not target_records:
+            return {}
+
+        return {
+            "patch_target_records": target_records,
+            "target_kind": "entity_ref",
+            "must_fix": must_fix,
+            "do_not_regress": ["Do not rename or merge unrelated entities."],
+            "success_condition": "All listed Entity Registry variants are replaced with their canonical names.",
+            "evidence_summary": str(entity_check.get("fix_instructions", "") or "v61_entity_check")[:220],
+            "subtype": "entity_consistency",
+            "provenance": "director_v61",
+            "provenance_sources": ["v61_entity_check"],
+        }
+
+    @staticmethod
+    def _build_v61_entity_repair_contract(entity_fix_pack: dict) -> dict:
+        if not entity_fix_pack:
+            return {}
+        return {
+            "subtype": "entity_consistency",
+            "fix_scope": "inplace",
+            "repair_scope": "inplace",
+            "authoritative_fix_scope": "inplace",
+            "target_kind": "entity_ref",
+            "provenance": "director_v61",
+            "provenance_sources": ["v61_entity_check"],
+        }
+
+    @staticmethod
+    def _build_v61_entity_scope_authority(entity_fix_pack: dict) -> dict:
+        if not entity_fix_pack:
+            return {}
+        return {
+            "fix_scope": "inplace",
+            "repair_scope": "inplace",
+            "authoritative_fix_scope": "inplace",
+            "widened": False,
+        }
+
+    @staticmethod
     def _coerce_episode_marker(value: object) -> int | None:
         try:
             marker = int(value)
@@ -1136,10 +1211,17 @@ class UnifiedBlueprintValidator:
         ).strip()
         if authoritative_fix_scope:
             result["authoritative_fix_scope"] = authoritative_fix_scope
+        entity_fix_pack = self._build_v61_entity_fix_pack(compare_result)
+        if entity_fix_pack and not repair_contract:
+            repair_contract = self._build_v61_entity_repair_contract(entity_fix_pack)
+        if entity_fix_pack and not scope_authority:
+            scope_authority = self._build_v61_entity_scope_authority(entity_fix_pack)
         if repair_contract:
             result["repair_contract"] = repair_contract
         if scope_authority:
             result["scope_authority"] = scope_authority
+        if entity_fix_pack:
+            fix_pack = _merge_stage3_fix_packs([fix_pack, entity_fix_pack])
         if fix_pack:
             result["fix_pack"] = fix_pack
         if advisory_fix_pack:
@@ -1407,7 +1489,14 @@ class UnifiedBlueprintValidator:
         if authoritative_fix_scope:
             result["authoritative_fix_scope"] = authoritative_fix_scope
         issue_fix_pack = self._build_issue_fix_pack(pre_result["issues"])
-        fix_pack = _normalize_stage3_fix_pack(director_result) or issue_fix_pack
+        entity_fix_pack = self._build_v61_entity_fix_pack(director_result)
+        fix_pack = _merge_stage3_fix_packs(
+            [_normalize_stage3_fix_pack(director_result), issue_fix_pack, entity_fix_pack]
+        )
+        if entity_fix_pack and not repair_contract:
+            repair_contract = self._build_v61_entity_repair_contract(entity_fix_pack)
+        if entity_fix_pack and not scope_authority:
+            scope_authority = self._build_v61_entity_scope_authority(entity_fix_pack)
         if fix_pack:
             result["fix_pack"] = fix_pack
         if repair_contract:
@@ -2293,6 +2382,35 @@ class UnifiedBlueprintValidator:
                                             "fix_hint": f"'{inst_name}' 명칭을 유지하거나 정당한 변경 경위를 명시",
                                         }
                                     )
+
+            # ── Person-role authority drift [NPC-CF-C] ──
+            if category == "인물":
+                if "확정 인물/직함:" in fact:
+                    locked_label = fact.split("확정 인물/직함:")[-1].strip()
+                    parts = locked_label.split()
+                    if len(parts) >= 2 and integrated:
+                        locked_name = parts[0].strip()
+                        locked_role = parts[1].strip()
+                        if locked_name and locked_role and locked_name not in integrated:
+                            competing_re = re.compile(r"([가-힣]{2,4})\s*" + re.escape(locked_role))
+                            competing = {
+                                match.group(1).strip()
+                                for match in competing_re.finditer(integrated)
+                                if match.group(1).strip() != locked_name
+                            }
+                            if competing:
+                                issues.append(
+                                    {
+                                        "severity": "CRITICAL",
+                                        "category": "fact_lock_person",
+                                        "issue": (
+                                            f"인물 사실잠금 위반: 확정 '{locked_name} {locked_role}'"
+                                            f" → blueprint '{', '.join(sorted(competing)[:2])} {locked_role}' 사용"
+                                        ),
+                                        "evidence": fact,
+                                        "fix_hint": f"'{locked_name} {locked_role}' 명칭을 유지하거나 정당한 변경 경위를 명시",
+                                    }
+                                )
 
         return issues[:6]  # bounded output
 
