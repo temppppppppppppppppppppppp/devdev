@@ -5012,6 +5012,33 @@ class TestRecordS4Attempt:
         assert payload.use_inplace is False
         assert payload.force_patch is False
 
+    def test_resolve_retry_lane_routing_blocks_completed_event_replay_patch(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._resolve_retry_lane_routing(
+            previous_attempt={
+                "score": "96",
+                "fix_scope": "full",
+                "reject_bucket": "post_select_conflict",
+                "selected_strategy_key": "tension",
+                "conflict_contract": {
+                    "contract_type": "post_select_conflict",
+                    "bounded_local_fix_hint": True,
+                    "contradiction_types": ["continuity", "completed_event_replay"],
+                    "completed_event_replay": True,
+                },
+                "fix_pack": _local_fix_pack("opening_replay_line", target_kind="local_sentence"),
+            },
+            prev_manuscript="original manuscript",
+            round_num=4,
+        )
+
+        assert payload.reject_bucket == "post_select_conflict"
+        assert payload.use_patch is False
+        assert payload.use_inplace is False
+        assert payload.force_patch is False
+
     def test_resolve_retry_lane_routing_blocks_bounded_patch_for_truth_pin_drift(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
@@ -13753,6 +13780,52 @@ class TestScopeSinkSemantics:
             "opening continuity pin" in item for item in previous_attempt["conflict_contract"]["contradiction_details"]
         )
         assert "[Continuity Conflict]" in director_feedback
+
+    def test_post_select_conflict_marks_completed_event_replay_contract(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 4
+        round_ctx.prev_manuscripts_text = "ep3 completed admission and father-funds contact"
+        ctx.agents["director"].check_manuscript_history_conflicts.return_value = {
+            "decision": "CONFLICT",
+            "summary": "History Conflict: 직전 화에서 이미 완료된 admission/father-funds contact 사건을 opening에서 다시 재연함",
+        }
+
+        verdict, director_feedback, previous_attempt, error_category = ir.post_select_runtime.run_post_select_checks(
+            verdict="PASS",
+            next_ep=4,
+            round_num=2,
+            round_ctx=round_ctx,
+            final_manuscript="candidate manuscript",
+            final_state_updates={},
+            director_result={
+                "director_verdict": "PASS",
+                "final_verdict": "PASS",
+                "selected_candidate": {"strategy_name": "balanced", "manuscript": "candidate manuscript"},
+                "score_breakdown": {},
+                "consistency_checklist": {},
+                "fix_pack": {},
+                "action_items": [],
+            },
+            director_feedback="initial feedback",
+            score=88,
+            error_category="",
+            previous_attempt={},
+            stage4_spinner=MagicMock(),
+            director_memory_context="",
+        )
+
+        assert verdict == "REJECT"
+        assert error_category == "POST_SELECT_HISTORY_CONFLICT"
+        assert "completed_event_replay" in previous_attempt["contradiction_types"]
+        conflict_contract = previous_attempt["conflict_contract"]
+        assert conflict_contract["completed_event_replay"] is True
+        assert "completed_event_replay" in conflict_contract["contradiction_types"]
+        assert "completed_event_replay" in conflict_contract["rewrite_required_reasons"]
+        assert any("이미 완료된" in item for item in conflict_contract["completed_event_replay_evidence"])
+        assert "completed-event replay reroute" in previous_attempt["fix_scope_reasoning"]
+        assert "History Conflict" in director_feedback
 
     def test_opening_action_continuity_type_counts_as_continuity_replay_reject(self):
         ctx = _make_ctx()

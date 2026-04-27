@@ -893,6 +893,7 @@ class BlueprintConstraintCompiler:
             progression_pkt.get("time_truths")
             or progression_pkt.get("institution_truths")
             or progression_pkt.get("blocked_scene_families")
+            or progression_pkt.get("completed_prior_events")
         ):
             lines.append("### ⏭️ [EPISODE PROGRESSION] 직전 화 재연 금지 / 이번 화는 앞으로 전진")
             lines.append("이번 화는 직전 화 장면을 다시 재연하는 화가 아닙니다. 직전 화의 결과 이후로 전진하세요.")
@@ -922,6 +923,20 @@ class BlueprintConstraintCompiler:
                         parts.append(f"type:{scene_type}")
                     if parts:
                         lines.append("    - " + " | ".join(parts))
+            completed_events = progression_pkt.get("completed_prior_events", [])
+            if isinstance(completed_events, list) and completed_events:
+                lines.append("  - [직전 화에서 이미 완료된 사건 — scene_1/live objective로 재연 금지]")
+                for event_row in completed_events[:3]:
+                    if not isinstance(event_row, dict):
+                        continue
+                    location = str(event_row.get("location", "") or "").strip()
+                    events = [
+                        str(item or "").strip() for item in (event_row.get("events") or []) if str(item or "").strip()
+                    ]
+                    if not events:
+                        continue
+                    prefix = f"장소:{location} | " if location else ""
+                    lines.append(f"    - {prefix}{'; '.join(events[:2])}")
             next_gate_strength = progression_pkt.get("next_gate_strength_mode", {})
             if isinstance(next_gate_strength, dict) and next_gate_strength.get("mode") == "foreshadow_only":
                 lines.append("  - [next-gate 강도 조절]")
@@ -1640,9 +1655,45 @@ class BlueprintConstraintCompiler:
                 )
             return scene_rows[-3:]
 
+        def _completed_event_rows(scene_breakdown: object) -> list[dict]:
+            if isinstance(scene_breakdown, list):
+                scene_breakdown = {
+                    f"scene_{idx + 1}": scene for idx, scene in enumerate(scene_breakdown) if isinstance(scene, dict)
+                }
+            if not isinstance(scene_breakdown, dict):
+                return []
+            rows: list[dict] = []
+            scene_keys = sorted(
+                scene_breakdown.keys(),
+                key=lambda key: int(re.search(r"\d+", key).group()) if re.search(r"\d+", key) else 0,
+            )
+            for scene_key in scene_keys:
+                scene = scene_breakdown.get(scene_key, {})
+                if not isinstance(scene, dict):
+                    continue
+                raw_events = scene.get("key_events", [])
+                event_texts: list[str] = []
+                if isinstance(raw_events, list):
+                    event_texts.extend(str(item or "").strip() for item in raw_events if str(item or "").strip())
+                summary = str(scene.get("summary", "") or scene.get("goal", "") or scene.get("description", "") or "")
+                if summary.strip():
+                    event_texts.append(summary.strip())
+                compact_events = _dedup(event_texts, limit=3)
+                if not compact_events:
+                    continue
+                rows.append(
+                    {
+                        "scene_key": scene_key,
+                        "events": [item[:160] for item in compact_events],
+                        "location": str(scene.get("location", "") or "").strip()[:80],
+                    }
+                )
+            return rows[-3:]
+
         time_truths: list[str] = []
         institution_truths: list[str] = []
         blocked_scene_families = _scene_rows(bp.get("scene_breakdown", {}))
+        completed_prior_events = _completed_event_rows(bp.get("scene_breakdown", {}))
 
         if isinstance(arc_data, dict):
             current_episode_excerpt = extract_episode_tactical(
@@ -1711,13 +1762,14 @@ class BlueprintConstraintCompiler:
             if any(marker in prev_time_flow for marker in ("겨울", "한겨울", "1월", "12월", "2월")):
                 time_truths.append(f"직전 화 시간 진실: {prev_time_flow[:120]}")
 
-        if not time_truths and not institution_truths and not blocked_scene_families:
+        if not time_truths and not institution_truths and not blocked_scene_families and not completed_prior_events:
             return {}
 
         return {
             "time_truths": _dedup(time_truths, limit=4),
             "institution_truths": _dedup(institution_truths, limit=4),
             "blocked_scene_families": blocked_scene_families,
+            "completed_prior_events": completed_prior_events,
             "source": "prev_blueprint+arc_authority",
         }
 

@@ -163,6 +163,8 @@ class Stage4RetryRuntime:
         conflict_contract = previous_attempt.get("conflict_contract")
         if not isinstance(conflict_contract, dict) or not conflict_contract:
             return False
+        if bool(conflict_contract.get("completed_event_replay")):
+            return False
         if not bool(conflict_contract.get("bounded_local_fix_hint")):
             return False
 

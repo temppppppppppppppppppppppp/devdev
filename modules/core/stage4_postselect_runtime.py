@@ -14,9 +14,7 @@ if TYPE_CHECKING:
 
 _POST_SELECT_QUOTED_TOKEN_RE = re.compile(r"'([^']+)'")
 _POST_SELECT_GROUP_TOKEN_RE = re.compile(r"([A-Za-z0-9가-힣]+그룹)")
-_POST_SELECT_ASSET_AMOUNT_RE = re.compile(
-    r"(\d[\d,]*(?:\.\d+)?\s*억(?:\s*원)?(?:\s*규모의)?\s*개인 명의 자산)"
-)  # utf8-hygiene: allow-line regex optional-group tokens next to Hangul
+_POST_SELECT_ASSET_AMOUNT_RE = re.compile(r"(\d[\d,]*(\.\d+){0,1}\s*억(\s*원){0,1}(\s*규모의){0,1}\s*개인 명의 자산)")
 
 
 def _normalize_post_select_truth_pin_value(value: object) -> str:
@@ -103,6 +101,7 @@ def _collect_post_select_rewrite_required_reasons(
     conflict_types: list[str] | None,
     contradiction_types: list[str] | None,
     truth_pins: list[dict[str, str]] | None,
+    completed_event_replay: bool = False,
 ) -> list[str]:
     reasons: list[str] = []
     normalized_conflict_types = {
@@ -113,6 +112,8 @@ def _collect_post_select_rewrite_required_reasons(
     }
     if {"continuity", "history"}.issubset(normalized_conflict_types | normalized_contradiction_types):
         reasons.append("dual_conflict_continuity_history")
+    if completed_event_replay:
+        reasons.append("completed_event_replay")
     if "proper_noun" in normalized_contradiction_types:
         reasons.append("proper_noun_truth_drift")
     for pin in truth_pins or []:
@@ -140,6 +141,7 @@ def _should_allow_bounded_post_select_local_fix(
         conflict_types=conflict_types,
         contradiction_types=contradiction_types,
         truth_pins=truth_pins,
+        completed_event_replay=False,
     )
     if rewrite_required_reasons:
         return False
@@ -198,6 +200,11 @@ def _build_post_select_fix_scope_reasoning(conflict_contract: dict | None) -> st
     lines: list[str] = []
     if reasons:
         lines.append("[post-select truth-pin reroute] local patch 금지: " + ", ".join(reasons))
+    if conflict_contract.get("completed_event_replay"):
+        lines.append(
+            "[completed-event replay reroute] 직전/이전 회차에서 이미 완료된 사건을 현재 opening/live action으로 "
+            "재연하지 말고 aftermath, consequence, or new transition으로 다시 설계해야 한다."
+        )
     if isinstance(truth_pins, list):
         for pin in truth_pins[:4]:
             if not isinstance(pin, dict):
@@ -221,6 +228,8 @@ def _build_post_select_conflict_contract(
     truth_pins: list[dict[str, str]] | None = None,
     conflict_fingerprint: str = "",
     rewrite_required_reasons: list[str] | None = None,
+    completed_event_replay: bool = False,
+    completed_event_replay_evidence: list[str] | None = None,
 ) -> dict[str, object]:
     entries: list[dict[str, str]] = []
     if not isinstance(conflicts, list):
@@ -287,7 +296,63 @@ def _build_post_select_conflict_contract(
             normalized_rewrite_required_reasons.append(token)
     if normalized_rewrite_required_reasons:
         contract["rewrite_required_reasons"] = normalized_rewrite_required_reasons
+    if completed_event_replay:
+        contract["completed_event_replay"] = True
+        evidence_lines: list[str] = []
+        for item in completed_event_replay_evidence or []:
+            line = str(item or "").strip()
+            if line and line not in evidence_lines:
+                evidence_lines.append(line)
+        if evidence_lines:
+            contract["completed_event_replay_evidence"] = evidence_lines[:5]
     return contract
+
+
+def _detect_completed_event_replay_contract(
+    *,
+    conflicts: list[str] | None,
+    contradiction_types: list[str] | None,
+    contradiction_details: list[str] | None,
+) -> tuple[bool, list[str]]:
+    type_tokens = {str(item or "").strip().lower() for item in (contradiction_types or []) if str(item or "").strip()}
+    if "completed_event_replay" in type_tokens:
+        return True, ["contradiction_type=completed_event_replay"]
+
+    evidence: list[str] = []
+    completed_markers = (
+        "completed_event_replay",
+        "completed event",
+        "already completed",
+        "already resolved",
+        "prior event replay",
+        "continuity replay",
+        "replay",
+        "이미 완료",
+        "이미 끝난",
+        "완료 사건",
+        "이전 화",
+        "이전 회차",
+        "직전 화",
+        "중복 묘사",
+        "반복",
+        "재연",
+        "다시",
+        "타임라인",
+    )
+    conflict_markers = ("History Conflict", "Continuity Conflict", "history", "continuity", "[V67")
+    for raw_line in list(conflicts or []) + list(contradiction_details or []):
+        line = str(raw_line or "").strip()
+        if not line:
+            continue
+        lowered = line.lower()
+        has_completed_marker = any(marker.lower() in lowered for marker in completed_markers)
+        has_conflict_marker = any(marker.lower() in lowered for marker in conflict_markers)
+        if has_completed_marker and has_conflict_marker:
+            evidence.append(line[:240])
+        elif has_completed_marker and any(token in {"history", "continuity"} for token in type_tokens):
+            evidence.append(line[:240])
+
+    return bool(evidence), list(dict.fromkeys(evidence))
 
 
 def _extract_opening_continuity_pin_metadata(blueprint: dict | None) -> tuple[list[str], list[str]]:
@@ -653,10 +718,18 @@ class Stage4PostSelectRuntime:
             conflicts=post_select_conflicts,
             contradiction_details=compact_contradiction_details,
         )
+        completed_event_replay, completed_event_replay_evidence = _detect_completed_event_replay_contract(
+            conflicts=post_select_conflicts,
+            contradiction_types=contradiction_types or classification.conflict_types,
+            contradiction_details=compact_contradiction_details,
+        )
+        if completed_event_replay and "completed_event_replay" not in contradiction_types:
+            contradiction_types.append("completed_event_replay")
         rewrite_required_reasons = _collect_post_select_rewrite_required_reasons(
             conflict_types=classification.conflict_types,
             contradiction_types=contradiction_types,
             truth_pins=truth_pins,
+            completed_event_replay=completed_event_replay,
         )
         conflict_fingerprint = _build_post_select_conflict_fingerprint(
             conflict_types=classification.conflict_types,
@@ -679,6 +752,8 @@ class Stage4PostSelectRuntime:
             truth_pins=truth_pins,
             conflict_fingerprint=conflict_fingerprint,
             rewrite_required_reasons=rewrite_required_reasons,
+            completed_event_replay=completed_event_replay,
+            completed_event_replay_evidence=completed_event_replay_evidence,
         )
 
         if contradiction_types:
