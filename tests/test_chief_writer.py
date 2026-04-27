@@ -376,6 +376,52 @@ class TestChiefWriterInplacePatchGuards:
 
 
 class TestChiefWriterStructuralInplacePatch:
+    def test_scene_header_feedback_inserts_headers_without_llm_call(self, chief_writer):
+        blueprint = {
+            "ep_num": 2,
+            "scene_breakdown": {
+                "scene_1": {"title": "부름에 응답하다"},
+                "scene_2": {"title": "거실의 협상"},
+                "scene_3": {"summary": "방으로 돌아와 투자처를 정리한다."},
+                "scene_4": {"description": "엔딩에서 첫 실행 목표를 확정한다."},
+            },
+        }
+        blocks = [
+            ("첫 번째 장면 본문 alpha beta. " * 55).strip(),
+            ("두 번째 장면 본문 gamma delta. " * 55).strip(),
+            ("세 번째 장면 본문 epsilon zeta. " * 55).strip(),
+            ("네 번째 장면 본문 eta theta. " * 55).strip(),
+        ]
+        original = "\n\n".join(blocks)
+
+        chief_writer._inplace_patch_blueprint = blueprint
+        chief_writer.ask = MagicMock(return_value="")
+
+        result = chief_writer.inplace_patch(
+            original_manuscript=original,
+            director_feedback="원고의 각 씬 구분에 맞게 4개의 씬 헤더를 삽입해 주십시오.",
+            attempt_number=1,
+            fix_pack={
+                "patch_targets": ["scene headers"],
+                "must_fix": ["insert 4 scene headers"],
+                "do_not_regress": ["preserve manuscript text"],
+                "success_condition": "all scene headers exist",
+                "target_kind": "local_sentence",
+            },
+        )
+
+        manuscript = result[0]["manuscript"]
+        assert result[0]["strategy"] == "inplace_patch_scene_headers"
+        assert manuscript.count("### 씬 ") == 4
+        assert "### 씬 1: 부름에 응답하다" in manuscript
+        assert "### 씬 4: 엔딩에서 첫 실행 목표를 확정한다." in manuscript
+        for block in blocks:
+            assert block in manuscript
+        chief_writer.ask.assert_not_called()
+        assert chief_writer._last_inplace_patch_trace["patch_strategy"] == "inplace_patch_scene_headers"
+        assert chief_writer._last_inplace_patch_trace["target_kind"] == "scene_header"
+        assert chief_writer._last_inplace_patch_trace["repair_trace"][0]["target"] == "scene_1"
+
     def test_structural_inplace_patch_replaces_only_target_scene_block(self, chief_writer):
         blueprint = {
             "ep_num": 10,
@@ -902,7 +948,9 @@ class TestGenerateEnsemble:
             assert "state_updates" in cand
             assert "metadata" in cand
 
-    def test_reduced_strategy_budget_prefers_selected_strategy(self, chief_writer, sample_blueprint, sample_master_bible):
+    def test_reduced_strategy_budget_prefers_selected_strategy(
+        self, chief_writer, sample_blueprint, sample_master_bible
+    ):
         called = []
 
         chief_writer.context_builder.build_common_context = MagicMock(return_value="ctx")
@@ -936,7 +984,9 @@ class TestGenerateEnsemble:
         assert len(candidates) == 2
         assert set(called) == {"tension", "balanced"}
 
-    def test_generate_ensemble_forwards_arc_data_into_common_context(self, chief_writer, sample_blueprint, sample_master_bible):
+    def test_generate_ensemble_forwards_arc_data_into_common_context(
+        self, chief_writer, sample_blueprint, sample_master_bible
+    ):
         chief_writer.context_builder.build_common_context = MagicMock(return_value="ctx")
         chief_writer._get_or_create_context_cache = MagicMock(return_value={})
         chief_writer._generate_single_candidate = MagicMock(
@@ -948,7 +998,10 @@ class TestGenerateEnsemble:
                 "metadata": {},
             }
         )
-        arc_data = {"arc_no": 2, "cross_stage_authority_packet": {"contract_version": "cross_stage_authority_packet.v1"}}
+        arc_data = {
+            "arc_no": 2,
+            "cross_stage_authority_packet": {"contract_version": "cross_stage_authority_packet.v1"},
+        }
 
         chief_writer.generate_ensemble(
             ep_num=10,
@@ -1062,9 +1115,7 @@ class TestRegenerateWithFeedback:
                     "action_items": ["시간 경과 명시"],
                     "score": 49,
                     "contradiction_types": ["타임라인"],
-                    "contradiction_details": [
-                        {"type": "타임라인", "current_violation": "하루 만에 일주일이 경과함"}
-                    ],
+                    "contradiction_details": [{"type": "타임라인", "current_violation": "하루 만에 일주일이 경과함"}],
                 },
             ],
         }
