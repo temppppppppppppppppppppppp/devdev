@@ -2014,11 +2014,35 @@ class Stage4InterviewRound:
             "reject_bucket": previous_attempt.get("reject_bucket", ""),
             "error_category": previous_attempt.get("error_category", ""),
             "fix_pack_reason": previous_attempt.get("fix_pack_reason", ""),  # [TF-4]
+            "local_patch_failure_key": previous_attempt.get("local_patch_failure_key", ""),
+            "patch_failure_reason": str(previous_attempt.get("patch_failure_reason", "") or ""),
             "rejection_reason": str(previous_attempt.get("rejection_reason", "") or ""),
             "action_items": list(previous_attempt.get("action_items", []) or []),
             "contradiction_types": list(previous_attempt.get("contradiction_types", []) or []),
             "retry_budget_axes": dict(previous_attempt.get("retry_budget_axes", {}) or {}),
         }
+        patch_trace = {}
+        if isinstance(previous_attempt.get("patch_trace"), dict):
+            raw_trace = previous_attempt.get("patch_trace") or {}
+            patch_trace = {
+                key: copy.deepcopy(raw_trace.get(key))
+                for key in (
+                    "patch_strategy",
+                    "patch_targets",
+                    "target_kind",
+                    "patch_target_records",
+                    "patch_round",
+                    "fallback_reason",
+                    "failure_key",
+                    "local_patch_failure_key",
+                    "failed_patch_len",
+                    "guard_result",
+                    "partial_fix_eval",
+                )
+                if raw_trace.get(key) not in ("", None, [], {})
+            }
+        if patch_trace:
+            snapshot["patch_trace"] = patch_trace
         conflict_contract = previous_attempt.get("conflict_contract")
         truth_pin_items = Stage4InterviewRound._compact_truth_pin_items(
             previous_attempt.get("truth_pin_items"),
@@ -2360,6 +2384,18 @@ class Stage4InterviewRound:
             ).strip(),
             "fix_pack": fix_pack,
             "fix_pack_reason": str(self._evaluate_fix_pack_contract(fix_pack).get("reason", "") or ""),
+            "local_patch_failure_key": str(
+                attempt_row.get("local_patch_failure_key")
+                or advisory_flags.get("local_patch_failure_key")
+                or retry_surface.get("local_patch_failure_key")
+                or ""
+            ).strip(),
+            "patch_failure_reason": str(
+                attempt_row.get("patch_failure_reason")
+                or advisory_flags.get("patch_failure_reason")
+                or retry_surface.get("patch_failure_reason")
+                or ""
+            ).strip(),
             "open_review": str(attempt_row.get("open_review") or verdict_surface.get("open_review") or "").strip(),
             "error_category": str(
                 attempt_row.get("failure_category") or verdict_surface.get("failure_category") or ""
@@ -2389,6 +2425,28 @@ class Stage4InterviewRound:
             "carryover_refs": dict(envelope.get("carryover_refs") or {}),
             "cache_lineage": dict(envelope.get("cache_lineage") or {}),
         }
+        raw_patch_trace = attempt_row.get("patch_trace")
+        if not isinstance(raw_patch_trace, dict):
+            raw_patch_trace = (
+                retry_surface.get("patch_trace") if isinstance(retry_surface.get("patch_trace"), dict) else {}
+            )
+        if isinstance(raw_patch_trace, dict) and raw_patch_trace:
+            payload["patch_trace"] = copy.deepcopy(raw_patch_trace)
+            trace_failure_key = str(
+                raw_patch_trace.get("local_patch_failure_key")
+                or raw_patch_trace.get("failure_key")
+                or (
+                    raw_patch_trace.get("guard_result", {}).get("failure_key")
+                    if isinstance(raw_patch_trace.get("guard_result"), dict)
+                    else ""
+                )
+                or ""
+            ).strip()
+            if trace_failure_key and not payload["local_patch_failure_key"]:
+                payload["local_patch_failure_key"] = trace_failure_key
+            trace_fallback = str(raw_patch_trace.get("fallback_reason") or "").strip()
+            if trace_fallback and not payload["patch_failure_reason"]:
+                payload["patch_failure_reason"] = trace_fallback
         if truth_pin_items:
             payload["truth_pin_items"] = truth_pin_items
         if conflict_contract:
@@ -2464,9 +2522,7 @@ class Stage4InterviewRound:
                 row for row in same_episode_rows if str(row.get("session_id") or "").strip() == session_id
             ]
         else:
-            same_episode_rows = [
-                row for row in same_episode_rows if not str(row.get("session_id") or "").strip()
-            ]
+            same_episode_rows = [row for row in same_episode_rows if not str(row.get("session_id") or "").strip()]
         if not same_episode_rows:
             return {}
 
@@ -7991,6 +8047,10 @@ class Stage4InterviewRound:
         updated_trace = dict(patch_trace or {})
         updated_trace["patch_strategy"] = str(updated_trace.get("patch_strategy", "") or "inplace_patch")
         updated_trace["fallback_reason"] = str(failure_key or "inplace_contract_fail")
+        updated_trace["failure_key"] = str(failure_key or "inplace_contract_fail")
+        updated_trace["local_patch_failure_key"] = str(failure_key or "inplace_contract_fail")
+        updated_result["local_patch_failure_key"] = str(failure_key or "inplace_contract_fail")
+        updated_result["patch_failure_reason"] = notice
 
         logging.warning("[Lane3 Emergency] %s", notice)
         self.ctx.ui.log(f"   ⚠️ [Lane3 Emergency] {notice}")
