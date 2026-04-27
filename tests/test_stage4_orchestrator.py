@@ -1607,25 +1607,24 @@ class TestHandleRoundOutcomeErrorPaths:
         log_path = tmp_path / "cove_project" / "logs" / "episode_production.jsonl"
         rows = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
         advisory_rows = [row for row in rows if row.get("event") == "STAGE4_COVE_RUNTIME_ADVISORY"]
+        pathology_rows = [row for row in rows if row.get("event") == "STAGE4_RETRY_PATHOLOGY"]
         assert result.should_return is False
         assert result.final_manuscript == "초안 원고"
+        assert result.final_title == "제1화"
+        assert result.final_state_updates == {"hp": 10}
         assert orch._interview_round.run.call_count == 1
+        assert cove.verify.call_count == 1
         assert advisory_rows
         assert advisory_rows[-1]["source"] == "llm_verify"
+        assert advisory_rows[-1]["error_type"] == "ChainOfVerificationParseError"
         assert advisory_rows[-1]["director_pass_preserved"] is True
+        assert advisory_rows[-1]["quick_warning"] == "관계 변화 의심"
+        assert pathology_rows == []
         orch._ctx.audit_event.assert_any_call(
             "stage4_cove_runtime_advisory",
             "stage4 CoVe runtime advisory observed",
             ANY,
         )
-        second_call = {"director_feedback": "", "previous_attempt": {"best_manuscript": ""}}
-        return
-
-        assert result.should_return is False
-        assert result.final_manuscript == "수정 원고"
-        assert orch._interview_round.run.call_count == 1
-        assert second_call["director_feedback"].startswith("[CoVe 사후검증 런타임 실패]")
-        assert second_call["previous_attempt"]["best_manuscript"] == "초안 원고"
 
 
 # ══════════════════════════════════════════════════════════════
@@ -1873,9 +1872,15 @@ class TestHandleRoundOutcomeRetryPathology:
 
         assert result.final_manuscript == "repaired manuscript"
         assert orch._interview_round.run.call_count == 2
+        second_round_kwargs = orch._interview_round.run.call_args_list[1].kwargs
+        assert second_round_kwargs["director_feedback"].startswith("[CoVe 사후검증 실패]")
+        assert second_round_kwargs["previous_attempt"]["cove_fail_closed"] is True
+        assert second_round_kwargs["previous_attempt"]["cove_runtime_failure"] is False
         log_path = tmp_path / "semantic_project" / "logs" / "episode_production.jsonl"
         rows = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        advisory_rows = [row for row in rows if row.get("event") == "STAGE4_COVE_RUNTIME_ADVISORY"]
         pathology_rows = [row for row in rows if row.get("event") == "STAGE4_RETRY_PATHOLOGY"]
+        assert advisory_rows == []
         assert pathology_rows
         assert pathology_rows[-1]["pathology_source"] == "cove_fail_closed"
         assert pathology_rows[-1]["cove_runtime_failure"] is False

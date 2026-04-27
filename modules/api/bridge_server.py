@@ -107,6 +107,15 @@ _CHECKLIST_LABELS = {
     "npc_knowledge_boundary": "NPC 지식 경계",
 }
 
+_PROOF_WARNING_ISSUE_FIELDS = (
+    "selection_reason_mismatches",
+    "verdict_reason_mismatches",
+    "runtime_advisory_mismatches",
+    "retry_directives_mismatches",
+    "rationale_metadata_missing",
+    "gate_repair_metadata_missing",
+)
+
 # ─── seq 카운터 (전역, 단조 증가) ────────────────────────────────────────────
 _seq_iter = itertools.count(1)
 
@@ -438,6 +447,7 @@ def _quality_dashboard_runtime_defaults(lookback: int) -> dict[str, Any]:
             "completion_claim_scope": "proof_artifact_alignment_only",
             "semantic_completion_status": "unavailable",
             "canonical_truth_status": "not_asserted_by_dashboard",
+            "warning_issue_counts": {"sink_alignment": {}, "runtime_summary": {}},
             "authority_note": "Proof status is a companion dashboard summary, not canonical PASS settlement authority.",
             "summary": "No proof artifacts available.",
         },
@@ -2070,6 +2080,38 @@ def _count_alignment_issues(value: Any) -> int:
     return 0
 
 
+def _positive_issue_count(value: Any) -> int:
+    try:
+        count = int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+    return max(0, count)
+
+
+def _extract_proof_warning_issue_counts(summary: dict | None) -> dict[str, dict[str, int]]:
+    if not isinstance(summary, dict):
+        return {}
+    stages = summary.get("stages", {})
+    if not isinstance(stages, dict):
+        return {}
+
+    stage_counts: dict[str, dict[str, int]] = {}
+    for stage_key, stage_summary in stages.items():
+        if not isinstance(stage_summary, dict):
+            continue
+        issue_counts = stage_summary.get("issue_counts", {})
+        if not isinstance(issue_counts, dict):
+            continue
+        counts = {
+            field: count
+            for field in _PROOF_WARNING_ISSUE_FIELDS
+            if (count := _positive_issue_count(issue_counts.get(field))) > 0
+        }
+        if counts:
+            stage_counts[str(stage_key)] = counts
+    return stage_counts
+
+
 def _compact_sink_alignment_summary(summary: dict | None) -> dict:
     if not isinstance(summary, dict) or not summary:
         return {}
@@ -2094,6 +2136,11 @@ def _compact_sink_alignment_summary(summary: dict | None) -> dict:
         "artifact_metadata_missing",
         "artifact_missing_files",
         "gate_repair_metadata_missing",
+        "selection_reason_mismatches",
+        "verdict_reason_mismatches",
+        "runtime_advisory_mismatches",
+        "retry_directives_mismatches",
+        "rationale_metadata_missing",
     )
     issue_counts = {
         field: _count_alignment_issues(summary.get(field))
@@ -2209,6 +2256,10 @@ def _build_dashboard_proof_status(*, sink_alignment_summary: dict, runtime_audit
     runtime_summary_status = str(proof_digest.get("status", "") or "")
     if not runtime_summary_status:
         runtime_summary_status = "unavailable"
+    warning_issue_counts = {
+        "sink_alignment": _extract_proof_warning_issue_counts(sink_alignment_summary),
+        "runtime_summary": _extract_proof_warning_issue_counts(proof_digest),
+    }
 
     available = sink_alignment_status != "unavailable" or runtime_summary_status != "unavailable"
     if sink_alignment_status == "warn" or runtime_summary_status == "warn":
@@ -2225,7 +2276,7 @@ def _build_dashboard_proof_status(*, sink_alignment_summary: dict, runtime_audit
     }
     summary_map = {
         "ok": "Proof evidence sinks aligned; canonical truth still belongs to pipeline settlement artifacts.",
-        "warn": "Proof evidence chain has alignment gaps; do not treat this as canonical completion.",
+        "warn": "Proof evidence chain has alignment gaps; see warning_issue_counts for rationale/runtime counts.",
         "unavailable": "No proof artifacts available.",
     }
     return {
@@ -2237,6 +2288,7 @@ def _build_dashboard_proof_status(*, sink_alignment_summary: dict, runtime_audit
         "completion_claim_scope": "proof_artifact_alignment_only",
         "semantic_completion_status": semantic_status_map.get(status, "unavailable"),
         "canonical_truth_status": "not_asserted_by_dashboard",
+        "warning_issue_counts": warning_issue_counts,
         "authority_note": "Proof status is a companion dashboard summary, not canonical PASS settlement authority.",
         "summary": summary_map.get(status, summary_map["unavailable"]),
     }

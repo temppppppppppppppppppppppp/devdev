@@ -16,10 +16,11 @@ Queue Snapshot:
 - `docs/temp/security-desktop-release-guardrails-execution-ssot.md`
 - `docs/temp/stage4-post-select-conflict-execution-ssot.md`
 - `docs/temp/stage3-stage4-genre-alignment-execution-ssot.md`
+- `docs/temp/stage4-proof-digest-cove-advisory-execution-ssot.md`
 
 ## 1. Purpose
 
-This roadmap is required because `docs/temp/` now contains more than one execution SSOT mirror. It preserves the pre-existing Frontier Lag queue item while adding three parked security execution items derived from the completed ten-terminal security survey, one parked Stage4 #58 execution item derived from the completed ten-terminal POST_SELECT_CONFLICT survey, and one parked #56 Stage3/Stage4 genre-alignment execution item derived from adversarial synthesis of the available issue/order/source evidence.
+This roadmap is required because `docs/temp/` now contains more than one execution SSOT mirror. It preserves the pre-existing Frontier Lag queue item while adding three parked security execution items derived from the completed ten-terminal security survey, one parked Stage4 #58 execution item derived from the completed ten-terminal POST_SELECT_CONFLICT survey, one parked #56 Stage3/Stage4 genre-alignment execution item derived from adversarial synthesis of the available issue/order/source evidence, and one parked #59 Stage4 proof-digest/CoVe advisory execution item derived from the completed ten-terminal #59 survey.
 
 This roadmap governs queue ordering only. It does not authorize implementation by itself. Before implementation from any listed item, re-run the 3-pass document audit against current workspace state and confirm at least 95% confidence.
 
@@ -33,6 +34,7 @@ This roadmap governs queue ordering only. It does not authorize implementation b
 | `security-desktop-release-guardrails` | `docs/2026-04-27/security-desktop-release-guardrails-execution-ssot.md` | `docs/temp/security-desktop-release-guardrails-execution-ssot.md` | pending | Depends on both prior security SSOTs; parked future wave. |
 | `stage4-post-select-conflict` | `docs/2026-04-27/stage4-post-select-conflict-execution-ssot.md` | `docs/temp/stage4-post-select-conflict-execution-ssot.md` | in_progress | #58 Stage4 carryover drift remediation; operator-promoted bug-risk patch. |
 | `stage3-stage4-genre-alignment` | `docs/2026-04-27/stage3-stage4-genre-alignment-execution-ssot.md` | `docs/temp/stage3-stage4-genre-alignment-execution-ssot.md` | pending | #56 investment/business-power action/tension semantics remediation; parked future wave pending operator promotion. |
+| `stage4-proof-digest-cove-advisory` | `docs/2026-04-27/stage4-proof-digest-cove-advisory-execution-ssot.md` | `docs/temp/stage4-proof-digest-cove-advisory-execution-ssot.md` | in_progress | #59 proof-digest warn taxonomy, CoVe advisory/fail-closed split, dashboard freshness, and benchmark diagnostic packet; operator-promoted side tranche partially realized. |
 
 ## 3. Dependency Graph
 
@@ -42,6 +44,7 @@ This roadmap governs queue ordering only. It does not authorize implementation b
 - `frontier-lag-clean-5arc-stabilization` is independent of the security remediation chain.
 - `stage4-post-select-conflict` has no formal dependency edge to avoid silently reordering the existing Frontier Lag queue item, but it should be considered before any fresh terminal clean 5-arc proof claim.
 - `stage3-stage4-genre-alignment` has no formal dependency edge to avoid silently reordering the existing Frontier Lag queue item, but it should be considered before any fresh terminal clean 5-arc proof claim because wrong action/tension semantics can feed downstream Stage4 rejects.
+- `stage4-proof-digest-cove-advisory` has no formal dependency edge, but it should be considered before any fresh terminal clean 5-arc proof claim or Issue #62 benchmark comparison claim because it separates proof evidence, runtime advisory, semantic fail-closed retry, stale summaries, and settled attempt verdicts.
 
 Shared substrate:
 - security secret boundary must precede runtime path/auth and desktop/release guardrail implementation.
@@ -53,6 +56,7 @@ Merge opportunities:
 - #71 status documentation should summarize all three security execution docs after implementation facts exist.
 - #58 Stage4 carryover remediation can feed the Frontier Lag strict 5-arc proof path by reducing repeated post-select conflicts before a fresh live proof run.
 - #56 Stage3/Stage4 genre alignment can feed the Frontier Lag strict 5-arc proof path by reducing physical-action drift and unauthorized business-power scene register mismatch before fresh proof.
+- #59 proof-digest/CoVe advisory remediation can feed Issue #62 benchmark reporting and any future Frontier Lag proof claim by keeping advisory warnings, semantic rejects, stale summaries, and proof evidence in separate fields.
 
 ## 4. Execution Order
 
@@ -69,6 +73,7 @@ Working order:
 4. `security-runtime-settings-vertex` (parked future wave; depends on `security-secrets-config`)
 5. `security-desktop-release-guardrails` (parked future wave; depends on `security-secrets-config` and `security-runtime-settings-vertex`)
 6. `stage3-stage4-genre-alignment` (parked future wave; #56 genre semantics remediation before any new clean 5-arc proof claim)
+7. `stage4-proof-digest-cove-advisory` (operator-promoted side tranche in progress; #59 proof evidence, CoVe advisory, dashboard freshness, and benchmark diagnostic split before proof/benchmark closure claims)
 
 ## 5. Per-Item Plan
 
@@ -120,6 +125,14 @@ Working order:
 - completion signal: targeted regressions and fresh proof evidence show business-power action/tension prompts and Director selection context are aligned, then #56 receives a status update.
 - temp cleanup action: remove `docs/temp/stage3-stage4-genre-alignment-execution-ssot.md` after closure.
 
+### stage4-proof-digest-cove-advisory
+
+- goal: make Stage4 proof-digest `warn`, CoVe runtime advisory, CoVe semantic fail-closed retry, Director PASS authority, settled attempt verdict, stale runtime summaries, and benchmark diagnostics visibly distinct.
+- prerequisites: all ten #59 terminal reports are present; current-state re-audit is required before each remaining tranche.
+- execution notes: do not make `warn` disappear by dropping evidence. Bridge/dashboard warn count forwarding and CoVe test hardening are partially realized; stale-summary detection, producer taxonomy, benchmark packet changes, and possible desktop rendering remain open.
+- completion signal: targeted dashboard, CoVe, and benchmark regressions pass; proof warnings are itemized by authority role; Issue #59 receives a status update.
+- temp cleanup action: remove `docs/temp/stage4-proof-digest-cove-advisory-execution-ssot.md` after closure.
+
 ## 6. Shared Risks and Side-Effects
 
 - shared write paths: docs, `.gitignore`, `.gitattributes`, `.env.example`, config modules, provider modules, desktop files, build scripts, CI workflows.
@@ -129,6 +142,7 @@ Working order:
 - queue collision or ordering risks: creating additional security or Stage4 SSOTs requires updating this roadmap before implementation.
 - Stage4-specific shared side effects: `stage_attempts`, `director_selections`, `manuscripts`, `blueprints`, `episode_meta`, context cache attempts, rejected/selected artifacts, and runtime/session logs.
 - Stage3/Stage4 genre-alignment side effects: prompt envelopes, candidate `_ensemble_meta`, strategy metadata, cache keys, Director prompt context, physical intrusion guard logs, and benchmark/reject-rate evidence.
+- Stage4 proof-digest/CoVe advisory side effects: proof digest payloads, bridge/dashboard compact summaries, `runtime_audit_summary.json` freshness labels, CoVe advisory audit events, benchmark archive packets, and operator comparison lines.
 
 ## 7. Status Ledger
 
@@ -140,6 +154,7 @@ Working order:
 | `security-desktop-release-guardrails` | pending | 2026-04-27 | depends on first two security items; access-control product model may remain residual |
 | `stage4-post-select-conflict` | in_progress | 2026-04-27 | partial T06 retry/hydration and T07 Director cache mitigations implemented; remaining #58 tranches and fresh proof still required |
 | `stage3-stage4-genre-alignment` | pending | 2026-04-27 | current-state re-audit required; #56 T01-T10 artifacts were not locally/GitHub-readable during synthesis |
+| `stage4-proof-digest-cove-advisory` | in_progress | 2026-04-27 | partial bridge/dashboard warn count forwarding and CoVe test hardening implemented; stale-summary detection, producer taxonomy, benchmark packet, and possible desktop rendering remain open |
 
 ## 8. Queue Cleanup Rule
 
@@ -161,6 +176,7 @@ Pass 2 - evidence and consistency:
 - PASS. Security items are marked as parked future wave, preventing accidental front-active interpretation.
 - PASS. Stage4 #58 item is explicitly operator-promoted for bug-risk reduction, and Frontier Lag is parked rather than silently reordered.
 - PASS. Stage3/Stage4 #56 item is marked as parked future wave and explicitly records the missing local/GitHub-readable T01-T10 artifact limitation.
+- PASS. Stage4 #59 item is marked as parked future wave and explicitly separates proof evidence, CoVe advisory, semantic retry, stale summary, and benchmark comparison surfaces.
 
 Pass 3 - execution readiness:
 - PASS. The roadmap is actionable for queue control but explicitly does not authorize implementation without fresh re-audit.
