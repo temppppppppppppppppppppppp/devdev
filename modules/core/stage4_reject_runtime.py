@@ -597,7 +597,36 @@ class Stage4RejectRuntime:
         )
 
     @staticmethod
-    def _should_preserve_post_select_fix_pack(fix_pack: dict | None) -> bool:
+    def _has_opening_action_continuity_contract(payload: object) -> bool:
+        if isinstance(payload, dict):
+            scalar_keys = ("dominant_contradiction_type", "subtype")
+            if any(
+                str(payload.get(key, "") or "").strip().lower() == "opening_action_continuity" for key in scalar_keys
+            ):
+                return True
+            contradiction_types = payload.get("contradiction_types")
+            if isinstance(contradiction_types, list | tuple | set) and any(
+                str(item or "").strip().lower() == "opening_action_continuity" for item in contradiction_types
+            ):
+                return True
+            nested_keys = (
+                "conflict_contract",
+                "repair_contract",
+                "authoritative_fix_scope_violation",
+                "contradiction_details",
+                "violations",
+            )
+            return any(
+                Stage4RejectRuntime._has_opening_action_continuity_contract(payload.get(key)) for key in nested_keys
+            )
+        if isinstance(payload, list | tuple | set):
+            return any(Stage4RejectRuntime._has_opening_action_continuity_contract(item) for item in payload)
+        return False
+
+    @staticmethod
+    def _should_preserve_post_select_fix_pack(fix_pack: dict | None, *conflict_sources: object) -> bool:
+        if any(Stage4RejectRuntime._has_opening_action_continuity_contract(source) for source in conflict_sources):
+            return False
         if not isinstance(fix_pack, dict):
             return False
         patch_targets = [str(item).strip() for item in (fix_pack.get("patch_targets") or []) if str(item).strip()]
@@ -1278,7 +1307,11 @@ class Stage4RejectRuntime:
         preserve_bounded_post_select_fix_pack = (
             reject_bucket == "post_select_conflict"
             and resolved_fix_scope == "full"
-            and self._should_preserve_post_select_fix_pack(snapshot_fix_pack)
+            and self._should_preserve_post_select_fix_pack(
+                snapshot_fix_pack,
+                director_result,
+                previous_attempt,
+            )
         )
         preserve_downgraded_pass_rationale = (
             reject_bucket == "post_select_conflict"
@@ -1505,7 +1538,10 @@ class Stage4RejectRuntime:
             logging.debug("[IFC] violation classification non-blocking error: %s", exc)
 
         if reject_bucket == "post_select_conflict":
-            preserve_bounded_post_select_fix_pack = self._should_preserve_post_select_fix_pack(resolved_fix_pack)
+            preserve_bounded_post_select_fix_pack = self._should_preserve_post_select_fix_pack(
+                resolved_fix_pack,
+                director_result,
+            )
             resolved_fix_scope = "full"
             resolved_fix_pack = (
                 owner._normalize_fix_pack(resolved_fix_pack) if preserve_bounded_post_select_fix_pack else {}

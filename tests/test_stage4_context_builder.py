@@ -2775,6 +2775,34 @@ class TestBuildMandatoryContext:
         )
         assert text.index("[Stage4 Opening Scene Authority]") < text.index("[Stage4 Work Identity Authority]")
 
+    def test_build_work_identity_authority_packet_renders_opening_continuity_pin(self):
+        cb = Stage4ContextBuilder(_make_ctx())
+
+        text = cb._build_work_identity_authority_packet(
+            focus={},
+            arc_data={},
+            blueprint={
+                "_continuity_pins": [
+                    {
+                        "type": "opening_action_continuity_pin",
+                        "before": "previous ending already moved toward the hallway",
+                        "expected": "continue into the next door",
+                        "observed": "replay the phone summons",
+                    }
+                ],
+            },
+            cp_entities={},
+        )
+
+        assert "[Stage4 Opening Scene Authority]" in text
+        assert (
+            "opening continuity pin previous action/state before retry: previous ending already moved toward the hallway"
+            in text
+        )
+        assert "opening continuity pin expected action: continue into the next door" in text
+        assert "invalid opening action to avoid/replay: replay the phone summons" in text
+        assert "rebuild the opening scene model from the expected action" in text
+
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_build_mandatory_context_injects_semantic_relation_slice_when_focus_requires_it(self, _mock_build):
         ctx = _make_ctx()

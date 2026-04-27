@@ -3085,9 +3085,7 @@ class TestRecordS4Attempt:
         )
         assert db_payload["primary_failure_layer"] == "quality_floor"
 
-    def test_hydrate_persisted_stage4_previous_attempt_preserves_envelope_and_blocks_rejected_artifact(
-        self, tmp_path
-    ):
+    def test_hydrate_persisted_stage4_previous_attempt_preserves_envelope_and_blocks_rejected_artifact(self, tmp_path):
         ctx = _make_ctx()
         ctx.current_project.metrics_session_id = "sess-stage4"
         ctx.current_project.paths = SimpleNamespace(root=tmp_path)
@@ -4988,7 +4986,7 @@ class TestRecordS4Attempt:
         assert payload.use_patch is True
         assert payload.force_patch is False
 
-    def test_resolve_retry_lane_routing_allows_opening_action_continuity_patch(self):
+    def test_resolve_retry_lane_routing_blocks_opening_action_continuity_patch(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
 
@@ -5010,7 +5008,7 @@ class TestRecordS4Attempt:
         )
 
         assert payload.reject_bucket == "post_select_conflict"
-        assert payload.use_patch is True
+        assert payload.use_patch is False
         assert payload.use_inplace is False
         assert payload.force_patch is False
 
@@ -9879,6 +9877,53 @@ class TestLane2DirectorSemantics:
         assert payload.resolved_fix_scope == "full"
         assert payload.resolved_fix_pack["patch_targets"] == ["기관명 표기 문장"]
         assert "TF-F1" in payload.resolved_fix_scope_reasoning
+
+    def test_build_reject_guidance_payload_drops_opening_continuity_local_fix_pack(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._build_retry_feedback_provenance = MagicMock(
+            return_value={
+                "merged_feedback": "[Continuity Conflict] opening action continuity",
+                "director_feedback_text": "director note",
+                "runtime_advisory": "",
+                "retry_directives": "",
+            }
+        )
+        ir._classify_reject_bucket = MagicMock(return_value="constraint_violation")
+        ir._is_continuity_replay_reject = MagicMock(return_value=False)
+
+        payload = ir.reject_runtime._build_reject_guidance_payload(
+            director_result={
+                "selected_candidate": {"manuscript": "candidate manuscript"},
+                "feedback": {"issues": ["opening action continuity"]},
+                "action_items": ["rebuild opening scene"],
+                "fix_scope": "inplace",
+                "fix_scope_reasoning": "director local repair",
+                "gate_basis": "post_select_conflict",
+                "contradiction_types": ["opening_action_continuity"],
+                "fix_pack": {
+                    "patch_targets": ["opening line"],
+                    "must_fix": ["replace opening line"],
+                    "do_not_regress": ["opening continuity"],
+                    "success_condition": "opening action continuity resolved",
+                    "target_kind": "local_sentence",
+                },
+            },
+            director_feedback="initial reject",
+            validation_results=[_validation_result()],
+            selected="A",
+            round_num=0,
+            blueprint={"episode": 1},
+            prev_manuscript="previous manuscript",
+            tot_used=False,
+            mad_used=False,
+            error_category="LOGIC_ERROR",
+        )
+
+        assert payload.reject_bucket == "post_select_conflict"
+        assert payload.resolved_fix_scope == "full"
+        assert payload.resolved_fix_pack == {}
+        assert "TF-F1" not in payload.resolved_fix_scope_reasoning
 
     def test_record_reject_attempt_artifact_builds_reject_attempt_payload(self):
         ctx = _make_ctx()

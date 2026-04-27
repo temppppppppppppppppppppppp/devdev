@@ -90,7 +90,6 @@ class TestBuildCommonContext:
         )
         assert "Director 피드백" in result
 
-
     def test_build_common_context_delegates_packet_bundle(self):
         host = _make_host()
         builder = ChiefWriterContextBuilder(host)
@@ -144,7 +143,10 @@ class TestBuildCommonContext:
                 "prev_manuscripts_section": "prev-full",
             }
         )
-        arc_data = {"arc_no": 1, "cross_stage_authority_packet": {"contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION}}
+        arc_data = {
+            "arc_no": 1,
+            "cross_stage_authority_packet": {"contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION},
+        }
 
         with patch("modules.domain.agents.chief_writer_context.build_chief_writer_main_prompt", return_value="prompt"):
             builder.build_common_context(
@@ -166,7 +168,9 @@ class TestBuildCommonContext:
         host = _make_host()
         builder = ChiefWriterContextBuilder(host)
 
-        with patch("modules.domain.agents.chief_writer_context.build_chief_writer_main_prompt", return_value="prompt") as mock_prompt:
+        with patch(
+            "modules.domain.agents.chief_writer_context.build_chief_writer_main_prompt", return_value="prompt"
+        ) as mock_prompt:
             result = builder.build_common_context(
                 ep_num=5,
                 blueprint={"scene_breakdown": {}, "integrated_scenario": ""},
@@ -196,7 +200,9 @@ class TestBuildCommonContext:
         host = _make_host()
         builder = ChiefWriterContextBuilder(host)
 
-        with patch("modules.domain.agents.chief_writer_context.build_chief_writer_main_prompt", return_value="prompt") as mock_prompt:
+        with patch(
+            "modules.domain.agents.chief_writer_context.build_chief_writer_main_prompt", return_value="prompt"
+        ) as mock_prompt:
             result = builder.build_common_context(
                 ep_num=2,
                 blueprint={"scene_breakdown": {}, "integrated_scenario": ""},
@@ -221,14 +227,18 @@ class TestBuildCommonContext:
         assert result == "prompt"
         hard_canon = mock_prompt.call_args.kwargs["writer_hard_canon_section"]
         assert hard_canon.startswith("[Stage4 Opening Scene Authority]")
-        assert hard_canon.index("[Stage4 Opening Scene Authority]") < hard_canon.index("[Stage4 Work Identity Authority]")
+        assert hard_canon.index("[Stage4 Opening Scene Authority]") < hard_canon.index(
+            "[Stage4 Work Identity Authority]"
+        )
         assert hard_canon.index("[Stage4 Work Identity Authority]") < hard_canon.index("WORLD-STATE")
 
     def test_build_common_context_promotes_stage4_numeric_carryover_authority_into_hard_canon(self):
         host = _make_host()
         builder = ChiefWriterContextBuilder(host)
 
-        with patch("modules.domain.agents.chief_writer_context.build_chief_writer_main_prompt", return_value="prompt") as mock_prompt:
+        with patch(
+            "modules.domain.agents.chief_writer_context.build_chief_writer_main_prompt", return_value="prompt"
+        ) as mock_prompt:
             result = builder.build_common_context(
                 ep_num=2,
                 blueprint={"scene_breakdown": {}, "integrated_scenario": ""},
@@ -254,7 +264,9 @@ class TestBuildCommonContext:
         assert result == "prompt"
         hard_canon = mock_prompt.call_args.kwargs["writer_hard_canon_section"]
         assert "[Stage4 Numeric Carryover Authority]" in hard_canon
-        assert hard_canon.index("[Stage4 Work Identity Authority]") < hard_canon.index("[Stage4 Numeric Carryover Authority]")
+        assert hard_canon.index("[Stage4 Work Identity Authority]") < hard_canon.index(
+            "[Stage4 Numeric Carryover Authority]"
+        )
         assert hard_canon.index("[Stage4 Numeric Carryover Authority]") < hard_canon.index("WORLD-STATE")
 
     def test_extract_blueprint_sections_includes_integrated_scenario_and_hook(self):
@@ -296,6 +308,31 @@ class TestBuildCommonContext:
         assert "직전 화에서 이미 끝난 행동을 opening에서 다시 재연하면 즉시 불합격" in opening_anchor
         assert "다른 장소/시간에서 시작하면 즉시 불합격 처리된다." not in opening_anchor
 
+    def test_extract_blueprint_sections_opening_anchor_includes_continuity_pin(self):
+        builder = ChiefWriterContextBuilder(_make_host())
+
+        _, _, _, opening_anchor = builder._extract_blueprint_sections(
+            {
+                "_continuity_pins": [
+                    {
+                        "type": "opening_action_continuity_pin",
+                        "before": "previous ending already moved toward the hallway",
+                        "expected": "continue into the next door",
+                        "observed": "replay the phone summons",
+                    }
+                ],
+                "scene_breakdown": {},
+            }
+        )
+
+        assert (
+            "opening continuity pin previous action/state before retry: previous ending already moved toward the hallway"
+            in opening_anchor
+        )
+        assert "opening continuity pin expected action: continue into the next door" in opening_anchor
+        assert "invalid opening action to avoid/replay: replay the phone summons" in opening_anchor
+        assert "rebuild the opening scene model from the expected action" in opening_anchor
+
     def test_build_character_voice_section_uses_stage4_fallback(self):
         host = _make_host()
         host.context.character_voice = None
@@ -304,9 +341,7 @@ class TestBuildCommonContext:
         host._stage4_ctx = MagicMock(character_voice=stage4_voice)
         builder = ChiefWriterContextBuilder(host)
 
-        section = builder._build_character_voice_section(
-            {"scene_breakdown": {"scene_1": {"npcs": ["연홍", "백운"]}}}
-        )
+        section = builder._build_character_voice_section({"scene_breakdown": {"scene_1": {"npcs": ["연홍", "백운"]}}})
 
         assert "연홍은 격식을 유지한다." in section
         stage4_voice.get_writing_guide.assert_called_once_with(["연홍", "백운"])
@@ -341,7 +376,9 @@ class TestBuildCommonContext:
             }
         )
 
-        with patch("modules.domain.agents.chief_writer_context.build_chief_writer_main_prompt", return_value="prompt") as mock_prompt:
+        with patch(
+            "modules.domain.agents.chief_writer_context.build_chief_writer_main_prompt", return_value="prompt"
+        ) as mock_prompt:
             result = builder.build_common_context(
                 ep_num=5,
                 blueprint={
@@ -857,10 +894,7 @@ class TestIFCPacketInputWiring:
 
     def test_stage4_carryover_ceiling_blocks_unestablished_infrastructure_and_replay(self):
         builder = ChiefWriterContextBuilder(_make_host())
-        prev_ms = (
-            "창가에 선 채 가죽 양장 노트의 절반을 숫자로 채웠다. "
-            "WTI 진입 시점과 청산 가격 계산도 이미 끝냈다."
-        )
+        prev_ms = "창가에 선 채 가죽 양장 노트의 절반을 숫자로 채웠다. WTI 진입 시점과 청산 가격 계산도 이미 끝냈다."
         section = builder.context_packets._build_stage4_carryover_ceiling_section(
             blueprint={"scene_breakdown": {"scene_1": {"goal": "다음 행동 결정"}}},
             prev_manuscript=prev_ms,
@@ -955,7 +989,10 @@ class TestIFCPacketInputWiring:
 
         assert "Explicit cross-stage packet numeric carryover authority" in section
         assert "upstream transport lineage: cross_stage_authority_packet.v1" in section
-        assert "total_assets: 20000000 (cross-stage packet; source=state_constraints.arc_end_state.total_assets)" in section
+        assert (
+            "total_assets: 20000000 (cross-stage packet; source=state_constraints.arc_end_state.total_assets)"
+            in section
+        )
         assert "FactLedger carryover baseline is unavailable here" in section
 
     def test_stage4_carryover_ceiling_supplements_fact_ledger_with_packet_only_numeric_fields(self):
@@ -991,5 +1028,8 @@ class TestIFCPacketInputWiring:
         assert "supplemented by explicit cross-stage packet rows" in section
         assert "upstream transport lineage: cross_stage_authority_packet.v1" in section
         assert "capital: 10000000 won (EP1 carryover baseline)" in section
-        assert "total_assets: 20000000 (cross-stage packet; source=state_constraints.arc_end_state.total_assets)" in section
+        assert (
+            "total_assets: 20000000 (cross-stage packet; source=state_constraints.arc_end_state.total_assets)"
+            in section
+        )
         assert "FactLedger carryover baseline remains the stronger surface below" in section
