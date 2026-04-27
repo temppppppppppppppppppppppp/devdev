@@ -1,6 +1,6 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-27T04:34:01.0291789Z",
+  "generated_at": "2026-04-27T06:33:21.014208+00:00",
   "queue_mode": "aggregate",
   "active_item_count": 6,
   "roadmap": {
@@ -10,12 +10,23 @@
   },
   "items": [
     {
+      "topic": "stage4-post-select-conflict",
+      "temp_path": "docs/temp/stage4-post-select-conflict-execution-ssot.md",
+      "canonical_path": "docs/2026-04-27/stage4-post-select-conflict-execution-ssot.md",
+      "status": "in_progress",
+      "queue_role": "front_active",
+      "roadmap_rank": 1,
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
       "topic": "frontier-lag-clean-5arc-stabilization",
       "temp_path": "docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md",
       "canonical_path": "docs/2026-04-26/frontier-lag-clean-5arc-stabilization-execution-ssot.md",
       "status": "pending",
-      "queue_role": "front_active",
-      "roadmap_rank": 1,
+      "queue_role": "parked_future_wave",
+      "roadmap_rank": 2,
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
@@ -26,7 +37,7 @@
       "canonical_path": "docs/2026-04-27/security-secrets-config-execution-ssot.md",
       "status": "pending",
       "queue_role": "parked_future_wave",
-      "roadmap_rank": 2,
+      "roadmap_rank": 3,
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
@@ -37,7 +48,7 @@
       "canonical_path": "docs/2026-04-27/security-runtime-settings-vertex-execution-ssot.md",
       "status": "pending",
       "queue_role": "parked_future_wave",
-      "roadmap_rank": 3,
+      "roadmap_rank": 4,
       "depends_on": [
         "security-secrets-config"
       ],
@@ -50,22 +61,11 @@
       "canonical_path": "docs/2026-04-27/security-desktop-release-guardrails-execution-ssot.md",
       "status": "pending",
       "queue_role": "parked_future_wave",
-      "roadmap_rank": 4,
+      "roadmap_rank": 5,
       "depends_on": [
         "security-secrets-config",
         "security-runtime-settings-vertex"
       ],
-      "mirror_present": true,
-      "canonical_present": true
-    },
-    {
-      "topic": "stage4-post-select-conflict",
-      "temp_path": "docs/temp/stage4-post-select-conflict-execution-ssot.md",
-      "canonical_path": "docs/2026-04-27/stage4-post-select-conflict-execution-ssot.md",
-      "status": "pending",
-      "queue_role": "parked_future_wave",
-      "roadmap_rank": 5,
-      "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
     },
