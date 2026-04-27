@@ -1170,6 +1170,71 @@ def test_sanitize_blueprint_candidate_rejects_episode_progression_replay_before_
     assert result == (None, AgentErrorType.CANDIDATE_DISQUALIFIED)
 
 
+def test_sanitize_blueprint_candidate_allows_progressive_opening_bridge():
+    agent = _make_agent()
+    candidate = {
+        "opening_transition": {"type": "direct_continuation", "signals": ["same_location_anchor"]},
+        "protagonist_state": {"mood": "집중"},
+        "integrated_scenario": "A" * 900,
+        "scene_breakdown": {
+            "scene_1": {
+                "title": "서재로 향하는 걸음",
+                "goal": "아버지 한정호의 서재로 향하며 독립 투자 회사 선언을 준비한다.",
+                "summary": "가사도우미의 안내를 받은 한시우가 거실에서 일어나 복도를 지나 서재로 향한다.",
+                "characters": ["한시우"],
+                "key_events": [
+                    "한시우가 거실 소파에서 일어나 서재가 있는 복도를 향해 걷기 시작한다.",
+                    "한시우는 투자 회사를 차리겠다는 말을 머릿속에서 정리한다.",
+                ],
+                "location": "2006년 성북동 본가, 거실에서 서재로 가는 복도",
+            },
+            "scene_2": {
+                "title": "독립 선언",
+                "goal": "아버지 한정호에게 그룹이 아닌 독립 투자 회사 설립 의사를 밝힌다.",
+                "summary": "한시우가 서재에서 한정호와 마주해 투자 회사를 차리겠다고 선언한다.",
+                "characters": ["한시우", "한정호"],
+                "key_events": ["한시우가 독립 투자 회사 설립 의사를 밝힌다."],
+                "location": "성북동 본가, 한정호의 서재",
+            },
+        },
+    }
+
+    result = agent._sanitize_blueprint_candidate(
+        candidate,
+        strategy_name="action_focused",
+        genre=GenreTypes.INVESTMENT,
+        prev_blueprint={
+            "scene_breakdown": {
+                "scene_2": {"location": "2006년 성북동 본가, 한시우의 방", "characters": ["한시우"]},
+                "scene_3": {"location": "2006년 성북동 본가, 거실", "characters": ["한시우"]},
+                "scene_4": {"location": "2006년 성북동 본가, 거실", "characters": ["한시우", "가사도우미"]},
+            }
+        },
+        constraint_block={
+            "must_focus": {"content": "아버지 한정호의 서재에 불려가 독립 투자 회사 설립 의사를 밝힌다."},
+            "episode_progression_packet": {
+                "blocked_scene_families": [
+                    {
+                        "scene_key": "scene_4",
+                        "label": "아버지의 부름",
+                        "location": "2006년 성북동 본가, 거실",
+                        "location_variants": ["2006년 성북동 본가, 거실", "거실"],
+                        "characters": ["한시우", "가사도우미"],
+                    }
+                ],
+                "completed_prior_events": [
+                    {
+                        "location": "2006년 성북동 본가, 거실",
+                        "events": ["TV를 보던 한시우에게 가사도우미가 다가와 회장님께서 찾는다고 말한다."],
+                    }
+                ],
+            },
+        },
+    )
+
+    assert result == candidate
+
+
 def test_format_constraints_surfaces_episode_progression_guardrails_for_producer_prompt():
     agent = _make_agent()
 
