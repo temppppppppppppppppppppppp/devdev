@@ -1018,3 +1018,59 @@ Validation:
 - `python -m pytest -q tests/test_auto_frontier_lag_harness.py` -> 41 passed
 - `python -X utf8 scripts/check_utf8_hygiene.py scripts/run_auto_frontier_lag_harness.py tests/test_auto_frontier_lag_harness.py docs/2026-04-28/auto-frontier-lag-2arc-runtime-analysis-ssot.md docs/2026-04-26/frontier-lag-clean-5arc-stabilization-execution-ssot.md docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md docs/2026-04-27/security-and-frontier-active-execution-roadmap.md docs/temp/execution-roadmap.md benchmarks/benchmark_index.csv` -> passed
 - `git diff --check -- scripts/run_auto_frontier_lag_harness.py tests/test_auto_frontier_lag_harness.py docs/2026-04-28/auto-frontier-lag-2arc-runtime-analysis-ssot.md docs/2026-04-26/frontier-lag-clean-5arc-stabilization-execution-ssot.md docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md docs/2026-04-27/security-and-frontier-active-execution-roadmap.md docs/temp/execution-roadmap.md benchmarks/benchmark_index.csv` -> passed
+
+## 9.9 Provider-Wait Rerun and Stage 3 Retry Recipe
+
+Date: 2026-04-28
+Baseline: `abf680780e1a07cf72b141cc77cdccf05a638224`
+Target project: `projects/auto_frontier_watchdog_probe_20260428_2arc`
+Run id: `20260428_001914_96ca44c527`
+Benchmark archive id: `20260428_003702__auto-frontier-lag-2arc-rerun__target-open__abf68078`
+
+### Rerun Result
+
+The watchdog hardening worked: the rerun was not terminated as a stall while provider HTTP response waits were in flight.
+
+- judgment: `failed`
+- root_cause: `stage3_strict_failure_stop`
+- watchdog_status: `progressing`
+- process_success: `True`
+- objective_success: `False`
+- objective_root_cause: `stage3_strict_failure_stop`
+- boundary_reached: `False`
+- Stage 3 attempts recorded: `2`
+- Stage 4 attempts recorded: `0`
+- Stage 3 current-session sink alignment: `warn`
+- Stage 4 current-session sink alignment: `missing`
+- generated runtime SSOT: `docs/2026-04-28/auto-frontier-lag-2arc-runtime-analysis-ssot.md`
+
+The terminal Stage 3 failure repeated `replay/authority` reroute guidance until plateau guard stopped the retry loop. This confirms the next blocker is no longer watchdog classification; it is the Stage 3 positive continuation recipe for episode 2 reroute.
+
+### 3-Pass Post-Run Audit
+
+Pass 1 - fact extraction: PASS.
+
+- Stage 2 completed and Stage 3 ep1 produced a PASS blueprint.
+- Stage 3 ep2 failed before Stage 4, so the requested 2-arc boundary was not reached.
+- The failure was objective-level, not process-level.
+
+Pass 2 - contradiction check: PASS.
+
+- This result is consistent with the previous run: provider waits should not be classified as idle stalls, and after that fix the latent Stage 3 reroute issue becomes observable.
+- The Stage 3 sink-alignment warning is secondary evidence drift for failed attempts, not the primary stop reason.
+
+Pass 3 - execution decision audit: PASS.
+
+- Add a concrete positive continuation recipe to candidate-disqualified retry feedback.
+- The recipe must tell the model how to continue: start at the previous ending location with carryover characters already present, spend at most one bridge beat acknowledging the prior result, and immediately advance into current `must_focus`.
+- Do not claim 5-arc readiness until the bounded 2-arc diagnostic passes after this Stage 3 retry hardening.
+
+Implementation status: realized in `modules/domain/agents/three_phase_blueprint_runtime.py`.
+
+Validation:
+
+- `python -m py_compile modules/domain/agents/three_phase_blueprint_runtime.py` -> passed
+- `python -m pytest -q tests/test_blueprint_patch_mode.py -k "candidate_disqualified"` -> 6 passed
+- `python -X utf8 scripts/check_utf8_hygiene.py modules/domain/agents/three_phase_blueprint_runtime.py tests/test_blueprint_patch_mode.py docs/2026-04-28/auto-frontier-lag-2arc-runtime-analysis-ssot.md benchmarks/benchmark_index.csv` -> passed
+
+Estimated operational confidence: 96% for the blocker classification and retry-feedback patch.
