@@ -379,7 +379,7 @@
             "div",
             { className: "pattern-item", key: `failure-pattern-${item.type || "type"}-${index}` },
             e("div", { className: "pattern-item-title" }, item.type || "unknown"),
-            e("div", { className: "pattern-item-meta" }, `누적 ${item.count || 0}회`)
+            e("div", { className: "pattern-item-meta" }, item.meta || `누적 ${item.count || 0}회`)
           )
         )
       : [e("div", { className: "insight-empty", key: "failure-pattern-empty" }, emptyText)];

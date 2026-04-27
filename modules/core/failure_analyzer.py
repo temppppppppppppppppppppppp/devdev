@@ -386,6 +386,7 @@ def _build_proof_warning_taxonomy_counts(
             (
                 "selection_reason_mismatches",
                 "verdict_reason_mismatches",
+                "phase_drift_rationale_warnings",
                 "comparison_notes_mismatches",
                 "selected_candidate_advisory_mismatches",
             ),
@@ -2450,10 +2451,12 @@ class FailureAnalyzer:
         director_selections: dict[str, dict],
         session_decisions: dict[str, dict],
         episode_production: dict[str, dict],
+        authority_row: dict[str, object] | None = None,
     ) -> dict[str, list[dict]]:
         results = {
             "selection_reason_mismatches": [],
             "verdict_reason_mismatches": [],
+            "phase_drift_rationale_warnings": [],
             "comparison_notes_mismatches": [],
             "selected_candidate_advisory_mismatches": [],
             "fix_scope_mismatches": [],
@@ -2558,7 +2561,23 @@ class FailureAnalyzer:
                 continue
             nonempty_values = self._nonempty_value_map(values_by_sink)
             if len(set(nonempty_values.values())) > 1:
-                results[result_key].append({"attempt_key": attempt_key, **nonempty_values})
+                if self._is_stage4_prefinal_rationale_phase_drift(
+                    stage=stage,
+                    field_name=field_name,
+                    values_by_sink=nonempty_values,
+                    authority_row=authority_row,
+                ):
+                    results["phase_drift_rationale_warnings"].append(
+                        {
+                            "attempt_key": attempt_key,
+                            "field": field_name,
+                            "phase_role": "director_selection_companion_pre_final",
+                            "authority_sink": "stage_attempts",
+                            **nonempty_values,
+                        }
+                    )
+                else:
+                    results[result_key].append({"attempt_key": attempt_key, **nonempty_values})
             missing_sinks = self._missing_value_sinks(values_by_sink)
             if missing_sinks and nonempty_values:
                 results["rationale_metadata_missing"].append(
@@ -2581,6 +2600,26 @@ class FailureAnalyzer:
                         {"attempt_key": attempt_key, "field": field_name, "sinks": missing_sinks}
                     )
         return results
+
+    @staticmethod
+    def _is_stage4_prefinal_rationale_phase_drift(
+        *,
+        stage: int,
+        field_name: str,
+        values_by_sink: dict[str, object],
+        authority_row: dict[str, object] | None,
+    ) -> bool:
+        if stage != 4 or field_name not in {"selection_reason", "verdict_reason"}:
+            return False
+        companion_status = str((authority_row or {}).get("selection_companion_status") or "").strip()
+        if companion_status != "pre_final_candidate" or "director_selections" not in values_by_sink:
+            return False
+        final_sink_values = [
+            str(value or "").strip()
+            for sink, value in values_by_sink.items()
+            if sink != "director_selections" and str(value or "").strip()
+        ]
+        return bool(final_sink_values) and len(set(final_sink_values)) == 1
 
     def _collect_sink_alignment_consistency_results(
         self,
@@ -2620,6 +2659,7 @@ class FailureAnalyzer:
             "artifact_metadata_missing": [],
             "selection_reason_mismatches": [],
             "verdict_reason_mismatches": [],
+            "phase_drift_rationale_warnings": [],
             "comparison_notes_mismatches": [],
             "selected_candidate_advisory_mismatches": [],
             "fix_scope_mismatches": [],
@@ -2681,6 +2721,7 @@ class FailureAnalyzer:
                     director_selections=director_selections,
                     session_decisions=session_decisions,
                     episode_production=episode_production,
+                    authority_row=final_authority_by_attempt.get(attempt_key),
                 ),
                 self._collect_sink_alignment_raw_rationale_results(
                     stage=stage,
@@ -2725,6 +2766,7 @@ class FailureAnalyzer:
         consistency_results = {
             "comparison_notes_mismatches": [],
             "selected_candidate_advisory_mismatches": [],
+            "phase_drift_rationale_warnings": [],
             "artifact_content_hash_mismatches": [],
             **dict(consistency_results or {}),
         }
@@ -2824,6 +2866,7 @@ class FailureAnalyzer:
                 "artifact_metadata_missing",
                 "selection_reason_mismatches",
                 "verdict_reason_mismatches",
+                "phase_drift_rationale_warnings",
                 "comparison_notes_mismatches",
                 "selected_candidate_advisory_mismatches",
                 "fix_scope_mismatches",
@@ -2889,6 +2932,7 @@ class FailureAnalyzer:
                 consistency_results["artifact_metadata_missing"],
                 consistency_results["selection_reason_mismatches"],
                 consistency_results["verdict_reason_mismatches"],
+                consistency_results["phase_drift_rationale_warnings"],
                 consistency_results["comparison_notes_mismatches"],
                 consistency_results["selected_candidate_advisory_mismatches"],
                 consistency_results["fix_scope_mismatches"],
@@ -2963,6 +3007,7 @@ class FailureAnalyzer:
             "artifact_metadata_missing": consistency_results["artifact_metadata_missing"][:10],
             "selection_reason_mismatches": consistency_results["selection_reason_mismatches"][:10],
             "verdict_reason_mismatches": consistency_results["verdict_reason_mismatches"][:10],
+            "phase_drift_rationale_warnings": consistency_results["phase_drift_rationale_warnings"][:10],
             "comparison_notes_mismatches": consistency_results["comparison_notes_mismatches"][:10],
             "selected_candidate_advisory_mismatches": consistency_results["selected_candidate_advisory_mismatches"][
                 :10

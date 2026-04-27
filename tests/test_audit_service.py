@@ -574,6 +574,27 @@ class TestWriteAuditSummary:
         assert compact["issue_counts"]["gate_repair_metadata_missing"] == 1
         assert compact["warning_taxonomy_counts"]["metadata_gap_warn"] == 1
 
+    def test_compact_sink_alignment_summary_counts_phase_drift_rationale_warnings(self, svc):
+        compact = svc._compact_sink_alignment_summary(
+            {
+                "status": "warn",
+                "attempts_considered": 1,
+                "complete_final_attempts": 1,
+                "complete_lifecycle_attempts": 1,
+                "phase_drift_rationale_warnings": [
+                    {
+                        "attempt_key": "s4:ep1:arc1:a1:sess",
+                        "field": "selection_reason",
+                        "phase_role": "director_selection_companion_pre_final",
+                    }
+                ],
+                "warning_taxonomy_counts": {"rationale_drift_warn": 1},
+            }
+        )
+
+        assert compact["issue_counts"]["phase_drift_rationale_warnings"] == 1
+        assert compact["warning_taxonomy_counts"]["rationale_drift_warn"] == 1
+
     def test_write_summary_proof_digest_uses_committed_snapshot_only(self, runtime_audit, tmp_project):
         db = DBManager(tmp_project.root / "project_data.db")
         try:
