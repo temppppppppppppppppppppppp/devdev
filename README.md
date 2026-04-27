@@ -1,156 +1,173 @@
 # 글도비
 
-Pipeline Order: `리서치 -> 기획안 -> Stage 0 preprocess -> Phase 0 design -> TR 생성 -> BI 생성 -> 글도비 파이프라인`
+글도비는 웹소설 제작을 위한 AI 원고 생산 파이프라인이다.
 
-> LLM 기반 장편 웹소설 자동 생성 워크스페이스.
-> CLI 런타임, Electron 데스크톱 앱, narrative pipeline 도구, 운영 감리 문서를 함께 포함한다.
+핵심은 단순히 원고를 한 번 생성하는 것이 아니라, 작품 재료를 표준화해서 만들고, 그 재료를 파이프라인에 태워 연속 원고 생산까지 이어가는 것이다.
 
-## 저장소 한눈에 보기
+```text
+리서치
+-> 기획안
+-> Stage 0 preprocess
+-> Phase 0 design
+-> TR 생성
+-> BI 생성
+-> work_guard / style_reference 정리
+-> 글도비 파이프라인 투입
+-> S2 / S3 / S4
+-> 실제 원고
+```
 
-글도비는 세계관 자료와 플롯 입력을 바탕으로 Stage 0부터 Stage 4까지의 생산 파이프라인을 운영하는 시스템이다. 기본 진입점은 `main_a.py`이며, 장르별 가드, Director 중심 심사, advisory/validation 체인, SQLite 기반 상태 저장, Electron control plane이 한 저장소 안에 묶여 있다.
+## 한 줄 요약
 
-현재 루트 README는 루트 런타임과 운영 동선을 설명한다. 작품별 TR/BI 라우팅 엔트리와 narrative-family 전용 흐름은 [`README.narrative-router.md`](README.narrative-router.md)로 분리되어 있다.
+글도비는 `재료 생산 -> BI/TR/work_guard/style_reference 표준화 -> S2/S3/S4 원고 생산`을 하나의 흐름으로 묶는 웹소설 제작 시스템이다.
 
-## 현재 운영 상태
+4월 말 현재 기준으로는 supervised run에서 거의 자동 생산 단계에 들어섰고, 연속성 및 생산성 이슈는 상당 부분 닫힌 상태다. 다음 과제는 원고가 계속 나오는지보다, 독자가 더 강하게 반응하는 연출과 상업성 레이어를 쌓는 것이다.
 
-- 운영 SSOT는 [`AGENTS.md`](AGENTS.md)이며, system-track 시작 하네스는 [`docs/implementation/system-order-init-harness.md`](docs/implementation/system-order-init-harness.md)다.
-- narrative/material-side 진입은 [`README.narrative-router.md`](README.narrative-router.md)와 [`docs/narrative-router/SSOT_narrative-router-integrated-order.md`](docs/narrative-router/SSOT_narrative-router-integrated-order.md)를 따른다.
-- active execution queue의 현재 컨트롤러는 [`docs/2026-04-01/active-temp-execution-roadmap.md`](docs/2026-04-01/active-temp-execution-roadmap.md)이며, mirror copy는 [`docs/temp/execution-roadmap.md`](docs/temp/execution-roadmap.md)다.
-- 최신 merged-main 기준으로 bounded `Stage234` authority-alignment lane은 닫혀 있고, broader `Stage3` / `Stage234` runtime proof는 여전히 `proof-pending / operator-gated` 상태다.
-- material-side standard flow에서는 `work_guard`가 `Phase 0 design`과 `TR` 사이의 standard companion artifact로 승격됐지만, 현재 runtime은 `work_guard` 부재만으로 hard-gated되지는 않는다.
+## 무엇을 만드는가
 
-현재 상태를 설명하는 대표 문서:
+글도비가 만드는 것은 크게 네 가지다.
 
-- [`docs/2026-04-14/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md`](docs/2026-04-14/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md)
-- [`docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`](docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md)
-- [`docs/2026-04-16/stage234-s2-s3-s4-authority-alignment-post-merge-current-head-adversarial-3pass-audit.md`](docs/2026-04-16/stage234-s2-s3-s4-authority-alignment-post-merge-current-head-adversarial-3pass-audit.md)
-
-## 현재 git 추적 파일 기준 스냅샷
-
-`git ls-files '*.py'` 기준으로 집계한 현재 코드 스냅샷이다.
-
-| 항목 | 값 |
+| 산출물 | 설명 |
 | --- | --- |
-| Python 소스 파일 | 502 |
-| Python 테스트 파일 | 447 |
-| Python 소스 LOC | 272,231 |
-| Python 테스트 LOC | 146,990 |
-| `modules/domain/agents/*.py` | 56 |
-| `modules/validation/*.py` | 17 |
-| `modules/core/genre_guards/*.py` | 14 |
-| 데스크톱 셸 | Electron 40 + React 18 |
+| 재료 | 시장 리서치, 장르 규칙, 도너 구조, 작품 콘셉트, 설정, 스타일 기준 |
+| TR | 앞으로 이런 이야기가 진행된다는 장기 전개 설계 |
+| BI | 작품 세계관, 인물, 규칙, 전개 약속을 런타임이 읽을 수 있게 정리한 기준 문서 |
+| 원고 | S2/S3/S4 파이프라인을 거쳐 생성되는 실제 회차 원고 |
 
-## 파이프라인 개요
+여기서 중요한 것은 원고만이 아니다. 원고 품질은 앞단 재료의 품질에 크게 좌우된다. 그래서 글도비는 원고 생성기이면서 동시에 재료 생산 및 표준화 시스템이다.
 
-| 단계 | 역할 | 대표 산출물 |
+## 재료는 어떻게 생산하는가
+
+재료 사이드는 원고 파이프라인 앞단이다. 여기서 작품의 방향, 구조, 독자 보상감, 금지선, 스타일 기준을 만든다.
+
+주요 흐름은 다음과 같다.
+
+1. 리서치
+   - 플랫폼 트렌드, 장르 관습, 독자 기대, 기존 성공작의 구조를 모은다.
+   - NAS/sample corpus, reference profile, few-shot bank, pattern report 같은 재사용 자료를 정리한다.
+
+2. 기획안
+   - 작품의 핵심 약속을 한 장으로 정리한다.
+   - 어떤 독자 욕망을 건드릴지, 어떤 보상 구조를 반복할지 정한다.
+
+3. Stage 0 preprocess
+   - source manifest, profile lock, material bundle summary, phase0 ready snapshot을 만든다.
+   - 흩어진 재료를 파이프라인이 읽을 수 있는 형태로 묶는다.
+
+4. Phase 0 design
+   - 작품의 장기 구조, 주인공 성장축, 반복 보상, 금지선, 장르 규칙을 설계한다.
+
+5. TR/BI pair 생성
+   - TR은 앞으로의 이야기 진행표다.
+   - BI는 그 진행표를 런타임이 참조할 수 있게 만든 작품 기준서다.
+
+6. work_guard / style_reference 생성
+   - `work_guard`는 작품별 금지선, 반복 규칙, 품질 기준을 잡는다.
+   - `style_reference`는 문체, 리듬, 장면 처리, 플랫폼 톤을 잡는다.
+
+7. 도너 구조 적용
+   - 좋은 구조를 그대로 복사하지 않고, 일반화된 법칙으로 번역해서 사용한다.
+   - donor registry, donor doctrine packet, deepclone 기준 샘플을 통해 재사용 가능한 구조를 관리한다.
+
+## 파이프라인은 어떻게 원고를 만드는가
+
+글도비 런타임은 S2, S3, S4를 중심으로 움직인다.
+
+| 단계 | 쉬운 설명 | 실제 역할 |
 | --- | --- | --- |
-| Stage 0 | 세계관, 스타일, 프로젝트 입력 정리 | Bible, Treatment, 스타일 정보 |
-| Stage 1 | 권/볼륨 전략 수립 | volume strategy |
-| Stage 2 | Arc 전술 설계 | tactical doc, state constraints |
-| Stage 3 | 에피소드 블루프린트 생성 | scene breakdown, integrated scenario |
-| Stage 4 | 원고 집필 및 검증 | manuscript, 상태 업데이트, 검증 결과 |
-| OneStop | Arc 단위 자동 실행 | Stage 2 -> 3 -> 4 연쇄 결과 |
+| S2 | 앞으로 이런 이야기 | Arc 단위 전개 방향, 갈등, 보상, 상태 변화를 설계한다. |
+| S3 | 이번 화는 이런 화별 구성 | 한 회차의 장면 순서, 감정 흐름, 정보 배치, 엔딩 훅을 설계한다. |
+| S4 | 실제 원고 | S3 구성을 바탕으로 후보 원고를 만들고, 검증/수정/재시도를 거쳐 최종 원고로 수렴시킨다. |
 
-핵심 운영 원칙은 다음과 같다.
+S2는 장기 전개의 뼈대, S3는 회차 설계도, S4는 실제 원고다.
 
-- Director가 최종 품질 판정권을 가진다.
-- Python은 수집, 포맷팅, 전달을 담당하고 판단은 LLM 에이전트가 맡는다.
-- 장르 가드, advisory chain, validation pipeline을 통해 장기 연재 모순을 줄인다.
-- UTF-8은 워크스페이스 전역 불변식이다.
+이 구조 덕분에 글도비는 원고를 한 번에 던지는 방식이 아니라, `이야기 방향 -> 화별 구성 -> 실제 원고`로 계층화해서 생산한다.
 
-## 저장소 지도
+## 기본 전략
 
-- `main_a.py`
-  - CLI 진입점이자 Stage 0/1/2/3/4/OneStop 운영 오너
-- `modules/core/`
-  - 오케스트레이터, 런타임 분해 모듈, DB, 상태/컨텍스트, 검증 공용 코어
-- `modules/domain/agents/`
-  - Analyst, Director, Chief Writer, ensemble, validator 계열 LLM 에이전트
-- `modules/api/`
-  - desktop/control-plane용 bridge server, process runner, risk approval, run validator
-- `modules/validation/`
-  - blocking, continuity, scoring, advisory 등 검증기 구현
-- `geuldobi-desktop/`
-  - Electron 데스크톱 앱
-  - authoritative desktop entry는 `geuldobi-desktop/src/main.js`
-  - 루트 `main.js`는 debug shadow entry만 담당
-- `scripts/`
-  - ops governance, UTF-8 hygiene, narrative routing, test support 스크립트
-- `tests/`
-  - unit, integration, e2e, property, desktop/runtime contract 테스트
-- `projects/`
-  - 프로젝트별 DB, 실행 산출물, 회차 결과물
-- `treatments/`, `bible/`
-  - 작품 입력/중간 산출물
-- `docs/`
-  - 운영 하네스, 감리 문서, execution SSOT, dated audit 문서
-- `AGENTS.md`
-  - 현재 워크스페이스 운영 SSOT
+글도비는 과정상에서 앙상블을 기본 전략으로 사용한다.
 
-## 빠른 시작
+한 번의 답을 그대로 믿지 않고, 여러 후보를 만들고, 비교하고, Director 판단을 통해 더 나은 결과를 고른다. 필요하면 재시도하고, 실패 원인을 기록하며, 다음 단계에 넘길 수 있는 형태로 정리한다.
 
-### 1. Python 환경 준비
+수정 전략도 한 단계가 아니다. 결과가 바로 쓸 만하면 통과시키고, 고칠 수 있으면 국소 수정한다. 국소 수정으로 해결되지 않으면 해당 회차를 다시 만들고, 구조 자체가 흔들렸다고 판단되면 앙상블 후보부터 다시 만든다.
 
-요구사항:
+| 판정/상태 | 쉬운 설명 | 대응 |
+| --- | --- | --- |
+| PASS | 그대로 써도 되는 결과 | 다음 단계로 넘긴다. |
+| PWF / PASS_WITH_FIX | 큰 틀은 맞지만 일부 수정이 필요한 결과 | 문제 지점을 지정하고 patch한다. |
+| PATCH | 국소 수정 | 문장, 장면 일부, 누락 요소, 충돌 지점만 고친다. |
+| 1화 전면 재생성 | 이번 회차 설계나 원고가 크게 어긋난 경우 | 해당 회차를 처음부터 다시 만든다. |
+| 앙상블 전면 재생성 | 후보군 자체가 약하거나 방향이 틀린 경우 | 여러 후보를 다시 만들고 Director가 다시 고른다. |
 
-- Python 3.11 이상
-- 기본 런타임용 Gemini API 키
-- 데스크톱 앱을 사용할 경우 Node.js + npm
+즉, 글도비는 `통과 -> 국소 수정 -> 회차 재생성 -> 앙상블 재생성` 순서로 비용이 낮은 대응부터 시도한다. 이 구조 덕분에 작은 문제를 매번 전면 재생성으로 밀어붙이지 않고, 반대로 큰 문제를 억지 patch로 덮지도 않는다.
 
-설치:
+주요 전략:
 
-```bash
-pip install -r requirements.txt
-```
+- 앙상블 후보 생성
+- Director 중심 선택과 검증
+- PASS / PWF / REJECT 기반 판정
+- PATCH 기반 국소 수정
+- 회차 단위 전면 재생성
+- 앙상블 후보군 전면 재생성
+- SQLite 기반 프로젝트 DB 저장
+- 세션 메모리로 실행 중 맥락 유지
+- 컨텍스트 캐싱으로 반복 맥락 재사용
+- cache lineage로 오래된 캐시 오염 방지
+- Stage별 로그와 지표 수집
+- S2/S3/S4 계층 분리
+- BI/TR/work_guard/style_reference 기반 구조화
 
-### 2. 환경 변수 설정
+## 현재 상태
 
-최소 구성은 `GOOGLE_API_KEY`다.
+4월 말 기준으로 현재 상태는 다음과 같이 정리할 수 있다.
 
-```bash
-GOOGLE_API_KEY=your_google_api_key_here
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/your/workspace/webhook
-```
+| 영역 | 현재 상태 |
+| --- | --- |
+| S2 | 안정화 후기. 현재 주요 병목이 아니다. |
+| S3 | 안정화 후기. 4월 중후반 하락 이후 회복됐다. |
+| S4 | 최적화 중기 진입. 세션 메모리와 컨텍스트 캐싱을 통해 재시도율 2회 수렴을 노릴 수 있는 단계다. |
+| 원고 런타임 | supervised run 기준 거의 자동 생산 단계에 들어섰다. |
+| 재료 사이드 | 생산 체계 구축 후기. 도너, work_guard, BI/TR pair 표준화가 마련됐다. |
+| 다음 과제 | 연속 생산 여부보다 연출 레이어와 상업성 강화다. |
 
-멀티 프로바이더 실험을 할 경우 아래 환경 변수를 추가로 사용할 수 있다.
+정량적으로는 S4 성공 1건당 시도 수가 4월 초 `3.408회`에서 4월 말 `2.3회`로 줄었다. S4 성공률도 4월 초 `29.3%`에서 4월 말 `43.5%`로 개선됐다.
 
-```bash
-GOOGLE_API_KEY_2=your_second_key
-GOOGLE_API_KEY_3=your_third_key
-ANTHROPIC_API_KEY=your_anthropic_key
-OPENAI_API_KEY=your_openai_key
-VERTEX_API_KEY=your_vertex_api_key
-VERTEX_PROJECT_ID=your_gcp_project
-VERTEX_LOCATION=asia-northeast3
-GOOGLE_APPLICATION_CREDENTIALS=C:\path\to\service-account.json
-```
+이 수치는 무인 완전 자동화가 끝났다는 뜻은 아니다. 다만 supervised run 기준으로는 생산성이 거의 닫혔고, 이제는 장면 연출, 초반 흡입력, 엔딩 훅, 보상감, 상업적 리듬을 강화할 차례라는 뜻이다.
 
-기본 provider 활성화 상태는 [`config/models.yaml`](config/models.yaml)에 정의되어 있으며, 현재 기본값은 Gemini 우선이다.
+## 주요 디렉터리
 
-### 주요 설정 파일
+| 경로 | 설명 |
+| --- | --- |
+| `material_ssot/` | 재료 사이드 표준 루트. 리서치, 기획, Stage0, Phase0, TR, BI 흐름을 관리한다. |
+| `treatments/` | Phase0, TR, preprocess 산출물이 있는 작업 영역이다. |
+| `bible/` | BI 산출물과 작품 기준 문서가 있는 영역이다. |
+| `work_guards/` | 작품별 금지선, 품질 기준, 반복 규칙을 담는 guard 파일 영역이다. |
+| `config/style_references/` | 문체와 장면 처리 기준을 담는 style reference 영역이다. |
+| `projects/` | 실제 파이프라인 실행 결과, DB, 로그, 원고 산출물이 쌓이는 영역이다. |
+| `modules/` | S2/S3/S4 런타임, 에이전트, 검증기, DB, 캐시, 세션 메모리 등 핵심 코드가 있는 영역이다. |
+| `geuldobi-desktop/` | 데스크톱 앱이다. |
+| `benchmarks/` | 벤치마크 결과와 재현성 확인 자료가 있는 영역이다. |
+| `docs/` | 운영 문서, 감사 문서, 설계 문서, 보고서가 있는 영역이다. |
+| `AGENTS.md` | LLM/agent용 운영 기준 문서다. 사람용 개요는 이 README를 보면 된다. |
 
-- [`config/models.yaml`](config/models.yaml)
-  - provider 활성화 상태, 에이전트별 모델 매핑, 폴백 체인
-- [`config/settings/validation.yaml`](config/settings/validation.yaml)
-  - 길이 기준, 품질 게이트, 장르별 threshold, retry/patch/context 예산
-- `config/prompts/`
-  - 프롬프트 외부화 자산
+## 실행 개요
 
-### 3. CLI 실행
+CLI 실행:
 
 ```bash
 python main_a.py
 ```
 
-일반적인 운영 흐름:
+일반적인 사용 흐름:
 
-1. 프로젝트 선택 또는 생성
-2. Stage 0으로 입력 정리
-3. 필요 시 Stage 1 진행
-4. Stage 2 -> Stage 3 -> Stage 4 순차 실행
-5. 반복 작업은 OneStop으로 Arc 단위 자동 실행
+1. 프로젝트를 선택하거나 만든다.
+2. 재료, BI, TR, work_guard, style_reference를 준비한다.
+3. S2에서 앞으로의 이야기 방향을 만든다.
+4. S3에서 이번 화의 구성을 만든다.
+5. S4에서 실제 원고를 생성한다.
+6. 필요하면 재시도, 후처리, 검증을 거쳐 원고를 확정한다.
 
-### 4. 데스크톱 앱 실행
+데스크톱 앱:
 
 ```bash
 cd geuldobi-desktop
@@ -158,102 +175,11 @@ npm install
 npm start
 ```
 
-패키징:
+## 현재 봐야 할 포인트
 
-```bash
-cd geuldobi-desktop
-npm run build
-```
-
-## 테스트와 검증
-
-Windows 환경에서는 메모리 보수 모드가 기본 권장 경로다.
-필요하면 `PYTHONIOENCODING=utf-8`을 설정한 뒤 `pytest`를 실행한다.
-
-```bash
-python scripts/run_pytest_lowmem.py
-```
-
-대상 테스트만 빠르게 돌릴 때:
-
-```bash
-pytest tests/test_director_modules.py -q
-```
-
-전체 테스트 스위트:
-
-```bash
-pytest tests/ -q
-```
-
-추가 운영 검증:
-
-```bash
-python scripts/check_utf8_hygiene.py README.md
-python scripts/ops_validator.py --strict
-```
-
-세부 규칙은 [`tests/README.md`](tests/README.md), [`scripts/README.md`](scripts/README.md)를 참고한다.
-
-## ClickUp 연동
-
-ClickUp은 이 워크스페이스에서 `external visibility surface`로 취급한다. authoritative queue와 판단 근거는 여전히 repo 안의 canonical docs, `docs/temp/` mirror, `queue-state.json`이 가진다. 기본 운영에서는 ClickUp을 상시 sync하지 않고, 사람이 현재 상태가 궁금해 명시적으로 요청한 경우에만 반영한다. 이유는 ClickUp sync latency가 routine queue update보다 느리기 때문이다.
-
-주요 명령:
-
-```bash
-python -X utf8 scripts/sync_clickup_queue.py --list-id <clickup-list-id> [--dry-run]
-python -X utf8 scripts/build_material_queue_state.py [--output docs/temp/material-queue-state.json] [--active-only]
-python -X utf8 scripts/sync_material_clickup_queue.py --list-id <clickup-list-id> [--dry-run] [--active-only]
-python -X utf8 scripts/setup_clickup_views.py --list-id <clickup-list-id> [--dry-run]
-python -X utf8 scripts/setup_material_clickup_views.py --list-id <clickup-list-id> [--dry-run]
-```
-
-운영 원칙:
-
-- repo-side queue를 ClickUp에 반영할 때는 사용자의 명시적 요청이 먼저 있어야 하며, 그 뒤 canonical doc, `docs/temp/` mirror, `docs/temp/queue-state.json`이 정렬되고 `python scripts/ops_validator.py --strict`까지 통과한 뒤에만 sync한다.
-- material-side ClickUp 반영은 `build_material_queue_state.py`로 snapshot을 만들고 `sync_material_clickup_queue.py`로 미러링한다.
-- ClickUp 전용 설정은 루트 `.env`를 기본으로 읽고, 필요하면 `secrets/clickup.env`와 `CLICKUP_ENV_FILE`, `CLICKUP_MATERIAL_ENV_FILE`로 override한다.
-- fresh run / live-run 중간 상태는 provisional evidence다. post-run merge audit이 끝나기 전에는 mid-run findings를 ClickUp 상태로 밀지 않는다.
-
-## 문서와 운영 동선
-
-시스템 트랙과 narrative 트랙의 시작 지점이 다르다.
-
-- 시스템 트랙
-  - [`AGENTS.md`](AGENTS.md)
-  - [`docs/implementation/system-order-init-harness.md`](docs/implementation/system-order-init-harness.md)
-  - [`docs/2026-03-23/llm-codebase-orientation-pack.md`](docs/2026-03-23/llm-codebase-orientation-pack.md)
-- narrative 트랙
-  - [`AGENTS.md`](AGENTS.md)
-  - [`README.narrative-router.md`](README.narrative-router.md)
-  - [`docs/narrative-router/SSOT_narrative-router-integrated-order.md`](docs/narrative-router/SSOT_narrative-router-integrated-order.md)
-
-추가 참고 문서:
-
-- [`scripts/README.md`](scripts/README.md)
-- [`tests/README.md`](tests/README.md)
-- [`docs/temp/README.md`](docs/temp/README.md)
-
-## 최상위 구조
-
-```text
-글도비/
-├── AGENTS.md
-├── README.md
-├── README.narrative-router.md
-├── main_a.py
-├── main.js
-├── config/
-├── modules/
-├── geuldobi-desktop/
-├── scripts/
-├── tests/
-├── projects/
-├── treatments/
-├── bible/
-└── docs/
-```
+1. 글도비는 원고를 한 번 생성하는 도구가 아니라, 재료 생산부터 원고 생산까지 이어지는 제작 파이프라인이다.
+2. 4월 말 기준으로 연속성 및 생산성 이슈는 supervised run 기준 거의 닫혔다.
+3. 다음 단계는 무작정 더 많이 생산하는 것이 아니라, 연출 레이어와 상업성을 높이는 것이다.
 
 ## 라이선스
 
