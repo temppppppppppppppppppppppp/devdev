@@ -47,6 +47,7 @@ def _write_record(
     git_head: str,
     notes: str = "",
     proof_digest_status: str | None = None,
+    stage4_diagnostic_packet: dict | None = None,
     runtime_audit_summary_payload: dict | None = None,
     guarded_summary_payload: dict | None = None,
 ) -> Path:
@@ -109,6 +110,8 @@ def _write_record(
             },
         },
     }
+    if stage4_diagnostic_packet is not None:
+        manifest["stage4_diagnostic_packet"] = stage4_diagnostic_packet
     (record_root / "manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -614,6 +617,24 @@ def test_compare_benchmark_records_surfaces_stage4_runtime_watchpoints(tmp_path)
                     },
                 },
             },
+            "stage4_diagnostic_packet": {
+                "schema_version": "stage4_diagnostic_packet_v1",
+                "authority_role": "runtime_audit_summary",
+                "operator_guidance_only": True,
+                "runtime_summary_freshness_status": "stale_for_stage4",
+                "runtime_summary_scope_status": "pre_stage4_or_partial",
+                "proof_digest_status": "ok",
+                "proof_stage4_status": "warn",
+                "proof_warning_taxonomy_counts": {
+                    "coverage_warn": 1,
+                    "runtime_advisory_warn": 2,
+                },
+                "cove_runtime_advisory_count": 2,
+                "pass_preserved_cove_advisory_count": 2,
+                "cove_semantic_fail_closed_count": 1,
+                "post_select_conflict_count": 3,
+                "settled_director_divergence_count": 4,
+            },
         },
     )
     right_root = _write_record(
@@ -690,6 +711,31 @@ def test_compare_benchmark_records_surfaces_stage4_runtime_watchpoints(tmp_path)
         "scope": "stage4",
         "side": "right",
         "message": "right stage4 post_pass_contract_signal_count is 2",
+    } in watchpoints
+    assert {
+        "id": "stage4_diagnostic_packet_attention",
+        "severity": "warn",
+        "scope": "stage4_diagnostic_packet",
+        "side": "left",
+        "message": "left stage4 diagnostic packet status is warn",
+    } in watchpoints
+    assert {
+        "id": "stage4_diagnostic_packet_stale",
+        "severity": "warn",
+        "scope": "stage4_diagnostic_packet",
+        "side": "left",
+        "message": "left stage4 diagnostic packet reports stale runtime summary",
+    } in watchpoints
+    assert {
+        "id": "stage4_diagnostic_packet_counts_recorded",
+        "severity": "info",
+        "scope": "stage4_diagnostic_packet",
+        "side": "left",
+        "message": (
+            "left stage4 diagnostic packet counts: cove_runtime_advisory=2, "
+            "pass_preserved_advisory=2, semantic_retry=1, post_select_conflict=3, "
+            "proof_warn=3, settled_director_divergence=4"
+        ),
     } in watchpoints
 
 
@@ -892,6 +938,16 @@ def test_compare_benchmark_records_surfaces_companion_post_run_evidence_watchpoi
             "gate_repair_surface_summary": {
                 "status": "missing",
             },
+            "stage4_diagnostic_packet": {
+                "schema_version": "stage4_diagnostic_packet_v1",
+                "authority_role": "native_post_run_evidence",
+                "operator_guidance_only": True,
+                "proof_stage4_status": "warn",
+                "proof_warning_taxonomy_counts": {
+                    "runtime_advisory_warn": 2,
+                },
+                "cove_runtime_advisory_count": 2,
+            },
         },
     )
 
@@ -931,6 +987,24 @@ def test_compare_benchmark_records_surfaces_companion_post_run_evidence_watchpoi
         "scope": "post_run_evidence_json",
         "side": "right",
         "message": "right companion evidence reports gate repair status missing",
+    } in watchpoints
+    assert {
+        "id": "stage4_diagnostic_packet_attention",
+        "severity": "warn",
+        "scope": "stage4_diagnostic_packet",
+        "side": "right",
+        "message": "right stage4 diagnostic packet status is warn",
+    } in watchpoints
+    assert {
+        "id": "stage4_diagnostic_packet_counts_recorded",
+        "severity": "info",
+        "scope": "stage4_diagnostic_packet",
+        "side": "right",
+        "message": (
+            "right stage4 diagnostic packet counts: cove_runtime_advisory=2, "
+            "pass_preserved_advisory=0, semantic_retry=0, post_select_conflict=0, "
+            "proof_warn=2, settled_director_divergence=0"
+        ),
     } in watchpoints
 
 

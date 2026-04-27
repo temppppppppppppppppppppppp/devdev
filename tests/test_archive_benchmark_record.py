@@ -73,6 +73,33 @@ def test_archive_benchmark_record_creates_bundle_and_index(tmp_path, monkeypatch
                     },
                     ensure_ascii=False,
                 ),
+                json.dumps(
+                    {
+                        "event": "STAGE4_COVE_RUNTIME_ADVISORY",
+                        "ep": 4,
+                        "round_num": 1,
+                        "source": "llm_verify",
+                        "director_pass_preserved": True,
+                    },
+                    ensure_ascii=False,
+                ),
+                json.dumps(
+                    {
+                        "event": "STAGE4_RETRY_PATHOLOGY",
+                        "ep": 4,
+                        "pathology_source": "cove_fail_closed",
+                        "cove_fail_closed": True,
+                    },
+                    ensure_ascii=False,
+                ),
+                json.dumps(
+                    {
+                        "event": "STAGE4_RETRY_PATHOLOGY",
+                        "ep": 4,
+                        "pathology_source": "post_select_conflict",
+                    },
+                    ensure_ascii=False,
+                ),
             ]
         )
         + "\n",
@@ -83,9 +110,24 @@ def test_archive_benchmark_record_creates_bundle_and_index(tmp_path, monkeypatch
             {
                 "tag": "interrupted",
                 "proof_digest": {
+                    "status": "warn",
                     "operational_metadata": {
                         "latest_session_id": "20260422_080513",
-                    }
+                    },
+                    "stages": {
+                        "stage4": {
+                            "status": "warn",
+                            "issue_counts": {
+                                "final_verdict_mismatches": 2,
+                                "director_verdict_mismatches": 3,
+                                "runtime_advisory_mismatches": 4,
+                            },
+                            "warning_taxonomy_counts": {
+                                "coverage_warn": 1,
+                                "runtime_advisory_warn": 2,
+                            },
+                        }
+                    },
                 },
                 "summary_window": {
                     "count_window_size": 200,
@@ -113,7 +155,13 @@ def test_archive_benchmark_record_creates_bundle_and_index(tmp_path, monkeypatch
         encoding="utf-8",
     )
     (project / "logs" / "runtime_audit.jsonl").write_text(
-        json.dumps({"type": "db_commit"}, ensure_ascii=False) + "\n",
+        "\n".join(
+            [
+                json.dumps({"type": "db_commit"}, ensure_ascii=False),
+                json.dumps({"type": "stage4_cove_runtime_advisory"}, ensure_ascii=False),
+            ]
+        )
+        + "\n",
         encoding="utf-8",
     )
     (project / "logs" / "quality_metrics.jsonl").write_text(
@@ -185,6 +233,16 @@ def test_archive_benchmark_record_creates_bundle_and_index(tmp_path, monkeypatch
     assert manifest["runtime_summary"]["run_scope"]["latest_session_id"] == "20260422_080513"
     assert manifest["runtime_summary"]["freshness"]["status"] == "scoped"
     assert manifest["runtime_summary"]["freshness"]["operator_guidance_only"] is True
+    assert manifest["stage4_diagnostic_packet"]["proof_digest_status"] == "warn"
+    assert manifest["stage4_diagnostic_packet"]["proof_stage4_status"] == "warn"
+    assert manifest["stage4_diagnostic_packet"]["runtime_summary_freshness_status"] == "scoped"
+    assert manifest["stage4_diagnostic_packet"]["stage4_reject_count"] == 1
+    assert manifest["stage4_diagnostic_packet"]["runtime_advisory_warn_count"] == 2
+    assert manifest["stage4_diagnostic_packet"]["cove_runtime_advisory_count"] == 1
+    assert manifest["stage4_diagnostic_packet"]["pass_preserved_cove_advisory_count"] == 1
+    assert manifest["stage4_diagnostic_packet"]["cove_semantic_fail_closed_count"] == 1
+    assert manifest["stage4_diagnostic_packet"]["post_select_conflict_count"] == 1
+    assert manifest["stage4_diagnostic_packet"]["settled_director_divergence_count"] == 5
     assert manifest["archive_evidence"]["scope"] == "local_ignored_snapshot"
     assert manifest["archive_evidence"]["reproducibility_status"] == "local_only_non_reproducible"
     assert manifest["archive_evidence"]["repo_tracking_policy"] == "benchmark_record_directories_ignored_by_git"
