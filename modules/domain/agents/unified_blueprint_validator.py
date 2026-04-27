@@ -3211,7 +3211,7 @@ class UnifiedBlueprintValidator:
         def _is_progressive_opening_bridge(scene_key: str, scene: dict) -> bool:
             if str(scene_key or "").strip().casefold() != "scene_1" or not isinstance(scene, dict):
                 return False
-            if normalized_transition_type != "direct_continuation":
+            if normalized_transition_type not in {"direct_continuation", "explicit_transition", "jump_opening"}:
                 return False
             scene_text = " ".join(
                 part
