@@ -344,6 +344,23 @@ def _merge_stage3_fix_packs(raw_packs: list[object]) -> dict:
     return merged
 
 
+def _is_concrete_opening_location(location: str) -> bool:
+    normalized = str(location or "").strip().casefold()
+    if not normalized:
+        return False
+    placeholder_locations = {
+        "n/a",
+        "none",
+        "unknown",
+        "미정",
+        "불명",
+        "서사 시작",
+        "서사 시작점",
+        "시작점",
+    }
+    return normalized not in placeholder_locations
+
+
 class UnifiedBlueprintValidator:
     """
     [V60.80] 통합 Blueprint 검증기
@@ -2243,7 +2260,7 @@ class UnifiedBlueprintValidator:
             else {}
         )
         opening_location = str(opening_truth.get("location", "") or "").strip()
-        if opening_location:
+        if _is_concrete_opening_location(opening_location):
             bp_start = str(blueprint.get("start_location", blueprint.get("location", "")) or "").strip()
             scenes = blueprint.get("scene_breakdown", {})
             scene_one = scenes.get("scene_1") if isinstance(scenes, dict) else None
