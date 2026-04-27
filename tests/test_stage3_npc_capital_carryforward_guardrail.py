@@ -54,6 +54,24 @@ class TestInstitutionFactLockAnchor:
         assert "HMC투자증권" in names
         assert "인베스트먼트" in names
 
+    def test_person_lock_filters_topic_marker_false_names(self):
+        """Korean topic/pronoun fragments like '저는 팀장' are not durable person-role labels."""
+        result = BlueprintConstraintCompiler._build_fact_lock_packet(
+            prev_blueprint={
+                "end_location": "여의도 한미증권 VIP룸",
+                "integrated_scenario": "저는 팀장 보고를 마쳤고, 박성호 팀장은 VIP룸에 남았다.",
+            },
+            prev_manuscript_ending="저는 팀장 지시를 확인했다. 박성호 팀장은 계좌 증빙을 접었다.",
+            arc_data={},
+            ep_num=7,
+        )
+        person_facts = [
+            anchor.get("fact", "") for anchor in result.get("anchors", []) if anchor.get("category") == "인물"
+        ]
+        joined = " ".join(person_facts)
+        assert "확정 인물/직함: 저는 팀장" not in joined
+        assert "확정 인물/직함: 박성호 팀장" in joined
+
     def test_institution_from_ending_state(self):
         """Ending state text containing institution names produces 기관 anchors."""
         bp = {

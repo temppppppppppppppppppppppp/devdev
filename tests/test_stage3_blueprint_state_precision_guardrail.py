@@ -609,6 +609,34 @@ class TestFactLockDriftDetection:
         location_issues = [i for i in issues if i["category"] == "fact_lock_location"]
         assert len(location_issues) == 0, "Same area prefix should not trigger"
 
+    def test_opening_truth_location_binds_start_and_scene_one(self):
+        constraint_block = {
+            "episode_state_packet": {
+                "opening_truth": {
+                    "location": "여의도 한미증권 VIP룸",
+                    "location_source": "prev_blueprint.scene_breakdown.last.location",
+                }
+            }
+        }
+        blueprint = {
+            "start_location": "강남 소호 오피스",
+            "scene_breakdown": {
+                "scene_1": {
+                    "location": "강남 소호 오피스",
+                }
+            },
+        }
+        issues = UnifiedBlueprintValidator._collect_fact_lock_drift_issues(
+            blueprint=blueprint,
+            integrated="강남 소호 오피스에서 시작한다.",
+            constraint_block=constraint_block,
+        )
+        location_issues = [i for i in issues if i["category"] == "fact_lock_location"]
+        assert {issue["severity"] for issue in location_issues} == {"MAJOR"}
+        issue_text = " ".join(issue["issue"] for issue in location_issues)
+        assert "start_location" in issue_text
+        assert "scene_1.location" in issue_text
+
     def test_item_storage_drift_detected(self):
         constraint_block = {
             "fact_lock_packet": {
