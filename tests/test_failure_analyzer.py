@@ -3735,6 +3735,68 @@ def test_failure_analyzer_stage4_companion_missing_runtime_advisory_is_not_metad
         db.close()
 
 
+def test_failure_analyzer_stage4_prefinal_director_rationale_drift_is_phase_warning(tmp_path):
+    db = DBManager(tmp_path / "test_stage4_prefinal_rationale_phase_drift.db")
+    try:
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        attempt_key = "s4:ep16:arc2:a1:sess_stage4_prefinal"
+        result = analyzer._collect_sink_alignment_rationale_results(
+            stage=4,
+            include_session_decisions=True,
+            attempt_key=attempt_key,
+            stage_attempts={
+                attempt_key: {
+                    "selection_reason": "settled post-fix candidate B wins",
+                    "verdict_reason": "settled manuscript passes after fix",
+                    "comparison_notes": "same comparison",
+                    "selected_candidate_advisory_struct": {},
+                    "fix_scope": "inplace",
+                    "runtime_advisory": "",
+                    "retry_directives": "",
+                }
+            },
+            director_selections={
+                attempt_key: {
+                    "selection_reason": "original candidate A was best before repair",
+                    "verdict_reason": "original director pass with fix",
+                    "comparison_notes": "same comparison",
+                    "selected_candidate_advisory_struct": {},
+                    "fix_scope": "inplace",
+                }
+            },
+            session_decisions={
+                attempt_key: {
+                    "selection_reason": "settled post-fix candidate B wins",
+                    "verdict_reason": "settled manuscript passes after fix",
+                    "comparison_notes": "same comparison",
+                    "selected_candidate_advisory_struct": {},
+                    "fix_scope": "inplace",
+                    "runtime_advisory": "",
+                    "retry_directives": "",
+                }
+            },
+            episode_production={
+                attempt_key: {
+                    "selection_reason": "settled post-fix candidate B wins",
+                    "verdict_reason": "settled manuscript passes after fix",
+                }
+            },
+            authority_row={"selection_companion_status": "pre_final_candidate"},
+        )
+
+        assert result["selection_reason_mismatches"] == []
+        assert result["verdict_reason_mismatches"] == []
+        assert len(result["phase_drift_rationale_warnings"]) == 2
+        fields = {row["field"] for row in result["phase_drift_rationale_warnings"]}
+        assert fields == {"selection_reason", "verdict_reason"}
+        assert all(
+            row["phase_role"] == "director_selection_companion_pre_final"
+            for row in result["phase_drift_rationale_warnings"]
+        )
+    finally:
+        db.close()
+
+
 def test_failure_analyzer_sink_alignment_summary_flags_stage4_runtime_rationale_mismatch(tmp_path):
     db = DBManager(tmp_path / "test_sink_alignment_stage4_runtime_rationale.db")
     try:

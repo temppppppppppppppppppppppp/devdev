@@ -138,6 +138,7 @@ class AuditService:
             "gate_repair_metadata_missing",
             "selection_reason_mismatches",
             "verdict_reason_mismatches",
+            "phase_drift_rationale_warnings",
             "fix_scope_mismatches",
             "runtime_advisory_mismatches",
             "retry_directives_mismatches",

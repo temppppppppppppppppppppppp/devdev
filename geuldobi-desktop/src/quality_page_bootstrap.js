@@ -127,6 +127,7 @@
     resultNextAction,
     project,
     result,
+    proofStatus = {},
     renderResultSummaryCopyReact,
     renderResultSignalAlertsReact,
     renderResultActionGridReact,
@@ -192,7 +193,10 @@
         result.selection_reason || result.open_review || "Director selection reason이 아직 없습니다.";
     }
 
-    const alerts = result.signal_alerts || [];
+    const alerts = [
+      ...buildProofStatusAlertChips(proofStatus),
+      ...(result.signal_alerts || []),
+    ];
     if (!renderResultSignalAlertsReact(alerts)) {
       resultSignalAlerts.innerHTML = "";
     }
@@ -614,6 +618,7 @@
     stageStats,
     failurePatterns,
     commonViolations,
+    proofStatus = {},
     renderFailureStageStatsGridReact,
     renderFailurePatternListReact,
     renderFailureRangeListReact,
@@ -645,7 +650,11 @@
     }
 
     failurePatternList.innerHTML = "";
-    const topTypes = failurePatterns.top_types?.length ? failurePatterns.top_types : commonViolations;
+    const proofDiagnosticItems = buildProofDiagnosticPatternItems(proofStatus);
+    const topTypes = [
+      ...proofDiagnosticItems,
+      ...((failurePatterns.top_types?.length ? failurePatterns.top_types : commonViolations) || []),
+    ];
     if (!renderFailurePatternListReact(topTypes || [], "주요 실패 패턴이 아직 충분히 쌓이지 않았습니다.")) {
       failurePatternList.innerHTML = "";
     }
@@ -656,9 +665,10 @@
         const node = document.createElement("div");
         node.className = "pattern-item";
         const typeLabel = escapeHtml(item.type || "unknown");
+        const metaLabel = escapeHtml(item.meta || `누적 ${item.count || 0}회`);
         node.innerHTML = `
           <div class="pattern-item-title">${typeLabel}</div>
-          <div class="pattern-item-meta">누적 ${item.count || 0}회</div>
+          <div class="pattern-item-meta">${metaLabel}</div>
         `;
         failurePatternList.appendChild(node);
       }
@@ -683,6 +693,98 @@
         failureRangeList.appendChild(node);
       }
     }
+  }
+
+  function sumNestedCounts(groups = {}) {
+    let total = 0;
+    for (const group of Object.values(groups || {})) {
+      if (!group || typeof group !== "object") continue;
+      for (const value of Object.values(group)) {
+        const numberValue = Number(value || 0);
+        if (Number.isFinite(numberValue)) total += numberValue;
+      }
+    }
+    return total;
+  }
+
+  function compactCountMap(groups = {}, limit = 4) {
+    const pairs = [];
+    for (const [groupName, group] of Object.entries(groups || {})) {
+      if (!group || typeof group !== "object") continue;
+      for (const [key, value] of Object.entries(group)) {
+        const numberValue = Number(value || 0);
+        if (Number.isFinite(numberValue) && numberValue > 0) {
+          pairs.push(`${groupName}.${key} ${numberValue}`);
+        }
+      }
+    }
+    return pairs.slice(0, limit).join(" · ");
+  }
+
+  function buildProofStatusAlertChips(proofStatus = {}) {
+    if (!proofStatus || typeof proofStatus !== "object") return [];
+    const status = String(proofStatus.status || proofStatus.runtime_summary_status || "unavailable");
+    const semanticStatus = String(proofStatus.semantic_completion_status || "");
+    const canonicalStatus = String(proofStatus.canonical_truth_status || "");
+    const freshnessStatus = String(proofStatus.runtime_summary_freshness_status || "");
+    const issueTotal = sumNestedCounts(proofStatus.warning_issue_counts || {});
+    const taxonomyTotal = sumNestedCounts(proofStatus.warning_taxonomy_counts || {});
+    if (
+      status === "unavailable" &&
+      !semanticStatus &&
+      !canonicalStatus &&
+      (!freshnessStatus || freshnessStatus === "unavailable") &&
+      issueTotal === 0 &&
+      taxonomyTotal === 0
+    ) {
+      return [];
+    }
+
+    const chips = [`proof ${status}`];
+    if (freshnessStatus && freshnessStatus !== "unavailable") {
+      chips.push(`freshness ${freshnessStatus}`);
+    }
+    if (semanticStatus) {
+      chips.push(`semantic ${semanticStatus}`);
+    }
+    if (canonicalStatus) {
+      chips.push(`truth ${canonicalStatus}`);
+    }
+    if (issueTotal > 0) {
+      chips.push(`issues ${issueTotal}`);
+    }
+    if (taxonomyTotal > 0) {
+      chips.push(`taxonomy ${taxonomyTotal}`);
+    }
+    return chips;
+  }
+
+  function buildProofDiagnosticPatternItems(proofStatus = {}) {
+    if (!proofStatus || typeof proofStatus !== "object") return [];
+    const status = String(proofStatus.status || proofStatus.runtime_summary_status || "unavailable");
+    const freshness = String(proofStatus.runtime_summary_freshness_status || "unavailable");
+    const issueCounts = proofStatus.warning_issue_counts || {};
+    const taxonomyCounts = proofStatus.warning_taxonomy_counts || {};
+    const issueTotal = sumNestedCounts(issueCounts);
+    const taxonomyTotal = sumNestedCounts(taxonomyCounts);
+    if (status === "unavailable" && freshness === "unavailable" && issueTotal === 0 && taxonomyTotal === 0) {
+      return [];
+    }
+    const items = [
+      {
+        type: `proof_status:${status} / freshness:${freshness}`,
+        count: issueTotal,
+        meta: compactCountMap(issueCounts) || "issue counts 0",
+      },
+    ];
+    if (taxonomyTotal > 0) {
+      items.push({
+        type: "proof_warn_taxonomy",
+        count: taxonomyTotal,
+        meta: compactCountMap(taxonomyCounts) || "taxonomy counts 0",
+      });
+    }
+    return items;
   }
 
   function renderCalibrationDeskSection({
@@ -808,6 +910,10 @@
         ...fallback.result_summary,
         ...((data || {}).result_summary || {}),
       },
+      proof_status: {
+        ...fallback.proof_status,
+        ...((data || {}).proof_status || {}),
+      },
       failure_patterns: {
         ...fallback.failure_patterns,
         ...((data || {}).failure_patterns || {}),
@@ -909,6 +1015,8 @@
     renderArtifactLadderSection,
     renderTrendCompareSection,
     renderFailureWatchSection,
+    buildProofStatusAlertChips,
+    buildProofDiagnosticPatternItems,
     renderCalibrationDeskSection,
     refreshSummary,
     loadSafeOpsPreview,

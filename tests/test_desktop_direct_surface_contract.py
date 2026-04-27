@@ -4,11 +4,8 @@ from urllib.parse import urlsplit
 
 import yaml
 
-
 ROOT = Path(__file__).resolve().parents[1]
-API_CONTRACT = yaml.safe_load(
-    (ROOT / "docs/implementation/api-contract-v1.yaml").read_text(encoding="utf-8")
-)
+API_CONTRACT = yaml.safe_load((ROOT / "docs/implementation/api-contract-v1.yaml").read_text(encoding="utf-8"))
 INDEX_HTML = (ROOT / "geuldobi-desktop/src/index.html").read_text(encoding="utf-8")
 SPLASH_HTML = (ROOT / "geuldobi-desktop/src/splash/splash.html").read_text(encoding="utf-8")
 SPLASH_JS = (ROOT / "geuldobi-desktop/src/splash/splash.js").read_text(encoding="utf-8")
@@ -55,7 +52,7 @@ def _extract_direct_surfaces() -> dict[str, dict[str, str]]:
     )
     assert google_match, "direct Google API validation fetch not found"
 
-    assert 'fetch(`${statusBaseUrl}/status`' in SPLASH_JS
+    assert "fetch(`${statusBaseUrl}/status`" in SPLASH_JS
     assert "new WebSocket(wsUrl)" in INDEX_HTML
 
     return {
@@ -92,9 +89,7 @@ def _extract_bridge_managed_routes() -> frozenset[str]:
         "/run/{run_id}/input": r"bridgeFetch\(buildRunInputRoute\(runId\)",
     }
     return frozenset(
-        route
-        for route, pattern in route_patterns.items()
-        if re.search(pattern, MAIN_JS, flags=re.MULTILINE)
+        route for route, pattern in route_patterns.items() if re.search(pattern, MAIN_JS, flags=re.MULTILINE)
     )
 
 
@@ -109,11 +104,7 @@ def _extract_bridge_preload_methods() -> frozenset[str]:
         "saveQualityReview",
         "resolvePrompt",
     }
-    return frozenset(
-        method
-        for method in methods
-        if re.search(rf"\b{re.escape(method)}\s*:", PRELOAD_JS)
-    )
+    return frozenset(method for method in methods if re.search(rf"\b{re.escape(method)}\s*:", PRELOAD_JS))
 
 
 def _extract_int_constant(source: str, name: str) -> int:
@@ -157,22 +148,14 @@ def test_renderer_csp_connect_src_matches_documented_direct_allowlist():
     direct_surfaces = _extract_direct_surfaces()
 
     main_direct_origins = frozenset(
-        surface["origin"]
-        for surface in direct_surfaces.values()
-        if surface["owner"] == "mainWindow"
+        surface["origin"] for surface in direct_surfaces.values() if surface["owner"] == "mainWindow"
     )
     splash_direct_origins = frozenset(
-        surface["origin"]
-        for surface in direct_surfaces.values()
-        if surface["owner"] == "splashWindow"
+        surface["origin"] for surface in direct_surfaces.values() if surface["owner"] == "splashWindow"
     )
 
-    assert _parse_connect_src(INDEX_HTML) == frozenset(
-        contract["csp_connect_src"]["main_window"]["origins"]
-    )
-    assert _parse_connect_src(SPLASH_HTML) == frozenset(
-        contract["csp_connect_src"]["splash_window"]["origins"]
-    )
+    assert _parse_connect_src(INDEX_HTML) == frozenset(contract["csp_connect_src"]["main_window"]["origins"])
+    assert _parse_connect_src(SPLASH_HTML) == frozenset(contract["csp_connect_src"]["splash_window"]["origins"])
     assert _parse_connect_src(INDEX_HTML) == main_direct_origins
     assert _parse_connect_src(SPLASH_HTML) == splash_direct_origins
 
@@ -274,36 +257,52 @@ def test_quality_radar_react_island_is_additive_and_vendor_local():
     assert "function renderArtifactLadderSection({" in QUALITY_PAGE_BOOTSTRAP_JS
     assert "function renderTrendCompareSection({" in QUALITY_PAGE_BOOTSTRAP_JS
     assert "function renderFailureWatchSection({" in QUALITY_PAGE_BOOTSTRAP_JS
+    assert "function buildProofStatusAlertChips(proofStatus = {})" in QUALITY_PAGE_BOOTSTRAP_JS
+    assert "function buildProofDiagnosticPatternItems(proofStatus = {})" in QUALITY_PAGE_BOOTSTRAP_JS
+    assert "proofStatus" in QUALITY_PAGE_BOOTSTRAP_JS
+    assert "proof_status: {" in QUALITY_PAGE_BOOTSTRAP_JS
+    assert "semantic_completion_status" in QUALITY_PAGE_BOOTSTRAP_JS
+    assert "canonical_truth_status" in QUALITY_PAGE_BOOTSTRAP_JS
+    assert "runtime_summary_freshness_status" in QUALITY_PAGE_BOOTSTRAP_JS
+    assert "proof_status:" in QUALITY_PAGE_BOOTSTRAP_JS
+    assert "warning_issue_counts" in QUALITY_PAGE_BOOTSTRAP_JS
+    assert "warning_taxonomy_counts" in QUALITY_PAGE_BOOTSTRAP_JS
     assert "function renderCalibrationDeskSection({" in QUALITY_PAGE_BOOTSTRAP_JS
     assert "async function refreshSummary({" in QUALITY_PAGE_BOOTSTRAP_JS
     assert "async function loadSafeOpsPreview({" in QUALITY_PAGE_BOOTSTRAP_JS
     assert "function mergeDashboardData(fallback, data)" in QUALITY_PAGE_BOOTSTRAP_JS
     assert "function renderReactTree(container, rootKey, tree)" in INDEX_HTML
     assert "window.GeuldobiQualityReactRuntime?.renderTree" in INDEX_HTML
-    assert "function renderSafeOpsGridReact(actionRows = [], emptyText = \"\")" in INDEX_HTML
+    assert 'function renderSafeOpsGridReact(actionRows = [], emptyText = "")' in INDEX_HTML
     assert "function renderQualityRadarReactCards(summary, emptyState = null)" in INDEX_HTML
     assert "function renderQualityRadarFootReact(sentenceCount = 0, hits = [])" in INDEX_HTML
     assert "function renderArtifactLadderReact(artifact, emptyState = null)" in INDEX_HTML
     assert "function renderResultSignalAlertsReact(alerts = [])" in INDEX_HTML
-    assert "function renderResultSummaryCopyReact(headline = \"\", reason = \"\")" in INDEX_HTML
-    assert "function renderResultIssueListReact(issues = [], emptyText = \"\")" in INDEX_HTML
+    assert "proofStatus" in INDEX_HTML
+    assert "proof_status: {" in INDEX_HTML
+    assert "buildProofStatusAlertChips?.(proofStatus)" in INDEX_HTML
+    assert 'function renderResultSummaryCopyReact(headline = "", reason = "")' in INDEX_HTML
+    assert 'function renderResultIssueListReact(issues = [], emptyText = "")' in INDEX_HTML
     assert "function renderResultActionGridReact(cards = [])" in INDEX_HTML
-    assert "function renderResultNextActionReact(text = \"\")" in INDEX_HTML
+    assert 'function renderResultNextActionReact(text = "")' in INDEX_HTML
     assert "function renderQualityTrendSummaryReact(chips = [])" in INDEX_HTML
-    assert "function renderQualityCompareBodyReact(compareRows = [], emptyText = \"\")" in INDEX_HTML
-    assert "function renderFailureStageStatsGridReact(stageStats = [], emptyText = \"\")" in INDEX_HTML
-    assert "function renderFailurePatternListReact(items = [], emptyText = \"\")" in INDEX_HTML
-    assert "function renderFailureRangeListReact(ranges = [], emptyText = \"\")" in INDEX_HTML
+    assert 'function renderQualityCompareBodyReact(compareRows = [], emptyText = "")' in INDEX_HTML
+    assert 'function renderFailureStageStatsGridReact(stageStats = [], emptyText = "")' in INDEX_HTML
+    assert 'function renderFailurePatternListReact(items = [], emptyText = "")' in INDEX_HTML
+    assert 'function renderFailureRangeListReact(ranges = [], emptyText = "")' in INDEX_HTML
+    assert "proof_status: {" in INDEX_HTML
+    assert "const proofStatus = insight.proof_status || {};" in INDEX_HTML
+    assert "buildProofDiagnosticPatternItems?.(proofStatus)" in INDEX_HTML
     assert "function renderCalibrationSummaryReact(summaryChips = [])" in INDEX_HTML
-    assert "function renderQualityObservationListReact(recentObservations = [], emptyText = \"\")" in INDEX_HTML
-    assert "function renderQualityAdvisoryListReact(candidates = [], emptyText = \"\")" in INDEX_HTML
+    assert 'function renderQualityObservationListReact(recentObservations = [], emptyText = "")' in INDEX_HTML
+    assert 'function renderQualityAdvisoryListReact(candidates = [], emptyText = "")' in INDEX_HTML
     assert "function renderPipelineStripReact(pipelineOrder = [])" in INDEX_HTML
     assert "function renderAgentBoardReact(agentList = [], activeKeys = [])" in INDEX_HTML
-    assert "function renderEventFeedReact(recentEvents = [], emptyText = \"\")" in INDEX_HTML
+    assert 'function renderEventFeedReact(recentEvents = [], emptyText = "")' in INDEX_HTML
     assert "function renderRetrievalSummaryStripReact(summaryChips = [])" in INDEX_HTML
-    assert "function renderRetrievalStageGridReact(stageRows = [], emptyText = \"\")" in INDEX_HTML
-    assert "function renderRetrievalWarningListReact(warnings = [], emptyText = \"\")" in INDEX_HTML
-    assert "function renderRetrievalRecentListReact(recentRows = [], emptyText = \"\")" in INDEX_HTML
+    assert 'function renderRetrievalStageGridReact(stageRows = [], emptyText = "")' in INDEX_HTML
+    assert 'function renderRetrievalWarningListReact(warnings = [], emptyText = "")' in INDEX_HTML
+    assert 'function renderRetrievalRecentListReact(recentRows = [], emptyText = "")' in INDEX_HTML
     assert 'renderReactTree(\n          safeOpsGrid,\n          "safeOpsGrid",' in INDEX_HTML
     assert 'renderReactTree(\n          qualityRadar,\n          "qualityRadar",' in INDEX_HTML
     assert 'renderReactTree(\n          qualityRadarFoot,\n          "qualityRadarFoot",' in INDEX_HTML
@@ -327,27 +326,33 @@ def test_quality_radar_react_island_is_additive_and_vendor_local():
     assert 'renderReactTree(\n          retrievalStageGrid,\n          "retrievalStageGrid",' in INDEX_HTML
     assert 'renderReactTree(\n          retrievalWarningList,\n          "retrievalWarningList",' in INDEX_HTML
     assert 'renderReactTree(\n          retrievalRecentList,\n          "retrievalRecentList",' in INDEX_HTML
-    assert "!renderSafeOpsGridReact(actionRows, \"운영 작업 preview가 아직 없습니다.\")" in INDEX_HTML
+    assert '!renderSafeOpsGridReact(actionRows, "운영 작업 preview가 아직 없습니다.")' in INDEX_HTML
     assert "if (renderQualityRadarReactCards(summary)) {" in INDEX_HTML
     assert "if (renderQualityRadarFootReact(sentenceCount, hits)) {" in INDEX_HTML
     assert "if (renderArtifactLadderReact(artifact)) {" in INDEX_HTML
     assert "if (!renderResultSignalAlertsReact(alerts)) {" in INDEX_HTML
     assert "!renderResultSummaryCopyReact(" in INDEX_HTML
-    assert "if (!renderResultIssueListReact([], \"이번 화의 핵심 이슈 3개가 여기에 표시됩니다.\")) {" in INDEX_HTML
+    assert 'if (!renderResultIssueListReact([], "이번 화의 핵심 이슈 3개가 여기에 표시됩니다.")) {' in INDEX_HTML
     assert "!renderResultActionGridReact([" in INDEX_HTML
     assert "!renderResultNextActionReact(" in INDEX_HTML
     assert "if (!renderQualityTrendSummaryReact(chips)) {" in INDEX_HTML
-    assert "!renderQualityCompareBodyReact(compareRows, \"최근 회차 비교 데이터가 아직 없습니다.\")" in INDEX_HTML
-    assert "!renderFailureStageStatsGridReact(stageStats, \"Stage별 pass rate / avg score가 누적되면 여기에 표시됩니다.\")" in INDEX_HTML
-    assert "!renderFailurePatternListReact(topTypes || [], \"주요 실패 패턴이 아직 충분히 쌓이지 않았습니다.\")" in INDEX_HTML
-    assert "!renderFailureRangeListReact(ranges, \"회차 구간별 실패 경향이 아직 없습니다.\")" in INDEX_HTML
+    assert '!renderQualityCompareBodyReact(compareRows, "최근 회차 비교 데이터가 아직 없습니다.")' in INDEX_HTML
+    assert (
+        '!renderFailureStageStatsGridReact(stageStats, "Stage별 pass rate / avg score가 누적되면 여기에 표시됩니다.")'
+        in INDEX_HTML
+    )
+    assert (
+        '!renderFailurePatternListReact(topTypes || [], "주요 실패 패턴이 아직 충분히 쌓이지 않았습니다.")'
+        in INDEX_HTML
+    )
+    assert '!renderFailureRangeListReact(ranges, "회차 구간별 실패 경향이 아직 없습니다.")' in INDEX_HTML
     assert "if (!renderCalibrationSummaryReact(summaryChips)) {" in INDEX_HTML
     assert "!renderQualityObservationListReact(" in INDEX_HTML
     assert "!renderQualityAdvisoryListReact(" in INDEX_HTML
     assert "if (!renderRetrievalSummaryStripReact(summaryChips)) {" in INDEX_HTML
-    assert "!renderRetrievalStageGridReact(stageRows, \"Stage별 retrieval 관측이 아직 없습니다.\")" in INDEX_HTML
+    assert '!renderRetrievalStageGridReact(stageRows, "Stage별 retrieval 관측이 아직 없습니다.")' in INDEX_HTML
     assert "!renderRetrievalWarningListReact(" in INDEX_HTML
-    assert "if (!renderRetrievalRecentListReact(recent, \"최근 retrieval 샘플이 아직 없습니다.\")) {" in INDEX_HTML
+    assert 'if (!renderRetrievalRecentListReact(recent, "최근 retrieval 샘플이 아직 없습니다.")) {' in INDEX_HTML
     assert "window.GeuldobiQualityPageBootstrap?.renderInsights" in INDEX_HTML
     assert "window.GeuldobiQualityPageBootstrap?.renderQualityRadarSection" in INDEX_HTML
     assert "window.GeuldobiQualityPageBootstrap?.renderResultSummarySection" in INDEX_HTML
@@ -397,4 +402,4 @@ def test_quality_radar_react_island_is_additive_and_vendor_local():
     assert 'if (viewName === "office") {' in INDEX_HTML
     assert "scheduleOfficeCanvasResize();" in INDEX_HTML
     assert "requestAnimationFrame(() => {" in INDEX_HTML
-    assert "const empty = document.createElement(\"div\");" in INDEX_HTML
+    assert 'const empty = document.createElement("div");' in INDEX_HTML
