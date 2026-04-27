@@ -449,6 +449,7 @@ def _quality_dashboard_runtime_defaults(lookback: int) -> dict[str, Any]:
             "semantic_completion_status": "unavailable",
             "canonical_truth_status": "not_asserted_by_dashboard",
             "warning_issue_counts": {"sink_alignment": {}, "runtime_summary": {}},
+            "warning_taxonomy_counts": {"sink_alignment": {}, "runtime_summary": {}},
             "authority_note": "Proof status is a companion dashboard summary, not canonical PASS settlement authority.",
             "summary": "No proof artifacts available.",
         },
@@ -2113,6 +2114,30 @@ def _extract_proof_warning_issue_counts(summary: dict | None) -> dict[str, dict[
     return stage_counts
 
 
+def _extract_proof_warning_taxonomy_counts(summary: dict | None) -> dict[str, dict[str, int]]:
+    if not isinstance(summary, dict):
+        return {}
+    stages = summary.get("stages", {})
+    if not isinstance(stages, dict):
+        return {}
+
+    stage_counts: dict[str, dict[str, int]] = {}
+    for stage_key, stage_summary in stages.items():
+        if not isinstance(stage_summary, dict):
+            continue
+        taxonomy_counts = stage_summary.get("warning_taxonomy_counts", {})
+        if not isinstance(taxonomy_counts, dict):
+            continue
+        counts = {
+            str(field): count
+            for field, value in taxonomy_counts.items()
+            if (count := _positive_issue_count(value)) > 0
+        }
+        if counts:
+            stage_counts[str(stage_key)] = counts
+    return stage_counts
+
+
 def _compact_sink_alignment_summary(summary: dict | None) -> dict:
     if not isinstance(summary, dict) or not summary:
         return {}
@@ -2151,6 +2176,11 @@ def _compact_sink_alignment_summary(summary: dict | None) -> dict:
     session_rows_without_attempt_key = int(summary.get("session_decision_rows_without_attempt_key", 0) or 0)
     if session_rows_without_attempt_key > 0:
         issue_counts["session_decision_rows_without_attempt_key"] = session_rows_without_attempt_key
+    warning_taxonomy_counts = {
+        str(field): count
+        for field, value in dict(summary.get("warning_taxonomy_counts") or {}).items()
+        if (count := _positive_issue_count(value)) > 0
+    }
     return {
         "stage": int(summary.get("stage", 0) or 0),
         "status": str(summary.get("status", "") or ""),
@@ -2159,6 +2189,7 @@ def _compact_sink_alignment_summary(summary: dict | None) -> dict:
         "complete_lifecycle_attempts": int(summary.get("complete_lifecycle_attempts", 0) or 0),
         "coverage": dict(summary.get("coverage") or {}),
         "issue_counts": issue_counts,
+        "warning_taxonomy_counts": warning_taxonomy_counts,
     }
 
 
@@ -2383,6 +2414,10 @@ def _build_dashboard_proof_status(*, sink_alignment_summary: dict, runtime_audit
         "sink_alignment": _extract_proof_warning_issue_counts(sink_alignment_summary),
         "runtime_summary": _extract_proof_warning_issue_counts(proof_digest),
     }
+    warning_taxonomy_counts = {
+        "sink_alignment": _extract_proof_warning_taxonomy_counts(sink_alignment_summary),
+        "runtime_summary": _extract_proof_warning_taxonomy_counts(proof_digest),
+    }
 
     available = sink_alignment_status != "unavailable" or runtime_summary_status != "unavailable"
     if (
@@ -2417,6 +2452,7 @@ def _build_dashboard_proof_status(*, sink_alignment_summary: dict, runtime_audit
         "semantic_completion_status": semantic_status_map.get(status, "unavailable"),
         "canonical_truth_status": "not_asserted_by_dashboard",
         "warning_issue_counts": warning_issue_counts,
+        "warning_taxonomy_counts": warning_taxonomy_counts,
         "authority_note": "Proof status is a companion dashboard summary, not canonical PASS settlement authority.",
         "summary": summary_map.get(status, summary_map["unavailable"]),
     }

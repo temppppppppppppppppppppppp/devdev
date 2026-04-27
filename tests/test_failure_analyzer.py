@@ -3841,6 +3841,7 @@ def test_failure_analyzer_sink_alignment_summary_flags_stage4_runtime_rationale_
         assert result["runtime_advisory_mismatches"][0]["attempt_key"] == attempt_key
         assert len(result["retry_directives_mismatches"]) == 1
         assert result["retry_directives_mismatches"][0]["attempt_key"] == attempt_key
+        assert result["warning_taxonomy_counts"]["runtime_advisory_warn"] == 2
         assert result["status"] == "warn"
     finally:
         db.close()
