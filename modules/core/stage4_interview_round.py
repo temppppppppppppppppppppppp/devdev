@@ -2455,6 +2455,10 @@ class Stage4InterviewRound:
             same_episode_rows = [
                 row for row in same_episode_rows if str(row.get("session_id") or "").strip() == session_id
             ]
+        else:
+            same_episode_rows = [
+                row for row in same_episode_rows if not str(row.get("session_id") or "").strip()
+            ]
         if not same_episode_rows:
             return {}
 
