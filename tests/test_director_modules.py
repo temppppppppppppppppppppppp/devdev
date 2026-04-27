@@ -82,11 +82,28 @@ def caching_manager(mock_client, mock_context):
 class TestDirectorCaching:
     """Tests for DirectorCachingManager."""
 
+    @staticmethod
+    def _install_fake_genai(monkeypatch):
+        fake_google = types.ModuleType("google")
+        fake_genai = types.ModuleType("google.genai")
+        fake_genai.types = types.SimpleNamespace(CreateCachedContentConfig=lambda **kwargs: kwargs)
+        fake_google.genai = fake_genai
+        monkeypatch.setitem(sys.modules, "google", fake_google)
+        monkeypatch.setitem(sys.modules, "google.genai", fake_genai)
+
+    @staticmethod
+    def _manuscript_db(manuscripts: dict[int, dict]):
+        db = MagicMock()
+        db.get_manuscript.side_effect = lambda ep_num: manuscripts.get(ep_num)
+        return db
+
     def test_initial_cache_state(self, caching_manager):
         """1. Cache starts with no active cache."""
         assert caching_manager.manuscript_cache_name is None
         assert caching_manager.manuscript_cache_enabled is True
         assert caching_manager._cached_manuscript_count == 0
+        assert caching_manager._cached_manuscript_content_hash == ""
+        assert caching_manager._cached_manuscript_model == ""
 
     def test_build_manuscript_history_empty_db(self, caching_manager):
         """2. build_manuscript_history_for_check returns empty when no manuscripts exist."""
@@ -145,6 +162,8 @@ class TestDirectorCaching:
         refreshed = director._get_protagonist_config()
         assert refreshed.get("world_origin") == "원시인"
         assert refreshed.get("incarnation_type") == "회귀자"
+        assert director._caching._cached_manuscript_content_hash == ""
+        assert director._caching._cached_manuscript_model == ""
 
     def test_create_manuscript_cache_disabled(self, caching_manager):
         """7. create_manuscript_cache returns None when disabled."""
@@ -174,6 +193,76 @@ class TestDirectorCaching:
 
         assert result is None
         caching_manager.client.caches.create.assert_not_called()
+
+    def test_create_manuscript_cache_reuses_when_count_content_and_model_match(
+        self, caching_manager, monkeypatch
+    ):
+        self._install_fake_genai(monkeypatch)
+        db = self._manuscript_db(
+            {
+                1: {"content": "A" * 2000, "title": "제1화"},
+                2: {"content": "B" * 2000, "title": "제2화"},
+            }
+        )
+        caching_manager.client.caches.create.return_value = types.SimpleNamespace(name="cache/v1")
+
+        first = caching_manager.create_manuscript_cache(db, current_ep=3)
+        second = caching_manager.create_manuscript_cache(db, current_ep=3)
+
+        assert first == "cache/v1"
+        assert second == "cache/v1"
+        assert caching_manager.client.caches.create.call_count == 1
+        assert caching_manager._cached_manuscript_count == 2
+        assert caching_manager._cached_manuscript_content_hash
+        assert caching_manager._cached_manuscript_model == "gemini-2.5-flash"
+
+    def test_create_manuscript_cache_rebuilds_when_content_changes_with_same_count(
+        self, caching_manager, monkeypatch
+    ):
+        self._install_fake_genai(monkeypatch)
+        manuscripts = {
+            1: {"content": "A" * 2000, "title": "제1화"},
+            2: {"content": "B" * 2000, "title": "제2화"},
+        }
+        db = self._manuscript_db(manuscripts)
+        caching_manager.client.caches.create.side_effect = [
+            types.SimpleNamespace(name="cache/v1"),
+            types.SimpleNamespace(name="cache/v2"),
+        ]
+
+        first = caching_manager.create_manuscript_cache(db, current_ep=3)
+        first_hash = caching_manager._cached_manuscript_content_hash
+        manuscripts[2] = {"content": "C" * 2000, "title": "제2화"}
+        second = caching_manager.create_manuscript_cache(db, current_ep=3)
+
+        assert first == "cache/v1"
+        assert second == "cache/v2"
+        assert caching_manager.client.caches.create.call_count == 2
+        assert caching_manager._cached_manuscript_content_hash != first_hash
+
+    def test_create_manuscript_cache_rebuilds_when_model_changes_with_same_content(
+        self, caching_manager, monkeypatch
+    ):
+        self._install_fake_genai(monkeypatch)
+        db = self._manuscript_db(
+            {
+                1: {"content": "A" * 2000, "title": "제1화"},
+                2: {"content": "B" * 2000, "title": "제2화"},
+            }
+        )
+        caching_manager.client.caches.create.side_effect = [
+            types.SimpleNamespace(name="cache/v1"),
+            types.SimpleNamespace(name="cache/v2"),
+        ]
+
+        first = caching_manager.create_manuscript_cache(db, current_ep=3)
+        caching_manager.primary_model = "vertex:gemini-2.5-pro"
+        second = caching_manager.create_manuscript_cache(db, current_ep=3)
+
+        assert first == "cache/v1"
+        assert second == "cache/v2"
+        assert caching_manager.client.caches.create.call_count == 2
+        assert caching_manager._cached_manuscript_model == "gemini-2.5-pro"
 
 
 # ═══════════════════════════════════════════════════════════════
