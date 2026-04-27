@@ -2229,13 +2229,47 @@ class UnifiedBlueprintValidator:
         if not isinstance(constraint_block, dict):
             return []
         fact_lock = constraint_block.get("fact_lock_packet", {})
-        if not isinstance(fact_lock, dict) or not fact_lock.get("anchors"):
-            return []
+        anchors = fact_lock.get("anchors") if isinstance(fact_lock, dict) else []
+        if not isinstance(anchors, list):
+            anchors = []
 
         issues: list[dict] = []
         integrated_lower = integrated.lower() if integrated else ""
 
-        for anchor in fact_lock["anchors"]:
+        episode_state_packet = constraint_block.get("episode_state_packet", {})
+        opening_truth = (
+            episode_state_packet.get("opening_truth")
+            if isinstance(episode_state_packet, dict) and isinstance(episode_state_packet.get("opening_truth"), dict)
+            else {}
+        )
+        opening_location = str(opening_truth.get("location", "") or "").strip()
+        if opening_location:
+            bp_start = str(blueprint.get("start_location", blueprint.get("location", "")) or "").strip()
+            scenes = blueprint.get("scene_breakdown", {})
+            scene_one = scenes.get("scene_1") if isinstance(scenes, dict) else None
+            scene_one_location = str(scene_one.get("location", "") or "").strip() if isinstance(scene_one, dict) else ""
+            drifted_locations = [
+                (field_name, actual)
+                for field_name, actual in (
+                    ("start_location", bp_start),
+                    ("scene_1.location", scene_one_location),
+                )
+                if actual and opening_location not in actual and actual not in opening_location
+            ]
+            for field_name, actual in drifted_locations:
+                issues.append(
+                    {
+                        "severity": "MAJOR",
+                        "category": "fact_lock_location",
+                        "issue": (
+                            f"위치 사실잠금 위반: 확정 위치 '{opening_location}' → blueprint {field_name} '{actual}'"
+                        ),
+                        "evidence": f"episode_state_packet.opening_truth.location={opening_location}",
+                        "fix_hint": "start_location과 scene_1.location을 opening.location과 정확히 일치시키기",
+                    }
+                )
+
+        for anchor in anchors:
             if not isinstance(anchor, dict):
                 continue
             category = anchor.get("category", "")

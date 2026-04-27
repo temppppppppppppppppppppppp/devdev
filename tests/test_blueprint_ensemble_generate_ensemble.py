@@ -1273,6 +1273,7 @@ def test_format_constraints_surfaces_episode_state_packet_authority_and_dropped_
     assert "[EpisodeStatePacket - authoritative pre-generation carryover]" in formatted
     assert "단일 carryover truth surface" in formatted
     assert "opening.location: 한미증권 청담동 지점 15층 VIP룸" in formatted
+    assert "JSON start_location and scene_breakdown.scene_1.location must equal opening.location exactly" in formatted
     assert "prev_blueprint.scene_breakdown.last.location" in formatted
     assert "mid_arc_arc_start_location_override_blocked" in formatted
 
