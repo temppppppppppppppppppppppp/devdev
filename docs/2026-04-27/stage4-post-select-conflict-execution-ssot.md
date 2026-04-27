@@ -2,14 +2,14 @@
 
 Date: 2026-04-27
 Track: system
-Status: partially-realized (#58 retry/cache bug-risk patches)
+Status: closed (GitHub #58 closed; active temp queue retired; no clean 5-arc readiness claim)
 Canonical Path: `docs/2026-04-27/stage4-post-select-conflict-execution-ssot.md`
-Temp Mirror Path: `docs/temp/stage4-post-select-conflict-execution-ssot.md`
+Temp Mirror Path: retired from active queue (was `docs/temp/stage4-post-select-conflict-execution-ssot.md`)
 Commit State:
 - Baseline Commit: `a3d826978d530ab61d3765e5e095890fa6533ea7`
 - Baseline Dirty Summary: documentation-only untracked paths were present: `docs/2026-04-27/security-parallel-investigation/`, `docs/2026-04-27/stage4-post-select-conflict-parallel-investigation/`, and pre-existing `docs/2026-04-27/issue-56-ensemble-genre-alignment-10terminal-order.md`
-- Resume Commit: `bc6abb7cd1e79400e3414b804575fae401371e5f`
-- Resume Drift Summary: operator promoted #58 ahead of the roadmap default for bug-risk reduction; current branch touches `modules/core/stage4_interview_round.py`, `modules/core/stage4_retry_runtime.py`, and `tests/test_stage4_interview_round.py`
+- Resume Commit: `9cfb9600154edcb71fabfa6bc467aef864b4025f`
+- Resume Drift Summary: main contains the #58 partial realization PRs plus later #59/README commits; GitHub issue #58 is closed, so this SSOT is retired from the active temp queue without making a terminal clean 5-arc proof claim.
 GitHub Issue:
 - #58 `[Stage4] Reduce POST_SELECT_CONFLICT carryover drift in 5-arc runs`
 Source Survey Docs:
@@ -37,8 +37,8 @@ execution_meta:
   schema_version: execution-meta-block-v1
   topic: stage4-post-select-conflict
   github_issue: 58
-  status: in_progress
-  queue_role: front_active
+  status: completed
+  queue_role: historical_backing
   roadmap_rank: 1
   depends_on: []
   tranches:
@@ -204,10 +204,10 @@ Implement in narrow, test-first tranches:
 
 ## 12. Temp Queue Notes
 
-- temp status: in_progress
-- queue role: front active by operator promotion for bug-risk reduction
-- cleanup condition: remove `docs/temp/stage4-post-select-conflict-execution-ssot.md` after realization, verification, canonical closure update, and any #58 GitHub status update.
-- roadmap dependency: no formal dependency edge is declared to avoid silently reordering the existing Frontier Lag queue item; however, this SSOT should be considered before any fresh claim of terminal clean 5-arc proof.
+- temp status: retired from active queue on 2026-04-27 after GitHub #58 was closed.
+- queue role: historical backing only.
+- cleanup condition: remove `docs/temp/stage4-post-select-conflict-execution-ssot.md` after the canonical closure update and roadmap refresh.
+- roadmap dependency: no active queue dependency remains. This SSOT still forbids using #58 partial patches as a clean 5-arc readiness claim.
 
 ## 13. Validation and Closure Hooks
 
@@ -414,3 +414,28 @@ Residual open work:
 - Pass 3 - readiness: PASS for a narrow PR. Residual #58 closure still requires the remaining tranches and fresh proof.
 
 Estimated operational confidence for this partial realization: 96%.
+
+## 20. Administrative Closure and Queue Retirement - 2026-04-27
+
+Closure classification:
+- GitHub #58 is closed as of 2026-04-27T06:54:48Z.
+- This is an administrative queue retirement, not a full terminal 5-arc proof claim.
+- The active `docs/temp/` mirror should be removed after the canonical roadmap and queue-state refresh.
+
+Closure evidence:
+- Merged #58 partial-realization PRs recorded above cover T06 sessionless hydration fail-safe, T06 rejected artifact rehydration guard, T07 Director manuscript cache lineage guard, and T07 Director cached-content routing guard.
+- GitHub issue comments record CI passing for PRs #75, #76, #77, and #78.
+- The canonical and temp mirrors matched before closure refresh.
+
+Residual routing:
+- Clean terminal proof remains under `frontier-lag-clean-5arc-stabilization` / GitHub #57.
+- Stage3/Stage4 genre semantics remain under `stage3-stage4-genre-alignment` / GitHub #56.
+- Proof-digest, CoVe advisory, stale-summary, and benchmark diagnostic separation remain under `stage4-proof-digest-cove-advisory` / GitHub #59.
+- Any future recurrence of the specific #58 carryover shapes should open a fresh focused issue rather than silently reactivating this closed temp item.
+
+3-pass closure audit:
+- Pass 1 - scope: PASS. This closure only retires #58 from the active temp queue and preserves the no-clean-proof guardrail.
+- Pass 2 - evidence: PASS. GitHub #58 is closed, prior realization ledgers remain in this document, and residual work is routed to active follow-up surfaces.
+- Pass 3 - readiness: PASS. The next queue action is #59; deleting the #58 temp mirror after roadmap refresh will reduce stale queue pressure.
+
+Estimated operational confidence for queue retirement: 96%.
