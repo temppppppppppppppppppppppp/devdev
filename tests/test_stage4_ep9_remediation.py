@@ -130,9 +130,7 @@ def test_retry_runtime_tf4_logs_stage_and_ep():
     )
 
     tf4_call = next(
-        call
-        for call in ir.ctx.ui.log.call_args_list
-        if call.args and "[TF-4] patch_targets 연속 부재" in call.args[0]
+        call for call in ir.ctx.ui.log.call_args_list if call.args and "[TF-4] patch_targets 연속 부재" in call.args[0]
     )
     assert tf4_call.kwargs["stage"] == "stage4"
     assert tf4_call.kwargs["ep_num"] == 9
@@ -183,11 +181,7 @@ def test_outcome_runtime_qr7_logs_stage_and_ep():
         interview_round=6,
     )
 
-    qr7_call = next(
-        call
-        for call in owner.ctx.ui.log.call_args_list
-        if call.args and "[QR-7]" in call.args[0]
-    )
+    qr7_call = next(call for call in owner.ctx.ui.log.call_args_list if call.args and "[QR-7]" in call.args[0])
     assert qr7_call.kwargs["stage"] == "stage4"
     assert qr7_call.kwargs["ep_num"] == 9
     assert qr7_call.kwargs["round_num"] == 6
