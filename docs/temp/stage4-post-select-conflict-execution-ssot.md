@@ -272,6 +272,41 @@ Residual open work:
 
 Estimated operational confidence for this partial realization: 96%.
 
+## 17. Realization Ledger - 2026-04-27 Rejected Artifact Rehydration Guard
+
+Scope realized:
+- Tranche: `retry-hydration-and-patch-containment`.
+- Branch: `codex/bugrisk-stage4-loop-exhaustion-guard`.
+- The first inspection target, loop-exhaustion adoption, was already fail-closed in `Stage4Orchestrator._finalize_round_outcome_loop`: `_allow_stage4_best_manuscript_adoption()` returns `False`, and existing tests prove user/policy choice cannot adopt the last rejected body.
+- Implemented the next T06 risk instead: post-select rejected artifact body rehydration.
+
+Code changes:
+- `Stage4InterviewRound._hydrate_stage4_previous_attempt_from_row` now preserves post-select conflict feedback, contract metadata, artifact path, and content hash, but does not reload `rejected_best` artifact text into `best_manuscript`.
+- Hydrated post-select rows with blocked bodies carry `best_manuscript_blocked_reason="post_select_rejected_artifact"` so retry code can distinguish an intentional source-body block from a missing artifact.
+- `Stage4RetryRuntime._should_bypass_duplicate_suppression_due_to_reuse_contract` no longer bypasses exact duplicate suppression when body rehydration was blocked, preventing a regenerated exact copy from slipping through under a stale reuse contract.
+- Quality reject artifact hydration remains allowed; this patch is scoped to post-select conflict `rejected_best` bodies.
+
+Validation completed:
+- `python -m py_compile modules/core/stage4_interview_round.py modules/core/stage4_retry_runtime.py` -> PASS.
+- `python -m pytest tests/test_stage4_interview_round.py -k "hydrate_persisted_stage4_previous_attempt or duplicate_suppression or retry_regenerate" -q` -> 14 passed, 315 deselected.
+- `python -m pytest tests/test_stage4_interview_round.py -k "hydrate or retry or previous_attempt" -q` -> 51 passed, 278 deselected.
+- `python -m pytest tests/test_stage4_orchestrator.py -k "finalize_round_outcome_loop or post_select or best_manuscript" -q` -> 6 passed, 159 deselected.
+- `python scripts/check_utf8_hygiene.py docs/2026-04-27/stage4-post-select-conflict-execution-ssot.md docs/temp/stage4-post-select-conflict-execution-ssot.md modules/core/stage4_interview_round.py modules/core/stage4_retry_runtime.py tests/test_stage4_interview_round.py` -> PASS.
+- `git diff --check` -> PASS.
+- `python scripts/ops_validator.py --strict` -> PASS.
+
+Residual open work:
+- This does not close #58.
+- Cache lineage, Stage3/Stage4 lineage, continuity authority symmetry, and artifact-backed bug-shape regressions remain open.
+- No clean 5-arc readiness claim is made from this patch.
+
+3-pass realization audit:
+- Pass 1 - scope: PASS. The patch only changes persisted post-select conflict body rehydration and duplicate suppression bypass behavior when the body was intentionally blocked.
+- Pass 2 - evidence: PASS. Tests prove post-select `rejected_best` bodies are blocked, quality reject artifact hydration still works, and exact duplicate suppression remains active even with a reuse contract.
+- Pass 3 - readiness: PASS for a narrow PR. Residual #58 closure still requires the remaining tranches and fresh proof.
+
+Estimated operational confidence for this partial realization: 96%.
+
 ## 16. Realization Ledger - 2026-04-27 Sessionless Hydration Fail-Safe
 
 Scope realized:

@@ -3085,7 +3085,9 @@ class TestRecordS4Attempt:
         )
         assert db_payload["primary_failure_layer"] == "quality_floor"
 
-    def test_hydrate_persisted_stage4_previous_attempt_reads_db_envelope_and_artifact(self, tmp_path):
+    def test_hydrate_persisted_stage4_previous_attempt_preserves_envelope_and_blocks_rejected_artifact(
+        self, tmp_path
+    ):
         ctx = _make_ctx()
         ctx.current_project.metrics_session_id = "sess-stage4"
         ctx.current_project.paths = SimpleNamespace(root=tmp_path)
@@ -3252,7 +3254,8 @@ class TestRecordS4Attempt:
 
         assert hydrated["strategy"] == "A"
         assert hydrated["selected_strategy_key"] == "balanced"
-        assert hydrated["best_manuscript"] == "candidate manuscript"
+        assert hydrated["best_manuscript"] == ""
+        assert hydrated["best_manuscript_blocked_reason"] == "post_select_rejected_artifact"
         assert hydrated["reject_bucket"] == "post_select_conflict"
         assert hydrated["fix_scope"] == "full"
         assert hydrated["runtime_advisory"] == "runtime digest"
@@ -3264,6 +3267,39 @@ class TestRecordS4Attempt:
         assert hydrated["truth_pin_items"][0]["observed"] == "서울역"
         assert hydrated["feedback_provenance"]["merged_feedback"].startswith("conflict-first reject feedback")
         assert hydrated["prior_attempts"][0]["attempt_key"] == "s4:ep2:arc1:a1:sess-stage4"
+
+    def test_hydrate_persisted_stage4_previous_attempt_reads_quality_reject_artifact(self, tmp_path):
+        ctx = _make_ctx()
+        ctx.current_project.metrics_session_id = "sess-stage4"
+        ctx.current_project.paths = SimpleNamespace(root=tmp_path)
+        ir = Stage4InterviewRound(ctx)
+
+        artifact = tmp_path / "logs" / "stage4" / "quality_reject.txt"
+        artifact.parent.mkdir(parents=True, exist_ok=True)
+        artifact.write_text("quality candidate manuscript", encoding="utf-8")
+        row = {
+            "ep_num": 2,
+            "arc_num": 1,
+            "session_id": "sess-stage4",
+            "attempt_key": "s4:ep2:arc1:a1:sess-stage4",
+            "verdict": "REJECT",
+            "reject_reason": "quality reject feedback",
+            "score": 61,
+            "candidate_key": "A|balanced",
+            "artifact_path": "logs/stage4/quality_reject.txt",
+            "advisory_flags": {"reject_bucket": "quality_issue"},
+        }
+        ctx.current_project.db.get_stage_attempts_for_arc.return_value = [row]
+
+        hydrated = ir.hydrate_persisted_stage4_previous_attempt(
+            next_ep=2,
+            arc_num=1,
+            previous_attempt=None,
+        )
+
+        assert hydrated["best_manuscript"] == "quality candidate manuscript"
+        assert "best_manuscript_blocked_reason" not in hydrated
+        assert hydrated["reject_bucket"] == "quality_issue"
 
     def test_hydrate_persisted_stage4_previous_attempt_skips_latest_pass_row(self):
         ctx = _make_ctx()
@@ -5685,6 +5721,53 @@ class TestRecordS4Attempt:
         tf_rh1_call = next(call for call in ctx.ui.log.call_args_list if call.args and "[TF-RH1]" in call.args[0])
         assert tf_rh1_call.kwargs["event_kind"] == "policy"
         assert tf_rh1_call.kwargs["attempt_key"] == "s4:ep9:arc1:a3"
+
+    def test_retry_regenerate_does_not_bypass_duplicate_suppression_when_body_rehydration_blocked(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        blocked_manuscript = "blocked rejected manuscript"
+        fresh_candidate = {"manuscript": "fresh rewrite", "strategy": "narrative"}
+        round_ctx.chief_writer.regenerate_with_feedback.return_value = [
+            {"manuscript": blocked_manuscript, "strategy": "balanced"},
+            fresh_candidate,
+        ]
+
+        candidates, is_patch, patch_fallback, prev_score, asp_manuscript = ir._generate_candidates(
+            round_num=2,
+            chief_writer=round_ctx.chief_writer,
+            director_feedback="rewrite without replaying rejected body",
+            previous_attempt={
+                "score": 88,
+                "best_manuscript": "",
+                "best_manuscript_blocked_reason": "post_select_rejected_artifact",
+                "content_hash": ir.retry_runtime._compute_candidate_content_hash(blocked_manuscript),
+                "fix_scope": "full",
+                "reject_bucket": "post_select_conflict",
+                "selected_strategy_key": "balanced",
+                "retry_budget_axes": {"repair": "rewrite_regenerate"},
+                "reuse_contract": {"mode": "best_manuscript_baseline"},
+                "conflict_contract": {
+                    "contract_type": "post_select_conflict",
+                    "bounded_local_fix_hint": True,
+                    "contradiction_types": ["continuity"],
+                },
+            },
+            prev_manuscript="",
+            style_guide="",
+            blueprint={},
+            common_writer_kwargs={"ep_num": 9},
+            arc_num=1,
+        )
+
+        assert candidates == [fresh_candidate]
+        assert is_patch is False
+        assert patch_fallback is False
+        assert prev_score == 88
+        assert asp_manuscript is None
+        tf_rh1_call = next(call for call in ctx.ui.log.call_args_list if call.args and "[TF-RH1]" in call.args[0])
+        assert tf_rh1_call.kwargs["event_kind"] == "policy"
+        assert tf_rh1_call.kwargs["meta"]["suppressed_count"] == 1
 
     def test_retry_regenerate_keeps_full_strategy_budget_for_structure_error(self):
         ctx = _make_ctx()
