@@ -1278,6 +1278,25 @@ def test_format_constraints_surfaces_episode_state_packet_authority_and_dropped_
     assert "mid_arc_arc_start_location_override_blocked" in formatted
 
 
+def test_format_constraints_does_not_hard_bind_placeholder_opening_location():
+    agent = _make_agent()
+
+    formatted = agent._format_constraints(
+        {
+            "episode_state_packet": {
+                "opening_truth": {
+                    "location": "서사 시작점",
+                    "location_source": "arc_opening_sentinel",
+                },
+            },
+        },
+        genre=GenreTypes.INVESTMENT,
+    )
+
+    assert "opening.location: 서사 시작점" in formatted
+    assert "must equal opening.location exactly" not in formatted
+
+
 def test_format_constraints_surfaces_opening_transition_expectation():
     agent = _make_agent()
 

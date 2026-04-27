@@ -637,6 +637,30 @@ class TestFactLockDriftDetection:
         assert "start_location" in issue_text
         assert "scene_1.location" in issue_text
 
+    def test_opening_truth_placeholder_location_does_not_bind_start(self):
+        constraint_block = {
+            "episode_state_packet": {
+                "opening_truth": {
+                    "location": "서사 시작점",
+                    "location_source": "arc_opening_sentinel",
+                }
+            }
+        }
+        blueprint = {
+            "start_location": "2024년, 허름한 원룸",
+            "scene_breakdown": {
+                "scene_1": {
+                    "location": "2024년, 허름한 원룸",
+                }
+            },
+        }
+        issues = UnifiedBlueprintValidator._collect_fact_lock_drift_issues(
+            blueprint=blueprint,
+            integrated="2024년 허름한 원룸에서 시작한다.",
+            constraint_block=constraint_block,
+        )
+        assert [i for i in issues if i["category"] == "fact_lock_location"] == []
+
     def test_item_storage_drift_detected(self):
         constraint_block = {
             "fact_lock_packet": {
