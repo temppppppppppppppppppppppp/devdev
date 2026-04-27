@@ -514,6 +514,16 @@ def _is_concrete_opening_location(location: str) -> bool:
     return normalized not in placeholder_locations
 
 
+def _should_hard_bind_opening_location(opening_truth: dict) -> bool:
+    if not isinstance(opening_truth, dict):
+        return False
+    location = str(opening_truth.get("location", "") or "").strip()
+    if not _is_concrete_opening_location(location):
+        return False
+    source = str(opening_truth.get("location_source", "") or "").strip()
+    return source.startswith("prev_blueprint") or "cross_stage_authority_packet" in source
+
+
 def _format_episode_state_packet_lines(packet: dict | None) -> list[str]:
     payload = packet if isinstance(packet, dict) else {}
     if not payload:
@@ -527,7 +537,7 @@ def _format_episode_state_packet_lines(packet: dict | None) -> list[str]:
     location = str(opening_truth.get("location", "") or "").strip()
     if location:
         packet_lines.append(f"  - opening.location: {_fit_compact_context(location, 120)}")
-        if _is_concrete_opening_location(location):
+        if _should_hard_bind_opening_location(opening_truth):
             packet_lines.append(
                 "    JSON start_location and scene_breakdown.scene_1.location must equal opening.location exactly; "
                 "move elsewhere only after an explicit transition inside scene_1 or a later scene."
