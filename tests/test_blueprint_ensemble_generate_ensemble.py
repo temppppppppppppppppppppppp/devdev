@@ -7,6 +7,7 @@ import pytest
 from modules.core.constants import GenreTypes
 from modules.core.prompt_loader import PromptLoader
 from modules.core.response_schemas import BLUEPRINT_SCHEMA
+from modules.core.tactical_intrusion_contract import detect_tactical_intrusion_signature
 from modules.domain.agents.base_agent import AgentErrorType
 from modules.domain.agents.blueprint_ensemble import BlueprintEnsembleGenerator
 
@@ -86,6 +87,19 @@ def test_generate_ensemble_owner_shell_coordinates_helper_chain():
         attempt_num=3,
         prompt_envelope_meta=ANY,
     )
+
+
+def test_compress_retry_feedback_rewrites_meta_recap_markers_before_prompt_injection():
+    feedback = "이전 화 훅을 이어받고 이번 화 시작부에 직전 화 설명을 반복하지 말 것."
+
+    compressed = BlueprintEnsembleGenerator._compress_retry_feedback(feedback)
+
+    assert "이전 화" not in compressed
+    assert "이번 화" not in compressed
+    assert "직전 화" not in compressed
+    assert "이전 사건 훅" in compressed
+    assert "현재 장면 시작부" in compressed
+    assert "직전 장면 설명" in compressed
 
 
 def test_qualify_blueprint_candidates_tracks_pass_and_fail_metadata():
@@ -691,6 +705,80 @@ def test_sanitize_blueprint_candidate_rejects_unauthorized_tactical_intrusion():
     assert result == (None, AgentErrorType.CANDIDATE_DISQUALIFIED)
 
 
+def test_tactical_intrusion_contract_detects_unauthorized_vehicle_chase_signature():
+    signature = detect_tactical_intrusion_signature(
+        "백미러에 끈질기게 따라붙는 검은 세단이 보이고, 헤드라이트를 켠 차량이 정면으로 돌진한다."
+    )
+
+    assert "검은 세단" in signature["entry_hits"]
+    assert any(marker in signature["conflict_hits"] for marker in ("돌진", "정면으로", "헤드라이트"))
+
+
+def test_sanitize_blueprint_candidate_rejects_unauthorized_vehicle_chase_intrusion():
+    agent = _make_agent()
+
+    result = agent._sanitize_blueprint_candidate(
+        {
+            "scene_breakdown": {
+                "scene_1": {
+                    "summary": "백미러에 검은 세단이 따라붙고 한시우가 도주를 시작한다.",
+                    "key_events": ["검은 세단이 미행하고 헤드라이트를 켠 차량이 정면으로 돌진한다."],
+                    "goal": "미행 차량을 따돌린다.",
+                },
+                "scene_2": {
+                    "summary": "급브레이크를 밟아 정면 충돌을 피한다.",
+                    "key_events": ["타이어가 비명을 지르고 스티어링을 꺾는다."],
+                    "goal": "충돌 위기에서 벗어난다.",
+                },
+            },
+            "integrated_scenario": (
+                "한시우는 도로 위에서 검은 세단의 미행을 확인하고, 헤드라이트를 켠 차량이 정면으로 "
+                "돌진하자 급브레이크를 밟는다. " * 30
+            ),
+            "opening_transition": {"type": "explicit_transition"},
+            "protagonist_state": {"mood": "경계"},
+        },
+        strategy_name="action_focused",
+        genre=GenreTypes.WUXIA,
+        tactical_excerpt="한시우가 VIP룸에서 박성호에게 해외 데스크 브리핑 메모를 받는다.",
+    )
+
+    assert result == (None, AgentErrorType.CANDIDATE_DISQUALIFIED)
+
+
+def test_sanitize_blueprint_candidate_allows_vehicle_threat_when_tactical_authorizes_it():
+    agent = _make_agent()
+    candidate = {
+        "scene_breakdown": {
+            "scene_1": {
+                "summary": "백미러에 검은 세단이 따라붙고 한시우가 도주를 시작한다.",
+                "key_events": ["검은 세단이 미행하고 헤드라이트를 켠 차량이 정면으로 돌진한다."],
+                "goal": "미행 차량을 따돌린다.",
+            },
+            "scene_2": {
+                "summary": "급브레이크를 밟아 정면 충돌을 피한다.",
+                "key_events": ["타이어가 비명을 지르고 스티어링을 꺾는다."],
+                "goal": "충돌 위기에서 벗어난다.",
+            },
+        },
+        "integrated_scenario": (
+            "한시우는 도로 위에서 검은 세단의 미행을 확인하고, 헤드라이트를 켠 차량이 정면으로 "
+            "돌진하자 급브레이크를 밟는다. " * 30
+        ),
+        "opening_transition": {"type": "explicit_transition"},
+        "protagonist_state": {"mood": "경계"},
+    }
+
+    result = agent._sanitize_blueprint_candidate(
+        candidate,
+        strategy_name="action_focused",
+        genre=GenreTypes.WUXIA,
+        tactical_excerpt="검은 세단의 미행과 도로 추격전, 헤드라이트 차량 돌진 위기를 처리한다.",
+    )
+
+    assert result is candidate
+
+
 def test_sanitize_blueprint_candidate_rejects_korean_synonym_tactical_intrusion():
     agent = _make_agent()
 
@@ -1081,6 +1169,31 @@ def test_format_constraints_surfaces_opening_active_characters_for_direct_carryo
     assert "opening.active_characters" in formatted
     assert "Lead, PB" in formatted
     assert "재입장 동선" in formatted
+
+
+def test_format_constraints_surfaces_terminal_timeline_lock_for_producer_prompt():
+    agent = _make_agent()
+
+    formatted = agent._format_constraints(
+        {
+            "terminal_timeline_lock": {
+                "mode": "exact_terminal_match",
+                "expression": "2006년 1월 15일 - 법인 설립 및 20억 자금 확보 완료",
+                "timeline": {
+                    "year": 2006,
+                    "month": 1,
+                    "day": 15,
+                    "description": "법인 설립 및 20억 자금 확보 완료",
+                },
+            }
+        },
+        genre=GenreTypes.HUNTER,
+    )
+
+    assert "TERMINAL TIMELINE LOCK" in formatted
+    assert "HARD CONSTRAINT" in formatted
+    assert "2006년 1월 15일 - 법인 설립 및 20억 자금 확보 완료" in formatted
+    assert "ending_state.timeline" in formatted
 
 
 def test_select_generate_error_type_prefers_candidate_disqualified_over_schema_bundle():

@@ -1,0 +1,45 @@
+{
+  "captured_at": "2026-04-27T02:21:51.110179+09:00",
+  "purpose": "pre-restart baseline after Gemini 3.1 Pro strict/global Vertex IAM patch; not a pass/fail judgment",
+  "branch": "run/gcp-iam-5arc-clean-proof",
+  "head": "de4dc335",
+  "project": "projects/01_골든카나리아",
+  "db": "projects/01_골든카나리아/project_data.db",
+  "env_contract": {
+    "GEULDOBI_PROVIDER_MODE": "vertex_ai",
+    "GEULDOBI_VERTEX_AUTH_MODE": "project_credentials",
+    "VERTEX_LOCATION": "global",
+    "GEULDOBI_FORCE_GOOGLE_MODEL": "gemini-3.1-pro-preview",
+    "VERTEX_PROJECT_ID_present": true,
+    "GOOGLE_CLOUD_PROJECT_present": true,
+    "GOOGLE_API_KEY_present": true,
+    "VERTEX_API_KEY_present": true
+  },
+  "counts": {
+    "stage_attempts": 0,
+    "context_cache_attempts": 2,
+    "llm_calls": 6,
+    "cost_log": 0,
+    "blueprints": 0,
+    "manuscripts": 0,
+    "reflexion_memory": 1,
+    "llm_calls_by_model_success": [
+      [
+        "vertexai:gemini-3.1-pro-preview",
+        0,
+        4
+      ],
+      [
+        "vertexai:gemini-2.5-flash",
+        1,
+        1
+      ],
+      [
+        "vertexai:gemini-2.5-pro",
+        1,
+        1
+      ]
+    ]
+  },
+  "reuse_decision": "reuse target project because no stage attempts, blueprints, or manuscripts exist; prior residue is diagnostic llm/cache logging only"
+}

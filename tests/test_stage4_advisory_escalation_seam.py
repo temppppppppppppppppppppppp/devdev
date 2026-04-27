@@ -58,6 +58,16 @@ def _base_pass_result(**overrides) -> dict:
     return base
 
 
+def _base_pass_with_fix_result(**overrides) -> dict:
+    base = _base_pass_result(
+        director_verdict="PASS_WITH_FIX",
+        final_verdict="PASS_WITH_FIX",
+        verdict="PASS_WITH_FIX",
+    )
+    base.update(overrides)
+    return base
+
+
 def _ready_local_fix_pack() -> dict:
     return {
         "patch_targets": ["씬 1 객장 묘사 첫 문단"],
@@ -77,7 +87,7 @@ class TestAdvisoryEscalationFixScope:
     def test_advisory_escalation_reject_has_partial_fix_scope(self):
         """G1+G2 chain must set fix_scope='partial' on the resulting REJECT."""
         ir = _make_ir(advisory_summary={"truth_gate": 1})
-        result = ir._normalize_director_gate_semantics(_base_pass_result())
+        result = ir._normalize_director_gate_semantics(_base_pass_with_fix_result())
         assert result["final_verdict"] == "REJECT"
         assert result["fix_scope"] == "partial"
 
@@ -85,7 +95,7 @@ class TestAdvisoryEscalationFixScope:
         """The rerun blocker: inplace scope alone is insufficient when fix_pack is not locally actionable."""
         ir = _make_ir(advisory_summary={"npc_drift": 1})
         result = ir._normalize_director_gate_semantics(
-            _base_pass_result(
+            _base_pass_with_fix_result(
                 authoritative_fix_scope="inplace",
                 fix_scope="inplace",
                 fix_pack={},
@@ -99,7 +109,7 @@ class TestAdvisoryEscalationFixScope:
     def test_advisory_escalation_reject_has_fix_scope_reasoning(self):
         """G1+G2 chain must populate fix_scope_reasoning with advisory class detail."""
         ir = _make_ir(advisory_summary={"truth_gate": 1, "npc_drift": 1})
-        result = ir._normalize_director_gate_semantics(_base_pass_result())
+        result = ir._normalize_director_gate_semantics(_base_pass_with_fix_result())
         reasoning = result.get("fix_scope_reasoning", "")
         assert "Lane2-G2a" in reasoning
         assert "truth_gate" in reasoning or "npc_drift" in reasoning
@@ -107,7 +117,7 @@ class TestAdvisoryEscalationFixScope:
     def test_advisory_escalation_with_multiple_classes_lists_all(self):
         """All triggered advisory classes must appear in fix_scope_reasoning."""
         ir = _make_ir(advisory_summary={"truth_gate": 1, "rel_drift": 1, "flashback": 1})
-        result = ir._normalize_director_gate_semantics(_base_pass_result())
+        result = ir._normalize_director_gate_semantics(_base_pass_with_fix_result())
         reasoning = result.get("fix_scope_reasoning", "")
         assert "truth_gate" in reasoning
         assert "rel_drift" in reasoning
@@ -133,12 +143,15 @@ class TestAdvisoryEscalationFixScope:
         # fix_scope stays blank for non-advisory G2
         assert result.get("fix_scope", "") == ""
 
-    def test_advisory_escalation_preserves_escalation_metadata(self):
-        """strong_advisory_escalation payload must survive the G2 REJECT."""
+    def test_pass_with_advisory_preserves_director_verdict_and_records_notice(self):
+        """PASS + advisory stays PASS; advisory is retained as sidecar metadata."""
         ir = _make_ir(advisory_summary={"info_paradox": 1})
         result = ir._normalize_director_gate_semantics(_base_pass_result())
-        assert "strong_advisory_escalation" in result
-        assert result["strong_advisory_escalation"]["source_verdict"] == "PASS"
+        assert result["final_verdict"] == "PASS"
+        assert result["verdict"] == "PASS"
+        assert result["strong_advisory_notice"]["source_verdict"] == "PASS"
+        assert result["strong_advisory_notice"]["triggered_by"] == ["info_paradox"]
+        assert result["strong_advisory_escalation"]["notice_only"] is True
 
     def test_advisory_escalation_fix_scope_feeds_reject_guidance(self):
         """End-to-end: reject guidance must read 'partial' from advisory-escalated REJECT."""
@@ -153,7 +166,7 @@ class TestAdvisoryEscalationFixScope:
         )
 
         # Simulate the G1+G2 chain
-        director_result = ir._normalize_director_gate_semantics(_base_pass_result())
+        director_result = ir._normalize_director_gate_semantics(_base_pass_with_fix_result())
         assert director_result["final_verdict"] == "REJECT"
 
         payload = ir.reject_runtime._build_reject_guidance_payload(
@@ -175,7 +188,7 @@ class TestAdvisoryEscalationFixScope:
     def test_advisory_escalation_gate_semantics_marks_runtime_widened(self):
         """Gate semantics must show runtime widening when authoritative scope is blank."""
         ir = _make_ir(advisory_summary={"truth_gate": 1})
-        result = ir._normalize_director_gate_semantics(_base_pass_result())
+        result = ir._normalize_director_gate_semantics(_base_pass_with_fix_result())
 
         payload = ir._build_gate_semantics_payload(result)
 
@@ -192,7 +205,7 @@ class TestAdvisoryEscalationFixScope:
         ir._set_retry_budget_axes = MagicMock(return_value={})
         ir._evaluate_fix_pack_contract = MagicMock(return_value={"ready": False, "reason": "missing_patch_targets"})
 
-        director_result = ir._normalize_director_gate_semantics(_base_pass_result())
+        director_result = ir._normalize_director_gate_semantics(_base_pass_with_fix_result())
         payload = ir.reject_runtime._build_reject_retry_snapshot(
             director_result=director_result,
             selected="A",
@@ -256,7 +269,7 @@ class TestAdvisoryEscalationHappyPathRegression:
         """PASS + strong advisory + ready local fix contract → PASS_WITH_FIX (not REJECT)."""
         ir = _make_ir(advisory_summary={"npc_drift": 1})
         result = ir._normalize_director_gate_semantics(
-            _base_pass_result(
+            _base_pass_with_fix_result(
                 authoritative_fix_scope="inplace",
                 fix_scope="inplace",
                 fix_pack=_ready_local_fix_pack(),
@@ -270,7 +283,7 @@ class TestAdvisoryEscalationHappyPathRegression:
         """Runtime strong advisory may backfill a bounded local fix contract for local targets."""
         ir = _make_ir(advisory_summary={"npc_drift": 1})
         result = ir._normalize_director_gate_semantics(
-            _base_pass_result(
+            _base_pass_with_fix_result(
                 authoritative_fix_scope="inplace",
                 fix_scope="inplace",
                 fix_pack={
@@ -308,7 +321,7 @@ class TestAdvisoryEscalationHappyPathRegression:
             ]
         }
         result = ir._normalize_director_gate_semantics(
-            _base_pass_result(
+            _base_pass_with_fix_result(
                 selected="A",
                 authoritative_fix_scope="inplace",
                 fix_scope="inplace",
@@ -346,7 +359,7 @@ class TestAdvisoryEscalationHappyPathRegression:
             ]
         }
         result = ir._normalize_director_gate_semantics(
-            _base_pass_result(
+            _base_pass_with_fix_result(
                 selected="A",
                 authoritative_fix_scope="inplace",
                 fix_scope="inplace",
@@ -382,7 +395,7 @@ class TestAdvisoryEscalationHappyPathRegression:
             ]
         }
         result = ir._normalize_director_gate_semantics(
-            _base_pass_result(
+            _base_pass_with_fix_result(
                 selected="A",
                 authoritative_fix_scope="inplace",
                 fix_scope="inplace",
@@ -410,7 +423,7 @@ class TestAdvisoryEscalationHappyPathRegression:
             ]
         }
         result = ir._normalize_director_gate_semantics(
-            _base_pass_result(
+            _base_pass_with_fix_result(
                 selected="A",
                 authoritative_fix_scope="inplace",
                 fix_scope="inplace",
@@ -445,7 +458,7 @@ class TestAdvisoryEscalationHappyPathRegression:
             ]
         }
         result = ir._normalize_director_gate_semantics(
-            _base_pass_result(
+            _base_pass_with_fix_result(
                 selected="A",
                 authoritative_fix_scope="inplace",
                 fix_scope="inplace",
@@ -479,7 +492,7 @@ class TestAdvisoryEscalationHappyPathRegression:
             ]
         }
         result = ir._normalize_director_gate_semantics(
-            _base_pass_result(
+            _base_pass_with_fix_result(
                 selected="A",
                 authoritative_fix_scope="inplace",
                 fix_scope="inplace",
@@ -507,7 +520,7 @@ class TestAdvisoryEscalationHappyPathRegression:
             ]
         }
         result = ir._normalize_director_gate_semantics(
-            _base_pass_result(
+            _base_pass_with_fix_result(
                 selected="A",
                 authoritative_fix_scope="inplace",
                 fix_scope="inplace",
@@ -522,7 +535,7 @@ class TestAdvisoryEscalationHappyPathRegression:
         """scene_model targets stay non-local even if strong advisory is backfilled."""
         ir = _make_ir(advisory_summary={"npc_drift": 1})
         result = ir._normalize_director_gate_semantics(
-            _base_pass_result(
+            _base_pass_with_fix_result(
                 authoritative_fix_scope="inplace",
                 fix_scope="inplace",
                 fix_pack={
@@ -542,7 +555,7 @@ class TestAdvisoryEscalationHappyPathRegression:
         """Empty scene_model placeholders may be narrowed into a bounded generic local contract."""
         ir = _make_ir(advisory_summary={"npc_drift": 1})
         result = ir._normalize_director_gate_semantics(
-            _base_pass_result(
+            _base_pass_with_fix_result(
                 authoritative_fix_scope="inplace",
                 fix_scope="inplace",
                 fix_pack={
@@ -583,7 +596,7 @@ class TestAdvisoryEscalationHappyPathRegression:
             ]
         }
         result = ir._normalize_director_gate_semantics(
-            _base_pass_result(
+            _base_pass_with_fix_result(
                 selected="A",
                 authoritative_fix_scope="inplace",
                 fix_scope="inplace",
@@ -611,7 +624,7 @@ class TestAdvisoryEscalationHappyPathRegression:
         """Already-local targets should not fail solely because generic contract fields were left blank."""
         ir = _make_ir(advisory_summary={"npc_drift": 1})
         result = ir._normalize_director_gate_semantics(
-            _base_pass_result(
+            _base_pass_with_fix_result(
                 authoritative_fix_scope="inplace",
                 fix_scope="inplace",
                 fix_pack={
@@ -926,7 +939,7 @@ class TestAdvisoryEscalationObservability:
         ir = _make_ir(advisory_summary={"flashback": 1, "truth_gate": 1})
 
         result = ir._normalize_director_gate_semantics(
-            _base_pass_result(
+            _base_pass_with_fix_result(
                 authoritative_fix_scope="inplace",
                 fix_scope="inplace",
                 fix_pack=_ready_local_fix_pack(),
@@ -948,7 +961,7 @@ class TestAdvisoryEscalationObservability:
         ir = _make_ir(advisory_summary={"flashback": 1})
 
         result = ir._normalize_director_gate_semantics(
-            _base_pass_result(
+            _base_pass_with_fix_result(
                 authoritative_fix_scope="inplace",
                 fix_scope="inplace",
                 fix_pack={},

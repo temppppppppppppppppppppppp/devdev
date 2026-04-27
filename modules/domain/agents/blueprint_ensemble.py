@@ -13,6 +13,7 @@ utf8-hygiene: allow-file -- legacy Korean prompt text in this generator predates
 2. 상세화 (integrated_scenario)
 """
 
+import json
 import logging
 import re
 import time
@@ -101,6 +102,7 @@ AI_TELL_BLUEPRINT_GUARDRAIL = """
 [AI 티 회피 지침]
 - Blueprint는 downstream scene authority이지 브리핑 문서나 회차 요약문이 아닙니다.
 - integrated_scenario에 독자 대상 설명문, recap, 메타 해설을 끼워 넣지 마세요.
+- scene_breakdown의 summary/description/goal/content에는 "직전 화", "이전 화", "이번 화", "이번 에피소드" 같은 회차 메타어를 쓰지 말고 실제 현재 장면의 행동/대사/결정으로만 작성하세요.
 - 상태창/HUD/시스템 메시지/홀로그램 같은 게임식 UI를 정본 근거 없이 새로 발명하지 마세요.
 - 장면 말미를 설명문으로 기계적으로 요약하지 마세요.
 - 감정 반응을 상투적인 반응구 반복으로 처리하지 말고 행동·대사·구체 감각으로 드러내세요.
@@ -236,6 +238,20 @@ _RETRY_FEEDBACK_DROP_MARKERS = tuple(
         "[주인공 고평가 연출 가이드]",
     )
 )
+
+_RETRY_FEEDBACK_OUTPUT_REWRITES = (
+    ("직전 화", "직전 장면"),
+    ("이전 화", "이전 사건"),
+    ("이번 화", "현재 장면"),
+    ("이번 에피소드", "현재 장면"),
+)
+
+
+def _sanitize_retry_feedback_for_blueprint_prompt(text: str) -> str:
+    sanitized = str(text or "")
+    for source, replacement in _RETRY_FEEDBACK_OUTPUT_REWRITES:
+        sanitized = sanitized.replace(source, replacement)
+    return sanitized
 
 
 def _build_stage3_retry_repair_guidance(fix_pack: dict | None, repair_contract: dict | None) -> str:
@@ -421,7 +437,9 @@ def _format_episode_state_packet_lines(packet: dict | None) -> list[str]:
         packet_lines.append(f"  - opening.transition_expectation: {_fit_compact_context(transition_expectation, 120)}")
     active_characters = opening_truth.get("active_characters") or []
     if isinstance(active_characters, list):
-        active_character_text = ", ".join(str(item or "").strip() for item in active_characters[:5] if str(item or "").strip())
+        active_character_text = ", ".join(
+            str(item or "").strip() for item in active_characters[:5] if str(item or "").strip()
+        )
     else:
         active_character_text = str(active_characters or "").strip()
     if active_character_text:
@@ -632,7 +650,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 bucket.append(line)
 
         for raw_line in raw.splitlines():
-            line = raw_line.strip()
+            line = _sanitize_retry_feedback_for_blueprint_prompt(raw_line.strip())
             if not line:
                 continue
 
@@ -1745,6 +1763,19 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     f"  *** 제{_cur_ep}화 이후 모든 에피소드 사건/NPC/전개를 "
                     f"이번 화에서 소비하거나 언급하면 즉시 REJECT ***"
                 )
+
+        terminal_timeline_lock = constraint_block.get("terminal_timeline_lock", {})
+        if isinstance(terminal_timeline_lock, dict) and terminal_timeline_lock.get("mode") == "exact_terminal_match":
+            end_text = str(terminal_timeline_lock.get("expression", "") or "").strip()
+            if not end_text and isinstance(terminal_timeline_lock.get("timeline"), dict):
+                end_text = json.dumps(terminal_timeline_lock["timeline"], ensure_ascii=False)
+            if end_text:
+                hard_lines.append("[TERMINAL TIMELINE LOCK - Arc 마지막 화]")
+                hard_lines.append(
+                    "  - 이번 화는 Arc 마지막 화입니다. ending_state.timeline은 아래 종료 시점과 정확히 맞아야 합니다."
+                )
+                hard_lines.append(f"  - authoritative arc end: {_fit_compact_context(end_text, 160)}")
+                hard_lines.append("  - 같은 월/같은 날의 vague 표현만 두고 정확한 종료 시점을 비워 두지 마세요.")
 
         progression_pkt = constraint_block.get("episode_progression_packet", {})
         if isinstance(progression_pkt, dict):

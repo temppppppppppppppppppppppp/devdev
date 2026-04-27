@@ -7,6 +7,7 @@ import contextlib
 import hashlib
 import json
 import re
+import shutil
 import signal
 import subprocess
 import sys
@@ -127,12 +128,23 @@ class SoakProfile:
 
 
 def default_soak_profile() -> SoakProfile:
-    """Return a standard soak profile: all-flash models, reduced lengths, heavy paths off."""
-    from modules.core.models_config import DEFAULT_FLASH_MODEL
+    """Return a standard soak profile: effective flash models, reduced lengths.
+
+    The model is resolved through the runtime models config instead of the
+    inline default so high-rigor runs can pin Gemini to a stricter floor via
+    ``GEULDOBI_FORCE_GOOGLE_MODEL`` without the soak profile silently downgrading.
+    """
+    from modules.core.models_config import DEFAULT_FLASH_MODEL, load_model_name
+
+    effective_flash_model = load_model_name(
+        section="role_constants",
+        key="flash_main",
+        fallback=DEFAULT_FLASH_MODEL,
+    )
 
     return SoakProfile(
-        stage2_model=DEFAULT_FLASH_MODEL,
-        stage4_model=DEFAULT_FLASH_MODEL,
+        stage2_model=effective_flash_model,
+        stage4_model=effective_flash_model,
         manuscript_min_length=1000,
         manuscript_target_length=1500,
         heavy_path_toggles={"post_pass_advisories": False},
@@ -947,6 +959,71 @@ def _derive_existing_project_frontier_ep(app: SovereignApp, plot_roadmap: list[A
     return 1
 
 
+def _episode_number_from_frontier_artifact_name(name: str) -> int | None:
+    match = re.match(r"(?:ep|emergency_ep|blueprint)_(\d{1,6})(?:\..+)?$", str(name or ""))
+    if not match:
+        return None
+    try:
+        return int(match.group(1))
+    except (TypeError, ValueError):
+        return None
+
+
+def _archive_reuse_reset_filesystem_frontier(project_root: Path, *, reset_target_ep: int) -> dict[str, Any]:
+    """Move stale file-based frontier evidence out of scanner paths after DB reset."""
+    reset_target = max(1, int(reset_target_ep or 1))
+    archive_root = (
+        project_root
+        / "logs"
+        / "reset_archives"
+        / f"reuse_reset_ge_ep{reset_target:04d}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    )
+    candidates: list[Path] = []
+
+    drafts_root = project_root / "drafts"
+    if drafts_root.exists():
+        for pattern in ("ep_*.*", "emergency_ep_*.txt"):
+            for path in drafts_root.glob(pattern):
+                ep_num = _episode_number_from_frontier_artifact_name(path.name)
+                if ep_num is not None and ep_num >= reset_target:
+                    candidates.append(path)
+
+    blueprints_root = project_root / "plans" / "blueprints"
+    if blueprints_root.exists():
+        for pattern in ("blueprint_*.*", "ep_*.json"):
+            for path in blueprints_root.glob(pattern):
+                ep_num = _episode_number_from_frontier_artifact_name(path.name)
+                if ep_num is not None and ep_num >= reset_target:
+                    candidates.append(path)
+
+    for stage_dir in (project_root / "logs" / "artifacts" / "stage3", project_root / "logs" / "artifacts" / "stage4"):
+        if not stage_dir.exists():
+            continue
+        for path in stage_dir.glob("ep_*"):
+            ep_num = _episode_number_from_frontier_artifact_name(path.name)
+            if ep_num is not None and ep_num >= reset_target:
+                candidates.append(path)
+
+    moved: list[str] = []
+    for path in sorted(candidates, key=lambda item: str(item)):
+        if not path.exists():
+            continue
+        rel = path.relative_to(project_root)
+        destination = archive_root / rel
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(path), str(destination))
+        moved.append(str(rel).replace("\\", "/"))
+
+    return {
+        "reuse_reset_filesystem_archive_applied": bool(moved),
+        "reuse_reset_filesystem_archive_root": str(archive_root.relative_to(project_root)).replace("\\", "/")
+        if moved
+        else "",
+        "reuse_reset_filesystem_archived_count": len(moved),
+        "reuse_reset_filesystem_archived_paths": moved[:50],
+    }
+
+
 def _read_reuse_failed_stage_state(db: Any, *, min_ep: int, limit: int = 20) -> list[dict[str, Any]]:
     conn = getattr(db, "conn", None)
     if conn is None:
@@ -1011,9 +1088,19 @@ def _assert_existing_project_frontier_ready(
     reset_target = max(1, int(reuse_reset_after_ep)) if reuse_reset_after_ep is not None else None
     reset_applied = False
     reset_result = "not_requested"
+    reset_filesystem_report: dict[str, Any] = {
+        "reuse_reset_filesystem_archive_applied": False,
+        "reuse_reset_filesystem_archive_root": "",
+        "reuse_reset_filesystem_archived_count": 0,
+        "reuse_reset_filesystem_archived_paths": [],
+    }
 
     if reset_target is not None:
         app.current_project.db.reset_after(reset_target)
+        reset_filesystem_report = _archive_reuse_reset_filesystem_frontier(
+            project_root,
+            reset_target_ep=reset_target,
+        )
         reset_applied = True
         reset_result = "applied"
 
@@ -1038,6 +1125,7 @@ def _assert_existing_project_frontier_ready(
         "reuse_post_failed_state_count": len(post_failed_rows),
         "reuse_db_hash_before": pre_hash,
         "reuse_db_hash_after": post_hash,
+        **reset_filesystem_report,
     }
 
 

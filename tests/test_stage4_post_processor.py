@@ -7,10 +7,18 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+from modules.core.constants import ManuscriptLimits
 from modules.core.cross_stage_authority_packet import CROSS_STAGE_AUTHORITY_PACKET_VERSION
 from modules.core.stage4_orchestrator import Stage4Orchestrator
 from modules.core.stage4_post_pass_runtime import Stage4PostPassRuntime, _build_state_truth_owner_contract
 from modules.core.stage4_post_processor import Stage4PostProcessor
+
+
+@pytest.fixture(autouse=True)
+def _use_compact_manuscript_floor_for_unit_fixtures(monkeypatch):
+    monkeypatch.setattr(ManuscriptLimits, "_lazy_MIN_LENGTH", 0, raising=False)
 
 
 class TestPostProcessorInit:
@@ -2187,10 +2195,11 @@ class TestProcessPassResult:
     def test_process_pass_result_persists_normalized_reader_facing_manuscript(self, tmp_path):
         pp = self._make_pp()
         pp.ctx.current_project.db.save_manuscript.return_value = True
+        body = "가" * int(ManuscriptLimits.MIN_LENGTH)
         manuscript = (
             "### 씬 1: 시작\n\n"
             "[2024년 12월, 서울 외곽의 좁은 원룸]\n\n"
-            "첫 문장이다.\n\n"
+            f"첫 문장이다. {body}\n\n"
             "### 씬 2: 전환\n\n"
             "[2006년 1월, 한성그룹 본가 시우의 방]\n\n"
             "둘째 문장이다."
@@ -2216,6 +2225,33 @@ class TestProcessPassResult:
         file_text = (tmp_path / "ep_0001.txt").read_text(encoding="utf-8")
         assert "### 씬" not in file_text
         assert "***" in file_text
+
+    def test_process_pass_result_blocks_when_reader_facing_normalization_drops_below_min_length(
+        self, tmp_path, monkeypatch
+    ):
+        monkeypatch.setattr(ManuscriptLimits, "_lazy_MIN_LENGTH", 4000, raising=False)
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        body = "가" * (int(ManuscriptLimits.MIN_LENGTH) - 5)
+        manuscript = "### 씬 1: 시작\n\n" + body
+
+        result = pp.process_pass_result(
+            next_ep=1,
+            final_manuscript=manuscript,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is False
+        pp.ctx.current_project.db.save_manuscript.assert_not_called()
+        status_payloads = self._settlement_status_payloads(pp)
+        assert status_payloads[-1]["settlement_status"] == "artifact_contract_failed"
+        assert status_payloads[-1]["manuscript_persisted"] is False
 
     def test_process_pass_result_re_normalizes_stringified_stv_martial_arts_correction(self, tmp_path):
         pp = self._make_pp()

@@ -3807,38 +3807,48 @@ class Stage4InterviewRound:
         director_result["verdict"] = final_verdict
         director_result["authoritative_fix_scope"] = authoritative_fix_scope
 
-        # [Lane2-G1] Strong advisory binding: tier-2+ advisory classes must not end as plain PASS.
-        # TruthGate (tier 3) and NpcDrift/RelDrift/Flashback/InfoParadox (tier 2) are binding
-        # advisory classes that require at minimum PASS_WITH_FIX acknowledgement.
+        # [Lane2-G1] Strong advisory notice: advisory systems may inform the
+        # Director, but they must not rewrite a Director-owned PASS into
+        # PASS_WITH_FIX. Keep the advisory payload as a sidecar; actual repair
+        # contract enforcement below still applies when the Director itself
+        # returns PASS_WITH_FIX.
         _STRONG_ADVISORY_KEYS = frozenset({"truth_gate", "npc_drift", "rel_drift", "flashback", "info_paradox"})
         _advisory_summary = getattr(self, "_last_advisory_summary", None) or {}
         _triggered = sorted(k for k in _STRONG_ADVISORY_KEYS if _advisory_summary.get(k))
-        if final_verdict == "PASS" and _triggered:
-            final_verdict = "PASS_WITH_FIX"
-            director_result["final_verdict"] = "PASS_WITH_FIX"
-            director_result["verdict"] = "PASS_WITH_FIX"
-            director_result["gate_basis"] = "strong_advisory_escalation"
+        if final_verdict in {"PASS", "PASS_WITH_FIX"} and _triggered:
+            director_result.setdefault(
+                "strong_advisory_notice",
+                {
+                    "source_verdict": final_verdict,
+                    "final_verdict_preserved": final_verdict,
+                    "triggered_by": _triggered,
+                    "authority": "advisory_to_director_only",
+                },
+            )
             director_result.setdefault(
                 "strong_advisory_escalation",
                 {
-                    "source_verdict": "PASS",
-                    "escalated_to": "PASS_WITH_FIX",
+                    "source_verdict": final_verdict,
+                    "escalated_to": final_verdict,
+                    "notice_only": True,
+                    "final_verdict_preserved": True,
                     "triggered_by": _triggered,
                 },
             )
-            logging.warning(
-                "[Stage4Gate] strong advisory escalation: PASS → PASS_WITH_FIX (classes=%s)",
+            logging.info(
+                "[Stage4Gate] strong advisory notice: %s preserved (classes=%s)",
+                final_verdict,
                 ",".join(_triggered),
             )
             _emit_stage4_ui_log(
                 self.ctx.ui,
-                f"   [Stage4Gate] strong advisory escalation: PASS → PASS_WITH_FIX ({', '.join(_triggered)})",
+                f"   [Stage4Gate] strong advisory notice: {final_verdict} preserved ({', '.join(_triggered)})",
                 component="director_gate",
                 event_kind="policy",
                 meta={
-                    "gate_basis": "strong_advisory_escalation",
-                    "source_verdict": "PASS",
-                    "final_verdict": "PASS_WITH_FIX",
+                    "gate_basis": "strong_advisory_notice",
+                    "source_verdict": final_verdict,
+                    "final_verdict": final_verdict,
                     "triggered_by": list(_triggered),
                 },
             )

@@ -17,6 +17,10 @@ TACTICAL_INTRUSION_ENTRY_MARKERS = (
     "침입자",
     "철문",
     "심부름센터",
+    "검은 세단",
+    "정체불명의 세단",
+    "미행",
+    "따라붙",
 )
 
 TACTICAL_INTRUSION_CONFLICT_MARKERS = (
@@ -49,6 +53,16 @@ TACTICAL_INTRUSION_CONFLICT_MARKERS = (
     "목덜미를 잡",
     "벽으로 밀치",
     "의자로 가로막",
+    "추격",
+    "도주",
+    "돌진",
+    "정면 충돌",
+    "정면으로",
+    "급브레이크",
+    "브레이크를",
+    "타이어",
+    "헤드라이트",
+    "스티어링",
 )
 
 _TACTICAL_INTRUSION_PROXIMITY_ENTRY_MARKERS = (
@@ -61,6 +75,10 @@ _TACTICAL_INTRUSION_PROXIMITY_ENTRY_MARKERS = (
     "습격",
     "침입자",
     "심부름센터",
+    "검은 세단",
+    "정체불명의 세단",
+    "미행",
+    "따라붙",
 )
 
 _TACTICAL_INTRUSION_PROXIMITY_CONFLICT_MARKERS = frozenset(
@@ -85,10 +103,21 @@ _TACTICAL_INTRUSION_PROXIMITY_CONFLICT_MARKERS = frozenset(
         "목덜미를 잡",
         "벽으로 밀치",
         "의자로 가로막",
+        "추격",
+        "도주",
+        "돌진",
+        "정면 충돌",
+        "정면으로",
+        "급브레이크",
+        "브레이크를",
+        "타이어",
+        "헤드라이트",
+        "스티어링",
     }
 )
 
-_TACTICAL_SENTENCE_SPLIT_RE = re.compile(r"(?:\n+|(?<=[.!?。！？])\s+)")
+_TACTICAL_SENTENCE_END_CHARS = ".!" + chr(63) + "。！？"
+_TACTICAL_SENTENCE_SPLIT_RE = re.compile(r"(?:\n+|(?<=[" + re.escape(_TACTICAL_SENTENCE_END_CHARS) + r"])\s+)")
 
 
 def _collapse_whitespace(text: str) -> str:
@@ -141,9 +170,7 @@ def detect_tactical_intrusion_signature(text: str) -> dict[str, list[str]]:
         marker_folded = marker.casefold()
         if marker_folded not in flat_text:
             continue
-        if marker in _TACTICAL_INTRUSION_PROXIMITY_CONFLICT_MARKERS and not _has_nearby_entry(
-            sentences, marker
-        ):
+        if marker in _TACTICAL_INTRUSION_PROXIMITY_CONFLICT_MARKERS and not _has_nearby_entry(sentences, marker):
             continue
         conflict_hits.append(marker)
 

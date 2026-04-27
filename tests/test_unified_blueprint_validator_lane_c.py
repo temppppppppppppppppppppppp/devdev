@@ -284,6 +284,43 @@ def test_lane_c_build_director_validation_result_surfaces_advisory_fix_pack():
     assert "python_warnings" not in blueprint["_ensemble_meta"]
 
 
+def test_lane_c_build_director_validation_result_synthesizes_v61_entity_patch_contract():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+    blueprint = {}
+
+    verdict, result = validator._build_director_validation_result(
+        blueprint=blueprint,
+        pre_result={"issues": []},
+        director_result={
+            "decision": "REJECT",
+            "reason": "Entity Registry에 등록된 정식 명칭으로 통일하십시오.",
+            "feedback": "[V61] Entity 일관성 오류",
+            "score": 40,
+            "v61_entity_check": {
+                "decision": "REJECT",
+                "fix_instructions": "'한태성'은 '한정호'으로 수정해야 합니다.",
+                "mismatches": [
+                    {
+                        "category": "character",
+                        "registered_name": "한정호",
+                        "found_variant": "한태성",
+                        "severity": "MAJOR",
+                    }
+                ],
+            },
+        },
+    )
+
+    assert verdict == "REJECT"
+    assert result["fix_pack"]["target_kind"] == "entity_ref"
+    assert result["fix_pack"]["patch_targets"] == ["한태성->한정호"]
+    assert result["fix_pack"]["patch_target_records"][0]["text_anchor"]["old_text"] == "한태성"
+    assert result["fix_pack"]["must_fix"] == ["Replace Entity Registry variant '한태성' with canonical '한정호'."]
+    assert result["repair_contract"]["authoritative_fix_scope"] == "inplace"
+    assert result["repair_contract"]["target_kind"] == "entity_ref"
+    assert result["scope_authority"]["widened"] is False
+
+
 def test_lane_c_validate_without_director_fail_closes_after_python_prevalidation():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
     validator._run_python_prevalidation_phase = Mock(

@@ -4193,8 +4193,8 @@ class SovereignApp:
             s3_success = s3_result.get("success_count", 0) if s3_result else 0
             s3_fail = s3_result.get("fail_count", 0) if s3_result else 0
 
-            if s3_success == 0 and s3_fail > 0:
-                self.ui.log(f"   ⚠️ [Stage 3] Blueprint 생성 실패 (성공: 0, 실패: {s3_fail})")
+            if s3_fail > 0:
+                self.ui.log(f"   ⚠️ [Stage 3] Blueprint 생성 실패 포함 (성공: {s3_success}, 실패: {s3_fail})")
                 if stage3_failure_policy == "strict":
                     self.ui.log("   [FrontierLag] strict Stage3 policy stops before Arc advancement.")
                     return {
@@ -4206,6 +4206,8 @@ class SovereignApp:
                             "status": "stop",
                             "stop_reason": "stage3_strict_failure_stop",
                             "stage3_failure_policy": stage3_failure_policy,
+                            "stage3_success_count": s3_success,
+                            "stage3_fail_count": s3_fail,
                         },
                     }
                 if stage3_failure_policy in {"skip", "quarantine"}:
@@ -4427,6 +4429,22 @@ class SovereignApp:
         )
         if stage3_result["status"] != "completed":
             return stage3_result["payload"]
+        bp_max_after_stage3 = self.current_project.db.get_latest_blueprint_number()
+        if bp_max_after_stage3 < int(frontier_plan["stage3_target"]):
+            self.ui.log(
+                "   🛑 [FrontierLag] Stage3 target not reached; "
+                f"bp_max={bp_max_after_stage3}, target={frontier_plan['stage3_target']}."
+            )
+            return {
+                "arcs_advanced_delta": 0,
+                "arcs_skipped_delta": 0,
+                "manuscripts_delta": 0,
+                "status": "stop",
+                "stop_reason": "stage3_target_not_reached_strict_stop",
+                "stage3_failure_policy": stage3_failure_policy,
+                "stage3_target": frontier_plan["stage3_target"],
+                "bp_max_after_stage3": bp_max_after_stage3,
+            }
         return self._run_frontier_lag_stage4_sync(frontier_plan=frontier_plan)
 
     def _prepare_frontier_lag_batch_request(
@@ -4747,8 +4765,8 @@ class SovereignApp:
             s3_success = s3_result.get("success_count", 0) if s3_result else 0
             s3_fail = s3_result.get("fail_count", 0) if s3_result else 0
 
-            if s3_success == 0 and s3_fail > 0:
-                self.ui.log(f"   ⚠️ [Stage 3] Blueprint 생성 실패 (성공: 0, 실패: {s3_fail})")
+            if s3_fail > 0:
+                self.ui.log(f"   ⚠️ [Stage 3] Blueprint 생성 실패 포함 (성공: {s3_success}, 실패: {s3_fail})")
                 # [HIL-BOUNDARY] Operator skip/stop decision inside automated OneStop pipeline.
                 # Automation cannot silently continue after Stage 3 failure — the operator must
                 # decide whether to skip this Arc or stop the pipeline entirely.

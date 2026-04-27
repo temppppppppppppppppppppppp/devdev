@@ -9,6 +9,7 @@ import os
 import re
 from pathlib import Path
 
+from modules.core.constants import ManuscriptLimits
 from modules.core.metrics_collector import get_metrics_collector
 from modules.core.non_wuxia_recovery_policy import normalize_chain_link_for_genre
 from modules.core.project_support import resolve_project_pov_contract
@@ -21,6 +22,13 @@ class Stage4PostProcessor:
     """[B-1-1] Stage4 PASS 후처리 전담 모듈"""
 
     _SETTLEMENT_STATUS_FLAGS = {
+        "artifact_contract_failed": {
+            "manuscript_persisted": False,
+            "metadata_settled": False,
+            "settlement_packet_persisted": False,
+            "human_export_persisted": False,
+            "fully_settled": False,
+        },
         "primary_db_failed": {
             "manuscript_persisted": False,
             "metadata_settled": False,
@@ -1469,6 +1477,35 @@ class Stage4PostProcessor:
             },
         }
 
+    def _handle_post_normalization_artifact_contract_failure(
+        self,
+        *,
+        final_manuscript: str,
+        settlement_status_context: dict,
+        next_ep: int,
+        arc_data: dict,
+    ) -> bool:
+        min_length = int(ManuscriptLimits.MIN_LENGTH)
+        actual_length = len(final_manuscript or "")
+        detail = f"reader-facing manuscript length {actual_length} < minimum {min_length}"
+        logging.error("[S4-ARTIFACT] post-normalization manuscript length below floor: %s", detail)
+        self._emit_stage4_settlement_status(
+            status="artifact_contract_failed",
+            detail=detail,
+            **settlement_status_context,
+        )
+        self.ctx.ui.log(
+            f"   ❌ 정산 실패: 독자용 정규화 후 원고 분량이 최소 기준 미달입니다 ({actual_length}자 < {min_length}자).",
+            stage="stage4",
+            component="post_pass_settlement",
+            ep_num=next_ep,
+            arc_num=arc_data.get("arc_no", 0) if isinstance(arc_data, dict) else 0,
+            event_kind="result",
+            level="error",
+            meta={"result": "artifact_contract_failed", "length": actual_length, "min_length": min_length},
+        )
+        return False
+
     def process_pass_result(
         self,
         *,
@@ -1499,6 +1536,14 @@ class Stage4PostProcessor:
         approved_hud_updates = settlement_inputs["approved_hud_updates"]
         hud_update_error = settlement_inputs["hud_update_error"]
         settlement_status_context = settlement_inputs["settlement_status_context"]
+
+        if len(final_manuscript or "") < int(ManuscriptLimits.MIN_LENGTH):
+            return self._handle_post_normalization_artifact_contract_failure(
+                final_manuscript=final_manuscript,
+                settlement_status_context=settlement_status_context,
+                next_ep=next_ep,
+                arc_data=arc_data,
+            )
 
         # DB 저장 (HUD보다 먼저 — DB 실패 시 HUD 오염 방지) [Sweep56]
         # [P0-D1/D4] lock 보호 + 원자적 트랜잭션으로 부분 저장 방지
