@@ -9,7 +9,7 @@ from modules.core.prompt_loader import PromptLoader
 from modules.core.response_schemas import BLUEPRINT_SCHEMA
 from modules.core.tactical_intrusion_contract import detect_tactical_intrusion_signature
 from modules.domain.agents.base_agent import AgentErrorType
-from modules.domain.agents.blueprint_ensemble import BlueprintEnsembleGenerator
+from modules.domain.agents.blueprint_ensemble import BlueprintEnsembleGenerator, build_genre_strategy_contract
 
 
 def _make_agent(root: Path | None = None):
@@ -29,7 +29,7 @@ def test_generate_ensemble_owner_shell_coordinates_helper_chain():
     agent = _make_agent()
     prepared = {
         "arc_focus": "focus",
-        "genre": GenreTypes.WUXIA,
+        "genre": GenreTypes.INVESTMENT,
         "constraints_str": "constraints",
         "tactical_excerpt": "tactical",
         "prev_info": "prev",
@@ -87,6 +87,10 @@ def test_generate_ensemble_owner_shell_coordinates_helper_chain():
         attempt_num=3,
         prompt_envelope_meta=ANY,
     )
+    envelope_meta = agent._finalize_blueprint_candidates.call_args.kwargs["prompt_envelope_meta"]
+    assert envelope_meta["genre_strategy_contracts"][0]["contract_id"] == "investment_business_power.action_focused.v1"
+    assert envelope_meta["genre_strategy_contracts"][0]["authority_level"] == "route"
+    assert envelope_meta["genre_strategy_contracts"][0]["contract_hash"]
 
 
 def test_compress_retry_feedback_rewrites_meta_recap_markers_before_prompt_injection():
@@ -364,6 +368,35 @@ def test_finalize_blueprint_candidates_snapshots_fanout_candidates_when_attempt_
     assert (tmp_path / artifact_path).exists()
 
 
+def test_finalize_blueprint_candidates_preserves_genre_strategy_contract_meta():
+    agent = _make_agent()
+    contract = build_genre_strategy_contract(GenreTypes.INVESTMENT, "action_focused")
+
+    _, all_candidates = agent._finalize_blueprint_candidates(
+        [
+            {
+                "_strategy": "action_focused",
+                "_qualified": True,
+                "_scene_count": 4,
+                "_length": 700,
+                "_genre_strategy_contract": contract,
+                "scene_breakdown": {"scene_1": {"summary": "opening"}},
+                "integrated_scenario": "x" * 700,
+            }
+        ],
+        [],
+        ep_num=9,
+        arc_data={"arc_no": 2},
+        attempt_num=None,
+    )
+
+    meta = all_candidates[0]["_ensemble_meta"]
+    assert meta["genre_strategy_contract"]["contract_id"] == "investment_business_power.action_focused.v1"
+    assert meta["genre_strategy_contract"]["authority_level"] == "route"
+    assert "_genre_strategy_contract" not in all_candidates[0]
+    assert "_strategy" not in all_candidates[0]
+
+
 def test_build_blueprint_prompt_bundle_uses_cache_stub_and_full_fallback():
     agent = _make_agent()
 
@@ -376,7 +409,7 @@ def test_build_blueprint_prompt_bundle_uses_cache_stub_and_full_fallback():
     agent._prompt_loader = MagicMock()
     agent._prompt_loader.load.side_effect = _load_side_effect
 
-    prompt, fallback = agent._build_blueprint_prompt_bundle(
+    prompt, fallback, contract = agent._build_blueprint_prompt_bundle(
         ep_num=11,
         arc_focus="ARC_FOCUS_PAYLOAD",
         constraints_str="CONSTRAINTS_PAYLOAD",
@@ -391,6 +424,7 @@ def test_build_blueprint_prompt_bundle_uses_cache_stub_and_full_fallback():
         cache_name="cache/bp",
     )
 
+    assert contract == {}
     assert "[context cached: refer to cached_content]" in prompt
     assert "ARC_FOCUS_PAYLOAD" not in prompt
     assert "CONSTRAINTS_PAYLOAD" not in prompt
@@ -400,6 +434,115 @@ def test_build_blueprint_prompt_bundle_uses_cache_stub_and_full_fallback():
     assert "CONSTRAINTS_PAYLOAD" in fallback
     assert "PREV_INFO_PAYLOAD" in fallback
     assert "HUD_PAYLOAD" in fallback
+
+
+def test_investment_action_focused_prompt_uses_business_power_semantics():
+    agent = _make_agent()
+
+    prompt, fallback, contract = agent._build_blueprint_prompt_bundle(
+        ep_num=11,
+        arc_focus="ARC_FOCUS_PAYLOAD",
+        constraints_str="CONSTRAINTS_PAYLOAD",
+        prev_info="PREV_INFO_PAYLOAD",
+        strategy={
+            "name": "action_focused",
+            "display": "액션 중심",
+            "directive": "전투, 추격, 대결 씬\n물리적 위기/액션 클리프행어",
+        },
+        protagonist_name="hero",
+        protagonist_instructions="do the thing",
+        extra_directive="",
+        hud_context="HUD_PAYLOAD",
+        pov_constraint="POV_CONSTRAINT",
+        reader_feedback="",
+        cache_name="",
+        genre=GenreTypes.INVESTMENT,
+    )
+
+    assert contract["contract_id"] == "investment_business_power.action_focused.v1"
+    assert contract["authority_level"] == "route"
+    assert contract["contract_hash"] in prompt
+    assert contract["factsheet_mutation"] is False
+    assert contract["material_mutation"] is False
+    for expected in ("business execution pressure", "capital exposure", "governance/legal gate"):
+        assert expected in prompt
+    for forbidden in ("전투", "추격", "물리적 위기", "액션 클리프행어"):
+        assert forbidden not in prompt
+    assert fallback == prompt
+
+
+def test_cached_investment_action_focused_prompt_and_fallback_keep_contract():
+    agent = _make_agent()
+
+    prompt, fallback, contract = agent._build_blueprint_prompt_bundle(
+        ep_num=11,
+        arc_focus="ARC_FOCUS_PAYLOAD",
+        constraints_str="CONSTRAINTS_PAYLOAD",
+        prev_info="PREV_INFO_PAYLOAD",
+        strategy={
+            "name": "action_focused",
+            "display": "액션 중심",
+            "directive": "전투, 추격, 대결 씬\n물리적 위기/액션 클리프행어",
+        },
+        protagonist_name="hero",
+        protagonist_instructions="do the thing",
+        extra_directive="",
+        hud_context="HUD_PAYLOAD",
+        pov_constraint="POV_CONSTRAINT",
+        reader_feedback="",
+        cache_name="cache/bp",
+        genre=GenreTypes.INVESTMENT,
+    )
+
+    for rendered in (prompt, fallback):
+        assert "investment_business_power.action_focused.v1" in rendered
+        assert contract["contract_hash"] in rendered
+        assert "business execution pressure" in rendered
+        assert "전투, 추격, 대결 씬" not in rendered
+        assert "물리적 위기/액션 클리프행어" not in rendered
+    assert "[context cached: refer to cached_content]" in prompt
+    assert "ARC_FOCUS_PAYLOAD" in fallback
+
+
+def test_build_genre_strategy_contract_keeps_verdict_authority_out_of_python():
+    contract = build_genre_strategy_contract(GenreTypes.INVESTMENT, "action_focused")
+
+    assert contract["authority_level"] == "route"
+    assert contract["authority_source"] == "stage3_genre_strategy_contract"
+    assert contract["director_visible"] is True
+    assert contract["contract_hash"]
+    assert contract["authority_level"] != "verdict"
+
+
+def test_request_blueprint_generation_preserves_genre_strategy_contract_hash():
+    agent = _make_agent()
+    contract = build_genre_strategy_contract(GenreTypes.INVESTMENT, "action_focused")
+    agent._ask_with_cached_context = MagicMock(
+        return_value='{"scene_breakdown": {"scene_1": {"summary": "투자 위원회 압박"}}, "integrated_scenario": "scenario"}'
+    )
+    agent._extract_json_robust = MagicMock(
+        return_value={
+            "scene_breakdown": {"scene_1": {"summary": "투자 위원회 압박"}},
+            "integrated_scenario": "scenario",
+        }
+    )
+    agent._sanitize_blueprint_candidate = MagicMock(
+        return_value={
+            "scene_breakdown": {"scene_1": {"summary": "투자 위원회 압박"}},
+            "integrated_scenario": "scenario",
+        }
+    )
+
+    result = agent._request_blueprint_generation(
+        cache_name="cache/bp",
+        prompt="PROMPT",
+        full_prompt_fallback="FALLBACK",
+        strategy_name="action_focused",
+        genre=GenreTypes.INVESTMENT,
+        genre_strategy_contract=contract,
+    )
+
+    assert result["_genre_strategy_contract"]["contract_hash"] == contract["contract_hash"]
 
 
 def test_prepare_blueprint_ensemble_context_caches_constraints_before_arc_focus():
@@ -435,7 +578,7 @@ def test_prepare_blueprint_ensemble_context_caches_constraints_before_arc_focus(
 def test_build_blueprint_prompt_bundle_places_constraints_before_arc_mission():
     agent = _make_agent()
 
-    prompt, fallback = agent._build_blueprint_prompt_bundle(
+    prompt, fallback, contract = agent._build_blueprint_prompt_bundle(
         ep_num=11,
         arc_focus="ARC_FOCUS_PAYLOAD",
         constraints_str="CONSTRAINTS_PAYLOAD",
@@ -450,6 +593,7 @@ def test_build_blueprint_prompt_bundle_places_constraints_before_arc_mission():
         cache_name="",
     )
 
+    assert contract == {}
     assert prompt.index("### [Constraint Stack / 제약 조건]") < prompt.index("### [Arc Mission / 이번 화 핵심]")
     assert prompt.index("### [Previous Truth And Archive]") < prompt.index("### [HUD Convenience State]")
     assert fallback == prompt
