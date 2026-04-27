@@ -1,8 +1,8 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-27T07:51:26.189103+00:00",
+  "generated_at": "2026-04-27T08:50:21.441333+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 6,
+  "active_item_count": 7,
   "roadmap": {
     "temp_path": "docs/temp/execution-roadmap.md",
     "canonical_path": "docs/2026-04-27/security-and-frontier-active-execution-roadmap.md",
@@ -76,6 +76,17 @@
       "status": "pending",
       "queue_role": "parked_future_wave",
       "roadmap_rank": 6,
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "stage4-proof-digest-cove-advisory",
+      "temp_path": "docs/temp/stage4-proof-digest-cove-advisory-execution-ssot.md",
+      "canonical_path": "docs/2026-04-27/stage4-proof-digest-cove-advisory-execution-ssot.md",
+      "status": "in_progress",
+      "queue_role": "front_active",
+      "roadmap_rank": 7,
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
