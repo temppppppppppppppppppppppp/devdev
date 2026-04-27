@@ -19,6 +19,44 @@ def supports_blueprint_patch_ir(normalized_fix_pack: dict[str, Any] | None) -> b
     return bool(target_kind in SUPPORTED_BLUEPRINT_PATCH_IR_TARGET_KINDS and patch_target_records)
 
 
+def explain_blueprint_patch_packet_failure(
+    *,
+    original_blueprint: dict[str, Any],
+    normalized_fix_pack: dict[str, Any] | None,
+) -> str:
+    if not isinstance(original_blueprint, dict):
+        return "invalid_original_blueprint"
+
+    payload = normalized_fix_pack if isinstance(normalized_fix_pack, dict) else {}
+    target_kind = str(payload.get("target_kind", "") or "").strip().lower()
+    if target_kind not in SUPPORTED_BLUEPRINT_PATCH_IR_TARGET_KINDS:
+        return "unsupported_target_kind" if target_kind else "missing_target_kind"
+
+    patch_target_records = list(payload.get("patch_target_records") or [])
+    if not patch_target_records:
+        return "missing_patch_target_records"
+
+    seen_target_ids: set[str] = set()
+    for record in patch_target_records[:6]:
+        if not isinstance(record, dict):
+            return "invalid_patch_target_record"
+        patch_target_id = str(record.get("patch_target_id") or "").strip()
+        if not patch_target_id:
+            return "missing_patch_target_id"
+        if patch_target_id in seen_target_ids:
+            return "duplicate_patch_target_id"
+        seen_target_ids.add(patch_target_id)
+
+        field_path = str(record.get("field_path") or "").strip()
+        if not field_path:
+            return "missing_field_path"
+        found, _current_value = _resolve_path_value(original_blueprint, field_path)
+        if not found:
+            return "unresolved_field_path"
+
+    return ""
+
+
 def build_blueprint_patch_packet(
     *,
     original_blueprint: dict[str, Any],
@@ -44,7 +82,9 @@ def build_blueprint_patch_packet(
     for record in patch_target_records[:6]:
         if not isinstance(record, dict):
             return {}
-        snapshot = _build_patch_target_snapshot(original_blueprint=original_blueprint, record=record, target_kind=target_kind)
+        snapshot = _build_patch_target_snapshot(
+            original_blueprint=original_blueprint, record=record, target_kind=target_kind
+        )
         if not snapshot:
             return {}
         target_snapshots.append(snapshot)
@@ -151,9 +191,7 @@ def _build_patch_target_snapshot(
     text_anchor = record.get("text_anchor")
     if isinstance(text_anchor, dict) and text_anchor:
         snapshot["text_anchor"] = {
-            key: str(value or "").strip()[:240]
-            for key, value in text_anchor.items()
-            if str(value or "").strip()
+            key: str(value or "").strip()[:240] for key, value in text_anchor.items() if str(value or "").strip()
         }
     return snapshot
 
@@ -202,7 +240,7 @@ def _set_path_value(payload: dict[str, Any], field_path: str, value: Any) -> boo
 
 
 def _is_valid_patch_value(value: Any) -> bool:
-    if isinstance(value, (str, int, float, bool)) or value is None:
+    if isinstance(value, str | int | float | bool) or value is None:
         return True
     if isinstance(value, list):
         return all(_is_valid_patch_value(item) for item in value)

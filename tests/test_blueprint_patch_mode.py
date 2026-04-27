@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from modules.domain.agents.base_agent import AgentErrorType
+from modules.domain.agents.stage3_blueprint_patch_ir import explain_blueprint_patch_packet_failure
 
 
 @pytest.fixture
@@ -371,7 +372,26 @@ class TestBlueprintInplacePatchMode:
         )
 
         assert result is None
+        assert blueprint_generator._last_blueprint_patch_failure_reason == "unresolved_field_path"
+        assert blueprint_generator._last_blueprint_patch_failure_meta["patch_targets"] == ["missing_field"]
         blueprint_generator.ensemble.ask.assert_not_called()
+
+    def test_blueprint_patch_packet_failure_explains_missing_field_path(self, sample_blueprint):
+        reason = explain_blueprint_patch_packet_failure(
+            original_blueprint=sample_blueprint,
+            normalized_fix_pack={
+                "target_kind": "local_sentence",
+                "patch_targets": ["opening_anchor"],
+                "patch_target_records": [
+                    {
+                        "patch_target_id": "pt:opening",
+                        "target_kind": "local_sentence",
+                    }
+                ],
+            },
+        )
+
+        assert reason == "missing_field_path"
 
     def test_inplace_scene_block_contract_still_uses_legacy_whole_blueprint_lane(
         self, blueprint_generator, sample_blueprint, sample_arc_data
@@ -2467,6 +2487,61 @@ class TestBlueprintPatchIntegration:
         assert any("사유: [Stage3 partial-fix contract]" in text for text in log_texts)
         assert any("사유: authoritative_scope:" in text for text in log_texts)
         assert any("[TF-32-V] patch #1 failed" in text for text in log_texts)
+
+    def test_pass_with_fix_packet_unavailable_persists_typed_fallback_reason(
+        self, blueprint_generator, sample_arc_data
+    ):
+        def _fail_with_reason(**_kwargs):
+            blueprint_generator._last_blueprint_patch_failure_reason = "unresolved_field_path"
+            blueprint_generator._last_blueprint_patch_failure_meta = {
+                "reason": "unresolved_field_path",
+                "target_kind": "local_sentence",
+                "patch_targets": ["missing_field"],
+            }
+            return None
+
+        blueprint_generator._operator_log = MagicMock()
+        blueprint_generator._inplace_patch_blueprint = MagicMock(side_effect=_fail_with_reason)
+        current_validation = {"fix_scope": "inplace", "feedback": "restore missing anchor"}
+        current_validation.update(
+            _ready_stage3_local_contract(
+                patch_target="missing_field",
+                field_path="scene_breakdown.scene_99.summary",
+                target_kind="local_sentence",
+                patch_target_id="pt:missing",
+                must_fix="restore the missing anchor",
+                success_condition="missing anchor repaired",
+            )
+        )
+        pipeline_result = {"phases": {"generate": {}, "validate": {}}}
+
+        result = blueprint_generator.runtime._run_pass_with_fix_iteration(
+            ep_num=1,
+            arc_data=sample_arc_data,
+            constraint_block={},
+            prev_blueprint=None,
+            current_blueprint={"ep_num": 1, "scene_breakdown": {"scene_1": {"summary": "opening"}}},
+            current_validation=current_validation,
+            pipeline_result=pipeline_result,
+            score=82,
+            quality_gate_score=90,
+            director=MagicMock(),
+            arc_idx=0,
+            entity_registry=None,
+            state_tracker=None,
+            prev_hud=None,
+            fix_index=0,
+            max_fix=3,
+        )
+
+        assert result.should_break is True
+        partial_fix_eval = pipeline_result["phases"]["validate"]["partial_fix_eval"]
+        assert partial_fix_eval["fallback_reason"] == "patch_packet_unavailable:unresolved_field_path"
+        assert pipeline_result["phases"]["validate"]["blueprint_patch_failure"] == {
+            "reason": "unresolved_field_path",
+            "target_kind": "local_sentence",
+            "patch_targets": ["missing_field"],
+        }
 
     def test_pass_with_fix_iteration_escalates_structural_binding_categories_to_full_regenerate(
         self, blueprint_generator, sample_arc_data

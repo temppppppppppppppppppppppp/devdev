@@ -2703,18 +2703,34 @@ class ThreePhaseBlueprintRuntime:
                 )
             if not patched_blueprint:
                 logging.warning("[TF-32-V] patch failed")
+                raw_failure_reason = str(
+                    getattr(owner, "_last_blueprint_patch_failure_reason", "") or "patch_generation_failed"
+                ).strip()
+                if raw_failure_reason and raw_failure_reason != "patch_generation_failed":
+                    fallback_reason = f"patch_packet_unavailable:{raw_failure_reason}"
+                else:
+                    fallback_reason = "patch_generation_failed"
                 partial_fix_eval = _build_stage3_partial_fix_eval(
                     fix_pack=effective_fix_pack,
                     patch_round=fix_index + 1,
-                    fallback_reason="patch_generation_failed",
+                    fallback_reason=fallback_reason,
                 )
                 if partial_fix_eval:
                     validate_phase["partial_fix_eval"] = partial_fix_eval
                     current_validation["partial_fix_eval"] = partial_fix_eval
+                failure_meta = getattr(owner, "_last_blueprint_patch_failure_meta", None)
+                if isinstance(failure_meta, dict) and failure_meta:
+                    validate_phase["blueprint_patch_failure"] = dict(failure_meta)
+                    current_validation["blueprint_patch_failure"] = dict(failure_meta)
                 self._log_operator_retry_context(
                     title=f"[TF-32-V] patch #{fix_index + 1} failed",
                     level="warning",
-                    meta={"phase": "validate", "patch_round": fix_index + 1, "patch_max": max_fix},
+                    meta={
+                        "phase": "validate",
+                        "patch_round": fix_index + 1,
+                        "patch_max": max_fix,
+                        "fallback_reason": fallback_reason,
+                    },
                     feedback=fix_feedback,
                     fix_scope=str(fix_scope or ""),
                 )
