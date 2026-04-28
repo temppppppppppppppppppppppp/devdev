@@ -9,6 +9,7 @@ multiple places.
 
 from __future__ import annotations
 
+import calendar
 import re
 from typing import Any
 
@@ -272,6 +273,19 @@ def _format_timeline_point(value: object) -> str:
     return _normalize_scalar(value)
 
 
+def _infer_relative_month_day(text: str, *, year: int = 0, month: int = 0) -> int:
+    source = str(text or "").strip()
+    if not source or month <= 0:
+        return 0
+    if re.search(r"\d{1,2}월\s*(초|초반|상순)", source):
+        return 1
+    if re.search(r"\d{1,2}월\s*(중순|중반)", source):
+        return 15
+    if re.search(r"\d{1,2}월\s*(말|말미|하순|후반)", source):
+        return calendar.monthrange(year or 2000, month)[1]
+    return 0
+
+
 def _arc_opening_packet_conflicts_with_start_state(
     *,
     packet: dict[str, Any] | None,
@@ -333,11 +347,37 @@ def _parse_timeline_point(raw: object) -> tuple[int, int, int] | None:
         if year not in (None, "") and month not in (None, ""):
             try:
                 day = raw.get("day")
-                day_value = int(day) if day not in (None, "") else 0
-                return int(year), int(month), day_value
+                year_value = int(year)
+                month_value = int(month)
+                if day not in (None, ""):
+                    return year_value, month_value, int(day)
+                raw_text = (
+                    raw.get("표현")
+                    or raw.get("expression")
+                    or raw.get("description")
+                    or raw.get("text")
+                    or raw.get("raw")
+                    or ""
+                )
+                return (
+                    year_value,
+                    month_value,
+                    _infer_relative_month_day(
+                        str(raw_text),
+                        year=year_value,
+                        month=month_value,
+                    ),
+                )
             except (TypeError, ValueError):
                 return None
-        raw = raw.get("표현") or raw.get("expression") or raw.get("description") or ""
+        raw = (
+            raw.get("표현")
+            or raw.get("expression")
+            or raw.get("description")
+            or raw.get("text")
+            or raw.get("raw")
+            or ""
+        )
 
     text = _normalize_scalar(raw)
     if not text:

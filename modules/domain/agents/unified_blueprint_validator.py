@@ -3561,7 +3561,14 @@ class UnifiedBlueprintValidator:
                     month_value = int(month)
                     if day not in (None, ""):
                         return year_value, month_value, int(day)
-                    raw_text = raw.get("표현") or raw.get("expression") or raw.get("text") or raw.get("raw") or ""
+                    raw_text = (
+                        raw.get("표현")
+                        or raw.get("expression")
+                        or raw.get("description")
+                        or raw.get("text")
+                        or raw.get("raw")
+                        or ""
+                    )
                     inferred_day = UnifiedBlueprintValidator._infer_relative_month_day(
                         str(raw_text),
                         pick=pick,
@@ -3571,7 +3578,14 @@ class UnifiedBlueprintValidator:
                     return year_value, month_value, inferred_day
                 except (TypeError, ValueError):
                     return None
-            raw = raw.get("표현") or raw.get("expression") or raw.get("text") or raw.get("raw") or ""
+            raw = (
+                raw.get("표현")
+                or raw.get("expression")
+                or raw.get("description")
+                or raw.get("text")
+                or raw.get("raw")
+                or ""
+            )
         text = str(raw or "").strip()
         if not text:
             return None
@@ -3641,7 +3655,7 @@ class UnifiedBlueprintValidator:
 
         def _render_timeline_expr(raw: object) -> str:
             if isinstance(raw, dict):
-                return str(raw.get("표현") or raw.get("expression") or raw).strip()
+                return str(raw.get("표현") or raw.get("expression") or raw.get("description") or raw).strip()
             return str(raw or "").strip()
 
         arc_start_expr = _render_timeline_expr(timeline.get("start"))
