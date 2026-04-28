@@ -1445,6 +1445,87 @@ def test_format_constraints_does_not_hard_bind_arc_start_opening_location():
     assert "must equal opening.location exactly" not in formatted
 
 
+def test_hard_bound_opening_location_normalizes_terminal_room_variant():
+    candidate = {
+        "start_location": "서울 성북동 본가, 한시우의 방",
+        "scene_breakdown": {
+            "scene_1": {
+                "location": "서울 성북동 본가, 한시우의 방",
+            }
+        },
+    }
+
+    normalized = BlueprintEnsembleGenerator._normalize_hard_bound_opening_location(
+        candidate,
+        constraint_block={
+            "episode_state_packet": {
+                "opening_truth": {
+                    "location": "서울 성북동 본가, 2층 복도 및 한시우의 방",
+                    "location_source": "prev_blueprint.scene_breakdown.last.location",
+                }
+            }
+        },
+    )
+
+    assert normalized == "start_location, scene_1.location"
+    assert candidate["start_location"] == "서울 성북동 본가, 2층 복도 및 한시우의 방"
+    assert candidate["scene_breakdown"]["scene_1"]["location"] == "서울 성북동 본가, 2층 복도 및 한시우의 방"
+
+
+def test_hard_bound_opening_location_does_not_mask_unrelated_location():
+    candidate = {
+        "start_location": "서울 강남구 S&Y 그룹 본사",
+        "scene_breakdown": {
+            "scene_1": {
+                "location": "서울 강남구 S&Y 그룹 본사",
+            }
+        },
+    }
+
+    normalized = BlueprintEnsembleGenerator._normalize_hard_bound_opening_location(
+        candidate,
+        constraint_block={
+            "episode_state_packet": {
+                "opening_truth": {
+                    "location": "서울 성북동 본가, 2층 복도 및 한시우의 방",
+                    "location_source": "prev_blueprint.scene_breakdown.last.location",
+                }
+            }
+        },
+    )
+
+    assert normalized == ""
+    assert candidate["start_location"] == "서울 강남구 S&Y 그룹 본사"
+    assert candidate["scene_breakdown"]["scene_1"]["location"] == "서울 강남구 S&Y 그룹 본사"
+
+
+def test_hard_bound_opening_location_does_not_mask_parent_only_location():
+    candidate = {
+        "start_location": "서울 성북동 본가",
+        "scene_breakdown": {
+            "scene_1": {
+                "location": "서울 성북동 본가",
+            }
+        },
+    }
+
+    normalized = BlueprintEnsembleGenerator._normalize_hard_bound_opening_location(
+        candidate,
+        constraint_block={
+            "episode_state_packet": {
+                "opening_truth": {
+                    "location": "서울 성북동 본가, 2층 복도 및 한시우의 방",
+                    "location_source": "prev_blueprint.scene_breakdown.last.location",
+                }
+            }
+        },
+    )
+
+    assert normalized == ""
+    assert candidate["start_location"] == "서울 성북동 본가"
+    assert candidate["scene_breakdown"]["scene_1"]["location"] == "서울 성북동 본가"
+
+
 def test_format_constraints_surfaces_opening_transition_expectation():
     agent = _make_agent()
 
