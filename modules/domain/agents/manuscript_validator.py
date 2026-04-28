@@ -16,6 +16,7 @@ import time
 from modules.core.constants import AIModels, ManuscriptLimits  # [V64.P4] [TF-9B]
 from modules.core.llm_generate import generate_content_via_router
 from modules.core.scene_obligation_heuristics import measure_manuscript_scene_materialization
+from modules.core.writer_template import evaluate_scene_header_contract
 
 
 def _normalize_collection_only_scene_coverage(
@@ -143,6 +144,14 @@ class ManuscriptValidator:
             warnings.extend(scene_result["warnings"])
             if scene_result["missing_scenes"]:
                 focus_points.append(f"씬 미반영 의심: {', '.join(scene_result['missing_scenes'][:3])}")
+
+        # 2B. 씬 헤더/분리 구조 체크
+        scene_structure_result = self._check_scene_structure(manuscript, blueprint)
+        metrics["scene_headers_expected"] = scene_structure_result["expected"]
+        metrics["scene_headers_found"] = scene_structure_result["found"]
+        if scene_structure_result["warnings"]:
+            warnings.extend(scene_structure_result["warnings"])
+            focus_points.extend(scene_structure_result["focus_points"])
 
         # 3. 연속성 기초 체크
         continuity_result = self._check_basic_continuity(manuscript, prev_manuscript, hud_report)
@@ -309,6 +318,32 @@ class ManuscriptValidator:
             "missing_scenes": list(materialization.weak_scenes),
             "warnings": [],
         }
+
+    def _check_scene_structure(self, manuscript: str, blueprint: dict) -> dict:
+        """씬 헤더/분리 구조를 수집해 Director 참고 경고로 전달한다."""
+        scene_breakdown = blueprint.get("scene_breakdown", {}) if isinstance(blueprint, dict) else {}
+        expected_scenes = len(scene_breakdown) if isinstance(scene_breakdown, dict) else 0
+        header_contract = evaluate_scene_header_contract(manuscript, expected_scenes)
+        result = {
+            "expected": int(header_contract.get("expected") or 0),
+            "found": int(header_contract.get("found") or 0),
+            "missing_numbers": list(header_contract.get("missing_numbers") or []),
+            "warnings": [],
+            "focus_points": [],
+        }
+        if not header_contract.get("required") or header_contract.get("passed"):
+            return result
+
+        missing = ", ".join(str(number) for number in result["missing_numbers"][:5])
+        warning = (
+            f"⚠️ 씬 헤더/구분 구조 약함: expected {result['expected']}, found {result['found']}"
+            + (f" (missing: {missing})" if missing else "")
+        )
+        result["warnings"].append(warning)
+        result["focus_points"].append(
+            f"씬 헤더/구분 구조 확인 필요: {result['found']}/{result['expected']}"
+        )
+        return result
 
     def _check_basic_continuity(self, manuscript: str, prev_manuscript: str, hud_report: str) -> dict:
         """연속성 기초 체크"""

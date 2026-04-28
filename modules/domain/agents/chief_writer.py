@@ -1586,7 +1586,13 @@ class ChiefWriter(BaseAgent):
                 "### 씬",
                 "scene header",
                 "Scene header",
+                "missing scene header",
+                "section header",
+                "scene separation",
+                "scene structure",
                 "헤더가 원고에 누락",
+                "섹션 헤더",
+                "장면 구조",
                 "모든 씬을 헤더",
             )
         )

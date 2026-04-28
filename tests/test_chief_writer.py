@@ -422,6 +422,39 @@ class TestChiefWriterStructuralInplacePatch:
         assert chief_writer._last_inplace_patch_trace["target_kind"] == "scene_header"
         assert chief_writer._last_inplace_patch_trace["repair_trace"][0]["target"] == "scene_1"
 
+    def test_scene_structure_feedback_inserts_headers_without_llm_call(self, chief_writer):
+        blueprint = {
+            "ep_num": 2,
+            "scene_breakdown": {
+                "scene_1": {"title": "첫 호출"},
+                "scene_2": {"title": "두 번째 응답"},
+            },
+        }
+        blocks = [
+            ("opening block alpha beta. " * 70).strip(),
+            ("second block gamma delta. " * 70).strip(),
+        ]
+
+        chief_writer._inplace_patch_blueprint = blueprint
+        chief_writer.ask = MagicMock(return_value="")
+
+        result = chief_writer.inplace_patch(
+            original_manuscript="\n\n".join(blocks),
+            director_feedback="section header and scene separation are weak in the current scene structure.",
+            attempt_number=1,
+        )
+
+        manuscript = result[0]["manuscript"]
+        assert result[0]["strategy"] == "inplace_patch_scene_headers"
+        assert manuscript.count("### 씬 ") == 2
+        assert "### 씬 1: 첫 호출" in manuscript
+        assert "### 씬 2: 두 번째 응답" in manuscript
+        for block in blocks:
+            assert block in manuscript
+        chief_writer.ask.assert_not_called()
+        assert chief_writer._last_inplace_patch_trace["patch_strategy"] == "inplace_patch_scene_headers"
+        assert chief_writer._last_inplace_patch_trace["target_kind"] == "scene_header"
+
     def test_structural_inplace_patch_replaces_only_target_scene_block(self, chief_writer):
         blueprint = {
             "ep_num": 10,
