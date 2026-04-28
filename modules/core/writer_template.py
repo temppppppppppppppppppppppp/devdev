@@ -27,6 +27,14 @@ from typing import Any
 from modules.core.constants import ManuscriptLimits
 from modules.core.scene_obligation_heuristics import measure_manuscript_scene_materialization
 
+_SCENE_HEADER_RE = re.compile(
+    r"^\s*#{1,6}\s*"
+    r"(?:Scene|"
+    r"씬)"
+    r"\s*(?P<number>\d+)\s*[:\-]",
+    re.MULTILINE | re.IGNORECASE,
+)
+
 
 class SceneType(Enum):
     """씬 타입"""
@@ -90,6 +98,43 @@ def _template_scene_issue_required(total_scenes: int, reflected_scenes: int) -> 
     if total_scenes <= 3:
         return reflected_scenes < max(1, total_scenes - 1)
     return reflected_scenes < total_scenes
+
+
+def evaluate_scene_header_contract(manuscript: str, expected_scenes: int) -> dict[str, Any]:
+    """Collect mechanical scene-header coverage for Stage4 manuscripts."""
+    expected = max(0, int(expected_scenes or 0))
+    if expected < 2:
+        return {
+            "required": False,
+            "passed": True,
+            "expected": expected,
+            "found": 0,
+            "found_numbers": [],
+            "missing_numbers": [],
+        }
+
+    found_numbers: list[int] = []
+    seen: set[int] = set()
+    for match in _SCENE_HEADER_RE.finditer(str(manuscript or "")):
+        try:
+            number = int(match.group("number"))
+        except (TypeError, ValueError):
+            continue
+        if number <= 0 or number in seen:
+            continue
+        seen.add(number)
+        found_numbers.append(number)
+
+    expected_numbers = list(range(1, expected + 1))
+    missing_numbers = [number for number in expected_numbers if number not in seen]
+    return {
+        "required": True,
+        "passed": not missing_numbers,
+        "expected": expected,
+        "found": len(found_numbers),
+        "found_numbers": found_numbers,
+        "missing_numbers": missing_numbers,
+    }
 
 
 class WriterTemplate:
@@ -380,14 +425,23 @@ class WriterTemplate:
         if _template_scene_issue_required(template.total_scenes, materialization.reflected_scenes):
             issues.append(f"씬 누락 의심: {', '.join(missing_scenes[:3])}")
 
-        # 3. 클리프행어 체크
+        # 3. 씬 헤더/분리 구조 체크
+        header_contract = evaluate_scene_header_contract(manuscript, template.total_scenes)
+        if header_contract["required"] and not header_contract["passed"]:
+            missing = ", ".join(str(number) for number in header_contract["missing_numbers"][:5])
+            issues.append(
+                f"씬 헤더 누락: expected {header_contract['expected']}, found {header_contract['found']}"
+                + (f" (missing: {missing})" if missing else "")
+            )
+
+        # 4. 클리프행어 체크
         if template.closing_hook:
             hook_keywords = re.findall(r"[\w가-힣]{2,}", template.closing_hook)[:3]
             ending_part = manuscript[-600:] if len(manuscript) > 600 else manuscript
             if hook_keywords and not any(kw in ending_part for kw in hook_keywords):
                 warnings.append("클리프행어가 원고 끝에서 감지되지 않음")
 
-        # 4. 직전 화 연결 체크
+        # 5. 직전 화 연결 체크
         if template.opening_anchor:
             anchor_keywords = re.findall(r"[\w가-힣]{3,}", template.opening_anchor)[:3]
             opening_part = manuscript[:600] if len(manuscript) > 600 else manuscript
@@ -403,6 +457,7 @@ class WriterTemplate:
             "length": length,
             "expected_range": f"{template.total_min_chars}~{template.total_max_chars}",
             "scene_coverage": f"{materialization.reflected_scenes}/{template.total_scenes}",
+            "scene_headers": f"{header_contract['found']}/{header_contract['expected']}",
         }
 
     def get_feedback_for_retry(self, validation_result: dict[str, Any], template: ManuscriptTemplate) -> str:

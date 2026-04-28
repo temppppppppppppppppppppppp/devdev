@@ -215,6 +215,40 @@ class TestValidateCandidate:
         length_warnings = [w for w in result["warnings"] if "분량 부족" in w]
         assert len(length_warnings) == 0
 
+    def test_missing_scene_headers_surface_as_director_warning(self, validator, sample_blueprint):
+        """씬 헤더 누락은 Director 참고용 구조 경고로 전달."""
+        manuscript = (
+            "청풍산장에서 결투 준비를 마친 이청풍이 검을 들었다. " * 90
+            + "\n\n"
+            + "철무련주와의 대결이 시작되고 치열한 검법 대결이 벌어진다. " * 90
+        )
+
+        result = validator.validate_candidate(
+            manuscript=manuscript, blueprint=sample_blueprint, prev_manuscript="", hud_report=""
+        )
+
+        assert result["metrics"]["scene_headers_expected"] == 2
+        assert result["metrics"]["scene_headers_found"] == 0
+        assert any("씬 헤더/구분 구조 약함" in warning for warning in result["warnings"])
+        assert any("씬 헤더/구분 구조 확인 필요" in point for point in result["focus_points"])
+
+    def test_numbered_scene_headers_do_not_warn(self, validator, sample_blueprint):
+        manuscript = (
+            "### 씬 1: 결투 준비\n\n"
+            + ("청풍산장에서 결투 준비를 마친 이청풍이 검을 들었다. " * 90)
+            + "\n\n"
+            + "### 씬 2: 대결\n\n"
+            + ("철무련주와의 대결이 시작되고 치열한 검법 대결이 벌어진다. " * 90)
+        )
+
+        result = validator.validate_candidate(
+            manuscript=manuscript, blueprint=sample_blueprint, prev_manuscript="", hud_report=""
+        )
+
+        assert result["metrics"]["scene_headers_expected"] == 2
+        assert result["metrics"]["scene_headers_found"] == 2
+        assert not any("씬 헤더/구분 구조 약함" in warning for warning in result["warnings"])
+
     def test_returns_dict_with_expected_keys(self, validator, long_manuscript, sample_blueprint):
         """반환값에 필요한 키가 존재"""
         result = validator.validate_candidate(

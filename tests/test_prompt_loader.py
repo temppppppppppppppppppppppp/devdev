@@ -315,6 +315,34 @@ class TestRealYamlFiles:
         keys = loader.list_keys("chief_writer")
         assert len(keys) > 0
 
+    def test_chief_writer_prompts_allow_required_scene_headers(self):
+        loader = PromptLoader()
+        writing_guidelines = loader.load("chief_writer", "WRITING_GUIDELINES_SECTION")
+        patch_prompt = loader.load(
+            "chief_writer",
+            "PATCH_MODE_PROMPT",
+            original_char_count=5000,
+            min_char_target=4500,
+            style_guide="문체 유지",
+            feedback_text="씬 헤더 누락",
+            original_manuscript="원고",
+        )
+        structural_prompt = loader.load(
+            "chief_writer",
+            "PATCH_MODE_STRUCTURAL_PROMPT",
+            style_guide="문체 유지",
+            feedback_text="scene separation missing",
+            focus_label="scene_header",
+            scene_plan="scene_1",
+            target_scene_ids="scene_1",
+            boundary_context="",
+            target_scene_payload="",
+        )
+
+        assert "`### 씬 N: 제목`은 예외" in writing_guidelines
+        assert "원본에 있는 `### 씬 N: 제목` 씬 헤더는 보존" in patch_prompt
+        assert "scene header 이외의 Markdown" in structural_prompt
+
     def test_emotion_tracker_yaml_loads(self):
         loader = PromptLoader()
         keys = loader.list_keys("emotion_tracker")

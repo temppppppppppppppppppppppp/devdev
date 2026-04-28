@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from modules.core.constants import ManuscriptLimits
 from modules.core.scene_obligation_heuristics import build_blueprint_scene_profile, estimate_scene_flex_budget
+from modules.core.writer_template import evaluate_scene_header_contract
 from modules.validation.threshold_helper import _threshold
 
 if TYPE_CHECKING:
@@ -163,6 +164,16 @@ class BlockingValidatorSceneChecks:
 
         # ── 1차: 마크다운 씬 헤더 기반 감지 ──
         header_matches = list(self._SCENE_HEADER_RE.finditer(manuscript))
+        header_contract = evaluate_scene_header_contract(manuscript, scene_count)
+        header_warning = ""
+        if header_contract["required"] and not header_contract["passed"]:
+            missing = header_contract.get("missing_numbers") or []
+            missing_suffix = f" (missing: {', '.join(map(str, missing[:5]))})" if missing else ""
+            header_warning = (
+                "씬 헤더/구분 구조 약함: "
+                f"expected {header_contract['expected']}, found {header_contract['found']}{missing_suffix}"
+            )
+
         if header_matches:
             scene_analysis = self._analyze_scenes_by_headers(
                 manuscript,
@@ -194,9 +205,15 @@ class BlockingValidatorSceneChecks:
                     "total_scenes": scene_count,
                     "incomplete": [s["scene"] for s in incomplete_scenes],
                     "min_scene_length": min_scene_length,
+                    "scene_headers": {
+                        "expected": header_contract["expected"],
+                        "found": header_contract["found"],
+                        "missing_numbers": header_contract.get("missing_numbers") or [],
+                    },
                 },
                 "suggestion": "각 씬에 충분한 분량(최소 300자)을 할당하세요. 특히 다음 씬이 부족합니다: "
                 + ", ".join([s["scene"] for s in incomplete_scenes[:3]]),
+                "scene_header_warning": header_warning,
             }
 
         # 일부 미달이면 WARNING (통과)
@@ -205,7 +222,30 @@ class BlockingValidatorSceneChecks:
                 "check": "scene_completeness",
                 "passed": True,
                 "warning": f"일부 씬 분량 부족: {len(incomplete_scenes)}개 씬이 300자 미만",
-                "details": {"incomplete_scenes": [s["scene"] for s in incomplete_scenes]},
+                "details": {
+                    "incomplete_scenes": [s["scene"] for s in incomplete_scenes],
+                    "scene_headers": {
+                        "expected": header_contract["expected"],
+                        "found": header_contract["found"],
+                        "missing_numbers": header_contract.get("missing_numbers") or [],
+                    },
+                },
+                "scene_header_warning": header_warning,
+            }
+
+        if header_warning:
+            return {
+                "check": "scene_completeness",
+                "passed": True,
+                "warning": header_warning,
+                "details": {
+                    "scene_headers": {
+                        "expected": header_contract["expected"],
+                        "found": header_contract["found"],
+                        "missing_numbers": header_contract.get("missing_numbers") or [],
+                    }
+                },
+                "scene_header_warning": header_warning,
             }
 
         return {"check": "scene_completeness", "passed": True}

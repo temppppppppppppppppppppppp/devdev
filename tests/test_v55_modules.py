@@ -310,6 +310,62 @@ class TestWriterTemplate:
 
         assert "직전 화와의 연결이 약함" not in result["warnings"]
 
+    def test_validation_flags_missing_scene_headers(self):
+        from modules.core.writer_template import WriterTemplate
+
+        wt = WriterTemplate(genre="wuxia")
+        blueprint = {
+            "ep_num": 3,
+            "scene_breakdown": {
+                "scene_1": {"description": "opening bridge alpha"},
+                "scene_2": {"description": "conflict rise beta"},
+                "scene_3": {"description": "ending hook gamma"},
+            },
+        }
+        template = wt.generate_template(blueprint=blueprint)
+        manuscript = (
+            "opening bridge alpha " * 90
+            + "\n\n"
+            + "conflict rise beta " * 90
+            + "\n\n"
+            + "ending hook gamma " * 90
+        )
+
+        result = wt.validate_against_template(manuscript, template)
+
+        assert "scene_headers" in result
+        assert result["scene_headers"] == "0/3"
+        assert any("씬 헤더 누락" in issue for issue in result["issues"])
+
+    def test_validation_accepts_numbered_scene_headers(self):
+        from modules.core.writer_template import WriterTemplate
+
+        wt = WriterTemplate(genre="wuxia")
+        blueprint = {
+            "ep_num": 3,
+            "scene_breakdown": {
+                "scene_1": {"description": "opening bridge alpha"},
+                "scene_2": {"description": "conflict rise beta"},
+                "scene_3": {"description": "ending hook gamma"},
+            },
+        }
+        template = wt.generate_template(blueprint=blueprint)
+        manuscript = (
+            "### 씬 1: 오프닝\n\n"
+            + ("opening bridge alpha " * 90)
+            + "\n\n"
+            + "### 씬 2: 충돌\n\n"
+            + ("conflict rise beta " * 90)
+            + "\n\n"
+            + "### 씬 3: 엔딩\n\n"
+            + ("ending hook gamma " * 90)
+        )
+
+        result = wt.validate_against_template(manuscript, template)
+
+        assert result["scene_headers"] == "3/3"
+        assert not any("씬 헤더 누락" in issue for issue in result["issues"])
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # PassRateMonitor Tests

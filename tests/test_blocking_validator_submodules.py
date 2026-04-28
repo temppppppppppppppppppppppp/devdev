@@ -385,6 +385,34 @@ class TestSceneCompletenessRegression:
         assert result["check"] == "scene_completeness"
         # fallback 경로를 탔다는 것만 확인 (결과는 키워드 매칭 의존)
 
+    def test_missing_scene_headers_surface_structural_warning(self):
+        """키워드 fallback이 통과해도 씬 헤더 누락은 구조 경고로 남긴다."""
+        validator = BlockingValidator()
+        manuscript = (
+            "주인공은 객잔에 도착했다. "
+            + "가" * 420
+            + "\n\n비밀 문서를 확보했다. "
+            + "나" * 420
+        )
+        context = {
+            "blueprint": {
+                "scene_breakdown": {
+                    "scene_1": {"description": "객잔 도착"},
+                    "scene_2": {"description": "비밀 문서 확보"},
+                }
+            }
+        }
+
+        result = validator.scene_checks._check_scene_completeness(manuscript, context)
+
+        assert result["passed"] is True
+        assert result["scene_header_warning"].startswith("씬 헤더/구분 구조 약함")
+        assert result["details"]["scene_headers"] == {
+            "expected": 2,
+            "found": 0,
+            "missing_numbers": [1, 2],
+        }
+
     def test_hash_scene_header_variants(self):
         """## 씬 N: 형식 (2-level heading)도 인식."""
         validator = BlockingValidator()
