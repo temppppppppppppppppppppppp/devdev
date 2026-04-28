@@ -217,6 +217,23 @@ def test_detect_provider_response_wait_clears_after_response_complete():
     )
 
 
+def test_detect_provider_response_wait_keeps_concurrent_backup_call_active():
+    assert (
+        harness.detect_provider_response_wait(
+            [
+                "[DEBUG] [httpcore.http11] receive_response_headers.started request=<Request [b'POST']>",
+                "[DEBUG] [httpcore.http11] receive_response_headers.started request=<Request [b'POST']>",
+                "[DEBUG] [httpcore.http11] receive_response_headers.started request=<Request [b'POST']>",
+                "[DEBUG] [httpcore.http11] receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [])",
+                "[INFO] [root] action_focused 생성 완료",
+                "[DEBUG] [httpcore.http11] receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [])",
+                "[INFO] [root] emotion_focused 생성 완료",
+            ]
+        )
+        is True
+    )
+
+
 def test_detect_budget_breach_reports_first_exceeded_cap():
     snapshot = {
         "runtime_elapsed_seconds": 61,
