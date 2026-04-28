@@ -3144,6 +3144,42 @@ class UnifiedBlueprintValidator:
                 variants.add(parts[0])
             return {variant for variant in variants if len(variant) >= 2}
 
+        def _is_specific_location_variant(raw: object) -> bool:
+            variant = str(raw or "").strip()
+            if not variant:
+                return False
+            if any(separator in variant for separator in (",", "/", "|", ">", "→")):
+                return True
+            specific_markers = (
+                "방",
+                "거실",
+                "복도",
+                "서재",
+                "현관",
+                "문 앞",
+                "앞",
+                "밖",
+                "룸",
+                "실",
+                "사무실",
+                "오피스",
+                "지점",
+                "센터",
+                "객장",
+                "로비",
+                "주차장",
+                "차량",
+                "차 안",
+            )
+            return any(marker in variant for marker in specific_markers)
+
+        def _location_variants_match(left: str, right: str) -> bool:
+            if left == right:
+                return True
+            if not (_is_specific_location_variant(left) and _is_specific_location_variant(right)):
+                return False
+            return left in right or right in left
+
         def _normalize_characters(raw: object) -> set[str]:
             if isinstance(raw, str):
                 return {raw.strip()} if raw.strip() else set()
@@ -3395,7 +3431,7 @@ class UnifiedBlueprintValidator:
                     continue
 
                 location_match = any(
-                    left in right or right in left
+                    _location_variants_match(left, right)
                     for left in current_location_variants
                     for right in family_location_variants
                 )
