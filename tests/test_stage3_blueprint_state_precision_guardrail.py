@@ -637,6 +637,59 @@ class TestFactLockDriftDetection:
         assert "start_location" in issue_text
         assert "scene_1.location" in issue_text
 
+    def test_opening_truth_location_rejects_shortened_compound_location(self):
+        constraint_block = {
+            "episode_state_packet": {
+                "opening_truth": {
+                    "location": "서울 성북동 본가, 2층 복도 및 한시우의 방",
+                    "location_source": "prev_blueprint.scene_breakdown.last.location",
+                }
+            }
+        }
+        blueprint = {
+            "start_location": "서울 성북동 본가, 한시우의 방",
+            "scene_breakdown": {
+                "scene_1": {
+                    "location": "서울 성북동 본가, 한시우의 방",
+                }
+            },
+        }
+        issues = UnifiedBlueprintValidator._collect_fact_lock_drift_issues(
+            blueprint=blueprint,
+            integrated="한시우의 방에서 개인 명의 자산 정리에 착수한다.",
+            constraint_block=constraint_block,
+        )
+        location_issues = [i for i in issues if i["category"] == "fact_lock_location"]
+        assert len(location_issues) == 2
+        issue_text = " ".join(issue["issue"] for issue in location_issues)
+        assert "2층 복도 및 한시우의 방" in issue_text
+        assert "start_location" in issue_text
+        assert "scene_1.location" in issue_text
+
+    def test_opening_truth_location_accepts_exact_compound_location(self):
+        constraint_block = {
+            "episode_state_packet": {
+                "opening_truth": {
+                    "location": "서울 성북동 본가, 2층 복도 및 한시우의 방",
+                    "location_source": "prev_blueprint.scene_breakdown.last.location",
+                }
+            }
+        }
+        blueprint = {
+            "start_location": "서울 성북동 본가, 2층 복도 및 한시우의 방",
+            "scene_breakdown": {
+                "scene_1": {
+                    "location": "서울 성북동 본가, 2층 복도 및 한시우의 방",
+                }
+            },
+        }
+        issues = UnifiedBlueprintValidator._collect_fact_lock_drift_issues(
+            blueprint=blueprint,
+            integrated="2층 복도 및 한시우의 방에서 개인 명의 자산 정리에 착수한다.",
+            constraint_block=constraint_block,
+        )
+        assert [i for i in issues if i["category"] == "fact_lock_location"] == []
+
     def test_opening_truth_placeholder_location_does_not_bind_start(self):
         constraint_block = {
             "episode_state_packet": {
