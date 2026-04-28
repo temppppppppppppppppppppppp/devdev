@@ -163,6 +163,6 @@ The current merge candidate is the narrow `codex/frontier-lag-2arc-rerun-proof` 
 
 - Pass 1 - evidence: PASS. The latest bounded rerun produced enough evidence that Stage 3 person fact-lock hard binding can override Director PASS-like judgment and force repeated regeneration.
 - Pass 2 - governance: PASS. The staged patch keeps Python as evidence collector and returns semantic person-lock judgment to Director review.
-- Pass 3 - execution order: PASS. Merge the narrow advisory patch before spending another bounded proof run. Keep GitHub #57 and this roadmap item open until a later full auto-frontier proof reaches the requested boundary.
+- Pass 3 - execution order: PASS. Merge the narrow advisory patch before spending another bounded proof run. GitHub `#57` was later auto-closed by PR `#115`, but that tracker closure must not be read as proof completion; keep this roadmap item active until a later full auto-frontier proof or explicit closure wave.
 
 Estimated roadmap confidence: 96%.
