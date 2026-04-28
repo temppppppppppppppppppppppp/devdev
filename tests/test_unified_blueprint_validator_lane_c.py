@@ -1378,6 +1378,79 @@ def test_lane_c_python_pre_validate_allows_parent_location_shift_to_new_room():
     assert not [issue for issue in pre_result["issues"] if issue["category"] == "episode_progression"]
 
 
+def test_lane_c_python_pre_validate_does_not_match_household_parent_variants_as_replay():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "opening_transition": {"type": "jump_opening"},
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "서재 요청",
+                    "goal": "한시우가 아버지 한정호에게 서재 대화를 요청한다.",
+                    "summary": "거실에서 TV를 끈 한시우가 한정호에게 서재에서 따로 이야기하자고 말한다.",
+                    "characters": ["한시우", "한정호"],
+                    "key_events": ["한시우가 한정호에게 서재 면담을 요청한다."],
+                    "location": "성북동 본가, 거실",
+                    "type": "opening_hook",
+                },
+                "scene_2": {
+                    "title": "독립 선언",
+                    "goal": "아버지 앞에서 독립 투자 법인 설립을 선언한다.",
+                    "summary": "한정호의 서재에서 한시우가 그룹 승계 포기와 독립 투자 사업을 선언한다.",
+                    "characters": ["한시우", "한정호", "한태준", "한태민"],
+                    "key_events": ["독립 투자 사업 선언이 서재에서 이뤄진다."],
+                    "location": "성북동 본가, 한정호의 서재",
+                    "type": "dialogue_duel",
+                },
+            },
+            "integrated_scenario": "거실에서 서재로 이동해 독립 투자 사업을 선언한다. " * 40,
+        },
+        constraint_block={
+            "must_focus": {"content": "아버지 한정호의 서재에서 독립을 선언"},
+            "episode_progression_packet": {
+                "blocked_scene_families": [
+                    {
+                        "scene_key": "scene_2",
+                        "label": "한시우의 방",
+                        "location": "성북동 본가, 한시우의 방",
+                        "location_variants": ["성북동 본가, 한시우의 방", "한시우의 방", "성북동 본가"],
+                        "characters": ["한시우"],
+                    },
+                    {
+                        "scene_key": "scene_3",
+                        "label": "가족 식사",
+                        "location": "성북동 본가, 다이닝 룸",
+                        "location_variants": ["성북동 본가, 다이닝 룸", "다이닝 룸", "성북동 본가"],
+                        "characters": ["한시우", "한정호", "한태준", "한태민"],
+                    },
+                    {
+                        "scene_key": "scene_4",
+                        "label": "거실 뉴스",
+                        "location": "성북동 본가, 거실",
+                        "location_variants": ["성북동 본가, 거실", "거실", "성북동 본가"],
+                        "characters": ["한시우"],
+                    },
+                ]
+            },
+        },
+        prev_blueprint={
+            "scene_breakdown": {
+                "scene_2": {"location": "성북동 본가, 한시우의 방", "characters": ["한시우"]},
+                "scene_3": {
+                    "location": "성북동 본가, 다이닝 룸",
+                    "characters": ["한시우", "한정호", "한태준", "한태민"],
+                },
+                "scene_4": {"location": "성북동 본가, 거실", "characters": ["한시우"]},
+            }
+        },
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert not [issue for issue in pre_result["issues"] if issue["category"] == "episode_progression"]
+
+
 def test_lane_c_python_pre_validate_ignores_weak_completed_event_overlap_for_new_action():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
 
