@@ -1602,6 +1602,64 @@ class BlueprintEnsembleGenerator(BaseAgent):
         return "missing"
 
     @staticmethod
+    def _normalize_hard_bound_opening_location(candidate: dict, *, constraint_block: dict | None) -> str:
+        if not isinstance(candidate, dict) or not isinstance(constraint_block, dict):
+            return ""
+        episode_state_packet = constraint_block.get("episode_state_packet", {})
+        opening_truth = (
+            episode_state_packet.get("opening_truth")
+            if isinstance(episode_state_packet, dict) and isinstance(episode_state_packet.get("opening_truth"), dict)
+            else {}
+        )
+        opening_location = str(opening_truth.get("location", "") or "").strip()
+        if not _should_hard_bind_opening_location(opening_truth) or not opening_location:
+            return ""
+
+        def _location_parts(raw: object) -> list[str]:
+            text = re.sub(r"\s+", " ", str(raw or "").strip())
+            if not text:
+                return []
+            parts = [part.strip() for part in re.split(r"\s*(?:,|/|\||>|→|및)\s*", text) if part.strip()]
+            return parts or [text]
+
+        def _is_same_terminal_location(actual: object) -> bool:
+            actual_text = re.sub(r"\s+", " ", str(actual or "").strip())
+            expected_text = re.sub(r"\s+", " ", opening_location)
+            if not actual_text:
+                return False
+            if actual_text == expected_text:
+                return True
+            expected_parts = _location_parts(expected_text)
+            actual_parts = _location_parts(actual_text)
+            if not expected_parts or not actual_parts:
+                return False
+            return (
+                len(actual_parts) >= 2
+                and expected_parts[0] == actual_parts[0]
+                and expected_parts[-1] == actual_parts[-1]
+            )
+
+        normalized_fields: list[str] = []
+        start_location = str(candidate.get("start_location", candidate.get("location", "")) or "").strip()
+        if start_location and start_location != opening_location and _is_same_terminal_location(start_location):
+            candidate["start_location"] = opening_location
+            normalized_fields.append("start_location")
+
+        scenes = candidate.get("scene_breakdown", {})
+        scene_one = scenes.get("scene_1") if isinstance(scenes, dict) else None
+        if isinstance(scene_one, dict):
+            scene_one_location = str(scene_one.get("location", "") or "").strip()
+            if (
+                scene_one_location
+                and scene_one_location != opening_location
+                and _is_same_terminal_location(scene_one_location)
+            ):
+                scene_one["location"] = opening_location
+                normalized_fields.append("scene_1.location")
+
+        return ", ".join(normalized_fields)
+
+    @staticmethod
     def _resolve_prev_blueprint_time_flow_fallback(prev_blueprint: dict | None) -> str:
         if not isinstance(prev_blueprint, dict):
             return ""
@@ -2415,6 +2473,20 @@ class BlueprintEnsembleGenerator(BaseAgent):
             self._operator_log(
                 f"[Blueprint] '{strategy_name}' opening_transition contract normalized",
                 meta={"strategy": strategy_name, "route": opening_transition_route},
+            )
+        normalized_opening_location = self._normalize_hard_bound_opening_location(
+            candidate,
+            constraint_block=constraint_block,
+        )
+        if normalized_opening_location:
+            logging.info(
+                "[BPEnsemble] normalized hard-bound opening location for %s: %s",
+                strategy_name,
+                normalized_opening_location,
+            )
+            self._operator_log(
+                f"[Blueprint] '{strategy_name}' hard-bound opening location normalized",
+                meta={"strategy": strategy_name, "fields": normalized_opening_location},
             )
         inherited_time_flow = self._normalize_direct_continuation_time_flow(
             candidate,
