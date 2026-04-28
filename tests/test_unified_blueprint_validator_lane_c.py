@@ -1306,6 +1306,78 @@ def test_lane_c_python_pre_validate_flags_completed_prior_event_replay_in_scene_
     assert "completed_event_replays" in episode_issues[0]["evidence"]
 
 
+def test_lane_c_python_pre_validate_allows_parent_location_shift_to_new_room():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "opening_transition": {"type": "direct_continuation"},
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "호출",
+                    "goal": "아버지의 부름에 응하여 서재로 향한다.",
+                    "summary": "가정부의 안내에 따라 한시우가 거실에서 서재로 가는 복도를 지난다.",
+                    "characters": ["한시우", "가정부"],
+                    "key_events": ["한시우가 2층 서재로 이동한다."],
+                    "location": "성북동 본가, 거실에서 서재로 가는 복도",
+                    "type": "tension_build",
+                },
+                "scene_2": {
+                    "title": "선언",
+                    "goal": "가족들 앞에서 독립 투자 법인 설립을 선언한다.",
+                    "summary": "한시우가 서재에서 한정호와 형들 앞에 선다.",
+                    "characters": ["한시우", "한정호"],
+                    "key_events": ["독립 투자 법인 설립 의사를 밝힌다."],
+                    "location": "성북동 본가, 서재",
+                    "type": "dialogue_duel",
+                },
+            },
+            "integrated_scenario": "가정부의 안내에 따라 복도를 지나 서재에 들어선다. " * 40,
+        },
+        constraint_block={
+            "must_focus": {
+                "content": "아버지 한정호 회장의 서재로 호출된다. 가족들 앞에서 독립 투자 법인 설립을 선언한다."
+            },
+            "episode_progression_packet": {
+                "blocked_scene_families": [
+                    {
+                        "scene_key": "scene_2",
+                        "label": "한시우의 방",
+                        "location": "성북동 본가, 한시우의 방",
+                        "location_variants": ["성북동 본가, 한시우의 방", "한시우의 방"],
+                        "characters": ["한시우"],
+                    },
+                    {
+                        "scene_key": "scene_3",
+                        "label": "거실 TV 확인",
+                        "location": "성북동 본가, 거실",
+                        "location_variants": ["성북동 본가, 거실", "거실"],
+                        "characters": ["한시우"],
+                    },
+                    {
+                        "scene_key": "scene_4",
+                        "label": "가정부 호출",
+                        "location": "성북동 본가, 거실",
+                        "location_variants": ["성북동 본가, 거실", "거실"],
+                        "characters": ["한시우", "가정부"],
+                    },
+                ]
+            },
+        },
+        prev_blueprint={
+            "scene_breakdown": {
+                "scene_2": {"location": "성북동 본가, 한시우의 방", "characters": ["한시우"]},
+                "scene_3": {"location": "성북동 본가, 거실", "characters": ["한시우"]},
+                "scene_4": {"location": "성북동 본가, 거실", "characters": ["한시우", "가정부"]},
+            }
+        },
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert not [issue for issue in pre_result["issues"] if issue["category"] == "episode_progression"]
+
+
 def test_lane_c_python_pre_validate_allows_lawful_repetition_when_goal_escalates():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
 
