@@ -137,6 +137,35 @@ def test_binding_contract_merges_fact_lock_issue_into_existing_pass_with_fix():
     assert binding_issues[0]["category"] == "fact_lock_institution"
 
 
+def test_person_fact_lock_stays_director_advisory_not_binding_gate():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    verdict, feedback, verdict_reason, fix_scope, fix_scope_reasoning, binding_issues = (
+        validator._apply_binding_prevalidation_contract(
+            verdict="PASS_WITH_FIX",
+            issues=[
+                {
+                    "severity": "CRITICAL",
+                    "category": "fact_lock_person",
+                    "issue": "인물 사실잠금 위반: 확정 '한태성 회장' → blueprint '한정호 회장' 사용",
+                    "fix_hint": "Director가 인물 혼동 여부를 판단",
+                }
+            ],
+            feedback="핵심 인물 언급 보완 필요",
+            verdict_reason="국소 보완",
+            fix_scope="inplace",
+            fix_scope_reasoning="Director 국소 수정",
+        )
+    )
+
+    assert verdict == "PASS_WITH_FIX"
+    assert feedback == "핵심 인물 언급 보완 필요"
+    assert verdict_reason == "국소 보완"
+    assert fix_scope == "inplace"
+    assert fix_scope_reasoning == "Director 국소 수정"
+    assert binding_issues == []
+
+
 def test_python_pre_validate_flags_off_arc_intrusion_as_tactical_semantic_fidelity():
     validator = _make_validator()
     result = validator._python_pre_validate(
