@@ -1,7 +1,7 @@
 # Security and Frontier Active Execution Roadmap
 
 Date: 2026-04-27
-Status: active (#56/#59 completed; Frontier Lag remains front-active after 2026-04-28 rerun exposed Stage 3 replay-reroute plateau)
+Status: active (#56/#59 completed; Frontier Lag remains front-active after 2026-04-28 reruns exposed Stage 3 replay-reroute and person fact-lock hard-binding blockers)
 Canonical Path: `docs/2026-04-27/security-and-frontier-active-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Commit State:
@@ -25,7 +25,7 @@ This roadmap governs queue ordering only. It does not authorize implementation b
 
 | Item | Canonical Path | Temp Path | Status | Notes |
 | --- | --- | --- | --- | --- |
-| `frontier-lag-clean-5arc-stabilization` | `docs/2026-04-26/frontier-lag-clean-5arc-stabilization-execution-ssot.md` | `docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md` | active | Provider-wait hardening is merged; bounded rerun reached real Stage 3 `replay/authority` plateau, and positive continuation retry feedback is implemented. Next step is another bounded 2-arc rerun. |
+| `frontier-lag-clean-5arc-stabilization` | `docs/2026-04-26/frontier-lag-clean-5arc-stabilization-execution-ssot.md` | `docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md` | active | Provider-wait hardening is merged; bounded reruns reached real Stage 3 `replay/authority` and person fact-lock hard-binding blockers. The narrow person fact-lock advisory patch is staged on `codex/frontier-lag-2arc-rerun-proof`; full proof remains pending. |
 | `security-secrets-config` | `docs/2026-04-27/security-secrets-config-execution-ssot.md` | `docs/temp/security-secrets-config-execution-ssot.md` | pending | Security P0 substrate; parked future wave. |
 | `security-runtime-settings-vertex` | `docs/2026-04-27/security-runtime-settings-vertex-execution-ssot.md` | `docs/temp/security-runtime-settings-vertex-execution-ssot.md` | pending | Depends on `security-secrets-config`; parked future wave. |
 | `security-desktop-release-guardrails` | `docs/2026-04-27/security-desktop-release-guardrails-execution-ssot.md` | `docs/temp/security-desktop-release-guardrails-execution-ssot.md` | pending | Depends on both prior security SSOTs; parked future wave. |
@@ -57,7 +57,7 @@ Priority basis:
 
 Working order:
 
-1. `frontier-lag-clean-5arc-stabilization` (front-active; Stage 3 positive continuation retry feedback implemented, rerun bounded strict 2-arc diagnostic)
+1. `frontier-lag-clean-5arc-stabilization` (front-active; Stage 3 positive continuation retry feedback implemented; person fact-lock hard-binding patch staged; full proof pending)
 2. `security-secrets-config` (parked future wave; security P0 substrate)
 3. `security-runtime-settings-vertex` (parked future wave; depends on `security-secrets-config`)
 4. `security-desktop-release-guardrails` (parked future wave; depends on `security-secrets-config` and `security-runtime-settings-vertex`)
@@ -67,7 +67,7 @@ Working order:
 ### frontier-lag-clean-5arc-stabilization
 
 - goal: preserve the existing active stabilization queue item and do not silently demote it during security document intake.
-- prerequisites: current-state re-audit completed, watchdog provider-wait classification hardening merged, and bounded rerun identified Stage 3 replay-reroute plateau. Positive continuation retry feedback is implemented; next proof step is bounded 2-arc rerun.
+- prerequisites: current-state re-audit completed, watchdog provider-wait classification hardening merged, bounded rerun identified Stage 3 replay-reroute plateau, and follow-up rerun identified person fact-lock hard-binding churn. Positive continuation retry feedback is implemented; person fact-lock is staged as Director advisory only. Next proof step is merge the narrow patch, then run a bounded 2-arc proof only with explicit approval and caps.
 - execution notes: unrelated to security remediation except for shared queue mechanics.
 - completion signal: canonical closure update and removal of temp mirror via closure harness.
 - temp cleanup action: remove only `docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md` after realized and closed.
@@ -110,7 +110,7 @@ Working order:
 
 | Item | Status | Last Update | Blocker |
 | --- | --- | --- | --- |
-| `frontier-lag-clean-5arc-stabilization` | active | 2026-04-28 | Stage 3 positive continuation retry feedback implemented; rerun bounded strict 2-arc diagnostic |
+| `frontier-lag-clean-5arc-stabilization` | active | 2026-04-28 | Person fact-lock hard-binding patch staged; strict full proof still pending |
 | `security-secrets-config` | pending | 2026-04-27 | external credential rotation/history decision may block closure |
 | `security-runtime-settings-vertex` | pending | 2026-04-27 | depends on `security-secrets-config`; path policy decision required |
 | `security-desktop-release-guardrails` | pending | 2026-04-27 | depends on first two security items; access-control product model may remain residual |
@@ -154,3 +154,15 @@ Follow-up closure:
 
 Retired item:
 - `stage4-post-select-conflict` / GitHub #58: closed on GitHub, canonical SSOT retained, temp mirror removed from the active queue. This retirement does not authorize a clean 5-arc readiness claim.
+
+## 11. Frontier Lag Merge Direction Note - 2026-04-28
+
+The current merge candidate is the narrow `codex/frontier-lag-2arc-rerun-proof` branch, not a full proof closure.
+
+3-pass queue note:
+
+- Pass 1 - evidence: PASS. The latest bounded rerun produced enough evidence that Stage 3 person fact-lock hard binding can override Director PASS-like judgment and force repeated regeneration.
+- Pass 2 - governance: PASS. The staged patch keeps Python as evidence collector and returns semantic person-lock judgment to Director review.
+- Pass 3 - execution order: PASS. Merge the narrow advisory patch before spending another bounded proof run. Keep GitHub #57 and this roadmap item open until a later full auto-frontier proof reaches the requested boundary.
+
+Estimated roadmap confidence: 96%.
