@@ -3210,7 +3210,7 @@ class UnifiedBlueprintValidator:
 
         def _location_variants_match(left: str, right: str) -> bool:
             if left == right:
-                return True
+                return _is_specific_location_variant(left)
             if not (_is_specific_location_variant(left) and _is_specific_location_variant(right)):
                 return False
             return left in right or right in left
