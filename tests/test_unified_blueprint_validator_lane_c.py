@@ -1496,6 +1496,51 @@ def test_lane_c_python_pre_validate_ignores_weak_completed_event_overlap_for_new
     assert not [issue for issue in pre_result["issues"] if issue["category"] == "episode_progression"]
 
 
+def test_lane_c_python_pre_validate_ignores_weak_pb_hallway_overlap_for_asset_forward_motion():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "opening_transition": {"type": "direct_continuation"},
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "현관을 나서며",
+                    "goal": "한시우가 PB를 통해 개인 자산 현금화를 실행하기 위해 움직인다.",
+                    "summary": "성북동 본가 현관에서 경호원을 지나친 한시우는 곧바로 PB센터에 연락해 자신의 개인 자산 정리를 지시한다.",
+                    "characters": ["한시우", "경호원"],
+                    "key_events": [
+                        "한시우가 현관을 지나 PB센터에 연락한다.",
+                        "한시우가 개인 자산 현금화 절차를 시작한다.",
+                    ],
+                    "location": "성북동 본가 현관",
+                    "type": "opening_hook",
+                }
+            },
+            "integrated_scenario": "현관을 지나 PB센터에 연락해 개인 자산 현금화를 시작한다. " * 40,
+        },
+        constraint_block={
+            "must_focus": {"content": "PB를 통해 과거 자신의 모든 개인 자산을 현금화."},
+            "episode_progression_packet": {
+                "completed_prior_events": [
+                    {
+                        "location": "성북동 본가 현관",
+                        "events": ["한시우가 경호원 앞에서 자신이 곧바로 나가겠다고 말한다."],
+                    }
+                ]
+            },
+        },
+        prev_blueprint={
+            "scene_breakdown": {
+                "scene_3": {"location": "성북동 본가 현관", "characters": ["한시우", "경호원"]},
+            }
+        },
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert not [issue for issue in pre_result["issues"] if issue["category"] == "episode_progression"]
+
+
 def test_lane_c_python_pre_validate_allows_lawful_repetition_when_goal_escalates():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
 
