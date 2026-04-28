@@ -3009,6 +3009,7 @@ class UnifiedBlueprintValidator:
                 "scene",
                 "summary",
                 "goal",
+                "title",
                 "직전",
                 "이전",
                 "이번",
@@ -3019,8 +3020,42 @@ class UnifiedBlueprintValidator:
                 "에서",
                 "으로",
                 "에게",
+                "이후",
+                "다시",
+                "이미",
+                "앞에서",
+                "아버지",
+                "회장님",
+                "한시우",
+                "한정호",
+                "한태준",
+                "한태민",
+                "가정부",
+                "집사",
+                "말한다",
+                "말했다",
+                "묻는다",
+                "답한다",
+                "본다",
+                "보인다",
+                "결연한",
+                "위축되지",
             }
-            return {token for token in tokens if token not in stop_tokens}
+
+            normalized_tokens: set[str] = set()
+            for token in tokens:
+                normalized = token
+                for suffix in ("에게서", "에게", "으로", "에서", "부터", "까지", "라는", "이며", "에게는"):
+                    if len(normalized) > len(suffix) + 1 and normalized.endswith(suffix):
+                        normalized = normalized[: -len(suffix)]
+                        break
+                for suffix in ("은", "는", "이", "가", "을", "를", "의", "와", "과", "도", "만", "로"):
+                    if len(normalized) > len(suffix) + 1 and normalized.endswith(suffix):
+                        normalized = normalized[: -len(suffix)]
+                        break
+                if normalized and normalized not in stop_tokens:
+                    normalized_tokens.add(normalized)
+            return normalized_tokens
 
         def _has_lawful_escalation(scene_text: str) -> bool:
             if lawful_window.get("mode") != "allow_escalated_repeat":
