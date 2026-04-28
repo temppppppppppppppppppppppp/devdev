@@ -1170,6 +1170,85 @@ def test_sanitize_blueprint_candidate_rejects_episode_progression_replay_before_
     assert result == (None, AgentErrorType.CANDIDATE_DISQUALIFIED)
 
 
+def test_sanitize_blueprint_candidate_allows_forward_must_focus_in_same_household_low_overlap():
+    agent = _make_agent()
+    candidate = {
+        "opening_transition": {"type": "jump_opening"},
+        "protagonist_state": {"mood": "결연"},
+        "integrated_scenario": "거실에서 서재로 이동해 독립 투자 사업을 선언한다. " * 40,
+        "scene_breakdown": {
+            "scene_1": {
+                "title": "서재 요청",
+                "goal": "한시우가 아버지 한정호에게 서재 대화를 요청한다.",
+                "summary": "거실에서 TV를 끈 한시우가 한정호에게 서재에서 따로 이야기하자고 말한다.",
+                "characters": ["한시우", "한정호"],
+                "key_events": ["한시우가 한정호에게 서재 면담을 요청한다."],
+                "location": "성북동 본가, 거실",
+            },
+            "scene_2": {
+                "title": "독립 선언",
+                "goal": "아버지 앞에서 독립 투자 법인 설립을 선언한다.",
+                "summary": "한정호의 서재에서 한시우가 그룹 승계 포기와 독립 투자 사업을 선언한다.",
+                "characters": ["한시우", "한정호", "한태준", "한태민"],
+                "key_events": ["독립 투자 사업 선언이 서재에서 이뤄진다."],
+                "location": "성북동 본가, 한정호의 서재",
+            },
+        },
+    }
+
+    result = agent._sanitize_blueprint_candidate(
+        candidate,
+        strategy_name="dialogue_focused",
+        genre=GenreTypes.INVESTMENT,
+        prev_blueprint={
+            "scene_breakdown": {
+                "scene_2": {"location": "성북동 본가, 한시우의 방", "characters": ["한시우"]},
+                "scene_3": {
+                    "location": "성북동 본가, 다이닝 룸",
+                    "characters": ["한시우", "한정호", "한태준", "한태민"],
+                },
+                "scene_4": {"location": "성북동 본가, 거실", "characters": ["한시우"]},
+            }
+        },
+        constraint_block={
+            "must_focus": {
+                "content": (
+                    "아버지 한정호의 서재에서 독립을 선언; "
+                    "가족의 반대와 무시 속에서 투자 사업 계획을 발표; "
+                    "형들과의 후계 구도에서 완전히 벗어남"
+                )
+            },
+            "episode_progression_packet": {
+                "blocked_scene_families": [
+                    {
+                        "scene_key": "scene_2",
+                        "label": "한시우의 방",
+                        "location": "성북동 본가, 한시우의 방",
+                        "location_variants": ["성북동 본가, 한시우의 방", "한시우의 방", "성북동 본가"],
+                        "characters": ["한시우"],
+                    },
+                    {
+                        "scene_key": "scene_3",
+                        "label": "가족 식사",
+                        "location": "성북동 본가, 다이닝 룸",
+                        "location_variants": ["성북동 본가, 다이닝 룸", "다이닝 룸", "성북동 본가"],
+                        "characters": ["한시우", "한정호", "한태준", "한태민"],
+                    },
+                    {
+                        "scene_key": "scene_4",
+                        "label": "거실 뉴스",
+                        "location": "성북동 본가, 거실",
+                        "location_variants": ["성북동 본가, 거실", "거실", "성북동 본가"],
+                        "characters": ["한시우"],
+                    },
+                ]
+            },
+        },
+    )
+
+    assert result == candidate
+
+
 def test_sanitize_blueprint_candidate_allows_progressive_opening_bridge():
     agent = _make_agent()
     candidate = {
