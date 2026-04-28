@@ -1378,6 +1378,51 @@ def test_lane_c_python_pre_validate_allows_parent_location_shift_to_new_room():
     assert not [issue for issue in pre_result["issues"] if issue["category"] == "episode_progression"]
 
 
+def test_lane_c_python_pre_validate_ignores_weak_completed_event_overlap_for_new_action():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "opening_transition": {"type": "direct_continuation"},
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "서재로 향하는 호출",
+                    "goal": "한시우가 아버지 한정호의 서재로 향해 독립 투자 사업 선언을 준비한다.",
+                    "summary": "가정부의 호출을 받은 한시우가 거실을 떠나 서재 앞 복도로 이동한다.",
+                    "characters": ["한시우", "가정부"],
+                    "key_events": [
+                        "한시우가 거실에서 일어나 2층 서재로 향한다.",
+                        "한시우는 독립 투자 사업을 선언할 문장을 정리한다.",
+                    ],
+                    "location": "성북동 본가, 거실에서 서재로 가는 복도",
+                    "type": "tension_build",
+                }
+            },
+            "integrated_scenario": "가정부의 호출을 받은 한시우가 거실을 떠나 서재로 향한다. " * 40,
+        },
+        constraint_block={
+            "must_focus": {"content": "아버지 한정호의 서재로 가 독립 투자 사업을 선언한다."},
+            "episode_progression_packet": {
+                "completed_prior_events": [
+                    {
+                        "location": "성북동 본가, 거실",
+                        "events": ["가정부가 한시우에게 아버지 한정호가 찾는다고 말한다."],
+                    }
+                ]
+            },
+        },
+        prev_blueprint={
+            "scene_breakdown": {
+                "scene_4": {"location": "성북동 본가, 거실", "characters": ["한시우", "가정부"]},
+            }
+        },
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert not [issue for issue in pre_result["issues"] if issue["category"] == "episode_progression"]
+
+
 def test_lane_c_python_pre_validate_allows_lawful_repetition_when_goal_escalates():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
 
