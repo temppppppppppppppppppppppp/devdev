@@ -99,6 +99,32 @@ class ChiefWriterQualityGate:
             return content
         return str(content or "")
 
+    @staticmethod
+    def _normalize_issue_for_fix(issue, *, fallback_severity: str = "") -> dict:
+        if isinstance(issue, dict):
+            nested = issue.get("issue")
+            if isinstance(nested, dict):
+                merged = dict(nested)
+                if issue.get("severity") and not merged.get("severity"):
+                    merged["severity"] = issue.get("severity")
+                return merged
+            if nested and not issue.get("type") and not issue.get("description"):
+                return {
+                    "type": "unknown",
+                    "description": str(nested),
+                    "severity": issue.get("severity") or fallback_severity,
+                }
+            return {
+                "type": issue.get("type") or "unknown",
+                "description": issue.get("description") or "",
+                "severity": issue.get("severity") or fallback_severity,
+            }
+        return {
+            "type": "manuscript_length" if isinstance(issue, str) and "분량 부족" in issue else "unknown",
+            "description": str(issue),
+            "severity": fallback_severity,
+        }
+
     def apply_self_critique(
         self,
         manuscript: str,
@@ -172,13 +198,20 @@ class ChiefWriterQualityGate:
             )
 
         # ── [TF-G] 게이트 검사: ending_hook + 분량 (severity="low" 탈출 방지) ──
-        _gate_issues: list[str] = []
+        _gate_content = self._extract_content_text(current_manuscript)
+        _gate_issues: list[object] = []
         if blueprint:
-            _eh_issues = self._check_ending_hook_presence(current_manuscript, blueprint)
+            _eh_issues = self._check_ending_hook_presence(_gate_content, blueprint)
             if _eh_issues:
                 _gate_issues.extend(_eh_issues)
-        if len(current_manuscript) < 5000:
-            _gate_issues.append(f"분량 부족 ({len(current_manuscript)}자 < 5,000자)")
+        if len(_gate_content) < 5000:
+            _gate_issues.append(
+                {
+                    "type": "manuscript_length",
+                    "description": f"분량 부족 ({len(_gate_content)}자 < 5,000자)",
+                    "severity": "high",
+                }
+            )
 
         # [TF-20-01] meta_wall 단독 1건도 severity="low" 탈출 방지
         _meta_issues = self._check_system_term_exposure(current_manuscript, genre_name)
@@ -192,7 +225,7 @@ class ChiefWriterQualityGate:
                     current_manuscript,
                     {
                         "has_issues": True,
-                        "issues": [{"severity": "high", "issue": g} for g in _gate_issues],
+                        "issues": [self._normalize_issue_for_fix(g, fallback_severity="high") for g in _gate_issues],
                         "severity": "high",
                     },
                     hud_report,
@@ -347,8 +380,7 @@ class ChiefWriterQualityGate:
                 {
                     "type": "manuscript_length",
                     "description": (
-                        f"원고 길이 {len(content)}자 < 목표 {_target_len}자. "
-                        "장면 묘사, 인물 심리, 대화를 확장하세요."
+                        f"원고 길이 {len(content)}자 < 목표 {_target_len}자. 장면 묘사, 인물 심리, 대화를 확장하세요."
                     ),
                     "severity": _sev,
                 }
@@ -845,11 +877,7 @@ class ChiefWriterQualityGate:
 
         issues: list[dict] = []
 
-        phrase_hits = {
-            phrase: content.count(phrase)
-            for phrase in self.AI_TELL_PHRASES
-            if content.count(phrase) >= 2
-        }
+        phrase_hits = {phrase: content.count(phrase) for phrase in self.AI_TELL_PHRASES if content.count(phrase) >= 2}
         if phrase_hits:
             top_hits = sorted(phrase_hits.items(), key=lambda item: (-item[1], item[0]))[:3]
             labels = ", ".join(f"{phrase} x{count}" for phrase, count in top_hits)
@@ -863,7 +891,14 @@ class ChiefWriterQualityGate:
 
         starters: dict[str, int] = {}
         first_tokens: dict[str, int] = {}
-        sentences = [chunk.strip(" \"'“”‘’") for chunk in re.split(r"(?<=[.!?…])\s+|\n+", content) if chunk.strip()]  # utf8-hygiene: allow-line false-positive regex alias set
+        sentences = [
+            chunk.strip(" \"'“”‘’")
+            for chunk in re.split(  # utf8-hygiene: allow-line false-positive regex alias set
+                r"(?<=[.!?…])\s+|\n+",  # utf8-hygiene: allow-line false-positive regex punctuation
+                content,
+            )
+            if chunk.strip()
+        ]
         for sentence in sentences:
             tokens = re.findall(r"[가-힣A-Za-z]{2,}", sentence)
             if not tokens:
@@ -987,7 +1022,16 @@ class ChiefWriterQualityGate:
             return []
 
         for paragraph in paragraphs:
-            sentence_count = len([s for s in re.split(r"[.!?\n]|[다요]\s", paragraph) if s.strip()])  # utf8-hygiene: allow-line false-positive regex alias set
+            sentence_count = len(
+                [
+                    s
+                    for s in re.split(  # utf8-hygiene: allow-line false-positive regex alias set
+                        r"[.!?\n]|[다요]\s",  # utf8-hygiene: allow-line false-positive regex punctuation
+                        paragraph,
+                    )
+                    if s.strip()
+                ]
+            )
             if len(paragraph) >= 1000 and sentence_count >= 12:
                 return [
                     {
@@ -1112,15 +1156,13 @@ class ChiefWriterQualityGate:
         # 수정 지시 구성
         fix_instructions = []
         for issue in issues[:3]:  # 최대 3개만 수정
-            issue_type = issue.get("type", "unknown") if isinstance(issue, dict) else str(issue)
-            issue_desc = issue.get("description", "") if isinstance(issue, dict) else ""
+            normalized_issue = self._normalize_issue_for_fix(issue)
+            issue_type = str(normalized_issue.get("type") or "unknown")
+            issue_desc = str(normalized_issue.get("description") or "")
             fix_instructions.append(f"- {issue_type}: {issue_desc}")
 
         # [TF-H] 분량 부족 이슈면 확장 전용 프롬프트 사용
-        _has_length_issue = any(
-            isinstance(i, dict) and i.get("type") == "manuscript_length"
-            for i in issues[:3]
-        )
+        _has_length_issue = any(self._normalize_issue_for_fix(i).get("type") == "manuscript_length" for i in issues[:3])
 
         if _has_length_issue:
             _content = ""

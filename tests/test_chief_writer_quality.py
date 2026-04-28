@@ -114,6 +114,39 @@ class TestApplyAndCritique:
         mock_critique.assert_called_once()
         # [TF-G] 분량 부족 게이트에서 _fix_manuscript_issues 호출될 수 있음 (test manuscript < 5000자)
 
+    def test_tfg_gate_preserves_structured_issue_and_uses_content_tail(self):
+        gate = ChiefWriterQualityGate(_make_host())
+        content = "본문입니다. " * 700 + "회장님께서 찾으십니다"
+        manuscript = json.dumps({"content": content, "metadata": "tail noise"}, ensure_ascii=False)
+        hook_issue = {
+            "type": "missing_ending_hook",
+            "description": "ending_hook 키워드(회장님께서, 찾으십니다...) 중 0개만 원고 말미에서 발견됨",
+            "severity": "medium",
+        }
+        with (
+            patch.object(gate, "_evaluate_with_rubric", return_value=2.0),
+            patch.object(gate, "_check_ending_hook_presence", return_value=[hook_issue]) as mock_hook,
+            patch.object(
+                gate,
+                "_self_critique",
+                return_value={"has_issues": False, "issues": [], "severity": "low"},
+            ),
+            patch.object(gate, "_fix_manuscript_issues", return_value=manuscript) as mock_fix,
+        ):
+            gate.apply_self_critique(
+                manuscript,
+                "hud",
+                [],
+                "genre",
+                ep_num=2,
+                blueprint={"ending_hook": "회장님께서, 찾으십니다"},
+            )
+
+        assert mock_hook.call_args.args[0] == content
+        issues = mock_fix.call_args.args[1]["issues"]
+        assert issues[0]["type"] == "missing_ending_hook"
+        assert "회장님께서" in issues[0]["description"]
+
     def test_self_critique_no_issues(self):
         gate = ChiefWriterQualityGate(_make_host())
         manuscript = json.dumps({"content": "가" * (int(ManuscriptLimits.TARGET_LENGTH) + 200)}, ensure_ascii=False)
@@ -301,11 +334,7 @@ class TestCheckerMethods:
 
     def test_check_scene_transition_markers_detects_missing_markers(self):
         gate = ChiefWriterQualityGate(_make_host())
-        content = (
-            "한양의 밤은 차가웠다.\n\n"
-            "그는 칼을 만지작거리며 숨을 골랐다.\n\n"
-            "그리고 곧장 결전을 준비했다."
-        )
+        content = "한양의 밤은 차가웠다.\n\n그는 칼을 만지작거리며 숨을 골랐다.\n\n그리고 곧장 결전을 준비했다."
 
         issues = gate._check_scene_transition_markers(content)
 
@@ -313,10 +342,7 @@ class TestCheckerMethods:
 
     def test_check_ai_tell_patterns_detects_stock_phrase_repetition(self):
         gate = ChiefWriterQualityGate(_make_host())
-        content = (
-            "어느새 복도 끝이 조용해졌다. 그는 숨을 삼켰다. "
-            "어느새 방 안 공기가 식었다. 그녀도 숨을 삼켰다."
-        )
+        content = "어느새 복도 끝이 조용해졌다. 그는 숨을 삼켰다. 어느새 방 안 공기가 식었다. 그녀도 숨을 삼켰다."
 
         issues = gate._check_ai_tell_patterns(content)
 
@@ -325,8 +351,7 @@ class TestCheckerMethods:
     def test_check_ai_tell_patterns_detects_repeated_sentence_starters(self):
         gate = ChiefWriterQualityGate(_make_host())
         content = (
-            "그는 천천히 문을 열었다. 그는 조용히 안을 살폈다. "
-            "그는 다시 손끝을 움켜쥐었다. 그는 낮게 숨을 골랐다."
+            "그는 천천히 문을 열었다. 그는 조용히 안을 살폈다. 그는 다시 손끝을 움켜쥐었다. 그는 낮게 숨을 골랐다."
         )
 
         issues = gate._check_ai_tell_patterns(content)
@@ -453,8 +478,12 @@ class TestFixAndRubric:
         host.ask.return_value = '{"content":"expanded"}'
         gate = ChiefWriterQualityGate(host)
         with (
-            patch("modules.domain.agents.chief_writer_quality.get_expand_length_prompt", return_value="expand prompt") as m_expand,
-            patch("modules.domain.agents.chief_writer_quality.get_fix_issues_prompt", return_value="generic prompt") as m_generic,
+            patch(
+                "modules.domain.agents.chief_writer_quality.get_expand_length_prompt", return_value="expand prompt"
+            ) as m_expand,
+            patch(
+                "modules.domain.agents.chief_writer_quality.get_fix_issues_prompt", return_value="generic prompt"
+            ) as m_generic,
         ):
             gate._fix_manuscript_issues(
                 '{"content":"orig"}',
@@ -493,8 +522,12 @@ class TestFixAndRubric:
         host.ask.return_value = '{"content":"fixed"}'
         gate = ChiefWriterQualityGate(host)
         with (
-            patch("modules.domain.agents.chief_writer_quality.get_expand_length_prompt", return_value="expand prompt") as m_expand,
-            patch("modules.domain.agents.chief_writer_quality.get_fix_issues_prompt", return_value="generic prompt") as m_generic,
+            patch(
+                "modules.domain.agents.chief_writer_quality.get_expand_length_prompt", return_value="expand prompt"
+            ) as m_expand,
+            patch(
+                "modules.domain.agents.chief_writer_quality.get_fix_issues_prompt", return_value="generic prompt"
+            ) as m_generic,
         ):
             gate._fix_manuscript_issues(
                 '{"content":"orig"}',
@@ -504,6 +537,38 @@ class TestFixAndRubric:
         m_generic.assert_called_once()
         m_expand.assert_not_called()
         host.ask.assert_called_with("generic prompt", temperature=0.5, thinking_level="low")
+
+    def test_fix_prompt_unwraps_nested_gate_issue(self):
+        host = _make_host()
+        host.ask.return_value = '{"content":"fixed"}'
+        gate = ChiefWriterQualityGate(host)
+        captured = {}
+
+        def _fake_generic(**kwargs):
+            captured["kwargs"] = kwargs
+            return "generic prompt"
+
+        nested_issue = {
+            "severity": "high",
+            "issue": {
+                "type": "missing_ending_hook",
+                "description": "ending_hook 키워드(회장님께서, 찾으십니다...) 중 0개만 원고 말미에서 발견됨",
+                "severity": "medium",
+            },
+        }
+        with (
+            patch("modules.domain.agents.chief_writer_quality.get_expand_length_prompt", return_value="expand prompt"),
+            patch("modules.domain.agents.chief_writer_quality.get_fix_issues_prompt", side_effect=_fake_generic),
+        ):
+            gate._fix_manuscript_issues(
+                '{"content":"orig"}',
+                {"issues": [nested_issue]},
+                "hud",
+            )
+
+        fix_text = captured["kwargs"]["fix_instructions_text"]
+        assert "missing_ending_hook" in fix_text
+        assert "회장님께서" in fix_text
 
     def test_fix_generic_prompt_preserves_hud_tail_context(self):
         host = _make_host()
