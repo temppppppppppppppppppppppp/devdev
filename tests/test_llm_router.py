@@ -3,6 +3,7 @@ from types import ModuleType, SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
+from google.genai import types
 
 from modules.core.llm_generate import generate_content_via_router, generate_raw_content_via_router
 from modules.core.llm_provider import LLMRequest
@@ -164,6 +165,62 @@ def test_gemini_provider_preserves_raw_response():
         contents="hello",
         config={"temperature": 0.1},
     )
+
+
+def test_generate_content_via_router_injects_google_timeout():
+    client = MagicMock()
+    raw = MagicMock()
+    raw.text = '{"ok": true}'
+    raw.candidates = [MagicMock(finish_reason="STOP")]
+    client.models.generate_content.return_value = raw
+    config = types.GenerateContentConfig(temperature=0.1, response_mime_type="application/json")
+
+    response = generate_content_via_router(
+        client=client,
+        model="gemini-2.5-flash",
+        contents="hello",
+        config=config,
+    )
+
+    assert response.text == '{"ok": true}'
+    passed_config = client.models.generate_content.call_args.kwargs["config"]
+    assert passed_config.http_options is not None
+    assert passed_config.http_options.timeout == 300000
+
+
+def test_generate_content_via_router_injects_vertex_timeout_with_none_config(monkeypatch):
+    monkeypatch.setenv("GEULDOBI_PROVIDER_MODE", "vertex_ai")
+    monkeypatch.setenv("GEULDOBI_VERTEX_AUTH_MODE", "api_key")
+    monkeypatch.setenv("VERTEX_API_KEY", "test-key")
+
+    class FakeVertexProvider:
+        provider_name = "vertex_ai"
+
+        @staticmethod
+        def generate(*, client, request):
+            return SimpleNamespace(
+                text="{}",
+                finish_reason="STOP",
+                usage=None,
+                raw=None,
+                provider="vertex_ai",
+                backend="google_vertex",
+                family="gemini",
+                request=request,
+            )
+
+    router = get_shared_llm_router()
+    monkeypatch.setattr(router, "get_provider_for_model", lambda _model: FakeVertexProvider())
+
+    response = generate_content_via_router(
+        client=MagicMock(),
+        model="vertexai:gemini-2.5-flash",
+        contents="hello",
+        config=None,
+    )
+
+    assert response.request.config.http_options is not None
+    assert response.request.config.http_options.timeout == 300000
 
 
 def test_anthropic_provider_generate_with_fake_sdk(monkeypatch):
