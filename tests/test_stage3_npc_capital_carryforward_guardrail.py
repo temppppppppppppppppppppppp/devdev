@@ -206,6 +206,22 @@ class TestInstitutionFactLockAnchor:
         assert "한태성 회장" in person_issues[0]["issue"]
         assert "한정호 회장" in person_issues[0]["issue"]
 
+    def test_person_role_lock_ignores_prose_particles_before_title(self):
+        packet = BlueprintConstraintCompiler._build_fact_lock_packet(
+            prev_blueprint={"end_location": "성북동 본가 서재"},
+            prev_manuscript_ending=(
+                "한정호 회장이 손으로 회장 책상 위의 서류를 밀었다. 당황하며 회장 비서는 문밖에서 멈춰 섰다."
+            ),
+            arc_data={},
+            ep_num=4,
+        )
+
+        person_facts = [a["fact"] for a in packet.get("anchors", []) if a["category"] == "인물"]
+
+        assert any("한정호 회장" in fact for fact in person_facts)
+        assert all("손으로 회장" not in fact for fact in person_facts)
+        assert all("당황하며 회장" not in fact for fact in person_facts)
+
     def test_manuscript_institution_survives_anchor_truncation_priority(self):
         bp = {
             "end_location": "Alpha증권",

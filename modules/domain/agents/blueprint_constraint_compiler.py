@@ -663,6 +663,18 @@ def _collect_fact_lock_person_anchors(
         "그리고",
         "내일은",
     }
+    false_role_name_suffixes = (
+        "으로",
+        "하며",
+        "하게",
+        "하고",
+        "하자",
+        "에서",
+        "에게",
+        "부터",
+        "까지",
+        "처럼",
+    )
 
     texts: list[str] = [ms_text]
     if isinstance(bp, dict):
@@ -685,6 +697,8 @@ def _collect_fact_lock_person_anchors(
             name = match.group(1).strip()
             role = match.group(2).strip()
             if name in false_role_names:
+                continue
+            if any(name.endswith(suffix) for suffix in false_role_name_suffixes):
                 continue
             key = (name, role)
             if key in seen:
