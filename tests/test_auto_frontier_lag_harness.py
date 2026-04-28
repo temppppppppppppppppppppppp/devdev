@@ -138,6 +138,49 @@ def test_classify_poll_transition_treats_provider_response_wait_as_active():
     assert idle == 0
 
 
+def test_classify_poll_transition_treats_open_silentpass_call_as_active():
+    previous = {
+        "process_exit_code": None,
+        "process_alive": True,
+        "session_log_tail": [
+            "[DEBUG] [root] [SilentPass:Agent] call_start agent=Weaver model=vertexai:gemini-2.5-flash"
+        ],
+        "session_log_size": 401496,
+        "blueprint_count": 0,
+        "draft_count": 2,
+        "stage3_attempts": 3,
+        "stage4_attempts": 2,
+        "director_stage3_rows": 3,
+        "director_stage4_rows": 2,
+        "runtime_audit_total_events": 16,
+        "harness_phase": "frontier_running",
+        "prompt_blocked": False,
+    }
+    current = dict(previous)
+    current["session_log_tail"] = [
+        "[DEBUG] [root] [SilentPass:Agent] call_start agent=Weaver model=vertexai:gemini-2.5-flash",
+        "[DEBUG] [root] [SilentPass:Agent] call_start agent=PreflightChecker model=vertexai:gemini-2.5-flash",
+        "[DEBUG] [root] [SilentPass:Agent] call_success agent=PreflightChecker model=vertexai:gemini-2.5-flash",
+    ]
+
+    status, idle = harness.classify_poll_transition(previous, current, 1)
+
+    assert status == "provider_wait"
+    assert idle == 0
+
+
+def test_detect_silentpass_agent_wait_clears_after_failure():
+    assert (
+        harness.detect_silentpass_agent_wait(
+            [
+                "[DEBUG] [root] [SilentPass:Agent] call_start agent=Weaver model=vertexai:gemini-2.5-flash",
+                "[DEBUG] [root] [SilentPass:Agent] call_failure agent=Weaver model=vertexai:gemini-2.5-flash",
+            ]
+        )
+        is False
+    )
+
+
 def test_classify_poll_transition_extends_frontier_preflight_idle_grace():
     previous = {
         "process_exit_code": None,
