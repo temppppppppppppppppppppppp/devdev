@@ -6,7 +6,7 @@ Track: system
 Baseline Branch: `codex/person-fact-lock-director-advisory`
 Target Base After Merge: `main`
 Related PR: `#115`
-Related Issue: `#57`
+Related Issue: `#57` (auto-closed by PR `#115` after merge; see drift note below)
 
 ## 1. Purpose
 
@@ -22,6 +22,21 @@ git fetch origin
 git pull --ff-only origin main
 git checkout -b codex/director-python-authority-contract
 ```
+
+## 1A. Current-State Drift Note
+
+This handoff was written at PR `#115` merge time, but current repo/GitHub state has already moved.
+
+- PR `#115` merged at `767cd1b7`.
+- Current `main` later advanced to `3632369f`.
+- GitHub issue `#57` is now auto-closed by PR `#115`, even though the merge-time intent was to keep it open until a later bounded proof wave.
+
+Therefore:
+
+- do not assume `main HEAD == 767cd1b7`
+- do not read GitHub `#57` closure as proof completion or authority-contract completion
+- use `docs/2026-04-28/director-python-authority-taxonomy-survey.md` as the current pre-implementation survey anchor
+- if an implementation wave wants the exact PR `#115` base, branch from `767cd1b7` explicitly
 
 ## 2. What PR #115 Does
 
@@ -180,6 +195,10 @@ Director response should be a separate verdict packet:
 6. Only then run another bounded frontier proof with explicit runtime/token/cost caps.
 
 Do not start with a new expensive proof run. Merge PR #115 first, then continue the authority contract work from `main`.
+
+Current follow-up anchor:
+
+- `docs/2026-04-28/director-python-authority-taxonomy-survey.md` freezes the post-merge Stage3/Stage4 taxonomy survey and the current GitHub/main drift state before implementation.
 
 ## 7. Validation Status At Handoff
 
