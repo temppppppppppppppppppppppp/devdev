@@ -8,6 +8,7 @@ Tests for:
 """
 
 from modules.core.cross_stage_authority_packet import CROSS_STAGE_AUTHORITY_PACKET_VERSION
+from modules.core.episode_state_arbiter import _parse_timeline_point
 from modules.domain.agents.blueprint_constraint_compiler import BlueprintConstraintCompiler
 from modules.domain.agents.unified_blueprint_validator import UnifiedBlueprintValidator
 
@@ -1054,6 +1055,13 @@ class TestEpisodeStatePacket:
         assert opening_truth.get("time_source") == "arc_data.state_changes.timeline"
         assert opening_truth.get("time_context") == "2006년 2월 28일 - late February 2006"
         assert packet.get("source_precedence", {}).get("time_truth", [None])[0] == "arc_data.state_changes.timeline"
+
+    def test_episode_state_arbiter_timeline_parser_uses_relative_description_when_day_missing(self):
+        assert _parse_timeline_point({"year": 2006, "month": 2, "description": "2006년 2월 말"}) == (
+            2006,
+            2,
+            28,
+        )
 
     def test_episode_state_packet_surfaces_arc_opening_transition_expectation_on_anchor_shift(self):
         compiler = BlueprintConstraintCompiler()

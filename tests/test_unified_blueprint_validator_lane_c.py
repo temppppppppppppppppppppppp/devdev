@@ -2385,6 +2385,33 @@ def test_lane_c_arc_timeline_preserves_same_month_day_window_for_non_terminal_ep
     assert issues == []
 
 
+def test_lane_c_arc_timeline_uses_arc_description_when_day_missing():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    issues = validator._collect_arc_timeline_alignment_issues(
+        blueprint={
+            "ep_num": 5,
+            "ending_state": {
+                "timeline": {
+                    "표현": "2006년 2월 말",
+                }
+            },
+        },
+        arc_data={
+            "ep_start": 5,
+            "ep_end": 9,
+            "state_changes": {
+                "timeline": {
+                    "start": {"year": 2006, "month": 2, "description": "2월 초"},
+                    "end": {"year": 2006, "month": 2, "description": "2월 말"},
+                }
+            },
+        },
+    )
+
+    assert issues == []
+
+
 def test_lane_c_arc_timeline_ignores_future_foreshadow_month_in_terminal_expression():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
 
