@@ -71,11 +71,7 @@ FATAL_TAIL_MARKERS = (
     "AUTO_FRONTIER_LAG_FATAL",
 )
 PROVIDER_RESPONSE_WAIT_STARTED_MARKER = "receive_response_headers.started"
-PROVIDER_RESPONSE_WAIT_END_MARKERS = (
-    "receive_response_headers.complete",
-    "HTTP Request:",
-    "response_closed.complete",
-)
+PROVIDER_RESPONSE_WAIT_COMPLETED_MARKER = "receive_response_headers.complete"
 SILENTPASS_AGENT_CALL_RE = re.compile(r"\[SilentPass:Agent\] call_(start|success|failure) agent=([^\s]+)")
 ACTIVE_FRONTIER_WAIT_MARKERS = (
     "[Preflight] 병렬 분석 시작",
@@ -1268,15 +1264,14 @@ def detect_prompt_blocked(log_tail: list[str]) -> bool:
 
 def detect_provider_response_wait(log_tail: list[str]) -> bool:
     """Return true when the session tail is inside a provider HTTP response wait."""
-    last_start_index = -1
-    last_end_index = -1
-    for index, raw_line in enumerate(log_tail[-20:]):
+    inflight = 0
+    for raw_line in log_tail:
         line = str(raw_line or "")
         if PROVIDER_RESPONSE_WAIT_STARTED_MARKER in line:
-            last_start_index = index
-        if any(marker in line for marker in PROVIDER_RESPONSE_WAIT_END_MARKERS):
-            last_end_index = index
-    return last_start_index >= 0 and last_start_index > last_end_index
+            inflight += 1
+        if PROVIDER_RESPONSE_WAIT_COMPLETED_MARKER in line:
+            inflight = max(0, inflight - 1)
+    return inflight > 0
 
 
 def detect_silentpass_agent_wait(log_tail: list[str]) -> bool:
