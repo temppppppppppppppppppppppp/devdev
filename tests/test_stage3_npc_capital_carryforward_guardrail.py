@@ -222,6 +222,39 @@ class TestInstitutionFactLockAnchor:
         assert all("손으로 회장" not in fact for fact in person_facts)
         assert all("당황하며 회장" not in fact for fact in person_facts)
 
+    def test_person_role_lock_ignores_generic_representative_phrases(self):
+        packet = BlueprintConstraintCompiler._build_fact_lock_packet(
+            prev_blueprint={"end_location": "여의도 H증권사 본점 VIP 프라이빗 룸"},
+            prev_manuscript_ending=(
+                "그는 국가 대표 출신도, 법인 대표도 아니었다. "
+                "한정호 회장만이 한시우의 결정을 끝까지 지켜봤다."
+            ),
+            arc_data={},
+            ep_num=4,
+        )
+
+        person_facts = [a["fact"] for a in packet.get("anchors", []) if a["category"] == "인물"]
+
+        assert any("한정호 회장" in fact for fact in person_facts)
+        assert all("국가 대표" not in fact for fact in person_facts)
+        assert all("법인 대표" not in fact for fact in person_facts)
+
+    def test_person_role_drift_ignores_legacy_generic_representative_anchor(self):
+        issues = UnifiedBlueprintValidator._collect_fact_lock_drift_issues(
+            blueprint={},
+            integrated=(
+                "한시우는 SW인베스트먼트의 대표로서 박성호 PB에게 주문을 냈다. "
+                "그는 법인의 대표 자격으로 문서에 서명했다."
+            ),
+            constraint_block={
+                "fact_lock_packet": {
+                    "anchors": [{"category": "인물", "fact": "확정 인물/직함: 국가 대표"}]
+                }
+            },
+        )
+
+        assert [i for i in issues if i["category"] == "fact_lock_person"] == []
+
     def test_manuscript_institution_survives_anchor_truncation_priority(self):
         bp = {
             "end_location": "Alpha증권",
