@@ -1,0 +1,613 @@
+{
+  "arc_no": 1,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0001.txt",
+    "settlement_packet_path": "drafts/ep_0001.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 1,
+  "ep_num": 1,
+  "manuscript": {
+    "char_count": 6364,
+    "content_hash": "3f670cc7cc3b0dddd7c4ddaabfba3a4ad7d00401f2ed3ac92035caaf8914cf05",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0001.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "open_review": "이전 피드백이었던 '사설 계좌'가 '차명 계좌'로 적절히 수정되어 금융/투자 장르로서의 개연성이 확실히 확보되었습니다. 주인공의 냉혹한 태도 변화와 구체적인 투자 계획(WTI 원유 선물, 3배 레버리지)이 독자의 기대감을 높이는 훌륭한 도입부입니다.",
+      "repair_scope": "inplace",
+      "score": 90,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 10,
+        "quality_engagement": 19
+      },
+      "selection_reason": "이전 심사에서 지적된 '사설 해외선물 계좌'라는 단어가 '차명 해외선물 계좌'로 완벽하게 수정되어 투자 개연성이 확보되었습니다. 전반적인 문장력과 몰입도가 우수하며, 회귀 직후의 긴장감과 목표 설정이 명확하게 드러납니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [],
+      "ai_slop_score": 0.0,
+      "burstiness": 17.06,
+      "ced_score": 0.0,
+      "complexity": 46.77,
+      "compression_ratio": 0.4435,
+      "signal_summary": {
+        "ai_slop_total_hits": 0,
+        "burstiness": 17.06,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 46.77,
+        "compression_ratio": 0.4435,
+        "sentence_count": 168
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "국제",
+            "유가",
+            "변동성",
+            "심상치",
+            "않습니다"
+          ],
+          "source": "ending_hook",
+          "text": "\"국제 유가의 변동성이 심상치 않습니다.\" 뉴스 앵커의 목소리가 방 안을 채우는 순간, 한시우의 입가에 서늘한 미소가 번졌다."
+        },
+        {
+          "cue_terms": [
+            "한시우",
+            "유가",
+            "상승",
+            "뉴스",
+            "보며"
+          ],
+          "source": "expected_ending",
+          "text": "한시우가 유가 상승 뉴스를 보며 첫 번째 투자 계획에 대한 확신을 가짐."
+        }
+      ],
+      "age": 25,
+      "alias": "재벌가 막내",
+      "capital": 2000000000,
+      "causal_injuries": "전생의 고독사, 가문 몰락과 함께 무너진 기억, 누구에게도 인정받지 못했던 막내의 상처.",
+      "connections": [
+        "PB센터 김 지점장 (강압적 관계)",
+        "최 실장 (이용 대상)"
+      ],
+      "credentials": [
+        "승마 국가대표 출신",
+        "재벌가 막내"
+      ],
+      "current_objective": "SW인베스트먼트 패밀리오피스 설립 및 135조 운용권 확보를 위한 종잣돈 마련 및 초기 투자 실행",
+      "equipment": [],
+      "final_goal": "반복되는 몰락을 끊고, 누구도 조건 없이 건드릴 수 없는 통제권을 만든다.",
+      "financial_status": {
+        "business_lines": [],
+        "company": "없음",
+        "company_state": "설립 전",
+        "debt": "없음",
+        "derivatives": {},
+        "foreign_currency": {
+          "JPY": "0",
+          "USD": "0"
+        },
+        "liquid_cash": "2,000,000,000",
+        "max_assets": "135조",
+        "mobilizable_capital": "2,000,000,000",
+        "real_estate": [],
+        "stocks": [],
+        "total_assets": "2,000,000,000"
+      },
+      "investment_style": "미래 정보 기반의 이벤트 드리븐, 고레버리지 초기 투자",
+      "market_insight": "향후 18년간의 경제사 및 글로벌 시장 흐름 완벽 숙지 (WTI 원유 선물 상승 예측)",
+      "mid_term_goal": "WTI 원유 선물 투자를 통해 초기 자본을 극대화하고 개인 법인 설립",
+      "name": "한시우",
+      "network_level": {
+        "business_sector": 1,
+        "financial_sector": 1,
+        "political_sector": 0,
+        "underground_sector": 0
+      },
+      "portfolio_history": [
+        {
+          "block": 1,
+          "episode": 0,
+          "event": "회귀, 그리고 선언",
+          "month": "2006년 1월 초",
+          "total_assets": "20억 (정리 후)"
+        }
+      ],
+      "rank": "재벌가 막내",
+      "reputation": "가문 내 무시받던 막내에서 예측 불가능한 존재로 변화 중",
+      "risk_tolerance": "확신 구간에서는 최대 레버리지 활용",
+      "status": "회귀 직후, 복수와 제국 건설을 위한 초기 자본 확보 및 투자 계획 수립 중",
+      "wealth": 2000000000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "국제",
+            "유가",
+            "변동성",
+            "심상치",
+            "않습니다"
+          ],
+          "source": "ending_hook",
+          "text": "\"국제 유가의 변동성이 심상치 않습니다.\" 뉴스 앵커의 목소리가 방 안을 채우는 순간, 한시우의 입가에 서늘한 미소가 번졌다."
+        },
+        {
+          "cue_terms": [
+            "한시우",
+            "유가",
+            "상승",
+            "뉴스",
+            "보며"
+          ],
+          "source": "expected_ending",
+          "text": "한시우가 유가 상승 뉴스를 보며 첫 번째 투자 계획에 대한 확신을 가짐."
+        }
+      ],
+      "causal_links": [
+        "한시우의 전생 경험 (사업 실패, 가족의 배신) -> 회귀 후 냉철하고 복수심에 찬 성격 변화 및 독립적인 제국 건설 목표 설정",
+        "한시우의 미래 경제 지식 (WTI 원유 선물 상승 예측) -> 초기 자본금 20억 원을 활용한 WTI 원유 선물 투자 결정",
+        "한시우의 강압적인 태도 -> PB센터 김 지점장의 자산 현금화 지시 이행",
+        "한시우의 변화된 모습 -> 최 실장의 당황과 경계심 유발",
+        "어머니의 유산 (차명 신탁 계좌) 및 승마 연금 -> 초기 자본금 20억 원 마련의 기반"
+      ],
+      "inventory_count_deltas": [],
+      "inventory_counts": {},
+      "karma_matrix": [
+        {
+          "obsession": 0,
+          "target": "최 실장",
+          "value": -50
+        },
+        {
+          "obsession": 0,
+          "target": "한태준",
+          "value": -80
+        },
+        {
+          "obsession": 0,
+          "target": "한태민",
+          "value": -80
+        },
+        {
+          "obsession": 0,
+          "target": "한정호",
+          "value": -30
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [],
+        "new_witnesses": [
+          "PB센터 김 지점장 (한시우의 단호한 태도와 자산 현금화 지시 목격)",
+          "최 실장 (한시우의 변화된 태도와 서늘한 눈빛 목격)"
+        ]
+      },
+      "lost_items": [],
+      "new_items": [
+        "어머니의 차명 신탁 계좌 통장",
+        "휴대전화",
+        "유선 전화기",
+        "승마 연금 증서"
+      ],
+      "new_npcs": [
+        "김 지점장",
+        "최 실장",
+        "하인 (이름 미상)"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "PB센터 김 지점장 (한시우의 단호한 태도와 자산 현금화 지시 목격)",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "최 실장 (한시우의 변화된 태도와 서늘한 눈빛 목격)",
+          "to": "목격자"
+        }
+      ],
+      "reveals": [],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "국제",
+              "유가",
+              "변동성",
+              "심상치",
+              "않습니다"
+            ],
+            "source": "ending_hook",
+            "text": "\"국제 유가의 변동성이 심상치 않습니다.\" 뉴스 앵커의 목소리가 방 안을 채우는 순간, 한시우의 입가에 서늘한 미소가 번졌다."
+          },
+          {
+            "cue_terms": [
+              "한시우",
+              "유가",
+              "상승",
+              "뉴스",
+              "보며"
+            ],
+            "source": "expected_ending",
+            "text": "한시우가 유가 상승 뉴스를 보며 첫 번째 투자 계획에 대한 확신을 가짐."
+          }
+        ],
+        "age": 25,
+        "alias": "재벌가 막내",
+        "capital": 2000000000,
+        "causal_injuries": "전생의 고독사, 가문 몰락과 함께 무너진 기억, 누구에게도 인정받지 못했던 막내의 상처.",
+        "connections": [
+          "PB센터 김 지점장 (강압적 관계)",
+          "최 실장 (이용 대상)"
+        ],
+        "credentials": [
+          "승마 국가대표 출신",
+          "재벌가 막내"
+        ],
+        "current_objective": "SW인베스트먼트 패밀리오피스 설립 및 135조 운용권 확보를 위한 종잣돈 마련 및 초기 투자 실행",
+        "equipment": [],
+        "final_goal": "반복되는 몰락을 끊고, 누구도 조건 없이 건드릴 수 없는 통제권을 만든다.",
+        "financial_status": {
+          "business_lines": [],
+          "company": "없음",
+          "company_state": "설립 전",
+          "debt": "없음",
+          "derivatives": {},
+          "foreign_currency": {
+            "JPY": "0",
+            "USD": "0"
+          },
+          "liquid_cash": "2,000,000,000",
+          "max_assets": "135조",
+          "mobilizable_capital": "2,000,000,000",
+          "real_estate": [],
+          "stocks": [],
+          "total_assets": "2,000,000,000"
+        },
+        "investment_style": "미래 정보 기반의 이벤트 드리븐, 고레버리지 초기 투자",
+        "market_insight": "향후 18년간의 경제사 및 글로벌 시장 흐름 완벽 숙지 (WTI 원유 선물 상승 예측)",
+        "mid_term_goal": "WTI 원유 선물 투자를 통해 초기 자본을 극대화하고 개인 법인 설립",
+        "name": "한시우",
+        "network_level": {
+          "business_sector": 1,
+          "financial_sector": 1,
+          "political_sector": 0,
+          "underground_sector": 0
+        },
+        "portfolio_history": [
+          {
+            "block": 1,
+            "episode": 0,
+            "event": "회귀, 그리고 선언",
+            "month": "2006년 1월 초",
+            "total_assets": "20억 (정리 후)"
+          }
+        ],
+        "rank": "재벌가 막내",
+        "reputation": "가문 내 무시받던 막내에서 예측 불가능한 존재로 변화 중",
+        "risk_tolerance": "확신 구간에서는 최대 레버리지 활용",
+        "status": "회귀 직후, 복수와 제국 건설을 위한 초기 자본 확보 및 투자 계획 수립 중",
+        "wealth": 2000000000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "age",
+              "alias",
+              "capital",
+              "causal_injuries",
+              "connections",
+              "credentials",
+              "current_objective",
+              "equipment",
+              "final_goal",
+              "financial_status",
+              "investment_style",
+              "market_insight",
+              "mid_term_goal",
+              "name",
+              "network_level",
+              "portfolio_history",
+              "rank",
+              "reputation",
+              "risk_tolerance",
+              "status",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "location",
+              "protagonist_status",
+              "timeline"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets",
+              "portfolio_position",
+              "investment_calc_final_cash",
+              "investment_calc_final_total_assets"
+            ],
+            "owner": "cross_stage_authority_packet_bootstrap",
+            "promoted_fields": [
+              "capital",
+              "total_assets",
+              "investment_calc_final_cash",
+              "investment_calc_final_total_assets"
+            ],
+            "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+            "promotion_sources": {
+              "capital": "actual_truth",
+              "investment_calc_final_cash": "cross_stage_authority_packet.numeric_carryover",
+              "investment_calc_final_total_assets": "cross_stage_authority_packet.numeric_carryover",
+              "total_assets": "cross_stage_authority_packet.numeric_carryover"
+            },
+            "provenance": "cross_stage_transport_bootstrap",
+            "surfaces": [
+              "cross_stage_authority_packet.numeric_carryover",
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ],
+            "transport_authority_mode": "packet_bootstrap",
+            "transport_contract_version": "cross_stage_authority_packet.v1",
+            "transport_fields": [
+              "capital",
+              "total_assets",
+              "portfolio_position",
+              "investment_calc_final_cash",
+              "investment_calc_final_total_assets"
+            ],
+            "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "20억 원",
+      "director_score": 90,
+      "location": "본가 내실",
+      "protagonist_status": "과거의 기억을 바탕으로 첫 번째 투자 계획 확립, 가족 모임 준비",
+      "timeline": "2006년 1월 1일 저녁"
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "age",
+            "alias",
+            "capital",
+            "causal_injuries",
+            "connections",
+            "credentials",
+            "current_objective",
+            "equipment",
+            "final_goal",
+            "financial_status",
+            "investment_style",
+            "market_insight",
+            "mid_term_goal",
+            "name",
+            "network_level",
+            "portfolio_history",
+            "rank",
+            "reputation",
+            "risk_tolerance",
+            "status",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "location",
+            "protagonist_status",
+            "timeline"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets",
+            "portfolio_position",
+            "investment_calc_final_cash",
+            "investment_calc_final_total_assets"
+          ],
+          "owner": "cross_stage_authority_packet_bootstrap",
+          "promoted_fields": [
+            "capital",
+            "total_assets",
+            "investment_calc_final_cash",
+            "investment_calc_final_total_assets"
+          ],
+          "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+          "promotion_sources": {
+            "capital": "actual_truth",
+            "investment_calc_final_cash": "cross_stage_authority_packet.numeric_carryover",
+            "investment_calc_final_total_assets": "cross_stage_authority_packet.numeric_carryover",
+            "total_assets": "cross_stage_authority_packet.numeric_carryover"
+          },
+          "provenance": "cross_stage_transport_bootstrap",
+          "surfaces": [
+            "cross_stage_authority_packet.numeric_carryover",
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ],
+          "transport_authority_mode": "packet_bootstrap",
+          "transport_contract_version": "cross_stage_authority_packet.v1",
+          "transport_fields": [
+            "capital",
+            "total_assets",
+            "portfolio_position",
+            "investment_calc_final_cash",
+            "investment_calc_final_total_assets"
+          ],
+          "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 1개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "title": "제1화: 낯선 천장, 익숙한 내실"
+}

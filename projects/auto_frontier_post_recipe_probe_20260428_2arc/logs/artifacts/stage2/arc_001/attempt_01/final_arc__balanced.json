@@ -1,0 +1,436 @@
+{
+  "_director_compare_meta": {
+    "comparison_notes": "후보 1은 서사 밀도가 가장 높고(3519자) Block DNA의 핵심 사건과 복선을 충실히 반영했습니다. 후보 2는 분량 미달(3000자 미만)이며 역시 내공 수치를 사용했습니다. 후보 3은 시작 위치 설정이 모호하고 획득 아이템 처리가 누락되었습니다. 따라서 후보 1을 선택하되 제약 조건 위반 사항을 국소 수정하는 것이 가장 적합합니다.",
+    "director_decision": "PASS",
+    "feedback": "전술서의 논리적 무결성이 완벽하며, 파이썬 자동 수정 사항(무협 잔재 제거 등)이 적절히 반영되어 추가 수정이 필요하지 않음.",
+    "fix_scope": "inplace",
+    "quality_gate_reasons": [],
+    "quality_gate_triggered": false,
+    "selection_reason": "스토리 전개와 DNA 반영은 훌륭하나 금지된 '내공' 수치 사용"
+  },
+  "_ensemble_meta": {
+    "all_scores": [
+      [
+        "balanced",
+        100
+      ],
+      [
+        "conservative",
+        100
+      ],
+      [
+        "creative",
+        96
+      ]
+    ],
+    "best_score": 100,
+    "best_strategy": "balanced",
+    "candidate_index": 0,
+    "diversity": {
+      "high_similarity_pairs": [],
+      "max_similarity": 0.27,
+      "pairwise": [
+        {
+          "pair": "A-B",
+          "similarity": 0.24
+        },
+        {
+          "pair": "A-C",
+          "similarity": 0.25
+        },
+        {
+          "pair": "B-C",
+          "similarity": 0.27
+        }
+      ],
+      "warning": ""
+    },
+    "score": 100,
+    "strategy": "balanced",
+    "total_candidates": 3
+  },
+  "_strategy": "balanced",
+  "arc_drive": {
+    "narrative_drive": {
+      "active_villainy": {
+        "antagonist_name": "김 변호사 (그룹 법무팀 소속, 한시우 개인 자산 관리 담당)",
+        "antagonist_type": "내부 조력자/감시자 (Status Quo 유지 지향)",
+        "foreshadowing_of_major_antagonists": "김 변호사의 보고는 형제들이 한시우를 '무관심'에서 '경계' 대상으로 인식하게 만드는 첫 번째 계기가 될 것임. 이는 장기적으로 형제들의 몰락을 위한 한시우의 계획에 대한 첫 번째 반작용.",
+        "motivation": "한정호 회장과 그룹에 대한 충성심, 기존 재벌가 질서 유지, 한시우의 '재롱'이 그룹에 해가 될까 하는 우려. (궁극적으로는 형들의 기득권 보호)",
+        "reaction_plan": [
+          {
+            "action": "강력한 반대와 만류 (해외 선물 투자의 위험성, 재벌가 막내의 이미지 손상 우려 등), 법인 설립 절차 지연 시도.",
+            "impact_on_protagonist": "법인 설립 및 계좌 개설 과정에서의 불필요한 행정적/심리적 마찰 발생, 시간 지연 압박.",
+            "stage": 1,
+            "trigger": "한시우의 20억 자산 정리 및 해외 선물 투자 법인 설립 요청"
+          },
+          {
+            "action": "한태준/한태민 형제 또는 이들의 측근에게 한시우의 '위험한' 투자 활동과 '의외의' 수익 소식을 은밀히 보고. 표면적으로는 '그룹 리스크 관리' 명분, 실제로는 막내의 독자적 행보에 대한 견제 유도.",
+            "impact_on_protagonist": "형제들의 레이더에 포착될 가능성 증가, 향후 감시 및 견제의 시작점 마련.",
+            "stage": 2,
+            "trigger": "한시우의 투자 강행 및 첫 성공적인 수익 소문 (혹은 김 변호사에게 보고)"
+          }
+        ]
+      },
+      "arc_goal": "회귀 지식의 첫 번째 성공적 증명과 독립적 자산 증식 시스템 구축. 20억을 10개월 내 50억 이상으로 불려 다음 단계(서브프라임 숏) 진입을 위한 기반 마련.",
+      "core_scene_ratio": {
+        "focus": "SW인베스트먼트 설립 과정의 난관, 원유 시장 분석 및 포지션 진입의 긴장감, 실제 수익 실현 순간의 카타르시스.",
+        "next_arc_percentage": 85
+      },
+      "immediate_reward": {
+        "description": "2006년 이란 핵 이슈를 활용한 원유 선물 투자에서 첫 대규모 수익 실현 (최소 18억 이상). 'SW인베스트먼트'의 첫 성공적인 트레이딩으로 회귀자로서의 능력과 독립적인 사업가로서의 입지를 증명.",
+        "impact_on_protagonist": "자신감 회복, 미래 지식에 대한 확신 강화, 가족의 무관심 속에서 조용히 성장할 수 있는 기반 마련.",
+        "quantifiable_metric": "자본금 20억 → 38억 이상 (최소 90% 이상 수익률)",
+        "type": "Capital Gain / Proof of Concept"
+      }
+    },
+    "short_term_objective": "서사적 긴장감 고조",
+    "status": "LOCKED"
+  },
+  "arc_no": 1,
+  "beat_sequence": [
+    "제 1화: 2024년의 죽음에서 2006년으로 회귀한 한시우가 상황을 파악하고 뉴스 복선을 확인한다.",
+    "제 2화: 아버지의 서재에서 그룹 후계 구도에서 빠지겠다고 선언하며 가족들의 무관심을 이끌어낸다.",
+    "제 3화: 과거의 흔적인 연금과 신탁을 모조리 해지하여 20억 원의 초기 자본금을 마련하고 법인을 세운다.",
+    "제 4화: H증권사 VIP룸에서 해외선물 계좌 개설하고 본격적인 투자를 위한 모든 물리적 준비를 마친다."
+  ],
+  "constraint_summary": "",
+  "cross_stage_authority_packet": {
+    "contract_version": "cross_stage_authority_packet.v1",
+    "numeric_carryover": {
+      "capital": "20억 원",
+      "capital_source": "state_constraints.arc_end_state.capital",
+      "investment_calc_final_cash": 2000000000,
+      "investment_calc_final_cash_source": "state_constraints.investment_calc.final_cash",
+      "investment_calc_final_total_assets": 2000000000,
+      "investment_calc_final_total_assets_source": "state_constraints.investment_calc.final_total_assets",
+      "portfolio_position": "WTI 매수 진입 대기",
+      "portfolio_position_source": "state_constraints.arc_end_state.portfolio_position",
+      "total_assets": "20억 원",
+      "total_assets_source": "state_constraints.arc_end_state.total_assets"
+    },
+    "opening_carryover": {
+      "location": "여의도 H증권사 본점 VIP 프라이빗 룸",
+      "location_source": "state_constraints.arc_end_state.location",
+      "world_joint": "한시우의 자산 20억 원이 증거금 계좌로 이체 완료되어, 즉각적인 3배 레버리지 매수(Long) 포지션 진입이 가능한 물리적 대기 상태로 전환됨.",
+      "world_joint_source": "joint_docs.world_joint"
+    },
+    "protagonist_carryover": {
+      "equipment": [
+        "SW인베스트먼트 법인 인감도장",
+        "해외선물 전용 법인 계좌 보안카드(OTP)",
+        "WTI 선물 거래 약관 동의서 사본"
+      ],
+      "equipment_source": "state_constraints.arc_end_state.equipment",
+      "injuries": "없음",
+      "injuries_source": "state_constraints.arc_end_state.injuries"
+    },
+    "provenance": {
+      "arc_no": 1,
+      "emitted_by": "Stage2Finalizer",
+      "ep_end": 4,
+      "ep_start": 1,
+      "legacy_summary_surface": "advisory_flags.carryover_authority",
+      "legacy_text_surface": "[Carryover Authority Packet]",
+      "stage": 2
+    },
+    "source_precedence": {
+      "numeric_carryover": [
+        "state_constraints.arc_end_state.capital",
+        "state_constraints.arc_end_state.total_assets",
+        "state_constraints.arc_end_state.portfolio_position",
+        "state_constraints.investment_calc.final_cash",
+        "state_constraints.investment_calc.final_total_assets"
+      ],
+      "opening_carryover": [
+        "state_constraints.arc_end_state.location",
+        "joint_docs.final_location",
+        "joint_docs.world_joint"
+      ],
+      "protagonist_carryover": [
+        "state_constraints.arc_end_state.equipment",
+        "joint_docs.physical_inventory",
+        "state_constraints.arc_end_state.injuries",
+        "state_constraints.arc_end_state.internal_energy"
+      ]
+    }
+  },
+  "ep_count": 4,
+  "ep_end": 4,
+  "ep_start": 1,
+  "episode_details": [
+    {
+      "details": [
+        "본가 내실에서 회귀 각성 — 과거의 실패 복기",
+        "저녁 뉴스 시청 — 유가 상승 및 이란 핵 문제 보도 확인"
+      ],
+      "ep_num": 1
+    },
+    {
+      "details": [
+        "아버지 서재에서 가족 대면 — 후계 구도 이탈 선언",
+        "그룹 자금 거부 의사 표명 — 가족들의 무관심 확보"
+      ],
+      "ep_num": 2
+    },
+    {
+      "details": [
+        "은행 및 신탁사 방문 — 연금 및 차명 계좌 전액 현금화",
+        "SW인베스트먼트 법인 설립 — 20억 자본금 확보"
+      ],
+      "ep_num": 3
+    },
+    {
+      "details": [
+        "H증권사 VIP룸 방문 — 박성호 PB와 대면",
+        "해외선물 계좌 개설 및 증거금 예치 — WTI 매수 준비 완료"
+      ],
+      "ep_num": 4
+    }
+  ],
+  "global_arc_no": 1,
+  "hybrid_composition": {
+    "mixing_logic": "과거의 굴레를 끊어내는 심리적 단절 선언과 미래 투자를 위한 물리적 자본 준비 과정을 교차하여 밀도 있게 전개",
+    "primary": "회귀와 선언",
+    "secondary": [
+      "자산 정리",
+      "법인 설립"
+    ]
+  },
+  "joint_docs": {
+    "final_location": "여의도 H증권사 본점 VIP 프라이빗 룸",
+    "physical_inventory": [
+      "SW인베스트먼트 법인 인감도장",
+      "해외선물 전용 법인 계좌 보안카드(OTP)",
+      "WTI 선물 거래 약관 동의서 사본"
+    ],
+    "world_joint": "한시우의 자산 20억 원이 증거금 계좌로 이체 완료되어, 즉각적인 3배 레버리지 매수(Long) 포지션 진입이 가능한 물리적 대기 상태로 전환됨."
+  },
+  "pacing_decision": {
+    "density_focus": "초기 자본금 마련 과정의 심리적 압박과 증권사 VIP룸 입성까지의 밀도 높은 전개를 통해 긴장감을 유지",
+    "ep_count_reasoning": "회귀 직후의 상황 파악, 가족과의 관계 재정립, 자산 현금화, 계좌 개설이라는 4단계의 명확한 행동 변화를 담기 위해 4화 배정",
+    "pace_mode": "standard"
+  },
+  "rationale_digest": "관계(한정호): 그룹 자금 거부 선언\n관계(한태준): 후계 포기 선언\n관계(한태민): 후계 포기 선언\n성장근거: 자본금 20억 확보 및 독립적 투자 법인 설립을 통한 기초 기반 마련\n복선: 저녁 뉴스에서 '유가 상승세, 이란 핵 문제 재점화' 보도\n복선: 아버지가 '그룹 일은 형들이 알아서 할 거다'라고 발언\n복선: 한시우가 '그룹 돈 안 받겠다'고 선언\n연속성: 20억 자본금 확보; SW인베스트먼트 설립; H증권사 해외선물 계좌 개설",
+  "seed_injection": null,
+  "seeds": null,
+  "semantic_carryover": {
+    "continuity_checkpoints": [
+      "20억 자본금 확보",
+      "SW인베스트먼트 설립",
+      "H증권사 해외선물 계좌 개설"
+    ],
+    "foreshadow_anchors": [
+      "저녁 뉴스에서 '유가 상승세, 이란 핵 문제 재점화' 보도",
+      "아버지가 '그룹 일은 형들이 알아서 할 거다'라고 발언",
+      "한시우가 '그룹 돈 안 받겠다'고 선언"
+    ],
+    "growth_justification": "자본금 20억 확보 및 독립적 투자 법인 설립을 통한 기초 기반 마련",
+    "relationship_rationale": [
+      {
+        "justification": "막내의 예상치 못한 독립 선언으로 인한 인식의 미세한 변화",
+        "npc": "한정호",
+        "trigger": "그룹 자금 거부 선언"
+      },
+      {
+        "justification": "경쟁자 제거로 인한 안도와 철저한 방관",
+        "npc": "한태준",
+        "trigger": "후계 포기 선언"
+      },
+      {
+        "justification": "경쟁자 제거로 인한 안도와 철저한 방관",
+        "npc": "한태민",
+        "trigger": "후계 포기 선언"
+      }
+    ]
+  },
+  "state_changes": {
+    "major_items": [
+      {
+        "action": "소모",
+        "episode": 3,
+        "name": "승마 국가대표 은퇴 연금 증서"
+      },
+      {
+        "action": "소모",
+        "episode": 3,
+        "name": "어머니 명의 차명 신탁 계좌 통장"
+      },
+      {
+        "action": "획득",
+        "episode": 3,
+        "name": "SW인베스트먼트 법인 인감도장"
+      },
+      {
+        "action": "획득",
+        "episode": 4,
+        "name": "해외선물 전용 법인 계좌 보안카드(OTP)"
+      },
+      {
+        "action": "획득",
+        "episode": 4,
+        "name": "WTI 선물 거래 약관 동의서 사본"
+      }
+    ],
+    "npc_deaths": [],
+    "npc_introductions": [
+      {
+        "episode": 2,
+        "name": "한정호"
+      },
+      {
+        "episode": 2,
+        "name": "한태준"
+      },
+      {
+        "episode": 2,
+        "name": "한태민"
+      },
+      {
+        "episode": 4,
+        "name": "박성호"
+      }
+    ],
+    "npc_martial_state_changes": [],
+    "relationship_changes": [
+      {
+        "episode": 2,
+        "from": "귀여운 막내, 기대 제로",
+        "npc": "한정호",
+        "to": "의외라는 시선, 약간의 관심"
+      },
+      {
+        "episode": 2,
+        "from": "무관심",
+        "npc": "한태준",
+        "to": "무관심 유지"
+      },
+      {
+        "episode": 2,
+        "from": "무관심",
+        "npc": "한태민",
+        "to": "무관심 유지"
+      }
+    ],
+    "resolved_plots": [],
+    "skill_acquisitions": [],
+    "timeline": {
+      "end": {
+        "day": 3,
+        "description": "법인 설립 및 계좌 개설 완료",
+        "month": 1,
+        "year": 2006
+      },
+      "start": {
+        "day": 1,
+        "description": "2006년 1월 초, 회귀 직후",
+        "month": 1,
+        "year": 2006
+      }
+    }
+  },
+  "state_constraints": {
+    "arc_end_state": {
+      "capital": "20억 원",
+      "equipment": [
+        "SW인베스트먼트 법인 인감도장",
+        "해외선물 전용 법인 계좌 보안카드(OTP)",
+        "WTI 선물 거래 약관 동의서 사본"
+      ],
+      "injuries": "없음",
+      "location": "여의도 H증권사 본점 VIP 프라이빗 룸",
+      "portfolio_position": "WTI 매수 진입 대기",
+      "total_assets": "20억 원"
+    },
+    "arc_start_state": {
+      "capital": "0원",
+      "equipment": [],
+      "injuries": "없음",
+      "location": "본가 내실",
+      "portfolio_position": "포지션 없음",
+      "total_assets": "0원"
+    },
+    "continuity_checkpoints": [
+      "20억 자본금 확보",
+      "SW인베스트먼트 설립",
+      "H증권사 해외선물 계좌 개설"
+    ],
+    "distributed_items": [],
+    "foreshadowings": [
+      {
+        "description": "저녁 뉴스에서 '유가 상승세, 이란 핵 문제 재점화' 보도",
+        "expected_payoff": "WTI 선물 매수 포지션의 막대한 수익으로 연결",
+        "id": "FS_OIL_IRAN",
+        "type": "사건"
+      },
+      {
+        "description": "아버지가 '그룹 일은 형들이 알아서 할 거다'라고 발언",
+        "expected_payoff": "훗날 형들의 싸움으로 그룹이 분열되는 결과",
+        "id": "FS_GROUP_FIGHT",
+        "type": "사건"
+      },
+      {
+        "description": "한시우가 '그룹 돈 안 받겠다'고 선언",
+        "expected_payoff": "그룹이 망해도 본인 자산은 무사한 법적/명분적 근거",
+        "id": "FS_INDEPENDENCE",
+        "type": "비밀"
+      }
+    ],
+    "investment_calc": {
+      "final_cash": 2000000000,
+      "final_total_assets": 2000000000,
+      "transactions": []
+    },
+    "items_acquired": [
+      "SW인베스트먼트 법인 인감도장",
+      "해외선물 전용 법인 계좌 보안카드(OTP)",
+      "WTI 선물 거래 약관 동의서 사본"
+    ],
+    "items_consumed": [],
+    "power_changes": {
+      "end_power": 10,
+      "growth_justification": "자본금 20억 확보 및 독립적 투자 법인 설립을 통한 기초 기반 마련",
+      "start_power": 0
+    },
+    "protagonist_items": [
+      "SW인베스트먼트 법인 인감도장",
+      "해외선물 전용 법인 계좌 보안카드(OTP)",
+      "WTI 선물 거래 약관 동의서 사본"
+    ],
+    "relationship_changes": [
+      {
+        "from": "귀여운 막내, 기대 제로",
+        "justification": "막내의 예상치 못한 독립 선언으로 인한 인식의 미세한 변화",
+        "target": "한정호",
+        "to": "의외라는 시선, 약간의 관심",
+        "trigger": "그룹 자금 거부 선언"
+      },
+      {
+        "from": "무관심",
+        "justification": "경쟁자 제거로 인한 안도와 철저한 방관",
+        "target": "한태준",
+        "to": "무관심 유지",
+        "trigger": "후계 포기 선언"
+      },
+      {
+        "from": "무관심",
+        "justification": "경쟁자 제거로 인한 안도와 철저한 방관",
+        "target": "한태민",
+        "to": "무관심 유지",
+        "trigger": "후계 포기 선언"
+      }
+    ]
+  },
+  "status_shadow": {
+    "expected_injuries": "과거 자산의 급격한 현금화 및 법인 설립 서류 작업으로 인한 시신경 피로와 일시적 수면 부족 (일상 휴식으로 자연 회복 가능)",
+    "internal_energy_loss": "개인 명의 유동 자산 0원 (전액 SW인베스트먼트 법인 자본금 20억 원으로 전환 및 증거금 락업)",
+    "item_consumption": [
+      "승마 국가대표 은퇴 연금 증서",
+      "어머니 명의 차명 신탁 계좌 통장"
+    ],
+    "key_stat_change": "개인 명의 유동 자산 0원 (전액 SW인베스트먼트 법인 자본금 20억 원으로 전환 및 증거금 락업)"
+  },
+  "tactical_doc": "제 1화: 회귀의 아침과 첫 번째 복선\n[시작 상태] 위치: 본가 내실, 부상: 없음, 소지품: 없음\n2024년 어느 차가운 겨울밤. 이혼, 사업 실패, 그리고 감당할 수 없는 채무 속에서 원룸의 차가운 방바닥에 누워 쓸쓸히 숨을 거두던 순간이 아직도 생생했다. 한시우는 거친 숨을 몰아쉬며 눈을 번쩍 떴다. 낯선, 아니 너무나도 익숙해서 소름이 돋는 고급스러운 천장 샹들리에가 보였다. 재벌가 막내로 태어나 귀여움만 받으며 승마 국가대표까지 올랐던 시절의 본가 내실이었다. 몸을 일으켜 거울을 보았다. 젊고 생기 넘치는 얼굴. 2006년 1월 초의 어느 날로 돌아온 것이다. 두 번의 삶을 살았고, 두 번 모두 이 순간이 갈림길이었다. 첫 번째 생에서 그는 그저 흐르는 대로 살았다. 그 대가는 형들의 후계 싸움으로 그룹이 공중분해된 후 찾아온 비참한 몰락이었다. 한시우는 주먹을 강하게 쥐었다. 세 번째 기회는 없다. 이번에는 절대 같은 전철을 밟지 않으리라 다짐하며 마음을 추스르고 방 한구석에 놓인 텔레비전을 켰다. 화면에서는 저녁 뉴스가 흘러나오고 있었다. 앵커의 건조한 목소리가 방 안을 채웠다. \"유가 상승세가 심상치 않습니다. 이란 핵 문제가 재점화되면서 국제 유가가 요동치고 있습니다.\" 한시우의 입가에 미세한 호선이 그려졌다. 2006년 원유 60달러에서 80달러로 치솟는 거대한 파도. 그리고 2009년 사토시가 제네시스 블록을 캐며 시작될 비트코인의 시대. 숫자들이 순서대로 줄을 서서 그의 머릿속을 스쳐 지나갔다. 추측이 아니었다. 직접 살고, 직접 잃어본 자의 명확한 기억이었다. 그때, 문밖에서 고용인의 조심스러운 목소리가 들려왔다. 회장님이 서재로 부르신다는 전갈이었다. 올 것이 왔다.\n[종료 상태] 위치: 아버지 서재 앞, 부상: 없음, 소지품: 없음\n\n제 2화: 선언과 단절\n[시작 상태] 위치: 아버지 서재 앞, 부상: 없음, 소지품: 없음\n무거운 흑단목 문을 열고 들어가자, 매캐한 연초 냄새가 코를 찔렀다. 책상 너머에는 가문의 심판자이자 거대한 재벌 그룹의 총수인 아버지, 한정호 회장이 앉아 있었다. 그 옆으로는 이미 그룹 핵심 계열사를 꿰차고 피 튀기는 후계 경쟁에 돌입한 큰형 한태준과 둘째형 한태민이 거만한 표정으로 서 있었다. \"막내야, 이제 뭐 할 거냐?\" 한정호 회장의 목소리에는 기대가 없었다. 그저 귀여운 애완견의 재롱을 묻는 듯한 가벼운 뉘앙스였다. 전생에서 한시우는 이 질문에 '천천히 생각해볼게요'라며 얼버무렸고, 그것이 한량 인생의 시작이었다. 하지만 이번엔 다르다. 한시우는 흔들림 없는 눈빛으로 아버지를 직시했다. \"그룹 일은 형들이 알아서 할 겁니다.\" 순간 서재에 묘한 정적이 흘렀다. 큰형과 둘째형의 눈빛에 깃들어 있던 미세한 경계심이 스르르 풀리는 것이 보였다. 한시우는 쐐기를 박았다. \"저는 그룹 돈 안 받겠습니다. 제 길은 제가 알아서 찾겠습니다.\" 이 선언은 훗날 그룹이 형들의 싸움으로 산산조각이 나더라도, 본인의 자산만큼은 온전히 지켜낼 수 있는 완벽한 명분이 될 것이었다. 한정호 회장은 비서를 부르려고 손을 들었다가 도로 내렸다. 막내의 눈빛이 평소의 '재롱'과는 완전히 달랐기 때문이다. 하지만 굳이 반대할 이유도 없었다. 어차피 기대도 없었으니까. \"그래, 네 맘대로 해보거라.\" 그 한마디로 한시우는 가문의 레이더망에서 완전히 벗어났다. 완벽한 자유를 얻어낸 그는 가벼운 발걸음으로 서재를 나섰다.\n[종료 상태] 위치: 본가 내실, 부상: 없음, 소지품: 승마 국가대표 은퇴 연금 증서, 어머니 명의 차명 신탁 계좌 통장\n\n제 3화: 과거의 청산과 새로운 그릇\n[시작 상태] 위치: 본가 내실, 부상: 없음, 소지품: 승마 국가대표 은퇴 연금 증서, 어머니 명의 차명 신탁 계좌 통장\n다음 날 아침이 밝자마자 한시우는 바쁘게 움직였다. 가장 먼저 해야 할 일은 투자에 필요한 초기 자본금을 마련하는 것이었다. 국내 주식은 안 된다. 신고 의무가 따르고, 가족들의 시선이 쏠리며, 규모가 커지면 그룹 주가에 영향을 미친다. 철저하게 은폐된 해외 선물이 답이었다. 이를 위해서는 개인 법인이 필요했다. 한시우는 품에 챙긴 승마 국가대표 은퇴 연금 증서와 어머니 명의로 되어 있던 차명 신탁 계좌 통장을 들고 금융기관을 순회했다. \"전액 일시불로 해지해 주십시오.\" 창구 직원의 만류에도 불구하고 그는 단호했다. 할아버지에게 받았던 용돈, 승마 스폰서 수익, 그리고 신탁 자금까지 영혼을 끌어모아 현금화했다. 며칠간 이어진 급격한 자산 현금화와 복잡한 법인 설립 서류 작업으로 인해 시신경에 뻐근한 피로가 몰려왔지만, 그의 정신만큼은 그 어느 때보다 맑았다. 마침내 모든 절차가 끝났다. 그의 손에는 'SW인베스트먼트'라는 이름이 선명하게 새겨진 법인 인감도장이 쥐어져 있었다. 가족 누구도 이 작은 투자 법인의 설립을 진지하게 받아들이지 않았다. 철저하게 레이더 밖에서 움직이는 완벽한 은신처가 완성된 것이다. 통장에 찍힌 숫자는 정확히 20억 원. 이제 이 총알을 장전할 전장으로 향할 차례였다.\n[종료 상태] 위치: H증권사 로비, 부상: 없음, 소지품: 20억 원 예치 확인증, SW인베스트먼트 법인 인감도장\n\n제 4화: 전장의 입구\n[시작 상태] 위치: H증권사 로비, 부상: 없음, 소지품: 20억 원 예치 확인증, SW인베스트먼트 법인 인감도장\n여의도에 위치한 H증권사 본점. 대리석으로 장식된 화려한 로비를 지나 VIP 전용 프라이빗 룸으로 안내받았다. 묵직한 가죽 소파에 앉아 기다리자, 단정한 정장 차림의 PB 박성호가 조심스럽게 문을 열고 들어왔다. 박성호의 눈에는 한시우가 그저 돈 많은 재벌가 도련님의 취미 생활 정도로 비치는 듯했다. \"한 대표님, 어떤 상품을 알아보고 계십니까?\" 한시우는 탁자 위에 SW인베스트먼트 법인 인감도장과 20억 원 예치 확인증을 올려놓았다. \"해외선물 전용 법인 계좌 개설. 타겟은 WTI 원유 선물입니다. 레버리지는 최대치로 열어두십시오.\" 박성호의 눈동자가 미세하게 흔들렸다. 단순한 주식 투자가 아니라 고위험군의 해외선물, 그것도 유가에 최대 레버리지를 걸겠다는 말에 당황한 기색이 역력했다. \"대표님, 최근 이란 핵 문제로 유가 변동성이 극심합니다. 리스크 관리가...\" \"관리는 제가 합니다. 서류나 준비해 주시죠.\" 한시우의 차갑고 단호한 어조에 박성호는 더 이상 반박하지 못하고 서류를 내밀었다. 한시우는 거침없이 서명란에 인감을 찍어 나갔다. 마침내 모든 절차가 완료되었다. 한시우의 손에는 해외선물 전용 법인 계좌의 보안카드(OTP)와 WTI 선물 거래 약관 동의서 사본이 쥐어졌다. 자산 20억 원이 증거금 계좌로 이체 완료되어, 즉각적인 3배 레버리지 매수 포지션 진입이 가능한 완벽한 대기 상태. 18년의 경제사를 꿰뚫고 있는 회귀자의 첫 번째 사냥 준비가 끝나는 순간이었다.\n[종료 상태] 위치: 여의도 H증권사 본점 VIP 프라이빗 룸, 부상: 없음, 소지품: SW인베스트먼트 법인 인감도장, 해외선물 전용 법인 계좌 보안카드(OTP), WTI 선물 거래 약관 동의서 사본\n- 위치: 여의도 H증권사 본점 VIP 프라이빗 룸\n- 소지품: [\"SW인베스트먼트 법인 인감도장\", \"해외선물 전용 법인 계좌 보안카드(OTP)\", \"WTI 선물 거래 약관 동의서 사본\"]\n- 부상: 없음\n- 총자산: 20억 원\n- 자본: 20억 원\n- 포지션: WTI 매수 진입 대기",
+  "title": "회귀, 그리고 선언",
+  "volume_no": 0
+}

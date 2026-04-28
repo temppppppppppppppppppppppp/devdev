@@ -1,0 +1,370 @@
+{
+  "tag": "stage2_complete",
+  "timestamp": "2026-04-28 17:44:34",
+  "summary_role": "runtime_heartbeat_with_proof_digest",
+  "total_events": 23,
+  "counts": {
+    "v60_25_auto_correct": 2,
+    "field_repair": 2,
+    "db_commit": 5,
+    "v60_10_state_extracted": 3,
+    "blueprint_success": 3,
+    "stage4_session_scope": 1,
+    "stage4_post_pass_contract_signal": 2,
+    "stage4_pass_settlement_status": 2,
+    "stage4_cove_runtime_advisory": 1,
+    "target_ep_reached": 1,
+    "stage4_complete": 1
+  },
+  "latest_event_type": "v60_10_state_extracted",
+  "recent_events": [
+    {
+      "type": "stage4_cove_runtime_advisory",
+      "message": "stage4 CoVe runtime advisory observed"
+    },
+    {
+      "type": "stage4_post_pass_contract_signal",
+      "message": "stage4 post-pass contract persisted"
+    },
+    {
+      "type": "stage4_pass_settlement_status",
+      "message": "stage4 pass settlement status recorded"
+    },
+    {
+      "type": "target_ep_reached",
+      "message": "stage4 target episode reached"
+    },
+    {
+      "type": "stage4_complete",
+      "message": "stage4 production completed"
+    },
+    {
+      "type": "v60_10_state_extracted",
+      "message": "StateExtractor generated context"
+    },
+    {
+      "type": "v60_25_auto_correct",
+      "message": "arc auto-corrected"
+    },
+    {
+      "type": "field_repair",
+      "message": "non-wuxia persistence state noise removed"
+    },
+    {
+      "type": "db_commit",
+      "message": "데이터베이스 저장 완료"
+    },
+    {
+      "type": "v60_10_state_extracted",
+      "message": "StateExtractor generated context"
+    }
+  ],
+  "contract": {
+    "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
+    "attempt_truth_authoritative": false,
+    "authoritative_attempt_sinks": [
+      "stage_attempts",
+      "pass_rate_monitor",
+      "session_decisions",
+      "episode_production",
+      "director_selections"
+    ],
+    "proof_digest_truth_scope": "committed_persistence_only",
+    "operational_metadata_scope": "latest_structured_session_plus_runtime_audit_events_and_session_sinks",
+    "authoritative_attempt_truth_note": "Use DB/JSONL/artifact sink join for authoritative attempt truth.",
+    "operational_metadata_note": "Operational metadata is best-effort run interpretation and does not override persisted attempt truth."
+  },
+  "summary_window": {
+    "count_window_size": 200,
+    "counted_events": 23,
+    "counts_truncated": false,
+    "recent_event_window_size": 10,
+    "recent_events_returned": 10,
+    "event_window_truncated": true
+  },
+  "proof_digest": {
+    "available": true,
+    "status": "warn",
+    "artifacts": {
+      "db_available": true,
+      "session_decisions_exists": true,
+      "ui_events_jsonl_exists": true,
+      "pass_rate_monitor_exists": true,
+      "episode_production_exists": true,
+      "runtime_audit_jsonl_exists": true,
+      "ui_events_db_available": true,
+      "ui_events_count": 469,
+      "ui_event_coverage_status": "ok"
+    },
+    "stages": {
+      "stage2": {
+        "status": "ok",
+        "attempts_considered": 2,
+        "complete_final_attempts": 2,
+        "complete_lifecycle_attempts": 0,
+        "legacy_key_attempts": 0,
+        "session_scoped_attempts": 2,
+        "coverage": {
+          "stage_attempts": 2,
+          "pass_rate_monitor": 2,
+          "director_selections": 2,
+          "episode_production": 0,
+          "session_decisions": 2,
+          "attempt_raw_rationale": 0
+        },
+        "issue_counts": {},
+        "warning_taxonomy_counts": {}
+      },
+      "stage3": {
+        "status": "ok",
+        "attempts_considered": 3,
+        "complete_final_attempts": 3,
+        "complete_lifecycle_attempts": 0,
+        "legacy_key_attempts": 0,
+        "session_scoped_attempts": 3,
+        "coverage": {
+          "stage_attempts": 3,
+          "pass_rate_monitor": 3,
+          "director_selections": 3,
+          "episode_production": 0,
+          "session_decisions": 3,
+          "attempt_raw_rationale": 0
+        },
+        "issue_counts": {},
+        "warning_taxonomy_counts": {}
+      },
+      "stage4": {
+        "status": "warn",
+        "attempts_considered": 2,
+        "complete_final_attempts": 2,
+        "complete_lifecycle_attempts": 2,
+        "legacy_key_attempts": 0,
+        "session_scoped_attempts": 2,
+        "coverage": {
+          "stage_attempts": 2,
+          "pass_rate_monitor": 2,
+          "director_selections": 2,
+          "episode_production": 2,
+          "session_decisions": 2,
+          "attempt_raw_rationale": 2
+        },
+        "issue_counts": {
+          "phase_drift_rationale_warnings": 2
+        },
+        "warning_taxonomy_counts": {
+          "rationale_drift_warn": 2
+        },
+        "numeric_consistency_summary": {
+          "status": "ok",
+          "stage": 4,
+          "session_filter": "20260428_164548",
+          "attempt_rows_considered": 2,
+          "attempts_with_signals": 0,
+          "signal_count": 0,
+          "category_counts": {},
+          "severity_counts": {},
+          "ledger_field_counts": {},
+          "signal_examples": [],
+          "observability_note": "Numeric consistency summary surfaces persisted NC advisory text only; owner classification remains external to this summary."
+        }
+      }
+    },
+    "session_lineage": {
+      "plain_log_token": "20260428_164547",
+      "structured_session_id": "20260428_164548",
+      "status": "split_mapped"
+    },
+    "operational_metadata": {
+      "status": "ok",
+      "latest_session_id": "20260428_164548",
+      "stage2_live_session": {
+        "status": "ok",
+        "attempt_count": 2,
+        "episode_count": 2,
+        "episodes": [
+          1,
+          2
+        ],
+        "latest_ep": 2,
+        "latest_final_verdict": "PASS",
+        "session_decision_count": 6,
+        "ui_event_count": 6,
+        "attempt_key_coverage": {
+          "present": 2,
+          "total": 2,
+          "status": "ok"
+        },
+        "artifact_path_coverage": {
+          "present": 2,
+          "total": 2,
+          "status": "ok"
+        },
+        "selection_reason_coverage": {
+          "present": 2,
+          "total": 2,
+          "status": "ok"
+        },
+        "verdict_reason_coverage": {
+          "present": 2,
+          "total": 2,
+          "status": "ok"
+        },
+        "decision_attempt_key_coverage": {
+          "present": 6,
+          "total": 6,
+          "status": "ok"
+        },
+        "decision_artifact_path_coverage": {
+          "present": 2,
+          "total": 6,
+          "status": "partial"
+        },
+        "carryover_authority_event_count": 2,
+        "latest_carryover_authority": {
+          "start_location": "여의도 H증권사 본점 VIP 프라이빗 룸",
+          "start_inventory_count": 3,
+          "start_inventory_preview": [
+            "SW인베스트먼트 법인 인감도장",
+            "해외선물 전용 법인 계좌 보안카드(OTP)",
+            "WTI 선물 거래 약관 동의서 사본"
+          ],
+          "end_location": "여의도 H증권사 본점 VIP 프라이빗 룸",
+          "end_inventory_count": 2,
+          "end_inventory_preview": [
+            "SW인베스트먼트 법인 인감도장",
+            "해외선물 전용 법인 계좌 보안카드(OTP)"
+          ],
+          "start_total_assets": "20억 원",
+          "start_capital": "20억 원",
+          "start_portfolio_position": "WTI 매수 진입 대기",
+          "end_total_assets": "23억 원 (미실현 수익 포함)",
+          "end_capital": "5억 원 (잔여 현금)",
+          "end_portfolio_position": "WTI 6월물 3배 레버리지 매수(Long) 홀딩",
+          "investment_calc_final_total_assets": 2300000000,
+          "investment_calc_final_cash": 500000000,
+          "semantic_carryover_keys": [
+            "relationship_rationale",
+            "growth_justification",
+            "foreshadow_anchors",
+            "continuity_checkpoints"
+          ],
+          "continuity_checkpoint_count": 2,
+          "cross_stage_authority_packet_present": 1,
+          "cross_stage_authority_packet_version": "cross_stage_authority_packet.v1"
+        }
+      },
+      "stage3_live_session": {
+        "status": "ok",
+        "attempt_count": 3,
+        "episode_count": 3,
+        "episodes": [
+          1,
+          2,
+          3
+        ],
+        "latest_ep": 3,
+        "latest_final_verdict": "PASS",
+        "session_decision_count": 3,
+        "ui_event_count": 24,
+        "attempt_key_coverage": {
+          "present": 3,
+          "total": 3,
+          "status": "ok"
+        },
+        "artifact_path_coverage": {
+          "present": 3,
+          "total": 3,
+          "status": "ok"
+        },
+        "selection_reason_coverage": {
+          "present": 3,
+          "total": 3,
+          "status": "ok"
+        },
+        "verdict_reason_coverage": {
+          "present": 3,
+          "total": 3,
+          "status": "ok"
+        },
+        "decision_attempt_key_coverage": {
+          "present": 3,
+          "total": 3,
+          "status": "ok"
+        },
+        "decision_artifact_path_coverage": {
+          "present": 3,
+          "total": 3,
+          "status": "ok"
+        },
+        "source_anchor_summary_count": 3,
+        "source_anchor_ui_event_count": 3,
+        "latest_source_anchor_summary": {
+          "blueprint_window_count": 2,
+          "previous_blueprint_ep": 2,
+          "previous_blueprint_end_location": "본가 복도",
+          "previous_blueprint_opening_transition_type": "direct_continuation",
+          "semantic_carryover_keys": [
+            "relationship_rationale",
+            "growth_justification",
+            "foreshadow_anchors",
+            "continuity_checkpoints"
+          ],
+          "continuity_checkpoint_count": 3,
+          "anchor_surfaces": [
+            "prev_blueprint_end_location",
+            "prev_blueprint_opening_transition",
+            "semantic_carryover"
+          ]
+        }
+      },
+      "stage4_live_session": {
+        "status": "ok",
+        "attempt_count": 2,
+        "episode_count": 2,
+        "episodes": [
+          1,
+          2
+        ],
+        "latest_ep": 2,
+        "latest_final_verdict": "PASS",
+        "retry_exercised": false,
+        "patch_exercised": true,
+        "patch_attempt_count": 1,
+        "fallback_patch_count": 0,
+        "pass_count": 2,
+        "session_scope": {
+          "session_id": "20260428_164548",
+          "start_ep": 1,
+          "target_ep": 2,
+          "total_planned_ep": 3
+        },
+        "target_ep_reached": true,
+        "stage4_complete_emitted": true,
+        "post_pass_contract_signal_count": 2,
+        "non_exercised_reasons": [
+          "stage4_retry_not_needed_round1_pass"
+        ]
+      }
+    }
+  },
+  "run_scope": {
+    "status": "scoped",
+    "engine_run_id": "",
+    "latest_session_id": "20260428_164548",
+    "summary_tag": "stage2_complete",
+    "summary_timestamp": "2026-04-28 17:44:34",
+    "basis": [
+      "proof_digest.latest_session_id"
+    ],
+    "authority_role": "companion_snapshot"
+  },
+  "freshness": {
+    "status": "scoped",
+    "basis": [
+      "proof_digest.latest_session_id"
+    ],
+    "engine_run_id_present": false,
+    "latest_session_id_present": true,
+    "operator_guidance_only": true
+  }
+}
