@@ -2,7 +2,7 @@
 
 Date: 2026-04-26
 Track: system
-Status: implementation-in-progress (T0-T5 realized; T6 proposal store added; T7 projection and continuity canary set added; T8 strict 1-arc smoke passed; T9-A~C realized; T9-D/E/F/G/H guardrails added, including hard runtime worker kill shell; strict 5-arc pending)
+Status: implementation-in-progress (T0-T5 realized; T6 proposal store added; T7 projection and continuity canary set added; T8 strict 1-arc smoke passed; T9-A~C realized; T9-D/E/F/G/H guardrails added, including hard runtime worker kill shell; T10 person fact-lock advisory patch staged; strict 5-arc pending)
 Canonical Path: `docs/2026-04-26/frontier-lag-clean-5arc-stabilization-execution-ssot.md`
 Temp Mirror Path: `docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md`
 Commit State:
@@ -1074,3 +1074,65 @@ Validation:
 - `python -X utf8 scripts/check_utf8_hygiene.py modules/domain/agents/three_phase_blueprint_runtime.py tests/test_blueprint_patch_mode.py docs/2026-04-28/auto-frontier-lag-2arc-runtime-analysis-ssot.md benchmarks/benchmark_index.csv` -> passed
 
 Estimated operational confidence: 96% for the blocker classification and retry-feedback patch.
+
+## 9.10 Person Fact-Lock Advisory Patch and Diagnostic Closure
+
+Date: 2026-04-28
+Baseline: `96cb34d1ef8708b2e30b8f1550fa394e4e9cd3da`
+Branch: `codex/frontier-lag-2arc-rerun-proof`
+Target project: `projects/auto_frontier_post_recipe_probe_20260428_2arc`
+
+### Diagnostic Result
+
+The bounded rerun was stopped after diagnostic evidence was sufficient. This is not a full auto-frontier proof closure and does not close GitHub #57.
+
+- The watchdog/provider-wait layer was no longer the observed blocker.
+- Stage 2 reached the second arc setup, but Stage 3 entered repeated person-role fact-lock churn.
+- Ep4 repeatedly treated generic role phrases such as `국가 대표` and `법인 대표` as hard person facts, then forced regenerate-only routing when the model used variants such as `SW인베스트먼트의 대표`.
+- Ep5 repeated the same shape with `경고하는 PB` versus a concrete PB name.
+- Director often produced PASS-like or locally fixable outcomes, but Python binding routing converted the issue into regenerate pressure.
+
+### Execution Decision
+
+Result: PASS WITH NARROW MERGE CANDIDATE.
+
+- `fact_lock_person` must remain collectible evidence for Director review.
+- `fact_lock_person` must not be a hard binding prevalidation category or Stage 3 regenerate-only category.
+- Generic Korean role phrases must not be promoted into locked person anchors.
+- Broader Director/runtime route separation remains a follow-up authority refactor, not a prerequisite for this narrow patch.
+
+Implementation status: staged in `96cb34d1`.
+
+- `modules/domain/agents/unified_blueprint_validator.py`: person fact-lock issues remain advisory and no longer force binding prevalidation escalation.
+- `modules/domain/agents/three_phase_blueprint_runtime.py`: person fact-lock no longer belongs to Stage 3 regenerate-only binding categories.
+- `modules/domain/agents/blueprint_constraint_compiler.py`: generic role phrases are filtered before becoming person anchors.
+- Regression tests cover real person substitution, generic representative phrases, and legacy generic anchors.
+
+### 3-Pass Post-Run Audit
+
+Pass 1 - fact extraction: PASS.
+
+- The run evidence points to repeated person-role hard-binding churn, not a provider wait stall.
+- The run was intentionally stopped after diagnostic sufficiency, so its evidence supports a blocker patch but not an objective proof claim.
+
+Pass 2 - authority/governance: PASS.
+
+- The patch aligns with the workspace invariant that Python collects evidence while Director owns semantic judgment.
+- The patch removes Python hard authority for person fact-locks without disabling evidence capture.
+
+Pass 3 - merge readiness: PASS WITH RESIDUAL PROOF GAP.
+
+- Merge this branch as a narrow authority-correction patch.
+- Keep `frontier-lag-clean-5arc-stabilization` active until a later bounded full auto-frontier proof reaches the requested boundary.
+- The next proof run should happen after the patch is on `main` and only with explicit runtime/cost caps.
+
+Validation:
+
+- `python -m py_compile modules/domain/agents/blueprint_constraint_compiler.py modules/domain/agents/unified_blueprint_validator.py modules/domain/agents/three_phase_blueprint_runtime.py` -> passed
+- `python -m pytest tests/test_stage3_npc_capital_carryforward_guardrail.py -q` -> 58 passed
+- `python -m pytest tests/test_stage23_stage4_readiness_wave1.py -k "binding or fact_lock" -q` -> 3 passed, 8 deselected
+- `python -m pytest tests/test_blueprint_patch_mode.py -k "binding_prevalidation or candidate_disqualified" -q` -> 8 passed, 90 deselected
+- `python -m pytest tests/test_unified_blueprint_validator_lane_c.py -k "binding_prevalidation or fact_lock" -q` -> 1 passed, 59 deselected
+- `python -m pytest tests/test_stage3_orchestrator_handle_success_lane_c.py -q` -> 4 passed
+
+Estimated operational confidence: 96% for the diagnostic blocker classification and narrow merge direction.

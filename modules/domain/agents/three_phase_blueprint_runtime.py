@@ -37,7 +37,6 @@ _STAGE3_REGENERATE_ONLY_BINDING_CATEGORIES = {
     "fact_lock_item",
     "fact_lock_location",
     "fact_lock_provenance",
-    "fact_lock_person",
     "opening_anchor",
     "mission_clarity",
     "timeline_specificity",

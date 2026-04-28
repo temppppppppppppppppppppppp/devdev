@@ -70,7 +70,6 @@ _BINDING_PREVALIDATION_CATEGORIES = {
     "fact_lock_item",
     "fact_lock_location",
     "fact_lock_provenance",
-    "fact_lock_person",
     "opening_anchor",
     "mission_clarity",
     "timeline_specificity",
@@ -87,6 +86,45 @@ _BINDING_PREVALIDATION_REGENERATE_CATEGORIES = set(_BINDING_PREVALIDATION_CATEGO
 # 아니라 type 라벨만 정규화하면 되는 1-line 수정 가능 케이스이다. 다른 binding category가
 # 동시에 firing되지 않고 opening_transition alias가 유일한 binding 위반이면 inplace 허용.
 _BINDING_PREVALIDATION_INPLACE_ALIAS_CATEGORIES = frozenset({"opening_transition"})
+_GENERIC_PERSON_ROLE_NAMES = frozenset(
+    {
+        "국가",
+        "국대",
+        "법인",
+        "회사",
+        "기업",
+        "기관",
+        "시장",
+        "투자",
+        "금융",
+        "전용",
+        "고객",
+        "사업",
+        "해외",
+        "국내",
+        "그룹",
+    }
+)
+_GENERIC_PERSON_ROLE_NAME_SUFFIXES = (
+    "의",
+    "으로",
+    "하며",
+    "하게",
+    "하고",
+    "하자",
+    "에서",
+    "에게",
+    "부터",
+    "까지",
+    "처럼",
+)
+
+
+def _is_generic_person_role_name_token(name: str) -> bool:
+    token = str(name or "").strip()
+    return not token or token in _GENERIC_PERSON_ROLE_NAMES or any(
+        token.endswith(suffix) for suffix in _GENERIC_PERSON_ROLE_NAME_SUFFIXES
+    )
 
 
 _TEMPORAL_DEICTIC_RE = re.compile(r"(\d+)\s*(?:년|개월|달|주|일)\s*(?:전|후|뒤)")
@@ -2452,12 +2490,17 @@ class UnifiedBlueprintValidator:
                     if len(parts) >= 2 and integrated:
                         locked_name = parts[0].strip()
                         locked_role = parts[1].strip()
+                        if _is_generic_person_role_name_token(locked_name):
+                            continue
                         if locked_name and locked_role and locked_name not in integrated:
-                            competing_re = re.compile(r"([가-힣]{2,4})\s*" + re.escape(locked_role))
+                            competing_re = re.compile(
+                                r"(?<![가-힣])([가-힣]{2,4})\s*" + re.escape(locked_role)
+                            )
                             competing = {
                                 match.group(1).strip()
                                 for match in competing_re.finditer(integrated)
                                 if match.group(1).strip() != locked_name
+                                and not _is_generic_person_role_name_token(match.group(1).strip())
                             }
                             if competing:
                                 issues.append(

@@ -646,7 +646,9 @@ def _collect_fact_lock_person_anchors(
         "교수",
         "의사",
     )
-    role_re = re.compile(r"([가-힣]{2,4})\s*(" + "|".join(re.escape(s) for s in role_suffixes) + r")")
+    role_re = re.compile(
+        r"(?<![가-힣])([가-힣]{2,4})\s*(" + "|".join(re.escape(s) for s in role_suffixes) + r")"
+    )
     false_role_names = {
         "나는",
         "나도",
@@ -662,8 +664,24 @@ def _collect_fact_lock_person_anchors(
         "하지만",
         "그리고",
         "내일은",
+        "국가",
+        "국대",
+        "법인",
+        "회사",
+        "기업",
+        "기관",
+        "시장",
+        "투자",
+        "금융",
+        "전용",
+        "고객",
+        "사업",
+        "해외",
+        "국내",
+        "그룹",
     }
     false_role_name_suffixes = (
+        "의",
         "으로",
         "하며",
         "하게",
