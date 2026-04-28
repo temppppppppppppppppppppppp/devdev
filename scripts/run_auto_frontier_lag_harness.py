@@ -76,6 +76,7 @@ PROVIDER_RESPONSE_WAIT_END_MARKERS = (
     "HTTP Request:",
     "response_closed.complete",
 )
+SILENTPASS_AGENT_CALL_RE = re.compile(r"\[SilentPass:Agent\] call_(start|success|failure) agent=([^\s]+)")
 ACTIVE_FRONTIER_WAIT_MARKERS = (
     "[Preflight] 병렬 분석 시작",
     "[Preflight] arc_drive 완료",
@@ -1208,7 +1209,7 @@ def capture_poll_snapshot(
     operational_attempt_cap: int = DEFAULT_OPERATIONAL_ATTEMPT_CAP,
 ) -> dict[str, Any]:
     session_log = resolve_active_session_log(project_root)
-    log_tail = _tail_text(session_log, max_lines=20)
+    log_tail = _tail_text(session_log, max_lines=80)
     stage3_attempts, stage4_attempts, director_stage3_rows, director_stage4_rows = _read_attempt_counts(project_root)
     runtime_summary = _read_json(project_root / "logs" / "runtime_audit_summary.json")
     manifest = _read_json(project_root / "logs" / "auto_frontier_lag_harness_manifest.json")
@@ -1278,6 +1279,22 @@ def detect_provider_response_wait(log_tail: list[str]) -> bool:
     return last_start_index >= 0 and last_start_index > last_end_index
 
 
+def detect_silentpass_agent_wait(log_tail: list[str]) -> bool:
+    """Return true when an LLM agent call has started and not yet finished."""
+    active_agents: set[str] = set()
+    for raw_line in log_tail:
+        line = str(raw_line or "")
+        match = SILENTPASS_AGENT_CALL_RE.search(line)
+        if not match:
+            continue
+        event, agent = match.groups()
+        if event == "start":
+            active_agents.add(agent)
+        else:
+            active_agents.discard(agent)
+    return bool(active_agents)
+
+
 def detect_active_frontier_wait(snapshot: dict[str, Any]) -> bool:
     """Return true for known long-running frontier phases that can be quiet between logs."""
     if not snapshot.get("process_alive"):
@@ -1337,6 +1354,8 @@ def classify_poll_transition(previous: dict[str, Any], current: dict[str, Any], 
     if current.get("prompt_blocked"):
         return "waiting_prompt", 0
     if detect_provider_response_wait(current.get("session_log_tail", [])):
+        return "provider_wait", 0
+    if detect_silentpass_agent_wait(current.get("session_log_tail", [])):
         return "provider_wait", 0
     if current.get("process_alive"):
         idle_windows += 1
