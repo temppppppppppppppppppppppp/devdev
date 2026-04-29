@@ -514,6 +514,204 @@ def test_build_genre_strategy_contract_keeps_verdict_authority_out_of_python():
     assert contract["authority_level"] != "verdict"
 
 
+def test_resolve_blueprint_ensemble_genre_uses_style_guide_when_bible_genre_absent():
+    agent = _make_agent()
+
+    def load_anchor(name):
+        if name == "bible":
+            return {"MasterBible": {"ProjectData": {"MetaInfo": {}}}}
+        if name == "style_guide":
+            return {"genre": "investment"}
+        return {}
+
+    agent.context.db.load_anchor.side_effect = load_anchor
+
+    assert agent._resolve_blueprint_ensemble_genre() == GenreTypes.INVESTMENT
+
+
+def test_resolve_blueprint_ensemble_genre_uses_nested_bible_archetype_when_style_guide_absent():
+    agent = _make_agent()
+
+    def load_anchor(name):
+        if name == "bible":
+            return {
+                "MasterBible": {
+                    "ProjectData": {
+                        "MetaInfo": {
+                            "genre_archetype": "investment + 회귀물 + 패밀리오피스 통제권 장악",
+                        }
+                    }
+                }
+            }
+        if name == "style_guide":
+            return {}
+        return {}
+
+    agent.context.db.load_anchor.side_effect = load_anchor
+
+    assert agent._resolve_blueprint_ensemble_genre() == GenreTypes.INVESTMENT
+
+
+def test_resolve_blueprint_ensemble_genre_uses_stage0_style_guide_file_fallback(tmp_path):
+    agent = _make_agent(tmp_path)
+    style_dir = tmp_path / "stage0_output"
+    style_dir.mkdir()
+    (style_dir / "style_guide.json").write_text('{"genre": "investment"}', encoding="utf-8")
+    agent.context.db.load_anchor.return_value = {}
+
+    assert agent._resolve_blueprint_ensemble_genre() == GenreTypes.INVESTMENT
+
+
+def test_resolve_blueprint_ensemble_genre_defaults_to_wuxia_without_genre_signal():
+    agent = _make_agent()
+    agent.context.db.load_anchor.return_value = {}
+
+    assert agent._resolve_blueprint_ensemble_genre() == GenreTypes.WUXIA
+
+
+def test_prepare_blueprint_ensemble_context_applies_style_guide_genre_contract_source():
+    agent = _make_agent()
+
+    def load_anchor(name):
+        if name == "bible":
+            return {"MasterBible": {"ProjectData": {"MetaInfo": {}}}}
+        if name == "style_guide":
+            return {"genre": "investment"}
+        return {}
+
+    agent.context.db.load_anchor.side_effect = load_anchor
+    agent._resolve_blueprint_arc_focus = MagicMock(return_value="ARC_FOCUS_PAYLOAD")
+    agent._format_constraints = MagicMock(return_value="CONSTRAINTS_PAYLOAD")
+    agent._format_prev_info_expanded = MagicMock(return_value="PREV_INFO_PAYLOAD")
+    agent._build_hud_context = MagicMock(return_value="HUD_PAYLOAD")
+    agent._get_or_create_context_cache = MagicMock(return_value={"cache_name": "cache/bp"})
+
+    context_bundle = agent._prepare_blueprint_ensemble_context(
+        ep_num=11,
+        arc_data={},
+        constraint_block={},
+        prev_blueprint=None,
+        prev_blueprints=None,
+        prev_manuscripts_text="",
+        state_tracker=None,
+    )
+    strategy = {"name": "action_focused", "display": "액션 중심", "directive": "전투, 추격, 대결 씬"}
+
+    prompt, _fallback, contract = agent._build_blueprint_prompt_bundle(
+        ep_num=11,
+        arc_focus=context_bundle["arc_focus"],
+        constraints_str=context_bundle["constraints_str"],
+        prev_info=context_bundle["prev_info"],
+        strategy=strategy,
+        protagonist_name="hero",
+        protagonist_instructions="do the thing",
+        extra_directive="",
+        hud_context=context_bundle["hud_context"],
+        pov_constraint="POV_CONSTRAINT",
+        reader_feedback="",
+        cache_name="",
+        genre=context_bundle["genre"],
+    )
+
+    assert context_bundle["genre"] == GenreTypes.INVESTMENT
+    assert contract["contract_id"] == "investment_business_power.action_focused.v1"
+    assert contract["authority_level"] == "route"
+    assert "investment_business_power.action_focused.v1" in prompt
+    assert "business execution pressure" in prompt
+    assert "전투, 추격, 대결 씬" not in prompt
+
+
+def test_generate_ensemble_style_guide_investment_adds_prompt_envelope_contract():
+    agent = _make_agent()
+
+    def load_anchor(name):
+        if name == "bible":
+            return {"MasterBible": {"ProjectData": {"MetaInfo": {}}}}
+        if name == "style_guide":
+            return {"genre": "investment"}
+        return {}
+
+    agent.context.db.load_anchor.side_effect = load_anchor
+    agent._resolve_blueprint_arc_focus = MagicMock(return_value="ARC_FOCUS_PAYLOAD")
+    agent._format_constraints = MagicMock(return_value="CONSTRAINTS_PAYLOAD")
+    agent._format_prev_info_expanded = MagicMock(return_value="PREV_INFO_PAYLOAD")
+    agent._build_hud_context = MagicMock(return_value="HUD_PAYLOAD")
+    agent._get_or_create_context_cache = MagicMock(return_value={"cache_name": "cache/bp"})
+    raw_candidates = [
+        {
+            "_strategy": "action_focused",
+            "_scene_count": 4,
+            "_length": 700,
+            "scene_breakdown": {"scene_1": {"summary": "투자 압박"}},
+            "integrated_scenario": "x" * 700,
+        }
+    ]
+    agent._run_blueprint_ensemble_workers = MagicMock(return_value=(raw_candidates, []))
+    agent._qualify_blueprint_candidates = MagicMock(return_value=(raw_candidates, []))
+    agent._finalize_blueprint_candidates = MagicMock(return_value=({"best": True}, raw_candidates))
+
+    agent.generate_ensemble(
+        ep_num=11,
+        arc_data={},
+        constraint_block={},
+        prev_blueprint=None,
+        single_strategy="action_focused",
+    )
+
+    envelope_meta = agent._finalize_blueprint_candidates.call_args.kwargs["prompt_envelope_meta"]
+    contract_meta = envelope_meta["genre_strategy_contracts"][0]
+    assert contract_meta["strategy_name"] == "action_focused"
+    assert contract_meta["contract_id"] == "investment_business_power.action_focused.v1"
+    assert contract_meta["authority_level"] == "route"
+
+
+def test_style_guide_investment_action_focused_final_candidate_preserves_contract_meta():
+    agent = _make_agent()
+    genre = GenreTypes.INVESTMENT
+    agent._ask_with_cached_context = MagicMock(
+        return_value='{"scene_breakdown": {}, "integrated_scenario": "scenario"}'
+    )
+    agent._extract_json_robust = MagicMock(
+        return_value={"scene_breakdown": {"scene_1": {"summary": "투자 압박"}}, "integrated_scenario": "scenario"}
+    )
+    agent._sanitize_blueprint_candidate = MagicMock(
+        return_value={
+            "_strategy": "action_focused",
+            "_qualified": True,
+            "_scene_count": 4,
+            "_length": 700,
+            "scene_breakdown": {"scene_1": {"summary": "투자 압박"}},
+            "integrated_scenario": "x" * 700,
+        }
+    )
+
+    candidate = agent._generate_single(
+        ep_num=11,
+        arc_focus="ARC_FOCUS_PAYLOAD",
+        constraints_str="CONSTRAINTS_PAYLOAD",
+        tactical_excerpt="",
+        prev_info="PREV_INFO_PAYLOAD",
+        strategy={"name": "action_focused", "display": "액션 중심", "directive": "전투, 추격, 대결 씬"},
+        protagonist_name="hero",
+        protagonist_config={},
+        hud_context="HUD_PAYLOAD",
+        genre=genre,
+    )
+    _, all_candidates = agent._finalize_blueprint_candidates(
+        [candidate],
+        [],
+        ep_num=11,
+        arc_data={"arc_no": 1},
+        attempt_num=1,
+    )
+
+    contract = all_candidates[0]["_ensemble_meta"]["genre_strategy_contract"]
+    assert contract["contract_id"] == "investment_business_power.action_focused.v1"
+    assert contract["authority_level"] == "route"
+    assert contract["factsheet_mutation"] is False
+    assert contract["material_mutation"] is False
+
+
 def test_request_blueprint_generation_preserves_genre_strategy_contract_hash():
     agent = _make_agent()
     contract = build_genre_strategy_contract(GenreTypes.INVESTMENT, "action_focused")
