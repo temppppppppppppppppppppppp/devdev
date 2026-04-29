@@ -3367,6 +3367,34 @@ class TestRecordS4Attempt:
 
         assert hydrated == {}
 
+    def test_hydrate_persisted_stage4_previous_attempt_suppresses_hydration_after_settlement_failed_row(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        settlement_failed_row = {
+            "ep_num": 2,
+            "arc_num": 1,
+            "attempt_key": "s4:ep2:arc1:a2:sess-stage4",
+            "verdict": "SETTLEMENT_FAILED",
+            "advisory_flags": {},
+        }
+        reject_row = {
+            "ep_num": 2,
+            "arc_num": 1,
+            "attempt_key": "s4:ep2:arc1:a1:sess-stage4",
+            "verdict": "REJECT",
+            "advisory_flags": {},
+        }
+        ctx.current_project.db.get_stage_attempts_for_arc.return_value = [settlement_failed_row, reject_row]
+
+        hydrated = ir.hydrate_persisted_stage4_previous_attempt(
+            next_ep=2,
+            arc_num=1,
+            previous_attempt=None,
+        )
+
+        assert hydrated == {}
+
     def test_hydrate_persisted_stage4_previous_attempt_filters_current_session(self):
         ctx = _make_ctx()
         ctx.current_project.metrics_session_id = "sess-current"

@@ -185,6 +185,7 @@ class TestProcessPassResult:
         status_payloads = self._settlement_status_payloads(pp)
         assert status_payloads[-1]["settlement_status"] == "primary_db_failed"
         assert status_payloads[-1]["manuscript_persisted"] is False
+        pp.ctx.current_project.save_episode_blueprint.assert_not_called()
 
     def test_settlement_failure_demotes_pre_settlement_pass_attempt(self, tmp_path):
         pp = self._make_pp()
@@ -213,6 +214,7 @@ class TestProcessPassResult:
             settlement_status="primary_db_failed",
             detail="",
         )
+        pp.ctx.current_project.save_episode_blueprint.assert_not_called()
 
     def test_returns_false_and_logs_when_meta_save_fails(self, tmp_path):
         pp = self._make_pp()
@@ -251,6 +253,7 @@ class TestProcessPassResult:
         assert status_payloads[-1]["settlement_status"] == "primary_persisted_meta_failed"
         assert status_payloads[-1]["manuscript_persisted"] is True
         assert status_payloads[-1]["fully_settled"] is False
+        pp.ctx.current_project.save_episode_blueprint.assert_not_called()
 
     def test_returns_false_when_settlement_packet_save_fails(self, tmp_path):
         pp = self._make_pp()
@@ -291,6 +294,7 @@ class TestProcessPassResult:
         assert status_payloads[-1]["settlement_packet_persisted"] is False
         pp._write_human_facing_manuscript_export.assert_not_called()
         pp._finalize_pass_result_session.assert_not_called()
+        pp.ctx.current_project.save_episode_blueprint.assert_not_called()
 
     def test_returns_false_when_human_facing_export_fails(self, tmp_path):
         pp = self._make_pp()
@@ -331,6 +335,7 @@ class TestProcessPassResult:
         assert status_payloads[-1]["settlement_packet_persisted"] is True
         assert status_payloads[-1]["human_export_persisted"] is False
         pp._finalize_pass_result_session.assert_not_called()
+        pp.ctx.current_project.save_episode_blueprint.assert_not_called()
 
     def test_post_settlement_side_effects_run_only_after_fully_settled_status(self, tmp_path):
         pp = self._make_pp()
@@ -372,6 +377,42 @@ class TestProcessPassResult:
             ("memory", None),
             ("finalize", None),
         ]
+
+    def test_fully_settled_pass_marks_downstream_blueprints_for_revalidation(self, tmp_path):
+        pp = self._make_pp()
+        saved_blueprints = {}
+        pp.ctx.current_project.get_blueprint.side_effect = lambda ep: {
+            4: {"ep_num": 4, "summary": "future ep4"},
+            5: {"ep_num": 5, "summary": "future ep5"},
+        }.get(ep)
+        pp.ctx.current_project.save_episode_blueprint.side_effect = lambda ep, bp: saved_blueprints.setdefault(ep, bp)
+        pp._save_pass_result_primary_db = MagicMock(return_value=True)
+        pp._save_pass_result_quality_sidecars = MagicMock(return_value={})
+        pp._run_pass_result_post_pass_pipeline = MagicMock(
+            return_value={"actual_truth": {"location": "gate"}, "bible_delta": {}, "meta_save_failed": False}
+        )
+        pp._persist_stage4_settlement_packet = MagicMock(return_value=tmp_path / "ep_0003.settlement.json")
+        pp._write_human_facing_manuscript_export = MagicMock()
+        pp._run_pass_result_local_side_effects = MagicMock()
+        pp.post_pass_runtime._memorize_and_validate = MagicMock()
+        pp._finalize_pass_result_session = MagicMock()
+
+        result = pp.process_pass_result(
+            next_ep=3,
+            final_manuscript="settled manuscript " * 200,
+            final_title="title",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1, "ep_end": 5},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        assert set(saved_blueprints) == {4, 5}
+        assert saved_blueprints[4]["_frontier_status"]["status"] == "requires_actual_manuscript_revalidation"
+        assert saved_blueprints[5]["_frontier_status"]["evidence"]["accepted_ep"] == 3
 
     def test_hud_update_called(self, tmp_path):
         pp = self._make_pp()
