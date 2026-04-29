@@ -101,6 +101,32 @@ def test_build_patch_with_feedback_director_feedback_appends_history_and_fix_pac
     assert "[fix-pack]" in result
 
 
+def test_build_fix_pack_guidance_includes_patch_target_records():
+    writer = _make_writer()
+
+    result = writer._build_fix_pack_guidance(
+        {
+            "patch_targets": ["scene_1"],
+            "patch_target_records": [
+                {
+                    "summary": "opening transition",
+                    "scene_id": "scene_1",
+                    "target_kind": "scene_boundary",
+                    "paragraph_span": {"start": 1, "end": 3},
+                }
+            ],
+            "must_fix": ["make the opening bridge explicit"],
+            "target_kind": "scene_boundary",
+        }
+    )
+
+    assert "patch_target_records" in result
+    assert "summary=opening transition" in result
+    assert "scene_id=scene_1" in result
+    assert "target_kind=scene_boundary" in result
+    assert "paragraph_span=1-3" in result
+
+
 def test_patch_with_feedback_shell_uses_extracted_patch_helpers():
     writer = _make_writer()
     writer.generate_ensemble.return_value = [{"manuscript": "patched"}]

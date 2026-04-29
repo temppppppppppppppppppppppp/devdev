@@ -78,6 +78,11 @@ class AttemptRecord:
     downstream_override_applied: bool = False
     primary_failure_layer: str = ""
     strong_advisory_escalation: dict[str, Any] = field(default_factory=dict)
+    runtime_route_payload_version: str = ""
+    runtime_route_verdict: str = ""
+    runtime_route_action: str = ""
+    runtime_route_reason: str = ""
+    runtime_route_taxonomy: str = ""
 
 
 @dataclass
@@ -314,6 +319,11 @@ class PassRateMonitor:
         downstream_override_applied: bool = False,
         primary_failure_layer: str = "",
         strong_advisory_escalation: dict[str, Any] | None = None,
+        runtime_route_payload_version: str = "",
+        runtime_route_verdict: str = "",
+        runtime_route_action: str = "",
+        runtime_route_reason: str = "",
+        runtime_route_taxonomy: str = "",
     ):
         """
         시도 기록
@@ -369,6 +379,11 @@ class PassRateMonitor:
             downstream_override_applied=bool(downstream_override_applied),
             primary_failure_layer=str(primary_failure_layer or ""),
             strong_advisory_escalation=dict(strong_advisory_escalation or {}),
+            runtime_route_payload_version=str(runtime_route_payload_version or ""),
+            runtime_route_verdict=str(runtime_route_verdict or ""),
+            runtime_route_action=str(runtime_route_action or ""),
+            runtime_route_reason=str(runtime_route_reason or ""),
+            runtime_route_taxonomy=str(runtime_route_taxonomy or ""),
         )
 
         with self._lock:

@@ -8,6 +8,7 @@ import re
 
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 from modules.core.hud_utils import get_hud_trend_safe as _get_hud_trend_safe_shared
+from modules.core.writer_template import create_writer_template
 
 # [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
 try:
@@ -177,9 +178,6 @@ class ChiefWriterContextBuilder:
         current_martial_arts = current_martial_arts or []
         dead_npcs = dead_npcs or []
 
-        scene_breakdown, integrated_scenario_advisory, ending_hook, opening_anchor_section = (
-            self._extract_blueprint_sections(blueprint)
-        )
         (
             bible_root,
             core_identity,
@@ -188,6 +186,13 @@ class ChiefWriterContextBuilder:
             incarnation_type,
         ) = self._extract_bible_context(master_bible)
         genre_code = self._resolve_genre_code(genre_name, bible_root)
+        scene_breakdown, integrated_scenario_advisory, ending_hook, opening_anchor_section = (
+            self._extract_blueprint_sections(
+                blueprint,
+                prev_manuscript=prev_manuscript,
+                genre_code=genre_code,
+            )
+        )
 
         packet_sections = self.context_packets.build_common_context_packets(
             ep_num=ep_num,
@@ -289,7 +294,13 @@ class ChiefWriterContextBuilder:
             else "",
         )
 
-    def _extract_blueprint_sections(self, blueprint: dict) -> tuple[str, str, str, str]:
+    def _extract_blueprint_sections(
+        self,
+        blueprint: dict,
+        *,
+        prev_manuscript: str = "",
+        genre_code: str = "wuxia",
+    ) -> tuple[str, str, str, str]:
         scene_breakdown = ""
         integrated_scenario_advisory = ""
         ending_hook = ""
@@ -300,6 +311,17 @@ class ChiefWriterContextBuilder:
         scenes = blueprint.get("scene_breakdown", {})
         if isinstance(scenes, dict):
             scene_breakdown = json.dumps(scenes, ensure_ascii=False, indent=2)
+            try:
+                template_builder = create_writer_template(genre=genre_code or "wuxia")
+                template = template_builder.generate_template(
+                    blueprint=blueprint,
+                    prev_ending=str(prev_manuscript or "")[-600:],
+                )
+                if getattr(template, "slots", None):
+                    scene_execution_contract = template_builder.generate_prompt_injection(template)
+                    scene_breakdown = f"{scene_breakdown}\n\n{scene_execution_contract}"
+            except Exception as exc:
+                logging.debug("[Stage4] scene execution contract injection skipped: %s", exc)
         integrated = blueprint.get("integrated_scenario_advisory", "") or blueprint.get("integrated_scenario", "")
         if integrated:
             integrated_scenario_advisory = (
@@ -316,6 +338,9 @@ class ChiefWriterContextBuilder:
         # [TF-2] Opening-Anchor Packet — blueprint에서 첫 씬 불변 계약 추출
         _start_loc = blueprint.get("start_location", "")
         _time_flow = blueprint.get("time_flow", "")
+        _opening_transition = blueprint.get("opening_transition", {})
+        if not isinstance(_opening_transition, dict):
+            _opening_transition = {}
         _scene_1 = {}
         if isinstance(scenes, dict):
             _scene_1 = scenes.get("scene_1") or next(iter(scenes.values()), {})
@@ -339,6 +364,14 @@ class ChiefWriterContextBuilder:
                 anchor_parts.append(f"- 첫 씬 세부 장소: {_s1_location}")
             if _time_flow:
                 anchor_parts.append(f"- 시간대: {_time_flow}")
+            _transition_type = str(_opening_transition.get("type", "") or "").strip()
+            if _transition_type:
+                anchor_parts.append(f"- opening_transition.type: {_transition_type}")
+            _transition_signals = _opening_transition.get("signals")
+            if isinstance(_transition_signals, list):
+                cleaned_signals = [str(item).strip() for item in _transition_signals if str(item).strip()]
+                if cleaned_signals:
+                    anchor_parts.append("- opening_transition.signals: " + ", ".join(cleaned_signals[:5]))
             if _s1_title:
                 anchor_parts.append(f"- 첫 씬 제목/목표: {_s1_title}")
             if _s1_summary:

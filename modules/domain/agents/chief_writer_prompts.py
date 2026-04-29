@@ -168,7 +168,8 @@ def build_chief_writer_main_prompt(
 
 ⚠️ 필수: scene anchor는 내부 기획 좌표다. 독자-facing 원고 본문에는 scene id, 제목, Markdown 헤더, 구조 라벨을 쓰지 마라.
    anchor별 분량은 균등 분배하지 말고 장면 밀도와 긴장에 맞춰 가변 배분하라.
-   장면 전환이 필요하면 산문 전환문이나 `* * *` 같은 중립 전환 마커만 사용하라.
+   major scene anchor 사이에는 반드시 산문 전환문 또는 `* * *` 같은 중립 전환 마커로 분리감을 만들어라.
+   단, `* * *`를 썼다면 직후 1~2문장 안에 바뀐 장소/시간/행동 상태를 산문으로 명시하라.
    후반부 anchor도 요약하지 말고, Blueprint의 핵심 의무가 독자 눈앞에서 보이게 써라.
 
 {scene_breakdown}
@@ -181,6 +182,7 @@ def build_chief_writer_main_prompt(
 
 직전 화 엔딩에서 자연스럽게 이어져야 한다. 위 다이제스트의 상태를 반드시 준수하라.
 단, 위 Opening Anchor가 있으면 Blueprint의 시작 장소/시간이 직전 화 종료 상태보다 우선한다.
+이 경우에도 첫 beat에서 직전 화 종료 상태와 Opening Anchor 사이의 이어짐 또는 장면 전환을 명시해야 한다.
 
 ⛔ [V69.1] 중복 서술 금지: 직전 화의 마지막 장면을 다시 서술하지 마라.
    직전 화가 끝난 바로 그 다음 순간부터 시작하라.
