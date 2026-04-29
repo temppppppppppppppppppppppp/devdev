@@ -133,6 +133,7 @@ PATCH_MODE_STRUCTURAL_PROMPT: |
   3. 앞뒤 boundary context와 자연스럽게 이어지도록 연결감을 맞추세요.
   4. target scene의 핵심 사건, 문체, 시점은 유지하고 필요한 부분만 보강하세요.
   5. 전체 구조, 전역 톤, pacing 전면 조정은 하지 마세요.
+  6. scene id, 제목, Markdown 헤더, 구조 라벨을 patched scene text에 넣지 마세요. target 좌표는 metadata로만 사용하세요.
 
   ## 문체 가이드
   {style_guide}
@@ -167,6 +168,7 @@ PATCH_MODE_STRUCTURAL_PROMPT: |
   주의:
   - target scene id key는 위 목록과 정확히 일치해야 합니다.
   - 수정하지 않은 scene id는 JSON에 넣지 마세요.
+  - patched scene text는 독자-facing 순수 원고여야 하며 Markdown 헤더를 포함하면 안 됩니다.
   - 코드블록, Markdown, 설명문을 추가하지 마세요.
 
 SATISFACTION_GUIDE_SECTION: |

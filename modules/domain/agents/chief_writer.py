@@ -1565,7 +1565,7 @@ class ChiefWriter(BaseAgent):
         if not feedback:
             return ""
         if self._is_scene_header_patch_feedback(feedback):
-            return "scene_header"
+            return "scene_boundary"
         for focus, keywords in self._STRUCTURAL_PATCH_LOCAL_HINTS.items():
             if any(keyword in feedback for keyword in keywords):
                 return focus
@@ -1590,118 +1590,6 @@ class ChiefWriter(BaseAgent):
                 "모든 씬을 헤더",
             )
         )
-
-    @staticmethod
-    def _scene_header_title(scene_id: str, scene_data: object, scene_index: int) -> str:
-        raw_title = ""
-        if isinstance(scene_data, dict):
-            for key in ("title", "scene_title", "name", "header"):
-                raw_title = str(scene_data.get(key, "") or "").strip()
-                if raw_title:
-                    break
-            if not raw_title:
-                for key in ("summary", "description", "goal", "objective"):
-                    raw_title = str(scene_data.get(key, "") or "").strip()
-                    if raw_title:
-                        break
-        elif scene_data:
-            raw_title = str(scene_data).strip()
-
-        title = " ".join(raw_title.split())
-        title = re.sub(r"^\s*#{1,6}\s*", "", title).strip()
-        title = re.sub(r"^\s*씬\s*\d+\s*[:\-]\s*", "", title).strip()
-        if not title:
-            title = str(scene_id or f"scene_{scene_index}").strip() or f"scene_{scene_index}"
-        return title[:40]
-
-    def _attempt_scene_header_insertion_patch(
-        self,
-        *,
-        original_manuscript: str,
-        director_feedback: str,
-        blueprint: dict | None,
-    ) -> list[dict] | None:
-        if not self._is_scene_header_patch_feedback(director_feedback):
-            return None
-        if not isinstance(blueprint, dict):
-            return None
-
-        scene_breakdown = blueprint.get("scene_breakdown", {})
-        if not isinstance(scene_breakdown, dict) or len(scene_breakdown) < 2:
-            return None
-
-        expected_count = len(scene_breakdown)
-        existing_headers = re.findall(
-            r"^\s*#{1,6}\s*씬\s*\d+\s*[:\-]",
-            str(original_manuscript or ""),
-            flags=re.MULTILINE,
-        )
-        if len({header.strip() for header in existing_headers}) >= expected_count:
-            return None
-
-        blocks, separator = self._split_manuscript_into_structural_blocks(
-            original_manuscript,
-            expected_blocks=expected_count,
-        )
-        if len(blocks) != expected_count:
-            return None
-
-        scene_items = list(scene_breakdown.items())
-        patched_blocks: list[str] = []
-        repair_trace: list[dict] = []
-        changed = False
-        header_re = re.compile(r"^\s*#{1,6}\s*씬\s*\d+\s*[:\-]", re.MULTILINE)
-        for idx, ((scene_id, scene_data), block) in enumerate(zip(scene_items, blocks, strict=False), start=1):
-            text = str(block or "").strip()
-            if header_re.search(text[:160]):
-                patched_blocks.append(text)
-                continue
-
-            title = self._scene_header_title(scene_id, scene_data, idx)
-            header = f"### 씬 {idx}: {title}"
-            patched_blocks.append(f"{header}\n\n{text}".strip())
-            changed = True
-            repair_trace.append(
-                {
-                    "target": str(scene_id or f"scene_{idx}"),
-                    "target_kind": "scene_header",
-                    "old_excerpt": text[:160],
-                    "new_excerpt": header,
-                    "why_changed": "insert missing manuscript scene header",
-                }
-            )
-
-        if not changed:
-            return None
-
-        merged_manuscript = str(separator or "\n\n").join(patched_blocks).strip()
-        if len(merged_manuscript) < 2000:
-            return None
-
-        _, patch_target_records = normalize_patch_target_records(
-            [scene_id for scene_id, _scene_data in scene_items],
-            stage="stage4",
-            container_kind="manuscript",
-            default_target_kind="scene_header",
-        )
-        self._set_last_inplace_patch_trace(
-            patch_strategy="inplace_patch_scene_headers",
-            patch_targets=[scene_id for scene_id, _scene_data in scene_items],
-            fallback_reason="",
-            focus="scene_header",
-            structural_attempted=True,
-            target_kind="scene_header",
-            patch_target_records=patch_target_records,
-            repair_trace=repair_trace,
-        )
-        return [
-            {
-                "manuscript": merged_manuscript,
-                "strategy": "inplace_patch_scene_headers",
-                "state_updates": {},
-                "patch_targets": [scene_id for scene_id, _scene_data in scene_items],
-            }
-        ]
 
     def _split_manuscript_into_structural_blocks(
         self,
@@ -1739,6 +1627,17 @@ class ChiefWriter(BaseAgent):
                 blocks.append("\n\n".join(chunk))
         return blocks, "\n\n"
 
+    @staticmethod
+    def _build_structural_block_paragraph_spans(blocks: list[str]) -> list[dict[str, int]]:
+        spans: list[dict[str, int]] = []
+        cursor = 1
+        for block in blocks:
+            paragraph_count = len([item for item in re.split(r"\n{2,}", str(block or "")) if item.strip()])
+            paragraph_count = max(1, paragraph_count)
+            spans.append({"start": cursor, "end": cursor + paragraph_count - 1})
+            cursor += paragraph_count
+        return spans
+
     def _select_structural_patch_targets(self, *, focus: str, slots: list, block_count: int) -> list[int]:
         if not slots or block_count <= 1:
             return []
@@ -1747,6 +1646,8 @@ class ChiefWriter(BaseAgent):
         last_idx = usable_count - 1
         middle_idx = min(max(1, usable_count // 2), last_idx)
 
+        if focus == "scene_boundary":
+            return list(range(usable_count))
         if focus == "opening":
             return [0]
         if focus == "ending":
@@ -1807,11 +1708,14 @@ class ChiefWriter(BaseAgent):
         if not target_indexes:
             return {}
 
+        target_kind = "scene_boundary" if focus == "scene_boundary" else "scene_block"
         target_scene_ids: list[str] = []
         target_payload_lines: list[str] = []
         boundary_lines: list[str] = []
         scene_plan_lines: list[str] = []
         target_index_map: dict[str, int] = {}
+        paragraph_spans = self._build_structural_block_paragraph_spans(blocks)
+        target_paragraph_spans: dict[str, dict[str, int]] = {}
 
         for idx, slot in enumerate(slots):
             scene_plan_lines.append(
@@ -1824,11 +1728,15 @@ class ChiefWriter(BaseAgent):
             scene_id = slot.scene_id
             target_scene_ids.append(scene_id)
             target_index_map[scene_id] = idx
+            target_paragraph_spans[scene_id] = paragraph_spans[idx] if idx < len(paragraph_spans) else {}
+            span = target_paragraph_spans[scene_id]
             target_payload_lines.append(
                 "\n".join(
                     [
                         f"[{scene_id}]",
                         f"type={slot.scene_type.value}",
+                        f"target_kind={target_kind}",
+                        f"paragraph_span={span.get('start', '?')}-{span.get('end', '?')}",
                         f"description={str(slot.description or '')[:160]}",
                         "required=" + ", ".join(str(item) for item in list(slot.required_elements or [])[:4]),
                         blocks[idx],
@@ -1856,6 +1764,8 @@ class ChiefWriter(BaseAgent):
             "separator": separator,
             "target_scene_ids": target_scene_ids,
             "target_index_map": target_index_map,
+            "target_kind": target_kind,
+            "target_paragraph_spans": target_paragraph_spans,
             "scene_plan": "\n".join(scene_plan_lines),
             "boundary_context": "\n\n".join(boundary_lines),
             "target_scene_payload": "\n\n".join(target_payload_lines),
@@ -1894,12 +1804,13 @@ class ChiefWriter(BaseAgent):
         if not plan:
             return None
 
+        target_kind = str(plan.get("target_kind") or "scene_block")
         self._set_last_inplace_patch_trace(
             patch_strategy="inplace_patch_structural",
             patch_targets=list(plan["target_scene_ids"]),
             focus=str(plan["focus"] or ""),
             structural_attempted=True,
-            target_kind="scene_block",
+            target_kind=target_kind,
         )
 
         def _esc(text: str) -> str:
@@ -1931,6 +1842,7 @@ class ChiefWriter(BaseAgent):
                 f"[ScenePlan]\n{plan['scene_plan']}\n\n"
                 f"[BoundaryContext]\n{plan['boundary_context']}\n\n"
                 f"[TargetScenes]\n{plan['target_scene_payload']}\n\n"
+                "Do not add scene ids, titles, Markdown headers, or structural labels to patched scene text.\n"
                 'Return JSON only: {"patched_blocks":{"scene_id":"patched text"}, "patch_state_updates": {...}}'
             )
 
@@ -1975,7 +1887,7 @@ class ChiefWriter(BaseAgent):
             repair_trace.append(
                 {
                     "target": scene_id,
-                    "target_kind": "scene_block",
+                    "target_kind": target_kind,
                     "old_excerpt": old_block[:240],
                     "new_excerpt": patch_text[:240],
                     "why_changed": " ".join(str(director_feedback or "").split())[:220],
@@ -2009,18 +1921,28 @@ class ChiefWriter(BaseAgent):
         if not isinstance(state_updates, dict):
             state_updates = {}
 
+        target_spans = plan.get("target_paragraph_spans", {}) if isinstance(plan.get("target_paragraph_spans"), dict) else {}
+        target_records_payload = [
+            {
+                "summary": scene_id,
+                "scene_id": scene_id,
+                "target_kind": target_kind,
+                "paragraph_span": target_spans.get(scene_id) if isinstance(target_spans.get(scene_id), dict) else {},
+            }
+            for scene_id in plan["target_scene_ids"]
+        ]
         _, patch_target_records = normalize_patch_target_records(
-            plan["target_scene_ids"],
+            target_records_payload,
             stage="stage4",
             container_kind="manuscript",
-            default_target_kind="scene_block",
+            default_target_kind=target_kind,
         )
         self._set_last_inplace_patch_trace(
             patch_strategy="inplace_patch_structural",
             patch_targets=list(plan["target_scene_ids"]),
             focus=str(plan["focus"] or ""),
             structural_attempted=True,
-            target_kind="scene_block",
+            target_kind=target_kind,
             patch_target_records=patch_target_records,
             repair_trace=repair_trace,
         )
@@ -2050,15 +1972,7 @@ class ChiefWriter(BaseAgent):
         structural_attempted = False
         fallback_reason = ""
 
-        scene_header_result = self._attempt_scene_header_insertion_patch(
-            original_manuscript=original_manuscript,
-            director_feedback=director_feedback,
-            blueprint=blueprint,
-        )
-        if scene_header_result:
-            return scene_header_result, "scene_header", "", True
-
-        if normalized_fix_pack.get("patch_targets"):
+        if normalized_fix_pack.get("patch_targets") and focus != "scene_boundary":
             self._set_last_inplace_patch_trace(
                 patch_strategy="inplace_patch",
                 patch_targets=list(normalized_fix_pack.get("patch_targets") or []),

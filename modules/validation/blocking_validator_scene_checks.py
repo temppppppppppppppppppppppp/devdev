@@ -133,7 +133,7 @@ class BlockingValidatorSceneChecks:
 
         return {"check": "scope_overflow", "passed": True}
 
-    # [pre-rerun] 마크다운 씬 헤더 패턴 (### 씬 1: ..., ## 씬 2: ..., # 씬 N ... 등)
+    # [pre-rerun] Legacy Markdown scene-header pattern. Final manuscript surface must not require it.
     _SCENE_HEADER_RE = re.compile(
         r"^#{1,3}\s+씬\s*(\d+)\s*[:\-]" r"?\s*(.*)",
         re.MULTILINE,
@@ -143,8 +143,8 @@ class BlockingValidatorSceneChecks:
         """
         [V59] 씬별 완성도 체크 - 각 씬이 최소 분량을 충족하는지 검증
 
-        1차: 원고 내 마크다운 씬 헤더(### 씬 N:)로 실제 씬 영역 측정
-        2차(fallback): 씬 헤더 없을 때만 키워드-윈도우 휴리스틱 사용
+        1차: legacy 마크다운 씬 헤더가 남아 있으면 artifact-side evidence로만 영역 측정
+        2차(fallback): visible header 없이 키워드-윈도우 휴리스틱 사용
         """
         # [TF-7-P0-05] blueprint=None/비정규 입력 fail-safe
         blueprint = context.get("blueprint")
@@ -161,8 +161,9 @@ class BlockingValidatorSceneChecks:
 
         min_scene_length = _threshold("scene.min_scene_length", 300)
 
-        # ── 1차: 마크다운 씬 헤더 기반 감지 ──
+        # ── 1차: legacy 마크다운 씬 헤더 기반 감지 ──
         header_matches = list(self._SCENE_HEADER_RE.finditer(manuscript))
+        used_visible_headers = bool(header_matches)
         if header_matches:
             scene_analysis = self._analyze_scenes_by_headers(
                 manuscript,
@@ -182,19 +183,35 @@ class BlockingValidatorSceneChecks:
         complete_scenes = sum(1 for s in scene_analysis if s["is_complete"])
         incomplete_scenes = [s for s in scene_analysis if not s["is_complete"] and s["found_length"] > 0]
 
-        # 50% 이상 씬이 미달이면 REJECT
+        # Visible headers are not a required contract. Headerless separation gaps stay Director advisory.
         if complete_scenes < scene_count * 0.5:
+            reason = f"씬 완성도 부족: {complete_scenes}/{scene_count} 씬만 완성 (최소 50% 필요)"
+            details = {
+                "complete_scenes": complete_scenes,
+                "total_scenes": scene_count,
+                "incomplete": [s["scene"] for s in incomplete_scenes],
+                "min_scene_length": min_scene_length,
+            }
+            if not used_visible_headers:
+                return {
+                    "check": "scene_completeness",
+                    "passed": True,
+                    "warning": reason + " (Director advisory)",
+                    "severity": "ADVISORY",
+                    "advisory_only": True,
+                    "authority": "director",
+                    "details": details,
+                    "suggestion": (
+                        "visible scene header를 본문에 삽입하지 말고, scene_id/paragraph span diagnostics를 "
+                        "Director 참고 evidence로 전달하세요."
+                    ),
+                }
             return {
                 "check": "scene_completeness",
                 "passed": False,
-                "reason": f"씬 완성도 부족: {complete_scenes}/{scene_count} 씬만 완성 (최소 50% 필요)",
+                "reason": reason,
                 "severity": "HIGH",
-                "details": {
-                    "complete_scenes": complete_scenes,
-                    "total_scenes": scene_count,
-                    "incomplete": [s["scene"] for s in incomplete_scenes],
-                    "min_scene_length": min_scene_length,
-                },
+                "details": details,
                 "suggestion": "각 씬에 충분한 분량(최소 300자)을 할당하세요. 특히 다음 씬이 부족합니다: "
                 + ", ".join([s["scene"] for s in incomplete_scenes[:3]]),
             }
@@ -217,7 +234,7 @@ class BlockingValidatorSceneChecks:
         blueprint_scene_count: int,
         min_scene_length: int,
     ) -> list[dict]:
-        """[pre-rerun] 마크다운 씬 헤더 사이 텍스트 길이로 씬 완성도 측정."""
+        """[pre-rerun] legacy 마크다운 씬 헤더 사이 텍스트 길이를 artifact evidence로 측정."""
         scene_analysis = []
         for i, match in enumerate(header_matches):
             scene_start = match.end()

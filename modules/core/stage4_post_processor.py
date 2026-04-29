@@ -67,8 +67,9 @@ class Stage4PostProcessor:
     }
 
     _SCENE_HEADER_LINE_RE = re.compile(
-        r"(?m)^\s*#{1,6}\s*씬\s*\d+\s*[:\-].*$"  # utf8-hygiene: allow-line -- regex uses literal ? token safely for scene-header normalization
+        "(?im)^\\s*#{1,6}\\s*(?:\\uc52c|scene)\\s*\\d+\\s*[:\\-].*$"
     )
+    _MARKDOWN_HEADER_LINE_RE = re.compile(r"(?m)^\s*#{1,6}\s+\S.*$")
     _STANDALONE_STAGE_CUE_RE = re.compile(r"(?m)^\s*\[([^\[\]\n]{1,160})\]\s*$")
 
     _PRESSURE_STOPWORDS = {
@@ -448,6 +449,7 @@ class Stage4PostProcessor:
             return "" if scene_index == 1 else "\n\n***\n\n"
 
         normalized = cls._SCENE_HEADER_LINE_RE.sub(_replace_scene_header, normalized)
+        normalized = cls._MARKDOWN_HEADER_LINE_RE.sub("", normalized)
 
         def _replace_stage_cue(match) -> str:
             inner = re.sub(r"\s+", " ", match.group(1)).strip()

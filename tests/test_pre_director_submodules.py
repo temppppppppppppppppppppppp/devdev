@@ -150,49 +150,50 @@ class TestSceneHeaderContract:
         result = checker._check_scene_header_contract("원고 텍스트", breakdown)
         assert result == []
 
-    def test_headers_present_pass(self, checker):
-        """씬 헤더가 모두 있으면 빈 리스트 (통과)."""
+    def test_headers_present_advisory_only(self, checker):
+        """Visible 씬 헤더는 최종 표면 계약상 advisory로만 남긴다."""
         breakdown = {f"scene_{i}": {"title": f"씬 {i}"} for i in range(1, 4)}
         ms = "### 씬 1: 시작\n본문\n### 씬 2: 전개\n본문\n### 씬 3: 결말\n본문"
         result = checker._check_scene_header_contract(ms, breakdown)
-        assert result == []
+        assert len(result) == 1
+        assert result[0].passed is True
+        assert result[0].severity == CheckSeverity.WARNING
+        assert "독자-facing 최종 원고" in result[0].message
 
-    def test_zero_headers_fail(self, checker):
-        """씬 헤더 0개면 FAIL."""
+    def test_zero_headers_allowed(self, checker):
+        """Visible 씬 헤더 부재는 정상 원고 표면이다."""
         breakdown = {f"scene_{i}": {"title": f"씬 {i}"} for i in range(1, 6)}
         ms = "그냥 긴 산문 블록입니다. " * 100
         result = checker._check_scene_header_contract(ms, breakdown)
-        assert len(result) == 1
-        assert result[0].passed is False
-        assert result[0].severity == CheckSeverity.FAIL
-        assert "0개 발견" in result[0].message
+        assert result == []
 
     def test_partial_headers_warning(self, checker):
-        """씬 헤더가 절반 미만이면 WARNING."""
+        """일부 visible 씬 헤더도 표면 정리 advisory로만 남긴다."""
         breakdown = {f"scene_{i}": {"title": f"씬 {i}"} for i in range(1, 6)}
         ms = "### 씬 1: 시작\n본문 " * 50
         result = checker._check_scene_header_contract(ms, breakdown)
         assert len(result) == 1
         assert result[0].passed is True
         assert result[0].severity == CheckSeverity.WARNING
+        assert "visible header" in result[0].message
 
     def test_two_of_five_headers_warning(self, checker):
-        """홀수 씬 개수에서는 2/5도 WARNING이어야 한다."""
+        """헤더 개수는 최소 요구량으로 승격하지 않는다."""
         breakdown = {f"scene_{i}": {"title": f"씬 {i}"} for i in range(1, 6)}
         ms = "### 씬 1: 시작\n본문\n### 씬 2: 전개\n본문"
         result = checker._check_scene_header_contract(ms, breakdown)
         assert len(result) == 1
         assert result[0].severity == CheckSeverity.WARNING
-        assert "최소 3개 이상 필요" in result[0].message
+        assert "metadata/span diagnostics" in result[0].message
 
     def test_duplicate_headers_do_not_count_as_distinct(self, checker):
-        """같은 씬 번호 반복은 고유 헤더 수를 늘리지 않아야 한다."""
+        """같은 씬 번호 반복은 advisory의 visible header 수를 늘리지 않아야 한다."""
         breakdown = {f"scene_{i}": {"title": f"씬 {i}"} for i in range(1, 6)}
         ms = "### 씬 1: 시작\n본문\n### 씬 1: 반복\n본문\n### 씬 1: 반복2\n본문"
         result = checker._check_scene_header_contract(ms, breakdown)
         assert len(result) == 1
         assert result[0].severity == CheckSeverity.WARNING
-        assert "1개만 발견" in result[0].message
+        assert "1개 visible header" in result[0].message
 
 
 class TestOpeningAnchorGate:
