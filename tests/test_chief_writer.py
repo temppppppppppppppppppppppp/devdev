@@ -376,7 +376,7 @@ class TestChiefWriterInplacePatchGuards:
 
 
 class TestChiefWriterStructuralInplacePatch:
-    def test_scene_header_feedback_inserts_headers_without_llm_call(self, chief_writer):
+    def test_scene_header_feedback_uses_metadata_targets_without_visible_headers(self, chief_writer):
         blueprint = {
             "ep_num": 2,
             "scene_breakdown": {
@@ -393,33 +393,55 @@ class TestChiefWriterStructuralInplacePatch:
             ("네 번째 장면 본문 eta theta. " * 55).strip(),
         ]
         original = "\n\n".join(blocks)
+        patched_blocks = {
+            f"scene_{idx}": f"{block}\n\n장면 전환의 감정선이 문장 안에서 자연스럽게 이어졌다."
+            for idx, block in enumerate(blocks, start=1)
+        }
 
         chief_writer._inplace_patch_blueprint = blueprint
-        chief_writer.ask = MagicMock(return_value="")
-
-        result = chief_writer.inplace_patch(
-            original_manuscript=original,
-            director_feedback="원고의 각 씬 구분에 맞게 4개의 씬 헤더를 삽입해 주십시오.",
-            attempt_number=1,
-            fix_pack={
-                "patch_targets": ["scene headers"],
-                "must_fix": ["insert 4 scene headers"],
-                "do_not_regress": ["preserve manuscript text"],
-                "success_condition": "all scene headers exist",
-                "target_kind": "local_sentence",
-            },
+        chief_writer.ask = MagicMock(
+            return_value=json.dumps(
+                {
+                    "patched_blocks": patched_blocks,
+                    "patch_state_updates": {},
+                },
+                ensure_ascii=False,
+            )
         )
 
+        with patch("modules.core.prompt_loader.PromptLoader.load", return_value=None):
+            result = chief_writer.inplace_patch(
+                original_manuscript=original,
+                director_feedback="원고의 각 씬 구분이 약합니다. 본문에 ### 씬 헤더를 넣지 말고 장면 전환만 보강하세요.",
+                attempt_number=1,
+                fix_pack={
+                    "patch_targets": ["scene headers"],
+                    "must_fix": ["use scene metadata targets, not visible headers"],
+                    "do_not_regress": ["preserve manuscript text"],
+                    "success_condition": "scene separation is clearer without Markdown headers",
+                    "target_kind": "local_sentence",
+                },
+            )
+
         manuscript = result[0]["manuscript"]
-        assert result[0]["strategy"] == "inplace_patch_scene_headers"
-        assert manuscript.count("### 씬 ") == 4
-        assert "### 씬 1: 부름에 응답하다" in manuscript
-        assert "### 씬 4: 엔딩에서 첫 실행 목표를 확정한다." in manuscript
+        assert result[0]["strategy"] == "inplace_patch_structural"
+        assert "### 씬" not in manuscript
         for block in blocks:
             assert block in manuscript
-        chief_writer.ask.assert_not_called()
-        assert chief_writer._last_inplace_patch_trace["patch_strategy"] == "inplace_patch_scene_headers"
-        assert chief_writer._last_inplace_patch_trace["target_kind"] == "scene_header"
+        chief_writer.ask.assert_called_once()
+        assert chief_writer._last_inplace_patch_trace["patch_strategy"] == "inplace_patch_structural"
+        assert chief_writer._last_inplace_patch_trace["target_kind"] == "scene_boundary"
+        assert chief_writer._last_inplace_patch_trace["patch_targets"] == [
+            "scene_1",
+            "scene_2",
+            "scene_3",
+            "scene_4",
+        ]
+        assert chief_writer._last_inplace_patch_trace["patch_target_records"][0]["scene_id"] == "scene_1"
+        assert chief_writer._last_inplace_patch_trace["patch_target_records"][0]["paragraph_span"] == {
+            "start": 1,
+            "end": 1,
+        }
         assert chief_writer._last_inplace_patch_trace["repair_trace"][0]["target"] == "scene_1"
 
     def test_structural_inplace_patch_replaces_only_target_scene_block(self, chief_writer):

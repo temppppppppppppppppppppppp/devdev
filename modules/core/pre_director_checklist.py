@@ -350,7 +350,7 @@ class PreDirectorChecklist:
         if blueprint and isinstance(blueprint, dict):
             scene_breakdown = blueprint.get("scene_breakdown", {})
             if scene_breakdown and isinstance(scene_breakdown, dict):
-                # [Gap-2] 씬 헤더 계약 검증
+                # [Gap-2] 독자-facing 원고 표면 계약 진단
                 items.extend(self.manuscript_checker._check_scene_header_contract(manuscript, scene_breakdown))
 
                 # [V60.5] 씬별 반영률 정량 측정

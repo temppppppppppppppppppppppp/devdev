@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from modules.validation.blocking_validator import BlockingValidator
 from modules.validation.validation_orchestrator import ValidationOrchestrator
 
 
@@ -115,3 +116,67 @@ def test_validate_surfaces_blocking_degraded_advisory_without_failure():
     assert result["_blocking_advisory"]["severity"] == "MEDIUM"
     assert result["_blocking_advisory"]["warnings"] == ["degraded: relationship_consistency"]
     assert result["_blocking_advisory"]["degraded_checks"] == ["relationship_consistency"]
+
+
+def test_validate_surfaces_scene_separation_warning_as_director_advisory():
+    """Visible scene header 없는 separation gap은 Blocking 실패가 아니라 Director advisory로 전달된다."""
+    orch = ValidationOrchestrator(
+        config={
+            "use_pre_llm": False,
+            "use_adaptive_threshold": False,
+            "use_retrospective": False,
+            "use_self_consistency": False,
+            "scoring_threshold": 60,
+        },
+        client=None,
+        genre="wuxia",
+        context={},
+    )
+    orch.continuity = MagicMock()
+    orch.consistency = MagicMock()
+    orch.scoring = MagicMock()
+    orch.advisory = MagicMock()
+    orch.blocking = BlockingValidator(enable_justification_checks=False)
+
+    orch.continuity.validate.return_value = {"passed": True, "violations": [], "warning_count": 0}
+    orch.consistency.validate.return_value = {
+        "passed": True,
+        "unjustifiable_violations": [],
+        "justifiable_violations": [],
+        "score_penalty": 0,
+        "feedback": "",
+    }
+    orch.scoring.pass_threshold = 60
+    orch.scoring.validate_v59.return_value = {
+        "total_score": 82,
+        "breakdown": {},
+        "feedback": "ok",
+    }
+    orch.advisory.validate.return_value = {"suggestions": []}
+
+    manuscript = "헤더 없는 산문 원고입니다. 장면의 체류와 감정선이 이어졌다. " * 170
+    context = {
+        **_minimal_context(),
+        "blueprint": {
+            "scene_breakdown": {
+                "scene_1": {"description": "객잔 도착"},
+                "scene_2": {"description": "비밀 문서 확보"},
+                "scene_3": {"description": "추격전"},
+                "scene_4": {"description": "새 단서 발견"},
+                "scene_5": {"description": "다음 목표 확정"},
+            }
+        },
+    }
+
+    result = orch.validate(7, manuscript, context)
+
+    assert result["blocking_result"]["passed"] is True
+    assert result["blocking_result"]["failures"] == []
+    assert any("scene_completeness" in warning for warning in result["blocking_result"]["warnings"])
+    assert "_blocking_advisory" in result
+    assert result["_blocking_advisory"]["severity"] == "MEDIUM"
+    assert result["_blocking_advisory"]["failures"] == []
+    assert any(
+        "scene_completeness" in warning and "Director advisory" in warning
+        for warning in result["_blocking_advisory"]["warnings"]
+    )
