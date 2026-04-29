@@ -1,0 +1,225 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "238b3224356eaff357f7e11b64eecc38f5e9755ee25e410e47411018340d60c8"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 1,
+    "disqualified": [],
+    "length": 1704,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 83437,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": true,
+        "raw_chars": 83437
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 109805,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 890195,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 104575,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4464,
+          "lane": "constraints"
+        },
+        {
+          "chars": 638,
+          "lane": "feedback_context"
+        }
+      ],
+      "genre_strategy_contracts": [
+        {
+          "authority_level": "route",
+          "contract_hash": "65f385e6b082bf69",
+          "contract_id": "investment_business_power.action_focused.v1",
+          "strategy_name": "action_focused"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 118,
+        "constraints": 4464,
+        "feedback_context": 638,
+        "hud_context": 10,
+        "prev_info": 104575
+      },
+      "shared_context_chars": 109167,
+      "strategy_feedback_chars": 7877,
+      "total_chars": 109805
+    },
+    "python_warnings": [
+      {
+        "category": "continuity",
+        "focus": "위치 이동 경위를 설명하거나 시작 위치 수정",
+        "message": "위치 불연속: 한미증권 본사 VIP룸 → 서울 강남, SW인베스트먼트 오피스 VIP 상담실",
+        "severity": "MAJOR",
+        "source": "python_prevalidate"
+      }
+    ],
+    "quality_risk": true,
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T18:29:33.013671+00:00",
+    "last_score": 85,
+    "quality_gate_failed": true,
+    "quality_risk": true,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 13,
+    "source_prev_manuscript_hash": "6682e730eb951625c4eb69dd59d089fe3534dc86359659a83a514f1c7601d56e"
+  },
+  "core_tension": "금 선물 진입과 서브프라임의 거대한 공포 사이의 심리적 압박",
+  "end_location": "서울 강남, SW인베스트먼트 오피스 VIP 상담실 앞 복도",
+  "ending_hook": "굳게 닫히는 문 너머로, 박성호는 다가올 피 말리는 횡보장과 거대한 광기를 직감하며 마른침을 삼켰다.",
+  "ending_state": {
+    "location": "서울 강남, SW인베스트먼트 오피스 VIP 상담실 앞 복도",
+    "protagonist_status": "금 선물 포지션 세팅을 완료하고 성북동으로 떠날 채비를 마침",
+    "timeline": {
+      "표현": "2006년 5월 하순"
+    }
+  },
+  "ep_num": 14,
+  "episode_number": 14,
+  "expected_ending": "금 선물 전액 투입 후 성북동 벙커로의 이동 예고",
+  "integrated_scenario": "한미증권 본사 VIP룸에서의 압도적인 선언 이후, 한시우는 지체 없이 자신의 본진인 서울 강남의 SW인베스트먼트 오피스 VIP 상담실로 자리를 옮겼다. 박성호 역시 그를 그림자처럼 수행하며 Exception Account의 세부 권한을 오피스 시스템에 동기화하는 작업에 매달렸다. 오피스 안은 에어컨의 차가운 백색소음만이 감돌았지만, 그 이면에는 다가올 거대한 자본 이동을 준비하는 팽팽한 긴장감이 흐르고 있었다. 한시우는 마호가니 책상에 앉아 다중 모니터에 금 선물 호가창과 글로벌 거시경제 지표를 띄웠다. 박성호가 기관 전용망의 연결 상태가 완벽함을 보고하며 허리를 굽혔다. 그의 눈빛에는 5억 원의 수익을 목격한 이후 완전히 각인된 맹목적인 경외심이 서려 있었다.\n\n정적을 깨고 오피스 한편에 설치된 로이터 외신 단말기에서 날카로운 알림음이 울렸다. 검은 화면 위로 붉은색 텍스트가 맹렬하게 타전되었다. 미국 서브프라임 모기지 연체율이 심상치 않은 속도로 상승하고 있다는, 부동산 시장의 미세한 균열을 알리는 단신이었다. 대다수의 트레이더들은 이를 주택 시장의 국지적 문제로 치부하며 무시할 타이밍이었다. 그러나 한시우의 칠흑 같은 눈동자에는 서늘한 확신이 맺혔다. 그는 모니터를 가리키며 박성호에게 이 뉴스가 단순한 부동산 이슈가 아님을 단언했다. 주택 시장의 붕괴는 곧 파생상품의 연쇄 부실로 이어지고, 글로벌 금융 시스템 전체에 극단적인 인플레이션과 신용 경색의 공포를 불어넣을 것이라는 논리였다. 그 공포가 덮치는 순간, 전 세계의 뭉칫돈은 이자도 나오지 않는 '죽은 자산'이라 조롱받던 금을 향해 미친 듯이 쏠릴 수밖에 없었다. 박성호는 부동산 지표 하나로 글로벌 자본의 대이동을 짚어내는 시우의 통찰력에 압도되어 마른침을 삼켰다.\n\n\"망설일 시간은 없습니다. Exception Account의 권한을 최대치로 개방하십시오.\" 한시우의 건조하고 묵직한 명령이 오피스의 공기를 갈랐다. 박성호는 즉각 키보드 위로 손을 올렸다. 한시우는 확보된 가용 자금 전액을 금 선물 롱 포지션에 투입할 것을 지시했다. 원유 시장에서 거둔 수익까지 모조리 긁어모아 3배 이상의 레버리지로 묶어 던지는, 광기에 가까운 베팅이었다. 박성호의 손끝이 미세하게 떨렸지만, 그는 두 번 묻지 않고 엔터 키를 강하게 내리쳤다. 기관 전용 프랍 창구를 타고 날아간 거대한 매수 주문이 0.5초 만에 시장에 꽂혔다. 호가창이 붉은색과 푸른색으로 요동치며 체결 내역이 화면을 가득 채웠다. 거대한 톱니바퀴가 금 시장이라는 새로운 사냥터에 완벽하게 맞물려 돌아가기 시작했다.\n\n체결 완료를 알리는 팝업창이 뜨자, 한시우는 등받이에 깊숙이 몸을 기댔다. \"이제부터가 진짜 싸움입니다.\" 그의 목소리에는 일말의 흥분도 없었다. 금 시장은 원유처럼 단기간에 수직 상승하는 대신, 개인 투자자들의 피를 말리는 극심한 박스권 횡보를 거치며 에너지를 응축할 것이 뻔했다. 한시우는 박성호에게 다가올 지루한 횡보장 속에서 기관들의 개미 털기가 극에 달할 것임을 예고하며, 어떠한 상황에서도 포지션을 건드리지 말 것을 차갑게 경고했다. 그는 책상 위의 보안 휴대전화를 챙겨 안주머니에 넣고 자리에서 일어났다. 오피스의 소음과 여의도의 시선을 완벽히 차단할 수 있는 곳, 성북동의 프라이빗 카페로 거처를 옮겨 다가올 인고의 시간을 견뎌낼 참이었다. 굳게 닫히는 오피스 문 너머로, 박성호는 또 한 번 불어닥칠 거대한 시장의 광기를 예감하며 등줄기를 타고 흐르는 식은땀을 닦아냈다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "location_shift"
+    ],
+    "type": "jump_opening"
+  },
+  "pacing_notes": "권한 이양 직후의 빠른 실행과 거시경제 논리 전개가 교차하며 긴장감을 점진적으로 끌어올린다. 마지막 베팅 완료 후 차분한 예고로 마무리하여 완급 조절을 이룬다.",
+  "protagonist_state": {
+    "equipment": [
+      "20억 원 예치 통장",
+      "SW인베스트먼트 사업자 등록증 가승인 서류",
+      "2006년 1분기 글로벌 원자재 시황 분석 노트",
+      "한미증권 VIP 다이렉트 핫라인 보안 휴대전화",
+      "Exception Account 승인 문서 사본"
+    ],
+    "injuries": "없음",
+    "mood": "승리감과 여유, 서늘한 지배욕"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "맹목적 복종",
+      "justification": "부동산 지표 하나로 글로벌 금융 위기를 예견하는 한시우의 압도적 시야를 목격함",
+      "target": "박성호",
+      "to_state": "거시적 통찰에 대한 두려움 섞인 경외"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "한미증권에서 자리를 옮긴 한시우는 SW인베스트먼트 오피스에서 금 선물 시장 진입을 위한 인프라를 최종 점검한다.",
+      "description": "한시우가 SW인베스트먼트 오피스 VIP 상담실에서 다중 모니터를 세팅하고 박성호의 대면 보고를 받는다.",
+      "goal": "SW인베스트먼트 오피스에서 금 시장 진입을 위한 시스템 세팅 완료",
+      "key_events": [
+        "한시우가 SW인베스트먼트 오피스 VIP 상담실의 마호가니 책상에 앉아 다중 모니터를 가동함",
+        "박성호가 Exception Account의 금 선물 거래 한도 및 전용선 연결 상태가 완벽함을 대면 보고함",
+        "한시우가 금 선물 호가창을 화면 중앙에 배치하며 본격적인 사냥 준비를 마침"
+      ],
+      "location": "서울 강남, SW인베스트먼트 오피스 VIP 상담실",
+      "summary": "한미증권 VIP룸에서의 선언 직후, 장소를 SW인베스트먼트 오피스로 옮겨 금 시장 진입을 위한 계좌 세팅을 점검한다.",
+      "tension_level": 5,
+      "title": "새로운 사냥터의 세팅",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "서브프라임 모기지 사태의 초기 징후를 포착한 한시우가 금 시장 폭등의 필연성을 논리적으로 전개한다.",
+      "description": "로이터 단말기 속보를 통해 부동산 시장의 균열을 확인하고 글로벌 인플레이션의 공포를 예견한다.",
+      "goal": "서브프라임 모기지 뉴스를 목격하고 금값 폭등의 논리를 박성호에게 각인",
+      "key_events": [
+        "로이터 단말기에 미국 서브프라임 모기지 연체율 상승 속보가 붉은 글씨로 타전됨",
+        "한시우가 주택 시장의 붕괴가 파생상품 연쇄 부실과 글로벌 신용 경색을 유발할 것이라고 서늘하게 설명함",
+        "박성호가 부동산 지표와 안전 자산 쏠림 현상의 상관관계를 듣고 한시우의 거시적 통찰에 경악함"
+      ],
+      "location": "서울 강남, SW인베스트먼트 오피스 VIP 상담실",
+      "summary": "외신 단말기에서 미국 주택 시장의 이상 징후를 알리는 뉴스가 타전되고, 한시우가 이를 금값 폭등의 뇌관으로 지목한다.",
+      "tension_level": 6,
+      "title": "서브프라임의 전조",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "모든 자본과 레버리지를 동원하여 금 선물 시장에 거대한 포지션을 구축한다.",
+      "description": "박성호가 한시우의 명령에 따라 기관 전용 프랍 창구를 통해 거대한 매수 주문을 체결한다.",
+      "goal": "Exception Account 권한을 발동하여 금 선물 롱 포지션 전액 진입",
+      "key_events": [
+        "한시우가 박성호에게 확보된 현금 전액을 금 선물 롱 포지션에 즉각 진입하라고 명령함",
+        "박성호가 떨리는 손으로 엔터 키를 내리쳐 기관 전용 프랍 창구를 통한 우회 매수 주문을 전송함",
+        "거대한 매수 물량이 시장에 투입되며 HTS 화면에 체결 내역이 맹렬하게 쏟아짐"
+      ],
+      "location": "서울 강남, SW인베스트먼트 오피스 VIP 상담실",
+      "summary": "한시우가 Exception Account의 권한을 최대치로 개방하여 금 선물 롱 포지션에 가용 자금 전액을 투입한다.",
+      "tension_level": 8,
+      "title": "무제한의 베팅",
+      "type": "action_peak"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "성공적인 진입 직후, 지루한 인고의 시간을 버텨낼 벙커로의 이동을 준비하며 에피소드를 닫는다.",
+      "description": "박성호의 흔들림을 사전 차단하고 새로운 벙커로 떠날 채비를 마친다.",
+      "goal": "다가올 횡보장을 예견하며 성북동 프라이빗 카페로의 이동을 예고",
+      "key_events": [
+        "한시우가 당분간 금 시장에 극심한 박스권 횡보가 이어질 것이라며 박성호의 공포심을 사전 차단함",
+        "한시우가 책상 위의 보안 휴대전화를 챙겨 안주머니에 넣으며 자리에서 일어남",
+        "성북동 프라이빗 카페로 거처를 옮길 것을 예고하며 박성호에게 핫라인 24시간 대기를 지시함"
+      ],
+      "location": "서울 강남, SW인베스트먼트 오피스 VIP 상담실",
+      "summary": "포지션 세팅을 마친 한시우가 다가올 기나긴 횡보장을 견디기 위해 성북동 프라이빗 카페로 거처를 옮길 것을 선언한다.",
+      "tension_level": 7,
+      "title": "벙커로의 이동 준비",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 강남, SW인베스트먼트 오피스 VIP 상담실",
+  "target_beat": "서브프라임 뉴스를 바탕으로 한 금 선물 롱 포지션 전액 진입",
+  "time_flow": "2006년 5월 하순",
+  "title": "금의 귀환"
+}

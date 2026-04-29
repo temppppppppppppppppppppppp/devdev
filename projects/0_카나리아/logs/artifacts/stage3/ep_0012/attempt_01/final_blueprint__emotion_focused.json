@@ -1,0 +1,211 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "e793cf2115e13ca622d919fdc5a1ee24224b670275f80857283bd954838f4672"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 979,
+    "prevalidation_issue_count": 0,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 71757,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": true,
+        "raw_chars": 71757
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 94576,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 905424,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 89438,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4539,
+          "lane": "constraints"
+        },
+        {
+          "chars": 439,
+          "lane": "feedback_context"
+        }
+      ],
+      "genre_strategy_contracts": [
+        {
+          "authority_level": "route",
+          "contract_hash": "65f385e6b082bf69",
+          "contract_id": "investment_business_power.action_focused.v1",
+          "strategy_name": "action_focused"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 150,
+        "constraints": 4539,
+        "feedback_context": 439,
+        "hud_context": 10,
+        "prev_info": 89438
+      },
+      "shared_context_chars": 94137,
+      "total_chars": 94576
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 2
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T17:09:35.039836+00:00",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 11,
+    "source_prev_manuscript_hash": "d5ba6ba75f71cda2eb8743454cc41b1cefc58b0a5dc4db75b47b0d1ddeb6de43"
+  },
+  "core_tension": "남은 절반의 포지션 유지와 대명그룹의 자금 경색 한계",
+  "end_location": "SW인베스트먼트 대표실",
+  "ending_hook": "\"내일 오전, 본사 VIP룸을 비워두십시오.\" 서늘한 지시와 함께 다음 사냥터의 문이 열리고 있었다.",
+  "ending_state": {
+    "location": "SW인베스트먼트 대표실",
+    "protagonist_status": "5억 원의 실수익을 확보하고 다음 날 VIP룸 회동을 준비함",
+    "timeline": {
+      "표현": "2006년 5월"
+    }
+  },
+  "ep_num": 12,
+  "episode_number": 12,
+  "expected_ending": "한미증권 본사 VIP룸 방문을 예고하며 씬을 마무리함",
+  "integrated_scenario": "한시우의 입술이 열리며 75달러 돌파의 순간을 선언한다. \"보유 중인 포지션, 절반만 시장가 매도 실행하십시오!\" 박성호는 순간 전량 매도가 아닌 절반 매도라는 지시에 흠칫하지만, 훈련된 기계처럼 즉각 매도 버튼을 짓누른다. 거대한 매수세가 한시우의 물량을 집어삼키고, SW인베스트먼트의 법인 계좌에는 단숨에 5억 원이라는 막대한 순수익이 현금으로 꽂힌다. 붉게 점멸하던 화면이 평온을 되찾는 순간, 수화기 너머로 박성호의 거친 숨소리가 들려온다. 그는 스무 살 남짓한 청년이 며칠 만에 5억 원의 현금을 창출해 낸 사실에 경악을 금치 못한다. 한시우는 박성호의 찬사를 건조하게 끊어낸다. \"남은 절반의 포지션은 그대로 유지합니다. 대명그룹의 숨통을 끊어놓기 위해서는 아직 압력이 더 필요하니까요.\"\n\n한편, 대명그룹 본가 서재에서는 파열음이 터져 나온다. 한태준은 재무 담당 임원이 가져온 보고서를 바닥에 집어 던진다. 유가가 75달러를 돌파하며 화학 계열사 인수 원가가 통제 불능 상태로 치솟았기 때문이다. 단기 외화 차입금의 이자는 이미 그룹의 현금흐름을 갉아먹고 있었고, 재무 임원은 더 이상의 자금 조달이 불가능하다고 읍소한다. 그러나 이성을 잃은 한태준은 후계 구도에서 밀려날 수 없다는 강박에 사로잡혀, 제2금융권의 고금리 사채라도 끌어와서 만기를 막으라고 윽박지른다. 그들의 모래성은 한시우가 유지하고 있는 절반의 롱 포지션 압력 아래서 서서히 질식해가고 있었다.\n\n다시 SW인베스트먼트 대표실. 한시우는 남은 절반의 포지션이 뿜어내는 미실현 수익을 차분히 관조한다. 5억 원의 현금 실탄이 장전된 지금, 다음 사냥을 위한 기초 공사는 완벽히 끝났다. 그는 핫라인을 통해 박성호에게 지시를 내린다. \"내일 오전, 한미증권 본사 VIP룸을 비워두십시오. 만나서 처리할 서류가 있습니다.\" 박성호의 군더더기 없는 대답을 끝으로 통화가 종료된다. 한시우의 서늘한 눈동자는 이미 원유 시장을 넘어 더 거대한 자본의 소용돌이를 겨냥하고 있었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부의 절반 익절로 강렬한 쾌감을 선사한 뒤, 대명그룹의 위기를 교차로 보여주어 긴장감을 유지한다.",
+  "protagonist_state": {
+    "equipment": [
+      "20억 원 예치 통장",
+      "SW인베스트먼트 사업자 등록증 가승인 서류",
+      "2006년 1분기 글로벌 원자재 시황 분석 노트",
+      "한미증권 VIP 다이렉트 핫라인 보안 휴대전화"
+    ],
+    "injuries": "없음",
+    "mood": "차분함, 완벽한 통제감"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "경외와 불안",
+      "justification": "5억 원의 실수익을 직접 눈으로 확인하며 한시우의 판단에 완벽히 굴복함",
+      "target": "박성호",
+      "to_state": "절대적 맹신"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "한시우가 75달러 터치 순간 보유 포지션의 절반 물량만 시장가로 매도할 것을 지시함. 박성호가 즉각 주문을 실행하여 5억 원의 순수익을 법인 계좌에 현금으로 확정함.",
+      "description": "한시우가 직전의 전량 매도 지시를 정정하여 절반 익절을 관철시킨다.",
+      "goal": "유가 75달러 도달 시 절반 익절 실행",
+      "key_events": [
+        "한시우가 75달러 터치 순간 보유 포지션의 절반 물량만 시장가로 매도할 것을 지시함",
+        "박성호가 즉각 주문을 실행하여 5억 원의 순수익을 법인 계좌에 현금으로 확정함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "한시우가 75달러 도달 순간 절반의 물량을 매도 지시하여 5억 원의 수익을 확정한다.",
+      "tension_level": 8,
+      "title": "타점의 지배자",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "박성호가 단숨에 찍힌 5억 원의 실수익을 확인하고 덜덜 떨리는 목소리로 경외심을 표출함. 한시우는 남은 절반의 포지션을 유지하며 대명그룹의 숨통을 마저 조이겠다는 의도를 드러냄.",
+      "description": "박성호의 시선을 통해 한시우의 압도적인 통제력을 보여준다.",
+      "goal": "박성호의 경외심과 한시우의 냉철함 대비",
+      "key_events": [
+        "박성호가 단숨에 찍힌 5억 원의 실수익을 확인하고 덜덜 떨리는 목소리로 경외심을 표출함",
+        "한시우는 남은 절반의 포지션을 유지하며 대명그룹의 숨통을 마저 조이겠다는 의도를 드러냄"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "박성호가 5억 원의 확정 수익에 경악하지만 한시우는 남은 절반의 포지션으로 대명그룹을 계속 압박한다.",
+      "tension_level": 6,
+      "title": "경외의 시선",
+      "type": "side_glimpse"
+    },
+    "scene_3": {
+      "characters": [
+        "한태준",
+        "재무 담당 임원"
+      ],
+      "content": "재무 담당 임원이 유가 75달러 돌파로 인해 화학 계열사 인수 자금 조달이 한계에 달했음을 보고함. 한태준이 서류를 집어 던지며 무리한 고금리 단기 사채라도 끌어오라고 윽박지름.",
+      "description": "대명그룹 내부의 분열과 위기를 보여준다.",
+      "goal": "대명그룹의 자금 압박 심화 노출",
+      "key_events": [
+        "재무 담당 임원이 유가 75달러 돌파로 인해 화학 계열사 인수 자금 조달이 한계에 달했음을 보고함",
+        "한태준이 서류를 집어 던지며 무리한 고금리 단기 사채라도 끌어오라고 윽박지름"
+      ],
+      "location": "대명그룹 본가 서재",
+      "summary": "대명그룹의 한태준이 유가 고공행진으로 인한 자금 조달 실패 보고를 받고 이성을 잃는다.",
+      "tension_level": 7,
+      "title": "질식하는 모래성",
+      "type": "villain_scheme"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "한시우가 HTS 화면의 미실현 수익을 확인하며 1차 수확의 안착을 확인함. 박성호에게 내일 한미증권 본사 VIP룸을 비워두라고 지시하며 통화를 종료함.",
+      "description": "새로운 국면으로의 전환을 예고한다.",
+      "goal": "다음 화 VIP룸 방문 예고",
+      "key_events": [
+        "한시우가 HTS 화면의 미실현 수익을 확인하며 1차 수확의 안착을 확인함",
+        "박성호에게 내일 한미증권 본사 VIP룸을 비워두라고 지시하며 통화를 종료함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "한시우가 남은 포지션의 향방을 논의하기 위해 박성호에게 본사 VIP룸 회동을 지시한다.",
+      "tension_level": 6,
+      "title": "다음 사냥터",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "SW인베스트먼트 대표실",
+  "target_beat": "유가 75달러 도달에 따른 절반 익절과 대명그룹의 자금 압박 심화",
+  "time_flow": "2006년 5월",
+  "title": "절반의 수확"
+}

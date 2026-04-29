@@ -1,0 +1,219 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "dialogue_focused",
+    "content_hash": "1cb03766b156e1100c3aadf3c9306b2751f4c03e538282af656b01dcc01bc2a3"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 1,
+    "disqualified": [],
+    "length": 1227,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 44766,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": true,
+        "raw_chars": 44766
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 62805,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 937195,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 57302,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4621,
+          "lane": "constraints"
+        },
+        {
+          "chars": 607,
+          "lane": "feedback_context"
+        }
+      ],
+      "genre_strategy_contracts": [
+        {
+          "authority_level": "route",
+          "contract_hash": "65f385e6b082bf69",
+          "contract_id": "investment_business_power.action_focused.v1",
+          "strategy_name": "action_focused"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 265,
+        "constraints": 4621,
+        "feedback_context": 607,
+        "hud_context": 10,
+        "prev_info": 57302
+      },
+      "shared_context_chars": 62198,
+      "strategy_feedback_chars": 6122,
+      "total_chars": 62805
+    },
+    "python_warnings": [
+      {
+        "category": "fact_lock_person",
+        "focus": "'잡아먹힌 PB' 명칭을 유지하거나 정당한 변경 경위를 명시",
+        "message": "인물 사실잠금 위반: 확정 '잡아먹힌 PB' → blueprint '박성호 PB' 사용",
+        "severity": "CRITICAL",
+        "source": "python_prevalidate"
+      }
+    ],
+    "quality_risk": true,
+    "scene_count": 4,
+    "strategy": "dialogue_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T14:33:09.021928+00:00",
+    "last_score": 92,
+    "quality_gate_failed": true,
+    "quality_risk": true,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 7,
+    "source_prev_manuscript_hash": "c050b6d7c2c9c1b5111f604a47e2204f9eacd6a13591dbfddc1bc0754a6865c3"
+  },
+  "core_tension": "에콰도르와 이란 발 악재가 촉발한 글로벌 원자재 시장의 패닉과 유가 폭등",
+  "end_location": "SW인베스트먼트 대표실",
+  "ending_hook": "붉게 물든 모니터 불빛 아래, 한시우의 서늘한 미소가 텅 빈 대표실을 채우고 있었다.",
+  "ending_state": {
+    "location": "SW인베스트먼트 대표실",
+    "protagonist_status": "막대한 수익을 확인하고 다음 단계를 준비하는 압도적인 지배자의 태도",
+    "timeline": {
+      "표현": "2006년 2월 초, 새벽"
+    }
+  },
+  "ep_num": 8,
+  "episode_number": 8,
+  "expected_ending": "3억 원의 수익을 확인하며 시장 장악의 첫 단계를 성공적으로 마무리함",
+  "integrated_scenario": "성북동의 프라이빗 카페, 짙은 어둠이 깔린 창밖과 대조적으로 한시우의 눈동자는 모니터의 푸른빛을 받아 형형하게 빛나고 있었다. 박성호 PB의 다급한 전화를 차갑게 끊어낸 직후, 그의 시선은 HTS 호가창 옆에 띄워둔 외신 뉴스 터미널에 고정되었다. 로이터와 블룸버그 단말기에서 붉은색 속보가 타전되기 시작했다. 에콰도르 정부가 다국적 석유 기업 옥시덴탈 페트롤리엄에 대한 계약 강제 해지를 검토 중이라는 짧은 단신. 시장의 하락을 맹신하던 어리석은 자본들은 아직 이 뉴스의 파괴력을 눈치채지 못하고 있었지만, 한시우는 달랐다. 그는 차갑게 식은 커피를 비우고 노트북을 덮었다. 본격적인 폭발을 맞이하기 위해 자신만의 진지로 이동할 시간이었다.\n\n대기시켜 둔 차량에 올라탄 한시우는 서울의 텅 빈 새벽 도로를 가로질러 SW인베스트먼트 명의로 임대해 둔 대표실로 향했다. 외부의 간섭이 완벽히 차단된 그만의 벙커. 육중한 문을 열고 들어서자 서늘한 공기가 폐부를 채웠다. 그는 지체 없이 책상으로 다가가 6대의 다중 모니터 시스템을 가동했다. 중앙에는 뉴욕상업거래소 차트가, 좌우로는 글로벌 거시 지표들이 일제히 로딩되었다. 품속의 '2006년 1분기 글로벌 원자재 시황 분석 노트'를 펼치며 그는 다가올 거대한 변동성을 기다렸다.\n\n새벽 3시, 고요하던 대표실 안을 날카로운 속보 알림음이 찢어발겼다. 벽걸이 TV의 CNN 채널에서 이란 마무드 아마디네자드 대통령의 긴급 연설 장면이 송출되었다. 우라늄 농축 시설의 봉인을 해제하겠다는 강경한 선언. UN 안보리의 경고를 정면으로 무시한 이 폭탄 발언은 중동의 지정학적 리스크를 단숨에 최고조로 끌어올렸다. 에콰도르 사태에 이은 이란의 핵 위기. 글로벌 원유 공급망의 양대 축이 동시에 흔들리자, 시장을 짓누르던 매도 벽은 모래성처럼 무너져 내렸다.\n\nWTI 3월물 차트는 폭주하는 기관차처럼 수직으로 솟구치기 시작했다. 지루했던 60달러의 박스권을 뚫고 61달러, 63달러를 거쳐 단숨에 65달러 선을 터치했다. 3배 레버리지를 한계까지 끌어다 쓴 60억 원 규모의 롱 포지션이 뿜어내는 파괴력은 압도적이었다. HTS 잔고 화면이 맹렬하게 새로고침되며, 순식간에 3억 원이 넘는 미실현 수익이 붉은색으로 찍혔다. 단 몇 시간 만에 평범한 직장인의 평생 수익을 거머쥐었음에도, 한시우의 표정은 얼음장처럼 차가웠다. 모니터를 응시하는 그의 입가에 옅은 미소가 번졌다. 완벽한 통제 아래 놓인 시장, 이것은 거대한 제국을 향한 첫 수확에 불과했다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부의 고요한 긴장감에서 시작하여, 장소 이동 후 외신 보도라는 외부 충격을 기점으로 폭발적인 상승 랠리를 연출. 후반부에 막대한 수익을 시각적으로 각인시키며 카타르시스를 극대화함.",
+  "protagonist_state": {
+    "equipment": [
+      "20억 원 예치 통장",
+      "SW인베스트먼트 사업자 등록증 가승인 서류",
+      "2006년 1분기 글로벌 원자재 시황 분석 노트"
+    ],
+    "injuries": "없음",
+    "mood": "차가운 확신과 성취감"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "공포와 의심",
+      "justification": "한시우가 예언한 에콰도르 사태와 유가 폭등이 현실화되며 그의 압도적인 통찰력을 간접적으로 증명함",
+      "target": "박성호",
+      "to_state": "경악과 완벽한 굴복의 전조"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "박성호와의 통화를 일방적으로 종료한 한시우는 테이블 위에 놓인 휴대전화를 무심히 내려놓았다. 그의 시선은 여전히 HTS 모니터를 향해 있었다. 지루하게 60달러 선을 맴돌던 WTI 원유 3월물 호가창 옆, 별도로 띄워둔 외신 뉴스 터미널에서 미세한 변화가 감지되었다. 로이터 발 단신. 에콰도르 정부가 다국적 석유 기업 옥시덴탈 페트롤리엄에 대한 강제 계약 해지 절차를 검토 중이라는 짧은 문장이 붉은색으로 점멸했다. 시장의 멍청한 자본들은 아직 이 단신이 의미하는 파괴력을 인지하지 못한 채 숏 포지션을 쥐고 있었다. 한시우는 차갑게 식은 커피를 비우고, 노트북을 덮었다. 본격적인 폭발을 맞이하기 위해 자신만의 진지로 이동할 시간이었다.",
+      "description": "박성호와의 통화를 일방적으로 종료한 직후, 한시우는 흔들림 없이 모니터를 응시한다. 로이터와 블룸버그 단말기에서 에콰도르 옥시덴탈 페트롤리엄 관련 속보가 타전되기 시작한다.",
+      "goal": "에콰도르 사태의 초기 징후 확인",
+      "key_events": [
+        "박성호와의 통화를 끊고 차갑게 식은 커피를 한 모금 마심",
+        "외신 단말기에서 에콰도르 정부의 강경 대응을 암시하는 첫 속보가 붉은색 글씨로 타전됨",
+        "WTI 호가창의 매도 벽이 미세하게 얇아지는 것을 확인하고 자리에서 일어남"
+      ],
+      "location": "서울 성북동 프라이빗 카페",
+      "summary": "성북동 프라이빗 카페에서 전화를 끊은 한시우가 외신 단말기를 통해 에콰도르 사태의 초기 속보를 확인하며 확신을 다진다.",
+      "tension_level": 6,
+      "title": "예언의 시작",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "성북동의 인적 드문 골목을 빠져나온 한시우는 곧장 SW인베스트먼트 대표실로 향했다. 법인 설립과 동시에 은밀하게 임대해 둔, 외부의 간섭이 완벽히 차단된 그만의 벙커였다. 육중한 보안문을 열고 들어서자 텅 빈 공간에 서늘한 공기가 감돌았다. 한시우는 코트를 벗어 던지고 곧장 책상으로 다가갔다. 스위치를 올리자 벽면을 채운 6대의 다중 모니터가 일제히 푸른빛을 뿜어내며 켜졌다. 중앙 화면에는 뉴욕상업거래소의 실시간 차트를, 좌우로는 환율과 미 국채 금리, 그리고 글로벌 뉴스 피드를 띄웠다. 품속에서 꺼낸 '2006년 1분기 글로벌 원자재 시황 분석 노트'를 키보드 옆에 펼쳐두었다. 모든 준비는 끝났다. 이제 거대한 톱니바퀴가 맞물려 돌아가는 소리를 감상할 차례였다.",
+      "description": "차가운 새벽 공기를 가르고 SW인베스트먼트 명의로 임대한 대표실에 도착한 한시우가 글로벌 마켓 지표를 한눈에 볼 수 있도록 시스템을 세팅한다.",
+      "goal": "SW인베스트먼트 대표실로 이동하여 본격적인 모니터링 환경 세팅",
+      "key_events": [
+        "성북동 카페를 나와 대기시켜 둔 차량을 타고 SW인베스트먼트 대표실로 이동함",
+        "인적 끊긴 빌딩의 대표실 문을 열고 들어가 다중 모니터 시스템의 전원을 켬",
+        "2006년 1분기 글로벌 원자재 시황 분석 노트를 책상 중앙에 펼치고 타점을 재확인함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "카페를 나선 한시우가 SW인베스트먼트 대표실로 이동하여 다중 모니터를 가동하고 야간 장세를 맞이한다.",
+      "tension_level": 7,
+      "title": "진지 구축",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "새벽 3시를 넘긴 시각, 고요하던 대표실 안을 날카로운 속보 알림음이 찢었다. 벽걸이 TV의 CNN 채널에서 'BREAKING NEWS'라는 거대한 붉은 자막이 화면을 덮었다. 마무드 아마디네자드 이란 대통령이 우라늄 농축 시설의 봉인을 해제하겠다고 공식 선언하는 장면이 송출되었다. UN 안보리의 경고를 정면으로 무시한, 중동의 화약고에 불을 붙이는 극단적인 강경 발언이었다. 동시에 남미에서는 에콰도르의 옥시덴탈 강제 해지 이슈가 맞물렸다. 글로벌 원유 공급망의 핵심 축 두 개가 동시에 타격을 입는 전대미문의 사태. 시장을 억누르던 메이저 자본의 개미 털기용 매도 벽은 이 거대한 공포 앞에서 모래성처럼 허물어졌다. 숏 포지션을 잡고 있던 기관들의 비명 소리가 호가창 너머로 들려오는 듯했다.",
+      "description": "CNN 등 주요 외신과 국내 심야 뉴스에서 마무드 아마디네자드 이란 대통령의 강경 발언이 전파를 타며 시장의 공포가 극대화된다.",
+      "goal": "이란 핵 농축 재개 선언 보도와 유가 폭등의 시작",
+      "key_events": [
+        "대표실 한쪽의 TV에서 심야 뉴스 속보로 이란의 우라늄 핵 농축 재개 선언이 보도됨",
+        "CNN 화면에 마무드 아마디네자드 대통령의 연설 장면이 송출되며 중동의 지정학적 위기가 최고조에 달함",
+        "에콰도르 사태와 이란 핵 위기가 동시에 터지며 WTI 호가창의 매도 물량이 순식간에 증발함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "심야 뉴스에서 이란의 핵 농축 재개 선언이 긴급 보도되며, 에콰도르 사태와 겹쳐 유가 폭등의 거대한 촉매제로 작용한다.",
+      "tension_level": 9,
+      "title": "점화된 뇌관",
+      "type": "action_peak"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "WTI 3월물 차트는 중력을 상실한 것처럼 위를 향해 솟구쳤다. 60.5달러의 저항선이 종잇장처럼 찢겨 나갔고, 61달러, 63달러를 연달아 돌파하며 단숨에 65달러를 터치했다. 틱이 바뀔 때마다 HTS 잔고 화면의 숫자가 맹렬하게 요동쳤다. 3배 레버리지를 꽉 채운 60억 원 규모의 롱 포지션. 기초자산이 불과 몇 퍼센트 오르는 동안, 계좌의 수익금은 기하급수적으로 팽창했다. 화면 중앙에 '미실현 손익: +302,450,000 원'이라는 붉은색 숫자가 선명하게 각인되었다. 단 몇 시간 만에 3억 원이라는 거액을 벌어들였음에도, 모니터 불빛에 비친 한시우의 얼굴에는 광기 어린 환희 따위는 없었다. 오직 자신의 계산이 완벽하게 들어맞았다는 차가운 확인의 미소만이 입가에 스쳤을 뿐이다. 이것은 거대한 자본 제국을 건설하기 위한 아주 작은 서막에 불과했다.",
+      "description": "60달러 선에 갇혀 있던 유가가 저항선을 뚫고 폭등하며, 한시우의 60억 원 규모 레버리지 포지션이 막대한 수익을 창출한다.",
+      "goal": "유가 폭등으로 인한 막대한 미실현 수익 확인",
+      "key_events": [
+        "WTI 3월물 가격이 60달러에서 단숨에 61, 63달러를 돌파하며 65달러까지 수직 상승함",
+        "HTS 잔고 화면이 맹렬하게 새로고침되며 3억 원의 미실현 수익이 붉은색으로 선명하게 기록됨",
+        "압도적인 수익 앞에서도 한시우는 동요 없이 차가운 미소를 지으며 다음 단계를 구상함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "WTI 원유 가격이 65달러로 수직 상승하며 HTS 잔고에 3억 원의 미실현 수익이 찍힌다.",
+      "tension_level": 10,
+      "title": "수확의 시간",
+      "type": "resolution"
+    }
+  },
+  "start_location": "서울 성북동 프라이빗 카페",
+  "target_beat": "유가 폭등과 3억 원의 미실현 수익 달성",
+  "time_flow": "2006년 2월 초, 심야 -> 새벽",
+  "title": "폭발하는 뇌관"
+}

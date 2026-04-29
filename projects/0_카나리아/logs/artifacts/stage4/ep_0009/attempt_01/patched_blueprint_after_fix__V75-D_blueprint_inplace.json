@@ -1,0 +1,288 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "action_focused",
+    "content_hash": "ee1e6351b090543a8855ab4f4bad762cf0e47aa5e577e9b092b51d6f16f14913"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=4; sample_anchors=SW인베스트먼트, 한미증권, 65달러",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:21be5739d102",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 1,
+    "disqualified": [],
+    "genre_strategy_contract": {
+      "action_semantics": [
+        "decisive business move",
+        "capital exposure",
+        "institutional pressure",
+        "governance or legal next gate"
+      ],
+      "authority_level": "route",
+      "authority_source": "stage3_genre_strategy_contract",
+      "contract_hash": "65f385e6b082bf69",
+      "contract_id": "investment_business_power.action_focused.v1",
+      "director_visible": true,
+      "factsheet_mutation": false,
+      "forbidden_defaults": [
+        "combat",
+        "chase",
+        "intruder",
+        "vehicle attack",
+        "physical crisis",
+        "thriller infiltration"
+      ],
+      "genre_family": "investment_business_power",
+      "genre_type": "investment",
+      "material_mutation": false,
+      "schema_version": "genre-strategy-contract-v1",
+      "strategy_name": "action_focused",
+      "tension_semantics": [
+        "deadline pressure",
+        "counterparty risk",
+        "liquidity or margin limit",
+        "reputation and access risk"
+      ]
+    },
+    "length": 1118,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 50339,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": true,
+        "raw_chars": 50339
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 71304,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 928696,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 65639,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4842,
+          "lane": "constraints"
+        },
+        {
+          "chars": 552,
+          "lane": "feedback_context"
+        }
+      ],
+      "genre_strategy_contracts": [
+        {
+          "authority_level": "route",
+          "contract_hash": "65f385e6b082bf69",
+          "contract_id": "investment_business_power.action_focused.v1",
+          "strategy_name": "action_focused"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 261,
+        "constraints": 4842,
+        "feedback_context": 552,
+        "hud_context": 10,
+        "prev_info": 65639
+      },
+      "shared_context_chars": 70752,
+      "strategy_feedback_chars": 6298,
+      "total_chars": 71304
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "action_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T15:11:19.937298+00:00",
+    "last_score": 92,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 8,
+    "source_prev_manuscript_hash": "55c77ceeccb698d939eb1dcf8d49e9e833e76a174c8d51e454d698817ff8740e"
+  },
+  "core_tension": "막대한 수익 실현과 증권사 PB의 완전한 통제권 확보",
+  "end_location": "SW인베스트먼트 대표실",
+  "ending_hook": "펜촉이 종이 위를 스치는 사각거리는 마찰음만이, 다가올 거대한 파멸의 서곡처럼 텅 빈 대표실을 차갑게 울리고 있었다.",
+  "ending_state": {
+    "location": "SW인베스트먼트 대표실",
+    "protagonist_status": "초기 자본의 폭발적 증식을 완수하고 통신망을 장악한 채 다음 타겟을 조준함",
+    "timeline": {
+      "expression": "2006년 2월 28일",
+      "표현": "2006년 2월 말"
+    }
+  },
+  "ep_num": 9,
+  "episode_number": 9,
+  "expected_ending": "최상위 VIP 권한을 확립하고 대명그룹을 겨냥한 다음 사냥을 준비함",
+  "integrated_scenario": "SW인베스트먼트 대표실의 새벽. 모니터 스피커에서는 직전 화에서 터져 나온 CNN의 이란 핵 위기 긴급 속보가 계속해서 흘러나오고 있었다. 화면을 뒤덮은 붉은 자막을 바라보는 한시우의 입가에 서늘한 미소가 번졌다. 이미 원유 선물 포지션을 전량 청산하여 25억 1,245만 원의 천문학적인 수익을 확정 지은 직후였다. 원금 20억 원을 더해 총자산 45억 1,245만 원이 찍힌 HTS 잔고 화면은 그의 완벽한 승리를 증명하고 있었다.\n\n날이 밝고 오전 업무 시간이 시작되자마자, 한시우가 이미 쥐고 있던 보안 휴대전화가 요란하게 울렸다. 화면에 뜬 발신자는 박성호 PB였다. 전화를 받자마자 수화기 너머로 들려온 것은 이전의 의구심이나 두려움이 완전히 거세된, 맹목적인 경외심에 찬 목소리였다. 박성호는 밤사이 월스트리트를 덮친 에콰도르 사태와 이란 핵 위기의 파급력을 읊으며, 한시우의 완벽한 예측 앞에 철저히 굴복했음을 고백했다. 한시우는 그의 찬사를 건조한 어조로 끊어내며, 기개통된 핫라인의 권한을 최상위 VIP 등급으로 즉각 격상할 것을 지시했다.\n\n며칠 뒤, 박성호가 직접 SW인베스트먼트 대표실을 찾아왔다. 그의 손에는 한미증권 최상위 VIP 승급 인가 서류가 들려 있었다. 박성호는 두 손으로 공손히 서류를 테이블 위에 내려놓으며, 한시우가 쥐고 있는 보안 휴대전화의 다이렉트 권한이 이제 프랍 창구 전체를 통제할 수 있는 최고 수준으로 격상되었음을 보고했다. 한시우가 서류를 확인하는 동안, 박성호는 허리를 깊숙이 숙인 채 절대적인 충성을 맹세했다. 시장을 쥐고 흔들 수 있는 물리적인 통제망이 한시우의 손에 온전히 들어온 순간이었다.\n\n시간은 빠르게 흘러 2006년 2월 28일, 2월의 마지막 날에 이르렀다. 창밖으로 겨울의 끝자락을 알리는 차가운 비가 내리는 가운데, 한시우는 책상 위에 놓인 2006년 1분기 글로벌 원자재 시황 분석 노트를 다시 펼쳤다. 45억 1,245만 원으로 불어난 자금력은 단지 시드머니를 불리기 위한 전초전에 불과했다. 그의 시선은 노트의 다음 페이지, 대명그룹의 화학 계열사 인수전과 얽힌 거시경제 지표를 향하고 있었다. 펜촉을 들어 새로운 타점 위에 선명한 밑줄을 긋는 그의 눈동자에, 가문을 통째로 집어삼킬 포식자의 서늘한 안광이 번뜩였다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부의 신속한 수익 실현으로 긴장감을 해소한 뒤, 박성호의 굴복과 핫라인 수령을 통해 주인공의 권력을 물리적으로 증명한다. 후반부는 시간 경과와 함께 다음 사냥감을 암시하며 긴장감을 다시 끌어올린다.",
+  "protagonist_state": {
+    "equipment": [
+      "20억 원 예치 통장",
+      "SW인베스트먼트 사업자 등록증 가승인 서류",
+      "2006년 1분기 글로벌 원자재 시황 분석 노트",
+      "한미증권 VIP 다이렉트 핫라인 보안 휴대전화",
+      "한미증권 최상위 VIP 승급 인가 서류"
+    ],
+    "injuries": "없음",
+    "mood": "완벽한 통제감과 서늘한 지배욕"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "두려움과 직업적 의구심",
+      "justification": "한시우의 거시경제 예측이 1원의 오차도 없이 적중하고 막대한 수익을 창출하는 것을 실시간으로 목격함",
+      "target": "박성호",
+      "to_state": "완벽한 굴복과 맹목적인 충성"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "SW인베스트먼트 대표실의 새벽. 모니터 스피커에서는 직전 화에서 터져 나온 CNN의 이란 핵 위기 긴급 속보가 계속해서 흘러나오고 있었다. 화면을 뒤덮은 붉은 자막을 바라보는 한시우의 입가에 서늘한 미소가 번졌다. 이미 원유 선물 포지션을 전량 청산하여 25억 1,245만 원의 천문학적인 수익을 확정 지은 직후였다. 원금 20억 원을 더해 총자산 45억 1,245만 원이 찍힌 HTS 잔고 화면은 그의 완벽한 승리를 증명하고 있었다.",
+      "description": "직전 화 엔딩에서 터진 이란 핵 위기 뉴스를 관망하며, 성공적으로 청산된 계좌의 막대한 현금을 확인한다.",
+      "goal": "이란 핵 위기 뉴스를 확인하며 45억 1,245만 원으로 불어난 자산을 점검한다.",
+      "key_events": [
+        "직전 화에서 이어진 CNN의 이란 핵 위기 긴급 속보가 SW인베스트먼트 대표실 모니터를 붉게 물들임",
+        "이미 원유 선물 매도로 25억 1,245만 원의 막대한 수익을 확정 지은 한시우가 여유롭게 상황을 관망함",
+        "초기 자본금 20억 원이 단숨에 총자산 45억 1,245만 원으로 불어난 HTS 잔고 화면을 확인하며 다음 계획을 구상함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "새벽, SW인베스트먼트 대표실. 한시우는 CNN 긴급 속보를 지켜보며, 이미 실현한 25억 1,245만 원의 수익과 총자산 45억 1,245만 원의 압도적인 결과를 여유롭게 확인한다.",
+      "tension_level": 5,
+      "title": "예견된 폭등",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호(전화)"
+      ],
+      "content": "날이 밝고 오전 업무 시간이 시작되자마자, 한시우가 이미 쥐고 있던 보안 휴대전화가 울렸다. 화면에 뜬 발신자는 박성호 PB였다. 수화기 너머로 들려온 것은 이전의 의구심이나 두려움이 완전히 거세된, 맹목적인 경외심에 찬 목소리였다. 박성호는 밤사이 월스트리트를 덮친 악재들을 거론하며 철저히 굴복했음을 고백했다. 한시우는 그의 찬사를 건조한 어조로 끊어내며, 핫라인의 권한을 최상위 VIP 등급으로 격상할 것을 재촉했다.",
+      "description": "에콰도르 사태와 이란 핵 위기의 파급력을 확인한 박성호가 극도의 경외심을 담아 밤사이의 결과를 보고하고, 한시우는 이를 차갑게 통제한다.",
+      "goal": "박성호 PB의 항복을 받아내고 VIP 통제망을 확고히 한다.",
+      "key_events": [
+        "오전 업무 시작과 동시에 한시우가 이미 소지하고 있던 보안 휴대전화가 요란하게 울림",
+        "박성호가 떨리는 목소리로 에콰도르 사태와 이란 핵 위기가 촉발한 시장 붕괴를 읊으며 완벽한 굴복을 선언함",
+        "한시우가 박성호의 찬사를 건조하게 끊어내고, 기개통된 핫라인의 권한을 최상위 VIP 등급으로 즉각 격상할 것을 지시함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "날이 밝자 박성호가 전화를 걸어와 한시우의 예측에 완벽히 굴복하며 경의를 표한다.",
+      "tension_level": 5,
+      "title": "절대적 굴복",
+      "type": "dialogue_duel"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "며칠 뒤, 박성호가 직접 SW인베스트먼트 대표실을 찾아왔다. 그의 손에는 한미증권 최상위 VIP 승급 인가 서류가 들려 있었다. 박성호는 두 손으로 공손히 서류를 테이블 위에 내려놓으며, 한시우가 쥐고 있는 보안 휴대전화의 다이렉트 권한이 이제 프랍 창구 전체를 통제할 수 있는 최고 수준으로 격상되었음을 보고했다. 한시우가 서류와 기기의 상태를 확인하는 동안, 박성호는 허리를 깊숙이 숙인 채 절대적인 충성을 맹세했다.",
+      "description": "한미증권 프랍 창구와 직통으로 연결되는 권한이 최고 수준으로 격상되었음을 확인하며 물리적인 통제망을 확고히 한다.",
+      "goal": "박성호의 대면 보고를 통해 시장 장악의 첫 단계를 완성한다.",
+      "key_events": [
+        "박성호가 SW인베스트먼트 대표실을 직접 방문하여 한미증권 최상위 VIP 승급 인가 서류를 두 손으로 내려놓음",
+        "한시우가 기존에 지급받은 보안 휴대전화의 프랍 창구 직통 권한이 최고 수준으로 격상되었음을 확인함",
+        "박성호가 90도로 허리를 깊숙이 숙이며 24시간 대기할 것을 맹세함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "박성호가 직접 대표실을 찾아와 최상위 VIP 승급 서류를 바치며 절대적인 충성을 맹세한다.",
+      "tension_level": 7,
+      "title": "권력의 실체",
+      "type": "action_peak"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "시간은 빠르게 흘러 2006년 2월 28일, 2월의 마지막 날에 이르렀다. 창밖으로 차가운 비가 내리는 가운데, 한시우는 책상 위에 놓인 2006년 1분기 글로벌 원자재 시황 분석 노트를 다시 펼쳤다. 45억 원대로 불어난 자금력은 단지 전초전에 불과했다. 그의 시선은 노트의 다음 페이지, 대명그룹의 화학 계열사 인수전과 얽힌 거시경제 지표를 향하고 있었다. 펜촉을 들어 새로운 타점 위에 선명한 밑줄을 그었다.",
+      "description": "거대한 자본을 확보한 한시우가 대명그룹의 계열사 인수전과 관련된 지표를 분석하며 새로운 판을 짠다.",
+      "goal": "성공적인 첫 투자를 마무리하고 대명그룹을 겨냥한 다음 타겟을 설정한다.",
+      "key_events": [
+        "한시우가 책상 위에 놓인 2006년 1분기 글로벌 원자재 시황 분석 노트의 다음 페이지를 펼침",
+        "대명그룹의 화학 계열사 인수전과 얽힌 거시경제 지표를 확인하고 만년필로 선명한 밑줄을 그음",
+        "가문을 통째로 집어삼킬 거대한 계획을 세우며 서늘한 미소를 지음"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "2월 말, 시장 장악의 첫 단계를 완성한 한시우가 노트를 펼쳐 다음 타겟을 조준한다.",
+      "tension_level": 8,
+      "title": "다음 사냥감",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "SW인베스트먼트 대표실",
+  "target_beat": "action_focused",
+  "time_flow": "2006년 2월 초, 새벽 -> 2006년 2월 28일 - 2006년 2월 말",
+  "title": "완벽한 통제"
+}

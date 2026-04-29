@@ -1,0 +1,485 @@
+{
+  "arc_no": 4,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0015.txt",
+    "settlement_packet_path": "drafts/ep_0015.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 15,
+  "ep_num": 15,
+  "manuscript": {
+    "char_count": 5919,
+    "content_hash": "52eca123d5a663dc243ff197aa40f7ef5c9b1199d5f72c59483b6bd521d293bf",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0015.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "open_review": "특이사항 없음. 이전 피드백이 잘 반영되었고, 횡보장의 지루함 속에서도 긴장감을 잃지 않는 훌륭한 전개입니다. 박성호의 공포와 한시우의 냉철함이 대비되며 몰입도를 높였습니다.",
+      "repair_scope": "inplace",
+      "score": 90,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 10,
+        "quality_engagement": 20
+      },
+      "selection_reason": "이전 피드백이었던 도입부 중복 서술이 완벽하게 제거되었으며, 횡보장의 압박감과 주인공의 냉철한 통제력이 훌륭하게 묘사되었습니다. 자본금 및 레버리지 설정 등 이전 화와의 연속성도 완벽합니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 1,
+          "pattern": "입을 열었다"
+        }
+      ],
+      "ai_slop_score": 1.0,
+      "burstiness": 20.82,
+      "ced_score": 0.0,
+      "complexity": 65.47,
+      "compression_ratio": 0.4471,
+      "signal_summary": {
+        "ai_slop_total_hits": 1,
+        "burstiness": 20.82,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 65.47,
+        "compression_ratio": 0.4471,
+        "sentence_count": 129
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "화면",
+            "붉은",
+            "숫자",
+            "미세하게",
+            "꿈틀거리"
+          ],
+          "source": "ending_hook",
+          "text": "화면 속 붉은 숫자가 미세하게 꿈틀거리는 순간, 두 달간 웅크렸던 포식자의 눈동자에 마침내 서늘한 살기가 번뜩였다."
+        },
+        {
+          "cue_terms": [
+            "메이저",
+            "자본",
+            "개미",
+            "털기",
+            "끝나고"
+          ],
+          "source": "expected_ending",
+          "text": "메이저 자본의 개미 털기가 끝나고 호가창의 배열이 무너지며 폭등이 임박했음을 직감함"
+        }
+      ],
+      "capital": 5000000000,
+      "connections": "PB 박성호 (맹목적인 경외감 및 절대적 복종, 현재는 시장의 공포에 잠식됨)",
+      "current_objective": "금 선물 폭발적 상승 랠리에서 막대한 부를 축적하여 SW인베스트먼트 패밀리오피스 장악의 교두보 마련.",
+      "equipment": "[\"몽블랑 만년필\", \"보안 휴대전화\", \"2006년 1분기 글로벌 원자재 시황 분석 노트\"]",
+      "inventory_counts": {
+        "2006년 1분기 글로벌 원자재 시황 분석 노트": 1,
+        "WTI 원유 선물 거래 내역서": 1,
+        "몽블랑 만년필": 1,
+        "보안 휴대전화": 1,
+        "익셉션 어카운트 승인 문서": 1
+      },
+      "market_insight": "기관의 개미 털기 패턴을 간파하고, 달러 약세와 인플레이션에 기반한 금값 폭등을 확신하여 횡보장을 완벽히 버텨냄.",
+      "reputation": "SW인베스트먼트 오피스 VIP",
+      "status": "2개월간의 롤오버 비용 출혈을 감내하고 금 선물 630.1달러 돌파(상승 랠리 시작)를 목도함.",
+      "stocks": "[\"금(Gold) 선물 롱 포지션 (진입가 620.1달러, 현재가 630.1달러, 최대 레버리지)\"]",
+      "total_assets": 5000000000,
+      "wealth": 5000000000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "화면",
+            "붉은",
+            "숫자",
+            "미세하게",
+            "꿈틀거리"
+          ],
+          "source": "ending_hook",
+          "text": "화면 속 붉은 숫자가 미세하게 꿈틀거리는 순간, 두 달간 웅크렸던 포식자의 눈동자에 마침내 서늘한 살기가 번뜩였다."
+        },
+        {
+          "cue_terms": [
+            "메이저",
+            "자본",
+            "개미",
+            "털기",
+            "끝나고"
+          ],
+          "source": "expected_ending",
+          "text": "메이저 자본의 개미 털기가 끝나고 호가창의 배열이 무너지며 폭등이 임박했음을 직감함"
+        }
+      ],
+      "causal_links": [
+        "한시우의 거시경제 확신 -> 2개월간의 롤오버 비용과 횡보장 인내 -> 기관의 매도 벽 철회 및 630.1달러 돌파(상승 랠리 시작)",
+        "박성호의 공포에 질린 전화 -> 한시우가 이를 대중의 절망을 알리는 '인간 지표'로 해석하여 폭발 임박을 확신함"
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "2006년 1분기 글로벌 원자재 시황 분석 노트",
+          "to": 1
+        }
+      ],
+      "inventory_counts": {
+        "2006년 1분기 글로벌 원자재 시황 분석 노트": 1,
+        "WTI 원유 선물 거래 내역서": 1,
+        "몽블랑 만년필": 1,
+        "보안 휴대전화": 1,
+        "익셉션 어카운트 승인 문서": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 90,
+          "target": "박성호",
+          "value": 80
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [],
+        "new_witnesses": [
+          "박성호 (한시우의 흔들림 없는 거시경제 분석과 압도적인 멘탈을 목격)"
+        ]
+      },
+      "lost_items": [],
+      "new_items": [
+        "2006년 1분기 글로벌 원자재 시황 분석 노트"
+      ],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호 (한시우의 흔들림 없는 거시경제 분석과 압도적인 멘탈을 목격)",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "집착90/오해80"
+        }
+      ],
+      "reveals": [
+        "expected_ending"
+      ],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "화면",
+              "붉은",
+              "숫자",
+              "미세하게",
+              "꿈틀거리"
+            ],
+            "source": "ending_hook",
+            "text": "화면 속 붉은 숫자가 미세하게 꿈틀거리는 순간, 두 달간 웅크렸던 포식자의 눈동자에 마침내 서늘한 살기가 번뜩였다."
+          },
+          {
+            "cue_terms": [
+              "메이저",
+              "자본",
+              "개미",
+              "털기",
+              "끝나고"
+            ],
+            "source": "expected_ending",
+            "text": "메이저 자본의 개미 털기가 끝나고 호가창의 배열이 무너지며 폭등이 임박했음을 직감함"
+          }
+        ],
+        "capital": 5000000000,
+        "connections": "PB 박성호 (맹목적인 경외감 및 절대적 복종, 현재는 시장의 공포에 잠식됨)",
+        "current_objective": "금 선물 폭발적 상승 랠리에서 막대한 부를 축적하여 SW인베스트먼트 패밀리오피스 장악의 교두보 마련.",
+        "equipment": "[\"몽블랑 만년필\", \"보안 휴대전화\", \"2006년 1분기 글로벌 원자재 시황 분석 노트\"]",
+        "inventory_counts": {
+          "2006년 1분기 글로벌 원자재 시황 분석 노트": 1,
+          "WTI 원유 선물 거래 내역서": 1,
+          "몽블랑 만년필": 1,
+          "보안 휴대전화": 1,
+          "익셉션 어카운트 승인 문서": 1
+        },
+        "market_insight": "기관의 개미 털기 패턴을 간파하고, 달러 약세와 인플레이션에 기반한 금값 폭등을 확신하여 횡보장을 완벽히 버텨냄.",
+        "reputation": "SW인베스트먼트 오피스 VIP",
+        "status": "2개월간의 롤오버 비용 출혈을 감내하고 금 선물 630.1달러 돌파(상승 랠리 시작)를 목도함.",
+        "stocks": "[\"금(Gold) 선물 롱 포지션 (진입가 620.1달러, 현재가 630.1달러, 최대 레버리지)\"]",
+        "total_assets": 5000000000,
+        "wealth": 5000000000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "location",
+              "protagonist_status",
+              "timeline"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ]
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "50억 원",
+      "director_score": 90,
+      "location": "서울 성북동 프라이빗 카페 밀실",
+      "protagonist_status": "금 선물 620.1달러에 50억 원 전액 3배 레버리지 매수 포지션 유지 중, 횡보장 종료 및 폭등 임박 직감",
+      "timeline": "2006년 7월 하순"
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "location",
+            "protagonist_status",
+            "timeline"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ]
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T18:45:57.733920+00:00",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 14,
+    "source_prev_manuscript_hash": "ab20d5d06fc6db48c277aee9471007e0dc1f4e6c736bd9f03c0d4272a97ce052"
+  },
+  "title": "침묵의 벙커"
+}

@@ -1,0 +1,528 @@
+{
+  "arc_no": 3,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0011.txt",
+    "settlement_packet_path": "drafts/ep_0011.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 11,
+  "ep_num": 11,
+  "manuscript": {
+    "char_count": 8149,
+    "content_hash": "d5ba6ba75f71cda2eb8743454cc41b1cefc58b0a5dc4db75b47b0d1ddeb6de43",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0011.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "open_review": "특이사항 없음. 이전 피드백이 완벽하게 반영되었으며, 10화 엔딩과의 연결성 및 Blueprint의 전개가 훌륭합니다. 대명그룹의 위기를 교차 편집하여 보여준 점이 긴장감을 크게 높였습니다.",
+      "repair_scope": "inplace",
+      "score": 90,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 10,
+        "quality_engagement": 20
+      },
+      "selection_reason": "이전 피드백에서 지적된 도입부 장소 명시('SW인베스트먼트 대표실')가 완벽하게 반영되었으며, 10화 엔딩과의 매끄러운 연결 및 Blueprint에서 요구한 5월의 유가 폭등 사태, 대명그룹의 위기, 75달러 목표가 도달 직전의 긴장감 등이 훌륭한 문장력으로 구현되었습니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 1,
+          "pattern": "어느새"
+        },
+        {
+          "count": 1,
+          "pattern": "한순간"
+        }
+      ],
+      "ai_slop_score": 2.0,
+      "burstiness": 21.41,
+      "ced_score": 0.0,
+      "complexity": 59.46,
+      "compression_ratio": 0.4268,
+      "signal_summary": {
+        "ai_slop_total_hits": 2,
+        "burstiness": 21.41,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 59.46,
+        "compression_ratio": 0.4268,
+        "sentence_count": 189
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "정확히",
+            "75달러",
+            "터치하"
+          ],
+          "source": "ending_hook",
+          "text": "\"정확히 75달러를 터치하는 순간...\""
+        },
+        {
+          "cue_terms": [
+            "유가",
+            "75달러",
+            "돌파",
+            "시점에서",
+            "조건부"
+          ],
+          "source": "expected_ending",
+          "text": "유가 75달러 돌파 시점에서의 조건부 익절 지시 하달"
+        }
+      ],
+      "capital": 4500000000,
+      "connections": "PB 박성호 (절대적 복종 및 경외)",
+      "current_objective": "확보된 막대한 자본을 바탕으로 대명그룹 한태준의 자금줄을 완전히 끊어내고 후계 구도를 붕괴시키기.",
+      "equipment": [
+        "보안 휴대전화 (익셉션 어카운트 핫라인 연결)"
+      ],
+      "inventory_counts": {
+        "두꺼운 양장 노트 ('2006년 1분기 글로벌 원자재 시황 분석 노트')": 1,
+        "몽블랑 만년필": 1,
+        "보안 휴대전화 (익셉션 어카운트 핫라인 연결)": 1,
+        "익셉션 어카운트 활성화 코드 서류": 1,
+        "최종 잔고 증명서": 1
+      },
+      "market_insight": "에콰도르 자원 국유화 사태와 공급망 파괴로 인한 유가 폭등(75달러 임계점)을 정확히 예측하고 최고점에서 청산하는 완벽한 타이밍 포착.",
+      "reputation": "최상위 VIP '익셉션 어카운트' 홀더. 막대한 레버리지와 변동성을 완벽히 통제하며 경이적인 수익을 창출하는 시장의 포식자.",
+      "status": "WTI 75달러 도달 시점에 맞춰 구리, 아연, 환율, 원유 선물 포지션 전량 시장가 매도 실행 완료. 막대한 차익 실현 대기 중.",
+      "stocks": [],
+      "total_assets": 4500000000,
+      "wealth": 4500000000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "정확히",
+            "75달러",
+            "터치하"
+          ],
+          "source": "ending_hook",
+          "text": "\"정확히 75달러를 터치하는 순간...\""
+        },
+        {
+          "cue_terms": [
+            "유가",
+            "75달러",
+            "돌파",
+            "시점에서",
+            "조건부"
+          ],
+          "source": "expected_ending",
+          "text": "유가 75달러 돌파 시점에서의 조건부 익절 지시 하달"
+        }
+      ],
+      "causal_links": [
+        "한시우의 원자재 및 환율 선물 매수 포지션 진입 -> 에콰도르 사태 발발로 인한 글로벌 원자재 시장 패닉 및 가격 폭등 -> 대명그룹 한태준의 화학 계열사 인수 원가 15% 폭등 및 단기 외화 차입금 이자 부담 급증 -> 한태준의 유동성 위기 및 후계 구도 붕괴 시작",
+        "WTI 유가 75달러 도달 -> 한시우의 정확한 임계점 예측 적중 -> 보유 포지션 전량 시장가 매도 실행으로 막대한 차익 실현 확정"
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "노트북",
+          "to": 0
+        },
+        {
+          "delta": -2,
+          "from": 2,
+          "name": "휴대용 서브 모니터",
+          "to": 0
+        }
+      ],
+      "inventory_counts": {
+        "두꺼운 양장 노트 ('2006년 1분기 글로벌 원자재 시황 분석 노트')": 1,
+        "몽블랑 만년필": 1,
+        "보안 휴대전화 (익셉션 어카운트 핫라인 연결)": 1,
+        "익셉션 어카운트 활성화 코드 서류": 1,
+        "최종 잔고 증명서": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 80,
+          "target": "한태준",
+          "value": -50
+        },
+        {
+          "obsession": 50,
+          "target": "박성호",
+          "value": 80
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [
+          "한태준 (자신의 몰락이 단순한 시장의 일시적 발작인 줄 알며, 배후에 한시우가 있음을 전혀 인지하지 못함)",
+          "한미증권 리스크관리팀 (비정상적 수익과 변동성의 의도를 파악하지 못하고 패닉에 빠짐)"
+        ],
+        "new_witnesses": [
+          "박성호 (한시우의 완벽한 시장 예측력과 통제력을 실시간으로 목격하며 경외감을 느낌)"
+        ]
+      },
+      "lost_items": [
+        "휴대용 서브 모니터",
+        "노트북"
+      ],
+      "new_items": [],
+      "new_npcs": [
+        "한태준",
+        "박성호",
+        "최 대리"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호 (한시우의 완벽한 시장 예측력과 통제력을 실시간으로 목격하며 경외감을 느낌)",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "한태준 (자신의 몰락이 단순한 시장의 일시적 발작인 줄 알며, 배후에 한시우가 있음을 전혀 인지하지 못함)",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "한미증권 리스크관리팀 (비정상적 수익과 변동성의 의도를 파악하지 못하고 패닉에 빠짐)",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "한태준",
+          "to": "집착80/오해-50"
+        },
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "집착50/오해80"
+        }
+      ],
+      "reveals": [
+        "expected_ending"
+      ],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "정확히",
+              "75달러",
+              "터치하"
+            ],
+            "source": "ending_hook",
+            "text": "\"정확히 75달러를 터치하는 순간...\""
+          },
+          {
+            "cue_terms": [
+              "유가",
+              "75달러",
+              "돌파",
+              "시점에서",
+              "조건부"
+            ],
+            "source": "expected_ending",
+            "text": "유가 75달러 돌파 시점에서의 조건부 익절 지시 하달"
+          }
+        ],
+        "capital": 4500000000,
+        "connections": "PB 박성호 (절대적 복종 및 경외)",
+        "current_objective": "확보된 막대한 자본을 바탕으로 대명그룹 한태준의 자금줄을 완전히 끊어내고 후계 구도를 붕괴시키기.",
+        "equipment": [
+          "보안 휴대전화 (익셉션 어카운트 핫라인 연결)"
+        ],
+        "inventory_counts": {
+          "두꺼운 양장 노트 ('2006년 1분기 글로벌 원자재 시황 분석 노트')": 1,
+          "몽블랑 만년필": 1,
+          "보안 휴대전화 (익셉션 어카운트 핫라인 연결)": 1,
+          "익셉션 어카운트 활성화 코드 서류": 1,
+          "최종 잔고 증명서": 1
+        },
+        "market_insight": "에콰도르 자원 국유화 사태와 공급망 파괴로 인한 유가 폭등(75달러 임계점)을 정확히 예측하고 최고점에서 청산하는 완벽한 타이밍 포착.",
+        "reputation": "최상위 VIP '익셉션 어카운트' 홀더. 막대한 레버리지와 변동성을 완벽히 통제하며 경이적인 수익을 창출하는 시장의 포식자.",
+        "status": "WTI 75달러 도달 시점에 맞춰 구리, 아연, 환율, 원유 선물 포지션 전량 시장가 매도 실행 완료. 막대한 차익 실현 대기 중.",
+        "stocks": [],
+        "total_assets": 4500000000,
+        "wealth": 4500000000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "location",
+              "protagonist_status",
+              "timeline"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "promoted_fields": [
+              "capital",
+              "total_assets"
+            ],
+            "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+            "promotion_sources": {
+              "capital": "actual_truth",
+              "total_assets": "actual_truth"
+            },
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ]
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "45억 원 (미실현 수익 수십억 원 발생 중)",
+      "director_score": 90,
+      "location": "SW인베스트먼트 대표실",
+      "protagonist_status": "유가 75달러 돌파를 목전에 두고 박성호에게 매도 대기를 지시하며 완벽한 통제력을 행사함",
+      "timeline": "2006년 5월 중순"
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "location",
+            "protagonist_status",
+            "timeline"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "promoted_fields": [
+            "capital",
+            "total_assets"
+          ],
+          "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+          "promotion_sources": {
+            "capital": "actual_truth",
+            "total_assets": "actual_truth"
+          },
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ]
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T16:49:16.037900+00:00",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "source_prev_manuscript_ep": 10,
+    "source_prev_manuscript_hash": "6d97542945ba0c4593a938f36f1faf957fe32154a77ae4fa3a74d0f04eb9a94e"
+  },
+  "title": "제11화"
+}

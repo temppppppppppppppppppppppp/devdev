@@ -1,0 +1,503 @@
+{
+  "arc_no": 4,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0014.txt",
+    "settlement_packet_path": "drafts/ep_0014.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 14,
+  "ep_num": 14,
+  "manuscript": {
+    "char_count": 6806,
+    "content_hash": "ab20d5d06fc6db48c277aee9471007e0dc1f4e6c736bd9f03c0d4272a97ce052",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0014.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "open_review": "특이사항 없음. 서브프라임 모기지 사태를 금 시장 진입의 명분으로 삼는 논리 전개가 매우 훌륭하며, 박성호의 반응도 VIP PB로서의 한계를 잘 보여주며 몰입도를 높입니다. 피드백이 완벽하게 반영되었습니다.",
+      "repair_scope": "inplace",
+      "score": 90,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 10,
+        "quality_engagement": 20
+      },
+      "selection_reason": "이전 피드백이었던 '50억 원'이라는 구체적인 자본금 수치가 독백에 완벽하게 반영되었습니다. 또한 Python 경고로 지적되었던 위치 불연속 문제도 도입부에서 이동 경위를 자연스럽게 서술하여 해결했습니다. Blueprint의 모든 씬이 긴장감 있게 잘 구현되었으며, 서브프라임 모기지 사태를 금 시장 진입의 명분으로 삼는 논리 전개가 매우 훌륭합니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 1,
+          "pattern": "시선을 돌렸다"
+        },
+        {
+          "count": 1,
+          "pattern": "입을 열었다"
+        },
+        {
+          "count": 1,
+          "pattern": "침을 삼켰다"
+        }
+      ],
+      "ai_slop_score": 3.0,
+      "burstiness": 25.75,
+      "ced_score": 0.0,
+      "complexity": 84.91,
+      "compression_ratio": 0.4352,
+      "signal_summary": {
+        "ai_slop_total_hits": 3,
+        "burstiness": 25.75,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 84.91,
+        "compression_ratio": 0.4352,
+        "sentence_count": 127
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "굳게",
+            "닫히",
+            "너머",
+            "박성호",
+            "다가올"
+          ],
+          "source": "ending_hook",
+          "text": "굳게 닫히는 문 너머로, 박성호는 다가올 피 말리는 횡보장과 거대한 광기를 직감하며 마른침을 삼켰다."
+        },
+        {
+          "cue_terms": [
+            "선물",
+            "전액",
+            "투입",
+            "성북동",
+            "벙커로"
+          ],
+          "source": "expected_ending",
+          "text": "금 선물 전액 투입 후 성북동 벙커로의 이동 예고"
+        }
+      ],
+      "capital": 5000000000,
+      "connections": "PB 박성호 (맹목적인 경외감 및 절대적 복종)",
+      "current_objective": "금 선물 시장의 지루한 횡보장을 견뎌내고 폭발적인 상승 랠리에서 막대한 부를 축적하기.",
+      "equipment": "[\"보안 휴대전화\"]",
+      "inventory_counts": {
+        "WTI 원유 선물 거래 내역서": 1,
+        "몽블랑 만년필": 1,
+        "보안 휴대전화": 1,
+        "익셉션 어카운트 승인 문서": 1
+      },
+      "market_insight": "서브프라임 모기지 연체율 상승 뉴스를 통해 글로벌 금융 위기(CDO 붕괴)를 정확히 예측. 안전자산인 금(Gold)으로의 글로벌 자본 대이동을 확신하고 횡보장을 견딜 계획 수립.",
+      "reputation": "최상위 VIP '익셉션 어카운트' 홀더. 거시경제의 중력을 이용해 기업의 숨통을 끊는 자본 시장의 괴물.",
+      "status": "금 선물 최대 레버리지 롱 포지션 진입 완료. 성북동 벙커에서 횡보장을 견디며 대기 중.",
+      "stocks": [
+        "원유 선물 롱 포지션 (절반 유지)",
+        "금(Gold) 선물 롱 포지션 (진입가 620.1달러, 최대 레버리지)"
+      ],
+      "total_assets": 5000000000,
+      "wealth": 5000000000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "굳게",
+            "닫히",
+            "너머",
+            "박성호",
+            "다가올"
+          ],
+          "source": "ending_hook",
+          "text": "굳게 닫히는 문 너머로, 박성호는 다가올 피 말리는 횡보장과 거대한 광기를 직감하며 마른침을 삼켰다."
+        },
+        {
+          "cue_terms": [
+            "선물",
+            "전액",
+            "투입",
+            "성북동",
+            "벙커로"
+          ],
+          "source": "expected_ending",
+          "text": "금 선물 전액 투입 후 성북동 벙커로의 이동 예고"
+        }
+      ],
+      "causal_links": [
+        {
+          "cause": "서브프라임 모기지 연체율 상승 뉴스 확인",
+          "effect": "글로벌 금융 위기 및 금 가치 폭등 예측, 가용 현금 50억 전액 금 선물 최대 레버리지 롱 포지션 진입"
+        },
+        {
+          "cause": "금 시장의 지독한 횡보장(기관의 개미 털기) 예상",
+          "effect": "여의도의 소음을 차단하고 멘탈을 유지하기 위해 성북동 프라이빗 카페(벙커)로 거처 이동"
+        }
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "두꺼운 양장 노트",
+          "to": 0
+        }
+      ],
+      "inventory_counts": {
+        "WTI 원유 선물 거래 내역서": 1,
+        "몽블랑 만년필": 1,
+        "보안 휴대전화": 1,
+        "익셉션 어카운트 승인 문서": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 80,
+          "target": "박성호",
+          "value": 100
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [
+          "일반 트레이더들 (서브프라임 모기지 뉴스를 국지적 노이즈로 치부)"
+        ],
+        "new_witnesses": [
+          "박성호 (한시우의 서브프라임 모기지 사태 예측과 금 선물 풀매수 지시 목격)"
+        ]
+      },
+      "lost_items": [
+        "두꺼운 양장 노트"
+      ],
+      "new_items": [
+        "무광 블랙의 보안 휴대전화"
+      ],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호 (한시우의 서브프라임 모기지 사태 예측과 금 선물 풀매수 지시 목격)",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "일반 트레이더들 (서브프라임 모기지 뉴스를 국지적 노이즈로 치부)",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "집착80/오해100"
+        }
+      ],
+      "reveals": [
+        "expected_ending"
+      ],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "굳게",
+              "닫히",
+              "너머",
+              "박성호",
+              "다가올"
+            ],
+            "source": "ending_hook",
+            "text": "굳게 닫히는 문 너머로, 박성호는 다가올 피 말리는 횡보장과 거대한 광기를 직감하며 마른침을 삼켰다."
+          },
+          {
+            "cue_terms": [
+              "선물",
+              "전액",
+              "투입",
+              "성북동",
+              "벙커로"
+            ],
+            "source": "expected_ending",
+            "text": "금 선물 전액 투입 후 성북동 벙커로의 이동 예고"
+          }
+        ],
+        "capital": 5000000000,
+        "connections": "PB 박성호 (맹목적인 경외감 및 절대적 복종)",
+        "current_objective": "금 선물 시장의 지루한 횡보장을 견뎌내고 폭발적인 상승 랠리에서 막대한 부를 축적하기.",
+        "equipment": "[\"보안 휴대전화\"]",
+        "inventory_counts": {
+          "WTI 원유 선물 거래 내역서": 1,
+          "몽블랑 만년필": 1,
+          "보안 휴대전화": 1,
+          "익셉션 어카운트 승인 문서": 1
+        },
+        "market_insight": "서브프라임 모기지 연체율 상승 뉴스를 통해 글로벌 금융 위기(CDO 붕괴)를 정확히 예측. 안전자산인 금(Gold)으로의 글로벌 자본 대이동을 확신하고 횡보장을 견딜 계획 수립.",
+        "reputation": "최상위 VIP '익셉션 어카운트' 홀더. 거시경제의 중력을 이용해 기업의 숨통을 끊는 자본 시장의 괴물.",
+        "status": "금 선물 최대 레버리지 롱 포지션 진입 완료. 성북동 벙커에서 횡보장을 견디며 대기 중.",
+        "stocks": [
+          "원유 선물 롱 포지션 (절반 유지)",
+          "금(Gold) 선물 롱 포지션 (진입가 620.1달러, 최대 레버리지)"
+        ],
+        "total_assets": 5000000000,
+        "wealth": 5000000000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "current_position",
+              "director_score",
+              "location",
+              "protagonist_status",
+              "timeline",
+              "total_assets"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ]
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "50억 원",
+      "current_position": "금 선물 6월물 롱 포지션 (진입가 620.1달러, 최대 레버리지)",
+      "director_score": 90,
+      "location": "서울 강남, SW인베스트먼트 오피스 VIP 상담실 앞 복도",
+      "protagonist_status": "금 선물 포지션 세팅을 완료하고 성북동으로 떠날 채비를 마침",
+      "timeline": "2006년 5월 하순",
+      "total_assets": "50억 원 + WTI 원유 선물 미실현 수익"
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "current_position",
+            "director_score",
+            "location",
+            "protagonist_status",
+            "timeline",
+            "total_assets"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ]
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T18:29:33.013671+00:00",
+    "last_score": 85,
+    "quality_gate_failed": true,
+    "quality_risk": true,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 13,
+    "source_prev_manuscript_hash": "6682e730eb951625c4eb69dd59d089fe3534dc86359659a83a514f1c7601d56e"
+  },
+  "title": "제14화"
+}

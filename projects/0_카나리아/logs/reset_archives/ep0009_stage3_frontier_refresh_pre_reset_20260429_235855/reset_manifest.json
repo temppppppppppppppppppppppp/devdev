@@ -1,0 +1,19 @@
+{
+  "project_root": "C:\\Users\\PC\\Desktop\\글도비\\projects\\0_카나리아",
+  "from_ep": 9,
+  "db_backup": "C:\\Users\\PC\\Desktop\\글도비\\projects\\0_카나리아\\logs\\reset_archives\\ep0009_stage3_frontier_refresh_pre_reset_20260429_235855\\project_data.pre_stage3_frontier_refresh.db",
+  "db_sha256_before": "65a11697ce5d865895249003d0b7089a83284188c9d50700a170111a6d0a1a21",
+  "latest_blueprint_before": 8,
+  "latest_episode_next_before": 9,
+  "blueprints_ge_from_ep": 0,
+  "stage3_attempts_ge_from_ep": 0,
+  "latest_blueprint_after_db_reset": 8,
+  "latest_episode_next_after_db_reset": 9,
+  "filesystem_archive": {
+    "reuse_reset_filesystem_archive_applied": false,
+    "reuse_reset_filesystem_archive_root": "",
+    "reuse_reset_filesystem_archived_count": 0,
+    "reuse_reset_filesystem_archived_paths": []
+  },
+  "db_sha256_after": "dce99e921a9d45cdd2ee3b01c135f0bffa3742806371309345eb9731adf8e46c"
+}

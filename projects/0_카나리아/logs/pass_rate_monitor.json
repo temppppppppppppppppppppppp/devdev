@@ -1,7 +1,7 @@
 {
-  "session_start": "2026-04-29T14:56:36.346912",
-  "last_updated": "2026-04-29T18:05:58.493309",
-  "total_records": 20,
+  "session_start": "2026-04-30T03:46:13.912498",
+  "last_updated": "2026-04-30T03:56:52.037451",
+  "total_records": 66,
   "records": [
     {
       "timestamp": "2026-04-29T13:50:13.143278",
@@ -39,7 +39,12 @@
       "artifact_path": "logs/artifacts/stage2/arc_001/attempt_01/final_arc__balanced.json",
       "downstream_override_applied": false,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T13:57:32.695689",
@@ -77,7 +82,12 @@
       "artifact_path": "logs/artifacts/stage2/arc_002/attempt_01/final_arc__conservative.json",
       "downstream_override_applied": false,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T14:02:50.598852",
@@ -115,7 +125,12 @@
       "artifact_path": "logs/artifacts/stage2/arc_003/attempt_01/final_arc__balanced.json",
       "downstream_override_applied": false,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T14:10:53.431483",
@@ -153,7 +168,12 @@
       "artifact_path": "logs/artifacts/stage2/arc_004/attempt_01/final_arc__balanced.json",
       "downstream_override_applied": false,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T14:13:13.021740",
@@ -191,7 +211,12 @@
       "artifact_path": "logs/artifacts/stage3/ep_0001/attempt_01/final_blueprint__emotion_focused.json",
       "downstream_override_applied": false,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T14:19:52.161427",
@@ -229,7 +254,12 @@
       "artifact_path": "logs/artifacts/stage3/ep_0002/attempt_03/final_blueprint__dialogue_focused.json",
       "downstream_override_applied": false,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T14:31:27.072809",
@@ -267,7 +297,12 @@
       "artifact_path": "logs/artifacts/stage3/ep_0003/attempt_06/final_blueprint__emotion_focused.json",
       "downstream_override_applied": false,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T14:34:19.181561",
@@ -305,7 +340,12 @@
       "artifact_path": "logs/artifacts/stage3/ep_0004/attempt_01/final_blueprint__dialogue_focused.json",
       "downstream_override_applied": false,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T14:35:53.239909",
@@ -343,7 +383,12 @@
       "artifact_path": "logs/artifacts/stage3/ep_0005/attempt_01/final_blueprint__emotion_focused.json",
       "downstream_override_applied": false,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T14:39:25.751434",
@@ -381,7 +426,12 @@
       "artifact_path": "logs/artifacts/stage3/ep_0006/attempt_02/final_blueprint__emotion_focused.json",
       "downstream_override_applied": false,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T14:40:21.281286",
@@ -419,7 +469,12 @@
       "artifact_path": "",
       "downstream_override_applied": false,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T15:04:11.552619",
@@ -457,7 +512,12 @@
       "artifact_path": "logs/artifacts/stage3/ep_0007/attempt_03/final_blueprint__emotion_focused.json",
       "downstream_override_applied": false,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T15:07:40.308164",
@@ -495,7 +555,12 @@
       "artifact_path": "logs/artifacts/stage3/ep_0008/attempt_02/final_blueprint__action_focused.json",
       "downstream_override_applied": false,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T15:11:59.424836",
@@ -533,7 +598,12 @@
       "artifact_path": "logs/artifacts/stage3/ep_0009/attempt_01/final_blueprint__dialogue_focused.json",
       "downstream_override_applied": true,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T15:14:52.117498",
@@ -571,7 +641,12 @@
       "artifact_path": "logs/artifacts/stage3/ep_0010/attempt_01/final_blueprint__action_focused.json",
       "downstream_override_applied": true,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T15:17:11.641388",
@@ -609,7 +684,12 @@
       "artifact_path": "logs/artifacts/stage3/ep_0011/attempt_01/final_blueprint__action_focused.json",
       "downstream_override_applied": true,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T15:18:19.361151",
@@ -647,7 +727,12 @@
       "artifact_path": "logs/artifacts/stage3/ep_0012/attempt_01/final_blueprint__dialogue_focused.json",
       "downstream_override_applied": false,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T15:39:44.875220",
@@ -685,7 +770,12 @@
       "artifact_path": "logs/artifacts/stage3/ep_0013/attempt_07/final_blueprint__emotion_focused.json",
       "downstream_override_applied": true,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T15:49:34.717110",
@@ -723,7 +813,12 @@
       "artifact_path": "logs/artifacts/stage3/ep_0014/attempt_05/final_blueprint__action_focused.json",
       "downstream_override_applied": true,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
     },
     {
       "timestamp": "2026-04-29T15:50:59.993134",
@@ -761,7 +856,3429 @@
       "artifact_path": "logs/artifacts/stage3/ep_0015/attempt_01/final_blueprint__dialogue_focused.json",
       "downstream_override_applied": true,
       "primary_failure_layer": "",
-      "strong_advisory_escalation": {}
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-29T21:33:41.493324",
+      "stage": 3,
+      "episode": 6,
+      "arc": 2,
+      "attempt_num": 1,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 105766,
+      "token_cost": 0.446547,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep6:arc2:a1:20260429_213100",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "emotion_focused",
+      "content_hash": "1e5bdccc6e125c8c7f742b166a9381c77e3f2ab64964bc4eb30a288994550684",
+      "artifact_path": "logs/artifacts/stage3/ep_0006/attempt_01/final_blueprint__emotion_focused.json",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-29T21:39:40.703045",
+      "stage": 3,
+      "episode": 7,
+      "arc": 2,
+      "attempt_num": 3,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 359176,
+      "token_cost": 1.46311,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep7:arc2:a3:20260429_213100",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "action_focused",
+      "content_hash": "047c8a264a35d7666998da35ddb891cac80f8e1bd50f1ccdc1f4aa7794c9ae3b",
+      "artifact_path": "logs/artifacts/stage3/ep_0007/attempt_03/final_blueprint__action_focused.json",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-29T21:44:54.763380",
+      "stage": 3,
+      "episode": 8,
+      "arc": 2,
+      "attempt_num": 3,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 314028,
+      "token_cost": 1.433365,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep8:arc2:a3:20260429_213100",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "dialogue_focused",
+      "content_hash": "54fe2d805845e5fed6e66afc191aa7ad6fc35b224a1f5ced20314cc8871f3fb6",
+      "artifact_path": "logs/artifacts/stage3/ep_0008/attempt_03/final_blueprint__dialogue_focused.json",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-29T21:47:48.562863",
+      "stage": 3,
+      "episode": 9,
+      "arc": 2,
+      "attempt_num": 1,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 173771,
+      "token_cost": 0.132681,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep9:arc2:a1:20260429_213100",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "emotion_focused",
+      "content_hash": "5b54b6f624df51b2386c820f637b22008f1322ee2740e3c0f0b0ae44366870cf",
+      "artifact_path": "logs/artifacts/stage3/ep_0009/attempt_01/final_blueprint__emotion_focused.json",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-29T21:57:18.041414",
+      "stage": 3,
+      "episode": 10,
+      "arc": 3,
+      "attempt_num": 4,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 547050,
+      "token_cost": 0.548878,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep10:arc3:a4:20260429_213100",
+      "final_verdict": "PASS_WITH_WARNING",
+      "director_verdict": "PASS_WITH_FIX",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "action_focused",
+      "content_hash": "d1d228b1b372c66fab487880d558f87cdd2232ba209ae383aacd945a0279bda4",
+      "artifact_path": "logs/artifacts/stage3/ep_0010/attempt_04/final_blueprint__action_focused.json",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-29T21:58:28.841420",
+      "stage": 3,
+      "episode": 11,
+      "arc": 3,
+      "attempt_num": 1,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 70760,
+      "token_cost": 0.132845,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep11:arc3:a1:20260429_213100",
+      "final_verdict": "PASS_WITH_WARNING",
+      "director_verdict": "PASS_WITH_FIX",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "emotion_focused",
+      "content_hash": "75eefaa4394f674517976aaeb374a7a4f0be8666057d983d776afd205435b892",
+      "artifact_path": "logs/artifacts/stage3/ep_0011/attempt_01/final_blueprint__emotion_focused.json",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-29T22:03:16.088404",
+      "stage": 3,
+      "episode": 12,
+      "arc": 3,
+      "attempt_num": 2,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 287213,
+      "token_cost": 0.282523,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep12:arc3:a2:20260429_213100",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "action_focused",
+      "content_hash": "e62c19cc0c6ab9dd1abf70bc37fd1e58eefc4135ddf9bec241706b9f97dfd739",
+      "artifact_path": "logs/artifacts/stage3/ep_0012/attempt_02/final_blueprint__action_focused.json",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-29T22:09:59.807718",
+      "stage": 3,
+      "episode": 13,
+      "arc": 3,
+      "attempt_num": 3,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 403680,
+      "token_cost": 0.410343,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep13:arc3:a3:20260429_213100",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "emotion_focused",
+      "content_hash": "2a5fb9564414016433719f095cf1b67a1d767e920f14a1c8c3e6435e7d613034",
+      "artifact_path": "logs/artifacts/stage3/ep_0013/attempt_03/final_blueprint__emotion_focused.json",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-29T22:23:53.052813",
+      "stage": 3,
+      "episode": 14,
+      "arc": 4,
+      "attempt_num": 5,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 782576,
+      "token_cost": 0.815731,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep14:arc4:a5:20260429_213100",
+      "final_verdict": "PASS_WITH_WARNING",
+      "director_verdict": "PASS_WITH_FIX",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "emotion_focused",
+      "content_hash": "d290209b32df6023a4a31755b77b156c316be784ebd0ec37d1c8baf22e9dab61",
+      "artifact_path": "logs/artifacts/stage3/ep_0014/attempt_05/final_blueprint__emotion_focused.json",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-29T22:25:23.067337",
+      "stage": 3,
+      "episode": 15,
+      "arc": 4,
+      "attempt_num": 1,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 89982,
+      "token_cost": 0.149135,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep15:arc4:a1:20260429_213100",
+      "final_verdict": "PASS_WITH_WARNING",
+      "director_verdict": "PASS_WITH_FIX",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "dialogue_focused",
+      "content_hash": "2b577bc52cb892816a1435a4a6f6aefbeb6604bbb4a3f7fa8f8341b75b673954",
+      "artifact_path": "logs/artifacts/stage3/ep_0015/attempt_01/final_blueprint__dialogue_focused.json",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-29T22:38:04.156405",
+      "stage": 4,
+      "episode": 6,
+      "arc": 2,
+      "attempt_num": 1,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "ensemble",
+      "model_tier": 1,
+      "duration_ms": 454937,
+      "token_cost": 0.671878,
+      "is_patch": false,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep6:arc2:a1:20260429_223005",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "repair_scope": "inplace",
+      "fix_scope": "inplace",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [],
+        "must_fix": [],
+        "do_not_regress": [
+          "주인공의 냉철하고 압도적인 분위기 유지",
+          "직전 화 엔딩과의 매끄러운 연결"
+        ],
+        "success_condition": "현재 상태 유지",
+        "target_kind": "scene_model",
+        "target_kinds": [
+          "scene_model"
+        ],
+        "provenance": "director_authored"
+      },
+      "repair_contract": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "scene_model"
+      },
+      "scope_authority": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": false
+      },
+      "retry_budget_axes": {
+        "round": "initial",
+        "repair": "ensemble_generation",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "baseline"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 18,
+        "length": 10,
+        "python_warnings": 8
+      },
+      "candidate_key": "A|서사 강조",
+      "content_hash": "bbc74ff28a6dceaeeb13131409acc4683eedb2ab3e8bdf76016f49ccd909e715",
+      "artifact_path": "logs/artifacts/stage4/ep_0006/attempt_01/final_manuscript__A.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "none",
+      "strong_advisory_escalation": {
+        "source_verdict": "PASS",
+        "escalated_to": "PASS",
+        "notice_only": true,
+        "final_verdict_preserved": true,
+        "triggered_by": [
+          "npc_drift"
+        ]
+      },
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "PASS",
+      "runtime_route_action": "adopt_stage4_artifact",
+      "runtime_route_reason": "stage4 runtime gate=director_primary_pass route verdict=PASS",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-29T22:44:25.490893",
+      "stage": 3,
+      "episode": 7,
+      "arc": 2,
+      "attempt_num": 1,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 143425,
+      "token_cost": 0.138745,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep7:arc2:a1:20260429_224040",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "action_focused",
+      "content_hash": "aa4493c642dd3a944192f6f21323f7a7593c193452b69ddded176093f7358f44",
+      "artifact_path": "logs/artifacts/stage3/ep_0007/attempt_01/final_blueprint__action_focused.json",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-29T22:53:24.603294",
+      "stage": 4,
+      "episode": 7,
+      "arc": 2,
+      "attempt_num": 1,
+      "success": false,
+      "reject_reason": "[Conflict-first retry] post-select hard conflict invalidated the provisional PASS. 다음 라운드는 local patch가 아니라 authoritative carryover 기준 재작성으로 처리하세요.\n[V67] History Conflict: 제6화에서 바로 이어지는 상황임에도 불구하고 제7화에서 계절적 배경(월)이 1월에서 2월로 잘못 표기된 타임라인 충돌이 발견되었습니다.\n[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ced_score 4.00 (python warnings 4건)\n  [STYLE] dialogue_ratio 39% > style target 0%\n[자유 리뷰] 특이사항 없음. 폭풍 전야의 고요함과 본장 개장 후의 긴장감 대비가 훌륭하며, 주인공의 냉철한 심리 묘사가 돋보입니다. Python 연속성 경고는 직전 화 엔딩에서 이미 복도로 나온 상황이므로 엘리베이터 탑승으로 이어지는 전개가 자연스러워 오탐으로 판단됩니다.\n[모순 세부] [V67] History Conflict: 제6화에서 바로 이어지는 상황임에도 불구하고 제7화에서 계절적 배경(월)이 1월에서 2월로 잘못 표기된 타임라인 충돌이 발견되었습니다.\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 4.00 (python warnings 4건) / - [후보 A] dialogue_ratio 39% > style target 0%",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 495000,
+      "token_cost": 0.592562,
+      "is_patch": true,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep7:arc2:a1:20260429_224438",
+      "final_verdict": "REJECT",
+      "director_verdict": "PASS",
+      "gate_basis": "post_select_conflict",
+      "repair_scope": "full",
+      "fix_scope": "full",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "target_kind": "local_phrase"
+      },
+      "repair_contract": {
+        "subtype": "completed_event_replay",
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_phrase"
+      },
+      "scope_authority": {
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": true
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_2",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "POST_SELECT_CONFLICT",
+      "reject_bucket": "post_select_conflict",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 18,
+        "length": 10,
+        "python_warnings": 7
+      },
+      "candidate_key": "A|balanced",
+      "content_hash": "a1cd838f63d036a611232183240afb42ea75bf6841796d45f1fa111511ef43fd",
+      "artifact_path": "logs/artifacts/stage4/ep_0007/attempt_01/rejected_best__A_balanced.txt",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "downstream_gate",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "REJECT",
+      "runtime_route_action": "route_retry_full_rewrite",
+      "runtime_route_reason": "stage4 runtime gate=post_select_conflict route verdict=REJECT",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-29T22:57:20.549811",
+      "stage": 4,
+      "episode": 7,
+      "arc": 2,
+      "attempt_num": 2,
+      "success": false,
+      "reject_reason": "[V67] History Conflict: 제6화에서 바로 이어지는 상황임에도 불구하고 제7화에서 계절적 배경(월)이 1월에서 2월로 잘못 표기된 타임라인 충돌이 발견되었습니다.\n[V67] History Conflict: 제5화에서 이미 에콰도르 사태에 대해 박성호와 상세히 논의했음에도 불구하고, 제7화에서 박성호가 이를 처음 듣거나 맥락을 전혀 모르는 것처럼 반응하는 대화 및 정보 인지 충돌이 발생했습니다.\n[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ced_score 5.00 (python warnings 5건)\n  [STYLE] dialogue_ratio 36% > style target 0%\n[자유 리뷰] 특이사항 없음. 타임라인 오류(1월->2월)를 후보 A가 1월로 잘 교정하여 작성함. 주인공의 심리 묘사와 PB와의 대비가 훌륭하며, 폭풍 전야의 긴장감이 잘 조성됨.\n[모순 세부] [V67] History Conflict: 제5화에서 이미 에콰도르 사태에 대해 박성호와 상세히 논의했음에도 불구하고, 제7화에서 박성호가 이를 처음 듣거나 맥락을 전혀 모르는 것처럼 반응하는 대화 및 정보 인지 충돌이 발생했습니다.\n[R0 이전 지시] [Conflict-first retry] post-select hard conflict invalidated the provisional PASS. 다음 라운드는 local patch가 아니라 authoritative carryover 기준 재작성으로 처리하세요.\n- [R0] [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 4.00 (python warnings 4건) / - [후보 A] dialogue_ratio 39% > style target 0%\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 5.00 (python warnings 5건) / - [후보 A] dialogue_ratio 36% > style target 0% / - [후보 B] ced_score 7.00 (python warnings 7건) / - [후보 B] dialogue_ratio 26% > style target 0% / - [후보 C] ced_score 7.00 (python warnings 7건) / - [후보 C] dialogue_ratio 28% > style target 0%",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 235922,
+      "token_cost": 0.5460160000000001,
+      "is_patch": true,
+      "prev_score": 95,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep7:arc2:a2:20260429_224438",
+      "final_verdict": "REJECT",
+      "director_verdict": "PASS",
+      "gate_basis": "post_select_conflict",
+      "repair_scope": "full",
+      "fix_scope": "full",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "target_kind": "local_phrase"
+      },
+      "repair_contract": {
+        "subtype": "history",
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_phrase"
+      },
+      "scope_authority": {
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": true
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_3",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "POST_SELECT_CONFLICT",
+      "reject_bucket": "post_select_conflict",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 18,
+        "length": 10,
+        "python_warnings": 7
+      },
+      "candidate_key": "A|balanced",
+      "content_hash": "213822034ecb415e984228dd520dfc3157c58e3fb300fd1e37283d411d0b2ff5",
+      "artifact_path": "logs/artifacts/stage4/ep_0007/attempt_02/rejected_best__A_balanced.txt",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "downstream_gate",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "REJECT",
+      "runtime_route_action": "route_retry_full_rewrite",
+      "runtime_route_reason": "stage4 runtime gate=post_select_conflict route verdict=REJECT",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-29T23:04:41.074633",
+      "stage": 4,
+      "episode": 7,
+      "arc": 2,
+      "attempt_num": 3,
+      "success": false,
+      "reject_reason": "[Conflict-first retry] post-select hard conflict invalidated the provisional PASS. 다음 라운드는 local patch가 아니라 authoritative carryover 기준 재작성으로 처리하세요.\n[Continuity Conflict] 현재 원고는 이전 원고에서 주인공이 속으로만 생각하고 노트에 적었던 정보(에콰도르 이슈)를, 마치 조력자(박성호)에게 이미 설명했던 것처럼 잘못 묘사하는 대화 충돌이 발생했습니다.\n[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ai_slop score 2.00 (recent median 1.00) / hits=그야말로x1, 어느새x1\n  [STYLE] ced_score 5.00 (python warnings 5건)\n  [STYLE] dialogue_ratio 24% > style target 0%\n도입부의 중복 서술 3문단을 삭제하고, 로비로 나서는 장면부터 시작하도록 수정할 것.\n[자유 리뷰] 레버리지 투자의 심리적 압박감과 주인공의 냉철한 통제력이 매우 잘 표현되었습니다. 다만 도입부 3문단이 직전 화 엔딩을 그대로 복사해 붙여넣은 형태이므로 이 부분만 덜어내면 훌륭한 원고가 됩니다.\n[모순 세부] [MINOR] 상태: 후보 A의 첫 3문단이 직전 화 엔딩과 토씨 하나 틀리지 않고 완전히 동일하게 반복 서술됨.\n[R1 이전 지시] - [R1] [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ai_slop score 2.00 (recent median 1.00) / hits=그야말로x1, 어느새x1 / - [후보 A] ced_score 5.00 (python warnings 5건) / - [후보 A] dialogue_ratio 24% > style target 0%\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ai_slop score 2.00 (recent median 1.00) / hits=그야말로x1, 어느새x1 / - [후보 A] ced_score 5.00 (python warnings 5건) / - [후보 A] dialogue_ratio 24% > style target 0%",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 395485,
+      "token_cost": 0.711759,
+      "is_patch": true,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep7:arc2:a3:20260429_224438",
+      "final_verdict": "REJECT",
+      "director_verdict": "PASS_WITH_FIX",
+      "gate_basis": "post_select_conflict",
+      "repair_scope": "full",
+      "fix_scope": "full",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [
+          "'이제 모든 설계가 실행 궤도에 올랐다.",
+          "맹렬히 회전하기 시작했다."
+        ],
+        "must_fix": [
+          "직전 화 엔딩과 완전히 동일한 첫 3문단을 삭제하고, '여의도 한미증권 본사의 1층 로비는...' 문장부터 자연스럽게 시작하도록 수정할 것."
+        ],
+        "do_not_regress": [
+          "이후의 이동 동선과 성북동 카페에서의 모니터링, 박성호 PB와의 통화 텐션은 그대로 유지할 것."
+        ],
+        "success_condition": "중복 서술이 제거되고 1층 로비로 나서는 장면부터 매끄럽게 시작됨.",
+        "target_kind": "local_sentence",
+        "patch_target_records": [
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_sentence",
+            "summary": "'이제 모든 설계가 실행 궤도에 올랐다.",
+            "patch_target_id": "pt:89eda231adf7"
+          },
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_sentence",
+            "summary": "맹렬히 회전하기 시작했다.",
+            "patch_target_id": "pt:bda6b251989a"
+          }
+        ],
+        "target_kinds": [
+          "local_sentence"
+        ],
+        "provenance": "director_authored"
+      },
+      "repair_contract": {
+        "subtype": "상태",
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_sentence"
+      },
+      "scope_authority": {
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": true
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_4",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "POST_SELECT_CONFLICT",
+      "reject_bucket": "post_select_conflict",
+      "score_breakdown": {
+        "continuity_contradiction": 37,
+        "blueprint_coverage": 20,
+        "quality_engagement": 18,
+        "length": 10,
+        "python_warnings": 8
+      },
+      "candidate_key": "A|narrative",
+      "content_hash": "d58fb1f2f1eba05f713bdb6bed2ade6be3b5684bbec770faf23aa4fc0a75c55c",
+      "artifact_path": "logs/artifacts/stage4/ep_0007/attempt_03/rejected_best__A_narrative.txt",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "downstream_gate",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "REJECT",
+      "runtime_route_action": "route_retry_full_rewrite",
+      "runtime_route_reason": "stage4 runtime gate=post_select_conflict route verdict=REJECT",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-29T23:13:51.146570",
+      "stage": 4,
+      "episode": 7,
+      "arc": 2,
+      "attempt_num": 4,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "ensemble",
+      "model_tier": 1,
+      "duration_ms": 550030,
+      "token_cost": 0.579426,
+      "is_patch": false,
+      "prev_score": 93,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep7:arc2:a4:20260429_224438",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "repair_scope": "inplace",
+      "fix_scope": "inplace",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [],
+        "must_fix": [],
+        "do_not_regress": [],
+        "success_condition": "",
+        "target_kind": "entity_ref",
+        "target_kinds": [
+          "entity_ref"
+        ],
+        "provenance": "director_authored"
+      },
+      "repair_contract": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "entity_ref"
+      },
+      "scope_authority": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": false
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_4",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 18,
+        "length": 10,
+        "python_warnings": 7
+      },
+      "candidate_key": "C|긴장감 + 반전 강조",
+      "content_hash": "c050b6d7c2c9c1b5111f604a47e2204f9eacd6a13591dbfddc1bc0754a6865c3",
+      "artifact_path": "logs/artifacts/stage4/ep_0007/attempt_04/final_manuscript__C.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "none",
+      "strong_advisory_escalation": {
+        "source_verdict": "PASS",
+        "escalated_to": "PASS",
+        "notice_only": true,
+        "final_verdict_preserved": true,
+        "triggered_by": [
+          "flashback"
+        ]
+      },
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "PASS",
+      "runtime_route_action": "adopt_stage4_artifact",
+      "runtime_route_reason": "stage4 runtime gate=director_primary_pass route verdict=PASS",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-29T23:33:09.033024",
+      "stage": 3,
+      "episode": 8,
+      "arc": 2,
+      "attempt_num": 5,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 900573,
+      "token_cost": 0.719298,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep8:arc2:a5:20260429_231654",
+      "final_verdict": "PASS_WITH_WARNING",
+      "director_verdict": "PASS_WITH_FIX",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "dialogue_focused",
+      "content_hash": "0fa5a7c3bfe451a671b9474870abd9a9562a9b0adcc099c2831e297707ca2643",
+      "artifact_path": "logs/artifacts/stage3/ep_0008/attempt_05/final_blueprint__dialogue_focused.json",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-29T23:42:33.721572",
+      "stage": 4,
+      "episode": 8,
+      "arc": 2,
+      "attempt_num": 1,
+      "success": false,
+      "reject_reason": "[Conflict-first retry] post-select hard conflict invalidated the provisional PASS. 다음 라운드는 local patch가 아니라 authoritative carryover 기준 재작성으로 처리하세요.\n[Continuity Conflict] 제8화는 이전 원고에서 확립된 수익금 계산 공식(1달러 상승 시 약 4~5억 원 수익)과 정면으로 충돌하는 오류(5달러 상승에 3억 원 수익)를 범하고 있습니다. 또한, 회귀 당일(1월 1일) 하루 만에 여의도에 완벽하게 세팅된 비밀 오피스를 임대했다는 설정이 타임라인상 개연성 충돌을 일으킵니다.\n[V67] History Conflict: 이전 회차에서 확립된 선물 거래의 레버리지 및 수익금 계산 공식(1달러 상승당 약 5억 원 수익)과 현재 회차에 묘사된 미실현 손익(4달러 이상 상승했으나 3억 원 수익) 간에 치명적인 수학적 모순이 존재합니다. 투자물 장르에서 자산 증식의 개연성을 크게 훼손하는 충돌입니다.\n[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ced_score 8.00 (python warnings 8건)\n  [STYLE] dialogue_ratio 18% > style target 0%\n[자유 리뷰] 특이사항 없음. 주인공의 냉철한 심리 묘사와 거시경제 지표가 맞물려 돌아가는 카타르시스가 잘 표현되었습니다.\n[모순 세부] [Continuity Conflict] 제8화는 이전 원고에서 확립된 수익금 계산 공식(1달러 상승 시 약 4~5억 원 수익)과 정면으로 충돌하는 오류(5달러 상승에 3억 원 수익)를 범하고 있습니다. 또한, 회귀 당일(1월 1일) 하루 만에 여의도에 완벽하게 세팅된 비밀 오피스를 임대했다는 설정이 타임라인상 개연성 충돌을 일으킵니다.\n[모순 세부] [V67] History Conflict: 이전 회차에서 확립된 선물 거래의 레버리지 및 수익금 계산 공식(1달러 상승당 약 5억 원 수익)과 현재 회차에 묘사된 미실현 손익(4달러 이상 상승했으나 3억 원 수익) 간에 치명적인 수학적 모순이 존재합니다. 투자물 장르에서 자산 증식의 개연성을 크게 훼손하는 충돌입니다.\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 8.00 (python warnings 8건) / - [후보 A] dialogue_ratio 18% > style target 0% / - [후보 B] ced_score 8.00 (python warnings 8건) / - [후보 B] dialogue_ratio 25% > style target 0% / - [후보 C] ced_score 8.00 (python warnings 8건)",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 489453,
+      "token_cost": 0.63212,
+      "is_patch": true,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep8:arc2:a1:20260429_233327",
+      "final_verdict": "REJECT",
+      "director_verdict": "PASS",
+      "gate_basis": "post_select_conflict",
+      "repair_scope": "full",
+      "fix_scope": "full",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "target_kind": "scene_model"
+      },
+      "repair_contract": {
+        "subtype": "completed_event_replay",
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "scene_model"
+      },
+      "scope_authority": {
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": true
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_2",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "POST_SELECT_CONFLICT",
+      "reject_bucket": "post_select_conflict",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 18,
+        "length": 10,
+        "python_warnings": 7
+      },
+      "candidate_key": "A|balanced",
+      "content_hash": "c30d3fc73c894afec802a432362ddbac8f97599764aa17b1947c0e1d882f9978",
+      "artifact_path": "logs/artifacts/stage4/ep_0008/attempt_01/rejected_best__A_balanced.txt",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "downstream_gate",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "REJECT",
+      "runtime_route_action": "route_retry_full_rewrite",
+      "runtime_route_reason": "stage4 runtime gate=post_select_conflict route verdict=REJECT",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-29T23:49:04.422267",
+      "stage": 4,
+      "episode": 8,
+      "arc": 2,
+      "attempt_num": 2,
+      "success": false,
+      "reject_reason": "empty_candidates",
+      "generation_method": "ensemble",
+      "model_tier": 1,
+      "duration_ms": 341467,
+      "token_cost": 0.779447,
+      "is_patch": false,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep8:arc2:a2:20260429_233327",
+      "final_verdict": "EMPTY",
+      "director_verdict": "",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "",
+      "content_hash": "",
+      "artifact_path": "",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-29T23:56:46.404213",
+      "stage": 4,
+      "episode": 8,
+      "arc": 2,
+      "attempt_num": 3,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "ensemble",
+      "model_tier": 1,
+      "duration_ms": 461968,
+      "token_cost": 0.6512020000000001,
+      "is_patch": false,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep8:arc2:a3:20260429_233327",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "repair_scope": "inplace",
+      "fix_scope": "inplace",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [],
+        "must_fix": [
+          "특별히 수정할 사항 없음"
+        ],
+        "do_not_regress": [
+          "현재의 차갑고 이성적인 주인공의 톤 앤 매너",
+          "시간대별로 조여오는 긴장감 묘사"
+        ],
+        "success_condition": "현재 상태 유지",
+        "target_kind": "scene_model",
+        "target_kinds": [
+          "scene_model"
+        ],
+        "provenance": "director_authored"
+      },
+      "repair_contract": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "scene_model"
+      },
+      "scope_authority": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": false
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_3",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "baseline"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 18,
+        "length": 10,
+        "python_warnings": 8
+      },
+      "candidate_key": "B|긴장감 + 반전 강조",
+      "content_hash": "b7fd07b7d245e523d4138c8f544ac30b32df850cf736b9b9487cd71831fbf3a8",
+      "artifact_path": "logs/artifacts/stage4/ep_0008/attempt_03/final_manuscript__B.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "none",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "PASS",
+      "runtime_route_action": "adopt_stage4_artifact",
+      "runtime_route_reason": "stage4 runtime gate=director_primary_pass route verdict=PASS",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T00:11:19.949037",
+      "stage": 3,
+      "episode": 9,
+      "arc": 2,
+      "attempt_num": 5,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 668916,
+      "token_cost": 0.665691,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep9:arc2:a5:20260429_235913",
+      "final_verdict": "PASS_WITH_WARNING",
+      "director_verdict": "PASS_WITH_FIX",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "action_focused",
+      "content_hash": "c1870693184f291fc8955e6ad2f7887cbb01cef5519fdf3bb072346c4ba8226d",
+      "artifact_path": "logs/artifacts/stage3/ep_0009/attempt_05/final_blueprint__action_focused.json",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-30T00:19:54.506255",
+      "stage": 4,
+      "episode": 9,
+      "arc": 2,
+      "attempt_num": 1,
+      "success": false,
+      "reject_reason": "[Conflict-first retry] post-select hard conflict invalidated the provisional PASS. 다음 라운드는 local patch가 아니라 authoritative carryover 기준 재작성으로 처리하세요.\n[IFC] 불변사실 위반 감지 (확정상태회귀). 국소 패치 대신 재작성 우선 처리가 필요합니다.\n[V67] History Conflict: 이전 회차에서 이미 획득하여 사용 중인 핵심 아이템(보안 휴대전화/핫라인)을 현재 회차에서 처음 전달받는 것으로 묘사하여 설정 충돌이 발생했습니다.\n[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ced_score 5.00 (python warnings 5건)\n  [STYLE] dialogue_ratio 18% > style target 0%\n  [FACT] [수치 불일치] 원고 '자산 45억 1,245만 원' (45.1억) vs FactLedger 'capital'=20.0억 (차이 25.1억, 126%)\n  [FACT] [수치 불일치] 원고 '자본금 20억 원' (20.0억) vs FactLedger 'total_assets'=45.1억 (차이 25.1억, 56%)\n  [FACT] [수치 불일치] 원고 '자산 45억 1,245만 원' (45.1억) vs FactLedger 'capital'=20.0억 (차이 25.1억, 126%)\n  [FACT] [\"처음\" 모순 의심] '첫 베팅이 단 며칠 만에 25억 원이라는 막대한 자본을 창' — 이전 화에서 유사 이벤트(베팅, 며칠, 만에) 존재 가능성. 실제 '처음'인지 확인 필요\n[자유 리뷰] 특이사항 없음. 주인공의 냉철한 판단력과 PB의 굴복이 대비되며 장르적 쾌감을 잘 살렸습니다.\n[모순 세부] [V67] History Conflict: 이전 회차에서 이미 획득하여 사용 중인 핵심 아이템(보안 휴대전화/핫라인)을 현재 회차에서 처음 전달받는 것으로 묘사하여 설정 충돌이 발생했습니다.\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 5.00 (python warnings 5건) / - [후보 A] dialogue_ratio 18% > style target 0% / - [후보 B] ced_score 6.00 (python warnings 6건) / - [후보 B] dialogue_ratio 20% > style target 0% / - [후보 C] ced_score 6.00 (python warnings 6건) / - [후보 C] dialogue_ratio 21% > style target 0%\n- [INFO] [NumericConsistency — Python 수치 검증 결과. 각 항목에 대해 numeric_consistency_review에서 AGREE/DISMISS 판정 필수] / - [NC-1][후보 A][MAJOR] [수치 불일치] 원고 '자산 45억 1,245만 원' (45.1억) vs FactLedger 'capital'=20.0억 (차이 25.1억, 126%) / - [NC-2][후보 A][MAJOR] [수치 불일치] 원고 '자본금 20억 원' (20.0억) vs FactLedger 'total_assets'=45.1억 (차이 25.1억, 56%) / - [NC-3][후보 A][MAJOR] [수치 불일치] 원고 '자산 45억 1,245만 원' (45.1억) vs FactLedger 'capital'=20.0억 (차이 25.1억, 126%) / - [NC-4][후보 A][MINOR] [\"처음\" 모순 의심] '첫 베팅이 단 며칠 만에 25억 원이라는 막대한 자본을 창' — 이전 화에서 유사 이벤트(베팅, 며칠, 만에) 존재 가능성. 실제 '처음'인지 확인 필요 / - [NC-5][후보 B][MAJOR] [수치 불일치] 원고 '자산은 45억 원' (45.0억) vs FactLedger 'capital'=20.0억 (차이 25.0억, 125%) / - [NC-6][후보 B][MAJOR] [수치 불일치] 원고 '자본금 20억 원' (20.0억) vs FactLedger 'total_assets'=45.1억 (차이 25.1억, 56%) / - [NC-7][후보 B][MINOR] [\"처음\" 모순 의심] '첫 번째 단계를 완벽하게 완성하는 순간이었다' — 이전 화에서 유사 이벤트(번째, 단계, 완벽하게) 존재 가능성. 실제 '처음'인지 확인 필요 / - [NC-8][후보 C][MAJOR] [수치 불일치] 원고 '원금 20억 원' (20.0억) vs FactLedger 'total_assets'=45.1억 (차이 25.1억, 56%) / - [NC-9][후보 C][MAJOR] [수치 불일치] 원고 '수익 25억 1,245만 원' (25.1억) vs FactLedger 'capital'=20.0억 (차이 5.1억, 26%) / - [NC-10][후보 C][MAJOR] [수치 불일치] 원고 '수익 25억 1,245만 원' (25.1억) vs FactLedger 'total_assets'=45.1억 (차이 20.0억, 44%) / - [NC-11][후보 C][MAJOR] [수치 불일치] 원고 '45억 원의 자본' (45.0억) vs FactLedger 'capital'=20.0억 (차이 25.0억, 125%) / - [NC-12][후보 C][MINOR] [\"처음\" 모순 의심] '첫 번째 투자였던 원유 선물 포지션의 거대한 성공' — 이전 화에서 유사 이벤트(번째, 투자였던, 원유) 존재 가능성. 실제 '처음'인지 확인 필요",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 462063,
+      "token_cost": 0.592344,
+      "is_patch": true,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep9:arc2:a1:20260430_001137",
+      "final_verdict": "REJECT",
+      "director_verdict": "PASS",
+      "gate_basis": "post_select_conflict",
+      "repair_scope": "full",
+      "fix_scope": "full",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "target_kind": "local_sentence"
+      },
+      "repair_contract": {
+        "subtype": "completed_event_replay",
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_sentence"
+      },
+      "scope_authority": {
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": true
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_2",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "POST_SELECT_CONFLICT",
+      "reject_bucket": "post_select_conflict",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 20,
+        "length": 10,
+        "python_warnings": 10
+      },
+      "candidate_key": "A|tension",
+      "content_hash": "04d5ff895d9e8a54003230c396b6cb16c3ca87a752884905750959b7550a361b",
+      "artifact_path": "logs/artifacts/stage4/ep_0009/attempt_01/rejected_best__A_tension.txt",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "downstream_gate",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "REJECT",
+      "runtime_route_action": "route_retry_full_rewrite",
+      "runtime_route_reason": "stage4 runtime gate=post_select_conflict route verdict=REJECT",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T00:30:48.279569",
+      "stage": 4,
+      "episode": 9,
+      "arc": 2,
+      "attempt_num": 2,
+      "success": false,
+      "reject_reason": "[Conflict-first retry] post-select hard conflict invalidated the provisional PASS. 다음 라운드는 local patch가 아니라 authoritative carryover 기준 재작성으로 처리하세요.\n[Continuity Conflict] 제8화와 제9화가 시간상으로 바로 이어지는 장면임에도 불구하고, 주인공이 거래를 진행 중인 장소(카페 VIP 밀실 -> 대표실)와 사용 중인 장비(노트북 -> 데스크탑 본체)가 갑작스럽게 변경되는 설정 충돌이 발생했습니다.\n[V67] History Conflict: 제8화에서 프라이빗 카페 VIP 밀실에서 노트북으로 거래하던 상황이 제9화 도입부에서 대표실의 데스크톱 PC 환경으로 갑작스럽게 변경되어 장소 및 사물 묘사에 연속성 오류가 발생했습니다.\n[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ced_score 5.00 (python warnings 5건)\n  [STYLE] dialogue_ratio 28% > style target 0%\n  [FACT] [수치 불일치] 원고 '자본금 20억 원' (20.0억) vs FactLedger 'total_assets'=45.1억 (차이 25.1억, 56%)\n  [FACT] [수치 불일치] 원고 '45억 원의 자본' (45.0억) vs FactLedger 'capital'=20.0억 (차이 25.0억, 125%)\n도입부 청산 씬의 장소를 'VIP 밀실'로 수정하고, 날이 밝은 뒤 'SW인베스트먼트 대표실'로 이동하는 문장을 추가할 것\n[자유 리뷰] 후보 A는 전반적인 문장력과 긴장감 조성이 훌륭하며, 수치 계산도 정확합니다. 다만 직전 화 엔딩 장소인 VIP 밀실에서 SW인베스트먼트 대표실로 넘어가는 과정이 생략되어 있어, 도입부 장소 수정 및 이동 묘사 추가가 필요합니다.\n[모순 세부] [MINOR] 상태: 설명 없이 '대표실'에서 청산을 진행하는 것으로 서술됨\n[R0 이전 지시] - [R0] [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 5.00 (python warnings 5건) / - [후보 A] dialogue_ratio 28% > style target 0% / - [후보 B] ced_score 5.00 (python warnings 5건) / - [후보 B] dialogue_ratio 24% > style target 0% / - [후보 C] ced_score 5.00 (python warnings 5건) / - [후보 C] dialogue_ratio 37% > style target 0%\n- [R0] [INFO] [NumericConsistency — Python 수치 검증 결과. 각 항목에 대해 numeric_consistency_review에서 AGREE/DISMISS 판정 필수] / - [NC-1][후보 A][MAJOR] [수치 불일치] 원고 '자본금 20억 원' (20.0억) vs FactLedger 'total_assets'=45.1억 (차이 25.1억, 56%) / - [NC-2][후보 A][MAJOR] [수치 불일치] 원고 '45억 원의 자본' (45.0억) vs FactLedger 'capital'=20.0억 (차이 25.0억, 125%) / - [NC-3][후보 B][MAJOR] [수치 불일치] 원고 '자본금 20억 원' (20.0억) vs FactLedger 'total_assets'=45.1억 (차이 25.1억, 56%) / - [NC-4][후보 B][MINOR] [\"처음\" 모순 의심] '첫 페이지에 적혀 있던 원유 관련 지표와 폭등 타점들은 이' — 이전 화에서 유사 이벤트(페이지, 적혀, 있던) 존재 가능성. 실제 '처음'인지 확인 필요 / - [NC-5][후보 C][MAJOR] [수치 불일치] 원고 '자본금 20억 원' (20.0억) vs FactLedger 'total_assets'=45.1억 (차이 25.1억, 56%) / - [NC-6][후보 C][MAJOR] [수치 불일치] 원고 '자산 45억 1,245만 원' (45.1억) vs FactLedger 'capital'=20.0억 (차이 25.1억, 126%) / - [NC-7][후보 C][MINOR] [\"처음\" 모순 의심] '첫 페이지에 적힌 원유 선물 타점은 이미 완벽한 승리로 기' — 이전 화에서 유사 이벤트(페이지, 적힌, 원유) 존재 가능성. 실제 '처음'인지 확인 필요\n- [R0] [MAJOR · Flashback] [FlashbackVerifier — 회상 오염 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 C][MAJOR] '떠올랐다': 회상 장면에서는 시장 붕괴와 글로벌 자본 폭주의 원인을 '이란 핵 위기'와 '이란의 우라늄 농축 재개 선언'으로 서술하고 있으나, 과거 에피소드(EP 7)에서는 글로벌 자본 시장의 심장부를 찢어발길 거대한 뇌관을 '에콰도르'로 명시했습니다.\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 5.00 (python warnings 5건) / - [후보 A] dialogue_ratio 28% > style target 0% / - [후보 B] ced_score 5.00 (python warnings 5건) / - [후보 B] dialogue_ratio 24% > style target 0% / - [후보 C] ced_score 5.00 (python warnings 5건) / - [후보 C] dialogue_ratio 37% > style target 0%\n- [INFO] [NumericConsistency — Python 수치 검증 결과. 각 항목에 대해 numeric_consistency_review에서 AGREE/DISMISS 판정 필수] / - [NC-1][후보 A][MAJOR] [수치 불일치] 원고 '자본금 20억 원' (20.0억) vs FactLedger 'total_assets'=45.1억 (차이 25.1억, 56%) / - [NC-2][후보 A][MAJOR] [수치 불일치] 원고 '45억 원의 자본' (45.0억) vs FactLedger 'capital'=20.0억 (차이 25.0억, 125%) / - [NC-3][후보 B][MAJOR] [수치 불일치] 원고 '자본금 20억 원' (20.0억) vs FactLedger 'total_assets'=45.1억 (차이 25.1억, 56%) / - [NC-4][후보 B][MINOR] [\"처음\" 모순 의심] '첫 페이지에 적혀 있던 원유 관련 지표와 폭등 타점들은 이' — 이전 화에서 유사 이벤트(페이지, 적혀, 있던) 존재 가능성. 실제 '처음'인지 확인 필요 / - [NC-5][후보 C][MAJOR] [수치 불일치] 원고 '자본금 20억 원' (20.0억) vs FactLedger 'total_assets'=45.1억 (차이 25.1억, 56%) / - [NC-6][후보 C][MAJOR] [수치 불일치] 원고 '자산 45억 1,245만 원' (45.1억) vs FactLedger 'capital'=20.0억 (차이 25.1억, 126%) / - [NC-7][후보 C][MINOR] [\"처음\" 모순 의심] '첫 페이지에 적힌 원유 선물 타점은 이미 완벽한 승리로 기' — 이전 화에서 유사 이벤트(페이지, 적힌, 원유) 존재 가능성. 실제 '처음'인지 확인 필요\n- [MAJOR · Flashback] [FlashbackVerifier — 회상 오염 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 C][MAJOR] '떠올랐다': 회상 장면에서는 시장 붕괴와 글로벌 자본 폭주의 원인을 '이란 핵 위기'와 '이란의 우라늄 농축 재개 선언'으로 서술하고 있으나, 과거 에피소드(EP 7)에서는 글로벌 자본 시장의 심장부를 찢어발길 거대한 뇌관을 '에콰도르'로 명시했습니다.",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 552547,
+      "token_cost": 0.5800819999999999,
+      "is_patch": true,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep9:arc2:a2:20260430_001137",
+      "final_verdict": "REJECT",
+      "director_verdict": "PASS_WITH_FIX",
+      "gate_basis": "post_select_conflict",
+      "repair_scope": "full",
+      "fix_scope": "full",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [
+          "텅 빈 대표실을 채우는 것은",
+          "새로운 하루가 밝아오고 있었다."
+        ],
+        "must_fix": [
+          "도입부의 장소를 '대표실'에서 직전 화 엔딩 장소인 'VIP 밀실'로 수정할 것",
+          "아침이 밝아오는 묘사 직후, 한시우가 'SW인베스트먼트 대표실'로 이동하여 업무를 시작한다는 장소 이동 문장을 추가할 것"
+        ],
+        "do_not_regress": [
+          "청산 과정의 긴장감과 수치 정확성 유지",
+          "박성호와의 대화 톤 및 권력 관계 유지"
+        ],
+        "success_condition": "도입부 장소가 VIP 밀실로 일치하고, 박성호의 전화를 받기 전 SW인베스트먼트 대표실로 이동하는 묘사가 포함됨",
+        "target_kind": "local_sentence",
+        "patch_target_records": [
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_sentence",
+            "summary": "텅 빈 대표실을 채우는 것은",
+            "patch_target_id": "pt:0d3d5f31c0c6"
+          },
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_sentence",
+            "summary": "새로운 하루가 밝아오고 있었다.",
+            "patch_target_id": "pt:beffc5db5801"
+          }
+        ],
+        "target_kinds": [
+          "local_sentence"
+        ],
+        "provenance": "director_authored"
+      },
+      "repair_contract": {
+        "subtype": "상태",
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_sentence"
+      },
+      "scope_authority": {
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": true
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_3",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "POST_SELECT_CONFLICT",
+      "reject_bucket": "post_select_conflict",
+      "score_breakdown": {
+        "continuity_contradiction": 37,
+        "blueprint_coverage": 20,
+        "quality_engagement": 18,
+        "length": 10,
+        "python_warnings": 8
+      },
+      "candidate_key": "A|narrative",
+      "content_hash": "8902f2b2649fc707d34690dc808c3562baea969c02db89dc38b527441ebff438",
+      "artifact_path": "logs/artifacts/stage4/ep_0009/attempt_02/rejected_best__A_narrative.txt",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "downstream_gate",
+      "strong_advisory_escalation": {
+        "source_verdict": "PASS_WITH_FIX",
+        "escalated_to": "PASS_WITH_FIX",
+        "notice_only": true,
+        "final_verdict_preserved": true,
+        "triggered_by": [
+          "flashback"
+        ]
+      },
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "REJECT",
+      "runtime_route_action": "route_retry_full_rewrite",
+      "runtime_route_reason": "stage4 runtime gate=post_select_conflict route verdict=REJECT",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T00:36:32.446966",
+      "stage": 4,
+      "episode": 9,
+      "arc": 2,
+      "attempt_num": 3,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "ensemble",
+      "model_tier": 1,
+      "duration_ms": 344125,
+      "token_cost": 0.5929190000000002,
+      "is_patch": false,
+      "prev_score": 93,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep9:arc2:a3:20260430_001137",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "repair_scope": "inplace",
+      "fix_scope": "inplace",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [
+          "SW인베스트먼트 대표실"
+        ],
+        "must_fix": [
+          "추가 수정 불필요 (현재 상태 유지)"
+        ],
+        "do_not_regress": [
+          "카페 밀실에서 대표실로 이동하는 동선 묘사 유지",
+          "정확한 수치(20억 원, 3배 레버리지, 45억 1,245만 원) 유지"
+        ],
+        "success_condition": "현재의 높은 품질과 연속성 유지",
+        "target_kind": "local_phrase",
+        "patch_target_records": [
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_phrase",
+            "summary": "SW인베스트먼트 대표실",
+            "patch_target_id": "pt:59fa7bc8d4bf"
+          }
+        ],
+        "target_kinds": [
+          "local_phrase"
+        ],
+        "provenance": "director_authored"
+      },
+      "repair_contract": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_phrase"
+      },
+      "scope_authority": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": false
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_3",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 20,
+        "length": 10,
+        "python_warnings": 8
+      },
+      "candidate_key": "C|균형 전략",
+      "content_hash": "11904a2601919e3b6b1846175de67b7b6801921964e979906828627f8ef71e82",
+      "artifact_path": "logs/artifacts/stage4/ep_0009/attempt_03/final_manuscript__C.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "none",
+      "strong_advisory_escalation": {
+        "source_verdict": "PASS",
+        "escalated_to": "PASS",
+        "notice_only": true,
+        "final_verdict_preserved": true,
+        "triggered_by": [
+          "npc_drift"
+        ]
+      },
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "PASS",
+      "runtime_route_action": "adopt_stage4_artifact",
+      "runtime_route_reason": "stage4 runtime gate=director_primary_pass route verdict=PASS",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T00:49:20.706821",
+      "stage": 3,
+      "episode": 10,
+      "arc": 3,
+      "attempt_num": 2,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 410168,
+      "token_cost": 0.276939,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep10:arc3:a2:20260430_004105",
+      "final_verdict": "PASS_WITH_WARNING",
+      "director_verdict": "PASS_WITH_FIX",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "dialogue_focused",
+      "content_hash": "07c488e67104966e64b31a31206e03d926d296867a2661aa5656a79f6df8b669",
+      "artifact_path": "logs/artifacts/stage3/ep_0010/attempt_02/final_blueprint__dialogue_focused.json",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-30T00:59:22.879012",
+      "stage": 4,
+      "episode": 10,
+      "arc": 3,
+      "attempt_num": 1,
+      "success": false,
+      "reject_reason": "[IFC] 불변사실 위반 감지 (확정상태회귀). 국소 패치 대신 재작성 우선 처리가 필요합니다.\n[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ai_slop score 3.00 (recent median 2.00) / hits=시선을 돌렸다x2, 말 그대로x1\n  [STYLE] ced_score 4.00 (python warnings 4건)\n  [STYLE] dialogue_ratio 48% > style target 0%\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ai_slop score 3.00 (recent median 2.00) / hits=시선을 돌렸다x2, 말 그대로x1 / - [후보 A] ced_score 4.00 (python warnings 4건) / - [후보 A] dialogue_ratio 48% > style target 0% / - [후보 B] ced_score 3.00 (python warnings 3건) / - [후보 B] dialogue_ratio 43% > style target 0% / - [후보 C] ced_score 4.00 (python warnings 4건) / - [후보 C] dialogue_ratio 35% > style target 0%\n- [INFO] [NumericConsistency — Python 수치 검증 결과. 각 항목에 대해 numeric_consistency_review에서 AGREE/DISMISS 판정 필수] / - [NC-1][후보 C][MAJOR][numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '수익 3억 원' (3.0억) vs resumed FactLedger 'capital'=45.1억 (EP9 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요 / - [NC-2][후보 C][MAJOR][numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '수익 3억 원' (3.0억) vs resumed FactLedger 'total_assets'=45.1억 (EP9 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요 / - [NC-3][후보 C][MINOR] [\"처음\" 모순 의심] '첫 번째 원유 선물 거래를 통해 45억 1' — 이전 화에서 유사 이벤트(번째, 원유, 선물) 존재 가능성. 실제 '처음'인지 확인 필요\n- [MAJOR · Flashback] [FlashbackVerifier — 회상 오염 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 B][MAJOR] '과거의': 회상 장면에서 한시우가 자신을 재설계하던 공간을 '좁고 어두운 방'으로 묘사했으나, 과거 에피소드(EP 4)에 따르면 해당 시점의 장소는 '성북동 본가 저택 침실'이므로 공간의 규모와 환경 묘사가 모순됩니다.\n[MAD 제약/합의 개선 지침]\n세 전문가의 의견을 종합하여, 과도하게 설명적이었던 내면 독백을 대화와 행동 묘사로 전환하고, 작위적인 비유를 덜어내어 주인공의 냉철함을 부각한 합의된 수정본입니다.\n\n***\n\n펜촉이 종이 위를 스치는 사각거리는 마찰음만이 텅 빈 대표실을 차갑게 울리던 2월의 마지막 날로부터, 기계적인 정확성으로 한 달 남짓한 시간이 흘러 있었다.\n\n2006년 4월 1일 오전, SW인베스트먼트 대표실.\n\n창밖으로는 완연한 봄기운이 아지랑이처럼 피어오르며 스며들고 있었지만, 두꺼운 암막 블라인드가 빈틈없이 내려진 실내의 공기는 여전히 한겨울처럼 서늘하고 건조했다. 은은하게 퍼지는 묵직한 시더우드 향의 디퓨저 냄새가 차가운 공기와 섞여 후각을 자극했고, 손끝에 닿는 최고급 마호가니 원목 책상의 매끄러운 촉감은 그의 이성을 더욱 차갑게 식혀주었다. 책상 중앙에 배치된 6대의 다중 모니터들이 뿜어내는 푸르스름한 빛만이 짙은 그림자가 깔린 공간의 명암을 날카롭게 가르고 있었고, 구석에 놓인 대형 서버 본체에서 흘러나오는 미세하고 규칙적인 팬 소음만이 이 공간이 현실임을 일깨워주고 있었다.\n\n한시우는 최고급 가죽 의자에 깊숙이 기댄 채, 화면 중앙에 띄워진 서부텍사스산원유(WTI) 6월물 차트의 미세한 틱 변화를 고요히 응시했다.\n\n'과거의 나는 이깟 틱 변화에 일희일비하며 밤잠을 설쳤지. 하지만 지금은 다르다.'\n\n그는 붉은색 양봉과 푸른색 음봉이 교차하며 만들어내는 기하학적인 패턴들을 무심하게 바라보았다. 45억 원이라는 자본은 그에게 시장의 노이즈를 견뎌낼 수 있는 견고한 닻이 되어주었다. 이 고요한 기다림의 시간은 필연적으로 도래할 미래에 자본을 선점해 두는 트레이더의 뼈를 깎는 수행이었다.\n\n배럴당 70달러 선.\n\n지난 2월 말, 65달러 선에서 전량 청산을 감행하며 45억 1,245만 원이라는 막대한 자본을 확정 지었던 폭발적인 상승 랠리 이후, 시장은 지루한 횡보 장세에 돌입해 있었다.\n새롭게 진입한 6월물 매수 포지션은 박스권의 상단과 하단을 기계적으로 오가며 위태로운 진",
+      "generation_method": "ensemble",
+      "model_tier": 1,
+      "duration_ms": 535735,
+      "token_cost": 0.792959,
+      "is_patch": false,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep10:arc3:a1:20260430_004936",
+      "final_verdict": "REJECT",
+      "director_verdict": "REJECT",
+      "gate_basis": "director_primary_reject",
+      "repair_scope": "none",
+      "fix_scope": "partial",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {
+        "fix_scope": "none",
+        "repair_scope": "none",
+        "scope_origin": {
+          "fix_scope": "runtime_widened",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        }
+      },
+      "scope_authority": {
+        "fix_scope": "partial",
+        "repair_scope": "none",
+        "scope_origin": {
+          "fix_scope": "runtime_widened",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "authoritative_fix_scope_violation": {
+          "type": "blank_authoritative_fix_scope",
+          "raw_value": "",
+          "verdict": "REJECT"
+        },
+        "widened": true
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_2",
+        "repair": "patch_revision",
+        "strategy": "reduced",
+        "escalation": "mad",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "CONSTRAINT_VIOLATION",
+      "reject_bucket": "constraint_violation",
+      "score_breakdown": {
+        "continuity_contradiction": 0,
+        "blueprint_coverage": 0,
+        "quality_engagement": 0,
+        "length": 0,
+        "python_warnings": 0
+      },
+      "candidate_key": "A|narrative",
+      "content_hash": "86910b951092d46ba2bd24c10240da8c399397e10e4609ecfba99943017b3e1c",
+      "artifact_path": "logs/artifacts/stage4/ep_0010/attempt_01/rejected_best__A_narrative.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "director_quality",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "REJECT",
+      "runtime_route_action": "director_reject_retry",
+      "runtime_route_reason": "stage4 runtime gate=director_primary_reject route verdict=REJECT",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T01:04:44.861773",
+      "stage": 4,
+      "episode": 10,
+      "arc": 3,
+      "attempt_num": 2,
+      "success": false,
+      "reject_reason": "[Conflict-first retry] post-select hard conflict invalidated the provisional PASS. 다음 라운드는 local patch가 아니라 authoritative carryover 기준 재작성으로 처리하세요.\n[MAD 제약/합의 개선 지침]\n[Continuity Conflict] 제10화 원고는 전반적으로 이전 설정(자본금 45억 원, 3배 레버리지, 익셉션 어카운트 등)을 잘 유지하고 있으나, 이전 회차에서 1월 2일에 완료된 3월물 포지션 청산 사건을 '2월 말'에 일어난 것으로 잘못 서술하는 타임라인 충돌이 발견되었습니다.\n[V67] History Conflict: 제10화는 제9화에서 확립된 박성호 PB의 캐릭터 상태와 기억을 무시하고 있습니다. 박성호는 이미 에콰도르 사태 예측 적중을 통해 한시우에게 완벽히 굴복하고 맹신하는 상태가 되었으나, 제10화에서는 다시 포지션을 의심하고 동일한 에콰도르 사태 설명에 새롭게 감탄하는 등 인물 관계와 기억의 연속성에서 심각한 충돌이 발생했습니다.\n[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ced_score 2.00 (python warnings 2건)\n  [STYLE] dialogue_ratio 36% > style target 0%\n[자유 리뷰] 특이사항 없음. 주인공의 냉철한 분석과 PB를 압도하는 카리스마가 잘 표현되었으며, 거시경제 지표를 활용한 서사 전개가 훌륭함.\n[모순 세부] [Continuity Conflict] 제10화 원고는 전반적으로 이전 설정(자본금 45억 원, 3배 레버리지, 익셉션 어카운트 등)을 잘 유지하고 있으나, 이전 회차에서 1월 2일에 완료된 3월물 포지션 청산 사건을 '2월 말'에 일어난 것으로 잘못 서술하는 타임라인 충돌이 발견되었습니다.\n[모순 세부] [V67] History Conflict: 제10화는 제9화에서 확립된 박성호 PB의 캐릭터 상태와 기억을 무시하고 있습니다. 박성호는 이미 에콰도르 사태 예측 적중을 통해 한시우에게 완벽히 굴복하고 맹신하는 상태가 되었으나, 제10화에서는 다시 포지션을 의심하고 동일한 에콰도르 사태 설명에 새롭게 감탄하는 등 인물 관계와 기억의 연속성에서 심각한 충돌이 발생했습니다.\n[R0 이전 지시] [IFC] 불변사실 위반 감지 (확정상태회귀). 국소 패치 대신 재작성 우선 처리가 필요합니다.\n- [R0] [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ai_slop score 3.00 (recent median 2.00) / hits=시선을 돌렸다x2, 말 그대로x1 / - [후보 A] ced_score 4.00 (python warnings 4건) / - [후보 A] dialogue_ratio 48% > style target 0% / - [후보 B] ced_score 3.00 (python warnings 3건) / - [후보 B] dialogue_ratio 43% > style target 0% / - [후보 C] ced_score 4.00 (python warnings 4건) / - [후보 C] dialogue_ratio 35% > style target 0%\n- [R0] [INFO] [NumericConsistency — Python 수치 검증 결과. 각 항목에 대해 numeric_consistency_review에서 AGREE/DISMISS 판정 필수] / - [NC-1][후보 C][MAJOR][numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '수익 3억 원' (3.0억) vs resumed FactLedger 'capital'=45.1억 (EP9 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요 / - [NC-2][후보 C][MAJOR][numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '수익 3억 원' (3.0억) vs resumed FactLedger 'total_assets'=45.1억 (EP9 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요 / - [NC-3][후보 C][MINOR] [\"처음\" 모순 의심] '첫 번째 원유 선물 거래를 통해 45억 1' — 이전 화에서 유사 이벤트(번째, 원유, 선물) 존재 가능성. 실제 '처음'인지 확인 필요\n- [R0] [MAJOR · Flashback] [FlashbackVerifier — 회상 오염 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 B][MAJOR] '과거의': 회상 장면에서 한시우가 자신을 재설계하던 공간을 '좁고 어두운 방'으로 묘사했으나, 과거 에피소드(EP 4)에 따르면 해당 시점의 장소는 '성북동 본가 저택 침실'이므로 공간의 규모와 환경 묘사가 모순됩니다.\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 2.00 (python warnings 2건) / - [후보 A] dialogue_ratio 36% > style target 0% / - [후보 B] ced_score 4.00 (python warnings 4건) / - [후보 B] dialogue_ratio 50% > style target 0%",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 321936,
+      "token_cost": 0.48093300000000005,
+      "is_patch": true,
+      "prev_score": 50,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep10:arc3:a2:20260430_004936",
+      "final_verdict": "REJECT",
+      "director_verdict": "PASS",
+      "gate_basis": "post_select_conflict",
+      "repair_scope": "full",
+      "fix_scope": "full",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "target_kind": "local_sentence"
+      },
+      "repair_contract": {
+        "subtype": "completed_event_replay",
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_sentence"
+      },
+      "scope_authority": {
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": true
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_3",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "POST_SELECT_CONFLICT",
+      "reject_bucket": "post_select_conflict",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 18,
+        "length": 10,
+        "python_warnings": 8
+      },
+      "candidate_key": "A|balanced",
+      "content_hash": "9e68265453c9b326873f758194b8eb4c6930da4a79f359b83227cbff75830a8b",
+      "artifact_path": "logs/artifacts/stage4/ep_0010/attempt_02/rejected_best__A_balanced.txt",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "downstream_gate",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "REJECT",
+      "runtime_route_action": "route_retry_full_rewrite",
+      "runtime_route_reason": "stage4 runtime gate=post_select_conflict route verdict=REJECT",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T01:13:36.452658",
+      "stage": 4,
+      "episode": 10,
+      "arc": 3,
+      "attempt_num": 3,
+      "success": false,
+      "reject_reason": "[IFC] 불변사실 위반 감지 (확정상태회귀). 국소 패치 대신 재작성 우선 처리가 필요합니다.\n[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ced_score 3.00 (python warnings 3건)\n  [STYLE] dialogue_ratio 46% > style target 0%\n[R1 이전 지시] - [R1] [INFO] [NumericConsistency — Python 수치 검증 결과. 각 항목에 대해 numeric_consistency_review에서 AGREE/DISMISS 판정 필수] / - [NC-1][후보 C][MAJOR][numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '1,245만 원의 자본' (0.1억) vs resumed FactLedger 'capital'=45.1억 (EP9 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요 / - [NC-2][후보 C][MAJOR][numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '1,245만 원의 자본' (0.1억) vs resumed FactLedger 'total_assets'=45.1억 (EP9 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요\n- [R1] [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 3.00 (python warnings 3건) / - [후보 A] dialogue_ratio 46% > style target 0% / - [후보 B] ai_slop score 3.00 (recent median 2.00) / hits=순식간에x2, 입을 열었다x1 / - [후보 B] ced_score 3.00 (python warnings 3건) / - [후보 B] dialogue_ratio 41% > style target 0% / - [후보 C] ced_score 5.00 (python warnings 5건) / - [후보 C] dialogue_ratio 45% > style target 0%\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [INFO] [NumericConsistency — Python 수치 검증 결과. 각 항목에 대해 numeric_consistency_review에서 AGREE/DISMISS 판정 필수] / - [NC-1][후보 C][MAJOR][numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '1,245만 원의 자본' (0.1억) vs resumed FactLedger 'capital'=45.1억 (EP9 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요 / - [NC-2][후보 C][MAJOR][numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '1,245만 원의 자본' (0.1억) vs resumed FactLedger 'total_assets'=45.1억 (EP9 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 3.00 (python warnings 3건) / - [후보 A] dialogue_ratio 46% > style target 0% / - [후보 B] ai_slop score 3.00 (recent median 2.00) / hits=순식간에x2, 입을 열었다x1 / - [후보 B] ced_score 3.00 (python warnings 3건) / - [후보 B] dialogue_ratio 41% > style target 0% / - [후보 C] ced_score 5.00 (python warnings 5건) / - [후보 C] dialogue_ratio 45% > style target 0%\n[MAD 제약/합의 개선 지침]\n세 분의 전문가 의견을 종합하여, 과장된 대사와 상투적인 지문을 다듬고 정보 전달의 방식을 개선한 수정본입니다. 인물의 미세한 행동 묘사를 더해 긴장감을 높이고, 주인공의 냉혹함을 보다 건조하고 세련되게 표현했습니다.\n\n***\n\n[수정된 콘텐츠]\n사각, 사각.\n\n펜촉이 종이 위를 스치는 마찰음이 멈췄다.\n\n시간은 오차 없이 설계된 톱니바퀴처럼 굴러가 2006년 4월 1일 오전을 맞이했다.\n겨울의 끝자락을 알리던 차가운 비는 멎고, 창밖으로는 완연한 봄의 햇살이 여의도 빌딩 숲을 비추고 있었다.\n새롭게 단장한 SW인베스트먼트 대표실 안에는 아직 옅은 페인트 향과 고급 가죽 소파의 냄새가 맴돌았다.\n\n최고급 마호가니 원목 책상 너머로, 묵직한 정적이 공간을 짓누르고 있었다.\n\n똑똑.\n\n조심스러운 노크 소리와 함께 두꺼운 참나무 문이 열렸다.\n단정한 짙은 회색 수트 차림의 박성호가 서류 가방을 두 손으로 공손히 쥔 채 안으로 들어섰다.\n시선은 철저하게 바닥을 향해 있었고, 걸음걸이에는 극도의 긴장감이 역력했다.\n책상 앞까지 다가온 담당자는 망설임 없이 90도로 깊숙이 허리를 숙였다.\n\n\"대표님. 안녕하십니까. 한미증권 박성호입니다.\"\n\n과거 시중은행 VIP 라운지에서 대명그룹의 철없는 막내를 대하던 그 얄팍한 영업용 미소는 흔적조차 찾을 수 없었다.\n태도는 거대한 권력체, 혹은 이해할 수 없는 자연재해 앞에 선 말단 실무자의 그것과 정확히 일치했다.\n\n\"앉으시죠.\"\n\n건조한 음성이 텅 빈 방 안을 울렸다.\n허락이 떨어지고 나서야 한미증권의 10년 차 베테랑 영업맨은 조심스럽게 고개를 들고 맞은편 가죽 소파에 엉덩이를 걸쳤다.\n\n\"대표님. 45억 1,245만 원. 지난 한 달간 법인 계좌의 잔고를 확인할 때마다 제 금융 상식이 철저하게 부서지는 기분이었습니다.\"\n\n서류 가방의 손잡이를 쥔 박성호의 손끝이 미세하게 떨리고 있었다.\n\n\"에콰도르 사태의 발발 시점부터 이란의 핵 농축 재개 선언까지. 이 정도의 타점은 단순한 통찰력이 아닙니다. 제가 감히 대표님의 안목을 의",
+      "generation_method": "ensemble",
+      "model_tier": 1,
+      "duration_ms": 462156,
+      "token_cost": 0.5730299999999999,
+      "is_patch": false,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep10:arc3:a3:20260430_004936",
+      "final_verdict": "REJECT",
+      "director_verdict": "REJECT",
+      "gate_basis": "director_primary_reject",
+      "repair_scope": "none",
+      "fix_scope": "partial",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {
+        "fix_scope": "none",
+        "repair_scope": "none",
+        "scope_origin": {
+          "fix_scope": "runtime_widened",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        }
+      },
+      "scope_authority": {
+        "fix_scope": "partial",
+        "repair_scope": "none",
+        "scope_origin": {
+          "fix_scope": "runtime_widened",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "authoritative_fix_scope_violation": {
+          "type": "blank_authoritative_fix_scope",
+          "raw_value": "",
+          "verdict": "REJECT"
+        },
+        "widened": true
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_4",
+        "repair": "patch_revision",
+        "strategy": "reduced",
+        "escalation": "mad",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "CONSTRAINT_VIOLATION",
+      "reject_bucket": "constraint_violation",
+      "score_breakdown": {
+        "continuity_contradiction": 0,
+        "blueprint_coverage": 0,
+        "quality_engagement": 0,
+        "length": 0,
+        "python_warnings": 0
+      },
+      "candidate_key": "A|tension",
+      "content_hash": "73a24fe34a7a3a125aa4327475dc545324237ea17729fcfa6a456478d23ec4b7",
+      "artifact_path": "logs/artifacts/stage4/ep_0010/attempt_03/rejected_best__A_tension.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "director_quality",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "REJECT",
+      "runtime_route_action": "director_reject_retry",
+      "runtime_route_reason": "stage4 runtime gate=director_primary_reject route verdict=REJECT",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T01:25:30.234909",
+      "stage": 4,
+      "episode": 10,
+      "arc": 3,
+      "attempt_num": 4,
+      "success": false,
+      "reject_reason": "[A-4 continuity replay] 직전 화와 충돌하는 frontier/연속성 신호가 방화벽 REJECT로 재발했습니다. 다음 라운드는 국소 문장 보정이 아니라 blueprint/frontier 교정 우선으로 처리하세요.\n[MAD 제약/합의 개선 지침]\n[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ced_score 3.00 (python warnings 3건)\n  [STYLE] dialogue_ratio 46% > style target 0%\n직전 화(EP 9)에서 이미 익셉션 어카운트가 개설되었으므로, 중복 개설 지시 장면을 전면 삭제하십시오.\n4월 1일 시점에서는 이미 개설된 익셉션 어카운트를 활용하여 대명그룹을 타격하기 위한 구체적인 자금 투입(구리, 아연, 환율 선물 진입)을 지시하는 내용으로 씬을 재구성하십시오.\n박성호가 놀라는 포인트는 '계좌 개설'이 아니라 '대명그룹을 타격하려는 거대한 스케일과 무자비한 실행력'이 되어야 합니다.\n[자유 리뷰] 직전 화 엔딩과 완벽하게 충돌하는 전개입니다. 2월 28일에 이미 익셉션 어카운트가 개설되었는데, 4월 1일에 다시 개설을 요구하는 것은 서사적 오류입니다. Blueprint의 오류를 그대로 답습했습니다. 4월 1일 시점에서는 이미 확보된 익셉션 어카운트를 통해 대명그룹을 타격할 구체적인 주문 실행을 지시하는 방향으로 전개되어야 합니다.\n[모순 세부] [CRITICAL] 상태: 한시우가 다시 '익셉션 어카운트를 정식으로 개설하십시오'라고 지시하고, 박성호가 리스크관리팀 심사를 거쳐야 한다며 놀람.\n[R2 이전 지시] [IFC] 불변사실 위반 감지 (확정상태회귀). 국소 패치 대신 재작성 우선 처리가 필요합니다.\n- [R2] [INFO] [NumericConsistency — Python 수치 검증 결과. 각 항목에 대해 numeric_consistency_review에서 AGREE/DISMISS 판정 필수] / - [NC-1][후보 C][MAJOR][numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '1,245만 원의 자본' (0.1억) vs resumed FactLedger 'capital'=45.1억 (EP9 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요 / - [NC-2][후보 C][MAJOR][numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '1,245만 원의 자본' (0.1억) vs resumed FactLedger 'total_assets'=45.1억 (EP9 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요\n- [R2] [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 3.00 (python warnings 3건) / - [후보 A] dialogue_ratio 46% > style target 0% / - [후보 B] ai_slop score 3.00 (recent median 2.00) / hits=순식간에x2, 입을 열었다x1 / - [후보 B] ced_score 3.00 (python warnings 3건) / - [후보 B] dialogue_ratio 41% > style target 0% / - [후보 C] ced_score 5.00 (python warnings 5건) / - [후보 C] dialogue_ratio 45% > style target 0%\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 3.00 (python warnings 3건) / - [후보 A] dialogue_ratio 46% > style target 0%\n[ToT 구조 개선 지침]\n2006년 4월 1일 오전, 여의도 빌딩 숲을 비추는 완연한 봄의 햇살이 새롭게 단장한 SW인베스트먼트 대표실의 통유리창을 투과하고 있었다. 옅은 페인트 향과 고급 가죽 소파의 냄새가 채 가시지 않은 넓은 공간은, 오직 숫자로만 증명되는 금융 시장의 냉혹한 정적만이 짓누르고 있었다.\n\n최고급 마호가니 원목 책상 앞으로 다가선 한미증권 박성호의 걸음걸이에는 극도의 긴장감이 역력했다. 과거 시중은행 VIP 라운지에서 대명그룹의 철없는 막내를 대하던 얄팍한 영업용 미소는 완전히 증발한 지 오래였다. 그의 태도는 거대한 권력체이자 시장의 중력을 지배하는 포식자 앞에 선 말단 실무자의 그것과 정확히 일치했다.\n\n박성호가 두 손으로 공손히 밀어놓은 서류철 안에는 지난 2월 말 이미 모든 심사를 통과해 개설이 완료된 '익셉션 어카운트(Exception Account)'의 최종 승인 증서가 담겨 있었다. 그리고 그 옆에는 지난 한 달간 에콰도르 사태와 이란 핵 농축 재개 선언 등 글로벌 거시경제의 폭풍을 완벽한 타점으로 짚어내며 증식된 45억 1천만 원의 최종 잔고 증명서가 놓여 있었다. 한때 장부상 오기로 치부될 뻔했던 과거의 얄팍한 숫자들은 완전히 폐기되었고, 오직 45억 1천만 원이라는 거대한 자본의 실체만이 서류 위에서 육중한 존재감을 뿜어내고 있었다.\n\n문서를 확인하는 한시우의 시선에는 어떠한 감정의 동요도 없었다. 그는 잔고 증명서를 가볍게 덮은 뒤, 미리 준비해 둔 한 장의 서류를 박성호의 앞으로 밀어 보냈다. 단 한 마디의 음성조차 섞이지 않은, 철저한 서면 지시였다.\n\n서류에 인쇄된 주문 내역을 확인한 박성호의 동공이 미세하게 팽창했다. 그것은 익셉션 어카운트의 무제한적 레버리지를 극한까지 끌어다 쓰는 융단폭격 수준의 포지션 진입 명령이었다. 런던금속거래소(LME)의 구리와 아연 선물에 대한 천문학적인 매수 포지션, 그리고 이에 동기화된 원·달러 환율 선물 시장에서의 대규모 베팅이 정밀한 톱니바퀴처럼 맞물려 있었다.\n\n박성호의 머릿속에서 글로벌 원자재 시장의",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 713750,
+      "token_cost": 0.6927730000000001,
+      "is_patch": true,
+      "prev_score": 50,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep10:arc3:a4:20260430_004936",
+      "final_verdict": "REJECT",
+      "director_verdict": "REJECT",
+      "gate_basis": "continuity_firewall",
+      "repair_scope": "full",
+      "fix_scope": "partial",
+      "authoritative_fix_scope": "full",
+      "fix_pack": {
+        "patch_targets": [
+          "익셉션 어카운트를 정식으로 개설하십시오",
+          "이, 익셉션 어카운트 말씀이십니까?"
+        ],
+        "must_fix": [
+          "직전 화(EP 9) 엔딩에서 이미 익셉션 어카운트가 개설되었으므로, 중복 개설 지시를 삭제하고 본격적인 자금 투입 및 실행 지시로 변경할 것"
+        ],
+        "do_not_regress": [
+          "대명그룹을 향한 구리, 아연, 환율 선물 타점 설정 및 박성호의 충성 맹세 전개는 유지할 것"
+        ],
+        "success_condition": "이미 개설된 익셉션 어카운트를 활용하여 대명그룹 타격을 지시하는 자연스러운 흐름으로 수정됨",
+        "target_kind": "scene_model",
+        "patch_target_records": [
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "scene_model",
+            "summary": "익셉션 어카운트를 정식으로 개설하십시오",
+            "patch_target_id": "pt:c4dc45e679be"
+          },
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "scene_model",
+            "summary": "이, 익셉션 어카운트 말씀이십니까?",
+            "patch_target_id": "pt:5e58b951c1d2"
+          }
+        ],
+        "target_kinds": [
+          "scene_model"
+        ],
+        "provenance": "director_authored"
+      },
+      "repair_contract": {
+        "subtype": "상태",
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "full",
+        "scope_origin": {
+          "fix_scope": "runtime_widened",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "scene_model"
+      },
+      "scope_authority": {
+        "fix_scope": "partial",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "full",
+        "scope_origin": {
+          "fix_scope": "runtime_widened",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": true
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_5",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "tot",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "LOGIC_ERROR",
+      "reject_bucket": "structure_error",
+      "score_breakdown": {
+        "continuity_contradiction": 10,
+        "blueprint_coverage": 15,
+        "quality_engagement": 10,
+        "length": 5,
+        "python_warnings": 3
+      },
+      "candidate_key": "A|asp_correction",
+      "content_hash": "73a24fe34a7a3a125aa4327475dc545324237ea17729fcfa6a456478d23ec4b7",
+      "artifact_path": "logs/artifacts/stage4/ep_0010/attempt_04/rejected_best__A_asp_correction.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "director_quality",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "REJECT",
+      "runtime_route_action": "block_or_retry_stage4_artifact",
+      "runtime_route_reason": "stage4 runtime gate=continuity_firewall route verdict=REJECT",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T01:36:35.907411",
+      "stage": 4,
+      "episode": 10,
+      "arc": 3,
+      "attempt_num": 5,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "ensemble",
+      "model_tier": 1,
+      "duration_ms": 665641,
+      "token_cost": 0.643888,
+      "is_patch": false,
+      "prev_score": 45,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep10:arc3:a5:20260430_004936",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "repair_scope": "inplace",
+      "fix_scope": "inplace",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [],
+        "must_fix": [],
+        "do_not_regress": [],
+        "success_condition": "",
+        "target_kind": "local_sentence",
+        "target_kinds": [
+          "local_sentence"
+        ],
+        "provenance": "director_authored"
+      },
+      "repair_contract": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_sentence"
+      },
+      "scope_authority": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": false
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_5",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "tot",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 18,
+        "length": 10,
+        "python_warnings": 8
+      },
+      "candidate_key": "A|균형 전략",
+      "content_hash": "6d97542945ba0c4593a938f36f1faf957fe32154a77ae4fa3a74d0f04eb9a94e",
+      "artifact_path": "logs/artifacts/stage4/ep_0010/attempt_05/final_manuscript__A.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "none",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "PASS",
+      "runtime_route_action": "adopt_stage4_artifact",
+      "runtime_route_reason": "stage4 runtime gate=director_primary_pass route verdict=PASS",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T01:49:16.053010",
+      "stage": 3,
+      "episode": 11,
+      "arc": 3,
+      "attempt_num": 2,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 449059,
+      "token_cost": 0.3674,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep11:arc3:a2:20260430_014002",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "dialogue_focused",
+      "content_hash": "a14600fcda93171928cb24974ebe6973df68e074f2344c698f996ba35d55a46b",
+      "artifact_path": "logs/artifacts/stage3/ep_0011/attempt_02/final_blueprint__dialogue_focused.json",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-30T01:57:50.942095",
+      "stage": 4,
+      "episode": 11,
+      "arc": 3,
+      "attempt_num": 1,
+      "success": false,
+      "reject_reason": "[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ced_score 5.00 (python warnings 5건)\n  [STYLE] dialogue_ratio 31% > style target 0%\n박성호의 대사에서 미실현 수익의 원천을 '구리/아연/환율 폭등'으로 수정할 것\n한시우의 대사에서 '유가 75달러'는 투자 종목의 목표가가 아니라, 보유 중인 구리/아연/환율 포지션을 청산하기 위한 '트리거(신호)'임을 명확히 할 것\n[자유 리뷰] 후보 B는 EP 10의 구리/아연/환율 진입 씬을 자연스럽게 이어받아 훌륭한 도입부를 작성했습니다. 다만 Blueprint의 '유가 75달러 목표가' 설정을 그대로 따르다 보니, 45억을 구리/아연/환율에 투자해놓고 유가 폭등으로 수익을 얻는 듯한 논리적 모순이 발생했습니다. 이를 해결하기 위해 유가 75달러를 투자 종목의 목표가가 아닌, 대명그룹 붕괴를 확인하고 구리/아연/환율 포지션을 청산하는 '트리거(신호)'로 묘사하도록 국소적 수정을 지시합니다.\n[모순 세부] [CRITICAL] 상태: 유가 폭등으로 인해 미실현 수익이 수십억 발생한 것처럼 묘사되며, 유가 75달러를 목표가로 매도하려 함\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 4.00 (python warnings 4건) / - [후보 A] dialogue_ratio 32% > style target 0% / - [후보 B] ced_score 5.00 (python warnings 5건) / - [후보 B] dialogue_ratio 31% > style target 0%",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 468907,
+      "token_cost": 0.656071,
+      "is_patch": true,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep11:arc3:a1:20260430_014929",
+      "final_verdict": "REJECT",
+      "director_verdict": "REJECT",
+      "gate_basis": "continuity_firewall",
+      "repair_scope": "inplace",
+      "fix_scope": "inplace",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [
+          "유가가 미친 듯이 치솟고 있습니다! 현재 미실현 수익만 수십억 단위를 넘어서고 있습니다.",
+          "내 목표가는 75달러입니다. 그 전까지는 단 1계약도 건드리지 마십시오.",
+          "정확히 75달러를 터치하는 순간... 전량 시장가 매도, 실행하십시오!"
+        ],
+        "must_fix": [
+          "박성호의 대사에서 미실현 수익의 원천을 '구리/아연/환율 폭등'으로 명시하고, 유가 폭등은 대명그룹을 압박하는 외부 요인으로 언급할 것",
+          "한시우의 대사에서 '유가 75달러'는 투자 종목의 목표가가 아니라, 대명그룹이 붕괴하는 임계점이자 보유 중인 구리/아연/환율 포지션의 '청산 트리거(신호)'임을 명확히 할 것"
+        ],
+        "do_not_regress": [
+          "EP 10에서 이어지는 구리/아연/환율 진입 씬 유지",
+          "대명그룹 한태준의 분노 씬 유지",
+          "유가 75달러 도달 시점의 긴장감 유지"
+        ],
+        "success_condition": "한시우의 투자 종목이 구리/아연/환율임이 명확히 유지되며, 유가 75달러는 포지션 청산을 위한 외부 지표(트리거)로 논리적으로 연결됨",
+        "target_kind": "local_sentence",
+        "patch_target_records": [
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_sentence",
+            "summary": "유가가 미친 듯이 치솟고 있습니다! 현재 미실현 수익만 수십억 단위를 넘어서고 있습니다.",
+            "patch_target_id": "pt:ff3326d0aac8"
+          },
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_sentence",
+            "summary": "내 목표가는 75달러입니다. 그 전까지는 단 1계약도 건드리지 마십시오.",
+            "patch_target_id": "pt:b1147e22b348"
+          },
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_sentence",
+            "summary": "정확히 75달러를 터치하는 순간... 전량 시장가 매도, 실행하십시오!",
+            "patch_target_id": "pt:1c6f4c19d572"
+          }
+        ],
+        "target_kinds": [
+          "local_sentence"
+        ],
+        "provenance": "director_authored"
+      },
+      "repair_contract": {
+        "subtype": "상태",
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_sentence"
+      },
+      "scope_authority": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": false
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_2",
+        "repair": "patch_revision",
+        "strategy": "reduced",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "QUALITY_ISSUE",
+      "reject_bucket": "quality_issue",
+      "score_breakdown": {
+        "continuity_contradiction": 15,
+        "blueprint_coverage": 20,
+        "quality_engagement": 18,
+        "length": 10,
+        "python_warnings": 8
+      },
+      "candidate_key": "B|balanced",
+      "content_hash": "f5ad96c4db7b8d3a6f2f255a6adb4c4468b558cbe7e5caaedb5e28de09b7b8ac",
+      "artifact_path": "logs/artifacts/stage4/ep_0011/attempt_01/rejected_best__B_balanced.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "director_quality",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "REJECT",
+      "runtime_route_action": "block_or_retry_stage4_artifact",
+      "runtime_route_reason": "stage4 runtime gate=continuity_firewall route verdict=REJECT",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T02:02:13.441016",
+      "stage": 4,
+      "episode": 11,
+      "arc": 3,
+      "attempt_num": 2,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 262468,
+      "token_cost": 0.334701,
+      "is_patch": true,
+      "prev_score": 71,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep11:arc3:a2:20260430_014929",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "repair_scope": "inplace",
+      "fix_scope": "inplace",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [
+          "사무실 안은 대형 모니터 6대에서 뿜어져 나오는 푸른 광원으로 서늘하게 물들어 있었다."
+        ],
+        "must_fix": [],
+        "do_not_regress": [],
+        "success_condition": "",
+        "target_kind": "local_sentence",
+        "target_kinds": [
+          "local_sentence"
+        ],
+        "provenance": "director_authored",
+        "patch_target_records": [
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_sentence",
+            "summary": "사무실 안은 대형 모니터 6대에서 뿜어져 나오는 푸른 광원으로 서늘하게 물들어 있었다.",
+            "patch_target_id": "pt:b397514b98e4"
+          }
+        ]
+      },
+      "repair_contract": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_sentence"
+      },
+      "scope_authority": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": false
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_2",
+        "repair": "inplace_local_repair",
+        "strategy": "inplace",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "inplace_patch_local_ops",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 20,
+        "length": 10,
+        "python_warnings": 10
+      },
+      "candidate_key": "A|InPlace 수정",
+      "content_hash": "42c32d590f3e8594702c5ba09e5b6413281eaae09a3cde6b72c6d532432913d5",
+      "artifact_path": "logs/artifacts/stage4/ep_0011/attempt_02/patched_after_fix__A_InPlace.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "none",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "PASS",
+      "runtime_route_action": "adopt_patched_artifact",
+      "runtime_route_reason": "stage4 runtime gate=patch_reaudit_pass route verdict=PASS",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T02:09:35.058715",
+      "stage": 3,
+      "episode": 12,
+      "arc": 3,
+      "attempt_num": 1,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 198642,
+      "token_cost": 0.131801,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep12:arc3:a1:20260430_020425",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "emotion_focused",
+      "content_hash": "40d103c0343f8b783268781b76a1033513d512c1bef97c7e91ef08fa4d5171cb",
+      "artifact_path": "logs/artifacts/stage3/ep_0012/attempt_01/final_blueprint__emotion_focused.json",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-30T02:16:20.024374",
+      "stage": 4,
+      "episode": 12,
+      "arc": 3,
+      "attempt_num": 1,
+      "success": false,
+      "reject_reason": "[Conflict-first retry] post-select hard conflict invalidated the provisional PASS. 다음 라운드는 local patch가 아니라 authoritative carryover 기준 재작성으로 처리하세요.\n[Continuity Conflict] 이전 회차에서 5월 중순(늦봄)으로 진행된 타임라인이 현재 원고에서 늦겨울로 묘사되어 계절 및 시간적 배경에 충돌이 발생했습니다.\n[V67] History Conflict: 제12화는 이전 화에서 확립된 투자 포지션의 종류(구리/아연/환율 -> 원유로 착각)와 수익금 규모(수십억 -> 5억으로 축소)에서 심각한 설정 충돌을 일으키고 있으며, 11화 결말부의 대화와 행동을 무리하게 번복하는 타임라인 오류가 존재합니다.\n[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ced_score 8.00 (python warnings 8건)\n  [STYLE] dialogue_ratio 41% > style target 0%\n한태준의 대사를 수정하여, 직전 화에서 이미 사채 조달을 지시했으나 여의치 않아 더 높은 금리를 주더라도 무조건 끌어오라고 윽박지르는 뉘앙스로 변경할 것\n[자유 리뷰] 후보 C는 긴장감 넘치는 묘사와 함께 주인공의 냉철한 판단력을 잘 보여줍니다. 특히 수치적 모순을 피하기 위해 불필요한 총자산 언급을 생략한 점이 훌륭합니다. 한태준 씬의 대사만 직전 화와 이어지도록 살짝 다듬으면 완벽합니다.\n[모순 세부] [Continuity Conflict] 이전 회차에서 5월 중순(늦봄)으로 진행된 타임라인이 현재 원고에서 늦겨울로 묘사되어 계절 및 시간적 배경에 충돌이 발생했습니다.\n[모순 세부] [V67] History Conflict: 제12화는 이전 화에서 확립된 투자 포지션의 종류(구리/아연/환율 -> 원유로 착각)와 수익금 규모(수십억 -> 5억으로 축소)에서 심각한 설정 충돌을 일으키고 있으며, 11화 결말부의 대화와 행동을 무리하게 번복하는 타임라인 오류가 존재합니다.\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 9.00 (python warnings 9건) / - [후보 A] dialogue_ratio 37% > style target 0% / - [후보 B] ced_score 8.00 (python warnings 8건) / - [후보 B] dialogue_ratio 33% > style target 0% / - [후보 C] ced_score 8.00 (python warnings 8건) / - [후보 C] dialogue_ratio 41% > style target 0%\n- [INFO] [NumericConsistency — Python 수치 검증 결과. 각 항목에 대해 numeric_consistency_review에서 AGREE/DISMISS 판정 필수] / - [NC-1][후보 A][MAJOR] [수치 불일치] 원고 '5억 원의 현금' (5.0억) vs FactLedger 'capital'=45.0억 (차이 40.0억, 89%) / - [NC-2][후보 A][MAJOR] [수치 불일치] 원고 '5억 원의 현금' (5.0억) vs FactLedger 'total_assets'=45.0억 (차이 40.0억, 89%) / - [NC-3][후보 B][MAJOR] [수치 불일치] 원고 '현금 5억 원' (5.0억) vs FactLedger 'capital'=45.0억 (차이 40.0억, 89%) / - [NC-4][후보 B][MAJOR] [수치 불일치] 원고 '현금 5억 원' (5.0억) vs FactLedger 'total_assets'=45.0억 (차이 40.0억, 89%) / - [NC-5][후보 B][MAJOR] [수치 불일치] 원고 '원금 7.5억 원' (7.5억) vs FactLedger 'capital'=45.0억 (차이 37.5억, 83%) / - [NC-6][후보 B][MAJOR] [수치 불일치] 원고 '원금 7.5억 원' (7.5억) vs FactLedger 'total_assets'=45.0억 (차이 37.5억, 83%) / - [NC-7][후보 B][MINOR] [\"처음\" 모순 의심] '첫 번째 수확은 완벽하게 안착했다' — 이전 화에서 유사 이벤트(번째, 수확, 완벽하게) 존재 가능성. 실제 '처음'인지 확인 필요",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 362640,
+      "token_cost": 0.632266,
+      "is_patch": true,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep12:arc3:a1:20260430_020947",
+      "final_verdict": "REJECT",
+      "director_verdict": "PASS_WITH_FIX",
+      "gate_basis": "post_select_conflict",
+      "repair_scope": "full",
+      "fix_scope": "full",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [
+          "당장 추가 자금을 융통해! 제2금융권이든 해외 사모펀드든, 고금리 사채라도 닥치는 대로 끌어와서 어음 만기를 막아!"
+        ],
+        "must_fix": [
+          "직전 화에서 이미 사채 조달을 지시했음을 반영하여, '어제 지시한 사채는 어떻게 됐어! 더 높은 금리를 줘서라도 당장 끌어와!'와 같이 연속성이 느껴지도록 대사를 수정할 것"
+        ],
+        "do_not_regress": [
+          "한태준의 극심한 분노와 자금 압박에 대한 절망감 유지"
+        ],
+        "success_condition": "한태준의 대사가 직전 화의 지시와 자연스럽게 이어지며 중복감이 해소됨",
+        "target_kind": "local_sentence",
+        "patch_target_records": [
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_sentence",
+            "summary": "당장 추가 자금을 융통해! 제2금융권이든 해외 사모펀드든, 고금리 사채라도 닥치는 대로 끌어와서 어음 만기를 막아!",
+            "patch_target_id": "pt:e4483d8499e7"
+          }
+        ],
+        "target_kinds": [
+          "local_sentence"
+        ],
+        "provenance": "director_authored"
+      },
+      "repair_contract": {
+        "subtype": "completed_event_replay",
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_sentence"
+      },
+      "scope_authority": {
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": true
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_2",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "POST_SELECT_CONFLICT",
+      "reject_bucket": "post_select_conflict",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 18,
+        "length": 10,
+        "python_warnings": 8
+      },
+      "candidate_key": "C|narrative",
+      "content_hash": "d9262676ea7302f13ec7d96902273b154c7bc3aedcbd70c2a31192d7f6488cc6",
+      "artifact_path": "logs/artifacts/stage4/ep_0012/attempt_01/rejected_best__C_narrative.txt",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "downstream_gate",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "REJECT",
+      "runtime_route_action": "route_retry_full_rewrite",
+      "runtime_route_reason": "stage4 runtime gate=post_select_conflict route verdict=REJECT",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T02:23:34.739074",
+      "stage": 4,
+      "episode": 12,
+      "arc": 3,
+      "attempt_num": 2,
+      "success": false,
+      "reject_reason": "[Continuity Conflict] 이전 회차에서 5월 중순(늦봄)으로 진행된 타임라인이 현재 원고에서 늦겨울로 묘사되어 계절 및 시간적 배경에 충돌이 발생했습니다.\n[V67] History Conflict: 제12화는 이전 화에서 확립된 투자 포지션의 종류(구리/아연/환율 -> 원유로 착각)와 수익금 규모(수십억 -> 5억으로 축소)에서 심각한 설정 충돌을 일으키고 있으며, 11화 결말부의 대화와 행동을 무리하게 번복하는 타임라인 오류가 존재합니다.\n[Continuity Conflict] 현재 원고는 이전 원고에서 확립된 투자 종목(구리, 아연, 환율)을 무시하고 원유 선물을 매도하는 것으로 묘사하고 있으며, 수익금 규모 또한 이전 회차의 설정(수십억 단위의 미실현 수익)과 크게 충돌합니다.\n[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ced_score 7.00 (python warnings 7건)\n  [STYLE] dialogue_ratio 27% > style target 0%\n도입부의 'SW인베스트먼트 임시 사무실'을 'SW인베스트먼트 대표실'로 수정할 것\n[자유 리뷰] 후보 C는 직전 화와의 연결성이 가장 매끄럽고, 한태준의 심리적 압박감을 대화와 묘사로 훌륭하게 표현했습니다. 다만 도입부의 '임시 사무실'이라는 표현만 '대표실'로 수정하면 완벽합니다.\n[모순 세부] [Continuity Conflict] 현재 원고는 이전 원고에서 확립된 투자 종목(구리, 아연, 환율)을 무시하고 원유 선물을 매도하는 것으로 묘사하고 있으며, 수익금 규모 또한 이전 회차의 설정(수십억 단위의 미실현 수익)과 크게 충돌합니다.\n[R0 이전 지시] [Conflict-first retry] post-select hard conflict invalidated the provisional PASS. 다음 라운드는 local patch가 아니라 authoritative carryover 기준 재작성으로 처리하세요.\n- [R0] [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 9.00 (python warnings 9건) / - [후보 A] dialogue_ratio 37% > style target 0% / - [후보 B] ced_score 8.00 (python warnings 8건) / - [후보 B] dialogue_ratio 33% > style target 0% / - [후보 C] ced_score 8.00 (python warnings 8건) / - [후보 C] dialogue_ratio 41% > style target 0%\n- [R0] [INFO] [NumericConsistency — Python 수치 검증 결과. 각 항목에 대해 numeric_consistency_review에서 AGREE/DISMISS 판정 필수] / - [NC-1][후보 A][MAJOR] [수치 불일치] 원고 '5억 원의 현금' (5.0억) vs FactLedger 'capital'=45.0억 (차이 40.0억, 89%) / - [NC-2][후보 A][MAJOR] [수치 불일치] 원고 '5억 원의 현금' (5.0억) vs FactLedger 'total_assets'=45.0억 (차이 40.0억, 89%) / - [NC-3][후보 B][MAJOR] [수치 불일치] 원고 '현금 5억 원' (5.0억) vs FactLedger 'capital'=45.0억 (차이 40.0억, 89%) / - [NC-4][후보 B][MAJOR] [수치 불일치] 원고 '현금 5억 원' (5.0억) vs FactLedger 'total_assets'=45.0억 (차이 40.0억, 89%) / - [NC-5][후보 B][MAJOR] [수치 불일치] 원고 '원금 7.5억 원' (7.5억) vs FactLedger 'capital'=45.0억 (차이 37.5억, 83%) / - [NC-6][후보 B][MAJOR] [수치 불일치] 원고 '원금 7.5억 원' (7.5억) vs FactLedger 'total_assets'=45.0억 (차이 37.5억, 83%) / - [NC-7][후보 B][MINOR] [\"처음\" 모순 의심] '첫 번째 수확은 완벽하게 안착했다' — 이전 화에서 유사 이벤트(번째, 수확, 완벽하게) 존재 가능성. 실제 '처음'인지 확인 필요\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 8.00 (python warnings 8건) / - [후보 A] dialogue_ratio 35% > style target 0% / - [후보 B] ced_score 7.00 (python warnings 7건) / - [후보 B] dialogue_ratio 37% > style target 0% / - [후보 C] ced_score 7.00 (python warnings 7건) / - [후보 C] dialogue_ratio 27% > style target 0%\n- [INFO] [NumericConsistency — Python 수치 검증 결과. 각 항목에 대해 numeric_consistency_review에서 AGREE/DISMISS 판정 필수] / - [NC-1][후보 A][MAJOR] [수치 불일치] 원고 '5억 원의 현금' (5.0억) vs FactLedger 'capital'=45.0억 (차이 40.0억, 89%) / - [NC-2][후보 A][MAJOR] [수치 불일치] 원고 '5억 원의 현금' (5.0억) vs FactLedger 'total_assets'=45.0억 (차이 40.0억, 89%) / - [NC-3][후보 A][MAJOR] [수치 불일치] 원고 '5억 원의 현금' (5.0억) vs FactLedger 'capital'=45.0억 (차이 40.0억, 89%) / - [NC-4][후보 A][MAJOR] [수치 불일치] 원고 '5억 원의 현금' (5.0억) vs FactLedger 'total_assets'=45.0억 (차이 40.0억, 89%) / - [NC-5][후보 A][MINOR] [\"처음\" 모순 의심] '첫 번째 수확은 완벽하게 안착했다' — 이전 화에서 유사 이벤트(번째, 수확, 완벽하게) 존재 가능성. 실제 '처음'인지 확인 필요 / - [NC-6][후보 B][MAJOR] [수치 불일치] 원고 '5억 원의 현금' (5.0억) vs FactLedger 'capital'=45.0억 (차이 40.0억, 89%) / - [NC-7][후보 B][MAJOR] [수치 불일치] 원고 '5억 원의 현금' (5.0억) vs FactLedger 'total_assets'=45.0억 (차이 40.0억, 89%)",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 434688,
+      "token_cost": 0.6917979999999999,
+      "is_patch": true,
+      "prev_score": 96,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep12:arc3:a2:20260430_020947",
+      "final_verdict": "REJECT",
+      "director_verdict": "PASS",
+      "gate_basis": "post_select_conflict",
+      "repair_scope": "full",
+      "fix_scope": "full",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [
+          "여의도 SW인베스트먼트 임시 사무실"
+        ],
+        "must_fix": [
+          "'임시 사무실'을 '대표실'로 수정하여 이전 화와의 공간 명칭 일관성 유지"
+        ],
+        "do_not_regress": [
+          "긴장감 있는 묘사와 대화 톤 유지",
+          "한태준 씬의 자연스러운 대화 흐름 유지"
+        ],
+        "success_condition": "공간 명칭이 '대표실'로 통일됨",
+        "target_kind": "local_phrase",
+        "patch_target_records": [
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_phrase",
+            "summary": "여의도 SW인베스트먼트 임시 사무실",
+            "patch_target_id": "pt:2f0fe8d7a626"
+          }
+        ],
+        "target_kinds": [
+          "local_phrase"
+        ],
+        "provenance": "director_authored"
+      },
+      "repair_contract": {
+        "subtype": "completed_event_replay",
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_phrase"
+      },
+      "scope_authority": {
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": true
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_3",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "POST_SELECT_CONFLICT",
+      "reject_bucket": "post_select_conflict",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 20,
+        "length": 10,
+        "python_warnings": 5
+      },
+      "candidate_key": "C|balanced",
+      "content_hash": "2ac59cbf3d6245d8a06a7145115dca18be7f1ce99a88b775f1beb3cf7b732856",
+      "artifact_path": "logs/artifacts/stage4/ep_0012/attempt_02/rejected_best__C_balanced.txt",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "downstream_gate",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "REJECT",
+      "runtime_route_action": "route_retry_full_rewrite",
+      "runtime_route_reason": "stage4 runtime gate=post_select_conflict route verdict=REJECT",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T02:31:06.649434",
+      "stage": 4,
+      "episode": 12,
+      "arc": 3,
+      "attempt_num": 3,
+      "success": false,
+      "reject_reason": "[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ced_score 7.00 (python warnings 7건)\n  [STYLE] dialogue_ratio 23% > style target 0%\n매도한 포지션이 '원유'가 아니라 '구리/아연/환율 포지션 중 절반'임을 명확히 수정할 것.\n확보한 45억 원은 '투자 원금 회수' 성격이며, 남은 절반의 포지션이 여전히 막대한 수익을 내고 있음을 서술하여 자본금 정합성을 맞출 것.\n20억이 45억이 되었다는 과거 서술을 삭제할 것.\n[자유 리뷰] Blueprint 자체에 '매도 체결 직후 45억 원 자본 확인'이라는 지시가 있어 AI가 과거 원유 청산 씬을 재현한 것으로 보입니다. 하지만 EP 10에서 45억 전액을 비철금속/환율에 투자했으므로, 이번 화의 매도는 '비철금속/환율 포지션의 절반 익절'을 통해 투자 원금 45억을 회수하는 그림으로 수정되어야 논리적 모순이 해결됩니다.\n[모순 세부] [CRITICAL] 자본금정합: 원유 선물 포지션 전량 청산을 통해 45억을 확보했다고 서술함.\n[모순 세부] [CRITICAL] 수치: 20억 종잣돈이 몇 주 만에 45억이 되었다고 서술하여 EP 9의 상황을 반복함.\n[R1 이전 지시] - [R1] [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 7.00 (python warnings 7건) / - [후보 A] dialogue_ratio 23% > style target 0%\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 7.00 (python warnings 7건) / - [후보 A] dialogue_ratio 23% > style target 0%",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 412953,
+      "token_cost": 0.5754439999999998,
+      "is_patch": true,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep12:arc3:a3:20260430_020947",
+      "final_verdict": "REJECT",
+      "director_verdict": "REJECT",
+      "gate_basis": "continuity_firewall",
+      "repair_scope": "partial",
+      "fix_scope": "partial",
+      "authoritative_fix_scope": "partial",
+      "fix_pack": {
+        "patch_targets": [
+          "원유 선물 포지션 전량 청산을 통해 확보한 순수 확정 자본이었다.",
+          "정확히 45억 원.",
+          "20억 원의 종잣돈이, 불과 몇 주 만에 두 배가 넘는 거대한 질량으로 팽창하여 수족으로 안착한 것이다."
+        ],
+        "must_fix": [
+          "매도한 포지션이 '원유'가 아니라 EP 10에서 진입한 '구리, 아연, 환율 선물 포지션 중 절반'임을 명확히 할 것.",
+          "계좌에 찍힌 45억 원은 '투자 원금 100% 회수' 성격이며, 남은 절반의 포지션이 여전히 막대한 미실현 수익을 내고 있음을 서술하여 자본금 정합성을 맞출 것.",
+          "20억 원이 45억 원이 되었다는 서술은 EP 9의 중복이므로 삭제할 것."
+        ],
+        "do_not_regress": [
+          "박성호의 경외심과 한시우의 냉철한 통제력 묘사",
+          "대명그룹 한태준의 분노와 절망 씬"
+        ],
+        "success_condition": "매도 대상이 비철금속/환율 포지션의 절반으로 수정되고, 45억 원 회수가 논리적으로 설명되며 과거 원유 청산(EP 9) 사실과 모순되지 않음.",
+        "target_kind": "scene_model",
+        "patch_target_records": [
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "scene_model",
+            "summary": "원유 선물 포지션 전량 청산을 통해 확보한 순수 확정 자본이었다.",
+            "patch_target_id": "pt:7903b0422995"
+          },
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "scene_model",
+            "summary": "정확히 45억 원.",
+            "patch_target_id": "pt:0973a11a9754"
+          },
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "scene_model",
+            "summary": "20억 원의 종잣돈이, 불과 몇 주 만에 두 배가 넘는 거대한 질량으로 팽창하여 수족으로 안착한 것이다.",
+            "patch_target_id": "pt:7128f58e6c73"
+          }
+        ],
+        "target_kinds": [
+          "scene_model"
+        ],
+        "provenance": "director_authored"
+      },
+      "repair_contract": {
+        "subtype": "자본금정합",
+        "subtypes": [
+          "자본금정합",
+          "수치"
+        ],
+        "fix_scope": "partial",
+        "repair_scope": "partial",
+        "authoritative_fix_scope": "partial",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "scene_model"
+      },
+      "scope_authority": {
+        "fix_scope": "partial",
+        "repair_scope": "partial",
+        "authoritative_fix_scope": "partial",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": false
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_4",
+        "repair": "patch_revision",
+        "strategy": "reduced",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "QUALITY_ISSUE",
+      "reject_bucket": "quality_issue",
+      "score_breakdown": {
+        "continuity_contradiction": 0,
+        "blueprint_coverage": 15,
+        "quality_engagement": 15,
+        "length": 10,
+        "python_warnings": 3
+      },
+      "candidate_key": "A|balanced",
+      "content_hash": "c471b582f662ba5bb3e586cf36a82b852cf373649a69d5a8faa89ca3f5cb06b7",
+      "artifact_path": "logs/artifacts/stage4/ep_0012/attempt_03/rejected_best__A_balanced.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "director_quality",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "REJECT",
+      "runtime_route_action": "block_or_retry_stage4_artifact",
+      "runtime_route_reason": "stage4 runtime gate=continuity_firewall route verdict=REJECT",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T02:38:53.261353",
+      "stage": 4,
+      "episode": 12,
+      "arc": 3,
+      "attempt_num": 4,
+      "success": false,
+      "reject_reason": "[Conflict-first retry] post-select hard conflict invalidated the provisional PASS. 다음 라운드는 local patch가 아니라 authoritative carryover 기준 재작성으로 처리하세요.\n[IFC] 불변사실 위반 감지 (완료사건반복). 국소 패치 대신 재작성 우선 처리가 필요합니다.\n[V67] History Conflict: 제12화는 제11화와 연결되는 과정에서 두 가지 충돌이 발생했습니다. 첫째, 11화에서 이미 전개된 대명그룹 한태준의 분노 및 자금 조달 지시 장면이 12화에서 대사만 약간 변형된 채 그대로 반복되고 있어 장면 중복이 발생했습니다. 둘째, 11화 마지막의 '전량 매도' 지시가 12화 시작 부분에서 '절반 매도'로 의미가 번복되어 이전 회차의 단호한 지시와 모순됩니다.\n[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ced_score 8.00 (python warnings 8건)\n  [STYLE] dialogue_ratio 35% > style target 0%\n[자유 리뷰] 특이사항 없음. 이전 화의 엔딩을 매끄럽게 이어받아 주인공의 의도를 명확히 설명한 점이 돋보입니다. 대명그룹 한태준의 패닉 묘사도 몰입감을 높여줍니다.\n[모순 세부] [V67] History Conflict: 제12화는 제11화와 연결되는 과정에서 두 가지 충돌이 발생했습니다. 첫째, 11화에서 이미 전개된 대명그룹 한태준의 분노 및 자금 조달 지시 장면이 12화에서 대사만 약간 변형된 채 그대로 반복되고 있어 장면 중복이 발생했습니다. 둘째, 11화 마지막의 '전량 매도' 지시가 12화 시작 부분에서 '절반 매도'로 의미가 번복되어 이전 회차의 단호한 지시와 모순됩니다.\n[R2 이전 지시] - [R2] [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 7.00 (python warnings 7건) / - [후보 A] dialogue_ratio 23% > style target 0%\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 8.00 (python warnings 8건) / - [후보 A] dialogue_ratio 35% > style target 0% / - [후보 B] ced_score 7.00 (python warnings 7건) / - [후보 B] dialogue_ratio 44% > style target 0% / - [후보 C] ced_score 13.00 (python warnings 13건)",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 466578,
+      "token_cost": 0.45731500000000014,
+      "is_patch": true,
+      "prev_score": 45,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep12:arc3:a4:20260430_020947",
+      "final_verdict": "REJECT",
+      "director_verdict": "PASS",
+      "gate_basis": "post_select_conflict",
+      "repair_scope": "full",
+      "fix_scope": "full",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "target_kind": "scene_model"
+      },
+      "repair_contract": {
+        "subtype": "completed_event_replay",
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "scene_model"
+      },
+      "scope_authority": {
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": true
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_5",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "POST_SELECT_CONFLICT",
+      "reject_bucket": "post_select_conflict",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 18,
+        "length": 10,
+        "python_warnings": 8
+      },
+      "candidate_key": "A|tension",
+      "content_hash": "df0a182df9dbb1db08690d357e1bf12d36447abe0c1099c95f0581d089ff7ee2",
+      "artifact_path": "logs/artifacts/stage4/ep_0012/attempt_04/rejected_best__A_tension.txt",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "downstream_gate",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "REJECT",
+      "runtime_route_action": "route_retry_full_rewrite",
+      "runtime_route_reason": "stage4 runtime gate=post_select_conflict route verdict=REJECT",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T02:50:41.522281",
+      "stage": 4,
+      "episode": 12,
+      "arc": 3,
+      "attempt_num": 5,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "ensemble",
+      "model_tier": 1,
+      "duration_ms": 487328,
+      "token_cost": 0.5989949999999999,
+      "is_patch": false,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep12:arc3:a5:20260430_020947",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "repair_scope": "inplace",
+      "fix_scope": "inplace",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [
+          "그 찰나의 순간이었다. 시우의 칠흑 같은 눈동자에 투영된 HTS 호가창의 배열이 미세하게 비틀리는 것이 포착되었다."
+        ],
+        "must_fix": [
+          "문장 앞에 'SW인베스트먼트 대표실.' 이라는 공간적 배경을 명시하여 씬의 위치를 독자에게 확실히 인지시킬 것."
+        ],
+        "do_not_regress": [
+          "직전 화 엔딩 대화에서 이어지는 긴박한 텐션과 시우의 차가운 감정선 유지"
+        ],
+        "success_condition": "도입부에서 주인공이 위치한 장소가 명확히 드러나며 자연스럽게 호가창 묘사로 이어짐.",
+        "target_kind": "local_sentence",
+        "patch_target_records": [
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_sentence",
+            "summary": "그 찰나의 순간이었다. 시우의 칠흑 같은 눈동자에 투영된 HTS 호가창의 배열이 미세하게 비틀리는 것이 포착되었다.",
+            "patch_target_id": "pt:ce7ea75b93ad"
+          }
+        ],
+        "target_kinds": [
+          "local_sentence"
+        ],
+        "provenance": "director_authored"
+      },
+      "repair_contract": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_sentence"
+      },
+      "scope_authority": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": false
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_5",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "baseline"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 18,
+        "length": 10,
+        "python_warnings": 8
+      },
+      "candidate_key": "B|긴장감 + 반전 강조",
+      "content_hash": "43e205b01aa1685559ff1858665929088d7987a00aca1af5950d7e9f4acca3c2",
+      "artifact_path": "logs/artifacts/stage4/ep_0012/attempt_05/final_manuscript__B.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "none",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "PASS",
+      "runtime_route_action": "adopt_stage4_artifact",
+      "runtime_route_reason": "stage4 runtime gate=director_primary_pass route verdict=PASS",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T03:01:42.314282",
+      "stage": 3,
+      "episode": 13,
+      "arc": 3,
+      "attempt_num": 3,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 427156,
+      "token_cost": 0.43816,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep13:arc3:a3:20260430_025304",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "dialogue_focused",
+      "content_hash": "5d48d92d2dd7c55517876bb079fcb1662cc07fc00f476f6aae924a57419d4cc3",
+      "artifact_path": "logs/artifacts/stage3/ep_0013/attempt_03/final_blueprint__dialogue_focused.json",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-30T03:10:48.323519",
+      "stage": 4,
+      "episode": 13,
+      "arc": 3,
+      "attempt_num": 1,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 494860,
+      "token_cost": 0.823839,
+      "is_patch": true,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep13:arc3:a1:20260430_030200",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "repair_scope": "inplace",
+      "fix_scope": "inplace",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [
+          "잠시 후, 지점장이 조심스럽게 허리를 펴고",
+          "지점장은 입을 반쯤 벌린 채 헐떡였다.",
+          "모니터의 붉은 숫자를 가리키는 손끝을 보며, 지점장은 또 다른 거대한 피바람을 예감하며 숨을 멈췄다."
+        ],
+        "must_fix": [],
+        "do_not_regress": [],
+        "success_condition": "",
+        "target_kind": "local_phrase",
+        "target_kinds": [
+          "local_phrase"
+        ],
+        "provenance": "director_authored",
+        "patch_target_records": [
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_phrase",
+            "summary": "잠시 후, 지점장이 조심스럽게 허리를 펴고",
+            "patch_target_id": "pt:614bd4bf35a6"
+          },
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_phrase",
+            "summary": "지점장은 입을 반쯤 벌린 채 헐떡였다.",
+            "patch_target_id": "pt:41b140382fc4"
+          },
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_phrase",
+            "summary": "모니터의 붉은 숫자를 가리키는 손끝을 보며, 지점장은 또 다른 거대한 피바람을 예감하며 숨을 멈췄다.",
+            "patch_target_id": "pt:f931c0ec368b"
+          }
+        ]
+      },
+      "repair_contract": {
+        "subtype": "고유명사",
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_phrase"
+      },
+      "scope_authority": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": false
+      },
+      "retry_budget_axes": {
+        "round": "initial",
+        "repair": "ensemble_generation",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "baseline"
+      },
+      "patch_strategy": "inplace_patch_local_ops",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 20,
+        "length": 10,
+        "python_warnings": 10
+      },
+      "candidate_key": "A|InPlace 수정",
+      "content_hash": "efd3f5841b8839bccf1ad497e55f2a8bd27e7b22e2395b3262d6942b7093e226",
+      "artifact_path": "logs/artifacts/stage4/ep_0013/attempt_01/patched_after_fix__A_InPlace.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "none",
+      "strong_advisory_escalation": {
+        "source_verdict": "PASS_WITH_FIX",
+        "escalated_to": "PASS_WITH_FIX",
+        "notice_only": true,
+        "final_verdict_preserved": true,
+        "triggered_by": [
+          "flashback"
+        ]
+      },
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "PASS",
+      "runtime_route_action": "adopt_patched_artifact",
+      "runtime_route_reason": "stage4 runtime gate=patch_reaudit_pass route verdict=PASS",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T03:29:33.025942",
+      "stage": 3,
+      "episode": 14,
+      "arc": 4,
+      "attempt_num": 5,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 827621,
+      "token_cost": 0.76283,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep14:arc4:a5:20260430_031342",
+      "final_verdict": "PASS_WITH_WARNING",
+      "director_verdict": "PASS_WITH_FIX",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "emotion_focused",
+      "content_hash": "608f394db960cd1891acb220ca124365a2427ccba5fd92f3260e9e65651d4817",
+      "artifact_path": "logs/artifacts/stage3/ep_0014/attempt_05/final_blueprint__emotion_focused.json",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-30T03:37:31.498377",
+      "stage": 4,
+      "episode": 14,
+      "arc": 4,
+      "attempt_num": 1,
+      "success": false,
+      "reject_reason": "[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ai_slop score 3.00 (recent median 1.00) / hits=시선을 돌렸다x1, 입을 열었다x1, 침을 삼켰다x1\n  [STYLE] ced_score 7.00 (python warnings 7건)\n  [STYLE] dialogue_ratio 51% > style target 0%\n  [FACT] [수치 불일치] 원고 '자본 45억' (45.0억) vs FactLedger 'capital'=50.0억 (차이 5.0억, 10%)\n  [FACT] [수치 불일치] 원고 '자본 45억' (45.0억) vs FactLedger 'total_assets'=50.0억 (차이 5.0억, 10%)\n  [FACT] [numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '5억의 수익' (5.0억) vs resumed FactLedger 'capital'=50.0억 (EP13 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요\n  [FACT] [numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '5억의 수익' (5.0억) vs resumed FactLedger 'total_assets'=50.0억 (EP13 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요\n  [FACT] [numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '5억 원의 현금' (5.0억) vs resumed FactLedger 'capital'=50.0억 (EP13 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요\n  [FACT] [numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '5억 원의 현금' (5.0억) vs resumed FactLedger 'total_assets'=50.0억 (EP13 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요\n가용 현금 50억이라는 구체적 수치를 삭제하고 '확보된 가용 현금 전액' 등으로 수정하여 산술 모순을 해결할 것\n[모순 세부] [MAJOR] 수학: 가용 현금을 50억(45억+5억)으로 계산하여 전액 투입한다고 서술함\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ai_slop score 3.00 (recent median 1.00) / hits=시선을 돌렸다x1, 입을 열었다x1, 침을 삼켰다x1 / - [후보 A] ced_score 7.00 (python warnings 7건) / - [후보 A] dialogue_ratio 51% > style target 0% / - [후보 B] ai_slop score 3.00 (recent median 1.00) / hits=입을 열었다x1, 침을 삼켰다x1, 한순간x1 / - [후보 B] ced_score 8.00 (python warnings 8건) / - [후보 B] dialogue_ratio 35% > style target 0%\n- [INFO] [NumericConsistency — Python 수치 검증 결과. 각 항목에 대해 numeric_consistency_review에서 AGREE/DISMISS 판정 필수] / - [NC-1][후보 A][MAJOR] [수치 불일치] 원고 '자본 45억' (45.0억) vs FactLedger 'capital'=50.0억 (차이 5.0억, 10%) / - [NC-2][후보 A][MAJOR] [수치 불일치] 원고 '자본 45억' (45.0억) vs FactLedger 'total_assets'=50.0억 (차이 5.0억, 10%) / - [NC-3][후보 A][MAJOR][numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '5억의 수익' (5.0억) vs resumed FactLedger 'capital'=50.0억 (EP13 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요 / - [NC-4][후보 A][MAJOR][numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '5억의 수익' (5.0억) vs resumed FactLedger 'total_assets'=50.0억 (EP13 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요 / - [NC-5][후보 A][MAJOR][numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '5억 원의 현금' (5.0억) vs resumed FactLedger 'capital'=50.0억 (EP13 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요 / - [NC-6][후보 A][MAJOR][numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '5억 원의 현금' (5.0억) vs resumed FactLedger 'total_assets'=50.0억 (EP13 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요 / - [NC-7][후보 B][MAJOR][numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '5억 원의 현금' (5.0억) vs resumed FactLedger 'capital'=50.0억 (EP13 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요 / - [NC-8][후보 B][MAJOR][numeric_carryover_authority] [numeric carryover authority mismatch] 원고 '5억 원의 현금' (5.0억) vs resumed FactLedger 'total_assets'=50.0억 (EP13 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요\n[MAD 제약/합의 개선 지침]\n2006년 5월 하순, 서울 강남.\n\n새롭게 단장한 SW인베스트먼트 오피스 VIP 상담실의 공기는 서늘하게 가라앉아 있었다.\n최고급 이탈리아산 가죽 소파에서 배어 나오는 은은하고 묵직한 가죽 향과, 이제 막 가동을 시작한 고성능 서버 랙에서 풍기는 미세한 금속성 냄새가 묘하게 뒤섞여 후각을 자극했다.\n에어컨에서 뿜어져 나오는 일정한 백색소음만이 팽팽하게 당겨진 적막을 채우고 있었다.\n피부에 닿는 에어컨의 냉기는 소름이 돋을 만큼 날카로웠지만, 방 안을 감도는 긴장감에 비하면 아무것도 아니었다.\n여의도 한미증권 본사에서 금 시장으로의 진입을 선언한 직후, 한시우는 지체 없이 자신의 본진으로 자리를 옮겼다.\n\n방 한가운데 놓인 묵직한 마호가니 원목 책상 위에는 다중 모니터가 차가운 푸른빛을 뿜어내고 있었다.\n그 앞에 앉은 시우의 시선은 화면을 분할하여 띄워둔 글로벌 원자재 시황과 환율 지표에 고정되어 있었다.\n손끝으로 쓸어내린 마호가니의 표면은 차갑고도 단단했다. 이 견고함이야말로 그가 구축하고자 하는 자산의 성질과 닮아 있었다.\n\n'50억 원. 기존 자본 45억에 어제 WTI 원유 선물에서 확정 지은 5억의 수익이 더해진 나의 온전한 탄환이다. 남은 절반의 포지션에서 발생하는 평가익은 별도로 치더라도, 이 50억은 SW인베스트먼트 패밀리오피스를 가문의 거대한 그늘에서 완벽하게 분리해 낼 첫 번째 독립 요새의 주춧돌이다. 135조 원이라는 천문학적인 운용권을 온전히 내 규칙 아래 잠그기 위해서는, 이 공간이 철저히 내 통제 아래 있어야만 한다. 낡은 여의도의 규칙이나 얄팍한 감정에 얽매인 자들은 결코 닿을 수 없는 초월적인 속도와 냉혹한 결단력. 그것만이 이 잔혹한 사냥터의 유일한 생존 법칙이다.'\n\n책상 건너편에는 박성호 피비가 두 손을 앞으로 모은 채 바짝 긴장한 자세로 서 있었다.\n\n\"익셉션 어카운트의 금 선물 거래 한도 및 전용선 연결 상태, 모두 완벽하게 세팅되었습니다.\"\n\n박성호가 마른입술을 혀로 훑으며 조심스럽게 보고를 올렸다.\n\n\"서버의 응답 지연 ",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 369000,
+      "token_cost": 0.563858,
+      "is_patch": true,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep14:arc4:a1:20260430_032947",
+      "final_verdict": "REJECT",
+      "director_verdict": "REJECT",
+      "gate_basis": "director_primary_reject",
+      "repair_scope": "inplace",
+      "fix_scope": "inplace",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [
+          "'50억 원. 기존 자본 45억에 어제 WTI 원유 선물에서 확정 지은 5억의 수익이 더해진 나의 온전한 탄환이다. 남은 절반의 포지션에서 발생",
+          "가용 현금 50억 전액. 금 선물 620달러에 최대 레버리지로 롱 포지션 진입하세요."
+        ],
+        "must_fix": [
+          "원금 45억 중 절반이 원유 포지션에 묶여 있으므로 가용 현금이 50억이 될 수 없습니다. 구체적인 50억 수치를 지우고 '확보된 가용 현금'으로 수정하여 산술 모순을 해결하십시오."
+        ],
+        "do_not_regress": [
+          "서브프라임 모기지 사태를 분석하는 한시우의 냉철한 태도와 박성호의 경외감 묘사 유지",
+          "금 선물 시장 진입의 긴장감 유지"
+        ],
+        "success_condition": "가용 현금 50억이라는 산술적 모순이 제거되고, '확보된 가용 현금 전액' 등으로 자연스럽게 수정됨",
+        "target_kind": "local_phrase",
+        "patch_target_records": [
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_phrase",
+            "summary": "'50억 원. 기존 자본 45억에 어제 WTI 원유 선물에서 확정 지은 5억의 수익이 더해진 나의 온전한 탄환이다. 남은 절반의 포지션에서 발생",
+            "patch_target_id": "pt:25c6d53bb24c"
+          },
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_phrase",
+            "summary": "가용 현금 50억 전액. 금 선물 620달러에 최대 레버리지로 롱 포지션 진입하세요.",
+            "patch_target_id": "pt:f8d394ae0952"
+          }
+        ],
+        "target_kinds": [
+          "local_phrase"
+        ],
+        "provenance": "director_authored"
+      },
+      "repair_contract": {
+        "subtype": "수학",
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_phrase"
+      },
+      "scope_authority": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": false
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_2",
+        "repair": "patch_revision",
+        "strategy": "reduced",
+        "escalation": "mad",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "CONSTRAINT_VIOLATION",
+      "reject_bucket": "constraint_violation",
+      "score_breakdown": {
+        "continuity_contradiction": 30,
+        "blueprint_coverage": 20,
+        "quality_engagement": 18,
+        "length": 10,
+        "python_warnings": 8
+      },
+      "candidate_key": "A|balanced",
+      "content_hash": "2b88cef3b23470fffba0115f90b6d271e6b35421533f85e0a9253efc5cb76d30",
+      "artifact_path": "logs/artifacts/stage4/ep_0014/attempt_01/rejected_best__A_balanced.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "director_quality",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "REJECT",
+      "runtime_route_action": "director_reject_retry",
+      "runtime_route_reason": "stage4 runtime gate=director_primary_reject route verdict=REJECT",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T03:40:14.912372",
+      "stage": 4,
+      "episode": 14,
+      "arc": 4,
+      "attempt_num": 2,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 163375,
+      "token_cost": 0.29837,
+      "is_patch": true,
+      "prev_score": 86,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep14:arc4:a2:20260430_032947",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "repair_scope": "inplace",
+      "fix_scope": "inplace",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [
+          "'확보된 가용 현금. 어제 WTI 원유 선물에서 확정 지은 수익이 더해진 나의 온전한 탄환이다."
+        ],
+        "must_fix": [],
+        "do_not_regress": [],
+        "success_condition": "",
+        "target_kind": "local_sentence",
+        "target_kinds": [
+          "local_sentence"
+        ],
+        "provenance": "director_authored",
+        "patch_target_records": [
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_sentence",
+            "summary": "'확보된 가용 현금. 어제 WTI 원유 선물에서 확정 지은 수익이 더해진 나의 온전한 탄환이다.",
+            "patch_target_id": "pt:f059710166c3"
+          }
+        ]
+      },
+      "repair_contract": {
+        "subtype": "수치",
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_sentence"
+      },
+      "scope_authority": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": false
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_2",
+        "repair": "inplace_local_repair",
+        "strategy": "inplace",
+        "escalation": "mad",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "inplace_patch_local_ops",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 20,
+        "length": 10,
+        "python_warnings": 10
+      },
+      "candidate_key": "A|InPlace 수정",
+      "content_hash": "ab20d5d06fc6db48c277aee9471007e0dc1f4e6c736bd9f03c0d4272a97ce052",
+      "artifact_path": "logs/artifacts/stage4/ep_0014/attempt_02/patched_after_fix__A_InPlace.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "none",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "PASS",
+      "runtime_route_action": "adopt_patched_artifact",
+      "runtime_route_reason": "stage4 runtime gate=patch_reaudit_pass route verdict=PASS",
+      "runtime_route_taxonomy": "runtime_route_guard"
+    },
+    {
+      "timestamp": "2026-04-30T03:45:57.747870",
+      "stage": 3,
+      "episode": 15,
+      "arc": 4,
+      "attempt_num": 1,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 90799,
+      "token_cost": 0.164883,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep15:arc4:a1:20260430_034221",
+      "final_verdict": "PASS_WITH_WARNING",
+      "director_verdict": "PASS_WITH_FIX",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "action_focused",
+      "content_hash": "043a5a5e7483dc35b3107521b18eff323b8371ad75d36d79ad63311e14095bc2",
+      "artifact_path": "logs/artifacts/stage3/ep_0015/attempt_01/final_blueprint__action_focused.json",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "",
+      "runtime_route_verdict": "",
+      "runtime_route_action": "",
+      "runtime_route_reason": "",
+      "runtime_route_taxonomy": ""
+    },
+    {
+      "timestamp": "2026-04-30T03:54:37.480574",
+      "stage": 4,
+      "episode": 15,
+      "arc": 4,
+      "attempt_num": 1,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 466062,
+      "token_cost": 0.912967,
+      "is_patch": true,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep15:arc4:a1:20260430_034612",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "repair_scope": "inplace",
+      "fix_scope": "inplace",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [
+          "거대한 톱니바퀴가 새로운 사냥터에 완벽하게 맞물려 돌아가기 시작했다.",
+          "굳게 닫히는 문 너머로, 박성호는 다가올 숨 막히는 횡보장과 거대한 광기를 직감하며 마른침을 삼켰다."
+        ],
+        "must_fix": [],
+        "do_not_regress": [],
+        "success_condition": "",
+        "target_kind": "local_sentence",
+        "target_kinds": [
+          "local_sentence"
+        ],
+        "provenance": "director_authored",
+        "patch_target_records": [
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_sentence",
+            "summary": "거대한 톱니바퀴가 새로운 사냥터에 완벽하게 맞물려 돌아가기 시작했다.",
+            "patch_target_id": "pt:9cb8b44638cc"
+          },
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_sentence",
+            "summary": "굳게 닫히는 문 너머로, 박성호는 다가올 숨 막히는 횡보장과 거대한 광기를 직감하며 마른침을 삼켰다.",
+            "patch_target_id": "pt:639c2a19f7f5"
+          }
+        ]
+      },
+      "repair_contract": {
+        "subtype": "상태",
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "director_authored",
+        "target_kind": "local_sentence"
+      },
+      "scope_authority": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": false
+      },
+      "retry_budget_axes": {
+        "round": "initial",
+        "repair": "ensemble_generation",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "baseline"
+      },
+      "patch_strategy": "inplace_patch_local_ops",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 20,
+        "length": 10,
+        "python_warnings": 10
+      },
+      "candidate_key": "A|InPlace 수정",
+      "content_hash": "3171d16ce1afde843de3b69f7df9654ca674900d0e4cf66553845f1c4e877f0e",
+      "artifact_path": "logs/artifacts/stage4/ep_0015/attempt_01/patched_after_fix__A_InPlace.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "none",
+      "strong_advisory_escalation": {},
+      "runtime_route_payload_version": "stage4-runtime-route-v1",
+      "runtime_route_verdict": "PASS",
+      "runtime_route_action": "adopt_patched_artifact",
+      "runtime_route_reason": "stage4 runtime gate=patch_reaudit_pass route verdict=PASS",
+      "runtime_route_taxonomy": "runtime_route_guard"
     }
   ]
 }

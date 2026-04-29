@@ -1,0 +1,286 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "action_focused",
+    "content_hash": "31287f6dcf919444862eeb875e011bec2cab15ba8ad0bf30ff61d7a9b4d8eed9"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=4; sample_anchors=SW인베스트먼트, 꿈틀거리, 620달러",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:21be5739d102",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 2,
+    "disqualified": [],
+    "genre_strategy_contract": {
+      "action_semantics": [
+        "decisive business move",
+        "capital exposure",
+        "institutional pressure",
+        "governance or legal next gate"
+      ],
+      "authority_level": "route",
+      "authority_source": "stage3_genre_strategy_contract",
+      "contract_hash": "65f385e6b082bf69",
+      "contract_id": "investment_business_power.action_focused.v1",
+      "director_visible": true,
+      "factsheet_mutation": false,
+      "forbidden_defaults": [
+        "combat",
+        "chase",
+        "intruder",
+        "vehicle attack",
+        "physical crisis",
+        "thriller infiltration"
+      ],
+      "genre_family": "investment_business_power",
+      "genre_type": "investment",
+      "material_mutation": false,
+      "schema_version": "genre-strategy-contract-v1",
+      "strategy_name": "action_focused",
+      "tension_semantics": [
+        "deadline pressure",
+        "counterparty risk",
+        "liquidity or margin limit",
+        "reputation and access risk"
+      ]
+    },
+    "length": 1282,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 90261,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": true,
+        "raw_chars": 90261
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 119654,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 880346,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 114584,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4439,
+          "lane": "constraints"
+        },
+        {
+          "chars": 501,
+          "lane": "feedback_context"
+        }
+      ],
+      "genre_strategy_contracts": [
+        {
+          "authority_level": "route",
+          "contract_hash": "65f385e6b082bf69",
+          "contract_id": "investment_business_power.action_focused.v1",
+          "strategy_name": "action_focused"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 120,
+        "constraints": 4439,
+        "feedback_context": 501,
+        "hud_context": 10,
+        "prev_info": 114584
+      },
+      "shared_context_chars": 119153,
+      "total_chars": 119654
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "action_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T18:45:57.733920+00:00",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 14,
+    "source_prev_manuscript_hash": "ab20d5d06fc6db48c277aee9471007e0dc1f4e6c736bd9f03c0d4272a97ce052"
+  },
+  "core_tension": "두 달간 이어지는 금 시장의 피 말리는 횡보장과 막대한 레버리지 비용의 압박",
+  "end_location": "서울 성북동 프라이빗 카페 밀실",
+  "ending_hook": "화면 속 붉은 숫자가 미세하게 꿈틀거리는 순간, 두 달간 웅크렸던 포식자의 눈동자에 마침내 서늘한 살기가 번뜩였다.",
+  "ending_state": {
+    "location": "서울 성북동 프라이빗 카페 밀실",
+    "protagonist_status": "기나긴 횡보장을 견뎌내고 금값 폭등의 뇌관이 터지기 직전의 타점을 정확히 조준함",
+    "timeline": {
+      "표현": "2006년 7월 하순"
+    }
+  },
+  "ep_num": 15,
+  "episode_number": 15,
+  "expected_ending": "메이저 자본의 개미 털기가 끝나고 호가창의 배열이 무너지며 폭등이 임박했음을 직감함",
+  "integrated_scenario": "SW인베스트먼트 오피스 VIP 상담실을 나선 한시우는 차가운 밤공기를 가르며 대기 중이던 택시에 몸을 실었다. 목적지는 성북동의 인적 드문 프라이빗 카페. 거대한 자본이 최대 레버리지로 금 시장에 투입된 이상, 여의도의 얄팍한 시선과 소음으로부터 완벽하게 단절된 벙커가 필요했다. 카페의 가장 안쪽 밀실에 도착한 그는 두 대의 노트북과 서브 모니터를 전개하고, 2006년 1분기 글로벌 원자재 시황 분석 노트를 펼치며 기나긴 장기전의 진지를 구축했다.\n\n시간은 끈적하게 늘어지며 5월 하순에서 6월, 그리고 7월로 접어들었다. 금 선물 가격은 620달러에서 630달러 사이의 좁은 감옥에 갇힌 채 지독한 박스권 횡보를 거듭했다. 최대 레버리지를 끌어다 쓴 대가로 매일 밤 막대한 롤오버 비용이 계좌의 예수금을 야금야금 갉아먹었다. HTS 잔고 창에 붉고 푸른 숫자가 신경질적으로 점멸했지만, 한시우의 심장 박동은 평온한 60BPM을 유지했다. 차트 하단의 메말라버린 거래량은 메이저 세력이 개미들의 피를 말리며 물량을 매집하고 있다는 가장 완벽한 증거였다. 그는 이 지루한 톱니바퀴 속에서 기계적인 평온을 유지하며 차갑게 식은 커피를 마셨다.\n\n그러나 여의도 본사에 남아 HTS를 지켜보던 박성호 PB의 신경은 이미 한계에 달해 있었다. 적막을 깨고 요란하게 울린 보안 휴대전화 너머로 박성호의 갈라진 목소리가 쏟아졌다. 두 달째 누적된 롤오버 비용과 마진콜의 위협을 언급하며, 그는 덜덜 떨리는 목소리로 절반 청산을 다급하게 건의했다. 한시우는 모니터의 푸른빛을 정면으로 받아내며 건조하게 응수했다. 인플레이션의 공포가 실물 경제를 잠식하고 달러가 약세로 돌아선 거시경제의 중력을 짚어주며, 기관들이 쳐놓은 횡보장이라는 환영에 속아 황금알을 내던지는 어리석음을 차갑게 꾸짖었다. \"내 지시가 떨어질 때까지 단 1계약도 건드리지 마십시오.\" 서늘한 경고 한마디에 수화기 너머의 소란은 완벽하게 멎었다.\n\n7월 하순의 어느 늦은 밤, 끈질기게 시장을 짓누르던 630달러 선의 매도 벽이 마침내 미세하게 흔들리기 시작했다. 수만 계약씩 쌓여 있던 허수 주문들이 은밀하게 취소되며, 호가창의 배열이 위를 향해 얇아지는 질적인 변화가 포착되었다. 메이저 자본의 악랄한 개미 털기가 마침내 끝을 맺고, 거대한 상승 랠리가 임박했다는 명백한 신호였다. 한시우는 안주머니에서 몽블랑 만년필을 꺼내 분석 노트의 특정 날짜 위에 선명한 동그라미를 그렸다. 화면 속 붉은 숫자가 미세하게 꿈틀거리는 순간, 두 달간 웅크렸던 포식자의 눈동자에 마침내 서늘한 살기가 번뜩이며 다가올 거대한 사냥의 서막을 알렸다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor",
+      "scene_transition_cue"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부는 장소 이동과 벙커 구축의 정적인 긴장감을 조성하고, 중반부는 두 달간의 시간 경과를 압축적으로 보여주며 롤오버 비용이라는 현실적인 압박감을 강조한다. 후반부 통화 씬에서 박성호의 공포와 한시우의 냉철함을 대비시켜 갈등을 끌어올린 뒤, 마지막 씬에서 폭발 직전의 고요함으로 클리프행어를 완성한다.",
+  "protagonist_state": {
+    "equipment": [
+      "20억 원 예치 통장",
+      "SW인베스트먼트 사업자 등록증 가승인 서류",
+      "2006년 1분기 글로벌 원자재 시황 분석 노트",
+      "한미증권 VIP 다이렉트 핫라인 보안 휴대전화",
+      "Exception Account 승인 문서 사본"
+    ],
+    "injuries": "없음",
+    "mood": "기계적인 평온과 서늘한 인내"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "한시우의 예측력에 맹목적으로 경외하지만 막대한 레버리지와 횡보장 앞에서 본능적인 공포에 시달림",
+      "justification": "두 달간의 횡보장과 롤오버 비용 누적이라는 현실적인 압박을 견디지 못하고 건의를 올렸으나, 거시경제를 꿰뚫는 한시우의 서늘한 통제력 앞에 철저히 굴복했기 때문",
+      "target": "박성호",
+      "to_state": "한시우의 차가운 논리와 억압에 짓눌려 공포를 삼키고 완벽한 기계 부품으로서의 복종을 다시 한번 강요당함"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "택시 창밖으로 스쳐 가는 강남의 화려한 네온사인을 무심하게 응시하던 한시우는 이내 눈을 감고 다가올 횡보장의 파동을 머릿속으로 시뮬레이션했다. 성북동의 인적 드문 프라이빗 카페에 도착한 그는 가장 안쪽의 밀실을 통째로 빌려 외부와의 단절을 선언했다. 두 대의 노트북과 서브 모니터가 책상 위에 정렬되고, 푸른빛을 뿜어내는 금 선물 6월물 호가창이 화면 중앙에 자리 잡았다. 620달러 선에서 위태롭게 깜빡이는 숫자를 바라보며, 그는 빳빳한 양장 노트를 펼쳐 들었다.",
+      "description": "복도를 빠져나와 택시를 타고 성북동으로 향하는 한시우. 프라이빗 카페 밀실에 다중 모니터와 분석 노트를 세팅하며 장기전을 준비한다.",
+      "goal": "외부 소음을 차단하고 장기전을 위한 진지 구축",
+      "key_events": [
+        "SW인베스트먼트 오피스를 빠져나와 차가운 밤공기를 마시며 택시에 탑승함",
+        "성북동 프라이빗 카페의 구석 밀실에 도착하여 외부인의 출입을 전면 통제함",
+        "가방에서 노트북과 서브 모니터를 꺼내 세팅하고 2006년 1분기 글로벌 원자재 시황 분석 노트를 펼침"
+      ],
+      "location": "서울 성북동 프라이빗 카페 밀실",
+      "summary": "SW인베스트먼트를 나선 한시우가 성북동 프라이빗 카페에 도착해 금 시장의 횡보장을 견뎌낼 완벽한 진지를 세팅한다.",
+      "tension_level": 5,
+      "title": "벙커로의 귀환",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "시간은 끈적하게 늘어지며 5월 하순에서 6월, 그리고 7월로 접어들었다. 금 선물 가격은 620달러에서 630달러 사이의 좁은 감옥에 갇힌 채 지독한 횡보를 거듭했다. 최대 레버리지를 끌어다 쓴 대가로 매일 밤 막대한 롤오버 비용이 계좌를 야금야금 갉아먹고 있었다. 일반적인 트레이더였다면 극심한 피로와 손실의 공포에 신경 안정제를 삼켰을 상황이었지만, 한시우의 심장 박동은 60BPM에서 단 1도 벗어나지 않았다. 차트 하단의 메말라버린 거래량은 메이저 세력이 개미들의 피를 말리며 물량을 매집하고 있다는 가장 완벽한 증거였다.",
+      "description": "시간이 흐르며 금값이 620달러 선에서 위아래로 톱니바퀴처럼 움직이는 횡보장이 연출된다. 한시우는 메이저 자본의 개미 털기 패턴을 분석하며 흔들림 없이 모니터를 응시한다.",
+      "goal": "막대한 레버리지 비용과 박스권 장세의 심리적 압박 견뎌내기",
+      "key_events": [
+        "5월 하순에서 7월로 시간이 흐르며 금값이 620달러와 630달러 사이의 좁은 박스권에 갇혀 지루한 횡보를 이어감",
+        "최대 레버리지로 인한 막대한 롤오버 비용이 매일같이 계좌의 예수금을 갉아먹는 상황이 HTS 잔고 창에 붉고 푸른 숫자로 점멸함",
+        "한시우는 거래량 지표의 바닥을 확인하며 기관들의 인위적인 가격 누르기 패턴을 확신하고 차갑게 식은 커피를 마심"
+      ],
+      "location": "서울 성북동 프라이빗 카페 밀실",
+      "summary": "두 달간 이어지는 금 시장의 악랄한 박스권 장세 속에서 매일 롤오버 비용이 계좌를 갉아먹지만, 한시우는 기계적인 평온을 유지한다.",
+      "tension_level": 7,
+      "title": "피 말리는 횡보",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "적막을 깨고 보안 휴대전화가 날카롭게 진동했다. 통화 버튼을 누르자 박성호의 갈라진 목소리가 쏟아져 들어왔다. '대표님, 벌써 두 달째입니다! 롤오버 비용만 수천만 원이 넘게 깨졌습니다. 여기서 하방으로 방향을 틀면 마진콜을 방어할 현금이 없습니다. 제발 비중을 조금이라도 줄여서 숨통을 트셔야 합니다!' 한시우는 모니터의 푸른빛을 정면으로 받아내며 건조하게 대답했다. '눈앞의 틱 변화에 시야가 멀어 거시경제의 중력을 놓치지 마십시오. 달러는 약세로 돌아섰고, 인플레이션의 공포는 실물 경제를 잠식하고 있습니다. 기관들이 쳐놓은 횡보장이라는 환영에 겁을 먹고 황금알을 내던질 생각은 추호도 없습니다. 내 지시가 떨어질 때까지 단 1계약도 건드리지 마십시오.'",
+      "description": "핫라인이 울리고 박성호가 극도의 피로와 공포가 섞인 목소리로 위험을 경고한다. 한시우는 거시경제의 인플레이션 압력을 근거로 단 1계약도 청산하지 않겠다는 절대적인 지시를 하달한다.",
+      "goal": "박성호의 공포를 짓누르고 포지션 유지 관철",
+      "key_events": [
+        "책상 위의 보안 휴대전화가 요란하게 울리고, 박성호가 롤오버 비용 누적과 마진콜 위협을 언급하며 절반 청산을 다급하게 건의함",
+        "한시우가 박성호의 얄팍한 차트 분석을 비판하며 인플레이션 헤지 수요와 달러 약세라는 거시적 중력을 논리적으로 짚어줌",
+        "자신의 지시가 떨어지기 전까지는 HTS의 매도 버튼에서 손을 떼라는 서늘한 경고로 박성호의 입을 완벽하게 다물게 함"
+      ],
+      "location": "서울 성북동 프라이빗 카페 밀실",
+      "summary": "레버리지 압박을 견디지 못한 박성호가 전화를 걸어 포지션 축소를 건의하지만, 한시우가 차가운 논리로 그의 공포를 짓누른다.",
+      "tension_level": 8,
+      "title": "의구심과 확신",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "7월 하순의 어느 늦은 밤. 끈질기게 시장을 짓누르던 630달러 선의 매도 벽이 미세하게 흔들리기 시작했다. 수만 계약씩 쌓여 있던 허수 주문들이 하나둘씩 자취를 감추고, 호가창의 배열이 위를 향해 얇아지는 질적인 변화가 포착되었다. 메이저 자본의 개미 털기가 마침내 끝을 맺고, 그들 역시 상승 랠리에 올라탈 준비를 마쳤다는 명백한 신호였다. 한시우는 안주머니에서 몽블랑 만년필을 꺼내 분석 노트의 여백에 선명한 동그라미를 그렸다. 거대한 폭발을 앞둔 활화산의 초입. 화면 속 붉은 숫자가 미세하게 꿈틀거리는 순간, 두 달간 웅크렸던 포식자의 눈동자에 마침내 서늘한 살기가 번뜩였다.",
+      "description": "7월 하순으로 접어들며 호가창의 악성 매물대 배열이 미세하게 붕괴하는 것을 포착한다. 한시우는 다가올 거시경제의 변화를 앞두고 폭발 직전의 고요함 속에서 서늘한 미소를 짓는다.",
+      "goal": "횡보장의 끝을 확인하고 다가올 폭등의 타점 조준",
+      "key_events": [
+        "HTS 호가창 상단에 철옹성처럼 쌓여 있던 630달러 선의 매도 잔량들이 은밀하게 취소되며 저항선이 얇아지는 것을 눈으로 확인함",
+        "만년필을 들어 분석 노트의 7월 하순 특정 날짜 위에 선명한 동그라미를 그려 넣음",
+        "두 달간 웅크렸던 포식자의 눈동자에 마침내 서늘한 살기가 번뜩이며 다가올 사냥을 준비함"
+      ],
+      "location": "서울 성북동 프라이빗 카페 밀실",
+      "summary": "두 달의 인고 끝에 마침내 시장의 매도 벽이 얇아지고, 한시우가 거대한 폭발이 임박했음을 직감한다.",
+      "tension_level": 9,
+      "title": "응축된 에너지",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 강남, SW인베스트먼트 오피스 VIP 상담실 앞 복도",
+  "target_beat": "성북동 프라이빗 카페로 이동하여 두 달간의 금 횡보장과 박성호의 의구심을 견뎌냄",
+  "time_flow": "2006년 5월 하순 → 2006년 7월 하순",
+  "title": "침묵의 벙커"
+}

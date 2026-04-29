@@ -1,0 +1,19 @@
+{
+  "project": "0_카나리아",
+  "project_root": "C:\\Users\\PC\\Desktop\\글도비\\projects\\0_카나리아",
+  "target_ep": 15,
+  "operational_attempt_cap": 5,
+  "result": {
+    "success_count": 1,
+    "fail_count": 0
+  },
+  "latest_blueprint_ep": 15,
+  "success": true,
+  "benchmark_archive": {
+    "status": "ok",
+    "lane": "stage3-direct-supervised",
+    "target_ep": 15,
+    "run_id": "20260430_034558__stage3-direct-supervised__target-ep15__6222b5db",
+    "record_root": "C:\\Users\\PC\\Desktop\\글도비\\benchmarks\\0_카나리아\\20260430_034558__stage3-direct-supervised__target-ep15__6222b5db"
+  }
+}

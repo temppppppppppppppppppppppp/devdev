@@ -1,0 +1,558 @@
+{
+  "arc_no": 3,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0013.txt",
+    "settlement_packet_path": "drafts/ep_0013.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 13,
+  "ep_num": 13,
+  "manuscript": {
+    "char_count": 5433,
+    "content_hash": "6682e730eb951625c4eb69dd59d089fe3534dc86359659a83a514f1c7601d56e",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0013.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "open_review": "특이사항 없음. 이전 지시사항이었던 '지점장' 오기가 '박성호'로 완벽히 수정되었으며, 서사의 긴장감과 몰입도가 훌륭하게 유지되었습니다.",
+      "repair_scope": "inplace",
+      "score": 90,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 10,
+        "quality_engagement": 20
+      },
+      "selection_reason": "이전 심사에서 지적된 NPC 직함 오류(지점장 -> 박성호)가 완벽하게 수정되었으며, Blueprint의 모든 씬을 충실히 반영하고 이전 화와의 연속성 및 수치적 정합성이 뛰어납니다. 또한 Python 사전 검증에서 지적된 위치 불연속 문제도 도입부의 시간 및 장소 명시를 통해 자연스럽게 해결되었습니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 1,
+          "pattern": "시선을 돌렸다"
+        },
+        {
+          "count": 1,
+          "pattern": "입을 열었다"
+        }
+      ],
+      "ai_slop_score": 2.0,
+      "burstiness": 27.63,
+      "ced_score": 0.0,
+      "complexity": 75.25,
+      "compression_ratio": 0.4526,
+      "signal_summary": {
+        "ai_slop_total_hits": 2,
+        "burstiness": 27.63,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 75.25,
+        "compression_ratio": 0.4526,
+        "sentence_count": 105
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "모니터",
+            "붉은",
+            "숫자",
+            "가리키",
+            "그의"
+          ],
+          "source": "ending_hook",
+          "text": "모니터의 붉은 숫자를 가리키는 그의 손끝에서, 박성호는 또 다른 거대한 피바람을 예감하며 숨을 멈췄다."
+        },
+        {
+          "cue_terms": [
+            "모든",
+            "권한",
+            "손에",
+            "쥐고",
+            "시장으로"
+          ],
+          "source": "expected_ending",
+          "text": "모든 권한을 손에 쥐고 금 시장으로의 이동을 선언함"
+        }
+      ],
+      "capital": 5000000000,
+      "connections": "PB 박성호 (맹목적인 경외감 및 절대적 복종)",
+      "current_objective": "대명그룹 한태준의 1조 원 규모 화학 계열사 인수전을 붕괴시키고 후계 구도를 완전히 박살내기. 금(Gold) 선물 시장 진입.",
+      "equipment": [
+        "몽블랑 만년필",
+        "익셉션 어카운트 승인 문서",
+        "WTI 원유 선물 거래 내역서"
+      ],
+      "inventory_counts": {
+        "WTI 원유 선물 거래 내역서": 1,
+        "두꺼운 양장 노트": 1,
+        "몽블랑 만년필": 1,
+        "보안 휴대전화": 1,
+        "익셉션 어카운트 승인 문서": 1
+      },
+      "market_insight": "유가 75달러 돌파를 정확히 예측하여 5억 원의 수익을 창출하고, 고유가와 고환율이 대명그룹 화학 계열사 인수전에 미칠 치명적 타격을 계산하여 완벽한 자멸 시나리오를 설계함. 인플레이션 우려에 따른 금(Gold) 가치 상승 예측.",
+      "reputation": "최상위 VIP '익셉션 어카운트' 홀더. 거시경제의 중력을 이용해 기업의 숨통을 끊는 자본 시장의 괴물.",
+      "status": "익셉션 어카운트 활성화 완료. 원유 선물 절반 유지로 한태준 압박 중. 확보된 현금으로 금(Gold) 선물 시장 투입 지시.",
+      "stocks": [
+        "원유 선물 롱 포지션 (절반 유지)",
+        "금(Gold) 선물 진입 준비 중"
+      ],
+      "total_assets": 5000000000,
+      "wealth": 5000000000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "모니터",
+            "붉은",
+            "숫자",
+            "가리키",
+            "그의"
+          ],
+          "source": "ending_hook",
+          "text": "모니터의 붉은 숫자를 가리키는 그의 손끝에서, 박성호는 또 다른 거대한 피바람을 예감하며 숨을 멈췄다."
+        },
+        {
+          "cue_terms": [
+            "모든",
+            "권한",
+            "손에",
+            "쥐고",
+            "시장으로"
+          ],
+          "source": "expected_ending",
+          "text": "모든 권한을 손에 쥐고 금 시장으로의 이동을 선언함"
+        }
+      ],
+      "causal_links": [
+        "유가 75달러 돌파 및 5억 원 수익 확정 -> 한미증권 리스크관리팀의 태도 돌변 및 익셉션 어카운트 승인",
+        "에콰도르 사태 및 이란 핵 위기로 인한 인플레이션 우려 -> 한시우가 다음 투자 타겟으로 금(Gold)을 지목",
+        "유가 75달러 유지 및 원달러 환율 폭등 -> 대명그룹 화학 계열사 인수전의 원가 구조 악화 및 환차손 발생 -> 한태준의 자금줄 압박"
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "WTI 원유 선물 거래 내역서",
+          "to": 1
+        },
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "두꺼운 양장 노트",
+          "to": 1
+        },
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "두꺼운 양장 노트 ('2006년 1분기 글로벌 원자재 시황 분석 노트')",
+          "to": 0
+        },
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "보안 휴대전화",
+          "to": 1
+        },
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "보안 휴대전화 (익셉션 어카운트 핫라인 연결)",
+          "to": 0
+        },
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "익셉션 어카운트 승인 문서",
+          "to": 1
+        },
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "익셉션 어카운트 활성화 코드 서류",
+          "to": 0
+        },
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "최종 잔고 증명서",
+          "to": 0
+        }
+      ],
+      "inventory_counts": {
+        "WTI 원유 선물 거래 내역서": 1,
+        "두꺼운 양장 노트": 1,
+        "몽블랑 만년필": 1,
+        "보안 휴대전화": 1,
+        "익셉션 어카운트 승인 문서": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 80,
+          "target": "박성호",
+          "value": 100
+        },
+        {
+          "obsession": 0,
+          "target": "한태준",
+          "value": -50
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [
+          "시장 참여자들 (금을 이자도 나오지 않는 죽은 자산이라 조롱함)"
+        ],
+        "new_witnesses": [
+          "한미증권 임원진 및 리스크관리팀 (수익 규모와 시장 장악력 확인 후 예외 승인)"
+        ]
+      },
+      "lost_items": [
+        "두꺼운 양장 노트 ('2006년 1분기 글로벌 원자재 시황 분석 노트')",
+        "익셉션 어카운트 활성화 코드 서류",
+        "최종 잔고 증명서",
+        "보안 휴대전화 (익셉션 어카운트 핫라인 연결)"
+      ],
+      "new_items": [
+        "보안 휴대전화",
+        "WTI 원유 선물 거래 내역서",
+        "두꺼운 양장 노트",
+        "익셉션 어카운트 승인 문서"
+      ],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "한미증권 임원진 및 리스크관리팀 (수익 규모와 시장 장악력 확인 후 예외 승인)",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "시장 참여자들 (금을 이자도 나오지 않는 죽은 자산이라 조롱함)",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "집착80/오해100"
+        }
+      ],
+      "reveals": [
+        "ending_hook"
+      ],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "모니터",
+              "붉은",
+              "숫자",
+              "가리키",
+              "그의"
+            ],
+            "source": "ending_hook",
+            "text": "모니터의 붉은 숫자를 가리키는 그의 손끝에서, 박성호는 또 다른 거대한 피바람을 예감하며 숨을 멈췄다."
+          },
+          {
+            "cue_terms": [
+              "모든",
+              "권한",
+              "손에",
+              "쥐고",
+              "시장으로"
+            ],
+            "source": "expected_ending",
+            "text": "모든 권한을 손에 쥐고 금 시장으로의 이동을 선언함"
+          }
+        ],
+        "capital": 5000000000,
+        "connections": "PB 박성호 (맹목적인 경외감 및 절대적 복종)",
+        "current_objective": "대명그룹 한태준의 1조 원 규모 화학 계열사 인수전을 붕괴시키고 후계 구도를 완전히 박살내기. 금(Gold) 선물 시장 진입.",
+        "equipment": [
+          "몽블랑 만년필",
+          "익셉션 어카운트 승인 문서",
+          "WTI 원유 선물 거래 내역서"
+        ],
+        "inventory_counts": {
+          "WTI 원유 선물 거래 내역서": 1,
+          "두꺼운 양장 노트": 1,
+          "몽블랑 만년필": 1,
+          "보안 휴대전화": 1,
+          "익셉션 어카운트 승인 문서": 1
+        },
+        "market_insight": "유가 75달러 돌파를 정확히 예측하여 5억 원의 수익을 창출하고, 고유가와 고환율이 대명그룹 화학 계열사 인수전에 미칠 치명적 타격을 계산하여 완벽한 자멸 시나리오를 설계함. 인플레이션 우려에 따른 금(Gold) 가치 상승 예측.",
+        "reputation": "최상위 VIP '익셉션 어카운트' 홀더. 거시경제의 중력을 이용해 기업의 숨통을 끊는 자본 시장의 괴물.",
+        "status": "익셉션 어카운트 활성화 완료. 원유 선물 절반 유지로 한태준 압박 중. 확보된 현금으로 금(Gold) 선물 시장 투입 지시.",
+        "stocks": [
+          "원유 선물 롱 포지션 (절반 유지)",
+          "금(Gold) 선물 진입 준비 중"
+        ],
+        "total_assets": 5000000000,
+        "wealth": 5000000000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "investment_goal",
+              "location",
+              "position",
+              "protagonist_status",
+              "total_assets"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ]
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "50억 원 (기존 45억 원 + 5억 원 수익 확정, 남은 절반 포지션 평가익 별도)",
+      "director_score": 90,
+      "investment_goal": "SW인베스트먼트 패밀리오피스를 가족 자산과 분리하고 135조 운용권을 규칙 아래에 잠근다.",
+      "location": "한미증권 본사 VIP룸",
+      "position": "WTI 원유 선물 6월물 절반 포지션 유지 중, 금 선물 신규 진입 대기",
+      "protagonist_status": "Exception Account 공식 발효 및 금 선물 시장 진입 준비 완료",
+      "total_assets": "45억 원 이상 (평가금액 기준)"
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "investment_goal",
+            "location",
+            "position",
+            "protagonist_status",
+            "total_assets"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ]
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T18:01:42.298020+00:00",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 12,
+    "source_prev_manuscript_hash": "43e205b01aa1685559ff1858665929088d7987a00aca1af5950d7e9f4acca3c2"
+  },
+  "title": "예외의 지배자"
+}

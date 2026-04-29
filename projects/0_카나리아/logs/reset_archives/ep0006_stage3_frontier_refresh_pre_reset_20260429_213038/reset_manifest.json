@@ -1,0 +1,42 @@
+{
+  "project_root": "C:\\Users\\PC\\Desktop\\글도비\\projects\\0_카나리아",
+  "from_ep": 6,
+  "db_backup": "C:\\Users\\PC\\Desktop\\글도비\\projects\\0_카나리아\\logs\\reset_archives\\ep0006_stage3_frontier_refresh_pre_reset_20260429_213038\\project_data.pre_stage3_frontier_refresh.db",
+  "db_sha256_before": "8325622a9e20bc890b66a0e380007ea68ecd97afe6d23c897a7a2979f73495c1",
+  "latest_blueprint_before": 15,
+  "latest_episode_next_before": 6,
+  "existing_blueprints_ge_from_ep": 10,
+  "existing_stage3_attempts_ge_from_ep": 11,
+  "existing_stage4_attempts_ge_from_ep": 0,
+  "reset_after_applied": true,
+  "latest_blueprint_after_db_reset": 5,
+  "latest_episode_next_after_db_reset": 6,
+  "filesystem_archive": {
+    "reuse_reset_filesystem_archive_applied": true,
+    "reuse_reset_filesystem_archive_root": "logs/reset_archives/reuse_reset_ge_ep0006_20260429_213039",
+    "reuse_reset_filesystem_archived_count": 20,
+    "reuse_reset_filesystem_archived_paths": [
+      "logs/artifacts/stage3/ep_0006",
+      "logs/artifacts/stage3/ep_0007",
+      "logs/artifacts/stage3/ep_0008",
+      "logs/artifacts/stage3/ep_0009",
+      "logs/artifacts/stage3/ep_0010",
+      "logs/artifacts/stage3/ep_0011",
+      "logs/artifacts/stage3/ep_0012",
+      "logs/artifacts/stage3/ep_0013",
+      "logs/artifacts/stage3/ep_0014",
+      "logs/artifacts/stage3/ep_0015",
+      "plans/blueprints/blueprint_0006.txt",
+      "plans/blueprints/blueprint_0007.txt",
+      "plans/blueprints/blueprint_0008.txt",
+      "plans/blueprints/blueprint_0009.txt",
+      "plans/blueprints/blueprint_0010.txt",
+      "plans/blueprints/blueprint_0011.txt",
+      "plans/blueprints/blueprint_0012.txt",
+      "plans/blueprints/blueprint_0013.txt",
+      "plans/blueprints/blueprint_0014.txt",
+      "plans/blueprints/blueprint_0015.txt"
+    ]
+  },
+  "db_sha256_after": "3c1a7057184e8751389ea7da047e2f0275d389baca62d7baa064baf0a4898753"
+}

@@ -1,0 +1,500 @@
+{
+  "arc_no": 3,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0012.txt",
+    "settlement_packet_path": "drafts/ep_0012.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 12,
+  "ep_num": 12,
+  "manuscript": {
+    "char_count": 6211,
+    "content_hash": "43e205b01aa1685559ff1858665929088d7987a00aca1af5950d7e9f4acca3c2",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0012.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "ISSUE",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "open_review": "후보 B는 직전 화의 긴박한 대화를 그대로 이어받아 몰입감을 극대화했습니다. 다만, 전화 통화로 이어지는 상황이라 도입부에 'SW인베스트먼트 대표실'이라는 공간적 배경이 다소 늦게(중반부) 제시된 점이 아쉽습니다. 이를 제외하면 대명그룹의 붕괴 묘사와 주인공의 서늘한 태도가 매우 훌륭하게 대비되어 장르적 쾌감을 잘 살렸습니다.",
+      "repair_scope": "inplace",
+      "score": 96,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 8,
+        "quality_engagement": 18
+      },
+      "selection_reason": "후보 B는 직전 화의 긴박한 엔딩을 자연스럽게 이어받아 절반 익절이라는 반전을 효과적으로 연출했습니다. 후보 A는 심각한 산술 오류(총자산 30억 원)를 범하여 CRITICAL 모순이 발생했고, 후보 C는 씬 분량 배분이 불균형하여 후반부 긴장감이 떨어집니다. 후보 B는 수치적 모순을 피하면서도 대명그룹의 붕괴와 주인공의 서늘한 통제력을 몰입감 있게 그려내어 가장 우수합니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 1,
+          "pattern": "시선을 돌렸다"
+        }
+      ],
+      "ai_slop_score": 1.0,
+      "burstiness": 24.9,
+      "ced_score": 1.0,
+      "complexity": 75.5,
+      "compression_ratio": 0.4396,
+      "signal_summary": {
+        "ai_slop_total_hits": 1,
+        "burstiness": 24.9,
+        "ced_breakdown": {
+          "issue_count": 1,
+          "warning_count": 0
+        },
+        "complexity": 75.5,
+        "compression_ratio": 0.4396,
+        "sentence_count": 124
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "내일",
+            "오전",
+            "본사",
+            "vip룸",
+            "비워두십시오"
+          ],
+          "source": "ending_hook",
+          "text": "\"내일 오전, 본사 VIP룸을 비워두십시오.\" 서늘한 지시와 함께 다음 사냥터의 문이 열리고 있었다."
+        },
+        {
+          "cue_terms": [
+            "한미증권",
+            "본사",
+            "vip룸",
+            "방문",
+            "예고하며"
+          ],
+          "source": "expected_ending",
+          "text": "한미증권 본사 VIP룸 방문을 예고하며 씬을 마무리함"
+        }
+      ],
+      "capital": 5000000000,
+      "connections": "PB 박성호 (맹목적인 경외감 및 절대적 복종)",
+      "current_objective": "대명그룹 한태준의 1조 원 규모 화학 계열사 인수전을 붕괴시키고 후계 구도를 완전히 박살내기.",
+      "equipment": "[\"두꺼운 양장 노트\", \"몽블랑 만년필\", \"보안 휴대전화\"]",
+      "inventory_counts": {
+        "두꺼운 양장 노트 ('2006년 1분기 글로벌 원자재 시황 분석 노트')": 1,
+        "몽블랑 만년필": 1,
+        "보안 휴대전화 (익셉션 어카운트 핫라인 연결)": 1,
+        "익셉션 어카운트 활성화 코드 서류": 1,
+        "최종 잔고 증명서": 1
+      },
+      "market_insight": "유가 75달러 돌파를 정확히 예측하여 5억 원의 수익을 창출하고, 고유가와 고환율이 대명그룹 화학 계열사 인수전에 미칠 치명적 타격을 계산하여 완벽한 자멸 시나리오를 설계함.",
+      "reputation": "최상위 VIP '익셉션 어카운트' 홀더. 거시경제의 중력을 이용해 기업의 숨통을 끊는 자본 시장의 괴물.",
+      "status": "원유 선물 절반 익절로 5억 원 수익 확정. 남은 포지션으로 한태준 압박 중. 익셉션 어카운트 공식 승인 대기 및 다음 타겟 종목 물색 중.",
+      "stocks": [
+        "원유 선물 롱 포지션 (절반 유지)"
+      ],
+      "total_assets": 5000000000,
+      "wealth": 5000000000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "내일",
+            "오전",
+            "본사",
+            "vip룸",
+            "비워두십시오"
+          ],
+          "source": "ending_hook",
+          "text": "\"내일 오전, 본사 VIP룸을 비워두십시오.\" 서늘한 지시와 함께 다음 사냥터의 문이 열리고 있었다."
+        },
+        {
+          "cue_terms": [
+            "한미증권",
+            "본사",
+            "vip룸",
+            "방문",
+            "예고하며"
+          ],
+          "source": "expected_ending",
+          "text": "한미증권 본사 VIP룸 방문을 예고하며 씬을 마무리함"
+        }
+      ],
+      "causal_links": [
+        "한시우의 원유 선물 롱 포지션 유지 -> 유가 75달러 돌파 및 고공행진 -> 나프타 가격 폭등 및 대명그룹 화학 계열사 인수 대상 기업 영업이익 적자 전환 -> 한태준의 무리한 추가 자금 차입 및 자멸"
+      ],
+      "inventory_count_deltas": [],
+      "inventory_counts": {
+        "두꺼운 양장 노트 ('2006년 1분기 글로벌 원자재 시황 분석 노트')": 1,
+        "몽블랑 만년필": 1,
+        "보안 휴대전화 (익셉션 어카운트 핫라인 연결)": 1,
+        "익셉션 어카운트 활성화 코드 서류": 1,
+        "최종 잔고 증명서": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 80,
+          "target": "박성호",
+          "value": 100
+        },
+        {
+          "obsession": 0,
+          "target": "한태준",
+          "value": -100
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [
+          "한태준 (시장 발작으로 치부하며 배후를 모른 채 무리한 차입 강행)"
+        ],
+        "new_witnesses": [
+          "박성호 (한시우의 거시적 덫 설계 능력을 목격)"
+        ]
+      },
+      "lost_items": [],
+      "new_items": [],
+      "new_npcs": [
+        "박성호",
+        "한태준"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호 (한시우의 거시적 덫 설계 능력을 목격)",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "한태준 (시장 발작으로 치부하며 배후를 모른 채 무리한 차입 강행)",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "집착80/오해100"
+        }
+      ],
+      "reveals": [
+        "ending_hook",
+        "expected_ending"
+      ],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "내일",
+              "오전",
+              "본사",
+              "vip룸",
+              "비워두십시오"
+            ],
+            "source": "ending_hook",
+            "text": "\"내일 오전, 본사 VIP룸을 비워두십시오.\" 서늘한 지시와 함께 다음 사냥터의 문이 열리고 있었다."
+          },
+          {
+            "cue_terms": [
+              "한미증권",
+              "본사",
+              "vip룸",
+              "방문",
+              "예고하며"
+            ],
+            "source": "expected_ending",
+            "text": "한미증권 본사 VIP룸 방문을 예고하며 씬을 마무리함"
+          }
+        ],
+        "capital": 5000000000,
+        "connections": "PB 박성호 (맹목적인 경외감 및 절대적 복종)",
+        "current_objective": "대명그룹 한태준의 1조 원 규모 화학 계열사 인수전을 붕괴시키고 후계 구도를 완전히 박살내기.",
+        "equipment": "[\"두꺼운 양장 노트\", \"몽블랑 만년필\", \"보안 휴대전화\"]",
+        "inventory_counts": {
+          "두꺼운 양장 노트 ('2006년 1분기 글로벌 원자재 시황 분석 노트')": 1,
+          "몽블랑 만년필": 1,
+          "보안 휴대전화 (익셉션 어카운트 핫라인 연결)": 1,
+          "익셉션 어카운트 활성화 코드 서류": 1,
+          "최종 잔고 증명서": 1
+        },
+        "market_insight": "유가 75달러 돌파를 정확히 예측하여 5억 원의 수익을 창출하고, 고유가와 고환율이 대명그룹 화학 계열사 인수전에 미칠 치명적 타격을 계산하여 완벽한 자멸 시나리오를 설계함.",
+        "reputation": "최상위 VIP '익셉션 어카운트' 홀더. 거시경제의 중력을 이용해 기업의 숨통을 끊는 자본 시장의 괴물.",
+        "status": "원유 선물 절반 익절로 5억 원 수익 확정. 남은 포지션으로 한태준 압박 중. 익셉션 어카운트 공식 승인 대기 및 다음 타겟 종목 물색 중.",
+        "stocks": [
+          "원유 선물 롱 포지션 (절반 유지)"
+        ],
+        "total_assets": 5000000000,
+        "wealth": 5000000000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "protagonist_status",
+              "relationship_changes"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "promoted_fields": [
+              "capital",
+              "total_assets"
+            ],
+            "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+            "promotion_sources": {
+              "capital": "actual_truth",
+              "total_assets": "actual_truth"
+            },
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ]
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "기존 자본금 + 5억 원 (현금 수익 확정) 및 절반의 미실현 포지션 유지",
+      "director_score": 96,
+      "protagonist_status": "5억 원의 수익을 확정하고 다음 사냥(금 시장)을 위해 한미증권 본사로 향할 준비를 마친 상태",
+      "relationship_changes": [
+        {
+          "from_state": "당혹과 반신반의",
+          "target": "박성호",
+          "to_state": "절대적 경외와 완벽한 복종"
+        }
+      ]
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "protagonist_status",
+            "relationship_changes"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "promoted_fields": [
+            "capital",
+            "total_assets"
+          ],
+          "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+          "promotion_sources": {
+            "capital": "actual_truth",
+            "total_assets": "actual_truth"
+          },
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ]
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T17:09:35.039836+00:00",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 11,
+    "source_prev_manuscript_hash": "d5ba6ba75f71cda2eb8743454cc41b1cefc58b0a5dc4db75b47b0d1ddeb6de43"
+  },
+  "title": "제12화: 75달러의 임계점"
+}
