@@ -1560,9 +1560,82 @@ class DBManager:
             nested = self.conn.in_transaction
             serialized = json.dumps(data_dict, ensure_ascii=False)
             self.cursor.execute("INSERT OR REPLACE INTO blueprints (ep_num, data) VALUES (?, ?)", (ep_num, serialized))
+            self._upsert_blueprint_lineage_from_payload(ep_num, data_dict)
             # [수정] 트랜잭션 안전성 확보
             if not nested:
                 self.commit()
+
+    def _upsert_blueprint_lineage_from_payload(self, ep_num: int, data_dict: object) -> None:
+        if not isinstance(data_dict, dict):
+            return
+        stage3_meta = data_dict.get("_stage3_meta")
+        if not isinstance(stage3_meta, dict):
+            return
+        lineage_schema_version = str(stage3_meta.get("lineage_schema_version") or "").strip()
+        frontier_basis_version = str(stage3_meta.get("frontier_basis_version") or "").strip()
+        generated_at = str(stage3_meta.get("generated_at") or "").strip()
+        source_prev_manuscript_hash = str(stage3_meta.get("source_prev_manuscript_hash") or "").strip()
+        genre_strategy_contract_id = str(stage3_meta.get("genre_strategy_contract_id") or "").strip()
+        lineage_missing_reason = str(stage3_meta.get("lineage_missing_reason") or "").strip()
+        if not any(
+            (
+                lineage_schema_version,
+                frontier_basis_version,
+                generated_at,
+                source_prev_manuscript_hash,
+                genre_strategy_contract_id,
+                lineage_missing_reason,
+            )
+        ):
+            return
+        try:
+            source_prev_manuscript_ep = int(stage3_meta.get("source_prev_manuscript_ep") or 0)
+        except (TypeError, ValueError):
+            source_prev_manuscript_ep = 0
+        lineage_complete = 1 if bool(stage3_meta.get("lineage_complete")) else 0
+        self.cursor.execute(
+            """
+            INSERT OR REPLACE INTO blueprint_lineage (
+                ep_num,
+                lineage_schema_version,
+                generated_at,
+                frontier_basis_version,
+                source_prev_manuscript_ep,
+                source_prev_manuscript_hash,
+                source_prev_manuscript_created_at,
+                genre_strategy_contract_id,
+                lineage_complete,
+                lineage_missing_reason,
+                updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            """,
+            (
+                int(ep_num or 0),
+                lineage_schema_version,
+                generated_at,
+                frontier_basis_version,
+                source_prev_manuscript_ep,
+                source_prev_manuscript_hash,
+                str(stage3_meta.get("source_prev_manuscript_created_at") or "").strip(),
+                genre_strategy_contract_id,
+                lineage_complete,
+                lineage_missing_reason,
+            ),
+        )
+
+    def get_blueprint_lineage(self, ep_num: int) -> dict | None:
+        with self._lock:
+            cur = self.conn.cursor()
+            try:
+                cur.execute("SELECT * FROM blueprint_lineage WHERE ep_num = ?", (int(ep_num or 0),))
+                row = cur.fetchone()
+                if not row:
+                    return None
+                result = dict(row)
+                result["lineage_complete"] = bool(result.get("lineage_complete"))
+                return result
+            finally:
+                cur.close()
 
     def get_previous_blueprint(self, current_ep):
         with self._lock:

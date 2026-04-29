@@ -465,6 +465,10 @@ def test_regenerate_blueprint_success():
 
     result = orch._regenerate_blueprint(1, {"arc_no": 1}, round_ctx)
     assert result == new_bp
+    assert new_bp["_stage3_meta"]["lineage_schema_version"] == "stage3-blueprint-lineage-v1"
+    assert new_bp["_stage3_meta"]["source_prev_manuscript_ep"] == 0
+    assert new_bp["_stage3_meta"]["lineage_complete"] is True
+    assert new_bp["_stage3_meta"]["lineage_missing_reason"] == "no_prior_episode"
     ctx.current_project.save_episode_blueprint.assert_called_once_with(1, new_bp)
 
 

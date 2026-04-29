@@ -13,6 +13,7 @@ import re
 from pathlib import Path
 
 from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
+from modules.core.blueprint_lineage import attach_stage3_blueprint_lineage_meta
 from modules.core.constants import smart_truncate
 from modules.core.final_accepted_context import load_final_accepted_manuscript_row
 from modules.core.frontier_staleness import (
@@ -2605,6 +2606,11 @@ JSON으로 출력:
             )
 
             if new_bp and isinstance(new_bp, dict):
+                attach_stage3_blueprint_lineage_meta(
+                    new_bp,
+                    db=getattr(self.ctx.current_project, "db", None),
+                    ep_num=ep_num,
+                )
                 self.ctx.current_project.save_episode_blueprint(ep_num, new_bp)
                 return new_bp
             return None
