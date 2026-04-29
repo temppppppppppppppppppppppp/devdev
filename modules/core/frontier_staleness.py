@@ -34,6 +34,42 @@ def has_completed_investment_order(text: str) -> bool:
     return any(term in text for term in ("진입", "체결", "완료", "딸깍", "매수 포지션", "전량"))
 
 
+def _strip_stable_provisional_item_names(text: str) -> str:
+    if not text:
+        return ""
+    stable_item_names = (
+        "SW인베스트먼트 사업자 등록증 가승인 서류",
+        "사업자 등록증 가승인 서류",
+        "법인 설립 가승인 서류",
+    )
+    cleaned = text
+    for item_name in stable_item_names:
+        cleaned = cleaned.replace(item_name, "")
+    return cleaned
+
+
+def _stage3_lineage_matches_prev_manuscript(*, ep_num: int, blueprint: dict, prev_manuscript_text: str) -> bool:
+    stage3_meta = blueprint.get("_stage3_meta") if isinstance(blueprint, dict) else {}
+    if not isinstance(stage3_meta, dict):
+        return False
+
+    recorded_prev_hash = str(stage3_meta.get("source_prev_manuscript_hash") or "").strip()
+    if not recorded_prev_hash or not prev_manuscript_text:
+        return False
+
+    current_prev_hash = hashlib.sha256(str(prev_manuscript_text or "").encode("utf-8")).hexdigest()
+    if recorded_prev_hash != current_prev_hash:
+        return False
+
+    try:
+        recorded_prev_ep = int(stage3_meta.get("source_prev_manuscript_ep") or 0)
+    except (TypeError, ValueError):
+        recorded_prev_ep = 0
+    if recorded_prev_ep and recorded_prev_ep != int(ep_num or 0) - 1:
+        return False
+    return True
+
+
 def detect_stage4_frontier_staleness(
     *,
     ep_num: int,
@@ -61,19 +97,24 @@ def detect_stage4_frontier_staleness(
                 "source": "stage3_meta+accepted_prev_manuscript",
             },
         }
+    stage3_lineage_matches_prev = _stage3_lineage_matches_prev_manuscript(
+        ep_num=ep_num,
+        blueprint=blueprint,
+        prev_manuscript_text=prev_manuscript_text,
+    )
 
     if not has_completed_investment_order(prev_text):
         return {"stale": False, "severity": "none", "reasons": [], "evidence": {}}
 
-    frontier_text = "\n".join(
-        part
-        for part in (
-            compact_frontier_text(blueprint),
-            compact_frontier_text(arc_data.get("tactical_doc", "") if isinstance(arc_data, dict) else ""),
-            compact_frontier_text(arc_data.get("episode_details", []) if isinstance(arc_data, dict) else []),
+    frontier_parts = [compact_frontier_text(blueprint)]
+    if not stage3_lineage_matches_prev:
+        frontier_parts.extend(
+            [
+                compact_frontier_text(arc_data.get("tactical_doc", "") if isinstance(arc_data, dict) else ""),
+                compact_frontier_text(arc_data.get("episode_details", []) if isinstance(arc_data, dict) else []),
+            ]
         )
-        if part
-    )
+    frontier_text = "\n".join(part for part in frontier_parts if part)
     if not frontier_text:
         return {"stale": False, "severity": "none", "reasons": [], "evidence": {}}
 
@@ -87,12 +128,18 @@ def detect_stage4_frontier_staleness(
             "accepted prior manuscript completed WTI contract month "
             f"{sorted(prev_months)}, but current frontier carries {sorted(frontier_months)}"
         )
-    if prev_months and frontier_months.intersection(prev_months) and order_replay_terms:
+    if (
+        not stage3_lineage_matches_prev
+        and prev_months
+        and frontier_months.intersection(prev_months)
+        and order_replay_terms
+    ):
         reasons.append(
             "current frontier appears to replay an already completed WTI order event "
             f"({', '.join(order_replay_terms[:4])})"
         )
-    if ("가승인" in frontier_text) and any(term in prev_text for term in ("딸깍", "완료", "진입")):
+    provisional_check_text = _strip_stable_provisional_item_names(frontier_text)
+    if ("가승인" in provisional_check_text) and any(term in prev_text for term in ("딸깍", "완료", "진입")):
         reasons.append("current frontier still carries provisional approval language after accepted execution")
 
     if not reasons:
@@ -108,6 +155,7 @@ def detect_stage4_frontier_staleness(
             "frontier_wti_months": sorted(frontier_months),
             "order_replay_terms": order_replay_terms[:6],
             "source": "accepted_prev_manuscript+stage3_frontier",
+            "stage3_lineage_matches_prev_manuscript": stage3_lineage_matches_prev,
         },
     }
 
