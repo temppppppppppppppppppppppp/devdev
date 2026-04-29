@@ -4,6 +4,7 @@ import json
 import logging
 import sqlite3
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -19,6 +20,12 @@ from modules.core.stage4_post_processor import Stage4PostProcessor
 @pytest.fixture(autouse=True)
 def _use_compact_manuscript_floor_for_unit_fixtures(monkeypatch):
     monkeypatch.setattr(ManuscriptLimits, "_lazy_MIN_LENGTH", 0, raising=False)
+
+
+def _attach_temp_project_paths(project):
+    temp_dir = TemporaryDirectory(prefix="stage4-post-processor-")
+    project._stage4_test_temp_dir = temp_dir
+    project.paths = SimpleNamespace(root=Path(temp_dir.name))
 
 
 class TestPostProcessorInit:
@@ -84,6 +91,7 @@ class TestProcessPassResult:
         project.latest_state = {}
         project.seed_tracker = None
         project.karma_matrix = {}
+        _attach_temp_project_paths(project)
         project.master_bible = {
             "MasterBible": {
                 "AssetLibrary": {
@@ -2619,6 +2627,7 @@ class TestAtomicMetadataSave:
         project.latest_state = {}
         project.seed_tracker = None
         project.karma_matrix = {}
+        _attach_temp_project_paths(project)
         project.master_bible = {
             "MasterBible": {
                 "AssetLibrary": {"KeyNPCs": []},
@@ -3280,6 +3289,7 @@ class TestCapitalReconciliation:
         project.latest_state = {}
         project.seed_tracker = None
         project.karma_matrix = {}
+        _attach_temp_project_paths(project)
         project.master_bible = {
             "MasterBible": {"AssetLibrary": {"KeyNPCs": []}, "protagonist_config": {"name": "mc"}},
             "npc_registry": {},
