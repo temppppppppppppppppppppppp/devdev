@@ -166,10 +166,9 @@ def build_chief_writer_main_prompt(
 ### [STEP 1: Blueprint 분석]
 아래 Blueprint의 structured scene contract를 먼저 파악하고, 각 scene anchor의 핵심 의무를 실제 장면으로 구현하라.
 
-⚠️ 필수: 각 씬의 시작 부분에 반드시 '### 씬 N: 제목' 형식의 마크다운 헤더를 삽입하라.
-   예: ### 씬 1: 호텔 라운지의 만남
-   씬 헤더 없이 하나의 산문 블록으로 쓰면 불합격이다.
-   헤더는 planning anchor다. anchor별 분량은 균등 분배하지 말고 장면 밀도와 긴장에 맞춰 가변 배분하라.
+⚠️ 필수: scene anchor는 내부 기획 좌표다. 독자-facing 원고 본문에는 scene id, 제목, Markdown 헤더, 구조 라벨을 쓰지 마라.
+   anchor별 분량은 균등 분배하지 말고 장면 밀도와 긴장에 맞춰 가변 배분하라.
+   장면 전환이 필요하면 산문 전환문이나 `* * *` 같은 중립 전환 마커만 사용하라.
    후반부 anchor도 요약하지 말고, Blueprint의 핵심 의무가 독자 눈앞에서 보이게 써라.
 
 {scene_breakdown}

@@ -241,7 +241,7 @@ class PreDirectorManuscriptChecker:
                     message=(
                         f"전체 씬 미반영: {len(weak_scenes)}/{len(scene_breakdown)} 씬 반영률 30% 미만. "
                         "Blueprint 씬 구조가 원고에 전혀 반영되지 않았습니다. "
-                        "각 씬을 '### 씬 N: 제목' 헤더로 구분하여 빠짐없이 작성하세요."
+                        "scene target은 본문 헤더가 아니라 metadata/span 진단으로 추적하고, Director가 최종 판단해야 합니다."
                     ),
                 )
             )
@@ -291,7 +291,7 @@ class PreDirectorManuscriptChecker:
         return result
 
     # ──────────────────────────────────────────────
-    # [Gap-2] 씬 헤더 계약 검증
+    # [Gap-2] 독자-facing 원고 표면 계약 진단
     # ──────────────────────────────────────────────
 
     _SCENE_HEADER_RE = re.compile(
@@ -300,7 +300,7 @@ class PreDirectorManuscriptChecker:
     )
 
     def _check_scene_header_contract(self, manuscript: str, scene_breakdown: dict[str, Any]) -> list[CheckItem]:
-        """[Gap-2] Blueprint 씬 3개 이상일 때 원고에 씬 헤더가 최소 절반 이상 존재하는지 검증."""
+        """[Gap-2] Visible scene headers are advisory surface artifacts, not required anchors."""
         items: list[CheckItem] = []
         if not scene_breakdown or not isinstance(scene_breakdown, dict):
             return items
@@ -316,31 +316,18 @@ class PreDirectorManuscriptChecker:
             if match.group(1).isdigit()
         }
         found_count = len(found_headers)
-        min_required_headers = (expected_count + 1) // 2
 
-        if found_count == 0:
+        if found_count:
             items.append(
                 CheckItem(
                     category=CheckCategory.BLUEPRINT_MATCH,
-                    name="씬 헤더 부재",
-                    passed=False,
-                    severity=CheckSeverity.FAIL,
-                    message=(
-                        f"Blueprint {expected_count}개 씬 중 원고에 '### 씬 N: 제목' 헤더가 0개 발견됨. "
-                        "모든 씬을 헤더로 구분하여 작성해야 합니다."
-                    ),
-                )
-            )
-        elif found_count < min_required_headers:
-            items.append(
-                CheckItem(
-                    category=CheckCategory.BLUEPRINT_MATCH,
-                    name="씬 헤더 부족",
+                    name="가시 씬 헤더 감지",
                     passed=True,
                     severity=CheckSeverity.WARNING,
                     message=(
-                        f"Blueprint {expected_count}개 씬 중 원고에 '### 씬 N:' 헤더가 {found_count}개만 발견됨. "
-                        f"최소 {min_required_headers}개 이상 필요. 누락된 씬 헤더 보충 권장."
+                        f"독자-facing 최종 원고에는 Markdown 씬 헤더를 남기지 않습니다. "
+                        f"현재 {expected_count}개 Blueprint 씬 중 {found_count}개 visible header가 감지되었습니다. "
+                        "scene target은 metadata/span diagnostics로 유지하고, 표면 정리는 final artifact normalizer에 맡깁니다."
                     ),
                 )
             )

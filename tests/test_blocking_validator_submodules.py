@@ -385,6 +385,48 @@ class TestSceneCompletenessRegression:
         assert result["check"] == "scene_completeness"
         # fallback 경로를 탔다는 것만 확인 (결과는 키워드 매칭 의존)
 
+    def test_no_headers_scene_gap_is_director_advisory(self):
+        """Visible 헤더 없는 scene separation gap은 Python reject가 아니라 Director advisory."""
+        validator = BlockingValidator()
+        manuscript = "헤더 없는 산문 원고입니다. " * 200
+        context = {
+            "blueprint": {
+                "scene_breakdown": {
+                    "scene_1": {"description": "객잔 도착"},
+                    "scene_2": {"description": "비밀 문서 확보"},
+                    "scene_3": {"description": "추격전"},
+                    "scene_4": {"description": "새 단서 발견"},
+                    "scene_5": {"description": "다음 목표 확정"},
+                }
+            }
+        }
+        result = validator.scene_checks._check_scene_completeness(manuscript, context)
+        assert result["passed"] is True
+        assert result["severity"] == "ADVISORY"
+        assert result["advisory_only"] is True
+        assert result["authority"] == "director"
+        assert "visible scene header" in result["suggestion"]
+
+    def test_no_headers_scene_gap_validate_exposes_warning(self):
+        """Blocking facade warnings에 scene separation advisory를 전달한다."""
+        validator = BlockingValidator(enable_justification_checks=False)
+        manuscript = "헤더 없는 산문 원고입니다. 서술이 이어졌다. " * 180
+        context = {
+            "mode": "MANUSCRIPT",
+            "blueprint": {
+                "scene_breakdown": {
+                    "scene_1": {"description": "객잔 도착"},
+                    "scene_2": {"description": "비밀 문서 확보"},
+                    "scene_3": {"description": "추격전"},
+                    "scene_4": {"description": "새 단서 발견"},
+                    "scene_5": {"description": "다음 목표 확정"},
+                }
+            },
+        }
+        result = validator.validate(manuscript, context)
+        assert result["passed"] is True
+        assert any("scene_completeness" in warning and "Director advisory" in warning for warning in result["warnings"])
+
     def test_hash_scene_header_variants(self):
         """## 씬 N: 형식 (2-level heading)도 인식."""
         validator = BlockingValidator()

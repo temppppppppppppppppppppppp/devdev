@@ -136,6 +136,11 @@ class BlockingValidator:
             scene_completeness_check = self._check_scene_completeness(manuscript, validation_context)
             if not scene_completeness_check["passed"]:
                 failures.append(scene_completeness_check)
+            elif scene_completeness_check.get("warning"):
+                warnings.append(
+                    f"{scene_completeness_check.get('check', 'scene_completeness')}: "
+                    f"{scene_completeness_check.get('warning')}"
+                )
 
         if validation_context.get("mode") == "MANUSCRIPT":
             cliffhanger_check = self._check_cliffhanger_ending(manuscript, validation_context)

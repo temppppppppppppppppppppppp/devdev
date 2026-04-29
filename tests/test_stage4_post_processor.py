@@ -2175,10 +2175,11 @@ class TestProcessPassResult:
 
     def test_normalize_reader_facing_manuscript_strips_scene_headers_and_brackets(self):
         manuscript = (
+            "## 내부 제목\n\n"
             "### 씬 1: 2024년의 끝, 2006년의 시작\n\n"
             "[2024년 12월, 서울 외곽의 좁은 원룸]\n\n"
             "첫 문장이다.\n\n"
-            "### 씬 2: 귀환\n\n"
+            "### Scene 2: Return\n\n"
             "[2006년 1월, 한성그룹 본가 시우의 방]\n\n"
             "둘째 문장이다."
         )
@@ -2186,6 +2187,8 @@ class TestProcessPassResult:
         normalized = Stage4PostProcessor._normalize_reader_facing_manuscript(manuscript)
 
         assert "### 씬" not in normalized
+        assert "### Scene" not in normalized
+        assert "## 내부 제목" not in normalized
         assert "[2024년 12월, 서울 외곽의 좁은 원룸]" not in normalized
         assert "[2006년 1월, 한성그룹 본가 시우의 방]" not in normalized
         assert "2024년 12월, 서울 외곽의 좁은 원룸." in normalized

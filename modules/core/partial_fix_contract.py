@@ -56,6 +56,19 @@ def _normalize_text_anchor(raw: object) -> dict[str, str]:
     return result
 
 
+def _normalize_paragraph_span(raw: object) -> dict[str, int]:
+    if not isinstance(raw, dict):
+        return {}
+    try:
+        start = int(raw.get("start", 0) or 0)
+        end = int(raw.get("end", 0) or 0)
+    except (TypeError, ValueError):
+        return {}
+    if start <= 0 or end <= 0 or end < start:
+        return {}
+    return {"start": start, "end": end}
+
+
 def build_patch_target_id(record: dict[str, Any]) -> str:
     material = {
         "stage": str(record.get("stage") or "").strip(),
@@ -66,6 +79,7 @@ def build_patch_target_id(record: dict[str, Any]) -> str:
         "field_path": str(record.get("field_path") or "").strip(),
         "summary": str(record.get("summary") or "").strip(),
         "text_anchor": record.get("text_anchor") if isinstance(record.get("text_anchor"), dict) else {},
+        "paragraph_span": record.get("paragraph_span") if isinstance(record.get("paragraph_span"), dict) else {},
     }
     encoded = json.dumps(material, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return f"pt:{hashlib.sha1(encoded.encode('utf-8')).hexdigest()[:12]}"
@@ -86,6 +100,7 @@ def _normalize_single_patch_target(
         text_anchor = _normalize_text_anchor(item.get("text_anchor"))
         if not text_anchor and any(key in item for key in ("old_text", "anchor_before", "anchor_after")):
             text_anchor = _normalize_text_anchor(item)
+        paragraph_span = _normalize_paragraph_span(item.get("paragraph_span"))
         target_kind = _compact_text(item.get("target_kind") or default_target_kind, limit=80)
         normalized_stage = _compact_text(item.get("stage") or stage, limit=24)
         normalized_container_kind = _compact_text(item.get("container_kind") or container_kind, limit=32)
@@ -95,6 +110,7 @@ def _normalize_single_patch_target(
         scene_id = _guess_scene_id(summary)
         field_path = _guess_field_path(summary)
         text_anchor = {}
+        paragraph_span = {}
         target_kind = _compact_text(default_target_kind, limit=80)
         normalized_stage = _compact_text(stage, limit=24)
         normalized_container_kind = _compact_text(container_kind, limit=32)
@@ -118,6 +134,8 @@ def _normalize_single_patch_target(
         record["field_path"] = field_path
     if text_anchor:
         record["text_anchor"] = text_anchor
+    if paragraph_span:
+        record["paragraph_span"] = paragraph_span
     record["patch_target_id"] = build_patch_target_id(record)
     return record
 

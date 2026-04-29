@@ -298,9 +298,9 @@ class WriterTemplate:
 
         lines.append("\n" + "=" * 60)
         lines.append("⚠️ scene anchor를 순서대로 따라가되, 분량은 균등 배분하지 마세요.")
-        lines.append("⚠️ 각 scene anchor의 시작 부분에 반드시 '### 씬 N: 제목' 형식의 헤더를 삽입하세요.")
-        lines.append("   예: ### 씬 1: 호텔 라운지의 만남")
-        lines.append("   헤더는 planning anchor입니다. 각 anchor 아래에서 핵심 의무가 실제 장면으로 보이게 써 주세요.")
+        lines.append("⚠️ scene anchor는 내부 좌표입니다. 독자-facing 본문에는 scene id, 제목, Markdown 헤더, 구조 라벨을 쓰지 마세요.")
+        lines.append("   장면 전환은 산문 전환문이나 필요한 경우 중립 전환 마커로만 처리하세요.")
+        lines.append("   각 anchor의 핵심 의무가 실제 장면으로 보이게 써 주세요.")
         lines.append("   모든 anchor를 하나의 산문 블록으로 뭉개거나 후반부를 요약하면 불합격 처리됩니다.")
         lines.append("=" * 60)
 
