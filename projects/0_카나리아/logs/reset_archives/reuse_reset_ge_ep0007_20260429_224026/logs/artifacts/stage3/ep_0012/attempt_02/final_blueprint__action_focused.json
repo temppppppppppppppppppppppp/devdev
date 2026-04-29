@@ -1,0 +1,248 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "action_focused",
+    "content_hash": "10c1ae5530fe8629a4f63e5b7c8ea4c044202d40576f611f872014b7cc3b6cf2"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 0,
+    "disqualified": [],
+    "genre_strategy_contract": {
+      "action_semantics": [
+        "decisive business move",
+        "capital exposure",
+        "institutional pressure",
+        "governance or legal next gate"
+      ],
+      "authority_level": "route",
+      "authority_source": "stage3_genre_strategy_contract",
+      "contract_hash": "65f385e6b082bf69",
+      "contract_id": "investment_business_power.action_focused.v1",
+      "director_visible": true,
+      "factsheet_mutation": false,
+      "forbidden_defaults": [
+        "combat",
+        "chase",
+        "intruder",
+        "vehicle attack",
+        "physical crisis",
+        "thriller infiltration"
+      ],
+      "genre_family": "investment_business_power",
+      "genre_type": "investment",
+      "material_mutation": false,
+      "schema_version": "genre-strategy-contract-v1",
+      "strategy_name": "action_focused",
+      "tension_semantics": [
+        "deadline pressure",
+        "counterparty risk",
+        "liquidity or margin limit",
+        "reputation and access risk"
+      ]
+    },
+    "length": 1224,
+    "prevalidation_issue_count": 0,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 32037,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": true,
+        "raw_chars": 32037
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 57419,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 942581,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 51994,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4699,
+          "lane": "constraints"
+        },
+        {
+          "chars": 566,
+          "lane": "feedback_context"
+        }
+      ],
+      "genre_strategy_contracts": [
+        {
+          "authority_level": "route",
+          "contract_hash": "65f385e6b082bf69",
+          "contract_id": "investment_business_power.action_focused.v1",
+          "strategy_name": "action_focused"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 150,
+        "constraints": 4699,
+        "feedback_context": 566,
+        "hud_context": 10,
+        "prev_info": 51994
+      },
+      "shared_context_chars": 56853,
+      "strategy_feedback_chars": 5265,
+      "total_chars": 57419
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "action_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T13:03:16.082335+00:00",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 11,
+    "source_prev_manuscript_hash": ""
+  },
+  "core_tension": "75달러 도달 시점의 정확한 익절 실행과 예외 계좌 승인을 향한 압박",
+  "end_location": "SW인베스트먼트 대표실",
+  "ending_hook": "시황 분석 노트의 다음 페이지가 넘어가는 소리가 고요한 대표실을 채웠다. 원유를 집어삼킨 포식자의 시선은 이미 더 거대하고 눈부신 사냥감을 향해 번뜩이고 있었다.",
+  "ending_state": {
+    "location": "SW인베스트먼트 대표실",
+    "protagonist_status": "5억 원 수익 확보 후 새로운 시장을 분석하며 다음 날의 협상을 준비함",
+    "timeline": {
+      "표현": "2006년 4월 1일 심야"
+    }
+  },
+  "ep_num": 12,
+  "episode_number": 12,
+  "expected_ending": "5억 원의 수익 확정 및 다음 날 VIP룸 방문 예고",
+  "integrated_scenario": "2006년 4월 1일 밤, SW인베스트먼트 대표실. 모니터의 붉은 불빛이 한시우의 차가운 눈동자에 맺히며 과거의 상처를 태우는 서늘한 독기가 피어올랐다. 에콰도르 사태 속보와 함께 글로벌 자본이 원유 선물 시장으로 쏟아져 들어오며 유가는 거침없이 치솟고 있었다. 한시우는 HTS 화면의 호가창이 74달러 후반을 강타하며 미친 듯이 점멸하는 것을 지켜보며, 책상 위의 보안 휴대전화를 집어 들었다. 단축 번호를 누르자마자 대기하고 있던 박성호의 다급한 숨소리가 수화기 너머로 들려왔다. 한시우는 감정의 동요 없이 75달러 저항선 도달 시 즉각적인 절반 매도 주문을 세팅하라고 차갑게 지시했다.\n\n몇 분 뒤, 시장의 광기가 극에 달하며 WTI 원유 가격이 마침내 75달러 선을 터치했다. 그 찰나의 순간, 한시우의 입에서 \"실행\"이라는 단호한 명령이 떨어졌다. 박성호는 덜덜 떨리는 손으로 전산망을 통해 즉시 절반의 포지션을 시장가로 던졌다. 맹렬한 매수세가 그 물량을 순식간에 집어삼켰고, 법인 계좌에는 5억 원이라는 막대한 순수익이 현금으로 꽂혔다. 75달러를 터치한 직후 유가가 차익 실현 매물에 밀려 일시적으로 하락세로 돌아서자, 수화기 너머의 박성호는 한시우의 신들린 듯한 타점 포착에 짙은 경외감을 표하며 말을 잇지 못했다.\n\n그러나 한시우는 5억 원의 수익에 만족하거나 축배를 들지 않았다. 그는 오히려 목소리를 더 낮게 깔며 박성호를 압박했다. 현재의 시스템으로는 다음 단계의 거대한 자본 이동을 감당할 수 없음을 지적하며, 리스크 관리팀의 수동 개입과 지연을 원천 차단할 수 있는 '예외 계좌(Exception Account)'의 세팅을 강하게 요구했다. 박성호는 규정상의 어려움과 본부장 전결 사항임을 들어 난색을 표했지만, 방금 전 5억 원의 수익을 눈앞에서 목도한 그는 결국 한시우의 압도적인 실적과 기백 앞에 굴복했다. 박성호는 내일 아침까지 어떻게든 본부장의 승인을 받아 VIP 전용 처리선을 열어두겠다고 맹세했다.\n\n통화를 마친 한시우는 내일 오전 한미증권 본사 VIP룸으로 직접 가 승인 서류를 확인하겠다는 말을 남기고 전화를 끊었다. 대표실에 다시 무거운 정적이 내려앉았다. 한시우는 계좌에 남은 절반의 원유 포지션을 확인한 뒤, 글로벌 원자재 시황 분석 노트를 끌어당겼다. 만년필 끝이 다음 페이지로 넘어가며, 변동성이 극대화될 새로운 원자재 시장의 지표 위를 맴돌았다. 원유 시장을 찢어발긴 포식자의 시선은 이미 다음 사냥터를 향해 서늘하게 빛나고 있었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부의 익절 실행 장면에서 극도의 긴장감을 조성하고, 중반부에서 예외 계좌를 향한 압박으로 비즈니스적 갈등을 유발한 뒤, 결말부에서 다음 타겟을 암시하며 기대감을 증폭시킨다.",
+  "protagonist_state": {
+    "equipment": [
+      "20억 원 예치 통장",
+      "SW인베스트먼트 사업자 등록증 가승인 서류",
+      "2006년 1분기 글로벌 원자재 시황 분석 노트",
+      "한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화"
+    ],
+    "injuries": "없음",
+    "mood": "예리한 사냥꾼의 감각"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "당혹과 반신반의",
+      "justification": "75달러 터치 직후의 완벽한 익절 타이밍과 5억 원의 실적을 직접 목도했기 때문",
+      "target": "박성호",
+      "to_state": "완벽한 경외와 예외 처리의 조력자"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "유가 폭등 상황에서 냉철하게 타점을 노리는 한시우의 대기 지시",
+      "description": "에콰도르 사태로 폭등하는 유가 차트를 주시하던 한시우가 보안 휴대전화를 들어 박성호를 호출한다.",
+      "goal": "유가 75달러 돌파 시점의 정확한 타점 포착",
+      "key_events": [
+        "HTS 화면의 붉은 물결이 74달러 후반을 강타하며 변동성이 극대화됨",
+        "한시우가 보안 휴대전화의 단축 번호를 눌러 박성호를 호출함",
+        "75달러 도달 시 즉각적인 절반 매도 주문을 넣을 수 있도록 박성호의 전산망 세팅을 압박함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "한시우가 유가 75달러 돌파를 목전에 두고 박성호에게 전화를 걸어 매도 대기를 지시한다.",
+      "tension_level": 7,
+      "title": "75달러의 벽",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "가장 완벽한 타이밍에 이루어진 절반 청산과 5억 원의 수익 실현",
+      "description": "목표가 도달과 동시에 매도 주문이 체결되며 거액의 현금이 계좌에 꽂힌다.",
+      "goal": "정확한 절반 익절 실행과 수익 확정",
+      "key_events": [
+        "WTI 원유 가격이 75달러 저항선을 터치하는 찰나 한시우가 단호하게 실행을 명령함",
+        "박성호가 시장가로 절반의 포지션을 던져 맹렬한 매수세에 물량을 넘김",
+        "SW인베스트먼트 법인 계좌에 5억 원의 순수익이 현금으로 확정되어 찍히는 것을 확인함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "정확히 75달러를 터치한 순간 한시우가 절반 익절을 지시해 5억 원의 수익을 확정한다.",
+      "tension_level": 9,
+      "title": "5억의 순수익",
+      "type": "action_peak"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "더 큰 자본 운용을 위해 증권사의 규정을 넘어서는 VIP 전용 처리선 요구",
+      "description": "수익에 도취된 박성호를 억누르고, 리스크팀의 개입을 차단할 우선 검토 권한을 압박한다.",
+      "goal": "다음 단계 진입을 위한 예외 계좌 요구",
+      "key_events": [
+        "75달러 터치 후 유가가 일시 하락하자 박성호가 한시우의 신들린 타점 포착에 짙은 경외감을 표출함",
+        "한시우가 축배를 드는 대신, 리스크팀의 수동 승인 절차를 우회할 수 있는 예외 계좌(Exception Account) 개설을 요구함",
+        "박성호가 본부장 전결 사항이라며 난색을 표하다가, 압도적인 실적 앞에 결국 내일 아침까지 승인을 받아내겠다고 맹세함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "완벽한 타점에 경악하는 박성호에게 한시우가 다음 거래를 위한 예외 계좌 개설을 강하게 요구한다.",
+      "tension_level": 8,
+      "title": "통제선 너머의 요구",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "원유를 넘어선 다음 사냥감을 향한 서늘한 시선",
+      "description": "통화를 마친 한시우가 시황 분석 노트를 넘기며 다음 사냥을 준비한다.",
+      "goal": "다음 날의 일정 확정과 새로운 타겟 암시",
+      "key_events": [
+        "한시우가 내일 오전 한미증권 본사 VIP룸으로 직접 가 서류를 확인하겠다고 통보하며 전화를 끊음",
+        "계좌에 남은 절반의 원유 포지션을 한 번 훑어본 뒤, 2006년 1분기 글로벌 원자재 시황 분석 노트를 끌어당김",
+        "만년필 끝이 다음 페이지로 넘어가며, 변동성이 극대화될 새로운 시장 지표 위를 맴돌며 다가올 사냥을 예고함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "다음 날 아침 VIP룸에서의 서류 작업을 지시하고, 한시우가 새로운 시장을 노려본다.",
+      "tension_level": 7,
+      "title": "새로운 사냥터의 예고",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "SW인베스트먼트 대표실",
+  "target_beat": "5억 원 수익 확정과 예외 계좌 개설 압박",
+  "time_flow": "2006년 4월 1일 밤 → 심야",
+  "title": "5억의 증명"
+}

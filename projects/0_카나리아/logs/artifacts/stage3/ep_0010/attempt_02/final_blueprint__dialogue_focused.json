@@ -1,0 +1,254 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "dialogue_focused",
+    "content_hash": "04c607ebf2f2194706e25442d17a858637fc7559d70f6f67701fb6e1eed8fe14"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=3; sample_anchors=SW인베스트먼트, 한미증권, 3억",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 3개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:21be5739d102",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 1,
+    "disqualified": [],
+    "length": 1288,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 56968,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": true,
+        "raw_chars": 56968
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 77517,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 922483,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 71979,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4779,
+          "lane": "constraints"
+        },
+        {
+          "chars": 593,
+          "lane": "feedback_context"
+        }
+      ],
+      "genre_strategy_contracts": [
+        {
+          "authority_level": "route",
+          "contract_hash": "65f385e6b082bf69",
+          "contract_id": "investment_business_power.action_focused.v1",
+          "strategy_name": "action_focused"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 156,
+        "constraints": 4779,
+        "feedback_context": 593,
+        "hud_context": 10,
+        "prev_info": 71979
+      },
+      "shared_context_chars": 76924,
+      "strategy_feedback_chars": 6722,
+      "total_chars": 77517
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "dialogue_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 3개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T15:49:20.688851+00:00",
+    "last_score": 85,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 9,
+    "source_prev_manuscript_hash": "11904a2601919e3b6b1846175de67b7b6801921964e979906828627f8ef71e82"
+  },
+  "core_tension": "유가 횡보 장세 속 익절을 압박하는 PB와 더 큰 폭발을 예견하는 한시우의 대립",
+  "end_location": "SW인베스트먼트 대표실",
+  "ending_hook": "\"그렇다면, 그들이 스스로 목줄을 끊어버릴 때까지 지켜보시죠.\"",
+  "ending_state": {
+    "location": "SW인베스트먼트 대표실",
+    "protagonist_status": "박성호의 익절 압박을 차단하고 에콰도르 사태의 폭발을 확신하며 관망 모드에 돌입함",
+    "timeline": {
+      "표현": "2006년 4월 1일 오후"
+    }
+  },
+  "ep_num": 10,
+  "episode_number": 10,
+  "expected_ending": "박성호의 굴복과 리스크관리팀 예외 승인을 통한 포지션 유지",
+  "integrated_scenario": "2006년 4월 1일, 완연한 봄기운이 스며드는 SW인베스트먼트 대표실. 한시우는 묵직한 마호가니 책상에 앉아 다중 모니터를 응시하고 있다. 화면 중앙에는 WTI 6월물 차트가 띄워져 있다. 지난 2월의 폭발적인 수익 창출 이후 새롭게 진입한 매수 포지션은 현재 지루한 박스권 횡보 장세 속에서 미실현 수익 3억 원을 기록 중이다. 차트의 틱이 미세하게 오르내리지만, 한시우의 눈동자에는 일말의 조급함도 없다. 그는 책상 한편에 놓인 글로벌 원자재 시황 분석 노트를 손가락으로 가볍게 두드리며, 다가올 거대한 파동을 위한 에너지가 시장 기저에서 응축되고 있음을 꿰뚫어 본다.\n\n그 고요함을 깨고 책상 위 보안 휴대전화가 요란하게 울린다. 발신자는 한미증권의 박성호 PB다. 통화 버튼을 누르자마자 수화기 너머로 박성호의 다급한 목소리가 쏟아진다. \"대표님, 현재 유가가 강한 저항선에 부딪혀 며칠째 횡보 중입니다. 증권사 리스크관리팀에서도 변동성 축소를 이유로 포지션 정리를 권고하는 지침이 내려왔습니다. 지금 당장 3억 원의 수익을 확정 짓고 관망하시는 것이 안전합니다.\" 박성호는 과거의 압도적인 성과를 목격했음에도 불구하고, 여전히 기관의 보신주의와 단기 차트의 노이즈에 휘둘리며 익절을 강하게 압박한다.\n\n한시우는 등받이에 깊숙이 몸을 기대며 차갑게 식은 커피를 한 모금 마신다. \"박 PB님, 고작 3억 원의 푼돈을 줍자고 이 자리에 앉아 있는 게 아닙니다.\" 건조하고 단호한 음성이 박성호의 다급한 랩을 단칼에 벤다. 한시우는 에콰도르 정부와 옥시덴탈 페트롤리엄 간의 갈등을 언급하며, 시장의 바보들이 이를 단순한 협상용 카드로 치부하고 있음을 지적한다. \"그건 협상이 아닙니다. 남미 대륙 전체를 휩쓸 자원 국유화의 신호탄이자, 조만간 강제 계약 해지라는 극단적 수순으로 폭발할 뇌관입니다. 공급망이 물리적으로 찢겨 나가는 순간, 지금의 횡보는 수직 상승을 위한 발판이었음이 증명될 겁니다.\"\n\n숨 막히는 정적이 통신망을 타고 흐른다. 한시우의 쇳덩이 같은 논리와 완벽한 거시경제의 통찰 앞에 박성호의 얄팍한 방어 논리는 산산조각이 난다. 마른침을 삼키는 소리 뒤로, 박성호의 목소리에서 당혹감이 걷히고 맹목적인 경외심이 자리 잡는다. \"알겠습니다... 리스크관리팀의 경고는 제 선에서 차단하겠습니다. 오히려 이 포지션을 예외 분류로 승인받아 끝까지 유지할 수 있도록 조치하겠습니다.\" 박성호가 완전히 굴복하며 막는 부서에서 규정을 우회하는 조력자로 돌변한다. 한시우는 만족스러운 미소를 지으며 전화를 끊는다. 모니터 너머로 다가올 폭풍을 기다리며, 그는 서늘한 시선으로 차트를 응시한다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부의 정적인 관망에서 시작해 박성호의 다급한 전화로 긴장감을 끌어올리고, 한시우의 압도적인 논리 전개로 절정을 맞이한 뒤 서늘한 기대감으로 마무리하는 리듬을 유지할 것.",
+  "protagonist_state": {
+    "equipment": [
+      "20억 원 예치 통장",
+      "SW인베스트먼트 사업자 등록증 가승인 서류",
+      "2006년 1분기 글로벌 원자재 시황 분석 노트",
+      "한미증권 VIP 다이렉트 핫라인 보안 휴대전화"
+    ],
+    "injuries": "없음",
+    "mood": "차분함, 완벽한 통제감과 서늘한 지배욕"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "당혹 및 반신반의",
+      "justification": "한시우의 에콰도르 사태 분석에 압도당하여 리스크관리팀의 경고마저 스스로 차단하고 예외 승인을 받아내기로 결심함.",
+      "target": "박성호",
+      "to_state": "맹목적인 경외"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "한시우가 WTI 6월물 차트의 미세한 틱 변화를 관찰함. 미실현 수익 3억 원이 찍힌 잔고 창을 확인하며 차갑게 식은 커피를 마심. 글로벌 원자재 시황 분석 노트를 펼쳐 에콰도르 관련 지표를 재확인함.",
+      "description": "봄기운이 스며드는 SW인베스트먼트 대표실. 한시우는 다중 모니터에 띄워진 WTI 6월물 차트를 바라본다. 6주 전의 폭발적인 수익 이후 새롭게 진입한 포지션이 박스권에 갇혀 있지만, 그는 노트의 지표들을 짚어보며 에너지가 응축되고 있음을 확신한다.",
+      "goal": "WTI 6월물 매수 포지션의 현 상태와 한시우의 관망 태도 노출",
+      "key_events": [
+        "한시우가 WTI 6월물 차트의 미세한 틱 변화를 관찰함",
+        "미실현 수익 3억 원이 찍힌 잔고 창을 확인하며 차갑게 식은 커피를 마심",
+        "글로벌 원자재 시황 분석 노트를 펼쳐 에콰도르 관련 지표를 재확인함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "한시우가 WTI 6월물 차트를 응시하며 미실현 수익 3억 원을 기록 중인 횡보 장세를 여유롭게 관망한다.",
+      "tension_level": 3,
+      "title": "지루한 횡보",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "보안 휴대전화가 울리고 박성호의 다급한 목소리가 흘러나옴. 박성호가 증권사 리스크관리팀의 포지션 정리 권고 지침을 전달함. 변동성 축소를 이유로 3억 원의 수익을 안전하게 현금화할 것을 강하게 요구함.",
+      "description": "책상 위 보안 휴대전화가 요란하게 울린다. 전화를 받은 한시우에게 박성호는 유가 횡보 장세와 증권사 내부의 리스크 축소 지침을 근거로 대며, 현재의 미실현 수익을 당장 익절해야 한다고 다급하게 주장한다.",
+      "goal": "박성호 PB의 불안감 노출 및 익절 권고",
+      "key_events": [
+        "보안 휴대전화가 울리고 박성호의 다급한 목소리가 흘러나옴",
+        "박성호가 증권사 리스크관리팀의 포지션 정리 권고 지침을 전달함",
+        "변동성 축소를 이유로 3억 원의 수익을 안전하게 현금화할 것을 강하게 요구함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "박성호 PB가 보안 휴대전화로 연락해 리스크관리팀의 경고를 전하며 3억 원의 수익을 확정 짓자고 강하게 압박한다.",
+      "tension_level": 6,
+      "title": "익절의 압박",
+      "type": "dialogue_duel"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "한시우가 박성호의 말을 끊고 고작 3억 원에 만족할 수 없음을 단언함. 에콰도르 사태의 본질이 단순한 협상용 카드가 아님을 논리적으로 설명함. 조만간 옥시덴탈 페트롤리엄 계약이 강제 해지되며 유가가 수직 상승할 것이라고 예견함.",
+      "description": "한시우는 박성호의 조급함을 차갑게 쳐낸다. 그는 에콰도르 정부와 다국적 석유 기업 간의 갈등이 남미 전체의 자원 국유화 공포를 촉발할 뇌관이며, 조만간 강제 계약 해지로 이어져 공급망이 파괴될 것임을 정밀하게 해부하여 설명한다.",
+      "goal": "한시우가 박성호의 논리를 박살내고 에콰도르 사태를 예견",
+      "key_events": [
+        "한시우가 박성호의 말을 끊고 고작 3억 원에 만족할 수 없음을 단언함",
+        "에콰도르 사태의 본질이 단순한 협상용 카드가 아님을 논리적으로 설명함",
+        "조만간 옥시덴탈 페트롤리엄 계약이 강제 해지되며 유가가 수직 상승할 것이라고 예견함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "한시우가 에콰도르 옥시덴탈 페트롤리엄 사태가 단순 협상이 아닌 강제 해지 수순임을 논리적으로 짚으며 익절을 단호히 거절한다.",
+      "tension_level": 8,
+      "title": "본질의 해부",
+      "type": "action_peak"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "박성호가 말문이 막힌 채 한시우의 거시경제 통찰력에 완벽히 굴복함. 리스크관리팀의 경고를 차단하고 포지션을 예외 분류로 승인받겠다고 맹세함. 전화를 끊은 한시우가 차트를 바라보며 다가올 폭발을 조용히 기다림.",
+      "description": "한시우의 쇳덩이 같은 논리 앞에 박성호의 얄팍한 방어선은 산산조각 난다. 당혹감은 맹목적인 경외심으로 바뀌고, 박성호는 오히려 리스크관리팀을 설득해 해당 포지션을 예외 분류로 승인받겠다고 맹세한다. 전화를 끊은 한시우는 모니터를 응시하며 서늘한 미소를 짓는다.",
+      "goal": "박성호의 완벽한 굴복과 다가올 폭풍 암시",
+      "key_events": [
+        "박성호가 말문이 막힌 채 한시우의 거시경제 통찰력에 완벽히 굴복함",
+        "리스크관리팀의 경고를 차단하고 포지션을 예외 분류로 승인받겠다고 맹세함",
+        "전화를 끊은 한시우가 차트를 바라보며 다가올 폭발을 조용히 기다림"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "한시우의 통찰력에 압도당한 박성호가 리스크관리팀의 예외 분류 승인을 약속하며 굴복한다.",
+      "tension_level": 7,
+      "title": "예외의 승인",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "SW인베스트먼트 대표실",
+  "target_beat": "한시우가 시장의 노이즈에 흔들리지 않고 거시경제의 본질을 꿰뚫어 보며 주변 인물을 완벽히 장악하는 과정을 보여준다.",
+  "time_flow": "2006년 4월 1일 오전 -> 오후",
+  "title": "에콰도르의 뇌관"
+}

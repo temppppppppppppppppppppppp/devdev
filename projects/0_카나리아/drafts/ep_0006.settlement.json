@@ -1,0 +1,490 @@
+{
+  "arc_no": 2,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0006.txt",
+    "settlement_packet_path": "drafts/ep_0006.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 6,
+  "ep_num": 6,
+  "manuscript": {
+    "char_count": 7050,
+    "content_hash": "823bb4e3396f0e6dec86c77a65abcd212e9a0e3858819093f4d2e6f44fbf96a1",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0006.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "open_review": "특이사항 없음. 주인공의 내면 묘사와 상대방을 압박하는 대사의 티키타카가 훌륭하며, 20억 풀레버리지 세팅이라는 목표를 향해 달려가는 긴장감이 잘 유지되었습니다.",
+      "repair_scope": "inplace",
+      "score": 96,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 8,
+        "quality_engagement": 18
+      },
+      "selection_reason": "직전 화 엔딩의 긴장감을 완벽하게 이어받으며, 주인공의 냉철한 심리 묘사와 자본의 폭력을 통한 PB 장악 과정이 매우 밀도 있게 그려졌습니다. 후보 C는 문장력이 뛰어나나 PB인 박성호를 '지점장'으로 지칭하는 치명적인 직급 오류(MAJOR 모순)가 발생하여 제외했습니다. 후보 A는 설정과 수치를 정확히 지키면서도 Blueprint의 모든 씬을 훌륭하게 소화했습니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 2,
+          "pattern": "순식간에"
+        },
+        {
+          "count": 1,
+          "pattern": "입을 열었다"
+        }
+      ],
+      "ai_slop_score": 3.0,
+      "burstiness": 21.7,
+      "ced_score": 0.0,
+      "complexity": 64.35,
+      "compression_ratio": 0.4302,
+      "signal_summary": {
+        "ai_slop_total_hits": 3,
+        "burstiness": 21.7,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 64.35,
+        "compression_ratio": 0.4302,
+        "sentence_count": 155
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "굳게",
+            "닫힌",
+            "vip룸",
+            "너머",
+            "거대한"
+          ],
+          "source": "ending_hook",
+          "text": "굳게 닫힌 VIP룸 문 너머로, 거대한 자본의 포식자가 본격적인 사냥을 시작하기 위해 걸음을 내디뎠다."
+        },
+        {
+          "cue_terms": [
+            "20억",
+            "풀레버리지",
+            "세팅",
+            "완료",
+            "야간"
+          ],
+          "source": "expected_ending",
+          "text": "20억 풀레버리지 세팅 완료 후 야간 장세 대비"
+        }
+      ],
+      "capital": 2000000000,
+      "connections": "PB 박성호 (완전한 신뢰와 복종을 기반으로 한 실무 파트너 관계, VIP 전담 핫라인 구축)",
+      "current_objective": "WTI 원유 선물 포지션 유지 및 미국 본장 야간 장세 대응.",
+      "equipment": [],
+      "inventory_counts": {
+        "SW인베스트먼트 법인 통장": 1,
+        "노트북": 1,
+        "두꺼운 양장 노트": 1,
+        "만년필": 1,
+        "휴대전화": 1
+      },
+      "market_insight": "에콰도르 옥시덴탈 계약 강제 해지, 이란 우라늄 농축 시설 봉인 해제 등 원유 공급망 파괴로 인한 가격 폭등을 확신하며 20억 원 3배 레버리지 풀매수 실행.",
+      "reputation": "SW인베스트먼트 패밀리오피스를 장악하고 분리해내려는 목표를 가짐. PB 박성호를 완벽하게 장악하여 자신의 실행기로 만듦.",
+      "status": "WTI 원유 선물 3월물 20억 원(3배 레버리지) 매수 체결 완료. 박성호 PB를 완벽히 장악하고 VIP 전담 다이렉트 핫라인 개설 지시 후 퇴장.",
+      "stocks": [
+        "WTI 원유 선물 3월물 매수 (20억 원, 3배 레버리지)"
+      ],
+      "total_assets": 2000000000,
+      "wealth": 2000000000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "굳게",
+            "닫힌",
+            "vip룸",
+            "너머",
+            "거대한"
+          ],
+          "source": "ending_hook",
+          "text": "굳게 닫힌 VIP룸 문 너머로, 거대한 자본의 포식자가 본격적인 사냥을 시작하기 위해 걸음을 내디뎠다."
+        },
+        {
+          "cue_terms": [
+            "20억",
+            "풀레버리지",
+            "세팅",
+            "완료",
+            "야간"
+          ],
+          "source": "expected_ending",
+          "text": "20억 풀레버리지 세팅 완료 후 야간 장세 대비"
+        }
+      ],
+      "causal_links": [
+        "한시우가 수수료 2배 특약을 제안함 -> 박성호가 규정 위반의 공포를 이겨내고 지점장 예외 승인 코드를 입력해 프랍 창구 우회 라인을 연결함.",
+        "프랍 창구 우회 라인 연결 -> 남은 5억 원 전액 WTI 원유 선물 3월물 매수 체결 (총 20억 원, 3배 레버리지 세팅 완료)."
+      ],
+      "inventory_count_deltas": [],
+      "inventory_counts": {
+        "SW인베스트먼트 법인 통장": 1,
+        "노트북": 1,
+        "두꺼운 양장 노트": 1,
+        "만년필": 1,
+        "휴대전화": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 90,
+          "target": "박성호",
+          "value": 80
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [],
+        "new_witnesses": [
+          "박성호 (한시우의 20억 3배 레버리지 투자 및 우회 라인 사용 목격)"
+        ]
+      },
+      "lost_items": [],
+      "new_items": [],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호 (한시우의 20억 3배 레버리지 투자 및 우회 라인 사용 목격)",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "집착90/오해80"
+        }
+      ],
+      "reveals": [
+        "남은_5억_추가_지시"
+      ],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "굳게",
+              "닫힌",
+              "vip룸",
+              "너머",
+              "거대한"
+            ],
+            "source": "ending_hook",
+            "text": "굳게 닫힌 VIP룸 문 너머로, 거대한 자본의 포식자가 본격적인 사냥을 시작하기 위해 걸음을 내디뎠다."
+          },
+          {
+            "cue_terms": [
+              "20억",
+              "풀레버리지",
+              "세팅",
+              "완료",
+              "야간"
+            ],
+            "source": "expected_ending",
+            "text": "20억 풀레버리지 세팅 완료 후 야간 장세 대비"
+          }
+        ],
+        "capital": 2000000000,
+        "connections": "PB 박성호 (완전한 신뢰와 복종을 기반으로 한 실무 파트너 관계, VIP 전담 핫라인 구축)",
+        "current_objective": "WTI 원유 선물 포지션 유지 및 미국 본장 야간 장세 대응.",
+        "equipment": [],
+        "inventory_counts": {
+          "SW인베스트먼트 법인 통장": 1,
+          "노트북": 1,
+          "두꺼운 양장 노트": 1,
+          "만년필": 1,
+          "휴대전화": 1
+        },
+        "market_insight": "에콰도르 옥시덴탈 계약 강제 해지, 이란 우라늄 농축 시설 봉인 해제 등 원유 공급망 파괴로 인한 가격 폭등을 확신하며 20억 원 3배 레버리지 풀매수 실행.",
+        "reputation": "SW인베스트먼트 패밀리오피스를 장악하고 분리해내려는 목표를 가짐. PB 박성호를 완벽하게 장악하여 자신의 실행기로 만듦.",
+        "status": "WTI 원유 선물 3월물 20억 원(3배 레버리지) 매수 체결 완료. 박성호 PB를 완벽히 장악하고 VIP 전담 다이렉트 핫라인 개설 지시 후 퇴장.",
+        "stocks": [
+          "WTI 원유 선물 3월물 매수 (20억 원, 3배 레버리지)"
+        ],
+        "total_assets": 2000000000,
+        "wealth": 2000000000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "location",
+              "position",
+              "relationship_changes"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ],
+            "transport_authority_mode": "fact_ledger_overlap",
+            "transport_contract_version": "cross_stage_authority_packet.v1",
+            "transport_fields": [
+              "capital",
+              "total_assets"
+            ],
+            "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "0원 (20억 원 전액 증거금 투입)",
+      "director_score": 96,
+      "location": "서울 여의도 한미증권 VIP룸 앞 복도",
+      "position": "WTI 원유 선물 3월물 20억 원 매수 (3배 레버리지, 총 노출 60억 원)",
+      "relationship_changes": [
+        {
+          "from_state": "완벽한 굴복의 선언",
+          "target": "박성호",
+          "to_state": "절대적 충성 맹세와 이익 공동체 (수수료 2배 조건)"
+        }
+      ]
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "location",
+            "position",
+            "relationship_changes"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ],
+          "transport_authority_mode": "fact_ledger_overlap",
+          "transport_contract_version": "cross_stage_authority_packet.v1",
+          "transport_fields": [
+            "capital",
+            "total_assets"
+          ],
+          "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T12:33:41.485671+00:00",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 5,
+    "source_prev_manuscript_hash": "8a98ecfb54ed8dd391225d96d9eef54fdeca8fc77239bf0c1e7157deba1af532"
+  },
+  "title": "완전한 장악"
+}

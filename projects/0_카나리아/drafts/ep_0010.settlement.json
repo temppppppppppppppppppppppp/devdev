@@ -1,0 +1,533 @@
+{
+  "arc_no": 3,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0010.txt",
+    "settlement_packet_path": "drafts/ep_0010.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 10,
+  "ep_num": 10,
+  "manuscript": {
+    "char_count": 6604,
+    "content_hash": "6d97542945ba0c4593a938f36f1faf957fe32154a77ae4fa3a74d0f04eb9a94e",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0010.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "open_review": "특이사항 없음. 이전 피드백을 잘 반영하여 익셉션 어카운트 중복 개설 오류를 회피하고, 대명그룹 타격이라는 서사적 목표를 향해 긴장감 있게 전개되었습니다. 대화 비율이 다소 높다는 경고가 있으나, 작전 지시와 상황 설명에 필수적인 대화이므로 몰입을 해치지 않습니다.",
+      "repair_scope": "inplace",
+      "score": 96,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 8,
+        "quality_engagement": 18
+      },
+      "selection_reason": "이전 화(EP 9)에서 이미 익셉션 어카운트가 개설되었다는 사실을 정확히 반영하여, 중복 개설 지시라는 Blueprint의 오류를 훌륭하게 회피했습니다. 2월 말 승인된 계좌를 4월 1일에 본격 가동한다는 설정이 자연스러우며, 대명그룹을 타격하기 위한 구체적인 선물 진입 지시와 박성호의 경악이 몰입감 있게 묘사되었습니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [],
+      "ai_slop_score": 0.0,
+      "burstiness": 23.92,
+      "ced_score": 0.0,
+      "complexity": 75.2,
+      "compression_ratio": 0.4312,
+      "signal_summary": {
+        "ai_slop_total_hits": 0,
+        "burstiness": 23.92,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 75.2,
+        "compression_ratio": 0.4312,
+        "sentence_count": 133
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "그렇다면",
+            "그들",
+            "스스",
+            "목줄",
+            "끊어버릴"
+          ],
+          "source": "ending_hook",
+          "text": "\"그렇다면, 그들이 스스로 목줄을 끊어버릴 때까지 지켜보시죠.\""
+        },
+        {
+          "cue_terms": [
+            "박성호",
+            "굴복",
+            "리스크관리팀",
+            "예외",
+            "승인"
+          ],
+          "source": "expected_ending",
+          "text": "박성호의 굴복과 리스크관리팀 예외 승인을 통한 포지션 유지"
+        }
+      ],
+      "capital": 4512450000,
+      "connections": "PB 박성호 (완전한 복종)",
+      "current_objective": "환율과 비철금속 선물을 이용해 대명그룹의 1조 원 규모 화학 계열사 인수전 자금줄을 붕괴시키기.",
+      "equipment": [
+        "두꺼운 양장 노트 ('2006년 1분기 글로벌 원자재 시황 분석 노트')",
+        "몽블랑 만년필",
+        "최종 잔고 증명서",
+        "익셉션 어카운트 활성화 코드 서류"
+      ],
+      "inventory_counts": {
+        "노트북": 1,
+        "두꺼운 양장 노트 ('2006년 1분기 글로벌 원자재 시황 분석 노트')": 1,
+        "몽블랑 만년필": 1,
+        "보안 휴대전화 (익셉션 어카운트 핫라인 연결)": 1,
+        "익셉션 어카운트 활성화 코드 서류": 1,
+        "최종 잔고 증명서": 1,
+        "휴대용 서브 모니터": 2
+      },
+      "market_insight": "에콰도르 사태와 이란 핵 개발 선언의 중첩을 정확히 예측하여 최고점에서 청산. 대명그룹 화학 계열사 인수전의 치명적 약점(환율, 비철금속 변동성)을 완벽히 해부함.",
+      "reputation": "한미증권 최상위 VIP '익셉션 어카운트' 홀더. 자본과 권력의 결합으로 완벽한 시장 통제 인프라 구축.",
+      "status": "SW인베스트먼트 대표실에서 익셉션 어카운트를 가동하여 구리, 아연, 환율 선물 매수 포지션 진입 대기 중 (오후 3시 투입 예정).",
+      "stocks": [],
+      "total_assets": 4512450000,
+      "wealth": 4512450000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "그렇다면",
+            "그들",
+            "스스",
+            "목줄",
+            "끊어버릴"
+          ],
+          "source": "ending_hook",
+          "text": "\"그렇다면, 그들이 스스로 목줄을 끊어버릴 때까지 지켜보시죠.\""
+        },
+        {
+          "cue_terms": [
+            "박성호",
+            "굴복",
+            "리스크관리팀",
+            "예외",
+            "승인"
+          ],
+          "source": "expected_ending",
+          "text": "박성호의 굴복과 리스크관리팀 예외 승인을 통한 포지션 유지"
+        }
+      ],
+      "causal_links": [
+        "한시우의 익셉션 어카운트 가동 지시 -> 박성호의 완벽한 복종 및 오후 3시 구리/아연/환율 선물 매수 포지션 진입 대기",
+        "대명그룹의 1조 원 규모 화학 계열사 인수전 추진 -> 한시우가 이를 역이용하여 환율 및 비철금속 가격 상승을 통한 재무구조 붕괴 설계"
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "만년필",
+          "to": 0
+        },
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "몽블랑 만년필",
+          "to": 1
+        },
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "익셉션 어카운트 활성화 코드 서류",
+          "to": 1
+        },
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "최종 잔고 증명서",
+          "to": 1
+        }
+      ],
+      "inventory_counts": {
+        "노트북": 1,
+        "두꺼운 양장 노트 ('2006년 1분기 글로벌 원자재 시황 분석 노트')": 1,
+        "몽블랑 만년필": 1,
+        "보안 휴대전화 (익셉션 어카운트 핫라인 연결)": 1,
+        "익셉션 어카운트 활성화 코드 서류": 1,
+        "최종 잔고 증명서": 1,
+        "휴대용 서브 모니터": 2
+      },
+      "karma_matrix": [
+        {
+          "obsession": 90,
+          "target": "박성호",
+          "value": 100
+        },
+        {
+          "obsession": 0,
+          "target": "대명그룹",
+          "value": -50
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [
+          "대명그룹 (자신들의 1조 원짜리 인수전이 치명적인 덫임을 인지하지 못함)"
+        ],
+        "new_witnesses": [
+          "박성호 (한시우의 대명그룹 타격 계획과 거시경제 통찰력을 완벽히 인지하고 복종함)"
+        ]
+      },
+      "lost_items": [
+        "만년필"
+      ],
+      "new_items": [
+        "최종 잔고 증명서",
+        "몽블랑 만년필",
+        "익셉션 어카운트 활성화 코드 서류"
+      ],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호 (한시우의 대명그룹 타격 계획과 거시경제 통찰력을 완벽히 인지하고 복종함)",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "대명그룹 (자신들의 1조 원짜리 인수전이 치명적인 덫임을 인지하지 못함)",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "집착90/오해100"
+        }
+      ],
+      "reveals": [],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "그렇다면",
+              "그들",
+              "스스",
+              "목줄",
+              "끊어버릴"
+            ],
+            "source": "ending_hook",
+            "text": "\"그렇다면, 그들이 스스로 목줄을 끊어버릴 때까지 지켜보시죠.\""
+          },
+          {
+            "cue_terms": [
+              "박성호",
+              "굴복",
+              "리스크관리팀",
+              "예외",
+              "승인"
+            ],
+            "source": "expected_ending",
+            "text": "박성호의 굴복과 리스크관리팀 예외 승인을 통한 포지션 유지"
+          }
+        ],
+        "capital": 4512450000,
+        "connections": "PB 박성호 (완전한 복종)",
+        "current_objective": "환율과 비철금속 선물을 이용해 대명그룹의 1조 원 규모 화학 계열사 인수전 자금줄을 붕괴시키기.",
+        "equipment": [
+          "두꺼운 양장 노트 ('2006년 1분기 글로벌 원자재 시황 분석 노트')",
+          "몽블랑 만년필",
+          "최종 잔고 증명서",
+          "익셉션 어카운트 활성화 코드 서류"
+        ],
+        "inventory_counts": {
+          "노트북": 1,
+          "두꺼운 양장 노트 ('2006년 1분기 글로벌 원자재 시황 분석 노트')": 1,
+          "몽블랑 만년필": 1,
+          "보안 휴대전화 (익셉션 어카운트 핫라인 연결)": 1,
+          "익셉션 어카운트 활성화 코드 서류": 1,
+          "최종 잔고 증명서": 1,
+          "휴대용 서브 모니터": 2
+        },
+        "market_insight": "에콰도르 사태와 이란 핵 개발 선언의 중첩을 정확히 예측하여 최고점에서 청산. 대명그룹 화학 계열사 인수전의 치명적 약점(환율, 비철금속 변동성)을 완벽히 해부함.",
+        "reputation": "한미증권 최상위 VIP '익셉션 어카운트' 홀더. 자본과 권력의 결합으로 완벽한 시장 통제 인프라 구축.",
+        "status": "SW인베스트먼트 대표실에서 익셉션 어카운트를 가동하여 구리, 아연, 환율 선물 매수 포지션 진입 대기 중 (오후 3시 투입 예정).",
+        "stocks": [],
+        "total_assets": 4512450000,
+        "wealth": 4512450000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "current_location",
+              "director_score",
+              "protagonist_status",
+              "sub_characters",
+              "timeline"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ]
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "45억 1,245만 원",
+      "current_location": "SW인베스트먼트 대표실",
+      "director_score": 96,
+      "protagonist_status": "익셉션 어카운트를 통해 구리, 아연, 원·달러 환율 선물 시장에 대규모 매수 포지션 진입 지시 완료",
+      "sub_characters": {
+        "박성호": "한시우의 압도적인 통찰력과 무자비한 스케일에 완전히 굴복하여 완벽한 실행기로 거듭남"
+      },
+      "timeline": "2006년 4월 1일 오전"
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "current_location",
+            "director_score",
+            "protagonist_status",
+            "sub_characters",
+            "timeline"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ]
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 3개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T15:49:20.688851+00:00",
+    "last_score": 85,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 9,
+    "source_prev_manuscript_hash": "11904a2601919e3b6b1846175de67b7b6801921964e979906828627f8ef71e82"
+  },
+  "title": "완벽한 굴복"
+}

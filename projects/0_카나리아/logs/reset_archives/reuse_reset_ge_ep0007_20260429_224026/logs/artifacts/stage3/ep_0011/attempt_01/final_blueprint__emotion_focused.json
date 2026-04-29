@@ -1,0 +1,251 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "4ab7e30af57935f3fa6cd4231bc0f2efce88f543d1f70f780b02b60c0d41709b"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=4; sample_anchors=10만, 60달러, 70달러",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:21be5739d102",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1429,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 32037,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": true,
+        "raw_chars": 32037
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 54104,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 945896,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 48975,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4444,
+          "lane": "constraints"
+        },
+        {
+          "chars": 513,
+          "lane": "feedback_context"
+        }
+      ],
+      "genre_strategy_contracts": [
+        {
+          "authority_level": "route",
+          "contract_hash": "65f385e6b082bf69",
+          "contract_id": "investment_business_power.action_focused.v1",
+          "strategy_name": "action_focused"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 162,
+        "constraints": 4444,
+        "feedback_context": 513,
+        "hud_context": 10,
+        "prev_info": 48975
+      },
+      "shared_context_chars": 53591,
+      "total_chars": 54104
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T12:58:28.834302+00:00",
+    "last_score": 90,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 10,
+    "source_prev_manuscript_hash": ""
+  },
+  "core_tension": "에콰도르 사태 속보 확인과 그로 인한 유가 폭등 관망, 흔들림 없는 통제력 유지",
+  "end_location": "SW인베스트먼트 대표실",
+  "ending_hook": "모니터의 붉은 불빛이 한시우의 차가운 눈동자에 맺히며, 과거의 상처를 태우는 서늘한 독기가 짙게 피어올랐다.",
+  "ending_state": {
+    "location": "SW인베스트먼트 대표실",
+    "protagonist_status": "폭등하는 유가 차트를 주시하며 다가올 75달러 익절 타점을 차갑게 기다림",
+    "timeline": {
+      "표현": "2006년 4월 1일 밤"
+    }
+  },
+  "ep_num": 11,
+  "episode_number": 11,
+  "expected_ending": "유가 폭등이 시작되며 본격적인 수익 구간 진입 직전의 서늘한 기대감",
+  "integrated_scenario": "책상 위에 펼쳐진 분석 노트의 '에콰도르'라는 글자 위로 한시우의 서늘한 시선이 꽂혀 있던 그 순간, 적막하던 대표실의 공기를 가르고 외신 뉴스 단말기의 날카로운 경고음이 울렸다. 모니터 우측 하단에 고정해 둔 뉴스 피드 창이 붉은색으로 점멸했다. 'URGENT'. 에콰도르 정부가 다국적 석유 기업 옥시덴탈 페트롤리엄과의 원유 채굴 계약을 강제 해지하고 자산을 국유화한다는 속보였다. 한시우는 천천히 만년필을 들어 노트의 에콰도르 항목 아래에 짙은 밑줄을 그었다. 예언은 현실이 되었다. 일일 10만 배럴의 원유가 글로벌 시장에서 즉각 증발한다는 소식은 6주간 지루하게 횡보하던 시장에 던져진 거대한 폭탄이었다. \n\n몇 분 지나지 않아 HTS의 원유 선물 호가창이 미친 듯이 요동치기 시작했다. 60달러 선에서 팽팽하게 맞서던 매도 벽이 순식간에 허물어졌다. 거대한 기관 자본들이 숏 커버링을 위해 앞다투어 매수 주문을 쏟아내며 시장은 문자 그대로 아비규환의 패닉 바잉 상태로 접어들었다. 화면을 가득 채운 붉은색 체결 내역 위로, 한시우의 계좌에 찍힌 미실현 수익이 초 단위로 수천만 원씩 불어났다. 그러나 등받이에 깊숙이 몸을 기댄 한시우의 표정에는 그 어떤 환희나 흥분도 존재하지 않았다. 오직 철저하게 계산된 기계 장치가 오차 없이 돌아가는 것을 확인하는 기술자의 건조함만이 자리하고 있었다.\n\n그때, 책상 한쪽에 놓인 검은색 보안 휴대전화가 짧은 진동을 토해냈다. 전화를 받자마자 수화기 너머로 거친 숨을 몰아쉬는 박성호의 목소리가 들려왔다. \"대표님! 에콰도르입니다! 대표님 말씀대로 남미에서 터졌습니다! 지금 월가 쪽 숏 포지션 잡았던 헤지펀드들이 줄도산 위기에 처해서 미친 듯이 물량을 긁어모으고 있습니다!\" 박성호의 목소리에는 단순한 흥분을 넘어, 시장의 흐름을 완벽하게 꿰뚫어 본 한시우를 향한 짙은 경외감이 서려 있었다. 한시우는 낮고 묵직한 음성으로 그의 호들갑을 잘라냈다. \"소란 피울 것 없습니다. 아직 목표가에는 도달하지 않았으니, 내 지시가 떨어질 때까지 단 1계약도 건드리지 말고 대기하십시오.\" 철저한 통제력을 과시하며 전화를 끊은 한시우는 다시 모니터로 시선을 돌렸다.\n\n밤이 깊어지며 유가는 70달러 선을 향해 무서운 기세로 치솟고 있었다. 창밖으로 펼쳐진 여의도의 화려한 야경과 모니터에서 뿜어져 나오는 푸른빛이 교차하며 한시우의 창백한 얼굴에 기하학적인 그림자를 드리웠다. 계좌에 찍히는 막대한 수익금의 숫자가 올라갈수록, 역설적으로 과거 대명그룹의 그늘 아래서 철저히 짓밟히고 버려졌던 비참한 기억들이 뇌리를 스쳤다. 이 붉은 숫자들은 단순한 화폐가 아니라, 자신을 파멸로 몰아넣었던 가문의 숨통을 조일 날카로운 비수였다. 75달러라는 완벽한 익절 타점을 향해 달려가는 차트를 응시하며, 한시우는 만년필을 쥔 손에 천천히 힘을 주었다. 진정한 자본의 포식자로 거듭나기 위한 피비린내 나는 밤이 깊어가고 있었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부 속보 확인으로 빠른 텐션 상승을 유도하고, 중반부 HTS 호가창의 폭발적 반응을 시각적으로 묘사하여 몰입감을 높인다. 후반부는 박성호와의 통화로 주인공의 우위를 재확인하며, 마지막 씬에서 과거 회상과 결부된 내면의 독기를 끌어올려 감정적 여운을 남긴다.",
+  "protagonist_state": {
+    "equipment": [
+      "20억 원 예치 통장",
+      "SW인베스트먼트 사업자 등록증 가승인 서류",
+      "2006년 1분기 글로벌 원자재 시황 분석 노트",
+      "한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화"
+    ],
+    "injuries": "없음",
+    "mood": "완벽한 통제력과 다가올 더 큰 전쟁에 대한 서늘한 기대감"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "경외",
+      "justification": "한시우가 예언했던 에콰도르 사태가 정확한 타이밍에 터지며 시장이 패닉에 빠지는 것을 실시간으로 목격함",
+      "target": "박성호",
+      "to_state": "절대적 맹신"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "외신 뉴스 단말기에서 붉은색 'URGENT' 자막과 함께 에콰도르 사태 속보 타전. 한시우가 글로벌 원자재 시황 분석 노트의 '에콰도르' 항목에 만년필로 밑줄을 그음. 지루하게 횡보하던 HTS의 원유 선물 호가창이 미세하게 요동치기 시작함.",
+      "description": "적막한 대표실 안, 시황 분석 노트 위로 떨어지던 시선이 날카로운 경고음과 함께 모니터로 향한다. 거대한 지정학적 리스크가 현실화되는 순간이다.",
+      "goal": "에콰도르 사태 속보 확인 및 유가 상승의 서막 관망",
+      "key_events": [
+        "외신 뉴스 단말기에서 붉은색 'URGENT' 자막과 함께 에콰도르 사태 속보 타전",
+        "한시우가 글로벌 원자재 시황 분석 노트의 '에콰도르' 항목에 만년필로 밑줄을 그음",
+        "지루하게 횡보하던 HTS의 원유 선물 호가창이 미세하게 요동치기 시작함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "한시우가 모니터 한구석에 띄워둔 외신 뉴스 피드에서 에콰도르 정부의 옥시덴탈 페트롤리엄 계약 강제 해지 속보를 확인한다.",
+      "tension_level": 6,
+      "title": "점화된 도화선",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "매도 물량을 집어삼키는 거대한 매수세가 HTS 화면을 붉게 물들임. 계좌의 미실현 수익 숫자가 초 단위로 수천만 원씩 갱신됨. 한시우가 등받이에 몸을 기대며 시장의 광기를 차갑게 관조함.",
+      "description": "일일 10만 배럴의 원유가 시장에서 증발한다는 공포가 전 세계 트레이더들을 덮친다. 60달러 선에 묶여 있던 WTI 가격이 저항선을 뚫고 수직 상승한다.",
+      "goal": "시장의 패닉 바잉 관찰 및 수익 구간 진입 확인",
+      "key_events": [
+        "매도 물량을 집어삼키는 거대한 매수세가 HTS 화면을 붉게 물들임",
+        "계좌의 미실현 수익 숫자가 초 단위로 수천만 원씩 갱신됨",
+        "한시우가 등받이에 몸을 기대며 시장의 광기를 차갑게 관조함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "속보 타전 직후 글로벌 자본이 원유 선물 시장으로 쏟아져 들어오며 유가가 폭등하기 시작한다.",
+      "tension_level": 7,
+      "title": "붉은 물결",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "책상 위의 보안 휴대전화가 짧게 울리며 박성호의 다급한 목소리가 들려옴. 박성호가 숏 포지션을 잡았던 기관들의 마진콜 사태와 시장의 패닉을 보고함. 한시우가 동요 없이 목표가 도달 전까지 완벽한 대기를 지시하며 통화를 종료함.",
+      "description": "한미증권 VIP룸의 박성호는 한시우의 예측이 완벽하게 적중했음을 두 눈으로 목격하고 전율한다.",
+      "goal": "박성호의 보고를 통한 시장의 패닉 상태 확인",
+      "key_events": [
+        "책상 위의 보안 휴대전화가 짧게 울리며 박성호의 다급한 목소리가 들려옴",
+        "박성호가 숏 포지션을 잡았던 기관들의 마진콜 사태와 시장의 패닉을 보고함",
+        "한시우가 동요 없이 목표가 도달 전까지 완벽한 대기를 지시하며 통화를 종료함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "보안 휴대전화로 걸려 온 박성호의 전화를 통해 시장의 아비규환 상태를 전해 듣고, 흔들림 없는 통제력을 각인시킨다.",
+      "tension_level": 8,
+      "title": "증명된 통찰",
+      "type": "side_glimpse"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "창밖으로 여의도의 야경이 펼쳐진 가운데, HTS 모니터의 푸른빛이 한시우의 얼굴을 비춤. 숫자가 오를수록 대명그룹에 짓밟혔던 과거의 기억이 교차하며 내면의 독기가 짙어짐. 75달러 돌파를 앞둔 아슬아슬한 지점에서 만년필을 쥔 손에 힘이 들어감.",
+      "description": "수억 원의 수익이 눈앞에 펼쳐지고 있지만 한시우의 표정에는 환희 대신 과거의 상처를 태우는 서늘한 불꽃만이 일렁인다.",
+      "goal": "유가 폭등의 정점을 향해 가는 상황에서 내면의 독기 다짐",
+      "key_events": [
+        "창밖으로 여의도의 야경이 펼쳐진 가운데, HTS 모니터의 푸른빛이 한시우의 얼굴을 비춤",
+        "숫자가 오를수록 대명그룹에 짓밟혔던 과거의 기억이 교차하며 내면의 독기가 짙어짐",
+        "75달러 돌파를 앞둔 아슬아슬한 지점에서 만년필을 쥔 손에 힘이 들어감"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "밤이 깊어지며 유가가 70달러 선을 향해 거침없이 치솟는 가운데, 한시우는 다가올 익절 타이밍을 조율한다.",
+      "tension_level": 9,
+      "title": "폭풍 속의 고요",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "SW인베스트먼트 대표실",
+  "target_beat": "에콰도르 사태 발발과 원유 선물 폭등 시작, 완벽한 통제력 유지",
+  "time_flow": "2006년 4월 1일 오후 → 밤",
+  "title": "에콰도르의 불씨"
+}

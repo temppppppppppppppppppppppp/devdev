@@ -1,0 +1,214 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "a872f4679f9861b5fd9e9f1ffbbe9b870ed50bc3454ada5c3935f93f339849a8"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1035,
+    "prevalidation_issue_count": 0,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 32037,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": true,
+        "raw_chars": 32037
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 49085,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 950915,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 43176,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 5181,
+          "lane": "constraints"
+        },
+        {
+          "chars": 451,
+          "lane": "feedback_context"
+        }
+      ],
+      "genre_strategy_contracts": [
+        {
+          "authority_level": "route",
+          "contract_hash": "65f385e6b082bf69",
+          "contract_id": "investment_business_power.action_focused.v1",
+          "strategy_name": "action_focused"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 267,
+        "constraints": 5181,
+        "feedback_context": 451,
+        "hud_context": 10,
+        "prev_info": 43176
+      },
+      "shared_context_chars": 48634,
+      "total_chars": 49085
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T12:33:41.485671+00:00",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 5,
+    "source_prev_manuscript_hash": "8a98ecfb54ed8dd391225d96d9eef54fdeca8fc77239bf0c1e7157deba1af532"
+  },
+  "core_tension": "한시우의 극단적 베팅 강행과 박성호의 심리적 굴복",
+  "end_location": "서울 여의도 한미증권 VIP룸 앞 복도",
+  "ending_hook": "굳게 닫힌 VIP룸 문 너머로, 거대한 자본의 포식자가 본격적인 사냥을 시작하기 위해 걸음을 내디뎠다.",
+  "ending_state": {
+    "location": "서울 여의도 한미증권 VIP룸 앞 복도",
+    "protagonist_status": "20억 원 전액의 원유 롱 포지션 세팅을 마친 후 야간 장세를 모니터링할 장소를 물색하는 상태",
+    "timeline": {
+      "표현": "2006년 2월 초, 정오 무렵"
+    }
+  },
+  "ep_num": 6,
+  "episode_number": 6,
+  "expected_ending": "20억 풀레버리지 세팅 완료 후 야간 장세 대비",
+  "integrated_scenario": "VIP룸의 무거운 정적 속에서 한시우가 남은 5억 원의 행방을 선언했다. 박성호는 이미 15억 원의 롱 포지션 진입만으로도 혼이 나간 상태였으나, 한시우는 지체 없이 증권사 내부 리스크 한도를 우회할 방법을 제시했다. 해외 제휴 기관의 프랍 트레이딩 창구를 거쳐 남은 5억 원마저 WTI 3월물 매수에 쏟아부으라는 명령이었다. 박성호는 안색이 창백해진 채 규정 위반과 극단적인 마진콜 리스크를 들먹이며 필사적으로 만류하려 했지만, 한시우는 무감각한 시선으로 그를 짓누르며 변명할 틈조차 주지 않았다.\n\n만류하던 박성호의 입술이 파르르 떨리자, 한시우는 태도를 바꾸어 파격적인 제안을 던졌다. 우회 주문을 성사시키고 포지션을 끝까지 유지한다면, 발생하는 모든 거래 수수료를 두 배로 책정해 주겠다는 선언이었다. 단, 조건은 한미증권 내에서 한시우를 최우선 1순위로 대우하고, 다이렉트 핫라인을 통한 즉각적인 회신을 보장하라는 것이었다. 거대한 자본의 폭력과 달콤한 보상 앞에서 박성호의 이성은 무너져 내렸다. 그는 마른침을 삼키며 한시우의 모든 조건을 수락하겠다고 맹세했다.\n\n박성호는 이마의 땀을 닦아내며 키보드를 두드렸다. 지점장 전결 권한을 우회적으로 활성화하는 그의 손끝은 미세하게 떨리고 있었다. 몇 번의 클릭음이 VIP룸의 정적을 갈랐고, 이내 중앙 모니터에 붉은색 체결 알림이 떴다. 남은 5억 원마저 완벽하게 시장의 톱니바퀴 속으로 던져진 순간이었다. 총 20억 원, 3배 레버리지를 꽉 채운 극단적인 롱 포지션이 화면에 각인되었다. 한시우는 그 숫자를 응시하며 서늘한 미소를 지었다.\n\n모든 목적을 달성한 한시우가 천천히 자리에서 일어났다. 구겨진 코트를 걸치는 그의 동작에는 한 치의 흔들림도 없었다. 박성호는 자리에서 튕겨 나가듯 일어나 90도로 허리를 굽혔다. 한시우는 그의 정수리를 무심히 내려다보며, 오늘 밤 미국 본장이 열릴 때까지 핫라인을 열어두라는 마지막 지시를 남겼다. 굳게 닫힌 방음문을 열고 나서자, 여의도의 차가운 공조기 바람이 뺨을 스쳤다. 다가올 야간 장세의 광기를 견뎌낼 고요한 전장을 찾아야 할 시간이었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "PB의 저항을 무너뜨리는 심리적 압박에서 시작해, 매수 체결의 긴장감을 거쳐 폭풍 전야의 고요함으로 마무리되는 호흡.",
+  "protagonist_state": {
+    "equipment": [
+      "20억 원 예치 통장",
+      "SW인베스트먼트 사업자 등록증 가승인 서류",
+      "2006년 1분기 글로벌 원자재 시황 분석 노트"
+    ],
+    "injuries": "없음",
+    "mood": "냉철함, 단호함"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "완벽한 굴복의 선언",
+      "justification": "수수료 두 배 지급이라는 파격적 보상과 한시우의 압도적 기백에 완전히 압도됨",
+      "target": "박성호",
+      "to_state": "절대적 충성 맹세와 이익 공동체"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "남은 5억에 대한 추가 지시를 예고한 한시우의 말에 박성호는 굳어버렸다. 한시우는 지체 없이 증권사 내부 리스크 한도를 우회할 방법을 제시했다. 해외 제휴 기관의 프랍 트레이딩 창구를 거쳐 남은 5억 원마저 WTI 3월물 매수에 쏟아부으라는 명령이었다. 박성호는 안색이 창백해진 채 규정 위반과 극단적인 마진콜 리스크를 들먹이며 필사적으로 만류하려 했지만, 한시우는 무감각한 시선으로 그를 짓누르며 변명할 틈조차 주지 않았다.",
+      "description": "VIP룸의 무거운 정적 속에서 한시우가 남은 5억 원의 행방을 선언한다.",
+      "goal": "남은 5억 원의 투입 지시와 PB의 만류",
+      "key_events": [
+        "한시우가 증권사 시스템 한도 15억 원을 우회하여 남은 5억 원을 해외 기관 전용 파생 창구를 통해 원유 롱 포지션에 투입하라고 지시함",
+        "박성호가 규정 위반과 마진콜의 극단적 위험성을 언급하며 마지막으로 만류를 시도함",
+        "한시우가 박성호의 말을 차갑게 끊어내며 실행만을 강요함"
+      ],
+      "location": "서울 여의도 한미증권 VIP룸",
+      "summary": "한시우가 남은 5억 원마저 원유 롱 포지션에 밀어넣기 위한 우회로를 지시하며 박성호를 경악시킨다.",
+      "tension_level": 6,
+      "title": "한계 돌파",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "만류하던 박성호의 입술이 파르르 떨리자, 한시우는 태도를 바꾸어 파격적인 제안을 던졌다. 우회 주문을 성사시키고 포지션을 끝까지 유지한다면, 발생하는 모든 거래 수수료를 두 배로 책정해 주겠다는 선언이었다. 단, 조건은 한미증권 내에서 한시우를 최우선 1순위로 대우하고, 다이렉트 핫라인을 통한 즉각적인 회신을 보장하라는 것이었다. 거대한 자본의 폭력과 달콤한 보상 앞에서 박성호의 이성은 무너져 내렸다. 그는 마른침을 삼키며 한시우의 모든 조건을 수락하겠다고 맹세했다.",
+      "description": "한시우가 압도적인 공포와 파격적인 보상을 동시에 제시하며 PB를 길들인다.",
+      "goal": "파격적 조건을 통한 완전한 심리 장악",
+      "key_events": [
+        "한시우가 남은 5억 원 투입을 성사시킬 경우 박성호 개인에게 떨어질 인센티브를 계산해 주며 수수료 두 배 지급을 약속함",
+        "대신 자신을 최우선 VIP로 대우하고 어떤 상황에서도 즉각 회신할 것을 조건으로 내검",
+        "박성호가 거대한 이익과 한시우의 기백 앞에 직업적 윤리를 내려놓고 완전히 굴복함"
+      ],
+      "location": "서울 여의도 한미증권 VIP룸",
+      "summary": "한시우가 수수료 두 배 지급과 최우선 회신권을 조건으로 내걸어 박성호의 저항을 완전히 꺾는다.",
+      "tension_level": 8,
+      "title": "당근과 채찍",
+      "type": "dialogue_duel"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "박성호는 이마의 땀을 닦아내며 키보드를 두드렸다. 지점장 전결 권한을 우회적으로 활성화하는 그의 손끝은 미세하게 떨리고 있었다. 몇 번의 클릭음이 VIP룸의 정적을 갈랐고, 이내 중앙 모니터에 붉은색 체결 알림이 떴다. 남은 5억 원마저 완벽하게 시장의 톱니바퀴 속으로 던져진 순간이었다. 총 20억 원, 3배 레버리지를 꽉 채운 극단적인 롱 포지션이 화면에 각인되었다. 한시우는 그 숫자를 응시하며 서늘한 미소를 지었다.",
+      "description": "HTS 화면에 20억 원 전액이 원유 롱 포지션으로 각인되는 순간.",
+      "goal": "전액 풀레버리지 세팅 완료",
+      "key_events": [
+        "박성호가 덜덜 떨리는 손으로 지점장 전결 권한을 일시적으로 활성화하여 우회 주문을 넣음",
+        "HTS 모니터에 남은 5억 원의 매수 체결 알림이 붉은색으로 점멸함",
+        "총 20억 원의 풀레버리지 원유 롱 포지션 세팅이 완료된 것을 확인한 한시우가 만족감을 느낌"
+      ],
+      "location": "서울 여의도 한미증권 VIP룸",
+      "summary": "박성호가 관리자 권한을 동원해 남은 5억 원의 매수 주문을 체결한다.",
+      "tension_level": 7,
+      "title": "20억의 무게",
+      "type": "action_peak"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "모든 목적을 달성한 한시우가 천천히 자리에서 일어났다. 구겨진 코트를 걸치는 그의 동작에는 한 치의 흔들림도 없었다. 박성호는 자리에서 튕겨 나가듯 일어나 90도로 허리를 굽혔다. 한시우는 그의 정수리를 무심히 내려다보며, 오늘 밤 미국 본장이 열릴 때까지 핫라인을 열어두라는 마지막 지시를 남겼다. 굳게 닫힌 방음문을 열고 나서자, 여의도의 차가운 공조기 바람이 뺨을 스쳤다. 다가올 야간 장세의 광기를 견뎌낼 고요한 전장을 찾아야 할 시간이었다.",
+      "description": "한시우가 박성호의 배웅을 받으며 여의도의 차가운 복도로 나선다.",
+      "goal": "야간 장세를 대비하기 위한 퇴장",
+      "key_events": [
+        "한시우가 코트를 챙겨 입고 자리에서 일어남",
+        "박성호가 90도로 허리를 굽혀 완벽한 충성을 표함",
+        "한시우가 문을 열며 야간 모니터링을 위한 조용한 장소를 물색할 것을 암시함"
+      ],
+      "location": "서울 여의도 한미증권 VIP룸 앞 복도",
+      "summary": "모든 세팅을 마친 한시우가 VIP룸을 나서며 다가올 야간 장세를 맞이할 준비를 한다.",
+      "tension_level": 5,
+      "title": "폭풍 전야",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 여의도 한미증권 VIP룸",
+  "target_beat": "조건 제시와 굴복, 그리고 20억 풀레버리지 완성",
+  "time_flow": "2006년 2월 초, 오전",
+  "title": "완벽한 굴복"
+}

@@ -1,0 +1,546 @@
+{
+  "arc_no": 2,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0008.txt",
+    "settlement_packet_path": "drafts/ep_0008.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 8,
+  "ep_num": 8,
+  "manuscript": {
+    "char_count": 5556,
+    "content_hash": "55c77ceeccb698d939eb1dcf8d49e9e833e76a174c8d51e454d698817ff8740e",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0008.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "open_review": "특이사항 없음. 주인공이 홀로 야간 장세를 모니터링하는 상황이므로 대화 비율이 낮은 것은 서사적으로 매우 타당하며, 오히려 내면의 계산과 시장의 움직임을 교차 편집하듯 보여주어 몰입감이 극대화되었습니다.",
+      "repair_scope": "inplace",
+      "score": 96,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 8,
+        "quality_engagement": 18
+      },
+      "selection_reason": "후보 B는 직전 화 엔딩(박성호 PB와의 통화 종료 및 에콰도르 사태 예견)에서 시간적, 상황적으로 가장 매끄럽게 이어집니다. 20억 원 자본금과 3배 레버리지를 통한 25억 원의 미실현 수익 달성이라는 Blueprint의 수치적 목표를 정확하게 구현했으며, 야간 장세의 긴장감과 거시경제 지표가 맞물려 폭발하는 카타르시스를 압도적인 묘사로 살려냈습니다. 반면 후보 A는 수익금 수치 오류(3억 원)가 발생했고, 후보 C는 직전 화의 통화 장면을 중복 서술하는 오류가 있었습니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 1,
+          "pattern": "말 그대로"
+        },
+        {
+          "count": 1,
+          "pattern": "순식간에"
+        }
+      ],
+      "ai_slop_score": 2.0,
+      "burstiness": 21.39,
+      "ced_score": 0.0,
+      "complexity": 73.2,
+      "compression_ratio": 0.4554,
+      "signal_summary": {
+        "ai_slop_total_hits": 2,
+        "burstiness": 21.39,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 73.2,
+        "compression_ratio": 0.4554,
+        "sentence_count": 115
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "붉게",
+            "물든",
+            "모니터",
+            "불빛",
+            "아래"
+          ],
+          "source": "ending_hook",
+          "text": "붉게 물든 모니터 불빛 아래, 한시우의 서늘한 미소가 텅 빈 대표실을 채우고 있었다."
+        },
+        {
+          "cue_terms": [
+            "3억",
+            "원의",
+            "수익",
+            "확인하며",
+            "시장"
+          ],
+          "source": "expected_ending",
+          "text": "3억 원의 수익을 확인하며 시장 장악의 첫 단계를 성공적으로 마무리함"
+        }
+      ],
+      "capital": 2000000000,
+      "connections": "PB 박성호 (완전한 신뢰와 복종을 기반으로 한 실무 파트너 관계, VIP 전담 핫라인 구축)",
+      "current_objective": "수익 실현 타이밍 포착 및 다음 투자처 물색.",
+      "equipment": [
+        "노트북",
+        "두꺼운 양장 노트",
+        "휴대용 서브 모니터"
+      ],
+      "inventory_counts": {
+        "노트북": 1,
+        "두꺼운 양장 노트": 1,
+        "보안 휴대전화": 1,
+        "휴대용 서브 모니터": 1
+      },
+      "market_insight": "에콰도르 사태와 이란 핵 개발 선언의 중첩을 정확히 예측하여 WTI 원유 선물 폭등을 이끌어냄. 거시경제의 폭풍을 완벽히 통제.",
+      "reputation": "PB 박성호를 완벽하게 장악하여 자신의 실행기로 만듦.",
+      "status": "성북동 프라이빗 카페 VIP 밀실에서 WTI 원유 선물 폭등으로 25억 원의 미실현 수익 달성. 대명그룹 형들의 성벽을 허물 첫 수확 완료.",
+      "stocks": [
+        "WTI 원유 선물 3월물 매수 (20억 원, 3배 레버리지, 미실현 손익 +25.1억 원)"
+      ],
+      "total_assets": 4512450000,
+      "wealth": 4512450000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "붉게",
+            "물든",
+            "모니터",
+            "불빛",
+            "아래"
+          ],
+          "source": "ending_hook",
+          "text": "붉게 물든 모니터 불빛 아래, 한시우의 서늘한 미소가 텅 빈 대표실을 채우고 있었다."
+        },
+        {
+          "cue_terms": [
+            "3억",
+            "원의",
+            "수익",
+            "확인하며",
+            "시장"
+          ],
+          "source": "expected_ending",
+          "text": "3억 원의 수익을 확인하며 시장 장악의 첫 단계를 성공적으로 마무리함"
+        }
+      ],
+      "causal_links": [
+        "에콰도르 옥시덴탈 계약 해지 검토 및 이란 우라늄 농축 시설 봉인 해제 선언 -> 글로벌 원유 공급망 파괴 우려 확산 -> 숏 커버링 연쇄 폭발로 WTI 원유 선물 65달러 돌파 -> 한시우 미실현 수익 25억 원 달성"
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "SW인베스트먼트 법인 통장",
+          "to": 0
+        },
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "만년필",
+          "to": 0
+        },
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "휴대용 서브 모니터",
+          "to": 1
+        }
+      ],
+      "inventory_counts": {
+        "노트북": 1,
+        "두꺼운 양장 노트": 1,
+        "보안 휴대전화": 1,
+        "휴대용 서브 모니터": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 0,
+          "target": "프라이빗 카페 직원",
+          "value": 10
+        },
+        {
+          "obsession": 0,
+          "target": "한태준",
+          "value": -10
+        },
+        {
+          "obsession": 0,
+          "target": "한태민",
+          "value": -10
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [
+          "한태준",
+          "한태민"
+        ],
+        "new_witnesses": [
+          "프라이빗 카페 직원"
+        ]
+      },
+      "lost_items": [
+        "만년필",
+        "SW인베스트먼트 법인 통장"
+      ],
+      "new_items": [
+        "휴대용 서브 모니터",
+        "2006년 1분기 글로벌 원자재 시황 분석 노트"
+      ],
+      "new_npcs": [
+        "프라이빗 카페 직원"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "프라이빗 카페 직원",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "한태준",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "한태민",
+          "to": "오해 대상"
+        }
+      ],
+      "reveals": [
+        "expected_ending",
+        "ending_hook"
+      ],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "붉게",
+              "물든",
+              "모니터",
+              "불빛",
+              "아래"
+            ],
+            "source": "ending_hook",
+            "text": "붉게 물든 모니터 불빛 아래, 한시우의 서늘한 미소가 텅 빈 대표실을 채우고 있었다."
+          },
+          {
+            "cue_terms": [
+              "3억",
+              "원의",
+              "수익",
+              "확인하며",
+              "시장"
+            ],
+            "source": "expected_ending",
+            "text": "3억 원의 수익을 확인하며 시장 장악의 첫 단계를 성공적으로 마무리함"
+          }
+        ],
+        "capital": 2000000000,
+        "connections": "PB 박성호 (완전한 신뢰와 복종을 기반으로 한 실무 파트너 관계, VIP 전담 핫라인 구축)",
+        "current_objective": "수익 실현 타이밍 포착 및 다음 투자처 물색.",
+        "equipment": [
+          "노트북",
+          "두꺼운 양장 노트",
+          "휴대용 서브 모니터"
+        ],
+        "inventory_counts": {
+          "노트북": 1,
+          "두꺼운 양장 노트": 1,
+          "보안 휴대전화": 1,
+          "휴대용 서브 모니터": 1
+        },
+        "market_insight": "에콰도르 사태와 이란 핵 개발 선언의 중첩을 정확히 예측하여 WTI 원유 선물 폭등을 이끌어냄. 거시경제의 폭풍을 완벽히 통제.",
+        "reputation": "PB 박성호를 완벽하게 장악하여 자신의 실행기로 만듦.",
+        "status": "성북동 프라이빗 카페 VIP 밀실에서 WTI 원유 선물 폭등으로 25억 원의 미실현 수익 달성. 대명그룹 형들의 성벽을 허물 첫 수확 완료.",
+        "stocks": [
+          "WTI 원유 선물 3월물 매수 (20억 원, 3배 레버리지, 미실현 손익 +25.1억 원)"
+        ],
+        "total_assets": 4512450000,
+        "wealth": 4512450000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "current_position",
+              "director_score",
+              "location",
+              "total_assets"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "promoted_fields": [
+              "total_assets"
+            ],
+            "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+            "promotion_sources": {
+              "total_assets": "actual_truth"
+            },
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ],
+            "transport_authority_mode": "fact_ledger_overlap",
+            "transport_contract_version": "cross_stage_authority_packet.v1",
+            "transport_fields": [
+              "capital",
+              "total_assets"
+            ],
+            "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "20억 원 (미실현 수익 25억 원 별도)",
+      "current_position": "WTI 원유 선물 3월물 매수 (60억 원 규모 노출)",
+      "director_score": 96,
+      "location": "성북동 프라이빗 카페 VIP룸",
+      "total_assets": "45억 원 (평가금액 기준)"
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "current_position",
+            "director_score",
+            "location",
+            "total_assets"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "promoted_fields": [
+            "total_assets"
+          ],
+          "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+          "promotion_sources": {
+            "total_assets": "actual_truth"
+          },
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ],
+          "transport_authority_mode": "fact_ledger_overlap",
+          "transport_contract_version": "cross_stage_authority_packet.v1",
+          "transport_fields": [
+            "capital",
+            "total_assets"
+          ],
+          "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T14:33:09.021928+00:00",
+    "last_score": 92,
+    "quality_gate_failed": true,
+    "quality_risk": true,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 7,
+    "source_prev_manuscript_hash": "c050b6d7c2c9c1b5111f604a47e2204f9eacd6a13591dbfddc1bc0754a6865c3"
+  },
+  "title": "폭발하는 뇌관"
+}

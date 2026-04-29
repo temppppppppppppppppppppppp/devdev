@@ -1,0 +1,249 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "d9c6280a3887f811b9adc46186c2262868e0471a693b821acc78785dc3abee27"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 1,
+    "disqualified": [],
+    "length": 1273,
+    "prevalidation_issue_count": 3,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 32037,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": true,
+        "raw_chars": 32037
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 56966,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 943034,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 51820,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4348,
+          "lane": "constraints"
+        },
+        {
+          "chars": 594,
+          "lane": "feedback_context"
+        }
+      ],
+      "genre_strategy_contracts": [
+        {
+          "authority_level": "route",
+          "contract_hash": "65f385e6b082bf69",
+          "contract_id": "investment_business_power.action_focused.v1",
+          "strategy_name": "action_focused"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 194,
+        "constraints": 4348,
+        "feedback_context": 594,
+        "hud_context": 10,
+        "prev_info": 51820
+      },
+      "shared_context_chars": 56372,
+      "strategy_feedback_chars": 5394,
+      "total_chars": 56966
+    },
+    "python_warnings": [
+      {
+        "category": "continuity",
+        "focus": "위치 이동 경위를 설명하거나 시작 위치 수정",
+        "message": "위치 불연속: SW인베스트먼트 대표실 → 한미증권 본사 VIP룸",
+        "severity": "MAJOR",
+        "source": "python_prevalidate"
+      },
+      {
+        "category": "fact_lock_location",
+        "focus": "이전 화 종료 위치에서 시작하거나 이동 경위를 명시",
+        "message": "위치 사실잠금 위반: 확정 위치 'SW인베스트먼트 대표실' → blueprint 시작 '한미증권 본사 VIP룸'",
+        "severity": "MAJOR",
+        "source": "python_prevalidate"
+      },
+      {
+        "category": "fact_lock_person",
+        "focus": "'베테랑 PB' 명칭을 유지하거나 정당한 변경 경위를 명시",
+        "message": "인물 사실잠금 위반: 확정 '베테랑 PB' → blueprint '박성호 PB' 사용",
+        "severity": "CRITICAL",
+        "source": "python_prevalidate"
+      }
+    ],
+    "quality_risk": true,
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 3
+  },
+  "_inventory_gaps": [
+    {
+      "item": "절반 청산된 WTI 원유 선물 거래 내역서",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T13:09:59.795063+00:00",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 12,
+    "source_prev_manuscript_hash": ""
+  },
+  "core_tension": "예외 계좌 승인을 통한 시스템 장악과 새로운 타겟 설정",
+  "end_location": "한미증권 본사 VIP룸",
+  "ending_hook": "화면 속 번쩍이는 금괴의 잔상 위로, 거대한 포식자의 입꼬리가 서서히 말려 올라갔다.",
+  "ending_state": {
+    "location": "한미증권 본사 VIP룸",
+    "protagonist_status": "에콰도르 사태 직후 원유 익절을 완료하고 새로운 특권 계좌를 확보한 상태",
+    "timeline": {
+      "day": 17,
+      "description": "에콰도르 사태 직후 익절 완료 시점",
+      "month": 5,
+      "year": 2006
+    }
+  },
+  "ep_num": 13,
+  "episode_number": 13,
+  "expected_ending": "Exception Account 확보 및 금 시장으로의 시선 이동",
+  "integrated_scenario": "한시우는 한미증권 본사 VIP룸의 푹신한 가죽 소파에 깊숙이 몸을 묻고 있었다. 지난밤 SW인베스트먼트 대표실에서 에콰도르 사태 직후의 유가 폭등을 완벽히 발라먹고 남은 여운이, 이제는 차가운 승리감과 여유로 바뀌어 그의 전신을 감돌고 있었다. 테이블 위에는 갓 내린 에스프레소의 짙은 향이 피어올랐다. 2006년 5월 17일의 아침 공기는 그 어느 때보다 상쾌했다. 곧이어 묵직한 방음문이 열리고, 박성호 PB가 두꺼운 서류 철을 품에 안은 채 조심스럽게 들어섰다. 그의 얼굴에는 밤샘의 피로감 대신, 범접할 수 없는 존재를 마주한 자 특유의 짙은 경외심이 서려 있었다. 박성호는 허리를 깊숙이 굽히며 인사한 뒤, 절반 청산된 WTI 원유 선물 거래 내역서와 함께 'Exception Account(예외 계좌)' 승인 문서를 테이블 위에 정중히 내려놓았다.\n\n\"대표님, 지시하신 예외 계좌 승인 서류입니다. 리스크 관리팀과 본부장의 밤샘 회의 끝에, 전용 처리선과 우선 검토 권한이 포함된 특별 승인이 떨어졌습니다.\" 박성호의 목소리에는 미세한 떨림이 묻어 있었다. 한시우는 서류를 집어 들고 천천히 조항들을 훑어내렸다. 모든 통제가 면제되는 무법지대는 아니었지만, 후순위 개입과 수동 승인을 보장하는 완벽한 'Privileged Execution Lane(우선 집행 차선)'이었다. 이제 증권사의 시스템은 그를 막아서는 벽이 아니라, 그의 폭주를 위해 길을 터주는 레드카펫으로 변모한 것이다.\n\n\"수고했습니다. 이제 막히는 일 없이 다음 지시를 수행할 수 있겠군요.\" 한시우의 건조한 칭찬에 박성호는 감격한 듯 고개를 숙였다. 과거의 자신을 짓누르던 거대한 금융 시스템이 자신의 발아래 굴복하는 순간, 한시우의 내면에는 짜릿한 쾌감이 번졌다. 그는 거침없이 만년필을 들어 승인 문서 사본에 서명을 갈겼다. 이제 한미증권 리스크팀은 그를 경고하는 부서가 아니라, 규정의 빈틈을 열어주는 조력자로 전락했다.\n\n그때, 벽면에 걸린 대형 화면에서 경제 뉴스 속보가 흘러나왔다. 인플레이션 우려와 안전 자산 선호 심리로 인해 글로벌 금 가격이 심상치 않은 상승 기류를 타고 있다는 보도였다. 앵커의 다급한 목소리가 VIP룸을 채우는 순간, 한시우의 시선이 화면에 단단히 고정되었다. 그의 머릿속에 저장된 거시경제 데이터가 다시 한번 정밀하게 맞물려 돌아가기 시작했다. 에콰도르 사태가 촉발한 원유 시장의 광기는 이미 완벽하게 수익으로 치환되었다. 이제 다음 사냥감은 금이었다. 한시우는 품속의 보안 휴대전화를 매만지며, 다가올 더 거대한 자본의 폭발을 향해 서늘한 미소를 지었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "location_shift",
+      "scene_transition_cue"
+    ],
+    "type": "explicit_transition"
+  },
+  "pacing_notes": "초반부는 승리감과 여유를 묘사하며 느린 호흡으로 진행하다가, 서류 승인과 시스템 장악을 확인하는 중반부에서 텐션을 올린다. 후반부 뉴스 속보와 함께 다음 타겟이 제시되며 빠르고 강렬한 훅으로 마무리한다.",
+  "protagonist_state": {
+    "equipment": [
+      "20억 원 예치 통장",
+      "SW인베스트먼트 사업자 등록증 가승인 서류",
+      "2006년 1분기 글로벌 원자재 시황 분석 노트",
+      "한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화",
+      "Exception Account 승인 문서 사본",
+      "절반 청산된 WTI 원유 선물 거래 내역서"
+    ],
+    "injuries": "없음",
+    "mood": "승리감과 여유"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "당혹, 반신반의",
+      "justification": "한시우의 완벽한 타점 예측과 막대한 수익 실현을 두 눈으로 목격하고, 불가능해 보이던 예외 계좌 승인까지 관철시키며 완전한 굴복을 경험함",
+      "target": "박성호",
+      "to_state": "경외, 예외 처리의 witness"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "한시우는 소파에 앉아 승리감을 만끽한다. 조용한 VIP룸 안, 그는 다음 사냥을 위한 준비를 마친 상태다.",
+      "description": "에콰도르 사태 직후의 유가 폭등을 정확히 발라먹은 한시우가 한미증권 VIP룸 상석에 앉아 있다. 승리감과 여유가 묻어나는 그의 태도는 공간 전체를 압도한다.",
+      "goal": "한미증권 VIP룸에서 여유롭게 박성호를 기다리며 승리감을 만끽한다.",
+      "key_events": [
+        "한시우가 VIP룸 소파에 깊숙이 기대어 에스프레소 향을 음미함",
+        "지난밤 75달러 터치와 동시에 확정 지은 5억 원의 수익과 완벽한 타점의 기억을 내면에서 정리함"
+      ],
+      "location": "한미증권 본사 VIP룸",
+      "summary": "한미증권 본사 VIP룸에 도착한 한시우가 지난밤의 완벽한 익절을 곱씹으며 여유를 즐긴다.",
+      "tension_level": 3,
+      "title": "승리자의 아침",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "박성호가 서류를 전달하며 한시우의 압도적 성과에 경의를 표한다.",
+      "description": "밤샘 회의를 거쳐 서류를 받아낸 박성호가 피로감 대신 신을 마주한 듯한 경외어린 태도로 한시우에게 서류를 바친다.",
+      "goal": "박성호가 Exception Account 승인 서류를 바치며 완벽히 굴복함을 보여준다.",
+      "key_events": [
+        "박성호가 조심스럽게 문을 열고 들어와 90도로 허리를 굽혀 인사함",
+        "절반 청산된 WTI 원유 선물 거래 내역서를 테이블 위에 정중히 내려놓음",
+        "박성호가 떨리는 목소리로 본부장과 리스크팀을 압박해 얻어낸 Exception Account 승인 문서를 건넴"
+      ],
+      "location": "한미증권 본사 VIP룸",
+      "summary": "박성호가 방에 들어와 절반 청산된 거래 내역서와 예외 계좌 승인 서류를 전달하며 짙은 경외심을 드러낸다.",
+      "tension_level": 5,
+      "title": "경외심과 서류",
+      "type": "emotional_reveal"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "한시우는 서류에 서명하며 박성호에게 새로운 기준을 제시한다.",
+      "description": "무제한 특권이 아닌, 리스크팀의 개입 기준 완화와 전용 처리선이 명시된 서류. 한시우는 이를 통해 합법적 폭주의 길을 열었다.",
+      "goal": "예외 계좌의 권한을 확인하고 시스템을 장악했음을 각인시킨다.",
+      "key_events": [
+        "한시우가 서류의 조항을 빠르게 훑으며 전용 처리선과 우선 검토 권한을 확인함",
+        "이제 리스크팀은 막는 부서가 아니라 규정 옆자리를 여는 부서가 되었음을 박성호에게 차갑게 각인시킴",
+        "한시우가 거침없이 펜을 들어 승인 문서 사본에 서명함"
+      ],
+      "location": "한미증권 본사 VIP룸",
+      "summary": "한시우가 서류의 '우선 검토 및 수동 승인' 조항을 확인하며, 증권사 시스템이 자신의 발아래 놓였음을 선언한다.",
+      "tension_level": 6,
+      "title": "특권의 각인",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "금값 상승 뉴스를 보며 한시우는 다음 사냥을 다짐한다.",
+      "description": "에콰도르 사태로 인한 원유 익절의 여운이 가시기도 전에, 인플레이션 우려로 인한 금 가격 상승 보도가 이어진다. 한시우의 시선이 번뜩인다.",
+      "goal": "금 가격 상승 뉴스를 확인하고 다음 타겟을 향한 야욕을 드러낸다.",
+      "key_events": [
+        "벽면의 대형 화면에서 글로벌 인플레이션 우려와 안전 자산 선호로 인한 금 가격 상승 속보가 타전됨",
+        "한시우가 화면을 응시하며 머릿속 거시경제 데이터를 새로운 타겟에 맞춰 재조립함",
+        "보안 휴대전화를 만지작거리며 박성호에게 다음 집행 준비를 지시함"
+      ],
+      "location": "한미증권 본사 VIP룸",
+      "summary": "VIP룸 화면에서 금 가격 상승 뉴스가 흘러나오고, 한시우가 새로운 사냥을 암시하며 미소 짓는다.",
+      "tension_level": 8,
+      "title": "새로운 사냥감",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "한미증권 본사 VIP룸",
+  "target_beat": "Exception Account 확보를 통한 시스템 장악과 금 시장으로의 목표 전환",
+  "time_flow": "2006년 5월 17일 아침",
+  "title": "특권의 증명"
+}

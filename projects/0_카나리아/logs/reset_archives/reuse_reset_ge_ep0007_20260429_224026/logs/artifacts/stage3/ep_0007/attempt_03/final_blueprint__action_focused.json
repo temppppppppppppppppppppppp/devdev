@@ -1,0 +1,265 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "action_focused",
+    "content_hash": "ae254d620c38c7857cc184f04007d56598adb4d4de79022c11ce40efbb4d9a80"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 2,
+    "disqualified": [],
+    "genre_strategy_contract": {
+      "action_semantics": [
+        "decisive business move",
+        "capital exposure",
+        "institutional pressure",
+        "governance or legal next gate"
+      ],
+      "authority_level": "route",
+      "authority_source": "stage3_genre_strategy_contract",
+      "contract_hash": "65f385e6b082bf69",
+      "contract_id": "investment_business_power.action_focused.v1",
+      "director_visible": true,
+      "factsheet_mutation": false,
+      "forbidden_defaults": [
+        "combat",
+        "chase",
+        "intruder",
+        "vehicle attack",
+        "physical crisis",
+        "thriller infiltration"
+      ],
+      "genre_family": "investment_business_power",
+      "genre_type": "investment",
+      "material_mutation": false,
+      "schema_version": "genre-strategy-contract-v1",
+      "strategy_name": "action_focused",
+      "tension_semantics": [
+        "deadline pressure",
+        "counterparty risk",
+        "liquidity or margin limit",
+        "reputation and access risk"
+      ]
+    },
+    "length": 1476,
+    "prevalidation_issue_count": 0,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 32037,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": true,
+        "raw_chars": 32037
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 50414,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 949586,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 44575,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 5002,
+          "lane": "constraints"
+        },
+        {
+          "chars": 566,
+          "lane": "feedback_context"
+        }
+      ],
+      "genre_strategy_contracts": [
+        {
+          "authority_level": "route",
+          "contract_hash": "65f385e6b082bf69",
+          "contract_id": "investment_business_power.action_focused.v1",
+          "strategy_name": "action_focused"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 261,
+        "constraints": 5002,
+        "feedback_context": 566,
+        "hud_context": 10,
+        "prev_info": 44575
+      },
+      "shared_context_chars": 49848,
+      "strategy_feedback_chars": 5179,
+      "total_chars": 50414
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 5,
+    "strategy": "action_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T12:39:40.697439+00:00",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 6,
+    "source_prev_manuscript_hash": ""
+  },
+  "core_tension": "피를 말리는 박스권 횡보 장세와 박성호의 불안감 대 한시우의 흔들림 없는 확신",
+  "end_location": "서울 성북동 프라이빗 카페",
+  "ending_hook": "어두운 카페 안, 오직 HTS 화면에서 뿜어져 나오는 푸른 불빛만이 한시우의 서늘한 눈동자에 맺혀 있었다. 거대한 자본의 폭발을 알리는 초읽기는 이미 시작되고 있었다.",
+  "ending_state": {
+    "location": "서울 성북동 프라이빗 카페",
+    "protagonist_status": "HTS 화면을 주시하며 흔들림 없는 통제력을 유지하는 상태",
+    "timeline": {
+      "표현": "2006년 2월 초, 심야"
+    }
+  },
+  "ep_num": 7,
+  "episode_number": 7,
+  "expected_ending": "야간 모니터링 중 에콰도르 사태 복선을 남기며 폭등 직전의 긴장감 조성",
+  "integrated_scenario": "한미증권 VIP룸의 굳게 닫힌 문을 뒤로하고 한시우는 복도를 걸어 나왔다. 등 뒤에서는 베테랑 PB 박성호가 90도로 허리를 굽힌 채 그가 엘리베이터에 오를 때까지 고개를 들지 못했다. 완벽하게 공간과 사람의 주도권을 장악한 한시우는 차가운 겨울바람이 부는 여의도 거리로 나섰다. 20억 원이라는 거대 자본이 3배 레버리지로 WTI 원유 선물에 투입된 상황. 다가올 뉴욕상업거래소(NYMEX) 야간 장세를 흔들림 없이 지켜볼 조용한 공간이 필요했다. 그는 미끄러지듯 다가온 택시에 올라타 성북동으로 향할 것을 지시했다.\n\n택시가 멈춰 선 곳은 성북동의 한적한 골목에 위치한 프라이빗 카페였다. 회원제로 운영되어 인적이 드문 이곳은 거대한 자본의 흐름을 관망하기에 최적의 장소였다. 한시우는 가장 안쪽의 구석 자리에 앉아 가방에서 노트북을 꺼냈다. 전원을 켜고 HTS에 접속하자, 붉은색과 푸른색이 교차하는 WTI 원유 선물 3월물 호가창이 화면을 가득 채웠다. 그는 품속에서 '2006년 1분기 글로벌 원자재 시황 분석 노트'를 꺼내 키보드 옆에 펼쳐두고 차가운 아메리카노 한 잔을 주문했다.\n\n창밖으로 어둠이 짙게 깔리고 NYMEX 본장이 본격적으로 열렸다. 그러나 시장은 폭풍 전야의 고요함처럼 배럴당 60달러 선을 기점으로 지루한 횡보를 이어갔다. 3배 레버리지가 걸린 포지션 탓에 단 몇 센트의 움직임에도 수천만 원의 평가 손익이 점멸했다. 일반적인 투자자라면 피가 마르고 호흡이 가빠질 횡보장이었지만, 모니터를 응시하는 한시우의 눈동자는 얼음장처럼 차가웠다. 그는 노트에 적힌 거시경제 지표들을 훑으며, 이 지루한 박스권이야말로 거대한 상승 랠리를 앞두고 에너지를 응축하는 과정임을 확신하고 있었다.\n\n밤 11시를 넘긴 시각, 테이블 위의 휴대전화가 진동했다. 박성호 PB였다. 전화를 받자마자 수화기 너머로 박성호의 다급한 목소리가 흘러나왔다. \"대표님, 기관들의 매도 물량이 계속 쏟아지며 상단을 짓누르고 있습니다. 지금이라도 일부 물량을 청산해서 헷지를...\" 한시우는 그의 말이 끝나기도 전에 차갑게 잘라냈다. \"내 지시 없이 보고하지 말라고 했을 텐데요.\" 서늘한 음성에 수화기 너머가 단번에 얼어붙었다. 한시우는 HTS 화면 한구석에 띄워둔 국제 뉴스 피드를 응시하며 나지막이 덧붙였다. \"쓸데없는 차트 분석은 집어치우고, 에콰도르 쪽 뉴스나 주시하십시오.\" \n\n일방적으로 통화 종료 버튼을 누른 한시우는 휴대전화를 거꾸로 뒤집어 테이블에 내려놓았다. 얼음이 다 녹아 밍밍해진 아메리카노를 한 모금 마시는 그의 동작에는 한 치의 조급함도 묻어나지 않았다. 에콰도르 옥시덴탈 페트롤리엄의 강제 계약 해지, 그리고 이란의 핵 농축 재개 선언. 이 두 개의 거대한 뇌관이 시장에 던져지는 순간, 저 지루한 횡보 차트는 수직으로 솟구쳐 오를 것이다. 어두운 카페 안, 오직 HTS 화면에서 뿜어져 나오는 푸른 불빛만이 한시우의 서늘한 눈동자에 맺혀 있었다. 거대한 자본의 폭발을 알리는 초읽기는 이미 묵묵히 흘러가고 있었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor",
+      "scene_transition_cue"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반은 장소 이동을 통해 호흡을 고르고, 중반부터는 정적인 카페 공간 안에서 HTS 화면의 미세한 변동과 인물 간의 통화만으로 심리적 긴장감을 극한으로 응축시킵니다.",
+  "protagonist_state": {
+    "equipment": [
+      "20억 원 예치 통장",
+      "SW인베스트먼트 사업자 등록증 가승인 서류",
+      "2006년 1분기 글로벌 원자재 시황 분석 노트"
+    ],
+    "injuries": "없음",
+    "mood": "극도의 집중력과 냉철함"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "명령에 굴복했으나 시장 변동성에 여전히 공포를 느낌",
+      "justification": "전화 통화에서 한시우가 시장의 본질(에콰도르 사태)을 짚어내며 그의 얄팍한 차트 분석을 무력화시켰기 때문",
+      "target": "박성호",
+      "to_state": "한시우의 압도적인 통찰력과 단호함에 억눌려 맹목적으로 지시를 따르게 됨"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "한미증권 VIP룸의 굳게 닫힌 문을 뒤로하고 한시우는 복도를 걸어 나왔다. 등 뒤에서는 박성호가 90도로 허리를 굽힌 채 그가 엘리베이터에 오를 때까지 고개를 들지 못했다. 완벽하게 주도권을 장악한 한시우는 차가운 겨울바람이 부는 여의도 거리로 나섰다. 다가올 뉴욕상업거래소(NYMEX) 야간 장세를 흔들림 없이 지켜볼 조용한 공간이 필요했다. 그는 미끄러지듯 다가온 택시에 올라타 성북동으로 향할 것을 지시했다.",
+      "description": "모든 세팅을 마친 한시우가 박성호의 90도 인사를 뒤로하고 여의도를 떠나 조용한 장소를 물색한다.",
+      "goal": "여의도를 벗어나 야간 모니터링 장소로 이동",
+      "key_events": [
+        "한시우가 VIP룸 앞 복도를 걸어 나오며 코트를 걸침",
+        "박성호가 등 뒤에서 허리를 굽혀 완벽한 충성을 표함",
+        "한시우가 택시에 탑승하여 성북동으로 행선지를 지시함"
+      ],
+      "location": "서울 여의도 한미증권 VIP룸 앞 복도 → 이동 중인 택시",
+      "summary": "한시우가 한미증권 VIP룸 앞 복도를 지나 건물을 빠져나온다.",
+      "tension_level": 4,
+      "title": "사냥터의 이동",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "택시가 멈춰 선 곳은 성북동의 한적한 골목에 위치한 프라이빗 카페였다. 회원제로 운영되어 인적이 드문 이곳은 거대한 자본의 흐름을 관망하기에 최적의 장소였다. 한시우는 가장 안쪽의 구석 자리에 앉아 가방에서 노트북을 꺼냈다. 전원을 켜고 HTS에 접속하자, 붉은색과 푸른색이 교차하는 WTI 원유 선물 3월물 호가창이 화면을 가득 채웠다. 그는 품속에서 '2006년 1분기 글로벌 원자재 시황 분석 노트'를 꺼내 키보드 옆에 펼쳐두고, 차가운 아메리카노 한 잔을 주문했다.",
+      "description": "한시우는 성북동 프라이빗 카페의 구석 자리를 차지하고 노트북을 펼쳐 원유 선물 차트를 띄운다.",
+      "goal": "야간 장세를 모니터링할 거점 확보",
+      "key_events": [
+        "성북동 프라이빗 카페에 도착하여 가장 구석진 자리를 선택함",
+        "노트북을 켜고 HTS에 접속하여 WTI 원유 선물 3월물 차트를 화면에 띄움",
+        "품속의 글로벌 원자재 시황 분석 노트를 꺼내 테이블 한쪽에 펼쳐둠"
+      ],
+      "location": "서울 성북동 프라이빗 카페",
+      "summary": "성북동의 인적 드문 프라이빗 카페에 자리 잡고 HTS를 세팅한다.",
+      "tension_level": 5,
+      "title": "프라이빗 카페 세팅",
+      "type": "daily_routine"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "창밖으로 어둠이 짙게 깔리고 NYMEX 본장이 본격적으로 열렸다. 그러나 시장은 폭풍 전야의 고요함처럼 배럴당 60달러 선을 기점으로 지루한 횡보를 이어갔다. 3배 레버리지가 걸린 20억 원의 포지션 탓에 단 몇 센트의 움직임에도 수천만 원의 평가 손익이 점멸했다. 일반적인 투자자라면 피가 마르고 호흡이 가빠질 횡보장이었지만, 모니터를 응시하는 한시우의 눈동자는 얼음장처럼 차가웠다. 그는 노트에 적힌 거시경제 지표들을 훑으며, 이 지루한 박스권이야말로 거대한 상승 랠리를 앞두고 에너지를 응축하는 과정임을 확신하고 있었다.",
+      "description": "시간이 흘러 밤이 깊어지는 가운데, 원유 가격은 지루한 횡보를 거듭하며 피를 말리는 장세를 연출한다.",
+      "goal": "횡보 장세 속에서의 심리적 인내",
+      "key_events": [
+        "NYMEX 본장이 열리며 거래량이 증가하지만 유가는 60달러 선에서 횡보함",
+        "미세한 가격 변동에 따라 수천만 원의 평가 손익이 오가지만 한시우의 표정은 평온함",
+        "분석 노트의 수치와 현재 차트의 흐름을 대조하며 다가올 폭등의 에너지를 계산함"
+      ],
+      "location": "서울 성북동 프라이빗 카페",
+      "summary": "야간장이 열리고 유가가 박스권을 횡보하지만 한시우는 흔들림이 없다.",
+      "tension_level": 6,
+      "title": "지루한 박스권",
+      "type": "tension_build"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호(전화)"
+      ],
+      "content": "밤 11시를 넘긴 시각, 테이블 위의 휴대전화가 진동했다. 박성호 PB였다. 전화를 받자마자 수화기 너머로 박성호의 다급한 목소리가 흘러나왔다. '대표님, 기관들의 매도 물량이 계속 쏟아지며 상단을 짓누르고 있습니다. 지금이라도 일부 물량을 청산해서 헷지를...' 한시우는 그의 말이 끝나기도 전에 차갑게 잘라냈다. '내 지시 없이 보고하지 말라고 했을 텐데요.' 서늘한 음성에 수화기 너머가 얼어붙었다. 한시우는 HTS 화면 한구석에 띄워둔 국제 뉴스 피드를 응시하며 나지막이 덧붙였다. '쓸데없는 차트 분석은 집어치우고, 에콰도르 쪽 뉴스나 주시하십시오.'",
+      "description": "박성호 PB가 참지 못하고 전화를 걸어와 헷지를 권유하지만, 한시우는 압도적인 태도로 그를 제압한다.",
+      "goal": "박성호의 불안을 통제하고 복선 투척",
+      "key_events": [
+        "박성호가 다이렉트 핫라인으로 전화를 걸어와 시장의 매도 압력을 보고하며 불안을 표출함",
+        "한시우가 차가운 목소리로 박성호의 말을 끊고 포지션 유지 지시를 재확인함",
+        "한시우가 모니터를 보며 '에콰도르'라는 단어를 나지막이 중얼거리며 복선을 남김"
+      ],
+      "location": "서울 성북동 프라이빗 카페",
+      "summary": "불안에 휩싸인 박성호의 전화를 단호히 끊어내며 에콰도르 사태를 암시한다.",
+      "tension_level": 8,
+      "title": "불안의 전이와 차단",
+      "type": "dialogue_duel"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "통화 종료 버튼을 누른 한시우는 휴대전화를 거꾸로 뒤집어 테이블에 내려놓았다. 얼음이 다 녹아 밍밍해진 아메리카노를 한 모금 마시는 그의 동작에는 한 치의 조급함도 묻어나지 않았다. 에콰도르 옥시덴탈 페트롤리엄의 강제 계약 해지, 그리고 이란의 핵 농축 재개 선언. 이 두 개의 거대한 뇌관이 시장에 던져지는 순간, 저 지루한 횡보 차트는 수직으로 솟구쳐 오를 것이다. 어두운 카페 안, 오직 HTS 화면에서 뿜어져 나오는 푸른 불빛만이 한시우의 서늘한 눈동자에 맺혀 있었다. 거대한 자본의 폭발을 알리는 초읽기는 이미 시작되고 있었다.",
+      "description": "에콰도르 사태와 이란 핵 문제라는 거대한 뇌관이 터지기 직전의 팽팽한 긴장감으로 에피소드를 마무리한다.",
+      "goal": "다가올 거대한 시장의 변동성을 예고",
+      "key_events": [
+        "일방적으로 전화를 끊은 한시우가 식어버린 커피를 한 모금 마심",
+        "모니터의 푸른빛이 한시우의 차가운 눈동자에 반사됨",
+        "시장이라는 거대한 짐승의 목줄을 쥐고 완벽한 타이밍을 기다리는 사냥꾼의 텐션 유지"
+      ],
+      "location": "서울 성북동 프라이빗 카페",
+      "summary": "전화를 끊은 한시우가 흔들림 없는 시선으로 모니터를 응시하며 폭풍을 기다린다.",
+      "tension_level": 9,
+      "title": "폭발의 전조",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 여의도 한미증권 VIP룸 앞 복도",
+  "target_beat": "박스권 횡보라는 외부 압박 속에서도 흔들리지 않는 한시우의 통제력을 보여주며, 에콰도르 복선을 통해 다가올 폭등의 기대감을 고조시킵니다.",
+  "time_flow": "2006년 2월 초, 정오 무렵 → 밤/심야",
+  "title": "폭풍을 기다리는 밤"
+}

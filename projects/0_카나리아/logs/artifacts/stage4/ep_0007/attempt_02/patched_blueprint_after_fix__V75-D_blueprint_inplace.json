@@ -1,0 +1,245 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "action_focused",
+    "content_hash": "5097ab0deeed794a4d4b8ebd54eb159b74e0cbd98e0a84c27ccceb110ac7f20b"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 2,
+    "disqualified": [],
+    "genre_strategy_contract": {
+      "action_semantics": [
+        "decisive business move",
+        "capital exposure",
+        "institutional pressure",
+        "governance or legal next gate"
+      ],
+      "authority_level": "route",
+      "authority_source": "stage3_genre_strategy_contract",
+      "contract_hash": "65f385e6b082bf69",
+      "contract_id": "investment_business_power.action_focused.v1",
+      "director_visible": true,
+      "factsheet_mutation": false,
+      "forbidden_defaults": [
+        "combat",
+        "chase",
+        "intruder",
+        "vehicle attack",
+        "physical crisis",
+        "thriller infiltration"
+      ],
+      "genre_family": "investment_business_power",
+      "genre_type": "investment",
+      "material_mutation": false,
+      "schema_version": "genre-strategy-contract-v1",
+      "strategy_name": "action_focused",
+      "tension_semantics": [
+        "deadline pressure",
+        "counterparty risk",
+        "liquidity or margin limit",
+        "reputation and access risk"
+      ]
+    },
+    "length": 1362,
+    "prevalidation_issue_count": 0,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 39104,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": true,
+        "raw_chars": 39104
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 55740,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 944260,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 50191,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4790,
+          "lane": "constraints"
+        },
+        {
+          "chars": 488,
+          "lane": "feedback_context"
+        }
+      ],
+      "genre_strategy_contracts": [
+        {
+          "authority_level": "route",
+          "contract_hash": "65f385e6b082bf69",
+          "contract_id": "investment_business_power.action_focused.v1",
+          "strategy_name": "action_focused"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 261,
+        "constraints": 4790,
+        "feedback_context": 488,
+        "hud_context": 10,
+        "prev_info": 50191
+      },
+      "shared_context_chars": 55252,
+      "total_chars": 55740
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "action_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T13:44:25.476308+00:00",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 6,
+    "source_prev_manuscript_hash": "823bb4e3396f0e6dec86c77a65abcd212e9a0e3858819093f4d2e6f44fbf96a1"
+  },
+  "core_tension": "60억 원 규모의 레버리지 포지션을 쥔 채 피 말리는 박스권 장세를 견뎌내는 심리적 압박",
+  "end_location": "서울 성북동 프라이빗 카페",
+  "ending_hook": "에콰도르. 이미 예견된 그 단어 하나가 글로벌 자본 시장의 심장부를 찢어발길 거대한 뇌관으로 작용할 시간이 다가오고 있었다.",
+  "ending_state": {
+    "location": "서울 성북동 프라이빗 카페",
+    "protagonist_status": "박성호의 불안을 통제하고 확신에 찬 상태로 NYMEX 야간 모니터링을 지속함",
+    "timeline": {
+      "표현": "2006년 1월 초, 심야"
+    }
+  },
+  "ep_num": 7,
+  "episode_number": 7,
+  "expected_ending": "흔들림 없는 확신 속에서 에콰도르 사태를 암시하며 본격적인 폭등을 기다림",
+  "integrated_scenario": "박성호의 필사적인 타이핑으로 포지션 세팅이 완료된 직후, 한시우는 한미증권 VIP룸 앞 복도를 빠져나와 1층 로비로 향했다. 60억 원이라는 거대한 자본이 3배 레버리지를 입고 시장의 심장부로 파고들었지만, 그의 걸음걸이에는 한 치의 흐트러짐도 없었다. 건물 밖으로 나서자 1월의 차가운 겨울바람이 코트 자락을 파고들었다. 택시에 올라탄 그는 행선지를 성북동으로 지시했다. 창밖으로 스쳐 가는 여의도의 마천루와 바쁘게 걷는 사람들의 모습은 평온하기 그지없었다. 그 누구도 조만간 터져 나올 글로벌 자재 시장의 파열음을 눈치채지 못한 채 각자의 일상을 굴리고 있었다.\n\n성북동의 한적한 골목에 위치한 프라이빗 카페. 아는 사람만 찾아오는 이곳은 보안과 조용함이 보장되는 완벽한 벙커였다. 구석의 독립된 부스 자리에 앉은 한시우는 테이블 위에 노트북을 펼쳤다. 안주머니에서 꺼낸 '2006년 1분기 글로벌 원자재 시황 분석 노트'를 옆에 두고, 통신망을 연결해 HTS 화면을 구동했다. 짙은 에스프레소 향이 코끝을 맴도는 가운데, 창밖으로는 어느새 겨울의 짧은 해가 지고 짙은 어둠이 깔리기 시작했다. 미국 뉴욕상업거래소(NYMEX)의 본장 개장 시간이 다가오고 있었다.\n\n밤이 깊어지고 본장이 열리자, WTI 원유 선물 3월물 호가창이 신경질적으로 점멸하기 시작했다. 유가는 60달러에서 61달러 사이를 오가며 지루하고 피 말리는 박스권 횡보 장세를 연출했다. 3배 레버리지의 특성상 0.1달러의 미세한 등락에도 수천만 원의 평가 손익이 춤을 추었다. 일반적인 투자자라면 모니터 앞에서 손톱을 물어뜯으며 패닉에 빠질 상황이었지만, 한시우의 표정은 호수처럼 고요했다. 그는 차트의 거래량 지표를 분석하며, 이것이 상승 랠리 직전 메이저 자본이 개미들의 물량을 털어내기 위해 인위적으로 누르는 전형적인 패턴임을 완벽하게 꿰뚫어 보고 있었다.\n\n그때, 테이블 위에 올려둔 휴대폰이 진동했다. 발신자는 박성호 PB였다. 전화를 받자마자 수화기 너머로 초조함에 짓눌린 목소리가 쏟아졌다. \"대, 대표님! 지금 본장 흐름이 심상치 않습니다. 61달러 저항선을 뚫지 못하고 계속 밀리고 있는데, 여기서 한 번만 크게 하방으로 꽂히면 마진콜 위험이...\" 한시우는 차가운 목소리로 그의 말을 단호하게 끊어냈다. \"내 지시 없이 연락하지 말라고 했을 텐데요.\" 박성호의 숨소리가 멈칫하는 사이, 한시우는 모니터의 붉은 숫자를 응시하며 나지막이 말했다. \"지난번에 말했던 에콰도르 사태, 벌써 잊었습니까?\" \"아...!\" 수화기 너머로 박성호가 헉 하고 숨을 들이켜는 소리가 들렸다. 이미 공유받았던 거대한 폭등의 뇌관을 그제야 다시 떠올린 것이다. \"더 이상의 보고는 금지합니다. 끊으세요.\" 한시우는 일방적으로 통화를 종료하고 휴대폰을 뒤집어 놓았다. 에콰도르 옥시덴탈 페트롤리엄의 계약 강제 해지. 그 사태가 불러올 거대한 나비효과를 기다리며, 굳게 닫힌 카페의 유리창 너머로 폭풍 전야의 짙은 어둠이 시장을 감싸고 있었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor",
+      "scene_transition_cue"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "씬 1과 2에서는 이동과 공간적 안정을 통해 폭풍 전야의 고요함을 조성하고, 씬 3에서 본장 개장과 함께 수천만 원이 오가는 레버리지의 압박감으로 텐션을 급격히 끌어올린다. 마지막 씬 4에서는 PB의 호들갑을 단숨에 제압하며 주인공의 압도적 통제력을 보여주는 동시에 다음 화로 이어질 거대한 사건의 단서를 던진다.",
+  "protagonist_state": {
+    "equipment": [
+      "20억 원 예치 통장",
+      "SW인베스트먼트 사업자 등록증 가승인 서류",
+      "2006년 1분기 글로벌 원자재 시황 분석 노트"
+    ],
+    "injuries": "없음",
+    "mood": "냉철함, 확신"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "굴복했지만 여전히 시장 변동성에 극도의 공포를 느낌",
+      "justification": "금지된 타이밍에 전화를 걸어 불안을 표출했으나, 한시우가 기논의된 에콰도르 사태를 상기시키자 다가올 파급력을 깨닫고 완전히 기가 질려버림",
+      "target": "박성호",
+      "to_state": "한시우의 절대적인 통제력 앞에서 반론을 제기하지 못하고 압도당함"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "박성호의 손끝이 필사적으로 키보드를 두드려 마침내 관리자 권한 우회와 포지션 세팅이 완료되었다. 한시우는 화면에 뜬 60억 원 규모의 WTI 롱 포지션을 확인한 뒤, 굳게 닫힌 VIP룸 문을 뒤로하고 복도를 걸어 나갔다. 방금 전 거대한 시한폭탄의 뇌관을 누르고 나온 사람이라고는 믿기지 않을 만큼 그의 걸음은 일정하고 차분했다. 1층 로비를 빠져나와 차가운 1월의 바람을 맞으며 빈 택시에 올라탄 그는 짧게 성북동을 행선지로 댔다.",
+      "description": "60억 원 규모의 레버리지 세팅을 마친 한시우가 평온한 얼굴로 여의도를 빠져나가는 장면.",
+      "goal": "한미증권을 빠져나와 야간 모니터링을 위한 장소로 이동한다.",
+      "key_events": [
+        "박성호가 관리자 권한을 우회해 포지션 세팅을 마친 것을 확인하고 VIP룸을 나섬",
+        "1층 로비를 빠져나와 차가운 1월의 바람을 맞으며 택시에 탑승함",
+        "행선지를 성북동으로 지시하고 창밖의 평온한 서울 도심을 관조함"
+      ],
+      "location": "서울 여의도 한미증권 VIP룸 앞 복도 -> 이동 중(택시 안)",
+      "summary": "박성호의 필사적인 타이핑으로 60억 규모의 레버리지 세팅이 완료된 직후, 한시우는 한미증권을 빠져나와 야간 모니터링을 위해 성북동으로 향한다.",
+      "tension_level": 4,
+      "title": "여의도를 등지며",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "성북동의 한적한 골목에 숨겨지듯 자리한 프라이빗 카페. 아는 사람만 찾아오는 이곳은 타인의 시선을 피해 거액을 굴리기에 완벽한 벙커였다. 구석의 독립된 부스에 앉은 한시우는 테이블 위에 노트북을 펼치고 HTS를 구동했다. 안주머니에서 꺼낸 시황 분석 노트를 옆에 둔 채, 그는 짙은 에스프레소 향과 함께 미국 본장 개장을 기다렸다.",
+      "description": "조용하고 은밀한 프라이빗 카페에서 미국 본장 개장을 앞두고 만반의 준비를 갖추는 장면.",
+      "goal": "야간 장세를 모니터링할 프라이빗한 공간을 확보하고 세팅을 완료한다.",
+      "key_events": [
+        "성북동의 한적한 골목에 위치한 프라이빗 카페 구석 자리에 착석함",
+        "노트북을 열어 HTS 화면을 구동하고 2006년 1분기 글로벌 원자재 시황 분석 노트를 펼침",
+        "커피를 주문한 뒤 뉴욕상업거래소(NYMEX) 본장 개장을 기다림"
+      ],
+      "location": "서울 성북동 프라이빗 카페",
+      "summary": "성북동의 인적이 드문 프라이빗 카페에 자리 잡은 한시우가 노트북과 노트를 세팅한다.",
+      "tension_level": 5,
+      "title": "성북동 벙커",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "밤이 깊어지고 마침내 NYMEX 본장이 열렸다. WTI 원유 3월물 호가창이 맹렬하게 점멸하며 60달러와 61달러 사이를 오가는 피 말리는 횡보 장세가 시작되었다. 3배 레버리지 탓에 0.1달러의 미세한 등락만으로도 수천만 원의 평가 손익이 춤을 추었다. 일반 투자자라면 패닉에 빠질 상황이었지만, 한시우는 거래량이 메말라 있는 차트를 보며 기관들의 노골적인 개미 털기임을 간파하고 차가운 미소를 지었다.",
+      "description": "미세한 등락에도 수천만 원이 오가는 3배 레버리지의 압박 속에서 한시우의 냉철함이 빛나는 장면.",
+      "goal": "피 말리는 횡보 장세 속에서 흔들리지 않고 포지션을 유지한다.",
+      "key_events": [
+        "밤이 깊어지며 NYMEX 본장이 개장하고 WTI 원유 3월물 호가창이 점멸하기 시작함",
+        "유가가 60달러에서 61달러 사이를 오가며 지루하고 위태로운 박스권 횡보 장세를 연출함",
+        "평가 손익이 요동치는 가운데, 한시우는 거래량 지표를 근거로 메이저 자본의 인위적인 하방 압력임을 확신함"
+      ],
+      "location": "서울 성북동 프라이빗 카페",
+      "summary": "미국 본장이 열리고 극심한 박스권 횡보가 이어지지만 한시우는 기관의 개미 털기 패턴을 간파하고 평온을 유지한다.",
+      "tension_level": 8,
+      "title": "박스권의 압박",
+      "type": "action_peak"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "그때 테이블 위의 휴대폰이 진동했다. 박성호 PB였다. 전화를 받자마자 61달러 저항선 돌파 실패와 마진콜 위험을 운운하는 다급한 목소리가 쏟아졌다. 한시우는 '내 지시 없이 연락하지 말라'며 그의 말을 차갑게 잘라냈다. 박성호가 숨을 삼키는 사이, 한시우는 모니터를 응시하며 나지막이 말했다. '지난번에 말했던 에콰도르 사태, 벌써 잊었습니까?' 그 한마디에 수화기 너머의 박성호는 헉 하고 숨을 들이켰다. 이미 공유받았던 거대한 폭등의 뇌관을 그제야 다시 떠올린 것이다. 한시우는 더 이상의 보고를 금지한 뒤 일방적으로 전화를 끊어버렸다.",
+      "description": "시장의 변동성에 잡아먹힌 PB와 미래를 아는 한시우의 심리적 대비, 그리고 폭등의 도화선을 암시하는 장면.",
+      "goal": "불안감을 이기지 못하고 연락한 PB의 보고를 차단하며 통제력을 과시한다.",
+      "key_events": [
+        "박스권 하단 터치에 기겁한 박성호가 지시를 어기고 다급하게 전화를 걸어옴",
+        "마진콜 위험을 운운하는 박성호의 보고를 한시우가 차가운 어조로 단호하게 끊어냄",
+        "한시우가 지난번 논의했던 '에콰도르 사태'를 상기시키자, 박성호가 그제야 다가올 폭등의 뇌관을 떠올리고 침묵함"
+      ],
+      "location": "서울 성북동 프라이빗 카페",
+      "summary": "초조해진 박성호 PB의 전화를 차갑게 끊어내며, 이미 논의했던 에콰도르 사태의 파급력을 상기시켜 그의 입을 다물게 한다.",
+      "tension_level": 9,
+      "title": "에콰도르의 뇌관",
+      "type": "dialogue_duel"
+    }
+  },
+  "start_location": "서울 여의도 한미증권 VIP룸 앞 복도",
+  "target_beat": "박스권 횡보 장세의 압박 견디기 및 에콰도르 사태 암시",
+  "time_flow": "2006년 1월 초, 정오 무렵 -> 심야 (미국 본장 개장 시간)",
+  "title": "폭풍 전야의 횡보"
+}

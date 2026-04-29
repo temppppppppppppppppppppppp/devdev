@@ -1,0 +1,250 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "dialogue_focused",
+    "content_hash": "cf40178f1912020782dd88673c46ecbb8490a6a553c780b275827ceba6fa9656"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=2; sample_anchors=SW인베스트먼트, 15억",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 2개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:21be5739d102",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1361,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 32037,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": true,
+        "raw_chars": 32037
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 61973,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 938027,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 56629,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4695,
+          "lane": "constraints"
+        },
+        {
+          "chars": 519,
+          "lane": "feedback_context"
+        }
+      ],
+      "genre_strategy_contracts": [
+        {
+          "authority_level": "route",
+          "contract_hash": "65f385e6b082bf69",
+          "contract_id": "investment_business_power.action_focused.v1",
+          "strategy_name": "action_focused"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 120,
+        "constraints": 4695,
+        "feedback_context": 519,
+        "hud_context": 10,
+        "prev_info": 56629
+      },
+      "shared_context_chars": 61454,
+      "total_chars": 61973
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "dialogue_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 2개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "frontier_basis_version": "stage3-frontier-basis-v1",
+    "generated_at": "2026-04-29T13:25:23.056941+00:00",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    },
+    "source_prev_manuscript_ep": 14,
+    "source_prev_manuscript_hash": ""
+  },
+  "core_tension": "지루한 횡보장 속 박성호의 의구심 대 한시우의 완벽한 통제력",
+  "end_location": "성북동 프라이빗 카페",
+  "ending_hook": "\"대, 대표님! 방금 연준에서...!\" 수화기 너머의 비명을 차갑게 자르며 한시우가 입술을 열었다. \"시끄럽습니다. 안전벨트나 매시죠.\"",
+  "ending_state": {
+    "location": "성북동 프라이빗 카페",
+    "protagonist_status": "두 달의 인내 끝에 금값 폭등의 도화선이 점화되는 것을 목격하며 전면전을 준비함",
+    "timeline": {
+      "표현": "2006년 7월"
+    }
+  },
+  "ep_num": 15,
+  "episode_number": 15,
+  "expected_ending": "두 달간의 횡보를 끝낼 거대한 폭등의 전조 포착",
+  "integrated_scenario": "SW인베스트먼트 오피스 VIP 상담실. 붉은 체결 내역이 폭포수처럼 쏟아진 모니터를 응시하던 한시우가 천천히 몸을 일으켰다. 박성호는 여전히 15억 원어치의 금 선물 롱 포지션이 뿜어내는 압박감에 숨을 죽이고 있었다. 한시우는 구겨진 수트 재킷을 털어내며 건조하게 입을 열었다. '앞으로 두 달입니다. 시장은 죽은 듯이 멈출 거고, 기관들은 공포를 조장하는 리포트를 쏟아낼 겁니다.' 박성호가 당황하여 되묻기도 전에, 한시우는 보안 휴대전화를 챙겨 들고 상담실을 나섰다. '내 지시가 있기 전까지 다이렉트 핫라인으로 먼저 연락하는 일은 없어야 할 겁니다.'\n\n시간은 무겁게 흘러 2006년 7월. 매미 소리가 짙어진 성북동의 인적 드문 프라이빗 카페. 구석 자리에 앉은 한시우는 미동도 없이 노트북 화면을 주시하고 있었다. 두 달째 금 가격은 피 말리는 박스권을 형성하고 있었다. 미세한 등락이 반복될 때마다 계좌의 평가 손익이 수천만 원씩 요동쳤지만, 한시우의 눈동자는 얼음장처럼 차가웠다. 그는 테이블 한쪽에 펼쳐둔 글로벌 원자재 시황 분석 노트의 '연준 금리 스탠스 변화' 항목을 만년필 끝으로 가볍게 두드렸다. 모든 것은 오차 없이 궤도 위를 달리고 있었다.\n\n그때, 침묵을 지키던 검은색 보안 휴대전화가 짧게 진동했다. 박성호였다. 전화를 받자마자 수화기 너머로 바짝 마른 목소리가 쏟아졌다. '대표님, 더 이상은 위험합니다. 메이저 기관들이 일제히 달러 강세와 금값 하락 리포트를 내고 있습니다. 두 달간 이자 비용만 수천만 원입니다. 지금이라도 늦지 않았으니 포지션을...' 한시우는 식어버린 아이스 아메리카노를 한 모금 마신 뒤, 그의 말을 서늘하게 잘라냈다. '그래서요. 남들이 던지니까 우리도 꼬리를 말고 도망치자 이겁니까.'\n\n한시우의 목소리에는 일말의 온기도 없었다. '시장의 겉면만 보지 말고 이면의 균열을 보십시오. 미국 서브프라임 모기지 연체율이 지난달 대비 0.5퍼센트 포인트 상승했습니다. 달러의 가치를 떠받치던 부동산 거품이 터지기 직전이라는 뜻입니다. 기관들의 매도 리포트는 개미들의 물량을 빼앗기 위한 마지막 흔들기에 불과합니다.' 쇳덩이 같은 논리에 박성호는 꿀먹은 벙어리가 되었다. 완벽한 거시경제의 흐름 앞에서 얄팍한 트레이더의 공포는 무력했다.\n\n통화를 끊으려던 찰나, 노트북 모니터 우측 하단에 띄워둔 외신 뉴스 단말기가 붉은색으로 점멸하기 시작했다. 'Fed, 금리 인상 사이클 중단 시사 가능성'이라는 짤막한 속보가 타전되는 순간, 멈춰 있던 금 선물 호가창이 미친 듯이 요동치기 시작했다. 수화기 너머에서도 이를 발견한 박성호가 비명에 가까운 소리를 질렀다. '대, 대표님! 방금 연준에서...!' 한시우는 차가운 미소를 지으며 입술을 열었다. '시끄럽습니다. 안전벨트나 매시죠.'",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반은 긴 횡보장의 지루함과 무게감을 묘사하며 텐션을 낮게 가져가고, 후반부 박성호와의 대화 듀얼을 통해 거시경제 통찰력을 과시하며 극적인 긴장감으로 끌어올린다.",
+  "protagonist_state": {
+    "equipment": [
+      "20억 원 예치 통장",
+      "SW인베스트먼트 사업자 등록증 가승인 서류",
+      "2006년 1분기 글로벌 원자재 시황 분석 노트",
+      "한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화",
+      "Exception Account 승인 문서 사본"
+    ],
+    "injuries": "없음",
+    "mood": "흔들림 없는 냉철함과 폭발을 기다리는 사냥꾼의 텐션"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "명령에 절대 복종하나 시장의 공포에 흔들림",
+      "justification": "기관의 매도 리포트라는 눈앞의 악재에 흔들리던 중, 서브프라임 모기지 연체율이라는 이면의 진실을 듣고 깨달음을 얻음",
+      "target": "박성호",
+      "to_state": "한시우의 압도적인 거시경제 통찰력에 다시 한번 지적 굴복을 경험함"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "SW인베스트먼트 오피스 VIP 상담실. 붉은 체결 내역이 폭포수처럼 쏟아진 모니터를 응시하던 한시우가 천천히 몸을 일으켰다. 박성호는 여전히 15억 원어치의 금 선물 롱 포지션이 뿜어내는 압박감에 숨을 죽이고 있었다. 한시우는 구겨진 수트 재킷을 털어내며 건조하게 입을 열었다. '앞으로 두 달입니다. 시장은 죽은 듯이 멈출 거고, 기관들은 공포를 조장하는 리포트를 쏟아낼 겁니다.' 박성호가 당황하여 되묻기도 전에, 한시우는 보안 휴대전화를 챙겨 들고 상담실을 나섰다. '내 지시가 있기 전까지 다이렉트 핫라인으로 먼저 연락하는 일은 없어야 할 겁니다.'",
+      "description": "포지션 진입 직후의 고요함 속에서 한시우는 당분간 시장이 멈출 것을 선언하고, 박성호의 보고 빈도를 제한한 뒤 오피스를 떠난다.",
+      "goal": "SW인베스트먼트 오피스를 떠나 장기전을 준비함",
+      "key_events": [
+        "한시우가 두 달간의 지루한 박스권을 예견하며 박성호에게 불필요한 연락을 차단함",
+        "외투를 챙겨 입고 SW인베스트먼트 오피스를 떠나 성북동으로 행선지를 옮김"
+      ],
+      "location": "서울 강남, SW인베스트먼트 오피스 VIP 상담실",
+      "summary": "한시우가 금 선물 포지션 세팅을 마친 뒤 박성호에게 장기 횡보장을 예고하며 상담실을 나선다.",
+      "tension_level": 4,
+      "title": "사냥터의 이전",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "시간은 무겁게 흘러 2006년 7월. 매미 소리가 짙어진 성북동의 인적 드문 프라이빗 카페. 구석 자리에 앉은 한시우는 미동도 없이 노트북 화면을 주시하고 있었다. 두 달째 금 가격은 피 말리는 박스권을 형성하고 있었다. 미세한 등락이 반복될 때마다 계좌의 평가 손익이 수천만 원씩 요동쳤지만, 한시우의 눈동자는 얼음장처럼 차가웠다. 그는 테이블 한쪽에 펼쳐둔 글로벌 원자재 시황 분석 노트의 '연준 금리 스탠스 변화' 항목을 만년필 끝으로 가볍게 두드렸다. 모든 것은 오차 없이 궤도 위를 달리고 있었다.",
+      "description": "2006년 7월, 변동성 없는 금 시장. 한시우는 성북동의 인적 드문 카페에서 노트북으로 HTS를 주시하며 다가올 폭발을 기다린다.",
+      "goal": "성북동 카페에서 지루한 횡보장을 견뎌내는 한시우의 내면 통제력 묘사",
+      "key_events": [
+        "성북동 프라이빗 카페 구석 자리에서 횡보하는 금 차트를 흔들림 없이 모니터링함",
+        "시황 분석 노트를 펼쳐 연준 금리 인상 중단 시그널이 임박했음을 재확인함"
+      ],
+      "location": "성북동 프라이빗 카페",
+      "summary": "두 달 후, 성북동 프라이빗 카페에서 금 차트의 미세한 변동을 관조하며 인내심을 유지한다.",
+      "tension_level": 6,
+      "title": "두 달의 침묵",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "그때, 침묵을 지키던 검은색 보안 휴대전화가 짧게 진동했다. 박성호였다. 전화를 받자마자 수화기 너머로 바짝 마른 목소리가 쏟아졌다. '대표님, 더 이상은 위험합니다. 메이저 기관들이 일제히 달러 강세와 금값 하락 리포트를 내고 있습니다. 지금이라도 늦지 않았으니 포지션을...' 한시우는 식어버린 아이스 아메리카노를 한 모금 마신 뒤, 그의 말을 서늘하게 잘라냈다. '그래서요. 남들이 던지니까 우리도 꼬리를 말고 도망치자 이겁니까.' 한시우의 목소리에는 일말의 온기도 없었다. '시장의 겉면만 보지 말고 이면의 균열을 보십시오. 미국 서브프라임 모기지 연체율이 지난달 대비 0.5퍼센트 포인트 상승했습니다. 달러의 가치를 떠받치던 부동산 거품이 터지기 직전이라는 뜻입니다.'",
+      "description": "보안 휴대전화로 걸려온 박성호의 전화. 기관들의 매도 리포트를 근거로 흔들리는 그를 한시우가 거시경제의 이면을 짚어주며 완벽히 제압한다.",
+      "goal": "박성호의 의구심을 대화로 차단하고 통제력을 재확인함",
+      "key_events": [
+        "박성호가 다이렉트 핫라인으로 전화를 걸어와 금 시장의 하방 압력과 기관의 부정적 리포트를 보고함",
+        "한시우가 달러 약세와 서브프라임의 초기 균열을 근거로 박성호의 얄팍한 논리를 부수고 대기를 명령함"
+      ],
+      "location": "성북동 프라이빗 카페",
+      "summary": "불안감을 이기지 못한 박성호가 전화를 걸어 익절/손절을 건의하지만 한시우가 차갑게 묵살한다.",
+      "tension_level": 8,
+      "title": "흔들리는 수족",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "쇳덩이 같은 논리에 박성호는 꿀먹은 벙어리가 되었다. 완벽한 거시경제의 흐름 앞에서 얄팍한 트레이더의 공포는 무력했다. 통화를 끊으려던 찰나, 노트북 모니터 우측 하단에 띄워둔 외신 뉴스 단말기가 붉은색으로 점멸하기 시작했다. 'Fed, 금리 인상 사이클 중단 시사 가능성'이라는 짤막한 속보가 타전되는 순간, 멈춰 있던 금 선물 호가창이 미친 듯이 요동치기 시작했다. 수화기 너머에서도 이를 발견한 박성호가 비명에 가까운 소리를 질렀다.",
+      "description": "지루했던 두 달의 기다림이 끝나가는 순간. 모니터 한구석에 연준의 스탠스 변화를 암시하는 속보가 타전되고, 다급해진 박성호의 목소리를 한시우가 차갑게 자른다.",
+      "goal": "다음 화의 폭등을 예고하는 징후 포착과 대화 중단 훅",
+      "key_events": [
+        "한시우의 HTS 화면 구석에 연준의 금리 인상 중단 가능성을 시사하는 외신 속보가 깜빡임",
+        "박성호가 뉴스를 확인하고 다급히 소리치는 순간 한시우가 서늘한 대사로 통화를 끊어버림"
+      ],
+      "location": "성북동 프라이빗 카페",
+      "summary": "전화를 끊기 직전, 외신 단말기에 연준 관련 속보가 뜨며 횡보장의 끝을 알린다.",
+      "tension_level": 9,
+      "title": "초읽기",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 강남, SW인베스트먼트 오피스 VIP 상담실",
+  "target_beat": "금 선물 시장의 지루한 횡보장 속에서 흔들리는 조력자를 통제하고 폭등의 서막을 맞이함",
+  "time_flow": "2006년 5월 20일 오후 → 2006년 7월",
+  "title": "폭풍 전야의 카페"
+}
