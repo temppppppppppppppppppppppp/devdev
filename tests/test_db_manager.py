@@ -1641,6 +1641,39 @@ def test_get_strategy_win_rates_supports_stage2_filters(db):
     assert result["creative"] == 1.0
 
 
+def test_get_strategy_win_rates_excludes_runtime_overridden_director_pass(db):
+    db.save_director_selection(
+        4,
+        1,
+        "A",
+        "balanced",
+        "PASS",
+        score=98,
+        selection_reason="director liked it",
+        final_verdict="REJECT",
+        downstream_override_applied=True,
+        stage=4,
+    )
+    db.save_director_selection(
+        4,
+        2,
+        "B",
+        "tension",
+        "PASS",
+        score=91,
+        selection_reason="fully accepted",
+        final_verdict="PASS",
+        downstream_override_applied=False,
+        stage=4,
+    )
+
+    result = db.get_strategy_win_rates(lookback=10)
+
+    assert result["total"] == 1
+    assert result["tension"] == 1.0
+    assert "balanced" not in result
+
+
 def test_save_director_selection_persists_firewall_metadata(db):
     db.save_director_selection(
         4,

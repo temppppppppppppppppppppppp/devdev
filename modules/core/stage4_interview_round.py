@@ -2589,7 +2589,7 @@ class Stage4InterviewRound:
 
         latest_row = same_episode_rows[0]
         latest_verdict = str(latest_row.get("verdict") or "").strip().upper()
-        if latest_verdict in {"PASS", "PASS_WITH_FIX"}:
+        if latest_verdict != "REJECT":
             return {}
 
         hydrated = self._hydrate_stage4_previous_attempt_from_row(

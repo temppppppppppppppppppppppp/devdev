@@ -8,12 +8,15 @@ V68 lazy init: state_tracker, world_state, fact_ledger를 self.app에 할당
 """
 # utf8-hygiene: allow-file -- regex-heavy Stage3 operator/orchestration helpers intentionally include punctuation classes.
 
+import hashlib as _hashlib
 import json as _json
 import logging as _logging
 import re as _re
 import time as _time
 import traceback as _traceback
 from dataclasses import dataclass
+from datetime import UTC
+from datetime import datetime as _datetime
 
 from modules.core.artifact_logging import build_candidate_key, normalize_artifact_meta, snapshot_logged_artifact
 from modules.core.authoritative_continuity_projection import (
@@ -3029,9 +3032,31 @@ class Stage3Orchestrator:
     ):
         ctx = self.ctx
         if isinstance(blueprint, dict):
+            blueprint.pop("_frontier_status", None)
             validate_meta = (
                 pipeline_result.get("phases", {}).get("validate", {}) if isinstance(pipeline_result, dict) else {}
             )
+            source_prev_manuscript_ep = int(working_ep or 0) - 1 if int(working_ep or 0) > 1 else 0
+            source_prev_manuscript_hash = ""
+            if source_prev_manuscript_ep > 0:
+                try:
+                    db = getattr(getattr(ctx, "current_project", None), "db", None)
+                    prev_row = db.get_manuscript(source_prev_manuscript_ep) if db else None
+                    if isinstance(prev_row, dict):
+                        prev_text = str(
+                            prev_row.get("content")
+                            or prev_row.get("corrected_manuscript")
+                            or prev_row.get("manuscript")
+                            or ""
+                        )
+                    elif prev_row:
+                        prev_text = str(prev_row)
+                    else:
+                        prev_text = ""
+                    if prev_text:
+                        source_prev_manuscript_hash = _hashlib.sha256(prev_text.encode("utf-8")).hexdigest()
+                except Exception:
+                    source_prev_manuscript_hash = ""
             binding_issue_count = 0
             if isinstance(validate_meta, dict):
                 try:
@@ -3064,6 +3089,10 @@ class Stage3Orchestrator:
                 "revision_required": revision_required,
                 "last_score": pipeline_result.get("last_score", 0),
                 "binding_prevalidation_issue_count": binding_issue_count,
+                "generated_at": _datetime.now(UTC).isoformat(),
+                "frontier_basis_version": "stage3-frontier-basis-v1",
+                "source_prev_manuscript_ep": source_prev_manuscript_ep,
+                "source_prev_manuscript_hash": source_prev_manuscript_hash,
             }
             if binding_categories:
                 blueprint["_stage3_meta"]["binding_prevalidation_categories"] = binding_categories

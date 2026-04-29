@@ -3817,7 +3817,9 @@ class DBManager:
         query = (
             "SELECT selected_strategy "
             "FROM director_selections "
-            "WHERE verdict = 'PASS' AND selected_strategy IS NOT NULL AND selected_strategy != '' "
+            "WHERE COALESCE(NULLIF(final_verdict, ''), verdict) = 'PASS' "
+            "AND COALESCE(downstream_override_applied, 0) = 0 "
+            "AND selected_strategy IS NOT NULL AND selected_strategy != '' "
         )
         params: list[object] = []
         if selected_label is not None:
