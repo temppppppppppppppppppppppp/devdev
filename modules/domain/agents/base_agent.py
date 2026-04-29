@@ -1981,7 +1981,20 @@ class BaseAgent:
             return AgentErrorType.TIMEOUT
         elif "quota" in error_str or "rate" in error_str or "429" in error_str:
             return AgentErrorType.QUOTA_EXCEEDED
-        elif "connection" in error_str or "network" in error_str or "ssl" in error_str:
+        elif any(
+            marker in error_str
+            for marker in (
+                "connection",
+                "network",
+                "ssl",
+                "disconnect",
+                "disconnected",
+                "remote host",
+                "winerror 10054",
+                "원격 호스트",
+                "강제로 끊",
+            )
+        ):
             return AgentErrorType.NETWORK_ERROR
         elif "json" in error_str or "parse" in error_str or "decode" in error_str:
             return AgentErrorType.MALFORMED_RESPONSE
@@ -2029,6 +2042,12 @@ class BaseAgent:
             "connection",
             "network",
             "ssl",
+            "disconnect",
+            "disconnected",
+            "remote host",
+            "winerror 10054",
+            "원격 호스트",
+            "강제로 끊",
             "socket",
             "refused",
             "reset",

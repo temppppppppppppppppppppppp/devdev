@@ -1,0 +1,322 @@
+{
+  "_director_compare_meta": {
+    "comparison_notes": "후보 3은 절대 금지된 '내공' 수치를 사용하였고 에피소드 간 부상 상태의 연속성 오류가 발생했습니다. 후보 2는 서사 흐름이 자연스럽고 심리 상태 서술 등 제약 조건을 완벽히 준수하여 가장 우수합니다.",
+    "director_decision": "PASS",
+    "feedback": "전반적인 서사 흐름과 수치 계산이 정확하며, 시스템의 자동 교정 외에 추가적인 수정이 필요하지 않음.",
+    "fix_scope": "inplace",
+    "quality_gate_reasons": [],
+    "quality_gate_triggered": false,
+    "selection_reason": "제약 조건 완벽 준수 및 매끄러운 서사 전개"
+  },
+  "_ensemble_meta": {
+    "all_scores": [
+      [
+        "conservative",
+        78
+      ],
+      [
+        "balanced",
+        74
+      ],
+      [
+        "creative",
+        70
+      ]
+    ],
+    "best_score": 74,
+    "best_strategy": "balanced",
+    "candidate_index": 1,
+    "diversity": {
+      "high_similarity_pairs": [],
+      "max_similarity": 0.35,
+      "pairwise": [
+        {
+          "pair": "A-B",
+          "similarity": 0.35
+        },
+        {
+          "pair": "A-C",
+          "similarity": 0.34
+        },
+        {
+          "pair": "B-C",
+          "similarity": 0.31
+        }
+      ],
+      "warning": ""
+    },
+    "score": 74,
+    "strategy": "balanced",
+    "total_candidates": 3
+  },
+  "_strategy": "balanced",
+  "arc_drive": {
+    "narrative_drive": {
+      "antagonist_reaction_plan": {
+        "reaction_phase": "초기 경계 및 정보 수집",
+        "reaction_plan_details": [
+          {
+            "description": "초기 '원유로 찍었다'는 소문을 단순한 '막내의 운 좋은 한탕'으로 치부. 직접적인 견제보다는 '철없는 동생'으로 치부하며 무시. 다만, 가족 회의 등에서 한시우의 이름이 언급될 때마다 미묘한 불편함을 드러냄.",
+            "phase": "1. 무시와 경멸 (Block 4 ~ Block 5)"
+          },
+          {
+            "description": "한시우의 수익 규모가 예상치를 지속적으로 뛰어넘고, 일반적인 개인 투자자가 알기 어려운 정보나 대형 딜에 개입하는 것이 포착되자, 형들이 고용한 사설 정보원이나 재벌가 내부 감시망을 통해 한시우의 자금 출처, 투자 방식, 주변 인물 등에 대한 은밀한 조사를 시작. '혹시 외부 세력과 연루된 것이 아닌가?' 하는 의심을 품게 됨.",
+            "phase": "2. 은밀한 정보 수집 및 감시 (Block 6 ~ Block 9)",
+            "trigger": "한시우가 100억 원 이상의 자산을 단기간에 형성하거나, 언론에 '재벌가 막내의 투자 성공' 기사가 보도될 경우."
+          },
+          {
+            "description": "조사 결과가 심상치 않다고 판단될 경우, 재벌가 내부의 인맥을 동원하여 한시우에게 불리한 정보를 흘리거나, 그가 접근하려는 투자 기회에 미묘한 방해 공작을 펼칠 가능성. (예: 특정 정보원의 접근 차단, 투자 대상 기업에 대한 부정적 루머 살포, 언론을 통한 이미지 훼손 시도 등)",
+            "foreshadows": "형제들 간의 미묘한 신경전, 한시우에게 오는 알 수 없는 방해 요소들, 투자 정보의 갑작스러운 왜곡.",
+            "phase": "3. 간접적인 압박 및 견제 (Block 10 ~)"
+          }
+        ],
+        "target_antagonists": [
+          {
+            "name": "한시우의 형들 (재벌가)",
+            "tag": "hostile"
+          },
+          {
+            "name": "기존 금융권 기득권 세력",
+            "tag": "antagonist_potential"
+          }
+        ],
+        "villain_motivation": "재벌가 내 권력 구도 유지 및 한시우의 독자적인 성장 억제. 그들의 기존 질서와 통제권에 대한 위협 제거. 특히, 한시우가 자신들의 사업 영역에 직간접적으로 영향을 미칠 수 있는 자본을 확보하는 것을 경계."
+      },
+      "arc_goal": {
+        "arc_name": "초기 자본 증식과 시장 내 영향력 확대",
+        "concrete_reward": {
+          "description": "총 자산 1,000억 원 (100 Billion KRW) 달성 및 이를 통한 특정 대형 금융 상품/네트워크 접근권 확보",
+          "significance": "재벌가 형들의 시야에 '위협적인 존재'로 각인될 수 있는 최소한의 자산 규모 확보. 개인 투자자를 넘어선 기관급 영향력 행사 기반 마련. 향후 금융위기 시 대규모 숏 포지션을 위한 자본금 확보.",
+          "type": "financial_milestone"
+        },
+        "duration_estimate": "5~10화 (Block 4 ~ Block 13)",
+        "secondary_rewards": [
+          "금융 시장 내 '예외적 존재'로서의 명성 공고화 및 언론의 주목",
+          "주요 정보원 및 인맥 구축 시작 (예: 해외 헤지펀드 관계자, 경제 관료 등)"
+        ]
+      },
+      "narrative_pacing": {
+        "core_scene_ratio": "75%",
+        "explanation": "주인공의 회귀 지식 기반 예측과 실제 시장 반응, 그리고 이를 통한 심리적, 재정적 변동에 집중하여 높은 긴장감과 몰입도를 유지. 정보 수집 및 분석, 인물 간의 심리전은 핵심 장면으로 다룸."
+      },
+      "protagonist_motivation": {
+        "core_deficiency_addressed": "Block 3의 성공으로 '경제적 안정'과 '권위' 결핍 해소의 실마리를 잡았으나, 이는 시작에 불과함. 20억은 장기 목표 달성을 위한 미미한 자본이며, 증권사 내 '예외적 존재'는 아직 재벌가 전체에 대한 '권위'로 확장되지 못함.",
+        "immediate_catalyst": "첫 성공으로 얻은 자신감과 시장 통찰력에 대한 확신. 더 큰 판에서 자신의 능력을 증명하고, 형들의 시야에 들어갈 만한 자본과 영향력을 확보하려는 욕망 증폭.",
+        "long_term_drive_connection": "자신을 무시했던 형들에게 실질적인 위협이 될 만한 자산 규모를 구축하고, 시장의 광기를 '통제권'으로 전환하여 '자기 삶을 완전히 되찾는' 궁극적 목표를 향한 필수적인 초기 단계.",
+        "unaddressed_deficiency": "신체적 기능 저하 (Martial)"
+      }
+    },
+    "short_term_objective": "서사적 긴장감 고조",
+    "status": "LOCKED"
+  },
+  "arc_no": 3,
+  "beat_sequence": [
+    "제 10화: 유가 횡보 장세 속에서 박성호 PB와 리스크팀의 익절 압박이 들어오지만, 한시우는 에콰도르 사태를 예견하며 홀딩을 지시함.",
+    "제 11화: 에콰도르 정부의 옥시덴탈 계약 강제 해지 뉴스가 터지며 시장에 자원 국유화 공포가 확산되고 유가가 급등함.",
+    "제 12화: 유가 75달러 돌파 시점에서 한시우가 정확히 포지션 절반을 시장가로 익절하여 5억 원의 순수익을 확정 지음.",
+    "제 13화: 압도적 수익률 앞에 박성호와 리스크팀이 굴복하고, 한시우는 제약이 없는 'Exception Account' 등급을 부여받으며 다음 타겟(금, 7월 중동)을 주시함."
+  ],
+  "constraint_summary": "█                   [V60.28] 절대 금지 - 위반 시 즉시 REJECT                    █\n🚨🚨🚨 다음 아이템은 절대 획득하지 마세요! 🚨🚨🚨\n❌ '20억 원이 예치된 시중은행 VIP 법인 계좌 통장' - Arc 1에서 이미 획득함 → 다시 획득 금지!\n❌ 'SW인베스트먼트 사업자 등록증 가승인 서류' - Arc 1에서 이미 획득함 → 다시 획득 금지!\n❌ '2006년 1분기 글로벌 원자재 시황 분석 노트' - Arc 1에서 이미 획득함 → 다시 획득 금지!\n❌ '통장' - Arc 1에서 이미 획득함 → 다시 획득 금지!\n❌ '한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화' - Arc 2에서 이미 획득함 → 다시 획득 금지!\n│ 🚫 MUST NOT DO (절대 금지 - 위반 시 즉시 REJECT)                               │\n│ [아이템 획득 금지 - 이미 보유 중]                                                │\n│   (수여물 금지 목록 없음)                                                     │",
+  "cross_stage_authority_packet": {
+    "contract_version": "cross_stage_authority_packet.v1",
+    "numeric_carryover": {},
+    "opening_carryover": {
+      "location": "서울 강남, SW인베스트먼트 오피스 VIP 상담실, 심리 상태: 완전한 통제감",
+      "location_source": "state_constraints.arc_end_state.location",
+      "world_joint": "에콰도르 사태로 인한 중남미 자원 국유화 공포가 시장에 각인되었으며, 증권사 내 한시우의 등급이 예외적 존재로 격상되어 향후 고위험/고레버리지 거래의 제약이 해제됨.",
+      "world_joint_source": "joint_docs.world_joint"
+    },
+    "protagonist_carryover": {
+      "equipment": [
+        "['20억 원이 예치된 시중은행 VIP 법인 계좌 통장'",
+        "'SW인베스트먼트 사업자 등록증 가승인 서류'",
+        "'2006년 1분기 글로벌 원자재 시황 분석 노트'",
+        "'한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화'",
+        "'Exception Account 승인 문서 사본'"
+      ],
+      "equipment_source": "state_constraints.arc_end_state.equipment",
+      "injuries": "없음",
+      "injuries_source": "state_constraints.arc_end_state.injuries"
+    },
+    "provenance": {
+      "arc_no": 3,
+      "emitted_by": "Stage2Finalizer",
+      "ep_end": 13,
+      "ep_start": 10,
+      "legacy_summary_surface": "advisory_flags.carryover_authority",
+      "legacy_text_surface": "[Carryover Authority Packet]",
+      "stage": 2
+    },
+    "source_precedence": {
+      "numeric_carryover": [
+        "state_constraints.arc_end_state.capital",
+        "state_constraints.arc_end_state.total_assets",
+        "state_constraints.arc_end_state.portfolio_position",
+        "state_constraints.investment_calc.final_cash",
+        "state_constraints.investment_calc.final_total_assets"
+      ],
+      "opening_carryover": [
+        "state_constraints.arc_end_state.location",
+        "joint_docs.final_location",
+        "joint_docs.world_joint"
+      ],
+      "protagonist_carryover": [
+        "state_constraints.arc_end_state.equipment",
+        "joint_docs.physical_inventory",
+        "state_constraints.arc_end_state.injuries",
+        "state_constraints.arc_end_state.internal_energy"
+      ]
+    }
+  },
+  "ep_count": 4,
+  "ep_end": 13,
+  "ep_start": 10,
+  "episode_details": [
+    {
+      "details": [
+        "SW인베스트먼트 대표실 — 한시우 — 유가 횡보 장세 속 박성호 PB의 익절 압박을 거절하며 에콰도르 사태 예견"
+      ],
+      "ep_num": 10
+    },
+    {
+      "details": [
+        "SW인베스트먼트 대표실 — 한시우 — 에콰도르 옥시덴탈 페트롤리엄 계약 강제 해지 뉴스 속보 확인 및 유가 폭등 관망"
+      ],
+      "ep_num": 11
+    },
+    {
+      "details": [
+        "SW인베스트먼트 대표실 — 한시우 — 유가 75달러 돌파 시점에 절반 익절 지시하여 5억 원의 순수익 확정"
+      ],
+      "ep_num": 12
+    },
+    {
+      "details": [
+        "한미증권 본사 VIP룸 — 한시우, 박성호 — 박성호의 경외심 표출 및 Exception Account 승인 서류 수령, 금 가격 상승 뉴스 확인"
+      ],
+      "ep_num": 13
+    }
+  ],
+  "global_arc_no": 3,
+  "hybrid_composition": {
+    "mixing_logic": "기본",
+    "primary": "standard",
+    "secondary": []
+  },
+  "joint_docs": {
+    "final_location": "서울 강남, SW인베스트먼트 오피스 VIP 상담실, 심리 상태: 완전한 통제감",
+    "physical_inventory": [
+      "['20억 원이 예치된 시중은행 VIP 법인 계좌 통장'",
+      "'SW인베스트먼트 사업자 등록증 가승인 서류'",
+      "'2006년 1분기 글로벌 원자재 시황 분석 노트'",
+      "'한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화'",
+      "'Exception Account 승인 문서 사본'"
+    ],
+    "world_joint": "에콰도르 사태로 인한 중남미 자원 국유화 공포가 시장에 각인되었으며, 증권사 내 한시우의 등급이 예외적 존재로 격상되어 향후 고위험/고레버리지 거래의 제약이 해제됨."
+  },
+  "pacing_decision": {
+    "density_focus": "시장의 변동성에 따른 주변 인물(PB, 리스크팀)의 압박과 주인공의 심리적 우위를 대조하는 데 집중하며, 수익 실현 후의 보상(Exception 계좌) 획득 과정을 밀도 있게 배치함.",
+    "ep_count_reasoning": "에콰도르 사태라는 명확한 역사적 이벤트와 그에 따른 익절 타이밍, 그리고 증권사 내부의 태도 변화를 다루기 위해 4화 분량의 표준 전개가 적합함.",
+    "pace_mode": "standard"
+  },
+  "rationale_digest": "",
+  "seed_injection": null,
+  "seeds": null,
+  "semantic_carryover": {},
+  "state_changes": {
+    "major_items": [
+      {
+        "action": "획득",
+        "episode": 13,
+        "name": "Exception Account 승인 문서 사본"
+      },
+      {
+        "action": "획득",
+        "episode": 13,
+        "name": "절반 청산된 WTI 원유 선물 거래 내역서"
+      }
+    ],
+    "npc_deaths": [],
+    "npc_introductions": [],
+    "npc_martial_state_changes": [],
+    "relationship_changes": [
+      {
+        "episode": 13,
+        "from": "당혹, 반신반의",
+        "npc": "박성호",
+        "to": "경외. 예외 처리의 witness"
+      },
+      {
+        "episode": null,
+        "from": "당혹, 반신반의",
+        "justification": "",
+        "npc": "박성호 (담당 PB)",
+        "to": "경외. '이 사람은 뭔가 다르다'를 넘어서 예외 처리의 witness가 된다",
+        "trigger": ""
+      },
+      {
+        "episode": null,
+        "from": "경고, 압박",
+        "justification": "",
+        "npc": "증권사 리스크관리팀",
+        "to": "경고 대신 예외 분류를 승인. 이제는 막는 부서가 아니라 규정 옆자리를 여는 부서가 된다",
+        "trigger": ""
+      }
+    ],
+    "resolved_plots": [],
+    "skill_acquisitions": [],
+    "timeline": {
+      "end": {
+        "day": 17,
+        "description": "에콰도르 사태 직후 익절 완료 시점",
+        "month": 5,
+        "year": 2006
+      },
+      "start": {
+        "day": 1,
+        "description": "이전 Arc 종료로부터 약 6주 후",
+        "month": 4,
+        "year": 2006
+      }
+    }
+  },
+  "state_constraints": {
+    "arc_end_state": {
+      "equipment": [
+        "['20억 원이 예치된 시중은행 VIP 법인 계좌 통장'",
+        "'SW인베스트먼트 사업자 등록증 가승인 서류'",
+        "'2006년 1분기 글로벌 원자재 시황 분석 노트'",
+        "'한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화'",
+        "'Exception Account 승인 문서 사본'"
+      ],
+      "injuries": "없음",
+      "location": "서울 강남, SW인베스트먼트 오피스 VIP 상담실, 심리 상태: 완전한 통제감"
+    },
+    "arc_start_state": {
+      "capital": "23억원",
+      "equipment": [
+        "20억 원이 예치된 시중은행 VIP 법인 계좌 통장",
+        "SW인베스트먼트 사업자 등록증 가승인 서류",
+        "2006년 1분기 글로벌 원자재 시황 분석 노트",
+        "한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화"
+      ],
+      "injuries": "없음",
+      "location": "SW인베스트먼트 대표실",
+      "portfolio_position": "WTI 6월물 매수 포지션 (미실현 수익 3억원 포함)",
+      "total_assets": "23억원"
+    },
+    "items_acquired": [],
+    "items_consumed": []
+  },
+  "status_shadow": {
+    "expected_injuries": "없음",
+    "internal_energy_loss": "변동 없음",
+    "item_consumption": [
+      "WTI 원유 선물 매수 포지션 절반 (청산)"
+    ],
+    "key_stat_change": "변동 없음"
+  },
+  "tactical_doc": "제 10화:\n[시작 상태] 위치: SW인베스트먼트 대표실, 심리 상태: 차분함, 부상: 없음, 소지품: [\"20억 원이 예치된 시중은행 VIP 법인 계좌 통장\", \"SW인베스트먼트 사업자 등록증 가승인 서류\", \"2006년 1분기 글로벌 원자재 시황 분석 노트\", \"한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화\"], 총자산: 23억원, 자본: 23억원, 포지션: WTI 6월물 매수 포지션 (미실현 수익 3억원 포함)\n이전 시기 종료로부터 약 6주가 지난 2006년 4월. SW인베스트먼트 대표실의 공기는 팽팽했다. WTI 원유 가격이 배럴당 70달러 선에서 횡보하며 시장의 피로감이 극에 달해 있었다. 언론은 연일 '유가 고점론'과 '조정 임박'을 알리는 분석 기사를 쏟아냈다. 책상 위 한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화가 울렸다. 발신자는 박성호 PB였다. \"대표님, 이제 그만 익절하시죠. 이미 40% 가까운 수익입니다. 리스크 관리팀에서도 3배 레버리지 포지션을 이 이상 끌고 가는 건 위험하다고 경고가 내려왔습니다. 충분히 버셨잖아요.\" 박성호의 목소리에는 조급함이 묻어났다. 단기 이익에 급급한 전형적인 금융권의 생리였다. 하지만 한시우는 붉은색과 푸른색이 교차하는 HTS 모니터를 응시하며 단호하게 선을 그었다. \"아직이야. 에콰도르가 터진다.\" 수화기 너머로 박성호가 멍해진 목소리로 반문했다. \"네? 에콰도르요?\" 한시우는 지난겨울 카페에서 중얼거렸던 그 단어를 다시 꺼내 들며, 시장의 공포를 역이용할 준비를 마쳤다.\n[종료 상태] 위치: SW인베스트먼트 대표실, 심리 상태: 굳건한 확신, 부상: 없음, 소지품: ['20억 원이 예치된 시중은행 VIP 법인 계좌 통장', 'SW인베스트먼트 사업자 등록증 가승인 서류', '2006년 1분기 글로벌 원자재 시황 분석 노트', '한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화']\n\n제 11화:\n[시작 상태] 위치: SW인베스트먼트 대표실, 심리 상태: 굳건한 확신, 부상: 없음, 소지품: ['20억 원이 예치된 시중은행 VIP 법인 계좌 통장', 'SW인베스트먼트 사업자 등록증 가승인 서류', '2006년 1분기 글로벌 원자재 시황 분석 노트', '한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화']\n5월 중순으로 접어들며 유가의 변동성은 더욱 심해졌다. 며칠간 이어진 철야 모니터링으로 한시우의 눈가에는 가벼운 피로가 맺혔지만, 그의 집중력은 오히려 날카로워졌다. 박성호 PB는 하루가 멀다 하고 전화를 걸어와 불안감을 호소했다. \"대표님, 지금이라도 늦지 않았습니다. 수익이 깎이고 있습니다!\" 한시우는 2006년 1분기 글로벌 원자재 시황 분석 노트를 펼치며 차갑게 대꾸했다. \"흔들리지 마세요. 유가는 80까지 간다.\" 그리고 운명의 2006년 5월 16일. 글로벌 뉴스 채널에서 긴급 속보가 타전되었다. '에콰도르 정부, 미국 옥시덴탈 페트롤리엄 운영 계약 강제 해지 선언.' 시장은 발작했다. 일일 10만 배럴의 원유가 시장에서 증발한다는 소식보다 더 무서운 것은, 중남미 산유국 전체로 번질 수 있는 '자원 국유화 도미노 공포'였다. 한시우가 기다렸던 완벽한 패닉 바잉의 순간이 도래한 것이다.\n[종료 상태] 위치: SW인베스트먼트 대표실, 심리 상태: 예리한 사냥꾼의 감각, 부상: 없음, 소지품: ['20억 원이 예치된 시중은행 VIP 법인 계좌 통장', 'SW인베스트먼트 사업자 등록증 가승인 서류', '2006년 1분기 글로벌 원자재 시황 분석 노트', '한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화']\n\n제 12화:\n[시작 상태] 위치: SW인베스트먼트 대표실, 심리 상태: 예리한 사냥꾼의 감각, 부상: 없음, 소지품: ['20억 원이 예치된 시중은행 VIP 법인 계좌 통장', 'SW인베스트먼트 사업자 등록증 가승인 서류', '2006년 1분기 글로벌 원자재 시황 분석 노트', '한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화']\n에콰도르 발 뉴스가 전해진 직후, WTI 원유 가격은 미친 듯이 치솟아 단숨에 배럴당 75달러를 돌파했다. HTS 화면은 터질 듯한 붉은색으로 물들었다. 한시우는 보안 휴대전화를 들어 박성호에게 짧고 강렬한 지시를 내렸다. \"지금 당장 포지션 절반 익절합니다. 시장가로 던지세요.\" 박성호는 떨리는 손으로 주문을 실행했다. 7.5억 원의 투입분에서 정확히 5억 원의 순수익이 확정되는 순간이었다. 나머지 7.5억 원의 포지션은 여전히 홀딩 상태로 남겨두었다. 계좌의 총 자산은 순식간에 30억 원(현금 17.5억, 미실현 가치 12.5억)으로 불어났다. 에콰도르 사태 직후의 단기 고점을 정확히 짚어낸 신들린 타이밍이었다. 만약 여기서 욕심을 부려 전량 홀딩했다면 곧이어 올 되돌림에 수익을 크게 뱉어냈을 것이다. 한시우는 첫 번째 거대한 승리를 확정 지은 후, 증권사 측의 태도 변화를 확인하기 위해 직접 여의도로 향했다.\n[종료 상태] 위치: 한미증권 본사 VIP룸, 심리 상태: 승리감과 여유, 부상: 없음, 소지품: ['20억 원이 예치된 시중은행 VIP 법인 계좌 통장', 'SW인베스트먼트 사업자 등록증 가승인 서류', '2006년 1분기 글로벌 원자재 시황 분석 노트', '한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화']\n\n제 13화:\n[시작 상태] 위치: 한미증권 본사 VIP룸, 심리 상태: 승리감과 여유, 부상: 없음, 소지품: ['20억 원이 예치된 시중은행 VIP 법인 계좌 통장', 'SW인베스트먼트 사업자 등록증 가승인 서류', '2006년 1분기 글로벌 원자재 시황 분석 노트', '한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화']\n한미증권 본사 VIP룸에 들어선 한시우를 맞이하는 박성호 PB의 태도는 180도 달라져 있었다. 이전의 반신반의하던 눈빛은 사라지고, 오직 압도적인 실력에 대한 경외심만이 가득했다. \"대표님, 어떻게 에콰도르 사태를 정확히 예측하셨습니까...\" 박성호는 한시우의 말을 검토하는 입장에서, 이제는 그의 지시를 무조건적으로 받아 적는 '증인(witness)'으로 전락했다. 며칠 전까지 포지션 청산을 압박하던 리스크 관리팀 역시 입을 다물었다. 박성호는 공손한 태도로 서류 한 장을 내밀었다. \"당사 내부 규정상, 대표님의 계좌를 최상위 등급인 'Exception Account'로 재분류했습니다. 향후 고위험 및 고레버리지 거래의 모든 제약이 해제됩니다.\" 한시우는 새롭게 획득한 'Exception Account 승인 문서 사본'과 '절반 청산된 WTI 원유 선물 거래 내역서'를 챙겨 자신의 오피스로 돌아왔다. 새롭게 단장된 VIP 상담실 소파에 앉은 그는 벽걸이 TV에서 흘러나오는 '금 가격 상승세' 뉴스를 보며 옅은 미소를 지었다. \"7월에 중동이 다시 터진다.\" 그의 시선은 이미 다음 사냥감을 향해 있었다.\n[종료 상태] 위치: 서울 강남, SW인베스트먼트 오피스 VIP 상담실, 심리 상태: 완전한 통제감, 부상: 없음, 소지품: ['20억 원이 예치된 시중은행 VIP 법인 계좌 통장', 'SW인베스트먼트 사업자 등록증 가승인 서류', '2006년 1분기 글로벌 원자재 시황 분석 노트', '한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화', 'Exception Account 승인 문서 사본', '절반 청산된 WTI 원유 선물 거래 내역서']\n- 위치: 서울 강남, SW인베스트먼트 오피스 VIP 상담실, 심리 상태: 완전한 통제감\n- 소지품: [\"['20억 원이 예치된 시중은행 VIP 법인 계좌 통장'\", \"'SW인베스트먼트 사업자 등록증 가승인 서류'\", \"'2006년 1분기 글로벌 원자재 시황 분석 노트'\", \"'한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화'\", \"'Exception Account 승인 문서 사본'\"]",
+  "title": "중동의 불씨",
+  "volume_no": 0
+}

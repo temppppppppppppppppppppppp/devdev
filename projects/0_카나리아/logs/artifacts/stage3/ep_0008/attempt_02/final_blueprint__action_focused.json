@@ -1,0 +1,232 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "action_focused",
+    "content_hash": "0c63228445417911b8c31d7f65fd73359bc2c5459a87ee22c3b68b8026a3bc05"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "현재 화 tactical authority, opening-state, 엔딩 훅은 유지"
+      ],
+      "evidence_summary": "missing_relationship_npcs=박성호",
+      "must_fix": [
+        "Arc 관계 변화 핵심 인물을 현재 화 시나리오/회상/계획에 명시: 박성호"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:21be5739d102",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 Arc 관계 변화 인물 중 최소 1명을 현재 화 맥락으로 명시한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 1,
+    "disqualified": [],
+    "length": 949,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 16136,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 983864,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 10524,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4672,
+          "lane": "constraints"
+        },
+        {
+          "chars": 665,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 265,
+        "constraints": 4672,
+        "feedback_context": 665,
+        "hud_context": 10,
+        "prev_info": 10524
+      },
+      "shared_context_chars": 15471,
+      "strategy_feedback_chars": 2318,
+      "total_chars": 16136
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "action_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "fix_pack": {
+      "do_not_regress": [
+        "현재 화 tactical authority, opening-state, 엔딩 훅은 유지"
+      ],
+      "must_fix": [
+        "Arc 관계 변화 핵심 인물을 현재 화 시나리오/회상/계획에 명시: 박성호"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 Arc 관계 변화 인물 중 최소 1명을 현재 화 맥락으로 명시한다",
+      "target_kind": "local_sentence"
+    },
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "core_tension": "유가 폭등과 함께 시작된 극심한 시장 변동성 속의 심리전",
+  "end_location": "SW인베스트먼트 대표실",
+  "ending_hook": "65달러를 돌파하며 치솟던 붉은 기둥이 멈칫한 순간, 시장의 방향을 뒤틀어버릴 거대한 매도 벽이 화면을 집어삼켰다.",
+  "ending_state": {
+    "location": "SW인베스트먼트 대표실",
+    "protagonist_status": "폭발하는 시장의 극심한 흔들기 속에서 모니터를 주시하며 다음 대응을 준비하는 상태",
+    "timeline": {
+      "표현": "2006년 2월 초 심야"
+    }
+  },
+  "ep_num": 8,
+  "episode_number": 8,
+  "expected_ending": "WTI 65달러 돌파 및 막대한 미실현 수익 달성",
+  "integrated_scenario": "한시우는 성북동 프라이빗 카페의 창밖으로 짙게 깔린 어둠을 응시하며 자리에서 일어났다. 테이블 위에 놓인 2006년 1분기 글로벌 원자재 시황 분석 노트를 챙겨 들고, 본격적인 시장의 폭발을 맞이하기 위해 발걸음을 옮겼다. 목적지는 그가 온전한 통제권을 행사할 수 있는 공간, SW인베스트먼트 대표실이었다. 차가운 겨울바람을 뚫고 도착한 대표실은 아직 집기조차 제대로 갖춰지지 않아 휑한 냉기가 감돌았지만, 한시우는 망설임 없이 책상 중앙의 모니터 전원을 켰다. 20억 원 예치 통장과 사업자 등록증 가승인 서류를 책상 한편에 내려놓은 한시우는, 심야 뉴스 채널을 켜고 볼륨을 높였다.\n\n자정을 넘긴 시각, 고요하던 대표실의 공기를 찢고 앵커의 다급한 목소리가 울려 퍼졌다. 이란 정부가 국제사회의 경고를 무시하고 우라늄 핵 농축 재개를 공식 선언했다는 속보였다. 한시우의 입가에 서늘한 호선이 그려졌다. 그가 기다려온 완벽한 도화선이 마침내 점화된 것이다. 뉴스의 여파는 즉각적으로 시장을 강타했다. 지루한 횡보를 이어가던 WTI 원유 선물 차트가 미친 듯이 요동치기 시작했다. 60달러 선에서 머물던 가격이 단숨에 저항선을 돌파하며 수직으로 치솟았다.\n\n화면 속 붉은 양봉이 꼬리를 길게 늘어뜨리며 61달러, 63달러를 연이어 격파했다. 3배 레버리지가 적용된 한시우의 HTS 계좌 잔고는 1초가 다르게 앞자리를 갈아치웠다. 65달러 선에 도달하는 순간, 화면에는 이미 3억 원이라는 막대한 미실현 수익이 선명하게 찍혀 있었다. 한시우는 요동치는 숫자에 시선을 고정한 채, 마우스를 쥔 손에 힘을 주었다. 자본의 거대한 해일이 몰아치는 가운데, 한시우는 노트에 적어둔 1차 목표가를 확인하며 다음 변동성에 대비했다. 폭발적인 상승 랠리 속에서 시장은 잠시 숨을 고르는 듯하더니, 이내 방향을 가늠할 수 없는 극심한 흔들기를 시작했다. 한시우의 눈동자에는 두려움 대신 맹렬한 투쟁심이 타올랐다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor",
+      "scene_transition_cue"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부의 고요한 이동에서 시작해, 뉴스 속보를 기점으로 폭발적인 상승 랠리가 펼쳐지는 빠른 템포의 전개",
+  "protagonist_state": {
+    "equipment": [
+      "20억 원 예치 통장",
+      "SW인베스트먼트 사업자 등록증 가승인 서류",
+      "2006년 1분기 글로벌 원자재 시황 분석 노트"
+    ],
+    "injuries": "없음",
+    "mood": "고도의 집중과 맹렬한 투쟁심"
+  },
+  "relationship_changes": [],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "성북동 카페에서 일어난 한시우는 짐을 챙겨 차량에 탑승하고 SW인베스트먼트 대표실로 향한다.",
+      "description": "적막한 카페에서 일어난 한시우가 서류와 노트를 챙겨 자신의 본거지로 이동하는 과정",
+      "goal": "시장의 본격적인 변동성에 대비하여 최적의 통제 공간으로 이동",
+      "key_events": [
+        "한시우가 테이블 위의 시황 분석 노트와 서류를 챙겨 가방에 넣음",
+        "프라이빗 카페를 빠져나와 차가운 밤공기를 가르며 대기 중인 차량에 탑승함",
+        "SW인베스트먼트 대표실로 목적지를 지시하며 머릿속으로 다가올 뉴스의 타이밍을 계산함"
+      ],
+      "location": "서울 성북동 프라이빗 카페 → 이동 중인 차량",
+      "summary": "성북동 카페를 나선 한시우가 본격적인 시장 모니터링을 위해 SW인베스트먼트 대표실로 향한다.",
+      "tension_level": 5,
+      "title": "전장의 이동",
+      "type": "tension_build"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "대표실에서 뉴스를 켠 한시우는 이란 핵 농축 재개 속보를 확인하고 차트의 변화를 주시한다.",
+      "description": "대표실의 고요함 속에서 흘러나오는 앵커의 다급한 목소리와 차트의 미세한 떨림",
+      "goal": "이란 핵 농축 재개 뉴스 확인 및 시장의 초기 반응 관찰",
+      "key_events": [
+        "텅 빈 SW인베스트먼트 대표실에 들어선 한시우가 책상 중앙의 모니터와 TV 전원을 켬",
+        "TV 심야 뉴스에서 이란 정부의 우라늄 핵 농축 재개 선언 속보가 타전됨",
+        "뉴스가 흘러나옴과 동시에 횡보하던 WTI 원유 선물 차트가 거칠게 요동치기 시작함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "SW인베스트먼트 대표실에 도착한 한시우가 심야 뉴스의 속보를 확인하며 시장의 폭발을 확신한다.",
+      "tension_level": 7,
+      "title": "폭발의 전조",
+      "type": "omniscient_hint"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "유가가 65달러로 치솟고, 한시우의 계좌에 3억 원의 미실현 수익이 찍히며 시장이 폭발한다.",
+      "description": "수직 상승하는 붉은 양봉과 실시간으로 불어나는 잔고 화면의 교차",
+      "goal": "WTI 65달러 돌파 및 3억 원 미실현 수익 달성 확인",
+      "key_events": [
+        "WTI 원유 가격이 저항선을 뚫고 60달러에서 단숨에 65달러를 향해 수직으로 치솟음",
+        "3배 레버리지가 적용된 한시우의 HTS 잔고 화면에 3억 원의 미실현 수익이 실시간으로 찍힘",
+        "한시우가 시황 분석 노트의 목표가와 화면의 숫자를 교차 검증하며 흔들림 없이 마우스를 쥠"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "유가가 폭등하며 WTI가 65달러를 돌파하고, 한시우의 HTS 화면에 막대한 수익이 기록된다.",
+      "tension_level": 9,
+      "title": "거대한 해일",
+      "type": "action_peak"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "거대한 매도 물량이 쏟아지며 차트가 요동치고, 한시우는 흔들림 없이 화면을 응시한다.",
+      "description": "폭등 직후 찾아오는 살인적인 흔들기와 한시우의 투쟁심",
+      "goal": "상승장 속에서 발생하는 극심한 변동성으로 인한 긴장감 극대화",
+      "key_events": [
+        "65달러를 돌파하려던 찰나, 화면 전체를 뒤덮는 거대한 매도 물량이 쏟아져 내림",
+        "붉은 기둥이 꺾이고 수직 하락하는 꼬리가 생기며 시장의 극심한 변동성이 시작됨",
+        "한시우가 서늘하게 가라앉은 눈빛으로 모니터에 얼굴을 가까이 가져가며 다음 틱을 기다림"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "끝없이 치솟던 차트가 거대한 매도 벽에 부딪히며 시장이 요동치기 시작한다.",
+      "tension_level": 10,
+      "title": "광기의 브레이크",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 프라이빗 카페",
+  "target_beat": "이란 핵 농축 속보와 WTI 폭등을 통한 3억 원 수익 실현",
+  "time_flow": "2006년 2월 초 밤 → 심야",
+  "title": "점화된 도화선"
+}

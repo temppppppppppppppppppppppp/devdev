@@ -1,0 +1,587 @@
+{
+  "arc_no": 1,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0001.txt",
+    "settlement_packet_path": "drafts/ep_0001.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 1,
+  "ep_num": 1,
+  "manuscript": {
+    "char_count": 6432,
+    "content_hash": "08c7efb2d1a4e64736bb650e722820de932df1f4767b73fe6d5ec4a960987882",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0001.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "open_review": "특이사항 없음. 감각적인 묘사와 인물 간의 텐션이 매우 훌륭함. 특히 회귀 직후 과거의 빈곤했던 감각과 현재의 부유한 환경을 대비시키는 서술이 몰입도를 크게 높임.",
+      "repair_scope": "inplace",
+      "score": 95,
+      "score_breakdown": {
+        "blueprint_coverage": 18,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 8,
+        "quality_engagement": 19
+      },
+      "selection_reason": "회귀 직후의 혼란과 결연함을 감각적인 묘사로 훌륭하게 표현했으며, 서재에서의 대립 씬에서 팽팽한 긴장감을 잘 살려냄. 주인공의 내면 변화와 목표 설정이 가장 설득력 있게 그려져 몰입도가 가장 높음.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 2,
+          "pattern": "입을 열었다"
+        }
+      ],
+      "ai_slop_score": 2.0,
+      "burstiness": 17.86,
+      "ced_score": 0.0,
+      "complexity": 44.38,
+      "compression_ratio": 0.4488,
+      "signal_summary": {
+        "ai_slop_total_hits": 2,
+        "burstiness": 17.86,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 44.38,
+        "compression_ratio": 0.4488,
+        "sentence_count": 175
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "굳게",
+            "닫힌",
+            "서재",
+            "문을",
+            "등진"
+          ],
+          "source": "ending_hook",
+          "text": "굳게 닫힌 서재 문을 등진 한시우의 눈동자에 거대한 사냥감을 노리는 맹수와도 같은 서늘한 빛이 감돌고 있었다."
+        },
+        {
+          "cue_terms": [
+            "가족",
+            "그늘",
+            "벗어나",
+            "스스로",
+            "힘으"
+          ],
+          "source": "expected_ending",
+          "text": "가족의 그늘에서 벗어나 스스로의 힘으로 자본을 확보하려는 결심"
+        }
+      ],
+      "capital": 2000000000,
+      "connections": "대명그룹 가문 (현재 소외), 개인 비서 및 운전기사",
+      "current_objective": "개인 자산 20억 원 현금화 및 독립 기반 마련, 미래 시장 예측을 통한 자산 증식 시작",
+      "equipment": [
+        "검은색 수트",
+        "휴대전화"
+      ],
+      "inventory_counts": {
+        "검은색 수트": 1,
+        "휴대전화": 1
+      },
+      "market_insight": "미래 거시경제 흐름 (WTI 원유 폭등, 리먼 브라더스 파산, 자산 시장 광기 등) 완벽 인지",
+      "reputation": "가문 내 잉여물, 외부에는 재벌가 막내 도련님",
+      "status": "회귀 직후, 대명그룹으로부터 독립 선언 및 초기 자산 현금화 준비 중",
+      "stocks": [],
+      "total_assets": 2000000000,
+      "wealth": "20억 원 (현금화 예정)"
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "굳게",
+            "닫힌",
+            "서재",
+            "문을",
+            "등진"
+          ],
+          "source": "ending_hook",
+          "text": "굳게 닫힌 서재 문을 등진 한시우의 눈동자에 거대한 사냥감을 노리는 맹수와도 같은 서늘한 빛이 감돌고 있었다."
+        },
+        {
+          "cue_terms": [
+            "가족",
+            "그늘",
+            "벗어나",
+            "스스로",
+            "힘으"
+          ],
+          "source": "expected_ending",
+          "text": "가족의 그늘에서 벗어나 스스로의 힘으로 자본을 확보하려는 결심"
+        }
+      ],
+      "causal_links": [
+        "주인공의 회귀 -> 미래 거시경제 흐름에 대한 완벽한 인지",
+        "주인공의 전생 경험 (고독사, 가문 몰락) -> 대명그룹으로부터의 독립 선언 및 자산 분리 결심",
+        "주인공의 독립 선언 -> 한정호 회장과 한태준의 오만과 무관심 (잉여물로 치부)",
+        "주인공의 독립 선언 -> 개인 자산 20억 원 현금화 계획 수립 및 실행 착수",
+        "가족들의 무시와 오판 -> 주인공이 자신만의 제국을 건설할 완벽한 명분 확보"
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "검은색 수트",
+          "to": 1
+        },
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "휴대전화",
+          "to": 1
+        }
+      ],
+      "inventory_counts": {
+        "검은색 수트": 1,
+        "휴대전화": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 0,
+          "target": "한정호",
+          "value": 0
+        },
+        {
+          "obsession": 0,
+          "target": "한태준",
+          "value": -1
+        },
+        {
+          "obsession": 0,
+          "target": "김 비서",
+          "value": 0
+        },
+        {
+          "obsession": 0,
+          "target": "최 기사님",
+          "value": 1
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [
+          "한정호",
+          "한태준"
+        ],
+        "new_witnesses": [
+          "김 비서",
+          "한정호",
+          "한태준",
+          "최 기사님"
+        ]
+      },
+      "lost_items": [],
+      "new_items": [
+        "휴대전화",
+        "검은색 수트"
+      ],
+      "new_npcs": [
+        "김 비서",
+        "최 기사님"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "김 비서",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "한정호",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "한태준",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "최 기사님",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "한정호",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "한태준",
+          "to": "오해 대상"
+        }
+      ],
+      "reveals": [
+        "가족으로부터의 독립"
+      ],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "굳게",
+              "닫힌",
+              "서재",
+              "문을",
+              "등진"
+            ],
+            "source": "ending_hook",
+            "text": "굳게 닫힌 서재 문을 등진 한시우의 눈동자에 거대한 사냥감을 노리는 맹수와도 같은 서늘한 빛이 감돌고 있었다."
+          },
+          {
+            "cue_terms": [
+              "가족",
+              "그늘",
+              "벗어나",
+              "스스로",
+              "힘으"
+            ],
+            "source": "expected_ending",
+            "text": "가족의 그늘에서 벗어나 스스로의 힘으로 자본을 확보하려는 결심"
+          }
+        ],
+        "capital": 2000000000,
+        "connections": "대명그룹 가문 (현재 소외), 개인 비서 및 운전기사",
+        "current_objective": "개인 자산 20억 원 현금화 및 독립 기반 마련, 미래 시장 예측을 통한 자산 증식 시작",
+        "equipment": [
+          "검은색 수트",
+          "휴대전화"
+        ],
+        "inventory_counts": {
+          "검은색 수트": 1,
+          "휴대전화": 1
+        },
+        "market_insight": "미래 거시경제 흐름 (WTI 원유 폭등, 리먼 브라더스 파산, 자산 시장 광기 등) 완벽 인지",
+        "reputation": "가문 내 잉여물, 외부에는 재벌가 막내 도련님",
+        "status": "회귀 직후, 대명그룹으로부터 독립 선언 및 초기 자산 현금화 준비 중",
+        "stocks": [],
+        "total_assets": 2000000000,
+        "wealth": "20억 원 (현금화 예정)"
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "location",
+              "protagonist_status",
+              "timeline"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets",
+              "portfolio_position",
+              "investment_calc_final_cash",
+              "investment_calc_final_total_assets"
+            ],
+            "owner": "cross_stage_authority_packet_bootstrap",
+            "promoted_fields": [
+              "capital",
+              "total_assets",
+              "investment_calc_final_cash",
+              "investment_calc_final_total_assets"
+            ],
+            "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+            "promotion_sources": {
+              "capital": "actual_truth",
+              "investment_calc_final_cash": "cross_stage_authority_packet.numeric_carryover",
+              "investment_calc_final_total_assets": "cross_stage_authority_packet.numeric_carryover",
+              "total_assets": "actual_truth"
+            },
+            "provenance": "cross_stage_transport_bootstrap",
+            "surfaces": [
+              "cross_stage_authority_packet.numeric_carryover",
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ],
+            "transport_authority_mode": "packet_bootstrap",
+            "transport_contract_version": "cross_stage_authority_packet.v1",
+            "transport_fields": [
+              "capital",
+              "total_assets",
+              "portfolio_position",
+              "investment_calc_final_cash",
+              "investment_calc_final_total_assets"
+            ],
+            "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "20억 원 (현금화 예정 자산)",
+      "director_score": 95,
+      "location": "서울 성북동 본가 저택 현관 앞",
+      "protagonist_status": "가문과의 독립 선언 후 시드머니 확보를 위해 은행으로 이동 중",
+      "timeline": "2006년 1월 1일 오전"
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "location",
+            "protagonist_status",
+            "timeline"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets",
+            "portfolio_position",
+            "investment_calc_final_cash",
+            "investment_calc_final_total_assets"
+          ],
+          "owner": "cross_stage_authority_packet_bootstrap",
+          "promoted_fields": [
+            "capital",
+            "total_assets",
+            "investment_calc_final_cash",
+            "investment_calc_final_total_assets"
+          ],
+          "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+          "promotion_sources": {
+            "capital": "actual_truth",
+            "investment_calc_final_cash": "cross_stage_authority_packet.numeric_carryover",
+            "investment_calc_final_total_assets": "cross_stage_authority_packet.numeric_carryover",
+            "total_assets": "actual_truth"
+          },
+          "provenance": "cross_stage_transport_bootstrap",
+          "surfaces": [
+            "cross_stage_authority_packet.numeric_carryover",
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ],
+          "transport_authority_mode": "packet_bootstrap",
+          "transport_contract_version": "cross_stage_authority_packet.v1",
+          "transport_fields": [
+            "capital",
+            "total_assets",
+            "portfolio_position",
+            "investment_calc_final_cash",
+            "investment_calc_final_total_assets"
+          ],
+          "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc 핵심 사건과 인물 관계는 유지",
+        "시간축 외의 장면 구조는 불필요하게 넓히지 말 것"
+      ],
+      "must_fix": [
+        "ending_state.timeline을 Arc 권위 시점 '법인 설립 서류 확보 및 첫 투자 준비 완료'에 정렬",
+        "time_flow를 Arc 권위 시점 '법인 설립 서류 확보 및 첫 투자 준비 완료'과 모순되지 않게 정규화"
+      ],
+      "patch_targets": [
+        "ending_state.timeline",
+        "time_flow"
+      ],
+      "success_condition": "ending_state.timeline과 time_flow가 '법인 설립 서류 확보 및 첫 투자 준비 완료' 권위 시점과 정렬되고 조기 날짜 단서가 남지 않는다",
+      "target_kind": "field_value"
+    },
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "field_value"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "title": "회귀, 그리고 선언"
+}

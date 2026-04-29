@@ -638,6 +638,22 @@ class BlueprintEnsembleGenerator(BaseAgent):
             return non_unknown[0]
         return error_types[0]
 
+    @staticmethod
+    def _error_type_from_agent_error_response(result: dict) -> str | None:
+        if not isinstance(result, dict) or result.get("error") is not True:
+            return None
+        error_type = str(result.get("error_type", "") or "").strip()
+        known_error_types = {
+            AgentErrorType.TIMEOUT,
+            AgentErrorType.QUOTA_EXCEEDED,
+            AgentErrorType.MALFORMED_RESPONSE,
+            AgentErrorType.NETWORK_ERROR,
+            AgentErrorType.SCHEMA_INCOMPATIBLE,
+            AgentErrorType.CANDIDATE_DISQUALIFIED,
+            AgentErrorType.UNKNOWN,
+        }
+        return error_type if error_type in known_error_types else AgentErrorType.UNKNOWN
+
     def _resolve_blueprint_arc_focus(self, ep_num: int, arc_data: dict, constraint_block: dict) -> str:
         arc_focus = constraint_block.get("must_focus", {}).get("content", "")
         if not arc_focus:
@@ -1433,6 +1449,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
         result = self._extract_json_robust(response)
         if not isinstance(result, dict):
             return None, AgentErrorType.SCHEMA_INCOMPATIBLE
+        agent_error_type = self._error_type_from_agent_error_response(result)
+        if agent_error_type:
+            return None, agent_error_type
         if "scene_breakdown" not in result or "integrated_scenario" not in result:
             return None, AgentErrorType.SCHEMA_INCOMPATIBLE
         sanitized = self._sanitize_blueprint_candidate(
