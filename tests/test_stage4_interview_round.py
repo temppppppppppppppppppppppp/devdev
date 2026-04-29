@@ -4462,7 +4462,13 @@ class TestRecordS4Attempt:
             verdict="REJECT",
             advisory_flags={
                 "retry_budget_axes": {"repair": "patch_revision"},
-                "gate_semantics": {"director_verdict": "REJECT"},
+                "gate_semantics": {
+                    "director_verdict": "REJECT",
+                    "runtime_route_payload_version": "stage4-runtime-route-v1",
+                    "runtime_route_verdict": "REJECT",
+                    "runtime_route_action": "director_reject_retry",
+                    "runtime_route_taxonomy": "runtime_route_guard",
+                },
             },
             structural_attempted=True,
             error_category="LOGIC_ERROR",
@@ -4476,6 +4482,10 @@ class TestRecordS4Attempt:
         assert record.attempt_key == "s4:ep2:arc1:a2:sess-stage4"
         assert record.patch_strategy == "patch_with_feedback"
         assert record.retry_budget_axes == {"repair": "patch_revision"}
+        assert record.runtime_route_payload_version == "stage4-runtime-route-v1"
+        assert record.runtime_route_verdict == "REJECT"
+        assert record.runtime_route_action == "director_reject_retry"
+        assert record.runtime_route_taxonomy == "runtime_route_guard"
         assert not hasattr(record, SESSION_MEMORY_ENVELOPE_KEY)
 
     def test_save_stage4_db_attempt_uses_prelude_payload(self):

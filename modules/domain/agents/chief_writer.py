@@ -173,6 +173,34 @@ def _build_retry_reuse_feedback_block(previous_attempt: dict | None) -> str:
     return "\n".join(lines)
 
 
+def _format_stage4_contract_issue_details_for_retry(previous_attempt: dict | None) -> str:
+    if not isinstance(previous_attempt, dict):
+        return ""
+
+    metadata = previous_attempt.get("metadata") if isinstance(previous_attempt.get("metadata"), dict) else {}
+    raw_details = previous_attempt.get("contract_issue_details") or metadata.get("contract_issue_details")
+    if not isinstance(raw_details, list) or not raw_details:
+        return ""
+
+    lines = ["[Stage4 Draft Structure Contract — concrete repair targets]"]
+    for item in raw_details[:6]:
+        if not isinstance(item, dict):
+            continue
+        code = str(item.get("code", "") or "unknown").strip()
+        severity = str(item.get("severity", "") or "").strip()
+        evidence = " ".join(str(item.get("evidence", "") or "").split()).strip()
+        hint = " ".join(str(item.get("repair_hint", "") or "").split()).strip()
+        parts = [f"code={code}"]
+        if severity:
+            parts.append(f"severity={severity}")
+        if evidence:
+            parts.append(f"evidence={evidence}")
+        if hint:
+            parts.append(f"repair_hint={hint}")
+        lines.append("- " + " | ".join(parts))
+    return "\n".join(lines) if len(lines) > 1 else ""
+
+
 def _normalize_strategy_feedback_value(value: object) -> str:
     if isinstance(value, str):
         return value.strip()
@@ -283,6 +311,82 @@ def _manuscript_candidate_admission_reason(contract_diag: dict) -> str:
     return ""
 
 
+def _build_contract_issue_details(contract_diag: dict) -> list[dict[str, str]]:
+    if not contract_diag:
+        return []
+
+    details: list[dict[str, str]] = []
+    validation = contract_diag.get("validation", {}) if isinstance(contract_diag.get("validation"), dict) else {}
+    materialization = (
+        contract_diag.get("materialization", {}) if isinstance(contract_diag.get("materialization"), dict) else {}
+    )
+
+    for issue in list(validation.get("issues") or [])[:4]:
+        issue_text = " ".join(str(issue or "").split()).strip()
+        if issue_text:
+            details.append(
+                {
+                    "code": "template_contract_failed",
+                    "severity": "issue",
+                    "evidence": issue_text,
+                    "repair_hint": "Rebuild the draft against the scene execution contract instead of summarizing scene anchors.",
+                }
+            )
+
+    for warning in list(validation.get("warnings") or [])[:4]:
+        warning_text = " ".join(str(warning or "").split()).strip()
+        if not warning_text:
+            continue
+        code = "weak_previous_ending_transition" if "직전 화와의 연결이 약함" in warning_text else "template_warning"
+        details.append(
+            {
+                "code": code,
+                "severity": "warning",
+                "evidence": warning_text,
+                "repair_hint": (
+                    "Open from the prior ending's next consequence, then mark any location/time jump with prose or * * *."
+                    if code == "weak_previous_ending_transition"
+                    else "Preserve the scene contract while repairing the local warning."
+                ),
+            }
+        )
+
+    scene_count = int(materialization.get("scene_count") or 0)
+    reflected_scenes = int(materialization.get("reflected_scenes") or 0)
+    weak_scenes = [str(item) for item in list(materialization.get("weak_scenes") or [])[:4]]
+    if scene_count > 0 and reflected_scenes < min(2, scene_count):
+        details.append(
+            {
+                "code": "scene_obligation_under_materialized",
+                "severity": "issue",
+                "evidence": f"reflected_scenes={reflected_scenes}/{scene_count}; weak={', '.join(weak_scenes)}",
+                "repair_hint": "Materialize each weak scene anchor as on-page action/dialogue before submitting to Director.",
+            }
+        )
+    elif scene_count >= 2 and not materialization.get("tail_scene_reflected", False):
+        details.append(
+            {
+                "code": "tail_scene_not_reflected",
+                "severity": "issue",
+                "evidence": f"tail_scene_reflected=false; weak={', '.join(weak_scenes)}",
+                "repair_hint": "Expand the final scene anchor on-page instead of compressing it into summary.",
+            }
+        )
+
+    if contract_diag.get("opening_anchor_required") and not contract_diag.get("opening_anchor_hit", False):
+        keywords = ", ".join(str(item) for item in list(contract_diag.get("opening_anchor_keywords") or [])[:4])
+        details.append(
+            {
+                "code": "weak_previous_ending_transition",
+                "severity": "issue",
+                "evidence": f"opening anchor keywords absent from first 600 chars: {keywords}",
+                "repair_hint": "Start from the prior ending's immediate aftermath before any new location/time transition.",
+            }
+        )
+
+    return details
+
+
 def _score_manuscript_contract_diag(contract_diag: dict) -> tuple:
     if not contract_diag:
         return (0, 0, 0.0, 0, 0)
@@ -328,6 +432,9 @@ def _qualify_manuscript_candidates_for_director(
         metadata = candidate.setdefault("metadata", {})
         if isinstance(metadata, dict):
             metadata["template_contract"] = contract_diag
+            issue_details = _build_contract_issue_details(contract_diag)
+            if issue_details:
+                metadata["contract_issue_details"] = issue_details
 
         reason = _manuscript_candidate_admission_reason(contract_diag)
         if isinstance(metadata, dict) and reason:
@@ -1362,6 +1469,7 @@ class ChiefWriter(BaseAgent):
         """Director feedback와 이전 시도 히스토리를 재시도 prompt용으로 합친다."""
         history_feedback = self._build_retry_history_feedback(previous_attempt)
         reuse_feedback = _build_retry_reuse_feedback_block(previous_attempt)
+        contract_issue_feedback = _format_stage4_contract_issue_details_for_retry(previous_attempt)
         enhanced_feedback = f"""
 [🚨 {attempt_number}차 재시도 - Director 피드백 필수 반영]
 
@@ -1392,6 +1500,8 @@ class ChiefWriter(BaseAgent):
             enhanced_feedback += f"\n\n[Director 서사 관찰 — 반드시 개선할 것]\n{open_review}"
         if reuse_feedback:
             enhanced_feedback += f"\n\n{reuse_feedback}"
+        if contract_issue_feedback:
+            enhanced_feedback += f"\n\n{contract_issue_feedback}"
         if history_feedback:
             enhanced_feedback += f"\n\n{history_feedback}"
         return enhanced_feedback
@@ -1543,6 +1653,25 @@ class ChiefWriter(BaseAgent):
         patch_targets = normalized.get("patch_targets") or []
         if patch_targets:
             lines.append("- patch_targets: " + ", ".join(patch_targets[:6]))
+        patch_target_records = normalized.get("patch_target_records") or []
+        if patch_target_records:
+            lines.append("- patch_target_records:")
+            for record in patch_target_records[:6]:
+                if not isinstance(record, dict):
+                    continue
+                record_parts = []
+                for key in ("summary", "scene_id", "target_kind"):
+                    value = str(record.get(key, "") or "").strip()
+                    if value:
+                        record_parts.append(f"{key}={value}")
+                paragraph_span = record.get("paragraph_span")
+                if isinstance(paragraph_span, dict):
+                    start = paragraph_span.get("start")
+                    end = paragraph_span.get("end")
+                    if start is not None and end is not None:
+                        record_parts.append(f"paragraph_span={start}-{end}")
+                if record_parts:
+                    lines.append("  - " + " | ".join(record_parts))
         must_fix = normalized.get("must_fix") or []
         if must_fix:
             lines.append("- must_fix:")
@@ -1588,6 +1717,16 @@ class ChiefWriter(BaseAgent):
                 "Scene header",
                 "헤더가 원고에 누락",
                 "모든 씬을 헤더",
+                "section header",
+                "scene separation",
+                "scene structure",
+                "scene-structure",
+                "header/scene",
+                "씬 구조",
+                "장면 구조",
+                "장면 구분",
+                "섹션 헤더",
+                "장면 분리",
             )
         )
 
@@ -1921,7 +2060,9 @@ class ChiefWriter(BaseAgent):
         if not isinstance(state_updates, dict):
             state_updates = {}
 
-        target_spans = plan.get("target_paragraph_spans", {}) if isinstance(plan.get("target_paragraph_spans"), dict) else {}
+        target_spans = (
+            plan.get("target_paragraph_spans", {}) if isinstance(plan.get("target_paragraph_spans"), dict) else {}
+        )
         target_records_payload = [
             {
                 "summary": scene_id,
@@ -2372,6 +2513,9 @@ class ChiefWriter(BaseAgent):
         history_feedback = self._build_retry_history_feedback(previous_attempt)
         if history_feedback:
             enhanced_feedback += f"\n{history_feedback}"
+        contract_issue_feedback = _format_stage4_contract_issue_details_for_retry(previous_attempt)
+        if contract_issue_feedback:
+            enhanced_feedback += f"\n\n{contract_issue_feedback}"
         fix_pack_guidance = self._build_fix_pack_guidance(previous_attempt.get("fix_pack"))
         if fix_pack_guidance:
             enhanced_feedback += f"\n\n{fix_pack_guidance}"
