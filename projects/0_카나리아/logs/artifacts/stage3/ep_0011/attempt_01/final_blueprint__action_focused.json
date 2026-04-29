@@ -1,0 +1,239 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "action_focused",
+    "content_hash": "ffa9388a1bce52d720e9fc19aeedfad5a7de247d7d4f3d8c43a6fcb98058a1d7"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=4; sample_anchors=SW인베스트먼트, 한미증권, 70달러",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:21be5739d102",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1004,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 20019,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 979981,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 14805,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4551,
+          "lane": "constraints"
+        },
+        {
+          "chars": 491,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 162,
+        "constraints": 4551,
+        "feedback_context": 491,
+        "hud_context": 10,
+        "prev_info": 14805
+      },
+      "shared_context_chars": 19528,
+      "total_chars": 20019
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "action_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "core_tension": "예견된 지정학적 위기 발발과 통제 불능의 시장 변동성 속 한시우의 냉철한 장악력",
+  "end_location": "SW인베스트먼트 대표실",
+  "ending_hook": "화면을 가득 채운 붉은 기둥이 저항선을 박살 내며 솟구치는 순간, 한시우의 손이 천천히 보안 휴대전화를 움켜쥐었다.",
+  "ending_state": {
+    "location": "SW인베스트먼트 대표실",
+    "protagonist_status": "폭발적인 유가 상승을 지켜보며 최종 매도 결단을 앞둔 상태",
+    "timeline": {
+      "표현": "2006년 5월 초 폭등의 정점 직전"
+    }
+  },
+  "ep_num": 11,
+  "episode_number": 11,
+  "expected_ending": "유가가 폭등하며 목표치에 근접하는 순간, 최종 결단을 준비함",
+  "integrated_scenario": "SW인베스트먼트 대표실의 공기는 무겁게 가라앉아 있었다. 모니터 위에서 미세하게 요동치던 붉은 숫자들이 마침내 억눌렸던 숨을 토해내듯 거칠게 박동하기 시작했다. 한시우는 의자에서 몸을 일으켜 모니터 앞으로 다가갔다. 마우스를 쥔 그의 손등에 핏대가 섰다. 지난 기간의 지루한 횡보를 비웃기라도 하듯, 화면 하단의 거래량 지표가 미친 듯이 솟구쳐 올랐다. 거대한 해일이 몰려오기 전의 전조는 끝났다. 정적을 깨고 뉴스 화면과 HTS 단말기에 긴급 속보가 타전되었다. 에콰도르 정부가 옥시덴탈 페트롤리엄과의 계약을 강제 해지하고 자산을 몰수했다는 소식이었다. 한시우가 '2006년 1분기 글로벌 원자재 시황 분석 노트'에 적어두었던 정확히 그 뇌관이 터진 것이다.\n\n남미의 지정학적 리스크가 현실화되자, 시장은 즉각적이고 폭력적으로 반응했다. WTI 원유 선물 차트는 그야말로 미쳐 날뛰며 수직으로 치솟았다. 매도 벽이 세워지는 족족 거대한 매수세가 이를 씹어 삼키며 붉은 기둥을 위로 쏘아 올렸다. 한시우는 요동치는 화면을 보며 흔들림 없는 시선을 유지했다. 시장의 광기가 모니터를 뚫고 나올 듯했지만, 그의 호흡은 오히려 더 차분하게 가라앉았다.\n\n그때 책상 위의 보안 휴대전화가 발작하듯 울려댔다. 한미증권의 박성호였다. 수화기 너머로 들려오는 박성호의 목소리는 경악과 공포, 그리고 한시우의 예지력에 대한 맹렬한 경외로 떨리고 있었다. 전문가로서의 모든 데이터와 상식이 붕괴된 박성호는 이제 한시우가 예견한 거대한 파도 앞에서 숨조차 제대로 쉬지 못했다. 한시우는 박성호의 호들갑을 차가운 음성으로 짓눌렀다. 지금은 감탄할 때가 아니라, 다가올 정점을 대비해 방아쇠를 당길 준비를 해야 할 때였다. 일방적으로 통화를 끊은 한시우의 시선이 다시 붉은 차트로 향했다. 유가는 70달러를 가볍게 돌파하고 75달러라는 거대한 저항선을 향해 거침없이 돌진하고 있었다. 한시우는 시황 노트를 덮고, 천천히 보안 휴대전화 위로 손을 올렸다. 거대한 사냥감의 목줄을 끊어낼 완벽한 찰나가 다가오고 있었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "도입부에서 차트의 미세한 변화로 긴장감을 끌어올린 뒤, 에콰도르 뉴스 속보와 함께 폭발적인 액션(시장 변동성)을 전개. 후반부는 75달러를 향한 상승세와 한시우의 결단 직전 멈춰 최고조의 긴장감을 유지.",
+  "protagonist_state": {
+    "equipment": [
+      "20억 원 예치 통장",
+      "SW인베스트먼트 사업자 등록증 가승인 서류",
+      "2006년 1분기 글로벌 원자재 시황 분석 노트",
+      "한미증권 VIP 다이렉트 핫라인 번호가 저장된 보안 휴대전화"
+    ],
+    "injuries": "없음",
+    "mood": "폭발하는 시장 앞에서도 흔들림 없는 절대적 냉철함"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "포지션 유지에 대한 불안과 반신반의",
+      "justification": "에콰도르 사태라는 예상치 못한 지정학적 위기를 한시우가 정확히 예견하고 거대한 수익을 눈앞에 두었기 때문",
+      "target": "박성호",
+      "to_state": "한시우의 예지력 앞에서의 완벽한 경외와 굴복"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "미세하게 요동치던 붉은 숫자들이 마침내 억눌렸던 숨을 토해내듯 거칠게 박동하기 시작했다. 한시우는 의자에서 몸을 일으켜 모니터 앞으로 다가갔다. 지난 기간의 지루한 횡보를 비웃기라도 하듯, 화면 하단의 거래량 지표가 미친 듯이 솟구쳐 올랐다. 거대한 해일이 몰려오기 전의 전조는 끝났다. 이제는 폭력적인 파도가 시장을 덮칠 차례였다.",
+      "description": "SW인베스트먼트 대표실, 횡보하던 WTI 선물 차트의 거래량 지표가 갑작스럽게 튀어 오르며 시장의 공기가 급변한다.",
+      "goal": "시장의 미세한 변화를 감지하고 다가올 폭등을 준비",
+      "key_events": [
+        "모니터 위에서 미세하게 떨리던 붉은 숫자들이 거칠게 박동하기 시작함",
+        "한시우가 의자에서 몸을 일으켜 모니터로 다가가며 마우스를 꽉 쥠",
+        "지루했던 횡보장을 깨부수는 거대한 매수 물량이 화면 하단에서부터 쏟아져 들어옴"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "미세하게 요동치던 차트가 폭발적인 거래량을 동반하며 솟구치기 시작한다.",
+      "tension_level": 7,
+      "title": "요동치는 붉은 물결",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "정적을 깨고 뉴스 화면에 긴급 속보가 타전되었다. 에콰도르 정부가 옥시덴탈 페트롤리엄과의 계약을 강제 해지하고 자산을 몰수했다는 소식이었다. 한시우가 2006년 1분기 글로벌 원자재 시황 분석 노트에 적어두었던 정확히 그 뇌관이 터진 것이다. 남미의 지정학적 리스크가 현실화되자, 시장은 즉각적이고 폭력적으로 반응했다. WTI 원유 선물 차트는 그야말로 미쳐 날뛰며 수직으로 치솟았다.",
+      "description": "국제 뉴스 속보와 함께 한시우가 기다리던 에콰도르 발 뇌관이 정확히 터지며 시장이 발작한다.",
+      "goal": "예견했던 지정학적 리스크의 발발 확인",
+      "key_events": [
+        "뉴스 화면과 HTS 단말기에 에콰도르 정부의 옥시덴탈 페트롤리엄 자산 몰수 속보가 붉은 글씨로 타전됨",
+        "한시우가 2006년 1분기 글로벌 원자재 시황 분석 노트를 펼쳐 자신이 기록해둔 에콰도르 항목을 펜으로 강하게 그음",
+        "뉴스가 퍼짐과 동시에 WTI 차트가 기존의 저항선을 종잇장처럼 찢고 수직으로 치솟음"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "에콰도르 정부의 계약 강제 해지 속보가 타전되며 유가가 수직 상승한다.",
+      "tension_level": 9,
+      "title": "에콰도르 발 충격파",
+      "type": "action_peak"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호(전화)"
+      ],
+      "content": "책상 위의 보안 휴대전화가 발작하듯 울려댔다. 전화를 연결하자마자 수화기 너머로 박성호의 헐떡이는 숨소리가 들려왔다. 전문가로서의 모든 상식이 붕괴된 박성호는 한시우가 창조해낸 거대한 파도 앞에서 공포와 경외에 휩싸여 있었다. 한시우는 박성호의 호들갑을 단 한 마디로 짓눌렀다. 지금은 감탄할 때가 아니라, 다가올 정점을 대비해 방아쇠를 당길 준비를 해야 할 때였다.",
+      "description": "통제 불능의 폭등장 속에서 박성호가 보안 휴대전화를 통해 한시우에게 연락해 경외심을 드러낸다.",
+      "goal": "시장의 광기 속에서 한시우의 통찰력에 압도된 박성호의 반응",
+      "key_events": [
+        "책상 위의 보안 휴대전화가 발작하듯 요란하게 울림",
+        "전화를 받은 한시우에게 박성호가 숨넘어가는 목소리로 에콰도르 사태와 유가 폭등 상황을 보고함",
+        "전문가의 상식이 붕괴된 박성호의 떨리는 목소리를 한시우가 차갑고 단호한 어조로 짓누르며 대기할 것을 명령함"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "박성호가 경악에 찬 목소리로 전화를 걸어오며 한시우의 예측에 굴복한다.",
+      "tension_level": 8,
+      "title": "경외와 공포",
+      "type": "side_glimpse"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "일방적으로 통화를 끊은 한시우의 시선이 다시 모니터로 향했다. 유가는 브레이크 고장 난 기관차처럼 70달러를 돌파하고 거침없이 위를 향해 돌진하고 있었다. 75달러라는 상징적인 저항선이 눈앞으로 다가오며 시장의 긴장감이 극에 달했다. 매도 벽이 세워지는 족족 거대한 매수세가 이를 씹어 삼키며 붉은 기둥을 쏘아 올렸다. 한시우는 시황 노트를 덮고, 천천히 보안 휴대전화 위로 손을 올렸다.",
+      "description": "폭주하는 차트 앞에서 한시우가 다음 지시를 내리기 위해 보안 휴대전화를 쥐며 긴장감을 극대화한다.",
+      "goal": "최고조에 달하는 유가 상승과 결단의 순간 준비",
+      "key_events": [
+        "일방적으로 통화를 끊은 한시우가 모니터로 시선을 고정함",
+        "유가가 70달러를 가볍게 돌파하고 75달러라는 거대한 저항선을 향해 미친 듯이 솟구침",
+        "한시우가 시황 노트를 덮고 책상 위의 보안 휴대전화 위로 천천히 손을 뻗음"
+      ],
+      "location": "SW인베스트먼트 대표실",
+      "summary": "유가가 거침없이 상승하며 목표치인 75달러를 향해 돌진하자 한시우가 행동을 준비한다.",
+      "tension_level": 10,
+      "title": "임계점을 향하여",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "SW인베스트먼트 대표실",
+  "target_beat": "에콰도르 사태 발발과 유가 폭등 관망, 박성호의 경외심 획득",
+  "time_flow": "2006년 5월 초",
+  "title": "폭발하는 뇌관"
+}

@@ -1006,7 +1006,7 @@ def _build_stage3_retry_feedback_payload(validation_result: dict | None, *, pref
             for directive in binding_directives[:6]:
                 if directive not in lines:
                     lines.append(directive)
-            for _, directive in sorted(non_binding_directives, key=lambda item: (item[0], item[1]))[:2]:
+            for _, directive in sorted(non_binding_directives, key=lambda item: (item[0], item[1]))[:4]:
                 if directive not in lines:
                     lines.append(directive)
         if lines:
