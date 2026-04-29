@@ -1,6 +1,6 @@
 {
   "_schema_version": "production_pair_operational_registry.v1",
-  "updated_at": "2026-04-20",
+  "updated_at": "2026-04-29",
   "notes": [
     "Operational states here are durable governance overrides for the normalization runner.",
     "Benchmark freshness tracks whether a benchmark or bounded benchmark-preservation audit has been recorded after the latest material touch or regeneration.",
@@ -8,8 +8,9 @@
     "RED is terminal in current operator governance: negative exemplar archive, no repair budget, and do not reopen unless the governing law itself changes.",
     "Opening pacing triage is a separate operator field from benchmark_alias; YELLOW triage suspends opening exemplar use pending manual re-audit but does not automatically rewrite alias filenames.",
     "Benchmark_alias=GREENPLUS alone is not enough for current sell-in use. Operational deployable GREENPLUS now means quality-first top shelf: benchmark_freshness=current, opening pacing triage GREEN, no whole-run YELLOW/UNTRIAGED hold, no active repair/re-audit/hold note, and no remaining legacy-heuristic-only ambiguity on the opening claim.",
-    "2026-04-12 explicit closeout wave promoted pair01, office_checkup_next_day, chaebol_ent_empire, pantech_cyworld_reborn, and wuxia_heavenly_physician to deployable GREENPLUS under the then-current shelf law.",
-    "2026-04-20 initial benchmark plus explicit manual closeout admitted golden_canary_deepclone_probe_a_fullblock_v1 as deployable GREENPLUS. The current sell-in top shelf now reads deployable GREENPLUS 7.",
+    "2026-04-29 material-side immediate deployment overlay: current immediately deployable material is golden_canary_deepclone_probe_a_fullblock_v1 only, because it is the current pair with donor structure applied and visible. Other GREENPLUS/GREEN rows remain benchmark/reference inventory until donor structure is applied and recorded.",
+    "2026-04-12 explicit closeout wave promoted pair01, office_checkup_next_day, chaebol_ent_empire, pantech_cyworld_reborn, and wuxia_heavenly_physician to deployable GREENPLUS under the then-current quality shelf law; this does not by itself clear the 2026-04-29 immediate material-deployment overlay.",
+    "2026-04-20 initial benchmark plus explicit manual closeout admitted golden_canary_deepclone_probe_a_fullblock_v1 as deployable GREENPLUS. The benchmark quality shelf still records the historical closeouts, while immediate material deployment currently reads 1: golden_canary_deepclone_probe_a_fullblock_v1.",
     "2026-04-10 chaebol_allowance_zero is now explicitly classified as RED for live operation; keep the withdrawn GREENPLUS file only as a historical tombstone / anti-benchmark.",
     "2026-04-10 opening pacing triage operator result currently reads RED 3 / YELLOW 2 / GREEN 9 / UNTRIAGED 1 across the discoverable live TR inventory; incomplete B01~B10 opening windows are held as UNTRIAGED instead of being provisionally kept, the kill-first spot audit promoted jangyeongshil_industrial_revolution to RED while clearing pantech_cyworld_reborn out of kill-first, the forensic spot audit promoted jaebeol3se_loss_line to RED, the same-day targeted repair on chaebol_ent_empire moved its signboard from B09 to B08 and exited opening YELLOW, and the same-day bounded repair on pantech_cyworld_reborn moved its representative reevaluation from B10 to B02 and exited opening YELLOW.",
     "2026-04-10 YELLOW split is now cost-first: office_checkup_next_day/smart_new_hire remain repair-first, while both temporary escalation queues are now resolved (jangyeongshil_industrial_revolution -> RED, jaebeol3se_loss_line -> RED). chaebol_ent_empire and pantech_cyworld_reborn left the current YELLOW shelf after same-day bounded repairs.",
@@ -31,6 +32,8 @@
       "benchmark_alias": "GREENPLUS",
       "benchmark_freshness": "current",
       "benchmark_artifact": "docs/2026-04-12/golden_canary_deployable_greenplus_closeout.md",
+      "material_deployment_status": "reference_until_donor_structure_applied",
+      "donor_structure_status": "not_applied_or_not_recorded",
       "opening_pacing_triage": {
         "grade": "GREEN",
         "recommended_action": "keep_active_inventory",
@@ -41,7 +44,7 @@
           "MANUAL-CLOSEOUT-PASS"
         ]
       },
-      "operator_note": "Benchmark-fresh numbered live pair. The 2026-04-12 explicit manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B02/B03/B04/B06 token ladder with the work-guard timing thresholds, while whole-run pacing reread stays GREEN and the strict re-benchmark authority still stands. Pair 01 is now admitted as current sell-in top shelf."
+      "operator_note": "Benchmark-fresh numbered live pair. The 2026-04-12 explicit manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B02/B03/B04/B06 token ladder with the work-guard timing thresholds, while whole-run pacing reread stays GREEN and the strict re-benchmark authority still stands. Under the 2026-04-29 donor-structure overlay, pair 01 stays benchmark/reference inventory until donor structure is applied and recorded."
     },
     {
       "work_id": "chaebol_allowance_zero",
@@ -57,6 +60,8 @@
       ],
       "benchmark_freshness": "current",
       "benchmark_artifact": "docs/2026-04-09/chaebol_allowance_zero_opening_pacing_false_pass_triage.md",
+      "material_deployment_status": "not_deployable_negative_exemplar",
+      "donor_structure_status": "not_applied_or_not_recorded",
       "opening_pacing_triage": {
         "grade": "RED",
         "recommended_action": "negative_exemplar_archive",
@@ -80,6 +85,8 @@
       "benchmark_alias": "GREENPLUS",
       "benchmark_freshness": "current",
       "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "material_deployment_status": "reference_until_donor_structure_applied",
+      "donor_structure_status": "not_applied_or_not_recorded",
       "opening_pacing_triage": {
         "grade": "GREEN",
         "recommended_action": "keep_active_inventory",
@@ -90,7 +97,7 @@
           "MANUAL-CLOSEOUT-PASS"
         ]
       },
-      "operator_note": "Benchmark-fresh live pair. The 2026-04-10 targeted opening compression repair moved the first public signboard from B09 to B08, and the 2026-04-12 explicit manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B03/B04/B08 receipt chain. Whole-run pacing reread stays GREEN with no late drag, so pair 03 is now admitted as current sell-in top shelf."
+      "operator_note": "Benchmark-fresh live pair. The 2026-04-10 targeted opening compression repair moved the first public signboard from B09 to B08, and the 2026-04-12 explicit manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B03/B04/B08 receipt chain. Whole-run pacing reread stays GREEN with no late drag. Under the 2026-04-29 donor-structure overlay, pair 03 stays benchmark/reference inventory until donor structure is applied and recorded."
     },
     {
       "work_id": "defense_defect_engineer",
@@ -102,6 +109,8 @@
       "benchmark_alias": "GREENPLUS",
       "benchmark_freshness": "current",
       "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "material_deployment_status": "reference_until_donor_structure_applied",
+      "donor_structure_status": "not_applied_or_not_recorded",
       "opening_pacing_triage": {
         "grade": "GREEN",
         "recommended_action": "keep_active_inventory",
@@ -112,7 +121,7 @@
           "MANUAL-CLOSEOUT-PASS"
         ]
       },
-      "operator_note": "Benchmark-fresh regenerated live pair. 2026-04-10 explicit deployable GREENPLUS closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the work-guard thresholds with the live B02/B03/B08/B10/B12 receipt chain. Whole-run pacing re-audit found no downgrade-worthy mid/late drag, so pair 04 is now admitted as current sell-in top shelf."
+      "operator_note": "Benchmark-fresh regenerated live pair. 2026-04-10 explicit deployable GREENPLUS closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the work-guard thresholds with the live B02/B03/B08/B10/B12 receipt chain. Whole-run pacing re-audit found no downgrade-worthy mid/late drag. Under the 2026-04-29 donor-structure overlay, pair 04 stays benchmark/reference inventory until donor structure is applied and recorded."
     },
     {
       "work_id": "office_checkup_next_day",
@@ -124,6 +133,8 @@
       "benchmark_alias": "GREENPLUS",
       "benchmark_freshness": "current",
       "benchmark_artifact": "docs/2026-04-12/office_checkup_next_day_deployable_greenplus_refresh_closeout.md",
+      "material_deployment_status": "reference_until_donor_structure_applied",
+      "donor_structure_status": "not_applied_or_not_recorded",
       "opening_pacing_triage": {
         "grade": "GREEN",
         "recommended_action": "keep_active_inventory",
@@ -136,7 +147,7 @@
           "MANUAL-CLOSEOUT-PASS"
         ]
       },
-      "operator_note": "Historical GREENPLUS alias preserved through the 2026-04-11 bounded authority-first repair, and the 2026-04-12 bounded benchmark-preservation closeout re-closes freshness as current. The live opening contract remains explicit at signboard B03 / reevaluation B05 / ticket B03, whole-run pacing reread stays GREEN with no late drag, and 70/70 blocks still keep same-block cider receipts, so pair 07 is now admitted as current sell-in top shelf."
+      "operator_note": "Historical GREENPLUS alias preserved through the 2026-04-11 bounded authority-first repair, and the 2026-04-12 bounded benchmark-preservation closeout re-closes freshness as current. The live opening contract remains explicit at signboard B03 / reevaluation B05 / ticket B03, whole-run pacing reread stays GREEN with no late drag, and 70/70 blocks still keep same-block cider receipts. Under the 2026-04-29 donor-structure overlay, pair 07 stays benchmark/reference inventory until donor structure is applied and recorded."
     },
     {
       "work_id": "pantech_cyworld_reborn",
@@ -148,6 +159,8 @@
       "benchmark_alias": "GREENPLUS",
       "benchmark_freshness": "current",
       "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "material_deployment_status": "reference_until_donor_structure_applied",
+      "donor_structure_status": "not_applied_or_not_recorded",
       "opening_pacing_triage": {
         "grade": "GREEN",
         "recommended_action": "keep_active_inventory",
@@ -158,7 +171,7 @@
           "MANUAL-CLOSEOUT-PASS"
         ]
       },
-      "operator_note": "Benchmark-fresh live pair. The 2026-04-10 bounded repair made the early reevaluation surface legible at B02 and kept whole-run pacing GREEN, while the 2026-04-12 explicit manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B01/B02/B03 conversion chain despite the heuristic ticket gap. Pair 08 is now admitted as current sell-in top shelf."
+      "operator_note": "Benchmark-fresh live pair. The 2026-04-10 bounded repair made the early reevaluation surface legible at B02 and kept whole-run pacing GREEN, while the 2026-04-12 explicit manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B01/B02/B03 conversion chain despite the heuristic ticket gap. Under the 2026-04-29 donor-structure overlay, pair 08 stays benchmark/reference inventory until donor structure is applied and recorded."
     },
     {
       "work_id": "wuxia_heavenly_physician",
@@ -170,6 +183,8 @@
       "benchmark_alias": "GREENPLUS",
       "benchmark_freshness": "current",
       "benchmark_artifact": "docs/2026-04-12/wuxia_heavenly_physician_deployable_greenplus_refresh_closeout.md",
+      "material_deployment_status": "reference_until_donor_structure_applied",
+      "donor_structure_status": "not_applied_or_not_recorded",
       "opening_pacing_triage": {
         "grade": "GREEN",
         "recommended_action": "keep_active_inventory",
@@ -181,7 +196,7 @@
           "MANUAL-CLOSEOUT-PASS"
         ]
       },
-      "operator_note": "Regenerated live pair repaired on 2026-04-11 via bounded late-run pressure reinjection at B61/B65/B66. The 2026-04-12 bounded preservation closeout re-closes freshness as current, and the same-day manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B02/B03/B04/B06 permission chain. Whole-run pacing reread stays GREEN with only B70 epilogue closure as the sole late blank, so pair 09 is now admitted as current sell-in top shelf."
+      "operator_note": "Regenerated live pair repaired on 2026-04-11 via bounded late-run pressure reinjection at B61/B65/B66. The 2026-04-12 bounded preservation closeout re-closes freshness as current, and the same-day manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B02/B03/B04/B06 permission chain. Whole-run pacing reread stays GREEN with only B70 epilogue closure as the sole late blank. Under the 2026-04-29 donor-structure overlay, pair 09 stays benchmark/reference inventory until donor structure is applied and recorded."
     },
     {
       "work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
@@ -193,6 +208,8 @@
       "benchmark_alias": "GREENPLUS",
       "benchmark_freshness": "current",
       "benchmark_artifact": "docs/2026-04-20/golden_canary_deepclone_probe_a_fullblock_v1_deployable_greenplus_closeout.md",
+      "material_deployment_status": "immediate_deployable_material",
+      "donor_structure_status": "applied_donorized_full_block_structure",
       "opening_pacing_triage": {
         "grade": "GREEN",
         "recommended_action": "keep_active_inventory",
@@ -204,7 +221,7 @@
           "MANUAL-CLOSEOUT-PASS"
         ]
       },
-      "operator_note": "Benchmark-fresh unslotted live pair. The 2026-04-20 initial benchmark closes unbenchmarked -> current with P0 6/6, P1 19/20, and 60/60 same-block cider. The same-day manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B02/B03/B04/B06 receipt chain with the work-guard timing thresholds, so this donorized full-block gold sample is now admitted as current sell-in top shelf."
+      "operator_note": "Benchmark-fresh unslotted live pair. The 2026-04-20 initial benchmark closes unbenchmarked -> current with P0 6/6, P1 19/20, and 60/60 same-block cider. The same-day manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B02/B03/B04/B06 receipt chain with the work-guard timing thresholds. Because the donorized full-block structure is applied and visible, this is the current immediate material-deployment sample."
     },
     {
       "work_id": "jangyeongshil_industrial_revolution",
@@ -216,6 +233,8 @@
       "benchmark_alias": "GREEN",
       "benchmark_freshness": "current",
       "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "material_deployment_status": "not_deployable_negative_exemplar",
+      "donor_structure_status": "not_applied_or_not_recorded",
       "last_audit_date": "2026-04-09",
       "audit_trail": [
         "docs/2026-04-09/jangyeongshil_industrial_revolution_bi_audit_report.md",
@@ -247,6 +266,8 @@
       "benchmark_alias": "GREEN",
       "benchmark_freshness": "current",
       "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "material_deployment_status": "reference_until_donor_structure_applied",
+      "donor_structure_status": "not_applied_or_not_recorded",
       "opening_pacing_triage": {
         "grade": "GREEN",
         "recommended_action": "keep_active_inventory",

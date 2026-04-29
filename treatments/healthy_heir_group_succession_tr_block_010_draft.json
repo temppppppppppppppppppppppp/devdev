@@ -1,0 +1,1266 @@
+{
+  "_schema": "tr.v1",
+  "_work_id": "healthy_heir_group_succession",
+  "_total_blocks": 10,
+  "_phase0_ref": "treatments/phase0/healthy_heir_group_succession_phase0_design.json",
+  "_work_guard_ref": "work_guards/healthy_heir_group_succession.yaml",
+  "blocks": [
+    {
+      "block_id": "Block 1",
+      "title": "서명 직전",
+      "content": {
+        "context": "서도윤은 회귀 직후 한서그룹 본가 회장실 앞에 서 있다. 전생의 마지막 장면은 분명했다. 남부 냉장센터 폐쇄, 주거개발 자금 경색, 신용등급 하락, 신사업 생산권 상실. 그룹은 한 번에 무너진 것이 아니라 각자 자리에서는 맞았던 결정들이 늦게 이어지며 무너졌다.",
+        "event_villain": "회장실 안에서는 서문석이 남부 냉장센터 폐쇄안에 서명하려 한다. 한서리테일로지스 사장은 적자를 줄이려 하고, CFO 라인은 현금 유출을 막으려 한다. 숫자만 보면 폐쇄가 맞다. 문제는 도윤만 그 폐쇄 뒤에 사라질 다음 권리를 기억한다는 점이다.",
+        "solution": "도윤은 미래를 말하지 않기로 정한다. 대신 폐쇄안 표지 아래 손익 요약표를 훑고, 반품 손실과 인증 유지 비용이 같은 줄에 묶인 것을 본다. 서명 직전, 그는 회장실 문을 열고 한 문장만 묻는다. 원본 손익표를 보고 말씀드려도 되겠습니까.",
+        "reward": "아직 폐쇄는 멈추지 않았다. 하지만 서문석의 펜이 종이 위에서 멈추고, 회의실의 시선이 처음으로 도윤에게 돌아온다. 도윤은 감정 호소가 아니라 자료 요청으로 발언권을 얻는다."
+      },
+      "stakes": "여기서 감정적으로 밀고 들어가면 도윤은 회귀자가 아니라 성급한 손자로 보인다. 서명이 끝나면 냉장 인증 인력과 입찰 자격을 함께 잃고, 첫 붕괴 순서가 다시 시작된다.",
+      "power_shift": {
+        "protagonist": "정식 권한 없는 외동 손자에서 결재 직전 자료 요청으로 회의를 멈춘 사람",
+        "antagonist": "폐쇄안을 무리 없이 통과시키려던 계열사 라인이 예상 밖 질문을 받은 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "서문석",
+          "before": "외동 손자로만 보는 상태",
+          "after": "결재 회의에 끼어든 손자를 의아하게 보는 상태"
+        }
+      ],
+      "foreshadow": [
+        "손익 요약표의 묶인 비용 줄은 원본 자료가 호출되는 순간 첫 균열이 된다.",
+        "남부 냉장센터 폐쇄는 물류 문제로 보이지만 뒤의 자금 경색까지 이어지는 첫 고리다."
+      ],
+      "callback": [],
+      "emotional_beat": {
+        "type": "회귀충격",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "서도윤",
+      "location": {
+        "place": "서울 성북동 한서그룹 본가 회장실 입구",
+        "type": "실내",
+        "macro_battlefield": "남부 냉장센터 폐쇄 결재"
+      },
+      "time_span": {
+        "duration": "10분",
+        "in_story_time": "2026년 3월 초"
+      },
+      "genre_ext": {
+        "type": "business_growth",
+        "capital_before": "0",
+        "capital_after": "0",
+        "capital_delta": "0",
+        "profit_loss": "0",
+        "method": "폐쇄 결재 직전 감정 호소 대신 원본 자료 요청으로 발언권을 확보한다.",
+        "investment_type": "권한 확보 준비",
+        "deal_type": "결재 회의 진입",
+        "leverage_used": [
+          "회귀 전 붕괴 순서 기억",
+          "손익표 누락 열 확인",
+          "외동 후계자의 회장실 접근성"
+        ],
+        "opponent": {
+          "name": "폐쇄 결재 관성",
+          "type": "조직 판단",
+          "weakness_exploited": "요약표만 보고 원본 손익표를 아직 대조하지 않은 상태"
+        },
+        "historical_event": null,
+        "time_pressure": "서문석의 서명 직전이다. 지금 멈추지 못하면 폐쇄 절차가 바로 시작된다.",
+        "knowledge_used": "회귀 전 남부 냉장센터 폐쇄가 그룹 붕괴의 첫 고리였다는 기억",
+        "risk_level": "고위험",
+        "business_sector": "물류/유통",
+        "section_rotation": "폐쇄 결재 진입",
+        "success_pattern": "미래를 말하지 않고 현재 자료의 빈칸으로 회의를 멈춘다.",
+        "special_ability": {
+          "has_ability": false,
+          "ability_type": null,
+          "ability_name": null,
+          "ability_source": null,
+          "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "발언권",
+          "receipt_line": "서문석의 펜이 멈추고 도윤은 결재 직전 원본 자료를 요구할 발언권을 얻는다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "없음",
+          "representative_reevaluation": "없음",
+          "next_battlefield_ticket": "없음"
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "남부 냉장센터 폐쇄 뒤 PF, IR, 제조, 신사업으로 이어진 붕괴 순서",
+          "accuracy": "직접 경험한 기억이지만 현재 자료로만 증명 가능",
+          "source": "전생 기억"
+        },
+        "butterfly_effect": {
+          "original_event": "폐쇄안은 질문 없이 결재됐다.",
+          "changed_event": "도윤이 원본 손익표를 요구하며 서명을 멈춘다.",
+          "ripple_effect": "폐쇄안의 전제가 검증 대상이 된다."
+        },
+        "death_flag": null,
+        "regression_hint": {
+          "slip_up": "미래 발언 없음",
+          "suspicion_from": "없음"
+        },
+        "future_prep": {
+          "action": "원본 손익표와 인증 유지 비용 분리 확인",
+          "target_event": "콜드체인 입찰 자격 상실 방지"
+        }
+      },
+      "block_no": 1,
+      "foreshadow_targets": [
+        2,
+        10
+      ]
+    },
+    {
+      "block_id": "Block 2",
+      "title": "빠진 열",
+      "content": {
+        "context": "회장실 결재 테이블 위로 원본 손익표가 올라온다. 요약표에는 적자가 한 줄이었지만, 원본에는 반품 손실, 인증 유지 비용, 배송 단가 보전금이 따로 숨어 있다.",
+        "event_villain": "한서리테일로지스 사장은 폐쇄가 비용 절감이라고 믿는다. CFO 라인도 같은 숫자를 본다. 누구도 악의가 없다. 다만 인증 유지 비용을 손실로만 보면 폐쇄가 답이고, 자격 유지 비용으로 보면 이야기가 바뀐다.",
+        "solution": "도윤은 세 비용을 손으로 나눠 적고, 폐쇄안의 손실 합계가 판단 단위를 잘못 묶었다고 지적한다. 그는 결론을 선언하지 않고 원본 별첨과 인증 유지 내역을 함께 보자고 요구한다.",
+        "reward": "서문석은 폐쇄 결재를 그 자리에서 보류한다. 비서실은 원본 별첨과 인증 파일을 추가로 호출하고, 도윤의 이름이 임시 검토 메모 맨 위에 적힌다."
+      },
+      "stakes": "누락 열을 설명하지 못하면 도윤은 폐쇄를 늦춘 책임만 진다. 반대로 이 자리에서 원본 호출을 얻으면 외동 손자라는 위치가 자료 접근권으로 바뀐다.",
+      "power_shift": {
+        "protagonist": "자료 요청자에서 원본 손익표를 다시 보게 만든 사람",
+        "antagonist": "폐쇄안을 확정하려던 계열사 라인이 원본 별첨을 다시 내야 하는 입장"
+      },
+      "relationship_delta": [
+        {
+          "target": "서문석",
+          "before": "결재 회의에 끼어든 손자를 의아하게 보는 상태",
+          "after": "자료를 다시 보게 만든 손자로 인식"
+        },
+        {
+          "target": "한서리테일로지스 사장",
+          "before": "폐쇄안 통과를 확신",
+          "after": "도윤의 자료 요청을 부담스러운 변수로 봄"
+        }
+      ],
+      "foreshadow": [
+        "인증 유지 내역은 센터의 적자를 입찰 자격 비용으로 바꾸는 열쇠가 된다.",
+        "임시 검토 메모의 이름은 뒤에 공식 안건 표지로 바뀐다."
+      ],
+      "callback": [
+        "손익 요약표의 묶인 비용 줄이 원본 자료에서 실제 누락으로 확인된다."
+      ],
+      "emotional_beat": {
+        "type": "제동",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "서도윤",
+      "location": {
+        "place": "한서그룹 본가 회장실 결재 테이블",
+        "type": "실내",
+        "macro_battlefield": "남부 냉장센터 폐쇄 결재"
+      },
+      "time_span": {
+        "duration": "25분",
+        "in_story_time": "2026년 3월 초"
+      },
+      "genre_ext": {
+        "type": "business_growth",
+        "capital_before": "0",
+        "capital_after": "1",
+        "capital_delta": "1",
+        "profit_loss": "1 증가",
+        "method": "원본 손익표에서 반품 손실과 인증 유지 비용을 분리해 폐쇄 결재를 보류시킨다.",
+        "investment_type": "자료 접근권",
+        "deal_type": "원본자료 호출",
+        "leverage_used": [
+          "반품 손실 분리",
+          "인증 유지 비용 분리",
+          "서명 보류 압박"
+        ],
+        "opponent": {
+          "name": "한서리테일로지스 사장",
+          "type": "계열사 대표",
+          "weakness_exploited": "요약 손익표 기준으로 폐쇄안을 만든 점"
+        },
+        "historical_event": null,
+        "time_pressure": "서명이 보류된 시간 안에 원본 별첨까지 확인해야 한다.",
+        "knowledge_used": "폐쇄 뒤 입찰 자격이 사라진다는 전생 기억을 현재 비용 분리로 좁힌다.",
+        "risk_level": "고위험",
+        "business_sector": "물류/유통",
+        "section_rotation": "원본자료 호출",
+        "success_pattern": "한 줄 적자를 세 비용으로 쪼개 폐쇄 결재를 멈춘다.",
+        "special_ability": {
+          "has_ability": false,
+          "ability_type": null,
+          "ability_name": null,
+          "ability_source": null,
+          "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "자료접근권",
+          "receipt_line": "폐쇄 결재가 보류되고 원본 별첨 호출권과 임시 검토 메모의 이름을 얻는다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "원본 손익표와 인증 파일이 회장실 공식 검토 자료로 호출된다.",
+          "representative_reevaluation": "서문석이 도윤을 자료를 다시 보게 만든 사람으로 인식한다.",
+          "next_battlefield_ticket": "인증 유지 내역 확인으로 다음 검증이 열린다."
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "냉장 인증 상실이 뒤의 입찰 실패로 이어진 기억",
+          "accuracy": "현재 자료 확인 전에는 추정",
+          "source": "전생 기억"
+        },
+        "butterfly_effect": {
+          "original_event": "폐쇄안은 요약 손익표 기준으로 결재됐다.",
+          "changed_event": "원본 별첨과 인증 파일이 호출된다.",
+          "ripple_effect": "폐쇄안은 확정안이 아니라 검증안으로 격하된다."
+        },
+        "death_flag": null,
+        "regression_hint": {
+          "slip_up": "미래 발언 없음",
+          "suspicion_from": "없음"
+        },
+        "future_prep": {
+          "action": "인증 유지 내역과 입찰 자격 조건 대조",
+          "target_event": "센터 재분류"
+        }
+      },
+      "block_no": 2,
+      "foreshadow_targets": [
+        3,
+        4
+      ],
+      "callback_sources": [
+        1
+      ]
+    },
+    {
+      "block_id": "Block 3",
+      "title": "입찰 자격",
+      "content": {
+        "context": "비서실 자료실에서 냉장 인증 유지 내역과 콜드체인 입찰 사전 조건표가 도착한다. 센터는 적자를 내고 있지만, 최근 2년 냉장 납품 이력과 특정 인증 유지가 있어야만 다음 대형 입찰에 들어갈 수 있다.",
+        "event_villain": "계열사 사장은 단기 손익을 본다. 폐쇄하면 적자는 줄고 보고서는 깨끗해진다. 하지만 그 판단은 입찰 자격을 손실표 밖의 권리로 보지 못한다.",
+        "solution": "도윤은 원본 손익표 옆에 입찰 조건표를 붙인다. 그리고 회의실 전체가 들을 수 있게 말한다. 적자 센터가 아닙니다. 입찰 자격을 가진 적자 센터입니다.",
+        "reward": "서문석은 폐쇄안을 `정리 대상`에서 `검증 대상`으로 바꾸라고 지시한다. 도윤은 남부 냉장센터 폐쇄 대상 검증권을 받는다."
+      },
+      "stakes": "입찰 조건표와 손익표의 연결이 약하면 도윤은 단기 손실을 무시한 손자로 끝난다. 연결이 먹히면 적자를 권리 비용으로 다시 부를 수 있다.",
+      "power_shift": {
+        "protagonist": "원본 자료를 다시 보게 만든 사람에서 폐쇄안의 이름을 바꾼 사람",
+        "antagonist": "계열사 사장이 폐쇄안의 전제를 방어해야 하는 입장"
+      },
+      "relationship_delta": [
+        {
+          "target": "서문석",
+          "before": "자료를 다시 보게 만든 손자로 인식",
+          "after": "사업 판단을 하는 후계 후보로 재평가 시작"
+        },
+        {
+          "target": "한서리테일로지스 사장",
+          "before": "도윤의 자료 요청을 부담스러운 변수로 봄",
+          "after": "폐쇄안의 전제를 방어해야 하는 입장"
+        }
+      ],
+      "foreshadow": [
+        "검증권은 현장 출입권과 원장 접근권 없이는 빈 권한으로 남는다.",
+        "입찰 자격이라는 말은 뒤에 사장단 회의의 첫 안건 제목이 된다."
+      ],
+      "callback": [
+        "인증 유지 내역이 적자 센터를 입찰 자격 보유 거점으로 바꾼다."
+      ],
+      "emotional_beat": {
+        "type": "재분류쾌감",
+        "intensity": 9
+      },
+      "tension_level": 8,
+      "pov_character": "서도윤",
+      "location": {
+        "place": "한서그룹 비서실 자료 회의실",
+        "type": "실내",
+        "macro_battlefield": "남부 냉장센터 폐쇄 결재"
+      },
+      "time_span": {
+        "duration": "40분",
+        "in_story_time": "2026년 3월 초"
+      },
+      "genre_ext": {
+        "type": "business_growth",
+        "capital_before": "1",
+        "capital_after": "2",
+        "capital_delta": "1",
+        "profit_loss": "1 증가",
+        "method": "냉장 인증 유지 내역과 입찰 조건표를 손익표에 붙여 폐쇄 대상의 이름을 바꾼다.",
+        "investment_type": "검증권",
+        "deal_type": "사업 자격 재분류",
+        "leverage_used": [
+          "냉장 인증 유지 내역",
+          "콜드체인 입찰 조건표",
+          "원본 손익표 대조"
+        ],
+        "opponent": {
+          "name": "단기 손익 기준",
+          "type": "의사결정 기준",
+          "weakness_exploited": "입찰 자격을 손익표 밖의 권리로 처리한 점"
+        },
+        "historical_event": null,
+        "time_pressure": "입찰 사전 조건 확인 기한이 다가오고 있어 폐쇄 검증을 늦출 수 없다.",
+        "knowledge_used": "전생에서 입찰 자격 상실 뒤 물류 협상권을 잃은 기억",
+        "risk_level": "고위험",
+        "business_sector": "물류/유통",
+        "section_rotation": "입찰 자격 재분류",
+        "success_pattern": "손실의 이름을 권리 유지 비용으로 바꾼다.",
+        "special_ability": {
+          "has_ability": false,
+          "ability_type": null,
+          "ability_name": null,
+          "ability_source": null,
+          "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "재평가",
+          "receipt_line": "남부 냉장센터가 검증 대상으로 바뀌고 도윤은 폐쇄 대상 검증권을 받는다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "폐쇄안 표기가 정리 대상에서 검증 대상으로 바뀐다.",
+          "representative_reevaluation": "도윤은 외동 손자가 아니라 사업 판단을 하는 후계 후보로 보이기 시작한다.",
+          "next_battlefield_ticket": "검증권이 생기며 원장과 현장 확인 필요가 열린다."
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "콜드체인 입찰 자격 상실의 후폭풍",
+          "accuracy": "현재 입찰 조건표와 대조해 검증",
+          "source": "전생 기억과 현재 문서"
+        },
+        "butterfly_effect": {
+          "original_event": "센터는 적자 시설로 폐쇄됐다.",
+          "changed_event": "센터가 입찰 자격 보유 거점으로 재분류된다.",
+          "ripple_effect": "폐쇄안은 비용 절감이 아니라 권리 상실 여부를 따지는 안건이 된다."
+        },
+        "death_flag": null,
+        "regression_hint": {
+          "slip_up": "미래 발언 없음",
+          "suspicion_from": "없음"
+        },
+        "future_prep": {
+          "action": "원장과 현장 기록으로 손실 분류를 세분화",
+          "target_event": "90일 경영진단권 확보"
+        }
+      },
+      "block_no": 3,
+      "foreshadow_targets": [
+        4,
+        6,
+        10
+      ],
+      "callback_sources": [
+        2
+      ]
+    },
+    {
+      "block_id": "Block 4",
+      "title": "14일 표",
+      "content": {
+        "context": "서문석은 손자의 말을 바로 믿지 않는다. 폐쇄안을 멈추는 것은 돈이 새는 시간을 늘리는 일이기도 하다. 회장실 공기는 다시 무거워진다.",
+        "event_villain": "전면 권한을 주면 사장단은 손자 특혜라고 본다. 권한을 안 주면 도윤은 검증을 못 한다. 서문석은 이 사이에서 회장으로서의 조건을 걸어야 한다.",
+        "solution": "도윤은 전권을 요구하지 않는다. 14일 안에 손실 분류표를 만들고, 그 결과로 90일 경영진단권을 심사받겠다고 역제안한다. 필요한 것은 원장, 계약서, 현장 출입권뿐이라고 못박는다.",
+        "reward": "서문석은 14일 조건을 승인한다. 도윤은 원장, 계약서, 현장 출입권을 받고, 90일 경영진단권 협상 테이블을 연다."
+      },
+      "stakes": "권한을 크게 요구하면 특혜가 되고, 작게 요구하면 검증을 못 한다. 도윤은 필요한 권한만 정확히 찔러야 한다.",
+      "power_shift": {
+        "protagonist": "검증권을 받은 사람에서 조건부 실사 권한을 가진 사람",
+        "antagonist": "서문석의 검증 조건이 도윤의 다음 시험으로 확정"
+      },
+      "relationship_delta": [
+        {
+          "target": "서문석",
+          "before": "사업 판단을 하는 후계 후보로 재평가 시작",
+          "after": "조건을 걸어 제한 권한을 줄 만한 상대로 인정"
+        },
+        {
+          "target": "비서실장",
+          "before": "회장 지시를 기다리는 관찰자",
+          "after": "도윤에게 원장과 계약서 열람 절차를 열어 주는 실무자"
+        }
+      ],
+      "foreshadow": [
+        "14일 표는 뒤에 사장단 안건의 첫 첨부 문서가 된다.",
+        "계약서 별첨은 배송 단가 역풍에서 반격 카드가 된다."
+      ],
+      "callback": [
+        "검증권이 원장과 현장 출입권으로 실체를 얻는다."
+      ],
+      "emotional_beat": {
+        "type": "조건부승인",
+        "intensity": 8
+      },
+      "tension_level": 7,
+      "pov_character": "서도윤",
+      "location": {
+        "place": "한서그룹 회장실 별도 접견실",
+        "type": "실내",
+        "macro_battlefield": "남부 냉장센터 폐쇄 결재"
+      },
+      "time_span": {
+        "duration": "30분",
+        "in_story_time": "2026년 3월 초"
+      },
+      "genre_ext": {
+        "type": "business_growth",
+        "capital_before": "2",
+        "capital_after": "3",
+        "capital_delta": "1",
+        "profit_loss": "1 증가",
+        "method": "전권이 아니라 14일 손실 분류표 조건을 걸어 필요한 접근권만 회수한다.",
+        "investment_type": "제한 권한",
+        "deal_type": "제한 권한 협상",
+        "leverage_used": [
+          "검증권",
+          "필요 권한 최소화",
+          "서문석 체면 보존"
+        ],
+        "opponent": {
+          "name": "손자 특혜 프레임",
+          "type": "사장단 시선",
+          "weakness_exploited": "전권이 아니라 조건부 실사로 낮춘 점"
+        },
+        "historical_event": null,
+        "time_pressure": "14일 안에 분류표를 못 만들면 폐쇄 보류 명분이 사라진다.",
+        "knowledge_used": "센터 폐쇄 뒤 연쇄 리스크가 더 크다는 기억을 실사 범위로 압축",
+        "risk_level": "중위험",
+        "business_sector": "물류/유통",
+        "section_rotation": "제한 권한 협상",
+        "success_pattern": "책임질 수 있는 만큼만 권한을 요구한다.",
+        "special_ability": {
+          "has_ability": false,
+          "ability_type": null,
+          "ability_name": null,
+          "ability_source": null,
+          "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "권한이동",
+          "receipt_line": "14일 조건 아래 원장, 계약서, 현장 출입권과 90일 경영진단권 협상 테이블이 열린다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "비서실이 원장과 계약서 열람 절차를 공식으로 연다.",
+          "representative_reevaluation": "서문석은 도윤을 조건부 권한을 줄 만한 상대로 본다.",
+          "next_battlefield_ticket": "원장 예외코드와 현장 기록 검증으로 이어진다."
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "폐쇄 뒤 더 큰 손실이 온다는 기억",
+          "accuracy": "현재 실사 권한 확보 전에는 주장으로 남음",
+          "source": "전생 기억"
+        },
+        "butterfly_effect": {
+          "original_event": "검증 없이 폐쇄 절차가 진행됐다.",
+          "changed_event": "14일 손실 분류표 조건이 붙는다.",
+          "ripple_effect": "도윤의 개입이 특혜가 아니라 조건부 실사로 기록된다."
+        },
+        "death_flag": null,
+        "regression_hint": {
+          "slip_up": "미래 발언 없음",
+          "suspicion_from": "없음"
+        },
+        "future_prep": {
+          "action": "원장 예외코드와 계약서 별첨 확인",
+          "target_event": "손실의 회수 가능성 입증"
+        }
+      },
+      "block_no": 4,
+      "foreshadow_targets": [
+        5,
+        8,
+        10
+      ],
+      "callback_sources": [
+        3
+      ]
+    },
+    {
+      "block_id": "Block 5",
+      "title": "예외코드",
+      "content": {
+        "context": "도윤은 회계 검토실에서 오세진과 마주한다. 오세진은 회장실이 붙인 검증자이지 도윤 편이 아니다. 그는 원장 접근권을 열어 주되, 틀리면 그대로 보고하겠다고 선을 긋는다.",
+        "event_villain": "원장에는 센터 손실이 한 묶음으로 닫혀 있다. 반품, 온도 이탈, 거래처 보전금이 한 코드 아래로 들어가 있어 손실 회수가 불가능해 보인다.",
+        "solution": "도윤은 손실 총액을 맞히려 하지 않는다. 대신 거래처 보전금이 들어간 예외코드의 반복 날짜를 짚고, 오세진에게 배송 단가 계약서 별첨과 대조해 달라고 요청한다. 오세진은 날짜 패턴을 확인하고 표정을 바꾼다.",
+        "reward": "원장 예외코드가 열리고, 손실 일부가 회수 가능한 권리 후보로 바뀐다. 도윤의 검증안은 회장실 공유 자료에 올라간다."
+      },
+      "stakes": "회계 검증이 안 붙으면 도윤의 말은 감 좋은 손자의 추정으로 남는다. 오세진이 숫자로 확인해야 폐쇄 보류가 회장실 자료가 된다.",
+      "power_shift": {
+        "protagonist": "조건부 실사 권한을 가진 사람에서 회계 검증을 붙인 사람",
+        "antagonist": "한 묶음 손실 원장이 회수 가능 권리 후보를 드러내는 자료로 바뀜"
+      },
+      "relationship_delta": [
+        {
+          "target": "오세진",
+          "before": "회장실이 붙인 중립 검증자",
+          "after": "도윤의 방향을 숫자로 확인한 조건부 협력자"
+        },
+        {
+          "target": "비서실장",
+          "before": "도윤에게 원장과 계약서 열람 절차를 열어 주는 실무자",
+          "after": "도윤의 검증안을 회장실 공유 자료로 올리는 실무자"
+        }
+      ],
+      "foreshadow": [
+        "배송 단가 계약서 별첨은 거래처 역풍이 닥쳤을 때 도윤의 반격 근거가 된다.",
+        "회장실 공유 자료에 오른 검증안은 공식 안건으로 승격될 씨앗이다."
+      ],
+      "callback": [
+        "원장 열람권이 예외코드 확인으로 실질 보상이 된다.",
+        "계약서 별첨 접근권이 회계 검증의 다음 자료로 쓰인다."
+      ],
+      "emotional_beat": {
+        "type": "검증쾌감",
+        "intensity": 8
+      },
+      "tension_level": 7,
+      "pov_character": "서도윤",
+      "location": {
+        "place": "한서그룹 회계 검토실",
+        "type": "실내",
+        "macro_battlefield": "남부 냉장센터 폐쇄 결재"
+      },
+      "time_span": {
+        "duration": "반나절",
+        "in_story_time": "2026년 3월 초"
+      },
+      "genre_ext": {
+        "type": "business_growth",
+        "capital_before": "3",
+        "capital_after": "4",
+        "capital_delta": "1",
+        "profit_loss": "1 증가",
+        "method": "원장 예외코드의 반복 날짜를 계약서 별첨과 대조해 회수 가능한 손실 후보를 분리한다.",
+        "investment_type": "회계 검증",
+        "deal_type": "회계 검증",
+        "leverage_used": [
+          "원장 예외코드",
+          "배송 단가 계약서 별첨",
+          "오세진의 검증 권한"
+        ],
+        "opponent": {
+          "name": "한 묶음 손실 원장",
+          "type": "회계 기록",
+          "weakness_exploited": "반복 날짜와 거래처 보전금이 같은 코드에 묶여 있던 점"
+        },
+        "historical_event": null,
+        "time_pressure": "14일 표의 초안 제출 전 회계 검증을 붙여야 한다.",
+        "knowledge_used": "전생의 폐쇄 손실이 일부 회수 가능했다는 기억을 날짜 패턴 확인으로 검증",
+        "risk_level": "중위험",
+        "business_sector": "물류/유통",
+        "section_rotation": "원장 예외코드 검증",
+        "success_pattern": "추정을 회계 검증으로 바꾼다.",
+        "special_ability": {
+          "has_ability": false,
+          "ability_type": null,
+          "ability_name": null,
+          "ability_source": null,
+          "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "검증영수증",
+          "receipt_line": "원장 예외코드가 열리고 도윤의 검증안이 회장실 공유 자료에 오른다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "도윤의 검증안이 회장실 공유 자료에 오른다.",
+          "representative_reevaluation": "오세진이 도윤의 방향을 조건부로 인정한다.",
+          "next_battlefield_ticket": "현장 재측정과 거래처 조건 확인이 필요해진다."
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "폐쇄 손실 일부가 계약 조건으로 회수 가능했다는 기억",
+          "accuracy": "원장과 별첨으로 현재 검증",
+          "source": "전생 기억과 회계 자료"
+        },
+        "butterfly_effect": {
+          "original_event": "손실은 한 묶음으로 닫혀 폐쇄 근거가 됐다.",
+          "changed_event": "예외코드가 열리며 일부 손실이 권리 후보로 바뀐다.",
+          "ripple_effect": "폐쇄 보류가 감정이 아니라 회계 검증 자료를 가진다."
+        },
+        "death_flag": null,
+        "regression_hint": {
+          "slip_up": "미래 발언 없음",
+          "suspicion_from": "없음"
+        },
+        "future_prep": {
+          "action": "현장 기록과 거래처 조건 대조",
+          "target_event": "폐쇄 보류의 공식 경영 판단화"
+        }
+      },
+      "block_no": 5,
+      "foreshadow_targets": [
+        6,
+        8,
+        10
+      ],
+      "callback_sources": [
+        4
+      ]
+    },
+    {
+      "block_id": "Block 6",
+      "title": "현장 재측정",
+      "content": {
+        "context": "도윤은 남부 냉장센터 통제실로 내려간다. 화면에는 온도 이탈 기록, 교대판, 거래처별 배송 시간표가 따로 떠 있다. 현장 책임자는 회장 손자가 현장 기록을 읽을 거라 기대하지 않는다.",
+        "event_villain": "폐쇄안은 센터의 적자만 보지만, 현장은 더 복잡하다. 일부 온도 이탈은 센터 관리 문제가 아니라 거래처가 요구한 비정상 하차 시간과 연결되어 있다.",
+        "solution": "도윤은 온도 이탈 시간과 배송 단가 계약서 별첨의 시간대를 맞춘다. 현장 책임자에게 책임을 돌리지 않고, 거래처 조건과 센터 운영 조건이 어긋난 지점을 표로 잡는다.",
+        "reward": "폐쇄 보류가 공식 경영 판단으로 바뀐다. 남부 냉장센터 개선안은 다음 사장단 안건으로 올라가고, 도윤은 90일 경영진단권 심사 대상자가 된다."
+      },
+      "stakes": "현장 기록을 잡지 못하면 회계 검증은 책상 위 추정으로 끝난다. 현장 책임자를 몰아세우면 고용 보호 명분도 사라진다.",
+      "power_shift": {
+        "protagonist": "회계 검증을 붙인 사람에서 현장 조건까지 묶은 경영진단 후보",
+        "antagonist": "폐쇄안이 공식 개선안과 사장단 안건에 밀리는 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "오세진",
+          "before": "도윤의 방향을 숫자로 확인한 조건부 협력자",
+          "after": "현장 기록까지 대조해야 한다고 인정하는 검증 파트너"
+        },
+        {
+          "target": "한서리테일로지스 사장",
+          "before": "폐쇄안의 전제를 방어해야 하는 입장",
+          "after": "개선안이 공식 안건이 되자 계산을 다시 하는 입장"
+        },
+        {
+          "target": "현장 책임자",
+          "before": "회장 손자가 현장을 모를 거라 보는 상태",
+          "after": "도윤이 책임 전가가 아니라 조건을 다시 나눈다고 보는 상태"
+        }
+      ],
+      "foreshadow": [
+        "90일 경영진단권은 물류에서 끝나지 않고 건설 자금표까지 열게 된다.",
+        "현장 조건을 탓하지 않는 방식은 다른 계열사 사장들을 상대할 때 반복된다."
+      ],
+      "callback": [
+        "회계 검증 자료가 현장 온도 이탈 기록과 맞물려 공식 개선안으로 바뀐다.",
+        "배송 단가 계약서 별첨이 현장 책임 전가를 막는 근거가 된다."
+      ],
+      "emotional_beat": {
+        "type": "공식화",
+        "intensity": 9
+      },
+      "tension_level": 8,
+      "pov_character": "서도윤",
+      "location": {
+        "place": "남부 냉장센터 통제실",
+        "type": "현장",
+        "macro_battlefield": "남부 냉장센터 폐쇄 결재"
+      },
+      "time_span": {
+        "duration": "하루",
+        "in_story_time": "2026년 3월 첫째 주"
+      },
+      "genre_ext": {
+        "type": "business_growth",
+        "capital_before": "4",
+        "capital_after": "5",
+        "capital_delta": "1",
+        "profit_loss": "1 증가",
+        "method": "온도 이탈 기록과 거래처 배송 조건을 대조해 폐쇄 보류를 공식 개선안으로 바꾼다.",
+        "investment_type": "현장 검증",
+        "deal_type": "현장 재측정",
+        "leverage_used": [
+          "온도 이탈 기록",
+          "교대판",
+          "거래처 배송 시간표"
+        ],
+        "opponent": {
+          "name": "현장 책임 전가",
+          "type": "폐쇄안 논리",
+          "weakness_exploited": "거래처 조건과 센터 운영 조건의 어긋남을 분리하지 않은 점"
+        },
+        "historical_event": null,
+        "time_pressure": "사장단 회의 안건 마감 전 현장 검증을 끝내야 한다.",
+        "knowledge_used": "전생에서 센터 폐쇄 뒤 입찰 자격을 잃은 기억을 현장 조건 검증으로 확인",
+        "risk_level": "고위험",
+        "business_sector": "물류/유통",
+        "section_rotation": "현장 조건 대조",
+        "success_pattern": "책상 위 회계 검증을 현장 조건으로 확정한다.",
+        "special_ability": {
+          "has_ability": false,
+          "ability_type": null,
+          "ability_name": null,
+          "ability_source": null,
+          "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "다음전장",
+          "receipt_line": "폐쇄 보류가 공식 경영 판단이 되고 개선안이 다음 사장단 안건으로 올라간다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "남부 냉장센터 개선안이 사장단 안건 후보로 등록된다.",
+          "representative_reevaluation": "현장 책임자는 도윤을 책임 전가가 아니라 조건을 다시 나누는 사람으로 본다.",
+          "next_battlefield_ticket": "90일 경영진단권 심사와 사장단 회의 진입이 열린다."
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "센터 폐쇄가 다음 사업권 상실로 이어진 기억",
+          "accuracy": "현장 기록과 거래처 조건으로 현재 검증",
+          "source": "전생 기억과 현장 자료"
+        },
+        "butterfly_effect": {
+          "original_event": "현장 책임으로 묶인 손실이 폐쇄 근거가 됐다.",
+          "changed_event": "거래처 조건과 센터 운영 조건이 분리된다.",
+          "ripple_effect": "폐쇄 보류가 공식 개선안으로 바뀐다."
+        },
+        "death_flag": null,
+        "regression_hint": {
+          "slip_up": "미래 발언 없음",
+          "suspicion_from": "없음"
+        },
+        "future_prep": {
+          "action": "고용, 인증 인력, 거래처 조건을 사장단 안건으로 정리",
+          "target_event": "90일 경영진단권 확보"
+        }
+      },
+      "block_no": 6,
+      "foreshadow_targets": [
+        7,
+        10
+      ],
+      "callback_sources": [
+        3,
+        5
+      ]
+    },
+    {
+      "block_id": "Block 7",
+      "title": "고용 300명의 표",
+      "content": {
+        "context": "도윤은 센터 하역장 옆 사무실에서 숙련 인력 명단과 교대판을 받는다. 직원들은 회장 손자가 고용을 말하러 온 줄 알고 긴장하지만, 도윤은 사람을 지키겠다는 말을 꺼내지 않는다.",
+        "event_villain": "감동 대사로 고용을 말하면 경영진은 숫자 없는 미담으로 듣는다. 반대로 숫자만 말하면 현장 숙련 인력은 폐쇄 비용의 일부로 사라진다.",
+        "solution": "도윤은 300명을 숫자로 부르지 않고, 인증 유지 인력, 야간 냉장 숙련조, 거래처별 하차 담당, 긴급 복구 가능 인력으로 나눈다. 사람을 비용이 아니라 자격 유지 장치로 다시 분류한다.",
+        "reward": "현장 책임자는 숙련 교대조 원본을 도윤에게 넘긴다. 도윤의 14일 표에는 고용 보호가 감정이 아니라 인증 유지와 입찰 자격의 조건으로 들어간다."
+      },
+      "stakes": "사람을 감정으로만 다루면 사장단을 못 설득하고, 비용으로만 다루면 이 작품의 보호 축이 죽는다.",
+      "power_shift": {
+        "protagonist": "현장 조건까지 묶은 경영진단 후보에서 사람과 자격을 같은 표에 올린 사람",
+        "antagonist": "고용을 단순 비용으로 보던 폐쇄 논리가 인증 유지 조건 앞에서 약해짐"
+      },
+      "relationship_delta": [
+        {
+          "target": "현장 책임자",
+          "before": "도윤이 책임 전가가 아니라 조건을 다시 나눈다고 보는 상태",
+          "after": "숙련 교대조 원본을 맡길 수 있는 실사 담당자로 인정"
+        }
+      ],
+      "foreshadow": [
+        "숙련 교대조 원본은 거래처 역풍이 닥칠 때 센터가 당장 닫히면 안 되는 근거가 된다.",
+        "사람을 자격 유지 장치로 보는 표는 조기승계 로드맵의 첫 인간적 근거가 된다."
+      ],
+      "callback": [
+        "현장 조건을 탓하지 않은 태도가 숙련 교대조 원본 접근으로 돌아온다."
+      ],
+      "emotional_beat": {
+        "type": "잔잔한결속",
+        "intensity": 6
+      },
+      "tension_level": 6,
+      "pov_character": "서도윤",
+      "location": {
+        "place": "남부 냉장센터 하역장 옆 사무실",
+        "type": "현장",
+        "macro_battlefield": "남부 냉장센터 폐쇄 결재"
+      },
+      "time_span": {
+        "duration": "오후",
+        "in_story_time": "2026년 3월 첫째 주"
+      },
+      "genre_ext": {
+        "type": "business_growth",
+        "capital_before": "5",
+        "capital_after": "5",
+        "capital_delta": "0",
+        "profit_loss": "0",
+        "method": "고용 300명을 감정 대사가 아니라 인증 유지 인력과 숙련 교대조 구조로 재분류한다.",
+        "investment_type": "현장 신뢰",
+        "deal_type": "고용 구조 표준화",
+        "leverage_used": [
+          "숙련 교대조 원본",
+          "인증 유지 인력 명단",
+          "거래처별 하차 담당표"
+        ],
+        "opponent": {
+          "name": "고용 비용 프레임",
+          "type": "폐쇄 논리",
+          "weakness_exploited": "숙련 인력이 입찰 자격 유지 조건과 연결된 점"
+        },
+        "historical_event": null,
+        "time_pressure": "사장단 안건 전까지 고용을 미담이 아니라 조건으로 바꿔야 한다.",
+        "knowledge_used": "전생에서 숙련 인력 이탈 뒤 인증 복구가 늦어진 기억",
+        "risk_level": "중위험",
+        "business_sector": "물류/유통",
+        "section_rotation": "고용 조건 재분류",
+        "success_pattern": "사람을 비용이 아니라 사업 자격 유지 조건으로 재분류한다.",
+        "special_ability": {
+          "has_ability": false,
+          "ability_type": null,
+          "ability_name": null,
+          "ability_source": null,
+          "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "현장신뢰",
+          "receipt_line": "현장 책임자가 숙련 교대조 원본을 넘기며 도윤의 14일 표가 사람과 자격을 함께 품는다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "없음",
+          "representative_reevaluation": "현장 책임자가 도윤을 실사 담당자로 인정한다.",
+          "next_battlefield_ticket": "숙련 교대조 원본이 거래처 조건 재협상의 근거가 된다."
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "숙련 인력 이탈이 인증 복구 지연으로 이어진 기억",
+          "accuracy": "현장 명단으로 현재 검증",
+          "source": "전생 기억과 현장 자료"
+        },
+        "butterfly_effect": {
+          "original_event": "고용은 폐쇄 비용 항목으로 처리됐다.",
+          "changed_event": "고용이 입찰 자격 유지 조건으로 재분류된다.",
+          "ripple_effect": "사람을 지키는 논리가 경영 안건 안으로 들어간다."
+        },
+        "death_flag": null,
+        "regression_hint": {
+          "slip_up": "미래 발언 없음",
+          "suspicion_from": "없음"
+        },
+        "future_prep": {
+          "action": "숙련 교대조와 거래처 하차 조건 대조",
+          "target_event": "배송 단가 역풍 대응"
+        }
+      },
+      "block_no": 7,
+      "foreshadow_targets": [
+        8,
+        10
+      ],
+      "callback_sources": [
+        6
+      ]
+    },
+    {
+      "block_id": "Block 8",
+      "title": "단가 역풍",
+      "content": {
+        "context": "거래처 화상회의가 열린다. 도윤은 배송 단가 계약서 별첨을 들고 조건 재협상에 들어가지만, 거래처 구매팀장은 곧바로 선을 긋는다. 센터 폐쇄 보류는 한서 내부 문제이지 자기들이 돈을 더 낼 이유는 아니라고 한다.",
+        "event_villain": "거래처는 합리적이다. 한서가 센터 운영을 잘못해 온 부분도 있고, 단가를 올려 주면 자기 구매 원가가 흔들린다. 도윤의 개선안은 여기서 과속으로 보일 수 있다.",
+        "solution": "도윤은 단가 인상 요구를 접는다. 대신 온도 이탈 면책 패턴, 비정상 하차 시간, 숙련 교대조 유지 조건을 묶어 즉시 단가가 아니라 조건부 보전 검토로 낮춘다.",
+        "reward": "전면 재협상은 실패한다. 하지만 거래처는 비정상 하차 시간대와 면책 패턴을 함께 검토하겠다는 회신을 남긴다. 도윤은 손실을 다 회수하지 못했지만 반격 예약을 확보한다."
+      },
+      "stakes": "여기서 단가 인상을 밀어붙이면 거래처가 빠지고 센터 개선안은 무너진다. 물러서기만 하면 도윤의 14일 표도 힘을 잃는다.",
+      "power_shift": {
+        "protagonist": "조건을 낮춰 반격 예약을 남긴 사람",
+        "antagonist": "거래처가 단가 인상은 막았지만 비정상 하차 조건 검토를 열어 준 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "거래처 구매팀장",
+          "before": "한서 내부 문제로 선을 긋는 상대",
+          "after": "비정상 하차 조건 검토에는 응해야 하는 상대"
+        },
+        {
+          "target": "현장 책임자",
+          "before": "숙련 교대조 원본을 맡길 수 있는 실사 담당자로 인정",
+          "after": "도윤이 거래처 앞에서도 현장 책임으로 떠넘기지 않는다고 확신"
+        }
+      ],
+      "foreshadow": [
+        "거래처의 회신은 사장단 회의에서 폐쇄보다 조건 재협상이 낫다는 근거가 된다.",
+        "완승하지 못한 흔적은 도윤의 개선안이 과속이 아니라 조정 가능하다는 신뢰를 만든다."
+      ],
+      "callback": [
+        "배송 단가 계약서 별첨과 숙련 교대조 원본이 단가 인상 대신 조건부 검토로 연결된다."
+      ],
+      "emotional_beat": {
+        "type": "역풍",
+        "intensity": 7
+      },
+      "tension_level": 8,
+      "pov_character": "서도윤",
+      "location": {
+        "place": "남부 냉장센터 임시 화상회의실",
+        "type": "현장",
+        "macro_battlefield": "남부 냉장센터 폐쇄 결재"
+      },
+      "time_span": {
+        "duration": "1시간",
+        "in_story_time": "2026년 3월 첫째 주"
+      },
+      "genre_ext": {
+        "type": "business_growth",
+        "capital_before": "5",
+        "capital_after": "4",
+        "capital_delta": "-1",
+        "profit_loss": "1 감소",
+        "method": "단가 인상 요구를 낮추고 비정상 하차 조건 검토라는 반격 예약을 확보한다.",
+        "investment_type": "협상 손실 통제",
+        "deal_type": "거래처 역풍",
+        "leverage_used": [
+          "온도 이탈 면책 패턴",
+          "비정상 하차 시간",
+          "조건부 보전 검토"
+        ],
+        "opponent": {
+          "name": "거래처 구매팀장",
+          "type": "외부 협상 상대",
+          "weakness_exploited": "단가 인상은 거부해도 비정상 하차 조건은 검토해야 하는 위치"
+        },
+        "historical_event": null,
+        "time_pressure": "사장단 안건 제출 전 거래처 회신을 확보해야 한다.",
+        "knowledge_used": "전생에서 거래처 조건을 놓쳐 센터 책임으로 묶였던 기억",
+        "risk_level": "고위험",
+        "business_sector": "물류/유통",
+        "section_rotation": "거래처 조건 협상",
+        "success_pattern": "완승을 포기하고 다음 반격에 필요한 문서 회신을 확보한다.",
+        "special_ability": {
+          "has_ability": false,
+          "ability_type": null,
+          "ability_name": null,
+          "ability_source": null,
+          "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "반격예약",
+          "receipt_line": "단가 인상은 막혔지만 거래처의 비정상 하차 조건 검토 회신을 확보한다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "거래처 회신이 외부 문서로 남는다.",
+          "representative_reevaluation": "현장 책임자가 도윤의 협상 방식을 신뢰한다.",
+          "next_battlefield_ticket": "거래처 회신이 사장단 안건의 외부 근거가 된다."
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "거래처 조건을 놓치면 센터 책임으로 묶인다는 기억",
+          "accuracy": "현재 회신으로 일부 검증",
+          "source": "전생 기억과 거래처 회의"
+        },
+        "butterfly_effect": {
+          "original_event": "거래처 조건은 따로 다뤄지지 못하고 센터 손실로 묶였다.",
+          "changed_event": "비정상 하차 조건 검토 회신이 남는다.",
+          "ripple_effect": "도윤의 개선안은 완승 대신 조정 가능한 안건으로 살아남는다."
+        },
+        "death_flag": null,
+        "regression_hint": {
+          "slip_up": "미래 발언 없음",
+          "suspicion_from": "없음"
+        },
+        "future_prep": {
+          "action": "거래처 회신을 사장단 자료에 붙인다.",
+          "target_event": "90일 경영진단권 심사"
+        }
+      },
+      "block_no": 8,
+      "foreshadow_targets": [
+        9,
+        10
+      ],
+      "callback_sources": [
+        4,
+        7
+      ]
+    },
+    {
+      "block_id": "Block 9",
+      "title": "치워지지 않은 보고서",
+      "content": {
+        "context": "밤늦게 회장실 책상 위에 도윤의 14일 표 초안이 놓인다. 적자, 입찰 자격, 숙련 교대조, 거래처 회신이 한 장으로 묶여 있다. 서문석은 결재 도장을 찍지 않고 오래 읽는다.",
+        "event_villain": "보고서는 완벽하지 않다. 단가 회수는 아직 조건부이고, 센터 적자는 사라지지 않았다. 사장단 보수파는 이 빈틈을 잡을 수 있다.",
+        "solution": "도윤은 빈틈을 숨기지 않는다. 회수 확정, 회수 후보, 방어해야 할 자격, 사장단 판단 필요 항목을 네 칸으로 나눈다. 이 표는 센터를 살리자는 감정문이 아니라 판단 순서표가 된다.",
+        "reward": "서문석은 보고서를 치우지 않고 회장실 책상 오른쪽에 남긴다. 비서실장에게 사장단 회의 자료 목록에 넣으라고 지시한다. 말 없는 신뢰 영수증이 떨어진다."
+      },
+      "stakes": "빈틈을 감추면 도윤은 숫자를 꾸민 후계자로 보인다. 빈틈을 드러내도 판단 순서를 세우지 못하면 폐쇄론이 다시 힘을 얻는다.",
+      "power_shift": {
+        "protagonist": "반격 예약을 확보한 사람에서 빈틈까지 판단 순서표로 만든 사람",
+        "antagonist": "폐쇄론이 완승하지 못하고 사장단 판단으로 넘어가는 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "서문석",
+          "before": "조건을 걸어 제한 권한을 줄 만한 상대로 인정",
+          "after": "보고서를 치우지 않고 사장단 자료로 넘길 만큼 신뢰"
+        },
+        {
+          "target": "비서실장",
+          "before": "도윤의 검증안을 회장실 공유 자료로 올리는 실무자",
+          "after": "도윤의 표를 사장단 회의 자료 목록에 넣는 실무자"
+        }
+      ],
+      "foreshadow": [
+        "사장단 회의 자료 목록은 도윤의 첫 공식 안건 표지가 된다.",
+        "빈틈을 숨기지 않는 방식은 시장을 상대하는 전장에서 반복된다."
+      ],
+      "callback": [
+        "거래처의 조건부 회신이 빈틈을 숨기지 않는 판단 순서표에 들어간다.",
+        "회장실 공유 자료에 오른 검증안이 사장단 자료 목록으로 승격된다."
+      ],
+      "emotional_beat": {
+        "type": "신뢰",
+        "intensity": 7
+      },
+      "tension_level": 7,
+      "pov_character": "서도윤",
+      "location": {
+        "place": "한서그룹 회장실 야간 집무 책상",
+        "type": "실내",
+        "macro_battlefield": "남부 냉장센터 폐쇄 결재"
+      },
+      "time_span": {
+        "duration": "밤",
+        "in_story_time": "2026년 3월 첫째 주"
+      },
+      "genre_ext": {
+        "type": "business_growth",
+        "capital_before": "4",
+        "capital_after": "5",
+        "capital_delta": "1",
+        "profit_loss": "1 증가",
+        "method": "회수 확정과 회수 후보를 분리해 빈틈을 숨기지 않는 판단 순서표를 만든다.",
+        "investment_type": "회장실 신뢰",
+        "deal_type": "회장실 신뢰 영수증",
+        "leverage_used": [
+          "14일 손실 분류표 초안",
+          "거래처 조건부 회신",
+          "사장단 자료 목록"
+        ],
+        "opponent": {
+          "name": "불완전한 개선안",
+          "type": "안건 약점",
+          "weakness_exploited": "빈틈을 숨기지 않고 판단 필요 항목으로 분리한 점"
+        },
+        "historical_event": null,
+        "time_pressure": "사장단 회의 자료 마감 전 서문석의 신뢰를 얻어야 한다.",
+        "knowledge_used": "전생의 늦은 판단을 숨김이 아니라 순서 문제로 본 기억",
+        "risk_level": "중위험",
+        "business_sector": "물류/유통",
+        "section_rotation": "회장실 신뢰 영수증",
+        "success_pattern": "완벽한 척하지 않고 빈틈까지 판단 순서로 만든다.",
+        "special_ability": {
+          "has_ability": false,
+          "ability_type": null,
+          "ability_name": null,
+          "ability_source": null,
+          "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "신뢰영수증",
+          "receipt_line": "서문석이 도윤의 보고서를 치우지 않고 사장단 회의 자료 목록에 넣게 한다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "도윤의 표가 사장단 회의 자료 목록에 들어간다.",
+          "representative_reevaluation": "서문석이 말없이 도윤의 판단 순서표를 신뢰한다.",
+          "next_battlefield_ticket": "첫 사장단 안건 상정이 열린다."
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "전생에서 늦은 판단이 숨김과 체면 때문에 커진 기억",
+          "accuracy": "현재 보고서의 빈틈을 명시해 검증",
+          "source": "전생 기억과 현재 자료"
+        },
+        "butterfly_effect": {
+          "original_event": "폐쇄안은 회장 결재 뒤 사장단에 결과로만 공유됐다.",
+          "changed_event": "도윤의 판단 순서표가 사장단 자료로 올라간다.",
+          "ripple_effect": "사장단이 폐쇄가 아니라 개선안을 판단해야 하는 구조가 된다."
+        },
+        "death_flag": null,
+        "regression_hint": {
+          "slip_up": "미래 발언 없음",
+          "suspicion_from": "없음"
+        },
+        "future_prep": {
+          "action": "사장단 회의에서 90일 경영진단권을 조건부로 받는다.",
+          "target_event": "건설 자금표 진입"
+        }
+      },
+      "block_no": 9,
+      "foreshadow_targets": [
+        10
+      ],
+      "callback_sources": [
+        5,
+        8
+      ]
+    },
+    {
+      "block_id": "Block 10",
+      "title": "첫 사장단 안건",
+      "content": {
+        "context": "한서그룹 사장단 회의실. 남부 냉장센터는 폐쇄 결과 보고가 아니라 개선안으로 올라온다. 표지 첫 줄에는 `입찰 자격 유지 비용 재분류`가 적혀 있다.",
+        "event_villain": "사장단 보수파는 손자 특혜를 의심한다. 센터 적자가 완전히 사라진 것도 아니다. 한서리테일로지스 사장은 자기가 올린 폐쇄안이 뒤집히는 모양새를 경계한다.",
+        "solution": "도윤은 센터를 살려 달라고 하지 않는다. 폐쇄 보류, 회수 확정 손실, 회수 후보 손실, 유지해야 할 입찰 자격, 거래처 조건부 회신을 순서대로 제시한다. 그리고 90일 경영진단권을 달라고 한다. 책임질 수 있는 기간과 범위를 먼저 적어 낸다.",
+        "reward": "서문석은 사장단 앞에서 90일 경영진단권을 승인한다. 남부 냉장센터 개선안은 그룹 현금흐름 방어 안건으로 승격되고, CFO는 다음 자료로 건설 계열 PF 만기표를 도윤에게 넘긴다."
+      },
+      "stakes": "이 회의에서 권한을 못 얻으면 도윤의 모든 검증은 센터 하나를 잠시 늦춘 일로 끝난다. 권한을 얻으면 첫 proof가 다음 섹터의 문을 연다.",
+      "power_shift": {
+        "protagonist": "회장실 신뢰를 얻은 사람에서 사장단 앞 90일 경영진단권을 받은 사람",
+        "antagonist": "폐쇄론이 물류 단일 안건에서 그룹 현금흐름 방어 안건으로 재편됨"
+      },
+      "relationship_delta": [
+        {
+          "target": "서문석",
+          "before": "보고서를 치우지 않고 사장단 자료로 넘길 만큼 신뢰",
+          "after": "사장단 앞에서 도윤에게 제한 권한을 공식 부여"
+        },
+        {
+          "target": "한서리테일로지스 사장",
+          "before": "개선안이 공식 안건이 되자 계산을 다시 하는 입장",
+          "after": "도윤의 90일 진단 안에서 자기 폐쇄안을 다시 검증받는 입장"
+        },
+        {
+          "target": "그룹 CFO",
+          "before": "센터 개선안을 비용 방어 안건으로 보는 관찰자",
+          "after": "PF 만기표를 다음 검토 자료로 넘기는 계산형 관문"
+        }
+      ],
+      "foreshadow": [
+        "PF 만기표는 물류보다 큰 현금흐름 위기로 도윤을 끌고 간다.",
+        "사장단 앞에서 받은 제한 권한은 조기승계 명분의 첫 공식 기록이 된다."
+      ],
+      "callback": [
+        "사장단 자료 목록에 오른 도윤의 표가 첫 공식 안건으로 승격된다.",
+        "입찰 자격이라는 이름이 회의 표지의 첫 줄로 돌아온다.",
+        "거래처 조건부 회신이 폐쇄보다 개선안이 낫다는 외부 근거가 된다."
+      ],
+      "emotional_beat": {
+        "type": "게이트개방",
+        "intensity": 9
+      },
+      "tension_level": 9,
+      "pov_character": "서도윤",
+      "location": {
+        "place": "한서그룹 본사 사장단 회의실",
+        "type": "회의실",
+        "macro_battlefield": "남부 냉장센터 폐쇄 결재"
+      },
+      "time_span": {
+        "duration": "2시간",
+        "in_story_time": "2026년 3월 둘째 주"
+      },
+      "genre_ext": {
+        "type": "business_growth",
+        "capital_before": "5",
+        "capital_after": "6",
+        "capital_delta": "1",
+        "profit_loss": "1 증가",
+        "method": "남부 냉장센터 개선안을 그룹 현금흐름 방어 안건으로 승격시키고 90일 경영진단권을 받는다.",
+        "investment_type": "경영진단권",
+        "deal_type": "사장단 안건 상정",
+        "leverage_used": [
+          "14일 손실 분류표",
+          "입찰 자격 유지 비용 재분류",
+          "거래처 조건부 회신",
+          "서문석 신뢰 영수증"
+        ],
+        "opponent": {
+          "name": "사장단 보수파",
+          "type": "그룹 의사결정 라인",
+          "weakness_exploited": "폐쇄가 비용 절감만이 아니라 입찰 자격 상실을 동반한다는 점"
+        },
+        "historical_event": null,
+        "time_pressure": "90일 안에 센터 개선과 다음 현금흐름 위기를 동시에 다뤄야 한다.",
+        "knowledge_used": "전생에서 물류 폐쇄 뒤 PF 위기가 이어진 기억",
+        "risk_level": "고위험",
+        "business_sector": "물류/유통에서 건설/PF로 확장",
+        "section_rotation": "사장단 안건 진입",
+        "success_pattern": "센터 하나의 개선안을 그룹 현금흐름 방어 권한으로 환전한다.",
+        "special_ability": {
+          "has_ability": false,
+          "ability_type": null,
+          "ability_name": null,
+          "ability_source": null,
+          "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "권한확정",
+          "receipt_line": "사장단 앞에서 90일 경영진단권이 승인되고 PF 만기표가 다음 자료로 열린다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "남부 냉장센터 개선안이 사장단 공식 안건으로 상정된다.",
+          "representative_reevaluation": "도윤은 사장단 앞에서 제한 권한을 받을 만한 후계 후보로 인정된다.",
+          "next_battlefield_ticket": "PF 만기표가 다음 검토 자료로 열린다."
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "물류 폐쇄 뒤 건설 자금 경색이 이어졌던 기억",
+          "accuracy": "현재 PF 만기표 확인 전에는 위험 범위 지정",
+          "source": "전생 기억"
+        },
+        "butterfly_effect": {
+          "original_event": "센터 폐쇄는 비용 절감 결과로 처리되고 다음 위기를 가렸다.",
+          "changed_event": "센터 개선안이 그룹 현금흐름 방어 안건으로 승격된다.",
+          "ripple_effect": "도윤은 건설/PF 만기표까지 볼 공식 권한을 얻는다."
+        },
+        "death_flag": null,
+        "regression_hint": {
+          "slip_up": "미래 발언 없음",
+          "suspicion_from": "없음"
+        },
+        "future_prep": {
+          "action": "PF 만기표, 담보 재평가, 은행 조건을 한 화면에 묶는다.",
+          "target_event": "건설/PF 위기 선독"
+        }
+      },
+      "block_no": 10,
+      "foreshadow_targets": [
+        11
+      ],
+      "callback_sources": [
+        3,
+        8,
+        9
+      ]
+    }
+  ]
+}

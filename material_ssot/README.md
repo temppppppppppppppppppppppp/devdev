@@ -70,12 +70,19 @@ Current governance anchors:
 - `00_governance/authority-map.md`
 - `00_governance/stage-read-order.md`
 - `00_governance/donor-review-and-adoption-contract-v1.md`
+- `docs/2026-04-29/material-side-immediate-deployment-overlay.md`
 - `00_governance/legacy-map.md`
 - `00_governance/delegation-envelope-spec-v1.md`
 - `00_governance/work-current-truth-template-v1.md`
 - `00_governance/work-coverage-matrix.md`
 - `00_governance/bootstrap-status.md`
 - `00_governance/production-pair-benchmark-spec-v1.md`
+
+Current immediate material deployment:
+
+- `golden_canary_deepclone_probe_a_fullblock_v1` only
+- reason: current donorized full-block gold sample with donor structure applied and visible
+- other `GREENPLUS` / `GREEN` pairs remain benchmark/reference inventory until donor structure is applied and recorded
 
 TR block semantics note:
 

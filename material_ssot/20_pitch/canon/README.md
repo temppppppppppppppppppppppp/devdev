@@ -18,4 +18,5 @@ Current state:
 
 - `office_checkup_next_day.md` is the first active canonical pitch exemplar
 - `pantech_cyworld_reborn.md` is the second active canonical pitch exemplar
+- `gate_receipt_appraiser.md` is the first donor-structured modern-fantasy money-making canon candidate outside Golden Canary
 - `wuxia_heavenly_physician.md` still operates as a transition anchor note

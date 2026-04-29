@@ -1,0 +1,79 @@
+{
+  "events": [
+    "회귀 직후 남부 냉장센터 폐쇄 결재 회의 진입 — 도윤이 폐쇄안에서 빠진 column을 보고 원본 손익표 호출을 요구한다",
+    "남부 냉장센터 재분류 — 단순 적자 센터가 아니라 냉장 인증과 콜드체인 입찰 자격을 가진 거점임이 드러난다",
+    "14일 손실 분류표 조건 — 서문석은 도윤에게 전면 권한이 아니라 제한 조건을 걸고 90일 경영진단권 협상 테이블을 연다",
+    "오세진 원장 예외코드 확인 — 일부 손실이 회수 가능한 권리 후보로 바뀌며 도윤의 검증안이 사장단 공유 자료에 오른다",
+    "현장 재측정과 거래처 조건 확인 — 폐쇄 보류가 감정이 아니라 공식 경영 판단이 되고 다음 사장단 안건이 열린다",
+    "건설/PF 만기표 진입 — 물류 proof로 얻은 진단권이 건설 계열 공사 중단과 bank waiver 전장으로 이어진다",
+    "IR 신뢰 회복 — 숨기는 대신 공개 순서와 근거를 맞춰 신용등급 watch list를 막고 시장 receipt를 얻는다",
+    "제조/소재 capex 재배열 — 설비 납기와 인증 lead time을 기준으로 낭비될 capex를 다음 생산권 전장으로 환전한다",
+    "신사업 생산권 term sheet — 기적의 기술 성공이 아니라 생산권, 인증 조건, 우선협상권을 선점한다",
+    "조기승계 절차 — 섹터별 proof가 누적되어 서문석이 명예회장 전환을 검토할 수밖에 없는 상태에 도달한다"
+  ],
+  "npc_candidates": [
+    "서도윤(28) — 주인공, 한서그룹 외동 후계자, 효율형 청년 후계자",
+    "서문석(76) — 창업주 겸 회장, 도윤의 첫 authority witness이자 최종 은퇴 대상",
+    "오세진(34) — 회계/원장 helper, 원장 예외코드와 비용 귀속을 검증",
+    "한서리테일로지스 사장(실명 미정) — 남부 냉장센터 폐쇄안을 올린 합리적 반대자",
+    "남부 냉장센터 현장 책임자(실명 미정) — 인증 유지와 고용 300명의 현장 witness",
+    "그룹 CFO(실명 미정) — PF와 신용등급 관문",
+    "주거개발 계열사 사장(실명 미정) — 건설/PF 아크의 현장 대표",
+    "IR 담당 임원(실명 미정) — 시장 공시와 신뢰 회복 관문",
+    "제조/소재 계열 공장장(실명 미정) — capex와 인증 일정 관문",
+    "신사업 법무/전략투자 helper(실명 미정) — 생산권 term sheet 검증자",
+    "기관투자자/은행 담당자(실명 미정) — external receipt witness"
+  ],
+  "crisis_candidates": [
+    "남부 냉장센터 폐쇄 결재",
+    "원장 예외코드와 비용 귀속 오류",
+    "콜드체인 입찰 자격 상실 위험",
+    "건설/PF 만기와 bank waiver 실패 위험",
+    "신용등급 watch list와 IR 불신",
+    "capex 순서 오류와 설비 납기 지연",
+    "생산권 term sheet 우선협상권 상실",
+    "사장단 조기승계 거부",
+    "서문석의 체면 손상으로 인한 승계 명분 붕괴"
+  ],
+  "terms": [
+    "입찰 자격: 특정 인증, 납품 이력, 시설 요건이 있어야 다음 콜드체인 입찰에 참여할 수 있는 권리",
+    "적자 센터: 손익표상 손실을 내지만, 폐쇄하면 더 큰 권리와 협상석을 잃는 운영 거점",
+    "원장 예외코드: 비용 귀속과 회수 가능 권리 후보를 드러내는 회계 기록",
+    "14일 손실 분류표: 폐쇄/보류 판단을 위해 반품 손실, 인증 유지 비용, 배송 단가, 거래처 조건을 다시 나누는 표",
+    "90일 경영진단권: 도윤이 제한 조건 아래 계열사 손실 구조를 실사할 수 있는 첫 공식 권한",
+    "PF 만기표: 건설 계열의 만기, 담보, 공정률, 은행 조건을 한 장에 묶은 위기 지도",
+    "IR Q&A: 시장과 기관투자자가 물을 질문과 공개 순서를 사전에 묶은 신뢰 회복 문서",
+    "capex schedule: 설비 투자 순서, 납기, 인증 lead time을 묶은 제조 아크 핵심 문서",
+    "생산권 term sheet: 우선협상권, 인증 조건, 공급 조건을 묶은 신사업 권리 문서",
+    "권한 영수증: proof 뒤에 실제로 떨어지는 접근권, 보류권, 배석권, 안건권, TF owner 권한"
+  ],
+  "scene_details": [
+    "폐쇄 결재 회의 화면에서 빠진 column을 도윤이 묻는 장면 — 말투는 정중하지만 회의가 멈춘다",
+    "도윤이 `적자 센터가 아닙니다. 입찰 자격을 가진 적자 센터입니다`라고 말하고 원본 손익표가 호출되는 장면",
+    "오세진이 원장 예외코드를 열어 반품 손실과 인증 유지 비용 귀속을 분리하는 장면",
+    "남부 냉장센터 현장 재측정 — 온도 이탈 기록, shift board, 거래처 배송 조건을 한 판에 놓는 장면",
+    "서문석이 전면 권한 대신 14일 표와 90일 진단권 조건을 내거는 장면",
+    "건설/PF 회의에서 만기표와 담보 재평가 자료가 같은 화면에 뜨는 장면",
+    "IR 리허설에서 숨길 질문과 먼저 공개할 질문을 분리하는 장면",
+    "제조 공장 회의에서 설비 납기표와 인증 lead time이 capex 순서를 뒤집는 장면",
+    "신사업 법무 회의에서 생산권 term sheet의 우선협상권 문구가 사업 가치를 바꾸는 장면",
+    "사장단 회의에서 각 섹터 proof가 조기승계 절차 안건으로 묶이는 장면"
+  ],
+  "notes": "Stage0 material is sufficient for Phase0. The opening battlefield is locked as ARC-01 logistics/cold-chain, not generic headquarters strategy. All first-block reward must land inside TR 2~6. The core pleasure is status-first authority movement: access, hold, diagnosis, agenda, witness, next gate. Material gaps to carry forward: exact financial numbers, bank covenant language, IR watch-list details, capex/vendor specifics, and production-right legal phrasing.",
+  "opening_bundle_contract": {
+    "bundle_window": "TR 2~6",
+    "macro_battlefield": "남부 냉장센터 폐쇄 결재를 멈추고 `입찰 자격을 가진 적자 센터`로 재분류하는 opening logistics battlefield",
+    "macro_battlefield_map": [
+      "B2 폐쇄안 누락 column과 원본 손익표 호출",
+      "B3 입찰 자격/냉장 인증 기반 재분류와 폐쇄 대상 검증권",
+      "B4 14일 손실 분류표 조건과 원장/계약서/현장 출입권",
+      "B5 원장 예외코드와 회수 가능한 권리 후보",
+      "B6 현장 재측정/거래처 조건 확인과 다음 사장단 안건"
+    ],
+    "bundle_goal": "도윤을 외동 손자가 아니라 손실 뒤 권리를 회수하는 후계자로 재평가시키고, 90일 경영진단권과 다음 사장단 안건 gate를 얻는다",
+    "first_signboard_block": 2,
+    "representative_reevaluation_block": 3,
+    "next_battlefield_ticket_block": 6,
+    "timing_reconciliation_note": "Block 1은 회귀와 폐쇄 결재 회의 진입을 담당하고, reader-earning receipt는 엄격히 TR 2~6에 배치한다. ARC-01의 10블록 규모와 별개로 첫 체감 보상은 B2~B6에서 매 블록 떨어져야 한다."
+  }
+}
