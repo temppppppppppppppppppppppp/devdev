@@ -21,6 +21,11 @@ def test_build_stage4_session_memory_envelope_collects_retry_and_truth_surfaces(
             "gate_semantics": {
                 "truth_pins": {"ledger": "position=40"},
                 "conflict_resolution_linkage": {"original_contract_type": "timeline"},
+                "runtime_route_payload_version": "stage4-runtime-route-v1",
+                "runtime_route_verdict": "REJECT",
+                "runtime_route_action": "route_retry_full_rewrite",
+                "runtime_route_reason": "stage4 runtime gate=post_select_conflict route verdict=REJECT",
+                "runtime_route_taxonomy": "runtime_route_guard",
             },
             "retry_budget_axes": {"repair": "patch_revision"},
             "coverage_warnings": ["missing relation recovery"],
@@ -52,8 +57,15 @@ def test_build_stage4_session_memory_envelope_collects_retry_and_truth_surfaces(
     assert envelope["candidate"]["candidate_key"] == "A|balanced"
     assert envelope["verdict_surface"]["accepted"] is False
     assert envelope["verdict_surface"]["initial_verdict"] == "PASS_WITH_FIX"
+    assert envelope["verdict_surface"]["runtime_route_action"] == "route_retry_full_rewrite"
+    assert envelope["verdict_surface"]["runtime_route_taxonomy"] == "runtime_route_guard"
     assert envelope["retry_surface"]["retry_directives"] == "change ending"
     assert envelope["retry_surface"]["reject_bucket"] == ""
+    assert envelope["retry_surface"]["runtime_route_payload_version"] == "stage4-runtime-route-v1"
+    assert envelope["retry_surface"]["runtime_route_verdict"] == "REJECT"
+    assert envelope["retry_surface"]["runtime_route_action"] == "route_retry_full_rewrite"
+    assert "post_select_conflict" in envelope["retry_surface"]["runtime_route_reason"]
+    assert envelope["retry_surface"]["runtime_route_taxonomy"] == "runtime_route_guard"
     assert envelope["retry_surface"]["authority_schema_version"] == "advisory-authority-levels-v1"
     assert envelope["retry_surface"]["authority_levels"] == {"retry_budget_axes": "route"}
     assert envelope["retry_surface"]["retry_budget_axes"] == {"repair": "patch_revision"}

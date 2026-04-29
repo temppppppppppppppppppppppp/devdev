@@ -10,6 +10,7 @@ from modules.core.advisory_authority import (
     ensure_stage4_route_authority,
 )
 from modules.core.authoritative_continuity_projection import AUTHORITATIVE_CONTINUITY_PROJECTION_KEY
+from modules.core.stage4_runtime_route import extract_stage4_runtime_route
 
 SESSION_MEMORY_ENVELOPE_VERSION = "session-memory-envelope-v1"
 SESSION_MEMORY_ENVELOPE_KEY = "session_memory_envelope"
@@ -126,6 +127,7 @@ def build_stage4_session_memory_envelope(
 ) -> dict[str, Any]:
     advisory = ensure_stage4_route_authority(advisory_flags, source="stage4_session_memory_envelope")
     gate_semantics = _as_dict(advisory.get("gate_semantics"))
+    runtime_route = extract_stage4_runtime_route(gate_semantics, advisory)
     repair_contract = _first_dict(advisory.get("repair_contract"), gate_semantics.get("repair_contract"))
     scope_authority = _first_dict(advisory.get("scope_authority"), gate_semantics.get("scope_authority"))
     conflict_contract = _as_dict(advisory.get("conflict_contract"))
@@ -192,6 +194,7 @@ def build_stage4_session_memory_envelope(
             "selection_reason": str(selection_reason or ""),
             "verdict_reason": str(verdict_reason or ""),
             "open_review": str(open_review or ""),
+            **runtime_route,
         },
         "retry_surface": {
             "fix_scope": str(fix_scope or ""),
@@ -208,6 +211,7 @@ def build_stage4_session_memory_envelope(
             "is_patch": bool(is_patch),
             "is_patch_fallback": bool(is_patch_fallback),
             "patch_strategy": str(patch_strategy or ""),
+            **runtime_route,
         },
         "truth_pins": truth_pins,
         "truth_pin_items": truth_pin_items,

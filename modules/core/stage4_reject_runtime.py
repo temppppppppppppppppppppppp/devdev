@@ -15,6 +15,12 @@ from modules.core.stage4_raw_evidence import (
     build_stage4_raw_rationale_record,
     persist_stage4_raw_rationale_records,
 )
+from modules.core.stage4_runtime_route import (
+    STAGE4_RUNTIME_ROUTE_SCALAR_KEYS,
+    copy_stage4_runtime_route_fields,
+    is_stage4_nonlocal_repair_route,
+    is_stage4_post_select_route,
+)
 
 if TYPE_CHECKING:
     from modules.core.stage4_interview_round import Stage4InterviewRound
@@ -245,6 +251,7 @@ def _build_stage4_retry_contract_carryover_fields(
         value = previous_attempt.get(key)
         if isinstance(value, dict) and value:
             carryover[key] = copy.deepcopy(value)
+    copy_stage4_runtime_route_fields(carryover, previous_attempt)
     carryover["scope_origin"] = _build_stage4_scope_origin_payload(
         fix_scope=fix_scope,
         authoritative_fix_scope=authoritative_fix_scope,
@@ -306,6 +313,7 @@ def _build_stage4_reject_retry_contract_projection(
         "scope_origin": dict(scope_origin or {}),
     }
     source_payload = director_result if isinstance(director_result, dict) else {}
+    copy_stage4_runtime_route_fields(projection, source_payload)
 
     existing_repair_contract = (
         dict(projection.get("repair_contract") or {}) if isinstance(projection.get("repair_contract"), dict) else {}
@@ -469,6 +477,7 @@ def _build_stage4_reject_previous_attempt_override(
         value = gate_semantics.get(key)
         if isinstance(value, dict) and value:
             override[key] = copy.deepcopy(value)
+    copy_stage4_runtime_route_fields(override, gate_semantics)
 
     return override
 
@@ -666,6 +675,7 @@ class Stage4RejectRuntime:
             "error_category",
             "director_verdict",
             "final_verdict",
+            *STAGE4_RUNTIME_ROUTE_SCALAR_KEYS,
         ):
             if key not in previous_attempt:
                 continue
@@ -683,6 +693,7 @@ class Stage4RejectRuntime:
         if not isinstance(previous_attempt, dict):
             return enriched
 
+        copy_stage4_runtime_route_fields(enriched, previous_attempt)
         for key in ("fix_pack", "scope_origin", "repair_contract", "scope_authority", "fix_pack_origin"):
             value = previous_attempt.get(key)
             if isinstance(value, dict):
@@ -730,8 +741,7 @@ class Stage4RejectRuntime:
         source = source if isinstance(source, dict) else {}
         if self.owner._normalize_fix_pack(fix_pack):
             return {}
-        gate_basis = str(source.get("gate_basis", "") or "").strip()
-        if gate_basis != "strong_advisory_escalation_non_local_fix":
+        if not is_stage4_nonlocal_repair_route(source):
             return {}
 
         escalation = source.get("strong_advisory_escalation")
@@ -1470,13 +1480,12 @@ class Stage4RejectRuntime:
             feedback=feedback,
             action_items=action_items,
         )
-        # [C-2 seam fix] Text-based _classify_reject_bucket cannot detect post-select
-        # conflict downgrades (they arrive via gate_basis, not via text patterns).
-        # Promote reject_bucket from gate_basis so the existing "full" scope guard fires.
-        _gate_basis = str(director_result.get("gate_basis", "") or "").strip()
-        if _gate_basis == "post_select_conflict" and reject_bucket != "post_select_conflict":
+        # [C-2] Text-based _classify_reject_bucket cannot detect post-select
+        # conflict downgrades. Prefer the typed runtime route payload; keep
+        # gate_basis only as a compatibility fallback for older records.
+        if is_stage4_post_select_route(director_result) and reject_bucket != "post_select_conflict":
             reject_bucket = "post_select_conflict"
-            logging.info("[Stage4Gate] reject_bucket promoted to post_select_conflict from gate_basis")
+            logging.info("[Stage4Gate] reject_bucket promoted to post_select_conflict from runtime route")
         resolved_fix_scope = str(director_result.get("fix_scope", "") or "")
         resolved_fix_scope_reasoning = str(director_result.get("fix_scope_reasoning", "") or "")
         resolved_fix_pack = owner._normalize_fix_pack(director_result.get("fix_pack"))
