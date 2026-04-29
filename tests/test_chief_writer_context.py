@@ -1033,3 +1033,32 @@ class TestIFCPacketInputWiring:
             in section
         )
         assert "FactLedger carryover baseline remains the stronger surface below" in section
+
+    def test_extract_blueprint_sections_injects_scene_execution_contract(self):
+        host = _make_host()
+        builder = ChiefWriterContextBuilder(host)
+        blueprint = {
+            "ep_num": 8,
+            "start_location": "강남 PB센터 상담실",
+            "time_flow": "다음 날 아침",
+            "opening_transition": {"type": "explicit_transition", "signals": ["location_shift", "time_jump"]},
+            "scene_breakdown": {
+                "scene_1": {"description": "직전 화 직후 협상장 문 앞에서 시작한다."},
+                "scene_2": {"description": "계약 압박이 실제 대화로 터진다."},
+                "scene_3": {"description": "다음 자금 위기를 암시한다."},
+            },
+        }
+
+        scene_breakdown, _, _, opening_anchor_section = builder._extract_blueprint_sections(
+            blueprint,
+            prev_manuscript="직전 화 마지막 문장. 협상장 문고리가 돌아갔다.",
+            genre_code="investment",
+        )
+
+        assert '"scene_1"' in scene_breakdown
+        assert "Writer Template" in scene_breakdown
+        assert "씬별 작성 가이드" in scene_breakdown
+        assert "직전 화 마지막 - 여기서 이어서 시작" in scene_breakdown
+        assert "모든 anchor를 하나의 산문 블록으로 뭉개거나 후반부를 요약하면 불합격" in scene_breakdown
+        assert "opening_transition.type: explicit_transition" in opening_anchor_section
+        assert "opening_transition.signals: location_shift, time_jump" in opening_anchor_section

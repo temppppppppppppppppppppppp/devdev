@@ -2,7 +2,10 @@ import json
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from modules.domain.agents.chief_writer import ChiefWriter
+from modules.domain.agents.chief_writer import (
+    ChiefWriter,
+    _format_stage4_contract_issue_details_for_retry,
+)
 
 
 def _make_writer() -> ChiefWriter:
@@ -427,6 +430,51 @@ def test_finalize_generate_ensemble_candidates_orders_least_bad_fallback_when_al
 
     assert [candidate["strategy"] for candidate in result] == ["tension", "balanced"]
     assert all(candidate["metadata"].get("contract_admission_reason") for candidate in result)
+
+
+def test_contract_issue_details_surface_weak_transition_and_scene_structure_for_retry():
+    writer = _make_writer()
+    candidates = [
+        {"strategy": "balanced", "title": "a", "manuscript": "candidate-a", "state_updates": {}, "metadata": {}}
+    ]
+    diag = {
+        "validation": {
+            "issues": ["씬 누락 의심: scene_1, scene_2"],
+            "warnings": ["직전 화와의 연결이 약함"],
+        },
+        "materialization": {
+            "scene_count": 3,
+            "reflected_scenes": 1,
+            "overall_ratio": 0.28,
+            "tail_scene_reflected": False,
+            "weak_scenes": ["scene_2", "scene_3"],
+        },
+        "opening_anchor_required": True,
+        "opening_anchor_keywords": ["협상장", "문고리"],
+        "opening_anchor_hit": False,
+    }
+
+    with patch("modules.domain.agents.chief_writer._build_manuscript_contract_diagnostics", return_value=diag):
+        result = writer._finalize_generate_ensemble_candidates(
+            candidates,
+            ep_num=7,
+            blueprint={"scene_breakdown": {"scene_1": {}, "scene_2": {}, "scene_3": {}}},
+            prev_manuscript="",
+            genre_name="investment",
+        )
+
+    details = result[0]["metadata"]["contract_issue_details"]
+    assert {detail["code"] for detail in details} >= {
+        "template_contract_failed",
+        "scene_obligation_under_materialized",
+        "weak_previous_ending_transition",
+    }
+
+    retry_block = _format_stage4_contract_issue_details_for_retry({"contract_issue_details": details})
+    assert "Stage4 Draft Structure Contract" in retry_block
+    assert "code=weak_previous_ending_transition" in retry_block
+    assert "opening anchor keywords absent from first 600 chars" in retry_block
+    assert "code=scene_obligation_under_materialized" in retry_block
 
 
 def test_finalize_generate_ensemble_candidates_orders_qualified_candidates_by_contract_strength():
