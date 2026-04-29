@@ -321,6 +321,23 @@ Quality-first reading:
 - if there is any serious doubt about live market deployability, keep the pair below deployable `GREENPLUS`
 - the burden of proof is positive closure, not absence of obvious disaster
 
+### 8.1B Immediate Material Deployment Overlay
+
+Immediate material deployment is stricter than operational `GREENPLUS`.
+
+For the current material-side order, a pair may be treated as immediately deployable material only when:
+
+- it already clears the relevant benchmark/reference quality law
+- donor structure is applied or adopted in visible material-side authority
+- contamination guardrails are visible
+- pair-level closeout ties the current usability claim to the donorized structure
+
+Current overlay ruling as of 2026-04-29:
+
+- `golden_canary_deepclone_probe_a_fullblock_v1` is the only immediately deployable material
+- other `GREENPLUS` / `GREEN` rows stay benchmark/reference inventory until donor structure is applied and recorded
+- see `docs/2026-04-29/material-side-immediate-deployment-overlay.md`
+
 ### 8.2 `GREEN`
 
 Requirements:
