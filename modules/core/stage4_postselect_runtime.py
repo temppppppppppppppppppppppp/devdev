@@ -503,12 +503,16 @@ class Stage4PostSelectRuntime:
         )
 
         verdict = "REJECT"
+        authoritative_fix_scope = str(
+            director_result.get("authoritative_fix_scope") or director_result.get("fix_scope") or "full"
+        ).strip()
         director_result = self.owner._apply_director_gate_update(
             director_result,
             final_verdict="REJECT",
             gate_basis="post_select_conflict",
             repair_scope="full",
         )
+        director_result["authoritative_fix_scope"] = authoritative_fix_scope or "full"
         director_result["fix_scope"] = "full"
         error_category = self._derive_post_select_error_category(classification)
         director_feedback += "\n" + "\n".join(post_select_conflicts)
@@ -786,7 +790,9 @@ class Stage4PostSelectRuntime:
         contradiction_payload: _PostSelectContradictionPayload,
     ) -> dict:
         owner = self.owner
-        fix_scope = str(director_result.get("fix_scope", "") or "")
+        authoritative_fix_scope = str(
+            director_result.get("authoritative_fix_scope") or director_result.get("fix_scope") or ""
+        )
         selected_candidate = director_result.get("selected_candidate") or {}
         if not isinstance(selected_candidate, dict):
             selected_candidate = {}
@@ -799,7 +805,7 @@ class Stage4PostSelectRuntime:
             "state_updates": final_state_updates,
             "score": score,
             "fix_scope": "full",
-            "authoritative_fix_scope": fix_scope,
+            "authoritative_fix_scope": authoritative_fix_scope,
             "rejection_reason": director_feedback,
             "selected_strategy": director_result.get("selected_strategy", ""),
             "selected_strategy_key": selected_strategy_key,
@@ -807,6 +813,11 @@ class Stage4PostSelectRuntime:
             "verdict_reason": verdict_reason,
             "director_verdict": director_result.get("director_verdict", ""),
             "final_verdict": director_result.get("final_verdict", "REJECT"),
+            "runtime_route_payload_version": director_result.get("runtime_route_payload_version", ""),
+            "runtime_route_verdict": director_result.get("runtime_route_verdict", ""),
+            "runtime_route_action": director_result.get("runtime_route_action", ""),
+            "runtime_route_reason": director_result.get("runtime_route_reason", ""),
+            "runtime_route_taxonomy": director_result.get("runtime_route_taxonomy", ""),
             "gate_basis": director_result.get("gate_basis", "post_select_conflict"),
             "repair_scope": director_result.get("repair_scope", "full"),
             "reject_bucket": "post_select_conflict",

@@ -1844,7 +1844,7 @@ def test_lane_c_python_pre_validate_allows_post_execution_monitoring_same_room()
     assert not any(issue["category"] == "episode_progression" for issue in pre_result["issues"])
 
 
-def test_lane_c_build_director_validation_result_escalates_binding_issue_to_pass_with_fix():
+def test_lane_c_build_director_validation_result_emits_runtime_route_for_scene_completeness():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
     blueprint = {}
 
@@ -1868,8 +1868,8 @@ def test_lane_c_build_director_validation_result_escalates_binding_issue_to_pass
         },
     )
 
-    assert verdict == "PASS_WITH_FIX"
-    assert result["verdict"] == "PASS_WITH_FIX"
+    assert verdict == "PASS"
+    assert result["verdict"] == "PASS"
     assert result["director_verdict"] == "PASS"
     assert result["runtime_route_verdict"] == "PASS_WITH_FIX"
     assert result["runtime_gate_basis"] == "binding_prevalidation_contract"
@@ -1886,7 +1886,7 @@ def test_lane_c_build_director_validation_result_escalates_binding_issue_to_pass
     assert "[Binding prevalidation]" in result["feedback"]
 
 
-def test_lane_c_build_director_validation_result_escalates_missing_key_events_to_full_regenerate():
+def test_lane_c_build_director_validation_result_routes_missing_key_events_to_runtime_guard():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
     blueprint = {}
 
@@ -1910,14 +1910,15 @@ def test_lane_c_build_director_validation_result_escalates_missing_key_events_to
         },
     )
 
-    assert verdict == "PASS_WITH_FIX"
+    assert verdict == "PASS"
+    assert result["runtime_route_verdict"] == "PASS_WITH_FIX"
     assert result["fix_scope"] == "full"
     assert result["binding_prevalidation_categories"] == ["scene_completeness"]
     assert "regenerate-only repair" in result["fix_scope_reasoning"]
     assert result["binding_regenerate_only_categories"] == ["scene_completeness"]
 
 
-def test_lane_c_build_director_validation_result_escalates_opening_anchor_to_full_regenerate():
+def test_lane_c_build_director_validation_result_keeps_opening_anchor_director_required():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
     blueprint = {}
 
@@ -1941,14 +1942,17 @@ def test_lane_c_build_director_validation_result_escalates_opening_anchor_to_ful
         },
     )
 
-    assert verdict == "PASS_WITH_FIX"
-    assert result["fix_scope"] == "full"
-    assert result["binding_prevalidation_categories"] == ["opening_anchor"]
-    assert result["binding_regenerate_only_categories"] == ["opening_anchor"]
-    assert "opening_anchor" in result["fix_scope_reasoning"]
+    assert verdict == "PASS"
+    assert result["verdict"] == "PASS"
+    assert result["runtime_route_verdict"] == "PASS"
+    assert "runtime_route_action" not in result
+    assert result["binding_prevalidation_issue_count"] == 0
+    assert result["binding_prevalidation_categories"] == []
+    assert result["director_required_prevalidation_categories"] == ["opening_anchor"]
+    assert "binding_regenerate_only_categories" not in result
 
 
-def test_lane_c_build_director_validation_result_escalates_episode_progression_to_full_regenerate():
+def test_lane_c_build_director_validation_result_keeps_episode_progression_director_required():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
     blueprint = {}
 
@@ -1972,14 +1976,17 @@ def test_lane_c_build_director_validation_result_escalates_episode_progression_t
         },
     )
 
-    assert verdict == "PASS_WITH_FIX"
-    assert result["fix_scope"] == "full"
-    assert result["binding_prevalidation_categories"] == ["episode_progression"]
-    assert result["binding_regenerate_only_categories"] == ["episode_progression"]
-    assert "episode_progression" in result["fix_scope_reasoning"]
+    assert verdict == "PASS"
+    assert result["verdict"] == "PASS"
+    assert result["runtime_route_verdict"] == "PASS"
+    assert "runtime_route_action" not in result
+    assert result["binding_prevalidation_issue_count"] == 0
+    assert result["binding_prevalidation_categories"] == []
+    assert result["director_required_prevalidation_categories"] == ["episode_progression"]
+    assert "binding_regenerate_only_categories" not in result
 
 
-def test_lane_c_build_director_validation_result_escalates_dead_npc_and_fact_lock_binding_categories():
+def test_lane_c_build_director_validation_result_keeps_semantic_categories_director_required():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
     blueprint = {}
 
@@ -2015,9 +2022,12 @@ def test_lane_c_build_director_validation_result_escalates_dead_npc_and_fact_loc
         },
     )
 
-    assert verdict == "PASS_WITH_FIX"
-    assert result["binding_prevalidation_issue_count"] == 3
-    assert result["binding_prevalidation_categories"] == [
+    assert verdict == "PASS"
+    assert result["runtime_route_verdict"] == "PASS"
+    assert "runtime_route_action" not in result
+    assert result["binding_prevalidation_issue_count"] == 0
+    assert result["binding_prevalidation_categories"] == []
+    assert result["director_required_prevalidation_categories"] == [
         "dead_npc",
         "fact_lock_location",
         "arc_compliance",
@@ -2146,7 +2156,7 @@ def test_lane_c_python_pre_validate_skips_oil_price_rally_mentions_for_capital_u
     assert all(issue["category"] != "capital_unit" for issue in pre_result["issues"])
 
 
-def test_lane_c_build_director_validation_result_escalates_capital_unit_issue_to_pass_with_fix():
+def test_lane_c_build_director_validation_result_keeps_capital_unit_director_required():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
     blueprint = {}
 
@@ -2170,22 +2180,19 @@ def test_lane_c_build_director_validation_result_escalates_capital_unit_issue_to
         },
     )
 
-    assert verdict == "PASS_WITH_FIX"
-    assert result["verdict"] == "PASS_WITH_FIX"
+    assert verdict == "PASS"
+    assert result["verdict"] == "PASS"
     assert result["director_verdict"] == "PASS"
-    assert result["runtime_route_verdict"] == "PASS_WITH_FIX"
-    assert result["runtime_gate_basis"] == "binding_prevalidation_contract"
-    assert result["runtime_route_action"] == "regenerate_required"
-    assert result["revision_required"] is True
-    assert result["fix_scope"] == "full"
-    assert result["binding_prevalidation_issue_count"] == 1
-    assert result["binding_prevalidation_categories"] == ["capital_unit"]
-    assert result["binding_regenerate_only_categories"] == ["capital_unit"]
-    assert "capital_unit" in result["fix_scope_reasoning"]
-    assert "[Binding prevalidation]" in result["feedback"]
+    assert result["runtime_route_verdict"] == "PASS"
+    assert "runtime_route_action" not in result
+    assert result["revision_required"] is False
+    assert result["binding_prevalidation_issue_count"] == 0
+    assert result["binding_prevalidation_categories"] == []
+    assert result["director_required_prevalidation_categories"] == ["capital_unit"]
+    assert "binding_regenerate_only_categories" not in result
 
 
-def test_lane_c_run_compare_validation_escalates_binding_issue_to_pass_with_fix():
+def test_lane_c_run_compare_validation_keeps_arc_timeline_director_required():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
     candidates = [{"name": "alpha"}, {"name": "beta"}]
     validator._prepare_compare_candidate = Mock(
@@ -2233,18 +2240,17 @@ def test_lane_c_run_compare_validation_escalates_binding_issue_to_pass_with_fix(
         arc_idx=4,
     )
 
-    assert verdict == "PASS_WITH_FIX"
-    assert result["verdict"] == "PASS_WITH_FIX"
-    assert result["revision_required"] is True
-    assert result["fix_scope"] == "full"
-    assert result["binding_prevalidation_issue_count"] == 1
-    assert result["binding_prevalidation_categories"] == ["arc_timeline"]
-    assert result["binding_regenerate_only_categories"] == ["arc_timeline"]
-    assert "arc_timeline" in result["fix_scope_reasoning"]
-    assert "[Binding prevalidation]" in result["feedback"]
+    assert verdict == "PASS"
+    assert result["verdict"] == "PASS"
+    assert result["runtime_route_verdict"] == "PASS"
+    assert "runtime_route_action" not in result
+    assert result["binding_prevalidation_issue_count"] == 0
+    assert result["binding_prevalidation_categories"] == []
+    assert result["director_required_prevalidation_categories"] == ["arc_timeline"]
+    assert "binding_regenerate_only_categories" not in result
 
 
-def test_lane_c_run_compare_validation_escalates_capital_unit_issue_to_pass_with_fix():
+def test_lane_c_run_compare_validation_keeps_capital_unit_director_required():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
     candidates = [{"name": "alpha"}, {"name": "beta"}]
     validator._prepare_compare_candidate = Mock(
@@ -2292,15 +2298,14 @@ def test_lane_c_run_compare_validation_escalates_capital_unit_issue_to_pass_with
         arc_idx=4,
     )
 
-    assert verdict == "PASS_WITH_FIX"
-    assert result["verdict"] == "PASS_WITH_FIX"
-    assert result["revision_required"] is True
-    assert result["fix_scope"] == "full"
-    assert result["binding_prevalidation_issue_count"] == 1
-    assert result["binding_prevalidation_categories"] == ["capital_unit"]
-    assert result["binding_regenerate_only_categories"] == ["capital_unit"]
-    assert "capital_unit" in result["fix_scope_reasoning"]
-    assert "[Binding prevalidation]" in result["feedback"]
+    assert verdict == "PASS"
+    assert result["verdict"] == "PASS"
+    assert result["runtime_route_verdict"] == "PASS"
+    assert "runtime_route_action" not in result
+    assert result["binding_prevalidation_issue_count"] == 0
+    assert result["binding_prevalidation_categories"] == []
+    assert result["director_required_prevalidation_categories"] == ["capital_unit"]
+    assert "binding_regenerate_only_categories" not in result
 
 
 def test_lane_c_arc_timeline_allows_intra_arc_episode_window():
@@ -2526,15 +2531,15 @@ def test_lane_c_opening_transition_inplace_eligible_when_alias_only():
         )
     )
 
-    assert verdict == "PASS_WITH_FIX"
+    assert verdict == "PASS"
     assert fix_scope == "inplace", "opening_transition alias-only는 inplace 허용"
     assert "Opening-transition alias mismatch is the sole binding category" in fix_scope_reasoning
     assert binding_issues[0]["category"] == "opening_transition"
 
 
-def test_lane_c_opening_transition_full_when_co_fires_with_other_binding():
+def test_lane_c_opening_transition_not_widened_by_semantic_cofire():
     """Tranche 1 sub-edit 1.5: opening_transition이 다른 binding category와 함께
-    firing되면 inplace 격하가 아니라 기존대로 full regenerate를 강제해야 한다."""
+    firing되어도 semantic category는 Director-required evidence로 남기고 alias route만 유지한다."""
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
     verdict, feedback, verdict_reason, fix_scope, fix_scope_reasoning, binding_issues = (
         validator._apply_binding_prevalidation_contract(
@@ -2560,11 +2565,11 @@ def test_lane_c_opening_transition_full_when_co_fires_with_other_binding():
         )
     )
 
-    assert verdict == "PASS_WITH_FIX"
-    assert fix_scope == "full", "opening_transition + protagonist_state co-fire는 full regenerate"
-    assert "Structural binding prevalidation categories require regenerate-only repair" in fix_scope_reasoning
+    assert verdict == "PASS"
+    assert fix_scope == "inplace", "semantic co-fire must not widen alias route"
+    assert "Opening-transition alias mismatch is the sole binding category" in fix_scope_reasoning
     categories = {issue["category"] for issue in binding_issues}
-    assert categories == {"opening_transition", "protagonist_state"}
+    assert categories == {"opening_transition"}
 
 
 def test_lane_c_sync_prevalidation_ensemble_meta_clears_stale_warning_residue():

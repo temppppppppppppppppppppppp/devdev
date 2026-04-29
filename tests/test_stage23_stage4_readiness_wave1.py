@@ -74,7 +74,7 @@ def test_python_pre_validate_flags_stage4_readiness_contract_gaps():
     assert "protagonist_state" in categories
 
 
-def test_stage4_readiness_categories_are_binding():
+def test_stage4_readiness_categories_are_director_required_not_binding():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
 
     verdict, feedback, verdict_reason, fix_scope, fix_scope_reasoning, binding_issues = (
@@ -95,16 +95,15 @@ def test_stage4_readiness_categories_are_binding():
         )
     )
 
-    assert verdict == "PASS_WITH_FIX"
-    # binding-family static-kill landing(2026-04-13)에서 opening_anchor MAJOR는 regenerate-only로 승격됨.
-    # Tranche 1 sub-edit 1.5는 opening_transition alias-only 케이스에만 inplace를 허용하며
-    # opening_anchor는 여전히 structural binding 위반으로 full regenerate를 강제한다.
-    assert fix_scope == "full"
-    assert binding_issues[0]["category"] == "opening_anchor"
-    assert "[Binding prevalidation]" in feedback
+    assert verdict == "PASS"
+    assert feedback == ""
+    assert verdict_reason == "ok"
+    assert fix_scope == ""
+    assert fix_scope_reasoning == ""
+    assert binding_issues == []
 
 
-def test_binding_contract_merges_fact_lock_issue_into_existing_pass_with_fix():
+def test_fact_lock_institution_stays_director_required_not_binding_gate():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
 
     verdict, feedback, verdict_reason, fix_scope, fix_scope_reasoning, binding_issues = (
@@ -126,15 +125,11 @@ def test_binding_contract_merges_fact_lock_issue_into_existing_pass_with_fix():
     )
 
     assert verdict == "PASS_WITH_FIX"
-    assert "[Binding prevalidation]" in feedback
-    assert "기관 사실잠금 위반" in feedback
-    assert verdict_reason.endswith("binding prevalidation repair required")
-    # binding-family static-kill landing(2026-04-13)에서 fact_lock_institution CRITICAL은 regenerate-only로 승격됨.
-    # Tranche 1 sub-edit 1.5는 opening_transition alias-only 케이스에만 inplace를 허용하며
-    # fact_lock_institution은 여전히 structural binding 위반으로 full regenerate를 강제한다.
-    assert fix_scope == "full"
-    assert "Structural binding prevalidation categories require regenerate-only repair" in fix_scope_reasoning
-    assert binding_issues[0]["category"] == "fact_lock_institution"
+    assert feedback == "기관명만 수정 필요"
+    assert verdict_reason == "기관명 오류"
+    assert fix_scope == "inplace"
+    assert fix_scope_reasoning == "국소 수정"
+    assert binding_issues == []
 
 
 def test_person_fact_lock_stays_director_advisory_not_binding_gate():
@@ -393,8 +388,7 @@ def test_python_pre_validate_flags_korean_synonym_intrusion_as_tactical_semantic
                 },
             },
             "integrated_scenario": (
-                "리스크 관리팀이 VIP룸에 들이닥쳐 한시우의 팔목을 비틀고 주먹을 들이밀며 입막음을 강요한다. "
-                * 30
+                "리스크 관리팀이 VIP룸에 들이닥쳐 한시우의 팔목을 비틀고 주먹을 들이밀며 입막음을 강요한다. " * 30
             ).strip(),
             "start_location": "한미증권 청담동 지점 15층 VIP룸",
             "time_flow": "2006년 2월 16일 오전",
@@ -452,8 +446,7 @@ def test_python_pre_validate_skips_tactical_intrusion_fp_on_pb_negotiation_with_
                 },
             },
             "integrated_scenario": (
-                "박성호가 직원을 불러 대응표와 주문 확인서를 준비시키고, 한시우와 체결 순서를 차분히 조율한다. "
-                * 30
+                "박성호가 직원을 불러 대응표와 주문 확인서를 준비시키고, 한시우와 체결 순서를 차분히 조율한다. " * 30
             ).strip(),
             "start_location": "한미증권 청담동 지점 15층 VIP룸",
             "time_flow": "2006년 2월 16일 오전",

@@ -29,20 +29,6 @@ if TYPE_CHECKING:
 
 _STAGE3_REGENERATE_ONLY_BINDING_CATEGORIES = {
     "scene_completeness",
-    "episode_progression",
-    "arc_compliance",
-    "arc_timeline",
-    "capital_unit",
-    "dead_npc",
-    "fact_lock_item",
-    "fact_lock_location",
-    "fact_lock_provenance",
-    "opening_anchor",
-    "mission_clarity",
-    "timeline_specificity",
-    "protagonist_state",
-    "fact_lock_institution",
-    "tactical_semantic_fidelity",
     "opening_transition",
 }
 _STAGE3_INPLACE_ALIAS_REAUDIT_CATEGORIES = {
@@ -324,14 +310,9 @@ class _Stage3RepairRouter:
     ) -> _Stage3RepairRouteDecision:
         requested_fix_scope = material.requested_fix_scope
         resolved_fix_scope = material.resolved_fix_scope
-        if material.regenerate_only_binding_categories or material.binding_issue_count > 0:
-            regenerate_only_reason = (
-                _build_stage3_regenerate_only_binding_reason(material.regenerate_only_binding_categories)
-                if material.regenerate_only_binding_categories
-                else (
-                    "Structural binding prevalidation requires regenerate-only repair: "
-                    f"unresolved_binding_issue_count={material.binding_issue_count}"
-                )
+        if material.regenerate_only_binding_categories:
+            regenerate_only_reason = _build_stage3_regenerate_only_binding_reason(
+                material.regenerate_only_binding_categories
             )
             return _Stage3RepairRouteDecision(
                 effective_fix_scope="full",
@@ -1886,10 +1867,11 @@ class ThreePhaseBlueprintRuntime:
         ifc_penalty = self._enforce_scene_obligation_completeness(validation.best_blueprint)
         effective_score = max(0, validation.score - ifc_penalty)
 
+        route_verdict = self._resolve_phase3_runtime_route_verdict(validation.verdict, validation.validation_result)
         self._record_phase3_validation_payload(
             pipeline_result=pipeline_result,
             validation_result=validation.validation_result,
-            verdict=validation.verdict,
+            verdict=route_verdict,
             selected_strategy=validation.selected_strategy,
             all_candidates=all_candidates,
             score=validation.score,
@@ -1905,7 +1887,7 @@ class ThreePhaseBlueprintRuntime:
 
         validation_result = validation.validation_result
         verdict = self._apply_phase3_quality_gate(
-            verdict=validation.verdict,
+            verdict=route_verdict,
             score=effective_score,
             validation_result=validation_result,
         )
@@ -2176,6 +2158,7 @@ class ThreePhaseBlueprintRuntime:
         for key in (
             "director_verdict",
             "runtime_route_verdict",
+            "runtime_route_payload_version",
             "verdict_contract_version",
             "final_judgment_authority",
             "runtime_gate_authority",
@@ -2183,10 +2166,16 @@ class ThreePhaseBlueprintRuntime:
             "runtime_gate_basis",
             "runtime_route_action",
             "runtime_route_reason",
+            "runtime_route_taxonomy",
             "director_feedback",
             "director_verdict_reason",
             "director_fix_scope",
             "director_fix_scope_reasoning",
+            "prevalidation_authority_taxonomy",
+            "evidence_only_prevalidation_categories",
+            "director_required_prevalidation_categories",
+            "runtime_route_guard_categories",
+            "absolute_invariant_categories",
             "binding_regenerate_only_categories",
             "binding_regenerate_only_reason",
             "fix_pack",
@@ -2246,6 +2235,19 @@ class ThreePhaseBlueprintRuntime:
             if not (isinstance(issue, dict) and (issue.get("advisory_only") or issue.get("director_focus") is False))
         ]
         return bool(advisory_issues) and not substantive_issues
+
+    @staticmethod
+    def _resolve_phase3_runtime_route_verdict(validation_verdict: str, validation_result: dict | None) -> str:
+        if not isinstance(validation_result, dict):
+            return validation_verdict
+        route_action = str(validation_result.get("runtime_route_action", "") or "").strip()
+        route_basis = str(validation_result.get("runtime_gate_basis", "") or "").strip()
+        route_verdict = str(validation_result.get("runtime_route_verdict", "") or "").strip()
+        if not route_action or not route_verdict:
+            return validation_verdict
+        if route_basis and route_verdict in {"PASS_WITH_FIX", "PASS_WITH_WARNING", "REJECT"}:
+            return route_verdict
+        return validation_verdict
 
     @staticmethod
     def _collect_validation_issue_categories(validation_result: dict | None) -> list[str]:
@@ -2386,9 +2388,20 @@ class ThreePhaseBlueprintRuntime:
             or validation_result.get("quality_gate_effective_score") is not None
             or validation_result.get("quality_gate_score") is not None
         )
+        route_guard_categories = _extract_stage3_regenerate_only_binding_categories(validation_result)
+        raw_binding_issue_count = validation_result.get("binding_prevalidation_issue_count", 0)
+        try:
+            raw_binding_issue_count = int(raw_binding_issue_count or 0)
+        except (TypeError, ValueError):
+            raw_binding_issue_count = 0
+        runtime_route_action = str(validation_result.get("runtime_route_action", "") or "").strip()
+        binding_reopen_basis = bool(
+            str(validation_result.get("runtime_gate_basis", "") or "").strip() == "binding_prevalidation_reopen"
+            or runtime_route_action in {"full_regenerate_retry", "block_artifact_adoption"}
+        )
         prefer_binding_feedback = bool(
             reject_origin in {"pass_with_fix_unresolved", "binding_prevalidation_reopen"}
-            or validation_result.get("binding_prevalidation_issue_count")
+            or route_guard_categories
             or validation_result.get("binding_regenerate_only_reason")
         )
         feedback = _build_stage3_retry_feedback_payload(
@@ -2396,11 +2409,11 @@ class ThreePhaseBlueprintRuntime:
             prefer_binding=prefer_binding_feedback,
         )
         resolved_fix_scope = str(validation_result.get("fix_scope", "") or "").strip().lower()
-        try:
-            retry_state.prev_binding_issue_count = int(
-                validation_result.get("binding_prevalidation_issue_count", 0) or 0
-            )
-        except (TypeError, ValueError):
+        if route_guard_categories:
+            retry_state.prev_binding_issue_count = len(route_guard_categories)
+        elif binding_reopen_basis:
+            retry_state.prev_binding_issue_count = raw_binding_issue_count
+        else:
             retry_state.prev_binding_issue_count = 0
 
         retry_state.repeated_reject_score_streak = (
@@ -3198,6 +3211,7 @@ class ThreePhaseBlueprintRuntime:
                     validate_phase["director_verdict"] = director_verdict
                 authority_payload = {
                     "runtime_route_verdict": "REJECT",
+                    "runtime_route_payload_version": "runtime-route-v1",
                     "verdict_contract_version": "verdict-layer-v1",
                     "final_judgment_authority": "director_llm",
                     "runtime_gate_authority": "python_runtime_routing_gate",
@@ -3205,6 +3219,7 @@ class ThreePhaseBlueprintRuntime:
                     "runtime_gate_basis": "binding_prevalidation_reopen",
                     "runtime_route_action": "block_artifact_adoption",
                     "runtime_route_reason": "emergency fallback blocked by unresolved binding prevalidation issues",
+                    "runtime_route_taxonomy": "runtime_route_guard",
                     "objective_status": "blocked_by_runtime_guard",
                     "objective_success": False,
                     "objective_root_cause": "binding_prevalidation_unresolved",
@@ -3218,6 +3233,7 @@ class ThreePhaseBlueprintRuntime:
                         if key
                         in {
                             "runtime_route_verdict",
+                            "runtime_route_payload_version",
                             "verdict_contract_version",
                             "final_judgment_authority",
                             "runtime_gate_authority",
@@ -3225,6 +3241,7 @@ class ThreePhaseBlueprintRuntime:
                             "runtime_gate_basis",
                             "runtime_route_action",
                             "runtime_route_reason",
+                            "runtime_route_taxonomy",
                         }
                     }
                 )
@@ -3327,6 +3344,7 @@ class ThreePhaseBlueprintRuntime:
                         pass_with_fix_regenerate_categories
                     ),
                     "runtime_route_verdict": "REJECT",
+                    "runtime_route_payload_version": "runtime-route-v1",
                     "verdict_contract_version": "verdict-layer-v1",
                     "final_judgment_authority": "director_llm",
                     "runtime_gate_authority": "python_runtime_routing_gate",
@@ -3334,6 +3352,7 @@ class ThreePhaseBlueprintRuntime:
                     "runtime_gate_basis": "binding_prevalidation_reopen",
                     "runtime_route_action": "full_regenerate_retry",
                     "runtime_route_reason": route_reason,
+                    "runtime_route_taxonomy": "runtime_route_guard",
                 }
             )
             self._refresh_phase3_validate_phase_after_reaudit(
@@ -3345,6 +3364,7 @@ class ThreePhaseBlueprintRuntime:
                     key: routed_validation[key]
                     for key in (
                         "runtime_route_verdict",
+                        "runtime_route_payload_version",
                         "verdict_contract_version",
                         "final_judgment_authority",
                         "runtime_gate_authority",
@@ -3352,6 +3372,7 @@ class ThreePhaseBlueprintRuntime:
                         "runtime_gate_basis",
                         "runtime_route_action",
                         "runtime_route_reason",
+                        "runtime_route_taxonomy",
                     )
                 }
             )

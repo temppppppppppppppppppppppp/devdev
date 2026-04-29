@@ -44,6 +44,14 @@ from modules.core.stage4_raw_evidence import (
 )
 from modules.core.stage4_reject_runtime import Stage4RejectRuntime
 from modules.core.stage4_retry_runtime import Stage4RetryRuntime
+from modules.core.stage4_runtime_route import (
+    STAGE4_RUNTIME_ROUTE_PAYLOAD_VERSION,
+    STAGE4_RUNTIME_ROUTE_SCALAR_KEYS,
+    STAGE4_RUNTIME_ROUTE_TAXONOMY,
+    extract_stage4_runtime_route,
+    stage4_reject_bucket_from_route,
+    stage4_runtime_route_action,
+)
 
 _DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
 _RETRY_ADVISORY_MARKER = "[Advisory 핵심 요약 - 재시도 시 반영]"
@@ -67,6 +75,24 @@ _WRITER_BLUEPRINT_UI_CONTAMINATION_MARKERS = (
     "퀘스트 창",
 )
 _STAGE4_AUTHORITY_ACCEPTED_VERDICTS = {"PASS", "PASS_WITH_WARNING", "PASS_WITH_FIX"}
+
+
+def _attach_stage4_runtime_route_payload(normalized: dict | None) -> dict:
+    if not isinstance(normalized, dict):
+        return {}
+    final_verdict = str(normalized.get("final_verdict") or normalized.get("verdict") or "REJECT").strip()
+    gate_basis = str(normalized.get("gate_basis") or "").strip()
+    normalized["runtime_route_payload_version"] = STAGE4_RUNTIME_ROUTE_PAYLOAD_VERSION
+    normalized["runtime_route_verdict"] = final_verdict
+    normalized["runtime_route_action"] = stage4_runtime_route_action(
+        gate_basis=gate_basis,
+        final_verdict=final_verdict,
+    )
+    normalized["runtime_route_reason"] = (
+        f"stage4 runtime gate={gate_basis or 'director_primary'} route verdict={final_verdict or 'UNKNOWN'}"
+    )
+    normalized["runtime_route_taxonomy"] = STAGE4_RUNTIME_ROUTE_TAXONOMY
+    return normalized
 
 
 class Stage4AuthorityPersistenceError(RuntimeError):
@@ -457,8 +483,10 @@ def _build_stage4_attempt_contract_projection(
     include_strong_advisory_escalation: bool = False,
 ) -> dict[str, object]:
     resolved_fix_scope = str(contract_packet.scope_authority.get("fix_scope", "") or fix_scope_fallback or "").strip()
+    runtime_route = extract_stage4_runtime_route(contract_packet.gate_semantics, contract_packet.verdict_layers)
     projection: dict[str, object] = {
         "director_verdict": str(contract_packet.gate_semantics.get("director_verdict", "") or ""),
+        **{key: runtime_route.get(key, "") for key in STAGE4_RUNTIME_ROUTE_SCALAR_KEYS},
         "gate_basis": str(contract_packet.gate_semantics.get("gate_basis", "") or ""),
         "repair_scope": str(contract_packet.gate_semantics.get("repair_scope", "") or ""),
         "fix_scope": resolved_fix_scope or (None if empty_fix_scope_as_none else ""),
@@ -488,8 +516,10 @@ def _build_stage4_session_contract_projection(
     retry_budget_axes: dict | None,
 ) -> dict[str, object]:
     gate_semantics = session_gate_semantics if isinstance(session_gate_semantics, dict) else {}
+    runtime_route = extract_stage4_runtime_route(gate_semantics)
     projection: dict[str, object] = {
         "director_verdict": str(gate_semantics.get("director_verdict", "") or ""),
+        **{key: runtime_route.get(key, "") for key in STAGE4_RUNTIME_ROUTE_SCALAR_KEYS},
         "gate_basis": str(gate_semantics.get("gate_basis", "") or ""),
         "repair_scope": str(gate_semantics.get("repair_scope", "") or ""),
         "fix_pack": dict(fix_pack or {}),
@@ -1099,6 +1129,11 @@ class Stage4InterviewRound:
         scope_authority: dict | None = None,
         conflict_resolution_linkage: dict | None = None,
         reuse_contract: dict | None = None,
+        runtime_route_payload_version: str = "",
+        runtime_route_verdict: str = "",
+        runtime_route_action: str = "",
+        runtime_route_reason: str = "",
+        runtime_route_taxonomy: str = "",
     ) -> None:
         _sl = getattr(self.ctx, "session_logger", None)
         if not _sl:
@@ -1131,6 +1166,11 @@ class Stage4InterviewRound:
             initial_verdict=str(initial_verdict or ""),
             initial_score=int(initial_score or 0),
             director_verdict=str(director_verdict or ""),
+            runtime_route_payload_version=str(runtime_route_payload_version or ""),
+            runtime_route_verdict=str(runtime_route_verdict or ""),
+            runtime_route_action=str(runtime_route_action or ""),
+            runtime_route_reason=str(runtime_route_reason or ""),
+            runtime_route_taxonomy=str(runtime_route_taxonomy or ""),
             gate_basis=str(gate_basis or ""),
             repair_scope=str(repair_scope or ""),
             fix_pack=dict(fix_pack or {}),
@@ -2011,6 +2051,14 @@ class Stage4InterviewRound:
             "selection_artifact_path": previous_attempt.get("selection_artifact_path", ""),
             "fix_scope_reasoning": str(previous_attempt.get("fix_scope_reasoning", "") or ""),
             "open_review": str(previous_attempt.get("open_review", "") or ""),
+            "director_verdict": str(previous_attempt.get("director_verdict", "") or ""),
+            "final_verdict": str(previous_attempt.get("final_verdict", "") or ""),
+            "runtime_route_payload_version": str(previous_attempt.get("runtime_route_payload_version", "") or ""),
+            "runtime_route_verdict": str(previous_attempt.get("runtime_route_verdict", "") or ""),
+            "runtime_route_action": str(previous_attempt.get("runtime_route_action", "") or ""),
+            "runtime_route_reason": str(previous_attempt.get("runtime_route_reason", "") or ""),
+            "runtime_route_taxonomy": str(previous_attempt.get("runtime_route_taxonomy", "") or ""),
+            "gate_basis": str(previous_attempt.get("gate_basis", "") or ""),
             "reject_bucket": previous_attempt.get("reject_bucket", ""),
             "error_category": previous_attempt.get("error_category", ""),
             "fix_pack_reason": previous_attempt.get("fix_pack_reason", ""),  # [TF-4]
@@ -2179,16 +2227,21 @@ class Stage4InterviewRound:
             retry_surface.get("reject_bucket"),
             advisory.get("reject_bucket"),
             semantics.get("reject_bucket"),
-            primary_failure_layer,
         ):
             resolved = str(raw or "").strip()
             if resolved:
                 return resolved
 
+        route_bucket = stage4_reject_bucket_from_route(semantics, advisory, retry_surface)
+        if route_bucket:
+            return route_bucket
+
         gate_basis = str(semantics.get("gate_basis") or "").strip().lower()
-        if gate_basis == "post_select_conflict":
-            return "post_select_conflict"
-        if gate_basis == "quality_floor_fail":
+
+        primary_layer = str(primary_failure_layer or "").strip().lower()
+        if primary_layer in {"quality_issue", "constraint_violation", "structure_error", "post_select_conflict"}:
+            return primary_layer
+        if primary_layer in {"quality_floor", "downstream_gate"}:
             return "quality_issue"
 
         category = str(failure_category or "").strip().lower()
@@ -2310,6 +2363,8 @@ class Stage4InterviewRound:
             failure_category=attempt_row.get("failure_category"),
             primary_failure_layer=attempt_row.get("primary_failure_layer"),
         )
+        runtime_route = extract_stage4_runtime_route(gate_semantics, verdict_surface, retry_surface, advisory_flags)
+        runtime_route_action = str(runtime_route.get("runtime_route_action", "") or "").strip()
         artifact_name = Path(artifact_path).name.lower() if artifact_path else ""
         body_blocked_reason = ""
         if reject_bucket == "post_select_conflict" and artifact_name.startswith("rejected_best"):
@@ -2359,6 +2414,11 @@ class Stage4InterviewRound:
             ).strip(),
             "director_verdict": str(gate_semantics.get("director_verdict") or "").strip(),
             "final_verdict": str(attempt_row.get("verdict") or verdict_surface.get("verdict") or "").strip(),
+            "runtime_route_payload_version": str(runtime_route.get("runtime_route_payload_version", "") or "").strip(),
+            "runtime_route_verdict": str(runtime_route.get("runtime_route_verdict", "") or "").strip(),
+            "runtime_route_action": runtime_route_action,
+            "runtime_route_reason": str(runtime_route.get("runtime_route_reason", "") or "").strip(),
+            "runtime_route_taxonomy": str(runtime_route.get("runtime_route_taxonomy", "") or "").strip(),
             "gate_basis": str(gate_semantics.get("gate_basis") or "").strip(),
             "repair_scope": str(
                 gate_semantics.get("repair_scope")
@@ -2404,10 +2464,11 @@ class Stage4InterviewRound:
             "contradiction_types": contradiction_types,
             "contradiction_details": contradiction_details,
             "firewall_triggered": bool(
-                str(gate_semantics.get("gate_basis") or "").strip() == "post_select_conflict"
+                runtime_route_action == "route_retry_full_rewrite"
+                or str(gate_semantics.get("gate_basis") or "").strip() == "post_select_conflict"
                 or attempt_row.get("downstream_override_applied", False)
             ),
-            "firewall_reason": str(gate_semantics.get("gate_basis") or "").strip(),
+            "firewall_reason": str(gate_semantics.get("gate_basis") or runtime_route_action or "").strip(),
             "director_feedback_text": director_feedback_text,
             "runtime_advisory": runtime_advisory,
             "retry_directives": retry_directives,
@@ -3952,7 +4013,10 @@ class Stage4InterviewRound:
             # [Lane2-G2] PASS_WITH_FIX with blank/invalid fix_scope cannot run the repair loop.
             # Gate it to REJECT so the loop is not entered with an unresolved scope contract.
             if final_verdict == "PASS_WITH_FIX":
-                _is_advisory_escalation = bool(director_result.get("strong_advisory_escalation"))
+                _escalation_payload = director_result.get("strong_advisory_escalation")
+                _is_advisory_escalation = isinstance(_escalation_payload, dict) and not bool(
+                    _escalation_payload.get("notice_only")
+                )
                 _g2_basis = (
                     "strong_advisory_escalation_no_scope" if _is_advisory_escalation else "fix_scope_contract_violation"
                 )
@@ -4003,7 +4067,11 @@ class Stage4InterviewRound:
 
         # [Lane2-G2b] Strong advisory escalation may only stay PASS_WITH_FIX when the
         # result is truly local-fixable: fix_scope=inplace and fix_pack contract ready.
-        if final_verdict == "PASS_WITH_FIX" and isinstance(director_result.get("strong_advisory_escalation"), dict):
+        _strong_advisory_escalation = director_result.get("strong_advisory_escalation")
+        _is_binding_strong_advisory_escalation = isinstance(_strong_advisory_escalation, dict) and not bool(
+            _strong_advisory_escalation.get("notice_only")
+        )
+        if final_verdict == "PASS_WITH_FIX" and _is_binding_strong_advisory_escalation:
             director_result["fix_pack"] = self._backfill_strong_advisory_fix_pack(director_result)
             _runtime_fix_scope = str(director_result.get("fix_scope") or authoritative_fix_scope or "").strip().lower()
             _fix_pack_contract = self._evaluate_fix_pack_contract(director_result.get("fix_pack"))
@@ -4070,7 +4138,7 @@ class Stage4InterviewRound:
                 )
             director_result["fix_pack"] = _normalized_fix_pack
 
-        return director_result
+        return _attach_stage4_runtime_route_payload(director_result)
 
     def _apply_director_gate_update(
         self,
@@ -4093,7 +4161,7 @@ class Stage4InterviewRound:
             normalized["repair_scope"] = self._normalize_repair_scope_value(repair_scope)
         elif "repair_scope" not in normalized:
             normalized["repair_scope"] = self._normalize_repair_scope_value(normalized.get("fix_scope"))
-        return normalized
+        return _attach_stage4_runtime_route_payload(normalized)
 
     def _build_gate_semantics_payload(self, director_result: dict | None) -> dict[str, object]:
         normalized = self._normalize_director_gate_semantics(director_result)
@@ -4109,6 +4177,12 @@ class Stage4InterviewRound:
             "runtime_route_verdict": str(
                 normalized.get("runtime_route_verdict") or normalized.get("final_verdict") or ""
             ),
+            "runtime_route_payload_version": str(
+                normalized.get("runtime_route_payload_version") or STAGE4_RUNTIME_ROUTE_PAYLOAD_VERSION
+            ),
+            "runtime_route_action": str(normalized.get("runtime_route_action") or ""),
+            "runtime_route_reason": str(normalized.get("runtime_route_reason") or ""),
+            "runtime_route_taxonomy": str(normalized.get("runtime_route_taxonomy") or STAGE4_RUNTIME_ROUTE_TAXONOMY),
             "verdict_contract_version": str(normalized.get("verdict_contract_version") or "verdict-layer-v1"),
             "gate_basis": str(normalized.get("gate_basis", "") or ""),
             "repair_scope": str(normalized.get("repair_scope", "none") or "none"),
@@ -4349,6 +4423,12 @@ class Stage4InterviewRound:
         return {
             "director_verdict": director_verdict,
             "runtime_route_verdict": final_verdict,
+            "runtime_route_payload_version": str(
+                normalized.get("runtime_route_payload_version") or STAGE4_RUNTIME_ROUTE_PAYLOAD_VERSION
+            ),
+            "runtime_route_action": str(normalized.get("runtime_route_action") or ""),
+            "runtime_route_reason": str(normalized.get("runtime_route_reason") or ""),
+            "runtime_route_taxonomy": str(normalized.get("runtime_route_taxonomy") or STAGE4_RUNTIME_ROUTE_TAXONOMY),
             "verdict_contract_version": str(normalized.get("verdict_contract_version") or "verdict-layer-v1"),
             "director_quality_passed": director_quality_passed,
             "downstream_override_applied": downstream_override_applied,
@@ -8223,6 +8303,11 @@ class Stage4InterviewRound:
                 "director_verdict": _gate_semantics.get("director_verdict", _initial_verdict),
                 "final_verdict": _final_verdict,
                 "final_score": _final_score,
+                "runtime_route_payload_version": str(_gate_semantics.get("runtime_route_payload_version", "") or ""),
+                "runtime_route_verdict": str(_gate_semantics.get("runtime_route_verdict", "") or ""),
+                "runtime_route_action": str(_gate_semantics.get("runtime_route_action", "") or ""),
+                "runtime_route_reason": str(_gate_semantics.get("runtime_route_reason", "") or ""),
+                "runtime_route_taxonomy": str(_gate_semantics.get("runtime_route_taxonomy", "") or ""),
                 "gate_basis": _gate_semantics.get("gate_basis", ""),
                 "repair_scope": _gate_semantics.get(
                     "repair_scope",
