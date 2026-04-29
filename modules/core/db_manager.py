@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 import sqlite3
@@ -603,6 +604,90 @@ class DBManager:
                 return result
             finally:
                 cur.close()
+
+    _FINAL_ACCEPTED_STAGE_VERDICTS = {"PASS", "PASS_WITH_FIX", "PASS_WITH_WARNING"}
+    _NON_FINAL_STAGE_VERDICTS = {"REJECT", "FAILED", "ERROR", "SETTLEMENT_FAILED"}
+
+    def _latest_stage_attempt_for_episode(self, ep_num: int, *, stage: int = 4) -> dict | None:
+        with self._lock:
+            cur = self.conn.cursor()
+            try:
+                cur.execute(
+                    """
+                    SELECT id, stage, ep_num, attempt_num, verdict, score, session_id,
+                           attempt_key, candidate_key, content_hash, artifact_path,
+                           director_quality_passed, downstream_override_applied,
+                           primary_failure_layer
+                      FROM stage_attempts
+                     WHERE stage = ? AND ep_num = ?
+                     ORDER BY id DESC
+                     LIMIT 1
+                    """,
+                    (int(stage or 4), int(ep_num or 0)),
+                )
+                row = cur.fetchone()
+                return dict(row) if row else None
+            finally:
+                cur.close()
+
+    def get_final_accepted_episode_context(self, ep_num: int, *, stage: int = 4) -> dict | None:
+        """Return manuscript context only when latest Stage4 truth is usable.
+
+        If a latest Stage4 terminal row is rejected or settlement-failed, the
+        manuscript is not promoted as final context. Legacy manuscript-only rows
+        remain usable but are labeled explicitly for migration visibility.
+        """
+
+        try:
+            episode = int(ep_num or 0)
+        except (TypeError, ValueError):
+            return None
+        if episode <= 0:
+            return None
+
+        manuscript = self.get_manuscript(episode)
+        latest_attempt = self._latest_stage_attempt_for_episode(episode, stage=int(stage or 4))
+        latest_verdict = str((latest_attempt or {}).get("verdict") or "").strip().upper()
+        override = bool((latest_attempt or {}).get("downstream_override_applied"))
+
+        if latest_attempt and (latest_verdict in self._NON_FINAL_STAGE_VERDICTS or override):
+            return {
+                "ep_num": episode,
+                "content": "",
+                "authority_status": "blocked_by_non_final_stage4_attempt",
+                "source_kind": "stage_attempts",
+                "latest_stage_attempt": latest_attempt,
+                "final_verdict": latest_verdict,
+                "usable": False,
+            }
+        if not manuscript:
+            return None
+
+        content = str(manuscript.get("content") or "")
+        if not content:
+            return None
+
+        content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
+        accepted_attempt = latest_attempt if latest_verdict in self._FINAL_ACCEPTED_STAGE_VERDICTS else None
+        if accepted_attempt:
+            status = "stage4_final_accepted"
+            source_kind = "db_manuscript_plus_stage_attempt"
+        else:
+            status = "legacy_manuscript_without_stage_attempt"
+            source_kind = "db_manuscript"
+
+        return {
+            "ep_num": episode,
+            "title": str(manuscript.get("title") or ""),
+            "content": content,
+            "content_hash": content_hash,
+            "manuscript_created_at": str(manuscript.get("created_at") or ""),
+            "authority_status": status,
+            "source_kind": source_kind,
+            "latest_stage_attempt": latest_attempt or {},
+            "final_verdict": latest_verdict,
+            "usable": True,
+        }
 
     # 📂 modules/core/db_manager.py 내부에 추가
 

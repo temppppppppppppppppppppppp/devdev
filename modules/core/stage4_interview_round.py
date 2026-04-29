@@ -19,6 +19,7 @@ from modules.core.artifact_logging import (
 )
 from modules.core.constants import smart_truncate
 from modules.core.context_advisor import RetrievalSources
+from modules.core.final_accepted_context import load_final_accepted_manuscript_row
 from modules.core.jsonl_io import append_jsonl_record
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.partial_fix_contract import (
@@ -6963,7 +6964,7 @@ class Stage4InterviewRound:
 
         if _db:
             try:
-                _prev_ms = _db.get_manuscript(_prev_ep)
+                _prev_ms = load_final_accepted_manuscript_row(_db, _prev_ep)
             except Exception as _ms_err:
                 logging.warning(f"[SilentPass:InterviewRound] prev_hud manuscript load 실패: {_ms_err!s:.100}")
 
@@ -7711,9 +7712,11 @@ class Stage4InterviewRound:
             # 직전 화 원고
             _prev_ms = None
             if _db and next_ep > 1:
-                _prev_row = _db.get_manuscript(next_ep - 1)
+                _prev_row = load_final_accepted_manuscript_row(_db, next_ep - 1)
                 if _prev_row:
-                    _prev_ms = _prev_row.get("manuscript", "") or _prev_row.get("text", "")
+                    _prev_ms = (
+                        _prev_row.get("content", "") or _prev_row.get("manuscript", "") or _prev_row.get("text", "")
+                    )
 
             _nc_all: list[dict] = []
             for _ci, _cand in enumerate(candidates):

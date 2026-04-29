@@ -8,6 +8,8 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from modules.core.final_accepted_context import load_final_accepted_manuscript_row
+
 if TYPE_CHECKING:
     from modules.core.stage4_interview_round import Stage4InterviewRound
 
@@ -451,7 +453,7 @@ class Stage4PostSelectRuntime:
         if not history_for_check:
             for prev_ep in range(max(1, next_ep - 30), next_ep):
                 try:
-                    prev_ms_data = owner.ctx.current_project.db.get_manuscript(prev_ep)
+                    prev_ms_data = load_final_accepted_manuscript_row(owner.ctx.current_project.db, prev_ep)
                     if prev_ms_data:
                         content = (
                             prev_ms_data.get("content", "") if isinstance(prev_ms_data, dict) else str(prev_ms_data)

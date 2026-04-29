@@ -14,6 +14,7 @@ from pathlib import Path
 
 from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
 from modules.core.constants import smart_truncate
+from modules.core.final_accepted_context import load_final_accepted_manuscript_row
 from modules.core.frontier_staleness import (
     detect_stage4_frontier_staleness,
     frontier_status_satisfied_by_stage3_lineage,
@@ -1101,7 +1102,7 @@ class Stage4Orchestrator:
         prev_published_text = ""
         try:
             db = getattr(getattr(self.ctx, "current_project", None), "db", None)
-            prev_row = db.get_manuscript(ep_num - 1) if db and ep_num > 1 else None
+            prev_row = load_final_accepted_manuscript_row(db, ep_num - 1) if db and ep_num > 1 else None
             if isinstance(prev_row, dict):
                 prev_published_text = str(
                     prev_row.get("content") or prev_row.get("corrected_manuscript") or prev_row.get("manuscript") or ""
@@ -1367,7 +1368,7 @@ JSON으로 출력:
         prev_manuscript_text = ""
         try:
             db = getattr(self.ctx.current_project, "db", None)
-            prev_row = db.get_manuscript(next_ep - 1) if db and next_ep > 1 else None
+            prev_row = load_final_accepted_manuscript_row(db, next_ep - 1) if db and next_ep > 1 else None
             if isinstance(prev_row, dict):
                 prev_manuscript_text = str(
                     prev_row.get("content") or prev_row.get("corrected_manuscript") or prev_row.get("manuscript") or ""
