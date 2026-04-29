@@ -87,6 +87,59 @@ def test_save_and_get_blueprint(db):
     assert loaded["scenes"][0]["scene_no"] == 1
 
 
+def test_save_blueprint_persists_lineage_sidecar(db):
+    blueprint = {
+        "ep_num": 2,
+        "title": "lineage",
+        "_stage3_meta": {
+            "lineage_schema_version": "stage3-blueprint-lineage-v1",
+            "generated_at": "2026-04-30T00:00:00+00:00",
+            "frontier_basis_version": "stage3-frontier-basis-v1",
+            "source_prev_manuscript_ep": 1,
+            "source_prev_manuscript_hash": "h" * 64,
+            "source_prev_manuscript_created_at": "2026-04-29T00:00:00",
+            "genre_strategy_contract_id": "investment_business_power.action_focused.v1",
+            "lineage_complete": True,
+            "lineage_missing_reason": "",
+        },
+    }
+
+    db.save_blueprint(2, blueprint)
+
+    lineage = db.get_blueprint_lineage(2)
+    assert lineage["ep_num"] == 2
+    assert lineage["lineage_schema_version"] == "stage3-blueprint-lineage-v1"
+    assert lineage["frontier_basis_version"] == "stage3-frontier-basis-v1"
+    assert lineage["source_prev_manuscript_ep"] == 1
+    assert lineage["source_prev_manuscript_hash"] == "h" * 64
+    assert lineage["source_prev_manuscript_created_at"] == "2026-04-29T00:00:00"
+    assert lineage["genre_strategy_contract_id"] == "investment_business_power.action_focused.v1"
+    assert lineage["lineage_complete"] is True
+    assert lineage["lineage_missing_reason"] == ""
+
+
+def test_save_blueprint_lineage_sidecar_respects_outer_transaction_rollback(db):
+    with pytest.raises(DBError):
+        with db.transaction():
+            db.save_blueprint(
+                3,
+                {
+                    "ep_num": 3,
+                    "_stage3_meta": {
+                        "lineage_schema_version": "stage3-blueprint-lineage-v1",
+                        "frontier_basis_version": "stage3-frontier-basis-v1",
+                        "source_prev_manuscript_ep": 2,
+                        "lineage_complete": False,
+                        "lineage_missing_reason": "missing_final_accepted_prev_manuscript",
+                    },
+                },
+            )
+            raise RuntimeError("rollback trigger")
+
+    assert db.get_blueprint(3) is None
+    assert db.get_blueprint_lineage(3) is None
+
+
 def test_save_and_get_manuscript_and_latest_episode_number(db):
     db.save_manuscript(1, "제목1", "내용1")
     db.save_manuscript(5, "제목5", "내용5")
