@@ -1168,8 +1168,12 @@ class TestStageAttemptObservability:
         assert result["_stage3_meta"]["partial_fix_eval"]["patch_target_id"] == "pt:scene2"
         assert "_frontier_status" not in result
         assert result["_stage3_meta"]["frontier_basis_version"] == "stage3-frontier-basis-v1"
+        assert result["_stage3_meta"]["lineage_schema_version"] == "stage3-blueprint-lineage-v1"
+        assert result["_stage3_meta"]["lineage_complete"] is True
+        assert result["_stage3_meta"]["lineage_missing_reason"] == ""
         assert result["_stage3_meta"]["source_prev_manuscript_ep"] == 1
         assert len(result["_stage3_meta"]["source_prev_manuscript_hash"]) == 64
+        assert "source_prev_manuscript_created_at" in result["_stage3_meta"]
         assert result["_stage3_meta"]["generated_at"]
 
 

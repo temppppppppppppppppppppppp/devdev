@@ -1559,7 +1559,9 @@ class TestHandleRoundOutcomeErrorPaths:
             external_feedback="translated reverse feedback",
         )
 
-        assert result == {"scene_breakdown": {}}
+        assert result["scene_breakdown"] == {}
+        assert result["_stage3_meta"]["lineage_schema_version"] == "stage3-blueprint-lineage-v1"
+        assert result["_stage3_meta"]["source_prev_manuscript_ep"] == 1
         assert bp_agent.generate.call_args.kwargs["external_feedback"] == "translated reverse feedback"
         assert bp_agent.generate.call_args.kwargs["prev_manuscripts_text"] == minimal_round_ctx.prev_manuscripts_text
 

@@ -98,6 +98,29 @@ class DBBootstrapRuntime:
         )
         cursor.execute(
             """
+            CREATE TABLE IF NOT EXISTS blueprint_lineage (
+                ep_num INTEGER PRIMARY KEY,
+                lineage_schema_version TEXT,
+                generated_at TEXT,
+                frontier_basis_version TEXT,
+                source_prev_manuscript_ep INTEGER,
+                source_prev_manuscript_hash TEXT,
+                source_prev_manuscript_created_at TEXT,
+                genre_strategy_contract_id TEXT,
+                lineage_complete INTEGER DEFAULT 0,
+                lineage_missing_reason TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_blueprint_lineage_prev_ep ON blueprint_lineage(source_prev_manuscript_ep)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_blueprint_lineage_prev_hash ON blueprint_lineage(source_prev_manuscript_hash)"
+        )
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS state_logs (
                 ep_num INTEGER PRIMARY KEY,
                 data TEXT,
