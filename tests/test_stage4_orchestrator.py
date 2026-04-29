@@ -10,6 +10,7 @@
 """
 
 import dataclasses
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -1560,6 +1561,99 @@ class TestHandleRoundOutcomeErrorPaths:
 
         assert result == {"scene_breakdown": {}}
         assert bp_agent.generate.call_args.kwargs["external_feedback"] == "translated reverse feedback"
+        assert bp_agent.generate.call_args.kwargs["prev_manuscripts_text"] == minimal_round_ctx.prev_manuscripts_text
+
+    def test_prepare_current_episode_inputs_blocks_stale_frontier_against_accepted_manuscript(self, orch_with_ctx):
+        orch = orch_with_ctx
+        orch._ctx.current_project.arcs = [
+            {
+                "arc_no": 2,
+                "ep_start": 5,
+                "ep_count": 3,
+                "tactical_doc": "제6화: 한미증권 VIP룸에서 WTI 6월물 15억 원 매수 지시를 완료한다.",
+            }
+        ]
+        blueprints = {
+            6: {
+                "ep_num": 6,
+                "scene_breakdown": {
+                    "scene_1": {"summary": "가승인 서류를 들고 15억 원 규모의 WTI 6월물 매수 지시를 반복한다."}
+                },
+            },
+            7: {"ep_num": 7, "summary": "후속 시장 압박"},
+        }
+        orch._ctx.current_project.get_blueprint.side_effect = lambda ep: blueprints.get(ep)
+        saved_blueprints = {}
+        orch._ctx.current_project.save_episode_blueprint.side_effect = lambda ep, bp: saved_blueprints.setdefault(
+            ep, bp
+        )
+        orch._ctx.current_project.db.get_manuscript.return_value = {
+            "content": "박성호 PB가 WTI 원유 선물 3월물 매수 포지션에 전량 진입했다. 딸깍."
+        }
+        orch._preflight_validate_blueprint = MagicMock()
+        orch._log_escalation_event = MagicMock()
+
+        result = orch._prepare_current_episode_inputs(next_ep=6)
+
+        assert result is None
+        assert orch._stage4_completion_blocked is True
+        orch._preflight_validate_blueprint.assert_not_called()
+        orch._log_escalation_event.assert_called_once()
+        assert orch._log_escalation_event.call_args.args[:2] == (6, "STAGE4_FRONTIER_STALE_PREFLIGHT")
+        assert set(saved_blueprints) == {6, 7}
+        assert saved_blueprints[6]["_frontier_status"]["status"] == "requires_director_frontier_adjudication"
+        assert saved_blueprints[7]["_frontier_status"]["affected_ep"] == 7
+
+    @pytest.mark.parametrize(
+        "frontier_status",
+        [
+            "requires_actual_manuscript_revalidation",
+            "requires_director_frontier_adjudication",
+            "contaminated_requires_regeneration",
+        ],
+    )
+    def test_prepare_current_episode_inputs_blocks_persisted_frontier_status_before_generation(
+        self, orch_with_ctx, frontier_status
+    ):
+        orch = orch_with_ctx
+        orch._ctx.current_project.arcs = [{"arc_no": 1, "ep_start": 1, "ep_end": 3, "tactical_doc": ""}]
+        orch._ctx.current_project.get_blueprint.return_value = {
+            "ep_num": 2,
+            "_frontier_status": {"status": frontier_status},
+        }
+        orch._preflight_validate_blueprint = MagicMock()
+        orch._log_escalation_event = MagicMock()
+
+        result = orch._prepare_current_episode_inputs(next_ep=2)
+
+        assert result is None
+        assert orch._stage4_completion_blocked is True
+        orch._preflight_validate_blueprint.assert_not_called()
+        assert orch._log_escalation_event.call_args.args[:2] == (2, "STAGE4_FRONTIER_STATUS_BLOCK")
+
+    def test_prepare_current_episode_inputs_allows_revalidated_lineage_hash_match(self, orch_with_ctx):
+        orch = orch_with_ctx
+        prev_text = "새로 확정된 계약 체결 완료. 모두가 서명본을 확인했다."
+        prev_hash = hashlib.sha256(prev_text.encode("utf-8")).hexdigest()
+        orch._ctx.current_project.arcs = [{"arc_no": 1, "ep_start": 1, "ep_end": 3, "tactical_doc": ""}]
+        orch._ctx.current_project.get_blueprint.return_value = {
+            "ep_num": 2,
+            "_frontier_status": {
+                "status": "requires_actual_manuscript_revalidation",
+                "evidence": {"accepted_ep": 1, "accepted_manuscript_hash": prev_hash},
+            },
+            "_stage3_meta": {"source_prev_manuscript_ep": 1, "source_prev_manuscript_hash": prev_hash},
+        }
+        orch._ctx.current_project.db.get_manuscript.return_value = {"content": prev_text}
+        orch._preflight_validate_blueprint = MagicMock(return_value={"ok": True})
+        orch._log_escalation_event = MagicMock()
+
+        result = orch._prepare_current_episode_inputs(next_ep=2)
+
+        assert result is not None
+        assert orch._stage4_completion_blocked is False
+        orch._preflight_validate_blueprint.assert_called_once()
+        orch._log_escalation_event.assert_not_called()
 
     def test_handle_round_outcome_keeps_pass_when_cove_verify_raises(
         self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path

@@ -38,6 +38,54 @@ def _resolve_cross_stage_packet(arc_data: dict | None) -> dict:
     return {}
 
 
+def _completed_manuscript_event_rows(ms_text: str) -> list[dict]:
+    text = str(ms_text or "").strip()
+    if not text:
+        return []
+    event_terms = (
+        "WTI",
+        "원유",
+        "선물",
+        "매수",
+        "진입",
+        "체결",
+        "완료",
+        "딸깍",
+        "주문",
+        "계약",
+        "승인",
+        "서명",
+        "입금",
+        "청산",
+        "인수",
+        "매각",
+    )
+    completion_terms = ("진입", "체결", "완료", "딸깍", "전량", "매수 포지션", "서명", "입금", "청산")
+    if not any(term in text for term in event_terms) or not any(term in text for term in completion_terms):
+        return []
+
+    rows: list[dict] = []
+    for idx, raw_line in enumerate(re.split(r"[\n\r]+|(?<=[.!?。])\s+", text)):
+        line = " ".join(str(raw_line or "").split()).strip()
+        if len(line) < 8:
+            continue
+        if not any(term in line for term in event_terms):
+            continue
+        if not any(term in line for term in completion_terms):
+            continue
+        rows.append(
+            {
+                "scene_key": f"prev_manuscript_line_{idx + 1}",
+                "events": [line[:180]],
+                "location": "",
+                "source": "prev_manuscript_ending",
+            }
+        )
+        if len(rows) >= 3:
+            break
+    return rows
+
+
 def _resolve_arc_start_state(arc_data: dict | None) -> dict:
     payload = arc_data if isinstance(arc_data, dict) else {}
     state = _coerce_mapping(payload.get("state_constraints"))
@@ -646,9 +694,7 @@ def _collect_fact_lock_person_anchors(
         "교수",
         "의사",
     )
-    role_re = re.compile(
-        r"(?<![가-힣])([가-힣]{2,4})\s*(" + "|".join(re.escape(s) for s in role_suffixes) + r")"
-    )
+    role_re = re.compile(r"(?<![가-힣])([가-힣]{2,4})\s*(" + "|".join(re.escape(s) for s in role_suffixes) + r")")
     false_role_names = {
         "나는",
         "나도",
@@ -820,6 +866,7 @@ class BlueprintConstraintCompiler:
             prev_blueprint=prev_blueprint,
             arc_data=arc_data,
             ep_num=ep_num,
+            prev_manuscript_ending=prev_manuscript_ending,
         )
         future_beat_reservations = self._build_episode_progression_future_beat_reservations(
             must_focus=must_focus,
@@ -975,7 +1022,14 @@ class BlueprintConstraintCompiler:
                         lines.append("    - " + " | ".join(parts))
             completed_events = progression_pkt.get("completed_prior_events", [])
             if isinstance(completed_events, list) and completed_events:
-                lines.append("  - [직전 화에서 이미 완료된 사건 — scene_1/live objective로 재연 금지]")
+                has_manuscript_evidence = any(
+                    isinstance(event_row, dict) and event_row.get("source") == "prev_manuscript_ending"
+                    for event_row in completed_events
+                )
+                if has_manuscript_evidence:
+                    lines.append("  - [직전 원고 완료 후보 증거 — 재연 전 Director continuity 판단 우선]")
+                else:
+                    lines.append("  - [직전 화에서 이미 완료된 사건 — scene_1/live objective로 재연 금지]")
                 for event_row in completed_events[:3]:
                     if not isinstance(event_row, dict):
                         continue
@@ -1622,6 +1676,7 @@ class BlueprintConstraintCompiler:
         prev_blueprint: dict | None,
         arc_data: dict,
         ep_num: int,
+        prev_manuscript_ending: str = "",
     ) -> dict:
         """Build compact progression guardrails for immediate next-episode generation.
 
@@ -1743,7 +1798,10 @@ class BlueprintConstraintCompiler:
         time_truths: list[str] = []
         institution_truths: list[str] = []
         blocked_scene_families = _scene_rows(bp.get("scene_breakdown", {}))
-        completed_prior_events = _completed_event_rows(bp.get("scene_breakdown", {}))
+        manuscript_completed_events = _completed_manuscript_event_rows(prev_manuscript_ending)
+        completed_prior_events = (manuscript_completed_events + _completed_event_rows(bp.get("scene_breakdown", {})))[
+            -6:
+        ]
 
         if isinstance(arc_data, dict):
             current_episode_excerpt = extract_episode_tactical(
@@ -1820,7 +1878,9 @@ class BlueprintConstraintCompiler:
             "institution_truths": _dedup(institution_truths, limit=4),
             "blocked_scene_families": blocked_scene_families,
             "completed_prior_events": completed_prior_events,
-            "source": "prev_blueprint+arc_authority",
+            "source": "prev_manuscript+prev_blueprint+arc_authority"
+            if manuscript_completed_events
+            else "prev_blueprint+arc_authority",
         }
 
     @staticmethod

@@ -1,4 +1,5 @@
 from modules.domain.agents.arc_critic import ARC_CRITIQUE_PROMPT, ArcCritic
+from modules.domain.agents.blueprint_constraint_compiler import BlueprintConstraintCompiler
 from modules.domain.agents.constraint_compiler import ConstraintCompiler
 
 
@@ -68,3 +69,39 @@ def test_arc_critic_remove_items_falls_back_to_legacy_items_acquired_when_canoni
     fixed = critic._apply_auto_fixes(arc, critique)
 
     assert fixed["state_constraints"]["items_acquired"] == ["keep-item"]
+
+
+def test_blueprint_constraint_compiler_progression_packet_cites_actual_prior_manuscript_events():
+    compiler = BlueprintConstraintCompiler()
+
+    block = compiler.compile(
+        arc_data={"arc_no": 1, "ep_start": 1, "ep_count": 10, "tactical_doc": "제6화: 다음 압박으로 이동한다."},
+        ep_num=6,
+        prev_blueprint={"scene_breakdown": {}},
+        prev_manuscript_ending=(
+            "박성호 PB가 WTI 원유 선물 3월물 매수 포지션에 전량 진입했다고 말했다.\n딸깍. 주문 완료음이 VIP룸에 울렸다."
+        ),
+        genre="investment",
+    )
+
+    packet = block["episode_progression_packet"]
+    assert packet["source"] == "prev_manuscript+prev_blueprint+arc_authority"
+    assert packet["completed_prior_events"][0]["source"] == "prev_manuscript_ending"
+    assert "WTI 원유 선물 3월물" in packet["completed_prior_events"][0]["events"][0]
+
+
+def test_blueprint_constraint_compiler_progression_packet_cites_generic_completed_contract_events():
+    compiler = BlueprintConstraintCompiler()
+
+    block = compiler.compile(
+        arc_data={"arc_no": 1, "ep_start": 1, "ep_count": 10, "tactical_doc": "제6화: 후속 압박으로 이동한다."},
+        ep_num=6,
+        prev_blueprint={"scene_breakdown": {}},
+        prev_manuscript_ending="대표단은 계약 체결 완료를 선언했고, 양측은 서명본을 금고에 넣었다.",
+        genre="investment",
+    )
+
+    packet = block["episode_progression_packet"]
+    assert packet["source"] == "prev_manuscript+prev_blueprint+arc_authority"
+    assert packet["completed_prior_events"][0]["source"] == "prev_manuscript_ending"
+    assert "계약 체결 완료" in packet["completed_prior_events"][0]["events"][0]

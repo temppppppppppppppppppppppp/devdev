@@ -1096,10 +1096,11 @@ class TestStageAttemptObservability:
         assert payload["advisory_warnings"]["partial_fix_eval"]["patch_target_id"] == "pt:scene2"
 
     def test_annotate_stage3_success_blueprint_preserves_binding_meta(self, orch):
-        blueprint = {}
+        blueprint = {"_frontier_status": {"status": "requires_actual_manuscript_revalidation"}}
+        orch.ctx.current_project.db.get_manuscript.return_value = {"content": "accepted prior manuscript"}
 
         result = orch._annotate_stage3_success_blueprint(
-            working_ep=1,
+            working_ep=2,
             arc_data={},
             blueprint=blueprint,
             pipeline_result={
@@ -1165,6 +1166,11 @@ class TestStageAttemptObservability:
         assert result["_stage3_meta"]["repair_contract"]["provenance"] == "director_authored"
         assert result["_stage3_meta"]["scope_authority"]["widened"] is False
         assert result["_stage3_meta"]["partial_fix_eval"]["patch_target_id"] == "pt:scene2"
+        assert "_frontier_status" not in result
+        assert result["_stage3_meta"]["frontier_basis_version"] == "stage3-frontier-basis-v1"
+        assert result["_stage3_meta"]["source_prev_manuscript_ep"] == 1
+        assert len(result["_stage3_meta"]["source_prev_manuscript_hash"]) == 64
+        assert result["_stage3_meta"]["generated_at"]
 
 
 class TestLoadPrevBlueprint:
