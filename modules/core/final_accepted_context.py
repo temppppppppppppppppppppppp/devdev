@@ -66,6 +66,7 @@ def load_final_accepted_manuscript_row(db: object, ep_num: int) -> dict[str, Any
                     "final_context_status": str(context.get("authority_status") or ""),
                     "final_context_source": str(context.get("source_kind") or ""),
                     "content_hash": str(context.get("content_hash") or ""),
+                    "manuscript_created_at": str(context.get("manuscript_created_at") or ""),
                 }
             if str(context.get("authority_status") or "") == "blocked_by_non_final_stage4_attempt":
                 return None
