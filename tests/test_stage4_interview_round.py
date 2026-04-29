@@ -611,6 +611,14 @@ class TestInterviewRoundHelpers:
                 "selection_content_hash": "sel-hash-123",
                 "fix_scope_reasoning": "keep all details",
                 "open_review": "review",
+                "director_verdict": "PASS",
+                "final_verdict": "REJECT",
+                "runtime_route_payload_version": "stage4-runtime-route-v1",
+                "runtime_route_verdict": "REJECT",
+                "runtime_route_action": "route_retry_full_rewrite",
+                "runtime_route_reason": "stage4 runtime gate=post_select_conflict route verdict=REJECT",
+                "runtime_route_taxonomy": "runtime_route_guard",
+                "gate_basis": "post_select_conflict",
                 "rejection_reason": "reason",
                 "retry_budget_axes": {"repair": "rewrite_regenerate"},
                 "action_items": [f"fix-step-{idx}" for idx in range(10)],
@@ -636,6 +644,13 @@ class TestInterviewRoundHelpers:
         assert snapshot["content_hash"] == "hash-123"
         assert snapshot["selection_content_hash"] == "sel-hash-123"
         assert snapshot["retry_budget_axes"] == {"repair": "rewrite_regenerate"}
+        assert snapshot["director_verdict"] == "PASS"
+        assert snapshot["final_verdict"] == "REJECT"
+        assert snapshot["runtime_route_payload_version"] == "stage4-runtime-route-v1"
+        assert snapshot["runtime_route_verdict"] == "REJECT"
+        assert snapshot["runtime_route_action"] == "route_retry_full_rewrite"
+        assert snapshot["runtime_route_taxonomy"] == "runtime_route_guard"
+        assert snapshot["gate_basis"] == "post_select_conflict"
 
     def test_compact_attempt_snapshot_preserves_truth_pin_and_numeric_contract_surfaces(self):
         snapshot = Stage4InterviewRound._compact_attempt_snapshot(
@@ -2599,6 +2614,11 @@ class TestRecordS4Attempt:
                 "director_quality_passed": True,
                 "downstream_override_applied": True,
                 "primary_failure_layer": "downstream_gate",
+                "runtime_route_payload_version": "stage4-runtime-route-v1",
+                "runtime_route_verdict": "REJECT",
+                "runtime_route_action": "block_artifact_adoption",
+                "runtime_route_reason": "stage4 runtime gate=quality_floor_fail route verdict=REJECT",
+                "runtime_route_taxonomy": "runtime_route_guard",
             },
         )
 
@@ -2616,6 +2636,11 @@ class TestRecordS4Attempt:
         assert payload["repair_contract"] == {"subtype": "movement", "fix_scope": "inplace"}
         assert payload["scope_authority"] == {"fix_scope": "inplace", "authoritative_fix_scope": "partial"}
         assert payload["retry_budget_axes"] == {"repair": "patch_revision"}
+        assert payload["runtime_route_payload_version"] == "stage4-runtime-route-v1"
+        assert payload["runtime_route_verdict"] == "REJECT"
+        assert payload["runtime_route_action"] == "block_artifact_adoption"
+        assert "quality_floor_fail" in payload["runtime_route_reason"]
+        assert payload["runtime_route_taxonomy"] == "runtime_route_guard"
         assert payload["director_quality_passed"] is True
         assert payload["downstream_override_applied"] is True
         assert payload["primary_failure_layer"] == "downstream_gate"
@@ -2978,6 +3003,11 @@ class TestRecordS4Attempt:
         advisory_flags = {
             "gate_semantics": {
                 "director_verdict": "PASS_WITH_FIX",
+                "runtime_route_payload_version": "stage4-runtime-route-v1",
+                "runtime_route_verdict": "REJECT",
+                "runtime_route_action": "block_artifact_adoption",
+                "runtime_route_reason": "stage4 runtime gate=quality_floor_fail route verdict=REJECT",
+                "runtime_route_taxonomy": "runtime_route_guard",
                 "gate_basis": "quality_floor_fail",
                 "repair_scope": "partial",
                 "authoritative_fix_scope": "inplace",
@@ -3073,6 +3103,8 @@ class TestRecordS4Attempt:
         )
 
         assert pass_rate_payload["repair_contract"]["subtype"] == "movement"
+        assert pass_rate_payload["runtime_route_payload_version"] == "stage4-runtime-route-v1"
+        assert pass_rate_payload["runtime_route_action"] == "block_artifact_adoption"
         assert pass_rate_payload["scope_authority"]["authoritative_fix_scope"] == "inplace"
         assert pass_rate_payload["retry_budget_axes"] == {"repair": "patch_revision"}
         assert pass_rate_payload["primary_failure_layer"] == "quality_floor"
@@ -3082,6 +3114,14 @@ class TestRecordS4Attempt:
         assert db_payload["advisory_flags"]["retry_budget_axes"] == {"repair": "patch_revision"}
         assert db_payload["advisory_flags"][SESSION_MEMORY_ENVELOPE_KEY]["retry_surface"]["retry_directives"] == (
             "change ending"
+        )
+        assert (
+            db_payload["advisory_flags"][SESSION_MEMORY_ENVELOPE_KEY]["retry_surface"]["runtime_route_action"]
+            == "block_artifact_adoption"
+        )
+        assert (
+            db_payload["advisory_flags"][SESSION_MEMORY_ENVELOPE_KEY]["verdict_surface"]["runtime_route_reason"]
+            == "stage4 runtime gate=quality_floor_fail route verdict=REJECT"
         )
         assert db_payload["primary_failure_layer"] == "quality_floor"
 
@@ -3449,6 +3489,44 @@ class TestRecordS4Attempt:
         assert hydrated["fix_scope"] == "full"
         assert hydrated["authoritative_fix_scope"] == "inplace"
         assert hydrated["scope_authority"]["fix_scope"] == "inplace"
+
+    def test_hydrate_persisted_stage4_previous_attempt_prefers_runtime_route_action(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        row = {
+            "ep_num": 2,
+            "arc_num": 1,
+            "session_id": "sess-stage4",
+            "attempt_key": "s4:ep2:arc1:a1:sess-stage4",
+            "verdict": "REJECT",
+            "fix_scope": "inplace",
+            "failure_category": "LOGIC_ERROR",
+            "primary_failure_layer": "downstream_gate",
+            "advisory_flags": {
+                "gate_semantics": {
+                    "director_verdict": "PASS",
+                    "runtime_route_payload_version": "stage4-runtime-route-v1",
+                    "runtime_route_verdict": "REJECT",
+                    "runtime_route_action": "route_retry_full_rewrite",
+                    "runtime_route_reason": "stage4 runtime gate=post_select_conflict route verdict=REJECT",
+                    "runtime_route_taxonomy": "runtime_route_guard",
+                    "repair_scope": "full",
+                    "authoritative_fix_scope": "inplace",
+                },
+            },
+        }
+
+        hydrated = ir._hydrate_stage4_previous_attempt_from_row(row)
+
+        assert hydrated["reject_bucket"] == "post_select_conflict"
+        assert hydrated["fix_scope"] == "full"
+        assert hydrated["runtime_route_payload_version"] == "stage4-runtime-route-v1"
+        assert hydrated["runtime_route_verdict"] == "REJECT"
+        assert hydrated["runtime_route_action"] == "route_retry_full_rewrite"
+        assert hydrated["runtime_route_taxonomy"] == "runtime_route_guard"
+        assert hydrated["firewall_triggered"] is True
+        assert hydrated["firewall_reason"] == "route_retry_full_rewrite"
 
     def test_build_final_selection_advisory_payload_reuses_contract_packet(self):
         ctx = _make_ctx()
@@ -3980,10 +4058,20 @@ class TestRecordS4Attempt:
                 "authoritative_fix_scope_violation": {"type": "blank_authoritative_fix_scope"},
                 "widened": False,
             },
+            runtime_route_payload_version="stage4-runtime-route-v1",
+            runtime_route_verdict="REJECT",
+            runtime_route_action="block_artifact_adoption",
+            runtime_route_reason="stage4 runtime gate=quality_floor_fail route verdict=REJECT",
+            runtime_route_taxonomy="runtime_route_guard",
         )
 
         kwargs = ctx.session_logger.log_decision.call_args.kwargs
         assert kwargs["fix_scope"] == "partial"
+        assert kwargs["runtime_route_payload_version"] == "stage4-runtime-route-v1"
+        assert kwargs["runtime_route_verdict"] == "REJECT"
+        assert kwargs["runtime_route_action"] == "block_artifact_adoption"
+        assert kwargs["runtime_route_taxonomy"] == "runtime_route_guard"
+        assert "quality_floor_fail" in kwargs["runtime_route_reason"]
         assert kwargs["authoritative_fix_scope"] == ""
         assert kwargs["authoritative_fix_scope_violation"] == {"type": "blank_authoritative_fix_scope"}
         assert kwargs["scope_origin"] == {
@@ -4035,6 +4123,11 @@ class TestRecordS4Attempt:
             verdict_reason="verdict",
             session_gate_semantics={
                 "director_verdict": "PASS_WITH_FIX",
+                "runtime_route_payload_version": "stage4-runtime-route-v1",
+                "runtime_route_verdict": "REJECT",
+                "runtime_route_action": "route_retry_full_rewrite",
+                "runtime_route_reason": "stage4 runtime gate=post_select_conflict route verdict=REJECT",
+                "runtime_route_taxonomy": "runtime_route_guard",
                 "gate_basis": "trace_gate",
                 "repair_scope": "rewrite",
                 "authoritative_fix_scope": "partial",
@@ -4061,6 +4154,11 @@ class TestRecordS4Attempt:
         )
 
         assert kwargs["director_verdict"] == "PASS_WITH_FIX"
+        assert kwargs["runtime_route_payload_version"] == "stage4-runtime-route-v1"
+        assert kwargs["runtime_route_verdict"] == "REJECT"
+        assert kwargs["runtime_route_action"] == "route_retry_full_rewrite"
+        assert kwargs["runtime_route_taxonomy"] == "runtime_route_guard"
+        assert "post_select_conflict" in kwargs["runtime_route_reason"]
         assert kwargs["gate_basis"] == "trace_gate"
         assert kwargs["repair_scope"] == "rewrite"
         assert kwargs["authoritative_fix_scope"] == "partial"
@@ -4075,6 +4173,11 @@ class TestRecordS4Attempt:
         projection = _build_stage4_session_contract_projection(
             session_gate_semantics={
                 "director_verdict": "PASS_WITH_FIX",
+                "runtime_route_payload_version": "stage4-runtime-route-v1",
+                "runtime_route_verdict": "REJECT",
+                "runtime_route_action": "route_retry_full_rewrite",
+                "runtime_route_reason": "stage4 runtime gate=post_select_conflict route verdict=REJECT",
+                "runtime_route_taxonomy": "runtime_route_guard",
                 "gate_basis": "trace_gate",
                 "repair_scope": "rewrite",
                 "authoritative_fix_scope": "partial",
@@ -4104,6 +4207,11 @@ class TestRecordS4Attempt:
         )
 
         assert projection["director_verdict"] == "PASS_WITH_FIX"
+        assert projection["runtime_route_payload_version"] == "stage4-runtime-route-v1"
+        assert projection["runtime_route_verdict"] == "REJECT"
+        assert projection["runtime_route_action"] == "route_retry_full_rewrite"
+        assert projection["runtime_route_taxonomy"] == "runtime_route_guard"
+        assert "post_select_conflict" in projection["runtime_route_reason"]
         assert projection["gate_basis"] == "trace_gate"
         assert projection["repair_scope"] == "rewrite"
         assert projection["authoritative_fix_scope"] == "partial"
@@ -4230,6 +4338,11 @@ class TestRecordS4Attempt:
                 session_retry_directives="retry directives",
                 session_gate_semantics={
                     "director_verdict": "PASS_WITH_FIX",
+                    "runtime_route_payload_version": "stage4-runtime-route-v1",
+                    "runtime_route_verdict": "PASS_WITH_FIX",
+                    "runtime_route_action": "enter_pass_with_fix_repair",
+                    "runtime_route_reason": "stage4 runtime gate=trace_gate route verdict=PASS_WITH_FIX",
+                    "runtime_route_taxonomy": "runtime_route_guard",
                     "gate_basis": "trace_gate",
                     "repair_scope": "rewrite",
                 },
@@ -4237,6 +4350,9 @@ class TestRecordS4Attempt:
         )
 
         assert kwargs["reason"] == "trace verdict"
+        assert kwargs["runtime_route_payload_version"] == "stage4-runtime-route-v1"
+        assert kwargs["runtime_route_action"] == "enter_pass_with_fix_repair"
+        assert kwargs["runtime_route_taxonomy"] == "runtime_route_guard"
         assert kwargs["fix_scope"] == "rewrite"
         assert kwargs["selection_reason"] == "selection"
         assert kwargs["verdict_reason"] == "verdict"
@@ -4952,6 +5068,31 @@ class TestRecordS4Attempt:
             round_num=1,
         )
 
+        assert payload.fix_scope == "full"
+        assert payload.force_patch is False
+        assert payload.use_inplace is False
+        assert payload.use_patch is False
+
+    def test_resolve_retry_lane_routing_uses_runtime_route_action_for_post_select(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._resolve_retry_lane_routing(
+            previous_attempt={
+                "score": "98",
+                "fix_scope": "inplace",
+                "runtime_route_payload_version": "stage4-runtime-route-v1",
+                "runtime_route_verdict": "REJECT",
+                "runtime_route_action": "route_retry_full_rewrite",
+                "runtime_route_taxonomy": "runtime_route_guard",
+                "selected_strategy_key": "tension",
+                "fix_pack": _local_fix_pack("opening_location_name", target_kind="local_sentence"),
+            },
+            prev_manuscript="original manuscript",
+            round_num=1,
+        )
+
+        assert payload.reject_bucket == "post_select_conflict"
         assert payload.fix_scope == "full"
         assert payload.force_patch is False
         assert payload.use_inplace is False
@@ -8482,6 +8623,10 @@ class TestLane2DirectorSemantics:
         assert gate_semantics["director_verdict"] == "PASS_WITH_FIX"
         assert gate_semantics["final_verdict"] == "REJECT"
         assert gate_semantics["runtime_route_verdict"] == "REJECT"
+        assert gate_semantics["runtime_route_payload_version"] == "stage4-runtime-route-v1"
+        assert gate_semantics["runtime_route_action"] == "block_artifact_adoption"
+        assert gate_semantics["runtime_route_taxonomy"] == "runtime_route_guard"
+        assert "quality_floor_fail" in gate_semantics["runtime_route_reason"]
         assert gate_semantics["verdict_contract_version"] == "verdict-layer-v1"
         assert gate_semantics["gate_basis"] == "quality_floor_fail"
         repair_contract = kw["advisory_warnings"]["repair_contract"]
@@ -8505,6 +8650,9 @@ class TestLane2DirectorSemantics:
         assert gate_semantics["runtime_gate_role"] == "route_or_block_automatic_progress"
         assert gate_semantics["verdict_layers"]["director_verdict"] == "PASS_WITH_FIX"
         assert gate_semantics["verdict_layers"]["runtime_route_verdict"] == "REJECT"
+        assert gate_semantics["verdict_layers"]["runtime_route_action"] == "block_artifact_adoption"
+        assert "quality_floor_fail" in gate_semantics["verdict_layers"]["runtime_route_reason"]
+        assert gate_semantics["verdict_layers"]["runtime_route_taxonomy"] == "runtime_route_guard"
         assert gate_semantics["verdict_layers"]["verdict_contract_version"] == "verdict-layer-v1"
         assert gate_semantics["verdict_layers"]["director_quality_authority"] == "director_llm"
         assert gate_semantics["verdict_layers"]["runtime_gate_authority"] == "python_runtime_routing_gate"
@@ -8598,6 +8746,47 @@ class TestLane2DirectorSemantics:
         assert surface_payload["verdict_reason"] == "conflict"
         assert surface_payload["advisory_warnings"]["gate_semantics"]["gate_basis"] == "quality_floor_fail"
         assert ir._last_advisory_summary["repair_contract"]["subtype"] == "movement"
+
+    def test_apply_director_gate_update_preserves_director_verdict_with_typed_route_payload(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        updated = ir._apply_director_gate_update(
+            {
+                "verdict": "PASS_WITH_FIX",
+                "director_verdict": "PASS_WITH_FIX",
+                "final_verdict": "PASS_WITH_FIX",
+                "fix_scope": "inplace",
+            },
+            final_verdict="REJECT",
+            gate_basis="quality_floor_fail",
+        )
+
+        assert updated["director_verdict"] == "PASS_WITH_FIX"
+        assert updated["final_verdict"] == "REJECT"
+        assert updated["runtime_route_verdict"] == "REJECT"
+        assert updated["runtime_route_payload_version"] == "stage4-runtime-route-v1"
+        assert updated["runtime_route_action"] == "block_artifact_adoption"
+        assert updated["runtime_route_taxonomy"] == "runtime_route_guard"
+
+    def test_strong_advisory_notice_does_not_promote_pass_with_fix_to_reject(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._last_advisory_summary = {"truth_gate": 1}
+
+        normalized = ir._normalize_director_gate_semantics(
+            {
+                "verdict": "PASS_WITH_FIX",
+                "fix_scope": "partial",
+                "score": 91,
+            }
+        )
+
+        assert normalized["director_verdict"] == "PASS_WITH_FIX"
+        assert normalized["final_verdict"] == "PASS_WITH_FIX"
+        assert normalized["gate_basis"] == "director_primary_pass_with_fix"
+        assert normalized["strong_advisory_escalation"]["notice_only"] is True
+        assert normalized["runtime_route_action"] == "enter_pass_with_fix_repair"
 
     def test_build_director_decision_core_parts_injects_stage3_pov_and_writing_directive(self):
         ctx = _make_ctx()
@@ -9361,6 +9550,10 @@ class TestLane2DirectorSemantics:
                 "truth_pins": {
                     "carryover_numeric_authority": "FactLedger baseline wins",
                 },
+                "runtime_route_payload_version": "stage4-runtime-route-v1",
+                "runtime_route_verdict": "REJECT",
+                "runtime_route_action": "route_retry_full_rewrite",
+                "runtime_route_taxonomy": "runtime_route_guard",
                 "truth_pin_items": [
                     {
                         "pin_key": "family_group_name",
@@ -9407,6 +9600,9 @@ class TestLane2DirectorSemantics:
         assert payload["conflict_contract"] == {
             "contract_type": "post_select_conflict",
         }
+        assert payload["runtime_route_payload_version"] == "stage4-runtime-route-v1"
+        assert payload["runtime_route_action"] == "route_retry_full_rewrite"
+        assert payload["runtime_route_taxonomy"] == "runtime_route_guard"
 
     def test_build_stage4_reject_retry_contract_projection_merges_current_contract_and_carryover(self):
         ctx = _make_ctx()
@@ -9507,6 +9703,10 @@ class TestLane2DirectorSemantics:
                     "authoritative_fix_scope": "inplace",
                     "widened": True,
                 },
+                "runtime_route_payload_version": "stage4-runtime-route-v1",
+                "runtime_route_verdict": "REJECT",
+                "runtime_route_action": "route_retry_full_rewrite",
+                "runtime_route_taxonomy": "runtime_route_guard",
                 "authoritative_fix_scope_violation": {"type": "blank_authoritative_fix_scope"},
                 "strong_advisory_escalation": {"tier": "non_local_fix"},
             }
@@ -9520,6 +9720,9 @@ class TestLane2DirectorSemantics:
         assert payload["repair_contract"] == {"subtype": "opening_action_continuity"}
         assert payload["scope_origin"] == {"fix_scope": "runtime_widened"}
         assert payload["scope_authority"]["widened"] is True
+        assert payload["runtime_route_payload_version"] == "stage4-runtime-route-v1"
+        assert payload["runtime_route_action"] == "route_retry_full_rewrite"
+        assert payload["runtime_route_taxonomy"] == "runtime_route_guard"
         assert payload["authoritative_fix_scope_violation"] == {"type": "blank_authoritative_fix_scope"}
         assert payload["strong_advisory_escalation"] == {"tier": "non_local_fix"}
 
@@ -10017,7 +10220,10 @@ class TestLane2DirectorSemantics:
                 "action_items": ["rename institution anchor"],
                 "fix_scope": "inplace",
                 "fix_scope_reasoning": "director local repair",
-                "gate_basis": "post_select_conflict",
+                "runtime_route_payload_version": "stage4-runtime-route-v1",
+                "runtime_route_verdict": "REJECT",
+                "runtime_route_action": "route_retry_full_rewrite",
+                "runtime_route_taxonomy": "runtime_route_guard",
                 "fix_pack": {
                     "patch_targets": ["기관명 표기 문장"],
                     "must_fix": ["기관명을 이전 화 canonical 표기로 교체"],
@@ -12157,6 +12363,10 @@ class TestLane2DirectorSemantics:
             "runtime_advisory": "runtime digest",
             "retry_directives": "retry later",
             "director_feedback_text": "director said no",
+            "runtime_route_payload_version": "stage4-runtime-route-v1",
+            "runtime_route_verdict": "REJECT",
+            "runtime_route_action": "route_retry_full_rewrite",
+            "runtime_route_taxonomy": "runtime_route_guard",
             "scope_origin": {
                 "fix_scope": "post_select_conflict_override",
                 "authoritative_fix_scope": "director_authoritative",
@@ -12201,6 +12411,9 @@ class TestLane2DirectorSemantics:
             "retry_directives": "retry later",
         }
         assert payload.session_gate_semantics["gate_basis"] == "continuity"
+        assert payload.session_gate_semantics["runtime_route_payload_version"] == "stage4-runtime-route-v1"
+        assert payload.session_gate_semantics["runtime_route_action"] == "route_retry_full_rewrite"
+        assert payload.session_gate_semantics["runtime_route_taxonomy"] == "runtime_route_guard"
         assert payload.session_gate_semantics["scope_origin"]["fix_scope"] == "post_select_conflict_override"
         assert payload.session_gate_semantics["repair_contract"]["subtype"] == "opening_action_continuity"
         assert payload.session_gate_semantics["conflict_resolution_linkage"]["conflict_count"] == 2
@@ -12356,6 +12569,62 @@ class TestLane2DirectorSemantics:
         repair_contract = payload.session_gate_semantics["repair_contract"]
         assert repair_contract["provenance"] == "runtime_synthesized"
         assert repair_contract["target_kind"] == "scene_model"
+        assert payload.session_gate_semantics["fix_pack_origin"] == {
+            "provenance": "runtime_synthesized",
+            "provenance_sources": ["strong_advisory_non_local_fix", "npc_drift"],
+            "routing_contract": "runtime_generated_requires_rewrite",
+        }
+
+    def test_build_reject_logging_payload_uses_runtime_route_for_non_local_fix_contract(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        reject_result = MagicMock()
+        reject_result.previous_attempt = {
+            "reject_bucket": "quality_issue",
+            "runtime_advisory": "runtime digest",
+            "retry_directives": "retry later",
+            "director_feedback_text": "director said no",
+            "runtime_route_payload_version": "stage4-runtime-route-v1",
+            "runtime_route_verdict": "REJECT",
+            "runtime_route_action": "route_retry_nonlocal_repair",
+            "runtime_route_taxonomy": "runtime_route_guard",
+            "repair_scope": "partial",
+            "fix_scope": "partial",
+            "authoritative_fix_scope": "inplace",
+            "fix_pack": {},
+            "repair_contract": {
+                "fix_scope": "partial",
+                "repair_scope": "partial",
+                "authoritative_fix_scope": "inplace",
+            },
+            "scope_authority": {
+                "fix_scope": "partial",
+                "repair_scope": "partial",
+                "authoritative_fix_scope": "inplace",
+                "widened": True,
+            },
+            "strong_advisory_escalation": {
+                "triggered_by": ["npc_drift"],
+                "local_fix_contract": {
+                    "ready": False,
+                    "reason": "missing_fix_pack",
+                    "fix_scope": "inplace",
+                },
+            },
+        }
+        reject_result.attempt_artifact_meta = {}
+
+        payload = ir.reject_runtime._build_reject_logging_payload(
+            reject_result=reject_result,
+            director_result={"selection_reason": "initial selection"},
+            trace_director_result={},
+            reason="fallback reason",
+        )
+
+        assert payload.session_gate_semantics["runtime_route_action"] == "route_retry_nonlocal_repair"
+        fix_pack = payload.session_gate_semantics["fix_pack"]
+        assert fix_pack["target_kind"] == "scene_model"
+        assert fix_pack["provenance"] == "runtime_synthesized"
         assert payload.session_gate_semantics["fix_pack_origin"] == {
             "provenance": "runtime_synthesized",
             "provenance_sources": ["strong_advisory_non_local_fix", "npc_drift"],
@@ -12601,6 +12870,11 @@ class TestLane2DirectorSemantics:
                     "verdict": "PASS_WITH_FIX",
                     "director_verdict": "PASS_WITH_FIX",
                     "final_verdict": "REJECT",
+                    "runtime_route_payload_version": "stage4-runtime-route-v1",
+                    "runtime_route_verdict": "REJECT",
+                    "runtime_route_action": "block_artifact_adoption",
+                    "runtime_route_reason": "stage4 runtime gate=quality_floor_fail route verdict=REJECT",
+                    "runtime_route_taxonomy": "runtime_route_guard",
                     "gate_basis": "quality_floor_fail",
                     "fix_scope": "partial",
                     "authoritative_fix_scope": "inplace",
@@ -12637,6 +12911,11 @@ class TestLane2DirectorSemantics:
         payload = json.loads(written.strip())
         assert payload["director_verdict"] == "PASS_WITH_FIX"
         assert payload["final_verdict"] == "REJECT"
+        assert payload["runtime_route_payload_version"] == "stage4-runtime-route-v1"
+        assert payload["runtime_route_verdict"] == "REJECT"
+        assert payload["runtime_route_action"] == "block_artifact_adoption"
+        assert payload["runtime_route_taxonomy"] == "runtime_route_guard"
+        assert "quality_floor_fail" in payload["runtime_route_reason"]
         assert payload["gate_basis"] == "quality_floor_fail"
         assert payload["repair_scope"] == "partial"
         assert payload["fix_scope"] == "partial"
@@ -13699,13 +13978,20 @@ class TestScopeSinkSemantics:
 
         assert verdict == "REJECT"
         assert "scope_origin" in previous_attempt
+        assert previous_attempt["director_verdict"] == "PASS"
+        assert previous_attempt["final_verdict"] == "REJECT"
+        assert previous_attempt["runtime_route_payload_version"] == "stage4-runtime-route-v1"
+        assert previous_attempt["runtime_route_verdict"] == "REJECT"
+        assert previous_attempt["runtime_route_action"] == "route_retry_full_rewrite"
+        assert previous_attempt["runtime_route_taxonomy"] == "runtime_route_guard"
+        assert previous_attempt["authoritative_fix_scope"] == "partial"
         assert previous_attempt["scope_origin"]["fix_scope"] == "post_select_conflict_override"
         assert previous_attempt["scope_origin"]["authoritative_fix_scope"] == "director_authoritative"
         assert previous_attempt["scope_origin"]["repair_scope"] == "runtime_lane"
         assert previous_attempt["scope_authority"] == {
             "fix_scope": "full",
             "repair_scope": "full",
-            "authoritative_fix_scope": "full",
+            "authoritative_fix_scope": "partial",
             "scope_origin": {
                 "fix_scope": "post_select_conflict_override",
                 "authoritative_fix_scope": "director_authoritative",
@@ -13782,7 +14068,7 @@ class TestScopeSinkSemantics:
             "subtype": "proper_noun",
             "fix_scope": "full",
             "repair_scope": "full",
-            "authoritative_fix_scope": "full",
+            "authoritative_fix_scope": "inplace",
             "scope_origin": {
                 "fix_scope": "post_select_conflict_override",
                 "authoritative_fix_scope": "director_authoritative",

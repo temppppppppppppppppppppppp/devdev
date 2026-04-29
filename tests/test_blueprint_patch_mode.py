@@ -150,8 +150,8 @@ class TestStage3RepairRouter:
         current_validation = {
             "fix_scope": "inplace",
             "binding_prevalidation_issue_count": 1,
-            "binding_prevalidation_categories": ["arc_timeline"],
-            "feedback": "repair timeline binding",
+            "binding_prevalidation_categories": ["scene_completeness"],
+            "feedback": "repair scene contract binding",
         }
 
         material = _Stage3RepairRouter.build_validation_material(current_validation)
@@ -163,7 +163,36 @@ class TestStage3RepairRouter:
 
         assert route.effective_fix_scope == "full"
         assert route.should_break_to_generate is True
-        assert "arc_timeline" in route.regenerate_only_reason
+        assert "scene_completeness" in route.regenerate_only_reason
+
+    def test_router_does_not_force_full_regenerate_for_semantic_binding_count_only(self):
+        from modules.domain.agents.three_phase_blueprint_runtime import _Stage3RepairRouter
+
+        current_validation = {
+            "fix_scope": "inplace",
+            "binding_prevalidation_issue_count": 1,
+            "binding_prevalidation_categories": ["arc_timeline"],
+            "feedback": "timeline evidence for Director review",
+            **_ready_stage3_local_contract(
+                patch_target="integrated_scenario",
+                scene_id="integrated_scenario",
+                field_path="integrated_scenario",
+                target_kind="local_sentence",
+                patch_target_id="integrated_scenario",
+                must_fix="director-confirmed timeline edit",
+                success_condition="timeline edit applied",
+            ),
+        }
+
+        material = _Stage3RepairRouter.build_validation_material(current_validation)
+        route = _Stage3RepairRouter.decide_pass_with_fix(
+            material=material,
+            score=88,
+            inplace_threshold=60,
+        )
+
+        assert route.should_break_to_generate is False
+        assert route.regenerate_only_reason == ""
 
     def test_router_requires_explicit_local_contract_before_inplace(self):
         from modules.domain.agents.three_phase_blueprint_runtime import _Stage3RepairRouter
@@ -1155,15 +1184,15 @@ class TestBlueprintPatchIntegration:
                 "issues": [
                     {
                         "severity": "MAJOR",
-                        "category": "arc_timeline",
-                        "issue": "timeline exceeds arc date window",
+                        "category": "scene_completeness",
+                        "issue": "scene.characters missing",
                     }
                 ],
                 "binding_prevalidation_issue_count": 1,
-                "binding_prevalidation_categories": ["arc_timeline"],
-                "feedback": "timeline repair required",
+                "binding_prevalidation_categories": ["scene_completeness"],
+                "feedback": "scene contract repair required",
                 "fix_scope": "inplace",
-                "fix_scope_reasoning": "Director suggested a local fix, but binding is structural.",
+                "fix_scope_reasoning": "Director suggested a local fix, but scene contract is structural.",
             },
             verdict="PASS_WITH_FIX",
             score=88,
@@ -1186,14 +1215,14 @@ class TestBlueprintPatchIntegration:
         assert retry_state.prev_reject_origin == "binding_prevalidation_reopen"
         assert retry_state.prev_binding_issue_count == 1
         assert retry_state.prev_fix_scope == "full"
-        assert "arc_timeline" in retry_state.prev_reject_feedback
+        assert "scene_completeness" in retry_state.prev_reject_feedback
         validate_phase = pipeline_result["phases"]["validate"]
         assert validate_phase["director_verdict"] == "PASS_WITH_FIX"
         assert validate_phase["runtime_route_verdict"] == "REJECT"
         assert validate_phase["runtime_gate_basis"] == "binding_prevalidation_reopen"
         assert validate_phase["runtime_route_action"] == "full_regenerate_retry"
         assert validate_phase["fix_scope"] == "full"
-        assert validate_phase["binding_regenerate_only_categories"] == ["arc_timeline"]
+        assert validate_phase["binding_regenerate_only_categories"] == ["scene_completeness"]
         blueprint_generator.runtime._run_pass_with_fix_loop.assert_not_called()
 
     def test_resolve_retry_cycle_result_keeps_opening_transition_alias_in_pass_with_fix_loop(
@@ -1420,6 +1449,65 @@ class TestBlueprintPatchIntegration:
         log_texts = [call.args[0] for call in blueprint_generator._operator_log.call_args_list]
         assert any("effective_score=88" in text for text in log_texts)
 
+    def test_run_phase3_validation_consumes_typed_runtime_route_payload(self, blueprint_generator, sample_arc_data):
+        from modules.domain.agents.three_phase_blueprint_runtime import (
+            _ThreePhaseRetryState,
+            _ThreePhaseValidationEnvelope,
+        )
+
+        blueprint_generator._operator_log = MagicMock()
+        pipeline_result = {"phases": {"generate": {}, "validate": {}}}
+        validation = _ThreePhaseValidationEnvelope(
+            best_blueprint={"ep_num": 2, "scene_breakdown": {"scene_1": {"goal": "contract"}}},
+            validation_result={
+                "verdict": "PASS",
+                "director_verdict": "PASS",
+                "runtime_route_verdict": "PASS_WITH_FIX",
+                "runtime_route_action": "regenerate_required",
+                "runtime_gate_basis": "binding_prevalidation_contract",
+                "runtime_route_reason": "runtime-route prevalidation repair required",
+                "score": 94,
+                "issues": [{"severity": "MAJOR", "category": "scene_completeness"}],
+                "binding_prevalidation_issue_count": 1,
+                "binding_prevalidation_categories": ["scene_completeness"],
+                "binding_regenerate_only_categories": ["scene_completeness"],
+            },
+            verdict="PASS",
+            selected_strategy="balanced",
+            score=94,
+        )
+
+        with (
+            patch.object(blueprint_generator.runtime, "_maybe_reject_phase3_continuity", return_value=None),
+            patch.object(blueprint_generator.runtime, "_run_phase3_validation_envelope", return_value=validation),
+            patch.object(blueprint_generator.runtime, "_record_phase3_contradictions"),
+            patch("modules.domain.agents.three_phase_blueprint_runtime._threshold", return_value=90),
+        ):
+            result = blueprint_generator.runtime._run_phase3_validation(
+                ep_num=2,
+                arc_data=sample_arc_data,
+                constraint_block={},
+                prev_blueprint=None,
+                best_blueprint={"ep_num": 2},
+                all_candidates=[{"ep_num": 2}],
+                director=MagicMock(),
+                arc_idx=0,
+                entity_registry=None,
+                state_tracker=None,
+                db=None,
+                prev_hud=None,
+                retry_state=_ThreePhaseRetryState(),
+                pipeline_result=pipeline_result,
+                retry=0,
+                max_retries=1,
+            )
+
+        assert result.verdict == "PASS_WITH_FIX"
+        assert result.validation_result["director_verdict"] == "PASS"
+        assert pipeline_result["phases"]["validate"]["verdict"] == "PASS_WITH_FIX"
+        assert pipeline_result["phases"]["validate"]["director_verdict"] == "PASS"
+        assert pipeline_result["phases"]["validate"]["runtime_route_action"] == "regenerate_required"
+
     def test_run_phase3_validation_promotes_terminal_quality_gate_warning(self, blueprint_generator, sample_arc_data):
         from modules.domain.agents.three_phase_blueprint_runtime import (
             _ThreePhaseRetryState,
@@ -1534,7 +1622,7 @@ class TestBlueprintPatchIntegration:
                     "verdict": "PASS_WITH_FIX",
                     "director_verdict": "PASS",
                     "runtime_route_verdict": "PASS_WITH_FIX",
-                    "binding_prevalidation_categories": ["arc_timeline"],
+                    "binding_prevalidation_categories": ["scene_completeness"],
                 },
             },
         }
@@ -1568,7 +1656,7 @@ class TestBlueprintPatchIntegration:
         assert payload["summary_role"] == "stage3_terminal_failure_diagnostic"
         assert payload["director_verdict"] == "PASS"
         assert payload["runtime_route_verdict"] == "REJECT"
-        assert payload["binding_prevalidation_categories"] == ["arc_timeline"]
+        assert payload["binding_prevalidation_categories"] == ["scene_completeness"]
         assert payload["candidate_blueprint"] == best_blueprint
 
     def test_resolve_retry_cycle_result_accepts_direct_terminal_quality_gate_warning(self, blueprint_generator):
@@ -2556,8 +2644,8 @@ class TestBlueprintPatchIntegration:
             current_blueprint={"ep_num": 1},
             current_validation={
                 "fix_scope": "inplace",
-                "feedback": "restore opening anchor",
-                "binding_prevalidation_categories": ["opening_anchor", "scenario_density"],
+                "feedback": "restore scene contract",
+                "binding_prevalidation_categories": ["scene_completeness", "scenario_density"],
             },
             pipeline_result={"phases": {"generate": {}, "validate": {}}},
             score=88,
@@ -2573,15 +2661,19 @@ class TestBlueprintPatchIntegration:
 
         assert result.should_break is True
         assert result.current_validation["fix_scope"] == "full"
-        assert result.current_validation["binding_regenerate_only_categories"] == ["opening_anchor"]
-        assert "opening_anchor" in result.current_validation["binding_regenerate_only_reason"]
-        assert "opening_anchor" in result.current_validation["fix_scope_reasoning"]
+        assert result.current_validation["binding_regenerate_only_categories"] == ["scene_completeness"]
+        assert "scene_completeness" in result.current_validation["binding_regenerate_only_reason"]
+        assert "scene_completeness" in result.current_validation["fix_scope_reasoning"]
         blueprint_generator._inplace_patch_blueprint.assert_not_called()
 
-    def test_pass_with_fix_iteration_escalates_episode_progression_to_full_regenerate(
+    def test_pass_with_fix_iteration_does_not_escalate_episode_progression_to_full_regenerate(
         self, blueprint_generator, sample_arc_data
     ):
-        blueprint_generator._inplace_patch_blueprint = MagicMock(return_value={"unexpected": True})
+        blueprint_generator._inplace_patch_blueprint = MagicMock(return_value={"ep_num": 3})
+        blueprint_generator.validator.validate.return_value = (
+            "PASS",
+            {"score": 92, "issues": [], "confidence": 90, "binding_prevalidation_issue_count": 0},
+        )
 
         result = blueprint_generator.runtime._run_pass_with_fix_iteration(
             ep_num=3,
@@ -2593,6 +2685,15 @@ class TestBlueprintPatchIntegration:
                 "fix_scope": "inplace",
                 "feedback": "stop replaying prior-episode scenes",
                 "binding_prevalidation_categories": ["episode_progression", "scenario_density"],
+                **_ready_stage3_local_contract(
+                    patch_target="integrated_scenario",
+                    scene_id="integrated_scenario",
+                    field_path="integrated_scenario",
+                    target_kind="local_sentence",
+                    patch_target_id="integrated_scenario",
+                    must_fix="director-confirmed progression edit",
+                    success_condition="progression edit applied",
+                ),
             },
             pipeline_result={"phases": {"generate": {}, "validate": {}}},
             score=91,
@@ -2606,16 +2707,18 @@ class TestBlueprintPatchIntegration:
             max_fix=3,
         )
 
-        assert result.should_break is True
-        assert result.current_validation["fix_scope"] == "full"
-        assert result.current_validation["binding_regenerate_only_categories"] == ["episode_progression"]
-        assert "episode_progression" in result.current_validation["binding_regenerate_only_reason"]
-        blueprint_generator._inplace_patch_blueprint.assert_not_called()
+        assert result.should_break is False
+        assert "binding_regenerate_only_categories" not in result.current_validation
+        assert "binding_regenerate_only_reason" not in result.current_validation
 
-    def test_pass_with_fix_iteration_escalates_arc_timeline_to_full_regenerate(
+    def test_pass_with_fix_iteration_does_not_escalate_arc_timeline_to_full_regenerate(
         self, blueprint_generator, sample_arc_data
     ):
-        blueprint_generator._inplace_patch_blueprint = MagicMock(return_value={"unexpected": True})
+        blueprint_generator._inplace_patch_blueprint = MagicMock(return_value={"ep_num": 7})
+        blueprint_generator.validator.validate.return_value = (
+            "PASS",
+            {"score": 90, "issues": [], "confidence": 90, "binding_prevalidation_issue_count": 0},
+        )
 
         result = blueprint_generator.runtime._run_pass_with_fix_iteration(
             ep_num=7,
@@ -2628,6 +2731,15 @@ class TestBlueprintPatchIntegration:
                 "feedback": "align ending timeline",
                 "binding_prevalidation_categories": ["arc_timeline"],
                 "binding_prevalidation_issue_count": 1,
+                **_ready_stage3_local_contract(
+                    patch_target="integrated_scenario",
+                    scene_id="integrated_scenario",
+                    field_path="integrated_scenario",
+                    target_kind="local_sentence",
+                    patch_target_id="integrated_scenario",
+                    must_fix="director-confirmed arc timeline edit",
+                    success_condition="arc timeline edit applied",
+                ),
             },
             pipeline_result={"phases": {"generate": {}, "validate": {}}},
             score=85,
@@ -2641,11 +2753,9 @@ class TestBlueprintPatchIntegration:
             max_fix=3,
         )
 
-        assert result.should_break is True
-        assert result.current_validation["fix_scope"] == "full"
-        assert result.current_validation["binding_regenerate_only_categories"] == ["arc_timeline"]
-        assert "arc_timeline" in result.current_validation["binding_regenerate_only_reason"]
-        blueprint_generator._inplace_patch_blueprint.assert_not_called()
+        assert result.should_break is False
+        assert "binding_regenerate_only_categories" not in result.current_validation
+        assert "binding_regenerate_only_reason" not in result.current_validation
 
     def test_pass_with_fix_iteration_escalates_contract_blocked_scene_model_to_full_regenerate(
         self, blueprint_generator, sample_arc_data

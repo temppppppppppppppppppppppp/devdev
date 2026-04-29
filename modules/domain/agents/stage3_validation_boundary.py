@@ -141,6 +141,7 @@ class Stage3ValidationBoundary:
         for key in (
             "director_verdict",
             "runtime_route_verdict",
+            "runtime_route_payload_version",
             "verdict_contract_version",
             "final_judgment_authority",
             "runtime_gate_authority",
@@ -148,10 +149,16 @@ class Stage3ValidationBoundary:
             "runtime_gate_basis",
             "runtime_route_action",
             "runtime_route_reason",
+            "runtime_route_taxonomy",
             "director_feedback",
             "director_verdict_reason",
             "director_fix_scope",
             "director_fix_scope_reasoning",
+            "prevalidation_authority_taxonomy",
+            "evidence_only_prevalidation_categories",
+            "director_required_prevalidation_categories",
+            "runtime_route_guard_categories",
+            "absolute_invariant_categories",
         ):
             value = validation_result.get(key)
             if value:
@@ -301,11 +308,15 @@ class Stage3ValidationBoundary:
         authority_payload = {
             "director_verdict": validation_verdict,
             "runtime_route_verdict": verdict,
+            "runtime_route_payload_version": "runtime-route-v1",
             "verdict_contract_version": "verdict-layer-v1",
             "final_judgment_authority": "director_llm",
             "runtime_gate_authority": "python_runtime_routing_gate",
             "runtime_gate_role": "route_or_block_automatic_progress",
             "runtime_gate_basis": "quality_gate_reject",
+            "runtime_route_action": "retry_or_block_automatic_progress",
+            "runtime_route_reason": "quality gate score below runtime threshold",
+            "runtime_route_taxonomy": "runtime_route_guard",
         }
         normalized_validation.update(authority_payload)
 
