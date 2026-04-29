@@ -603,6 +603,55 @@ class TestBlueprintPatchIntegration:
         assert pipeline["phases"]["generate"]["error_type"] == AgentErrorType.SCHEMA_INCOMPATIBLE
         assert pipeline["reject_reason"] == "schema_incompatible로 즉시 중단합니다."
 
+    def test_phase2_generation_failure_does_not_schema_break_on_network_error(
+        self, blueprint_generator, sample_arc_data
+    ):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        blueprint_generator.ensemble.last_error_type = AgentErrorType.NETWORK_ERROR
+        blueprint_generator.ensemble.last_error_types = [AgentErrorType.NETWORK_ERROR]
+        pipeline = {"phases": {"generate": {}}}
+        retry_state = _ThreePhaseRetryState()
+
+        result = blueprint_generator.runtime._handle_phase2_generation_failure(
+            retry=0,
+            ep_num=1,
+            arc_data=sample_arc_data,
+            constraint_block={},
+            pipeline_result=pipeline,
+            retry_state=retry_state,
+            max_retries=2,
+        )
+
+        assert result.should_break is False
+        assert result.should_continue is True
+        assert pipeline["failure_reason"] == AgentErrorType.NETWORK_ERROR
+        assert pipeline["phases"]["generate"]["error_type"] == AgentErrorType.NETWORK_ERROR
+
+    def test_blueprint_agent_error_json_preserves_network_error(self, mock_context, mock_client):
+        from modules.domain.agents.blueprint_ensemble import BlueprintEnsembleGenerator
+
+        ensemble = BlueprintEnsembleGenerator(mock_context, mock_client)
+        ensemble._ask_with_cached_context = MagicMock(
+            return_value=json.dumps(
+                {
+                    "error": True,
+                    "error_type": AgentErrorType.NETWORK_ERROR,
+                    "error_message": "Server disconnected without sending a response.",
+                }
+            )
+        )
+
+        result = ensemble._request_blueprint_generation(
+            cache_name="",
+            prompt="{}",
+            full_prompt_fallback="{}",
+            strategy_name="emotion_focused",
+            genre="investment",
+        )
+
+        assert result == (None, AgentErrorType.NETWORK_ERROR)
+
     def test_phase2_generation_failure_retries_on_candidate_disqualified_bundle(
         self, blueprint_generator, sample_arc_data
     ):

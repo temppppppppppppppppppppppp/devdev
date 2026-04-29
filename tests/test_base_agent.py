@@ -387,6 +387,16 @@ class TestClassifyError:
         error = Exception("Connection refused by server")
         assert agent._classify_error(error) == AgentErrorType.NETWORK_ERROR
 
+    def test_remote_disconnect_error(self, agent):
+        """원격 연결 종료 분류"""
+        error = Exception("Server disconnected without sending a response.")
+        assert agent._classify_error(error) == AgentErrorType.NETWORK_ERROR
+
+    def test_winerror_10054_error(self, agent):
+        """Windows 원격 호스트 연결 종료 분류"""
+        error = Exception("[WinError 10054] 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다")
+        assert agent._classify_error(error) == AgentErrorType.NETWORK_ERROR
+
     def test_json_error(self, agent):
         """JSON 파싱 분류"""
         error = Exception("json decode error at position 5")
@@ -613,6 +623,12 @@ class TestIsNetworkError:
 
     def test_connection_is_network(self, agent):
         assert agent._is_network_error(Exception("Connection refused")) is True
+
+    def test_remote_disconnect_is_network(self, agent):
+        assert agent._is_network_error(Exception("Server disconnected without sending a response.")) is True
+
+    def test_winerror_10054_is_network(self, agent):
+        assert agent._is_network_error(Exception("[WinError 10054] 원격 호스트에 의해 강제로 끊겼습니다")) is True
 
     def test_ssl_is_network(self, agent):
         assert agent._is_network_error(Exception("SSL handshake failed")) is True

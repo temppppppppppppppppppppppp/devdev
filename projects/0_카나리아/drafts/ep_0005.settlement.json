@@ -1,0 +1,531 @@
+{
+  "arc_no": 2,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0005.txt",
+    "settlement_packet_path": "drafts/ep_0005.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 5,
+  "ep_num": 5,
+  "manuscript": {
+    "char_count": 5918,
+    "content_hash": "8a98ecfb54ed8dd391225d96d9eef54fdeca8fc77239bf0c1e7157deba1af532",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0005.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "open_review": "후보 원고는 제공된 블루프린트의 중대한 결함, 특히 투자 지시(금액 및 선물 월물)의 설정 변경(retcon)과 설명 없는 시간 점프를 정확히 식별하고 수정했습니다. 확립된 이야기(4화)와의 연속성을 우선시함으로써, 블루프린트를 문자 그대로 따랐을 때보다 훨씬 우수하고 일관성 있는 서사를 만들어냈습니다. 이는 작가의 뛰어난 편집 판단력을 보여줍니다.",
+      "repair_scope": "inplace",
+      "score": 96,
+      "score_breakdown": {
+        "blueprint_coverage": 18,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 8,
+        "quality_engagement": 20
+      },
+      "selection_reason": "후보 A는 긴장감 넘치고 임팩트 있는 대결 장면을 제공합니다. 두 후보 모두 이전 에피소드와 결함 있는 블루프린트 사이의 모순을 성공적으로 해결했지만, 후보 A의 대화가 더 날카롭고 특히 강력한 '활화산' 비유를 통해 주인공의 압도적인 전문성이 더 효과적으로 표현되었습니다. 이는 확립된 정사(4화)와의 연속성을 결함 있는 블루프린트보다 우선시한 올바른 편집상의 결정입니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 1,
+          "pattern": "시선을 돌렸다"
+        }
+      ],
+      "ai_slop_score": 1.0,
+      "burstiness": 22.08,
+      "ced_score": 0.0,
+      "complexity": 56.65,
+      "compression_ratio": 0.4554,
+      "signal_summary": {
+        "ai_slop_total_hits": 1,
+        "burstiness": 22.08,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 56.65,
+        "compression_ratio": 0.4554,
+        "sentence_count": 139
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "숨막히",
+            "적막",
+            "떨리",
+            "박성호",
+            "눈동자"
+          ],
+          "source": "ending_hook",
+          "text": "숨막히는 적막 속, 떨리는 박성호의 눈동자를 응시하며 한시우는 느릿하게 입술을 뗐다. \"내 자본을 감당할 그릇이 못 됩니까?\""
+        },
+        {
+          "cue_terms": [
+            "한미증권",
+            "vip룸",
+            "15억",
+            "매수",
+            "지시"
+          ],
+          "source": "expected_ending",
+          "text": "한미증권 VIP룸에서 15억 원 매수 지시를 내리며 박성호의 반발을 심리적으로 억누름"
+        }
+      ],
+      "capital": 2000000000,
+      "connections": "대명그룹 가문 (감시 및 견제 관계), PB 박성호 (완전한 신뢰와 복종을 기반으로 한 실무 파트너 관계), 큰형의 비서실장 (감시자)",
+      "current_objective": "WTI 원유 선물 매수 포지션 유지 및 자산 증식. 잔여 예수금 5억 원에 대한 추가 투자 기회 모색.",
+      "equipment": [
+        "SW인베스트먼트 법인 통장",
+        "휴대전화",
+        "노트북",
+        "두꺼운 양장 노트",
+        "만년필"
+      ],
+      "inventory_counts": {
+        "SW인베스트먼트 법인 통장": 1,
+        "노트북": 1,
+        "두꺼운 양장 노트": 1,
+        "만년필": 1,
+        "휴대전화": 1
+      },
+      "market_insight": "미래 거시경제 흐름 (WTI 원유 폭등, 이란 핵 농축 재개, 에콰도르 사태 등) 완벽 인지 및 2006년 1분기 원유 데이터 동기화 완료 및 투자 실행. 시장의 노이즈와 본질을 정확히 구분하는 통찰력 입증.",
+      "reputation": "대명그룹으로부터 독립된 신생 투자 법인 'SW인베스트먼트'의 대표. PB 박성호에게 압도적인 시장 통찰력과 지배력을 각인시킴.",
+      "status": "SW인베스트먼트 설립 완료 및 해외 선물 시장 진입 완료. WTI 원유 선물 15억 원 포지션 유지 중. 여의도 한미증권 VIP룸으로 이동.",
+      "stocks": [],
+      "total_assets": 2000000000,
+      "wealth": 2000000000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "숨막히",
+            "적막",
+            "떨리",
+            "박성호",
+            "눈동자"
+          ],
+          "source": "ending_hook",
+          "text": "숨막히는 적막 속, 떨리는 박성호의 눈동자를 응시하며 한시우는 느릿하게 입술을 뗐다. \"내 자본을 감당할 그릇이 못 됩니까?\""
+        },
+        {
+          "cue_terms": [
+            "한미증권",
+            "vip룸",
+            "15억",
+            "매수",
+            "지시"
+          ],
+          "source": "expected_ending",
+          "text": "한미증권 VIP룸에서 15억 원 매수 지시를 내리며 박성호의 반발을 심리적으로 억누름"
+        }
+      ],
+      "causal_links": [
+        "한시우의 미래 지식 -> WTI 원유 선물 3월물 매수 포지션 진입 지시",
+        "증권사 시스템 한도 -> 20억 원 중 15억 원만 WTI 선물 매수, 5억 원 예수금으로 잔류",
+        "WTI 선물 매수 직후 단기 하락 -> 박성호의 공포와 손절 권유",
+        "한시우의 에콰도르 사태 및 이란 핵 농축 재개에 대한 통찰력 -> 박성호의 완전한 굴복 및 신뢰 획득",
+        "박성호의 굴복 -> 한시우의 VIP 고객 최우선 대우 및 핫라인 개설 지시",
+        "한시우의 잔여 예수금 5억 원에 대한 추가 지시 예고 -> 향후 투자 계획 복선"
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "SW인베스트먼트 가승인 서류",
+          "to": 0
+        },
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "공인인증서 USB",
+          "to": 0
+        },
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "법인용 OTP 발생기",
+          "to": 0
+        },
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "보안카드",
+          "to": 0
+        }
+      ],
+      "inventory_counts": {
+        "SW인베스트먼트 법인 통장": 1,
+        "노트북": 1,
+        "두꺼운 양장 노트": 1,
+        "만년필": 1,
+        "휴대전화": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 90,
+          "target": "박성호",
+          "value": 100
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [
+          "일반 대중",
+          "택시 기사"
+        ],
+        "new_witnesses": [
+          "박성호"
+        ]
+      },
+      "lost_items": [
+        "법인용 OTP 발생기",
+        "SW인베스트먼트 가승인 서류",
+        "공인인증서 USB",
+        "보안카드"
+      ],
+      "new_items": [],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "일반 대중",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "택시 기사",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "집착90/오해100"
+        }
+      ],
+      "reveals": [],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "숨막히",
+              "적막",
+              "떨리",
+              "박성호",
+              "눈동자"
+            ],
+            "source": "ending_hook",
+            "text": "숨막히는 적막 속, 떨리는 박성호의 눈동자를 응시하며 한시우는 느릿하게 입술을 뗐다. \"내 자본을 감당할 그릇이 못 됩니까?\""
+          },
+          {
+            "cue_terms": [
+              "한미증권",
+              "vip룸",
+              "15억",
+              "매수",
+              "지시"
+            ],
+            "source": "expected_ending",
+            "text": "한미증권 VIP룸에서 15억 원 매수 지시를 내리며 박성호의 반발을 심리적으로 억누름"
+          }
+        ],
+        "capital": 2000000000,
+        "connections": "대명그룹 가문 (감시 및 견제 관계), PB 박성호 (완전한 신뢰와 복종을 기반으로 한 실무 파트너 관계), 큰형의 비서실장 (감시자)",
+        "current_objective": "WTI 원유 선물 매수 포지션 유지 및 자산 증식. 잔여 예수금 5억 원에 대한 추가 투자 기회 모색.",
+        "equipment": [
+          "SW인베스트먼트 법인 통장",
+          "휴대전화",
+          "노트북",
+          "두꺼운 양장 노트",
+          "만년필"
+        ],
+        "inventory_counts": {
+          "SW인베스트먼트 법인 통장": 1,
+          "노트북": 1,
+          "두꺼운 양장 노트": 1,
+          "만년필": 1,
+          "휴대전화": 1
+        },
+        "market_insight": "미래 거시경제 흐름 (WTI 원유 폭등, 이란 핵 농축 재개, 에콰도르 사태 등) 완벽 인지 및 2006년 1분기 원유 데이터 동기화 완료 및 투자 실행. 시장의 노이즈와 본질을 정확히 구분하는 통찰력 입증.",
+        "reputation": "대명그룹으로부터 독립된 신생 투자 법인 'SW인베스트먼트'의 대표. PB 박성호에게 압도적인 시장 통찰력과 지배력을 각인시킴.",
+        "status": "SW인베스트먼트 설립 완료 및 해외 선물 시장 진입 완료. WTI 원유 선물 15억 원 포지션 유지 중. 여의도 한미증권 VIP룸으로 이동.",
+        "stocks": [],
+        "total_assets": 2000000000,
+        "wealth": 2000000000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "location",
+              "protagonist_status",
+              "timeline"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ],
+            "transport_authority_mode": "fact_ledger_overlap",
+            "transport_contract_version": "cross_stage_authority_packet.v1",
+            "transport_fields": [
+              "capital",
+              "total_assets"
+            ],
+            "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "20억 원",
+      "director_score": 96,
+      "location": "서울 여의도 한미증권 VIP룸",
+      "protagonist_status": "15억 원 규모의 원유 선물(3월물) 매수 포지션을 유지하며 PB 박성호를 압도한 상태. 남은 5억 원에 대한 추가 지시를 예고함.",
+      "timeline": {
+        "표현": "2006년 1월 4일, 오전"
+      }
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "location",
+            "protagonist_status",
+            "timeline"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ],
+          "transport_authority_mode": "fact_ledger_overlap",
+          "transport_contract_version": "cross_stage_authority_packet.v1",
+          "transport_fields": [
+            "capital",
+            "total_assets"
+          ],
+          "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "title": "압도적 우위"
+}
