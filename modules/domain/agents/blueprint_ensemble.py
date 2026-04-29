@@ -20,6 +20,7 @@ import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
+from pathlib import Path
 
 from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
 from modules.core.constants import AIModels, GenreTypes, smart_truncate
@@ -65,7 +66,7 @@ def _normalize_genre_value(value: object) -> str:
 
 def _is_investment_business_power_genre(genre: object) -> bool:
     normalized = _normalize_genre_value(genre)
-    return normalized in {
+    if normalized in {
         GenreTypes.INVESTMENT,
         "investment",
         "invest",
@@ -74,7 +75,19 @@ def _is_investment_business_power_genre(genre: object) -> bool:
         "business-power",
         "business_power",
         "investment_family_office_control",
-    }
+    }:
+        return True
+    return "investment" in normalized or "투자" in normalized
+
+
+def _contains_investment_like_signal(value: object) -> bool:
+    if value is None:
+        return False
+    try:
+        text = json.dumps(value, ensure_ascii=False, sort_keys=True) if isinstance(value, dict | list) else str(value)
+    except Exception:
+        text = str(value)
+    return _is_investment_business_power_genre(text)
 
 
 def build_genre_strategy_contract(genre: object, strategy_name: object) -> dict:
@@ -684,15 +697,66 @@ class BlueprintEnsembleGenerator(BaseAgent):
         )
 
     def _resolve_blueprint_ensemble_genre(self) -> str:
-        genre = GenreTypes.WUXIA
+        genre_signals: list[tuple[str, object]] = []
+        weak_investment_sources: list[str] = []
         try:
             if hasattr(self, "context") and hasattr(self.context, "db"):
                 bible = self.context.db.load_anchor("bible")
-                if bible:
-                    genre = bible.get("_genre", GenreTypes.WUXIA)
+                if isinstance(bible, dict):
+                    genre_signals.append(("bible._genre", bible.get("_genre")))
+                    if _contains_investment_like_signal(bible):
+                        weak_investment_sources.append("bible")
+                style_guide = self.context.db.load_anchor("style_guide")
+                if isinstance(style_guide, dict):
+                    genre_signals.append(("style_guide.genre", style_guide.get("genre")))
+                    if _contains_investment_like_signal(style_guide):
+                        weak_investment_sources.append("style_guide")
+                if isinstance(bible, dict):
+                    meta_info = (
+                        bible.get("MasterBible", {}).get("ProjectData", {}).get("MetaInfo", {})
+                        if isinstance(bible.get("MasterBible"), dict)
+                        else {}
+                    )
+                    if isinstance(meta_info, dict):
+                        genre_signals.append(
+                            (
+                                "bible.MasterBible.ProjectData.MetaInfo.genre_archetype",
+                                meta_info.get("genre_archetype"),
+                            )
+                        )
         except Exception as exc:
             logging.warning(f" [V61.3] genre 사전 로드 실패: {str(exc)[:50]}")
-        return genre
+
+        stage0_genre = self._load_stage0_style_guide_genre()
+        genre_signals.append(("stage0_output/style_guide.json", stage0_genre))
+        if _contains_investment_like_signal(stage0_genre):
+            weak_investment_sources.append("stage0_output/style_guide.json")
+        for _source, value in genre_signals:
+            if _normalize_genre_value(value):
+                return GenreTypes.INVESTMENT if _is_investment_business_power_genre(value) else str(value)
+
+        if weak_investment_sources:
+            logging.warning(
+                "[BPEnsemble] genre defaulted to wuxia; detected unresolved investment-like genre signal at %s",
+                weak_investment_sources[0],
+            )
+        return GenreTypes.WUXIA
+
+    def _load_stage0_style_guide_genre(self) -> str:
+        try:
+            root = getattr(getattr(getattr(self, "context", None), "current_project", None), "paths", None)
+            root_path = getattr(root, "root", None)
+            if not root_path:
+                return ""
+            style_path = Path(root_path) / "stage0_output" / "style_guide.json"
+            if not style_path.exists():
+                return ""
+            payload = json.loads(style_path.read_text(encoding="utf-8"))
+            if isinstance(payload, dict):
+                return str(payload.get("genre") or "")
+        except Exception as exc:
+            logging.debug("[BPEnsemble] stage0 style guide genre fallback failed: %s", exc)
+        return ""
 
     def _prepare_blueprint_ensemble_context(
         self,

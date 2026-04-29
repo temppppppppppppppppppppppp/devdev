@@ -1,7 +1,7 @@
 # Stage3 Genre Contract Resolver Fallback Execution SSOT
 
 Date: 2026-04-29
-Status: proposed - GitHub issue backing execution doc
+Status: implementation-in-progress - resolver fallback patch staged
 Track: system
 Canonical Path: `docs/2026-04-29/stage3-genre-contract-resolver-fallback-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage3-genre-contract-resolver-fallback-execution-ssot.md`
@@ -171,3 +171,28 @@ Pass 3 - Execution and readability:
 - PASS. The plan is small enough for a focused bugfix wave and avoids active-run interference.
 - Optional lane expansion is separated from the immediate fix.
 - Estimated confidence: 96%.
+
+## 10. Implementation Note - 2026-04-29
+
+Patch status:
+- `modules/domain/agents/blueprint_ensemble.py` now resolves genre in the documented fallback order:
+  1. `bible._genre`
+  2. `style_guide.genre` DB anchor
+  3. `bible.MasterBible.ProjectData.MetaInfo.genre_archetype`
+  4. `stage0_output/style_guide.json`
+  5. `GenreTypes.WUXIA`
+- Investment-like values are normalized to `GenreTypes.INVESTMENT` for the existing `investment_business_power.action_focused.v1` contract path.
+- The patch reads routing signals only. It does not mutate bible, factsheets, style guide, or project materials.
+
+Validation:
+- `python -m py_compile modules/domain/agents/blueprint_ensemble.py tests/test_blueprint_ensemble_generate_ensemble.py` -> passed
+- `python -m pytest tests/test_blueprint_ensemble_generate_ensemble.py -q` -> 80 passed
+- `python scripts/check_utf8_hygiene.py modules/domain/agents/blueprint_ensemble.py tests/test_blueprint_ensemble_generate_ensemble.py` -> passed
+- `python scripts/ops_validator.py --strict` -> passed
+
+3-pass implementation audit:
+- Pass 1, scope: PASS. Only the Stage3 genre resolver and deterministic tests were touched.
+- Pass 2, authority: PASS. Python resolves genre routing signals and transports advisory contract metadata; it does not judge narrative quality or mutate facts.
+- Pass 3, acceptance: PASS. The `0_카나리아`-shaped `style_guide.genre=investment` path now reaches the action-focused investment contract and finalized candidate metadata preserves the route-level contract.
+
+Estimated implementation confidence: 96%.
