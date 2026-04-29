@@ -97,6 +97,114 @@ def test_save_and_get_manuscript_and_latest_episode_number(db):
     assert db.get_latest_episode_number() == 6
 
 
+def test_get_final_accepted_episode_context_accepts_stage4_pass(db):
+    db.save_manuscript(7, "제목7", "확정 원고")
+    db.save_stage_attempt(
+        stage=4,
+        verdict="PASS",
+        attempt_num=1,
+        ep_num=7,
+        arc_num=1,
+        score=94,
+        attempt_key="s4:ep7:arc1:a1:sess",
+        content_hash="artifact-hash",
+        artifact_path="logs/artifacts/stage4/ep_0007/attempt_01/final_manuscript__A.txt",
+    )
+
+    context = db.get_final_accepted_episode_context(7)
+
+    assert context["usable"] is True
+    assert context["content"] == "확정 원고"
+    assert context["authority_status"] == "stage4_final_accepted"
+    assert context["source_kind"] == "db_manuscript_plus_stage_attempt"
+    assert context["final_verdict"] == "PASS"
+    assert context["content_hash"]
+
+
+def test_get_final_accepted_episode_context_blocks_latest_reject(db):
+    db.save_manuscript(8, "제목8", "이전 확정처럼 보이는 원고")
+    db.save_stage_attempt(
+        stage=4,
+        verdict="PASS",
+        attempt_num=1,
+        ep_num=8,
+        arc_num=1,
+        score=92,
+        attempt_key="s4:ep8:arc1:a1:sess",
+    )
+    db.save_stage_attempt(
+        stage=4,
+        verdict="REJECT",
+        attempt_num=2,
+        ep_num=8,
+        arc_num=1,
+        score=41,
+        attempt_key="s4:ep8:arc1:a2:sess",
+    )
+
+    context = db.get_final_accepted_episode_context(8)
+
+    assert context["usable"] is False
+    assert context["content"] == ""
+    assert context["authority_status"] == "blocked_by_non_final_stage4_attempt"
+    assert context["final_verdict"] == "REJECT"
+
+
+def test_get_final_accepted_episode_context_blocks_settlement_failed(db):
+    db.save_manuscript(9, "제목9", "정착 실패 원고")
+    db.save_stage_attempt(
+        stage=4,
+        verdict="PASS",
+        attempt_num=1,
+        ep_num=9,
+        arc_num=1,
+        score=97,
+        attempt_key="s4:ep9:arc1:a1:sess",
+    )
+    db.mark_stage4_attempt_settlement_failed(
+        attempt_key="s4:ep9:arc1:a1:sess",
+        settlement_status="settlement_packet_failed",
+        detail="packet write failed",
+    )
+
+    context = db.get_final_accepted_episode_context(9)
+
+    assert context["usable"] is False
+    assert context["authority_status"] == "blocked_by_non_final_stage4_attempt"
+    assert context["final_verdict"] == "SETTLEMENT_FAILED"
+
+
+def test_get_final_accepted_episode_context_blocks_downstream_override(db):
+    db.save_manuscript(11, "제목11", "오버라이드 원고")
+    db.save_stage_attempt(
+        stage=4,
+        verdict="PASS",
+        attempt_num=1,
+        ep_num=11,
+        arc_num=1,
+        score=98,
+        attempt_key="s4:ep11:arc1:a1:sess",
+        downstream_override_applied=True,
+    )
+
+    context = db.get_final_accepted_episode_context(11)
+
+    assert context["usable"] is False
+    assert context["authority_status"] == "blocked_by_non_final_stage4_attempt"
+    assert context["final_verdict"] == "PASS"
+
+
+def test_get_final_accepted_episode_context_labels_legacy_manuscript_only(db):
+    db.save_manuscript(10, "제목10", "레거시 원고")
+
+    context = db.get_final_accepted_episode_context(10)
+
+    assert context["usable"] is True
+    assert context["content"] == "레거시 원고"
+    assert context["authority_status"] == "legacy_manuscript_without_stage_attempt"
+    assert context["source_kind"] == "db_manuscript"
+
+
 def test_transaction_rolls_back_on_exception(db):
     with pytest.raises(DBError):
         with db.transaction():

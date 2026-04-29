@@ -41,6 +41,7 @@ from modules.core.cross_stage_authority_packet import (
     collect_numeric_carryover_entries,
     extract_explicit_cross_stage_authority_packet,
 )
+from modules.core.final_accepted_context import has_final_accepted_context_accessor, load_final_accepted_manuscript_row
 from modules.core.genre_schema_builder import is_wuxia
 from modules.core.non_wuxia_recovery_policy import normalize_chain_link_for_genre, normalize_genre_type
 from modules.core.semantic_query_broker import SemanticQueryBroker
@@ -1630,7 +1631,14 @@ class Stage4ContextBuilder:
             logging.debug("[Stage4ContextBuilder] _fetch_manuscript_excerpt 스킵: db 없음")
             return ""
         try:
-            manuscripts = db.get_manuscripts_range(start_ep, end_ep + 1)
+            if has_final_accepted_context_accessor(db):
+                manuscripts = [
+                    row
+                    for ep in range(int(start_ep or 0), int(end_ep or 0) + 1)
+                    if (row := load_final_accepted_manuscript_row(db, ep))
+                ]
+            else:
+                manuscripts = db.get_manuscripts_range(start_ep, end_ep + 1)
         except Exception as e:
             logging.debug("[Stage4ContextBuilder] 원고 발췌 실패 (비치명): %s", e)
             return ""
@@ -1980,11 +1988,15 @@ class Stage4ContextBuilder:
             # 직전 10화 (기존 3화 제외 → ep-10 ~ ep-4 범위)
             start_ep = max(1, next_ep - 10)
             end_ep = max(1, next_ep - 3)  # 최근 3화는 기존 lookback이 커버
-            # [V66.1] B-4: 발췌 전용 쿼리 (첫 200자만 DB에서 조회)
             _excerpt_max = _threshold("context.lookback_excerpt_chars", 5000)
-            manuscripts = self.ctx.current_project.db.get_recent_manuscript_excerpts(
-                before_ep=next_ep, limit=10, max_chars=_excerpt_max
-            )
+            db = self.ctx.current_project.db
+            if has_final_accepted_context_accessor(db):
+                manuscripts = [
+                    row for ep in range(start_ep, end_ep) if (row := load_final_accepted_manuscript_row(db, ep))
+                ]
+            else:
+                # [V66.1] B-4: 발췌 전용 쿼리 (첫 200자만 DB에서 조회)
+                manuscripts = db.get_recent_manuscript_excerpts(before_ep=next_ep, limit=10, max_chars=_excerpt_max)
             if not manuscripts or not isinstance(manuscripts, list):
                 return ""
 
@@ -2597,11 +2609,21 @@ class Stage4ContextBuilder:
         _tier1_start = max(1, next_ep - 30)
         _tier1_rows: list[dict] = []
         try:
-            if hasattr(_db, "get_manuscripts_range"):
+            if has_final_accepted_context_accessor(_db):
+                for _prev_ep in range(_tier1_start, next_ep):
+                    _row = load_final_accepted_manuscript_row(_db, _prev_ep)
+                    if _row:
+                        _tier1_rows.append(
+                            {
+                                "ep_num": _prev_ep,
+                                "content": _row.get("content", "") if isinstance(_row, dict) else str(_row),
+                            }
+                        )
+            elif hasattr(_db, "get_manuscripts_range"):
                 _tier1_rows = _db.get_manuscripts_range(_tier1_start, next_ep) or []
             else:
                 for _prev_ep in range(_tier1_start, next_ep):
-                    _row = _db.get_manuscript(_prev_ep)
+                    _row = load_final_accepted_manuscript_row(_db, _prev_ep)
                     if _row:
                         _tier1_rows.append(
                             {
@@ -2735,7 +2757,7 @@ class Stage4ContextBuilder:
             arc_tactical = json.dumps(arc_tactical, ensure_ascii=False)
         arc_tactical = str(arc_tactical) if arc_tactical else ""
 
-        prev_ms_data = db.get_manuscript(next_ep - 1)
+        prev_ms_data = load_final_accepted_manuscript_row(db, next_ep - 1)
         prev_text = (prev_ms_data.get("content") or "") if prev_ms_data else ""  # [V70] NULL content 방어
         prev_ending = prev_text[-2500:] if prev_text else ""  # [1M-CTX: 500→2500] CW와 동일 수준
 
@@ -2929,7 +2951,7 @@ class Stage4ContextBuilder:
         result: list[dict] = []
         for prev_ep in range(max(1, next_ep - lookback), next_ep):
             try:
-                ms_row = db.get_manuscript(prev_ep)
+                ms_row = load_final_accepted_manuscript_row(db, prev_ep)
                 if not ms_row:
                     continue
                 content = ms_row.get("content", "") or ms_row.get("manuscript", "") or ""
