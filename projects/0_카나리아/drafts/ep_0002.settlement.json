@@ -1,0 +1,437 @@
+{
+  "arc_no": 1,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0002.txt",
+    "settlement_packet_path": "drafts/ep_0002.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 2,
+  "ep_num": 2,
+  "manuscript": {
+    "char_count": 6925,
+    "content_hash": "913442d2a034c64413da0f3f1e615b65f6fcee70ba9a627740633af273db973c",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0002.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "open_review": "특이사항 없음. 이전 지시사항이 훌륭하게 반영되었습니다.",
+      "repair_scope": "inplace",
+      "score": 90,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 10,
+        "quality_engagement": 20
+      },
+      "selection_reason": "이전 심사에서 지적된 도입부의 행동 모순('뒤돌아보았다')이 완벽하게 수정되었으며, 직전 화 엔딩과 자연스럽게 이어집니다. 전반적인 문장 품질과 긴장감 묘사가 훌륭하여 최종 통과시킵니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 1,
+          "pattern": "입을 열었다"
+        }
+      ],
+      "ai_slop_score": 1.0,
+      "burstiness": 19.04,
+      "ced_score": 0.0,
+      "complexity": 63.34,
+      "compression_ratio": 0.445,
+      "signal_summary": {
+        "ai_slop_total_hits": 1,
+        "burstiness": 19.04,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 63.34,
+        "compression_ratio": 0.445,
+        "sentence_count": 153
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "박성호",
+            "떨리",
+            "목소리",
+            "끊어내며",
+            "한시우"
+          ],
+          "source": "ending_hook",
+          "text": "박성호의 떨리는 목소리를 끊어내며, 한시우는 서류 위로 거침없이 펜을 그었다."
+        }
+      ],
+      "capital": 2000000000,
+      "connections": "대명그룹 가문 (현재 소외), 운전기사, PB 박성호 (강압적 관계 형성)",
+      "current_objective": "개인 자산 20억 원 현금화 완료, SW인베스트먼트 설립 및 해외 선물 시장 (원유) 진입을 통한 자산 증식 시작",
+      "equipment": [
+        "휴대전화"
+      ],
+      "inventory_counts": {
+        "검은색 수트": 1,
+        "휴대전화": 1
+      },
+      "market_insight": "미래 거시경제 흐름 (WTI 원유 폭등, 이란 핵 농축 재개, 에콰도르 원유 계약 해지 등) 완벽 인지 및 2006년 1분기 원유, 비철금속, 환율 데이터 동기화 완료",
+      "reputation": "가문 내 잉여물, 외부에는 재벌가 막내 도련님",
+      "status": "회귀 직후, 대명그룹으로부터 독립 선언 및 초기 자산 현금화 완료, SW인베스트먼트 설립 준비 중",
+      "stocks": [],
+      "total_assets": 2000000000,
+      "wealth": "20억 원 (현금화 완료)"
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "박성호",
+            "떨리",
+            "목소리",
+            "끊어내며",
+            "한시우"
+          ],
+          "source": "ending_hook",
+          "text": "박성호의 떨리는 목소리를 끊어내며, 한시우는 서류 위로 거침없이 펜을 그었다."
+        }
+      ],
+      "causal_links": [
+        "한시우의 미래 지식과 결단 -> 20억 원 자산 현금화 지시",
+        "박성호의 기존 인식과 저항 -> 한시우의 법적 조항 인용 및 위협 -> 박성호의 복종",
+        "한시우의 방대한 미래 경제 데이터 동기화 -> 극심한 편두통 발생",
+        "편두통 극복 -> 시장 통찰력의 확신과 정교한 계산식 도출",
+        "20억 원 현금화 완료 -> SW인베스트먼트 설립 및 해외 선물 시장 진입 계획 구체화"
+      ],
+      "inventory_count_deltas": [],
+      "inventory_counts": {
+        "검은색 수트": 1,
+        "휴대전화": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 0,
+          "target": "박성호",
+          "value": 0
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [],
+        "new_witnesses": [
+          "박성호"
+        ]
+      },
+      "lost_items": [],
+      "new_items": [],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "목격자"
+        }
+      ],
+      "reveals": [],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "박성호",
+              "떨리",
+              "목소리",
+              "끊어내며",
+              "한시우"
+            ],
+            "source": "ending_hook",
+            "text": "박성호의 떨리는 목소리를 끊어내며, 한시우는 서류 위로 거침없이 펜을 그었다."
+          }
+        ],
+        "capital": 2000000000,
+        "connections": "대명그룹 가문 (현재 소외), 운전기사, PB 박성호 (강압적 관계 형성)",
+        "current_objective": "개인 자산 20억 원 현금화 완료, SW인베스트먼트 설립 및 해외 선물 시장 (원유) 진입을 통한 자산 증식 시작",
+        "equipment": [
+          "휴대전화"
+        ],
+        "inventory_counts": {
+          "검은색 수트": 1,
+          "휴대전화": 1
+        },
+        "market_insight": "미래 거시경제 흐름 (WTI 원유 폭등, 이란 핵 농축 재개, 에콰도르 원유 계약 해지 등) 완벽 인지 및 2006년 1분기 원유, 비철금속, 환율 데이터 동기화 완료",
+        "reputation": "가문 내 잉여물, 외부에는 재벌가 막내 도련님",
+        "status": "회귀 직후, 대명그룹으로부터 독립 선언 및 초기 자산 현금화 완료, SW인베스트먼트 설립 준비 중",
+        "stocks": [],
+        "total_assets": 2000000000,
+        "wealth": "20억 원 (현금화 완료)"
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "location",
+              "protagonist_status",
+              "timeline"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ],
+            "transport_authority_mode": "fact_ledger_overlap",
+            "transport_contract_version": "cross_stage_authority_packet.v1",
+            "transport_fields": [
+              "capital",
+              "total_assets"
+            ],
+            "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "20억 원 (현금화 진행 중)",
+      "director_score": 90,
+      "location": "시중은행 본점 VIP 라운지",
+      "protagonist_status": "편두통을 이겨내고 현금화 서류에 서명 완료 직전",
+      "timeline": "2006년 1월 1일 오전"
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "location",
+            "protagonist_status",
+            "timeline"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ],
+          "transport_authority_mode": "fact_ledger_overlap",
+          "transport_contract_version": "cross_stage_authority_packet.v1",
+          "transport_fields": [
+            "capital",
+            "total_assets"
+          ],
+          "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "fix_pack": {
+      "do_not_regress": [
+        "현재 화 tactical authority, opening-state, 엔딩 훅은 유지",
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "Arc 관계 변화 핵심 인물을 현재 화 시나리오/회상/계획에 명시: 한정호",
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 3개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 Arc 관계 변화 인물 중 최소 1명을 현재 화 맥락으로 명시한다 / integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "last_score": 97,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true
+  },
+  "title": "자본의 재편"
+}

@@ -1,1 +1,0 @@
-{"timestamp": "2026-04-26 21:39:23", "type": "dna_sync_failed", "message": "force_sync_v25_dna returned False", "data": {"bible_file": "01_bi_투자물_골든_카나리아 테스트.json", "treatment_file": "01_tr_투자물_골든_카나리아 테스트.json", "protagonist_config": {"world_origin": "원시인", "incarnation_type": "회귀자", "pov": "혼합", "external_pov_insert_policy": "적극 허용"}}}
