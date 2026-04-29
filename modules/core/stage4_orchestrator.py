@@ -14,6 +14,12 @@ from pathlib import Path
 
 from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
 from modules.core.constants import smart_truncate
+from modules.core.frontier_staleness import (
+    detect_stage4_frontier_staleness,
+    frontier_status_satisfied_by_stage3_lineage,
+    mark_downstream_frontier_requires_adjudication,
+    resolve_arc_end_episode,
+)
 from modules.core.jsonl_io import append_jsonl_record
 from modules.core.llm_generate import generate_content_via_router
 from modules.core.logging_keys import resolve_logging_session_id
@@ -1339,16 +1345,100 @@ JSON으로 출력:
             self.ctx.ui.log(f"⚠️ 제{next_ep}화 Blueprint 없음. Stage 3 먼저 실행하세요.")
             return None
 
+        def _safe_int(value, default: int = 0) -> int:
+            try:
+                return int(value or default)
+            except (TypeError, ValueError):
+                return default
+
         arc_data = next(
             (
                 arc
                 for arc in self.ctx.current_project.arcs
-                if isinstance(arc, dict) and arc.get("ep_start", 0) <= next_ep <= arc.get("ep_end", 0)
+                if isinstance(arc, dict)
+                and _safe_int(arc.get("ep_start")) <= next_ep <= resolve_arc_end_episode(arc_data=arc, fallback_ep=0)
             ),
             None,
         )
         if not arc_data:
             self.ctx.ui.log(f"⚠️ 제{next_ep}화 Arc 데이터 없음.")
+            return None
+
+        prev_manuscript_text = ""
+        try:
+            db = getattr(self.ctx.current_project, "db", None)
+            prev_row = db.get_manuscript(next_ep - 1) if db and next_ep > 1 else None
+            if isinstance(prev_row, dict):
+                prev_manuscript_text = str(
+                    prev_row.get("content") or prev_row.get("corrected_manuscript") or prev_row.get("manuscript") or ""
+                )
+            elif prev_row:
+                prev_manuscript_text = str(prev_row)
+        except Exception:
+            prev_manuscript_text = ""
+
+        frontier_status = blueprint.get("_frontier_status") if isinstance(blueprint, dict) else {}
+        frontier_status_value = ""
+        if isinstance(frontier_status, dict):
+            frontier_status_value = str(frontier_status.get("status") or "")
+        if frontier_status_value in {
+            "requires_actual_manuscript_revalidation",
+            "requires_director_frontier_adjudication",
+            "contaminated_requires_regeneration",
+        }:
+            marker_satisfied = frontier_status_satisfied_by_stage3_lineage(
+                blueprint=blueprint,
+                frontier_status=frontier_status,
+                prev_manuscript_text=prev_manuscript_text,
+            )
+            if marker_satisfied:
+                self.ctx.ui.log(
+                    f"   [Stage4 Frontier Status] 제{next_ep}화 Blueprint는 확정 원고 기준 재생성 lineage가 확인되어 진행합니다."
+                )
+            else:
+                self.ctx.ui.log(
+                    f"   ⛔ [Stage4 Frontier Status] 제{next_ep}화 Blueprint는 {frontier_status_value} 상태입니다. Stage3 재생성이 필요합니다."
+                )
+                self._log_escalation_event(
+                    next_ep,
+                    "STAGE4_FRONTIER_STATUS_BLOCK",
+                    1,
+                    success=False,
+                    reason=frontier_status_value,
+                    contradiction_type="frontier_status",
+                )
+                self._stage4_completion_blocked = True
+                return None
+
+        stale_check = detect_stage4_frontier_staleness(
+            ep_num=next_ep,
+            blueprint=blueprint,
+            arc_data=arc_data,
+            prev_manuscript_text=prev_manuscript_text,
+        )
+        if stale_check.get("stale") and stale_check.get("severity") == "hard":
+            reasons = stale_check.get("reasons") or []
+            reason_text = "; ".join(str(reason) for reason in reasons[:3])
+            marked_eps = mark_downstream_frontier_requires_adjudication(
+                project=self.ctx.current_project,
+                ep_num=next_ep,
+                arc_data=arc_data,
+                stale_check=stale_check,
+            )
+            self.ctx.ui.log(f"   ⛔ [Stage4 Frontier Staleness] 제{next_ep}화 Blueprint가 직전 확정 원고와 충돌합니다.")
+            if reason_text:
+                self.ctx.ui.log(f"      {reason_text[:240]}")
+            if marked_eps:
+                self.ctx.ui.log(f"      frontier adjudication required: ep {marked_eps[0]}~{marked_eps[-1]}")
+            self._log_escalation_event(
+                next_ep,
+                "STAGE4_FRONTIER_STALE_PREFLIGHT",
+                len(reasons),
+                success=False,
+                reason=reason_text,
+                contradiction_type="frontier_staleness",
+            )
+            self._stage4_completion_blocked = True
             return None
 
         preflight = self._preflight_validate_blueprint(
@@ -2503,6 +2593,7 @@ JSON으로 출력:
                 arc_idx=(arc_data.get("arc_no") or 1) - 1,
                 prev_blueprint=prev_bp,
                 prev_blueprints=[],
+                prev_manuscripts_text=str(getattr(round_ctx, "prev_manuscripts_text", "") or ""),
                 external_feedback=str(external_feedback or ""),
                 entity_registry=_entity_registry,
                 protagonist_name=_prot_name,

@@ -1,8 +1,8 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-27T14:22:25.703321+00:00",
+  "generated_at": "2026-04-29T11:07:49.501589+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 4,
+  "active_item_count": 5,
   "roadmap": {
     "temp_path": "docs/temp/execution-roadmap.md",
     "canonical_path": "docs/2026-04-27/security-and-frontier-active-execution-roadmap.md",
@@ -21,12 +21,23 @@
       "canonical_present": true
     },
     {
+      "topic": "stage3-genre-contract-resolver-fallback",
+      "temp_path": "docs/temp/stage3-genre-contract-resolver-fallback-execution-ssot.md",
+      "canonical_path": "docs/2026-04-29/stage3-genre-contract-resolver-fallback-execution-ssot.md",
+      "status": "pending",
+      "queue_role": "front_active",
+      "roadmap_rank": 2,
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
       "topic": "security-secrets-config",
       "temp_path": "docs/temp/security-secrets-config-execution-ssot.md",
       "canonical_path": "docs/2026-04-27/security-secrets-config-execution-ssot.md",
       "status": "pending",
       "queue_role": "parked_future_wave",
-      "roadmap_rank": 2,
+      "roadmap_rank": 3,
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
@@ -37,7 +48,7 @@
       "canonical_path": "docs/2026-04-27/security-runtime-settings-vertex-execution-ssot.md",
       "status": "pending",
       "queue_role": "parked_future_wave",
-      "roadmap_rank": 3,
+      "roadmap_rank": 4,
       "depends_on": [
         "security-secrets-config"
       ],
@@ -50,7 +61,7 @@
       "canonical_path": "docs/2026-04-27/security-desktop-release-guardrails-execution-ssot.md",
       "status": "pending",
       "queue_role": "parked_future_wave",
-      "roadmap_rank": 4,
+      "roadmap_rank": 5,
       "depends_on": [
         "security-secrets-config",
         "security-runtime-settings-vertex"

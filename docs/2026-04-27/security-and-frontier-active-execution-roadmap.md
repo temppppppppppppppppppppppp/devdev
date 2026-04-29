@@ -1,23 +1,24 @@
 # Security and Frontier Active Execution Roadmap
 
 Date: 2026-04-27
-Status: active (#56/#59 completed; Frontier Lag remains front-active after 2026-04-28 reruns exposed Stage 3 replay-reroute and person fact-lock hard-binding blockers)
+Status: active (#56/#59 completed; #121 frontier-staleness work front-active; #120 genre-contract resolver queued next; security items parked)
 Canonical Path: `docs/2026-04-27/security-and-frontier-active-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Commit State:
 - Baseline Commit: `a3d826978d530ab61d3765e5e095890fa6533ea7`
 - Baseline Dirty Summary: documentation-only untracked paths were present: `docs/2026-04-27/security-parallel-investigation/`, `docs/2026-04-27/stage4-post-select-conflict-parallel-investigation/`, and pre-existing `docs/2026-04-27/issue-56-ensemble-genre-alignment-10terminal-order.md`
-- Resume Commit: `9cfb9600154edcb71fabfa6bc467aef864b4025f`
-- Resume Drift Summary: GitHub #58, #59, and #56 are now closed; this refresh retires `stage4-post-select-conflict`, `stage4-proof-digest-cove-advisory`, and `stage3-stage4-genre-alignment` from the active temp queue and promotes Frontier Lag as the next queued item.
+- Resume Commit: `23d2addd4a875a31fc2badd7b06573d4ecab6eff`
+- Resume Drift Summary: 2026-04-29 queue refresh adds `stage3-genre-contract-resolver-fallback` as the next system-pipeline item after the current #121 frontier-staleness fix. Security execution SSOTs remain parked behind pipeline blockers.
 Queue Snapshot:
 - `docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md`
+- `docs/temp/stage3-genre-contract-resolver-fallback-execution-ssot.md`
 - `docs/temp/security-secrets-config-execution-ssot.md`
 - `docs/temp/security-runtime-settings-vertex-execution-ssot.md`
 - `docs/temp/security-desktop-release-guardrails-execution-ssot.md`
 
 ## 1. Purpose
 
-This roadmap is required because `docs/temp/` still contains more than one execution SSOT mirror. It preserves the pre-existing Frontier Lag queue item and three parked security execution items derived from the completed ten-terminal security survey. The former #58 Stage4 POST_SELECT_CONFLICT item, #59 Stage4 proof-digest/CoVe advisory item, and #56 Stage3/Stage4 genre-alignment item are retained in canonical SSOTs as historical backing only because their GitHub issues are now closed and their PRs are merged.
+This roadmap is required because `docs/temp/` still contains more than one execution SSOT mirror. It preserves the pre-existing Frontier Lag queue item, adds the #120 Stage3 genre-contract resolver fallback item behind the #121 frontier-staleness blocker, and keeps three security execution items parked behind the current system-pipeline blockers. The former #58 Stage4 POST_SELECT_CONFLICT item, #59 Stage4 proof-digest/CoVe advisory item, and #56 Stage3/Stage4 genre-alignment item are retained in canonical SSOTs as historical backing only because their GitHub issues are now closed and their PRs are merged.
 
 This roadmap governs queue ordering only. It does not authorize implementation by itself. Before implementation from any listed item, re-run the 3-pass document audit against current workspace state and confirm at least 95% confidence.
 
@@ -26,6 +27,7 @@ This roadmap governs queue ordering only. It does not authorize implementation b
 | Item | Canonical Path | Temp Path | Status | Notes |
 | --- | --- | --- | --- | --- |
 | `frontier-lag-clean-5arc-stabilization` | `docs/2026-04-26/frontier-lag-clean-5arc-stabilization-execution-ssot.md` | `docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md` | active | Provider-wait hardening is merged; bounded reruns reached real Stage 3 `replay/authority` and person fact-lock hard-binding blockers. The narrow person fact-lock advisory patch is staged on `codex/frontier-lag-2arc-rerun-proof`; full proof remains pending. |
+| `stage3-genre-contract-resolver-fallback` | `docs/2026-04-29/stage3-genre-contract-resolver-fallback-execution-ssot.md` | `docs/temp/stage3-genre-contract-resolver-fallback-execution-ssot.md` | pending | GitHub #120 pipeline blocker after #121; resolver fallback must apply investment genre contracts when `bible._genre` is absent. |
 | `security-secrets-config` | `docs/2026-04-27/security-secrets-config-execution-ssot.md` | `docs/temp/security-secrets-config-execution-ssot.md` | pending | Security P0 substrate; parked future wave. |
 | `security-runtime-settings-vertex` | `docs/2026-04-27/security-runtime-settings-vertex-execution-ssot.md` | `docs/temp/security-runtime-settings-vertex-execution-ssot.md` | pending | Depends on `security-secrets-config`; parked future wave. |
 | `security-desktop-release-guardrails` | `docs/2026-04-27/security-desktop-release-guardrails-execution-ssot.md` | `docs/temp/security-desktop-release-guardrails-execution-ssot.md` | pending | Depends on both prior security SSOTs; parked future wave. |
@@ -36,6 +38,7 @@ This roadmap governs queue ordering only. It does not authorize implementation b
 - `security-secrets-config -> security-desktop-release-guardrails`
 - `security-runtime-settings-vertex -> security-desktop-release-guardrails`
 - `frontier-lag-clean-5arc-stabilization` is independent of the security remediation chain.
+- `stage3-genre-contract-resolver-fallback` should run after the #121 frontier-staleness blocker and before resuming the 0 Canaria episode-15 proof path.
 - #56 `stage3-stage4-genre-alignment` and #59 `stage4-proof-digest-cove-advisory` have landed on `main` through PR #84 and PR #83, respectively. They are no longer active temp queue blockers, but their canonical SSOTs remain historical evidence for Frontier Lag proof interpretation.
 
 Shared substrate:
@@ -58,9 +61,10 @@ Priority basis:
 Working order:
 
 1. `frontier-lag-clean-5arc-stabilization` (front-active; Stage 3 positive continuation retry feedback implemented; person fact-lock hard-binding patch staged; full proof pending)
-2. `security-secrets-config` (parked future wave; security P0 substrate)
-3. `security-runtime-settings-vertex` (parked future wave; depends on `security-secrets-config`)
-4. `security-desktop-release-guardrails` (parked future wave; depends on `security-secrets-config` and `security-runtime-settings-vertex`)
+2. `stage3-genre-contract-resolver-fallback` (pending; #120, direct pipeline blocker after #121)
+3. `security-secrets-config` (parked future wave; security P0 substrate)
+4. `security-runtime-settings-vertex` (parked future wave; depends on `security-secrets-config`)
+5. `security-desktop-release-guardrails` (parked future wave; depends on `security-secrets-config` and `security-runtime-settings-vertex`)
 
 ## 5. Per-Item Plan
 
@@ -71,6 +75,14 @@ Working order:
 - execution notes: unrelated to security remediation except for shared queue mechanics.
 - completion signal: canonical closure update and removal of temp mirror via closure harness.
 - temp cleanup action: remove only `docs/temp/frontier-lag-clean-5arc-stabilization-execution-ssot.md` after realized and closed.
+
+### stage3-genre-contract-resolver-fallback
+
+- goal: fix GitHub #120 by resolving the project genre from fallback authoritative surfaces when `bible._genre` is absent, so investment/business-power Stage3 strategy contracts apply before 0 Canaria resume.
+- prerequisites: complete or PR the #121 frontier-staleness blocker first; do not restart the 0 Canaria Stage4 run while applying this resolver patch.
+- execution notes: Python may resolve routing signals and transport strategy contracts, but must not mutate project facts, bible content, or narrative canon.
+- completion signal: deterministic resolver tests pass and selected investment `action_focused` candidates carry the expected `genre_strategy_contract`.
+- temp cleanup action: remove `docs/temp/stage3-genre-contract-resolver-fallback-execution-ssot.md` after realized and closed.
 
 ### security-secrets-config
 
@@ -110,7 +122,8 @@ Working order:
 
 | Item | Status | Last Update | Blocker |
 | --- | --- | --- | --- |
-| `frontier-lag-clean-5arc-stabilization` | active | 2026-04-28 | Person fact-lock hard-binding patch staged; strict full proof still pending |
+| `frontier-lag-clean-5arc-stabilization` | active | 2026-04-29 | #121 frontier-staleness blocker in progress; strict full proof still pending |
+| `stage3-genre-contract-resolver-fallback` | pending | 2026-04-29 | #120; waits behind #121 before episode-15 resume |
 | `security-secrets-config` | pending | 2026-04-27 | external credential rotation/history decision may block closure |
 | `security-runtime-settings-vertex` | pending | 2026-04-27 | depends on `security-secrets-config`; path policy decision required |
 | `security-desktop-release-guardrails` | pending | 2026-04-27 | depends on first two security items; access-control product model may remain residual |
@@ -128,19 +141,35 @@ Working order:
 Pass 1 - structure and scope:
 - PASS. Roadmap exists because temp queue now has multiple execution SSOT mirrors.
 - PASS. Queue inventory, dependencies, execution order, per-item plans, and cleanup rules are present.
+- PASS. 2026-04-29 refresh includes all five active temp execution SSOT mirrors.
 
 Pass 2 - evidence and consistency:
 - PASS. Existing Frontier Lag mirror is preserved and not silently removed.
 - PASS. Security dependencies match execution metadata blocks in the new SSOTs.
 - PASS. Security items are marked as parked future wave, preventing accidental front-active interpretation.
+- PASS. `stage3-genre-contract-resolver-fallback` is queued after the current #121 frontier-staleness blocker and before parked security work, matching the operator priority for #120.
 - PASS. Stage4 #58 is removed from the active temp queue only after GitHub #58 closure is reflected in the canonical #58 SSOT.
 - PASS. Stage3/Stage4 #56 and Stage4 #59 are removed from the active temp queue only after their PRs merged, CI passed, and GitHub issues closed.
 
 Pass 3 - execution readiness:
 - PASS. The roadmap is actionable for queue control but explicitly does not authorize implementation without fresh re-audit.
 - PASS. Cleanup behavior is explicit.
+- PASS. The 2026-04-29 refresh is queue-control only; it does not authorize starting #120 before #121 is PR-ready.
 
 Estimated operational confidence: 96%.
+
+## 9.1 Queue Refresh - 2026-04-29
+
+Pass 1 - inventory:
+- PASS. Active temp execution mirrors are Frontier Lag, Stage3 genre-contract resolver fallback, and three parked security items.
+
+Pass 2 - ordering:
+- PASS. Current pipeline priority remains #121 first, #120 second, #113 later; this roadmap only carries #121/#120 and parked security work.
+
+Pass 3 - validator readiness:
+- PASS. Queue-state may be regenerated from this roadmap and should include all five active execution items.
+
+Estimated refresh confidence: 96%.
 
 ## 10. Operator Promotion Note - 2026-04-27
 

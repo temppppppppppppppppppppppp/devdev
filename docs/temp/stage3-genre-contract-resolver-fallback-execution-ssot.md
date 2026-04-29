@@ -6,6 +6,9 @@ Track: system
 Canonical Path: `docs/2026-04-29/stage3-genre-contract-resolver-fallback-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage3-genre-contract-resolver-fallback-execution-ssot.md`
 Source Survey: `docs/2026-04-29/stage3-genre-contract-application-gap-survey.md`
+Source Survey Docs:
+- `docs/2026-04-29/stage3-genre-contract-application-gap-survey.md`
+- `docs/2026-04-29/stage3-genre-contract-resolver-fallback-execution-ssot.md`
 Baseline Commit: `8a1463b237499b2aa0d56ea95a67eac54d2cefb9`
 Runtime Guard: do not touch the active S4 run for `projects/0_카나리아`.
 
@@ -168,4 +171,3 @@ Pass 3 - Execution and readability:
 - PASS. The plan is small enough for a focused bugfix wave and avoids active-run interference.
 - Optional lane expansion is separated from the immediate fix.
 - Estimated confidence: 96%.
-

@@ -10,6 +10,7 @@ import re
 from pathlib import Path
 
 from modules.core.constants import ManuscriptLimits
+from modules.core.frontier_staleness import mark_downstream_frontier_requires_revalidation
 from modules.core.metrics_collector import get_metrics_collector
 from modules.core.non_wuxia_recovery_policy import normalize_chain_link_for_genre
 from modules.core.project_support import resolve_project_pov_contract
@@ -66,9 +67,7 @@ class Stage4PostProcessor:
         },
     }
 
-    _SCENE_HEADER_LINE_RE = re.compile(
-        "(?im)^\\s*#{1,6}\\s*(?:\\uc52c|scene)\\s*\\d+\\s*[:\\-].*$"
-    )
+    _SCENE_HEADER_LINE_RE = re.compile("(?im)^\\s*#{1,6}\\s*(?:\\uc52c|scene)\\s*\\d+\\s*[:\\-].*$")
     _MARKDOWN_HEADER_LINE_RE = re.compile(r"(?m)^\s*#{1,6}\s+\S.*$")
     _STANDALONE_STAGE_CUE_RE = re.compile(r"(?m)^\s*\[([^\[\]\n]{1,160})\]\s*$")
 
@@ -1508,6 +1507,73 @@ class Stage4PostProcessor:
         )
         return False
 
+    def _emit_fully_settled_status_and_mark_frontier(
+        self,
+        *,
+        settlement_packet_path,
+        settlement_status_context: dict,
+        next_ep: int,
+        final_manuscript: str,
+        arc_data: dict,
+    ) -> None:
+        self._emit_stage4_settlement_status(
+            status="fully_settled",
+            artifact_path=settlement_packet_path,
+            **settlement_status_context,
+        )
+        marked_eps = mark_downstream_frontier_requires_revalidation(
+            project=self.ctx.current_project,
+            accepted_ep=next_ep,
+            arc_data=arc_data,
+            manuscript_hash=hashlib.sha256(str(final_manuscript or "").encode("utf-8")).hexdigest(),
+        )
+        if marked_eps:
+            self.ctx.ui.log(
+                f"   [Frontier] downstream blueprint revalidation required: ep {marked_eps[0]}~{marked_eps[-1]}"
+            )
+
+    def _complete_fully_settled_pass_result(
+        self,
+        *,
+        settlement_packet_path,
+        settlement_status_context: dict,
+        next_ep: int,
+        final_title: str,
+        final_manuscript: str,
+        final_state_updates: dict,
+        blueprint: dict,
+        arc_data: dict,
+        output_dir,
+        v50_modules_available: bool,
+        approved_hud_updates: dict,
+        hud_update_error: str | None,
+    ) -> None:
+        self._emit_fully_settled_status_and_mark_frontier(
+            settlement_packet_path=settlement_packet_path,
+            settlement_status_context=settlement_status_context,
+            next_ep=next_ep,
+            final_manuscript=final_manuscript,
+            arc_data=arc_data,
+        )
+        self._run_pass_result_post_settlement_side_effects(
+            next_ep=next_ep,
+            final_manuscript=final_manuscript,
+            final_title=final_title,
+            final_state_updates=final_state_updates,
+            blueprint=blueprint,
+            arc_data=arc_data,
+            output_dir=output_dir,
+            v50_modules_available=v50_modules_available,
+            approved_hud_updates=approved_hud_updates,
+            hud_update_error=hud_update_error,
+        )
+        self._finalize_pass_result_session(
+            next_ep=next_ep,
+            final_title=final_title,
+            final_manuscript=final_manuscript,
+            arc_data=arc_data,
+        )
+
     def process_pass_result(
         self,
         *,
@@ -1663,15 +1729,12 @@ class Stage4PostProcessor:
             )
             return False
 
-        self._emit_stage4_settlement_status(
-            status="fully_settled",
-            artifact_path=settlement_packet_path,
-            **settlement_status_context,
-        )
-        self._run_pass_result_post_settlement_side_effects(
+        self._complete_fully_settled_pass_result(
+            settlement_packet_path=settlement_packet_path,
+            settlement_status_context=settlement_status_context,
             next_ep=next_ep,
-            final_manuscript=final_manuscript,
             final_title=final_title,
+            final_manuscript=final_manuscript,
             final_state_updates=final_state_updates,
             blueprint=blueprint,
             arc_data=arc_data,
@@ -1679,12 +1742,6 @@ class Stage4PostProcessor:
             v50_modules_available=v50_modules_available,
             approved_hud_updates=approved_hud_updates,
             hud_update_error=hud_update_error,
-        )
-        self._finalize_pass_result_session(
-            next_ep=next_ep,
-            final_title=final_title,
-            final_manuscript=final_manuscript,
-            arc_data=arc_data,
         )
         return True
 
