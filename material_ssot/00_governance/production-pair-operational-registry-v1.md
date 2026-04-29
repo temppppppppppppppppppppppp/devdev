@@ -1,6 +1,6 @@
 # Production Pair Operational Registry v1
 
-Date: 2026-04-20 (last updated; initial 2026-04-08 benchmark freshness wave)
+Date: 2026-04-29 (last updated; initial 2026-04-08 benchmark freshness wave)
 Status: active
 Scope: durable operational registry for current schema-clean production pairs
 
@@ -14,10 +14,15 @@ Use this registry when you need the current operator reading of:
 - benchmark freshness
 - opening pacing triage status
 - whether a pair is safe to cite as a current family baseline, or should stay reference-only
+- the current immediate material-deployment shelf under the donor-structure overlay
 
 Machine-readable SSOT:
 
 - `production-pair-operational-registry-v1.json`
+
+Immediate deployment overlay:
+
+- `docs/2026-04-29/material-side-immediate-deployment-overlay.md`
 
 Freshness closeout artifact:
 
@@ -41,19 +46,29 @@ Freshness closeout artifact:
   - no active repair / re-audit / hold note
   - no remaining legacy-heuristic-only ambiguity for the opening claim
 - if those are not all true, read the row as a historical benchmark snapshot, not a current sales-facing top shelf
+- immediate material deployment is now stricter again:
+  - it requires visible donor structure adoption/application in material-side authority
+  - current immediate deployment shelf is `golden_canary_deepclone_probe_a_fullblock_v1` only
+  - other `GREENPLUS`/`GREEN` rows remain benchmark/reference inventory until donor structure is applied and recorded
 
 ## 3. Current Inventory
 
+Immediate material deployment overlay as of 2026-04-29:
+
+- `golden_canary_deepclone_probe_a_fullblock_v1` is the only current immediately deployable material.
+- The reason is structural, not prestige-based: it is the current donorized full-block gold sample.
+- Earlier `deployable GREENPLUS` closeout language on other rows remains valid as historical quality-shelf language, but does not clear the current donor-structure overlay by itself.
+
 | work_id | family | inventory role | durable operational state | schema | alias | benchmark freshness | opening pacing triage | opening exemplar use |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `투자물_골든_카나리아 테스트_canonical_v1` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS certified by 2026-04-12 manual closeout; current sell-in top shelf |
+| `투자물_골든_카나리아 테스트_canonical_v1` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | historical quality-shelf GREENPLUS; reference until donor structure is applied and recorded |
 | `chaebol_allowance_zero` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `RED` | `current` | `RED` | negative exemplar archive; withdrawn GREENPLUS tombstone retained as anti-benchmark |
-| `chaebol_ent_empire` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS certified by 2026-04-12 manual closeout; current sell-in top shelf |
-| `defense_defect_engineer` | `blockguide` | `numbered_live_pair` | `regenerated_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS certified by 2026-04-10 manual closeout; current sell-in top shelf |
-| `office_checkup_next_day` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS re-closed by 2026-04-12 bounded benchmark-preservation + manual closeout; current sell-in top shelf |
-| `pantech_cyworld_reborn` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS certified by 2026-04-12 manual closeout; current sell-in top shelf |
-| `wuxia_heavenly_physician` | `wuxguide` | `numbered_live_pair` | `regenerated_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS re-closed by 2026-04-12 bounded benchmark-preservation + manual closeout; current sell-in top shelf |
-| `golden_canary_deepclone_probe_a_fullblock_v1` | `blockguide` | `unslotted_live_pair` | `new_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS certified by 2026-04-20 initial benchmark + manual closeout; donorized full-block gold sample / current sell-in top shelf |
+| `chaebol_ent_empire` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | historical quality-shelf GREENPLUS; reference until donor structure is applied and recorded |
+| `defense_defect_engineer` | `blockguide` | `numbered_live_pair` | `regenerated_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | historical quality-shelf GREENPLUS; reference until donor structure is applied and recorded |
+| `office_checkup_next_day` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | historical quality-shelf GREENPLUS; reference until donor structure is applied and recorded |
+| `pantech_cyworld_reborn` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | historical quality-shelf GREENPLUS; reference until donor structure is applied and recorded |
+| `wuxia_heavenly_physician` | `wuxguide` | `numbered_live_pair` | `regenerated_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | historical quality-shelf GREENPLUS; reference until donor structure is applied and recorded |
+| `golden_canary_deepclone_probe_a_fullblock_v1` | `blockguide` | `unslotted_live_pair` | `new_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | immediate material deployment; donorized full-block gold sample |
 | `jangyeongshil_industrial_revolution` | `blockguide` | `unslotted_live_pair` | `new_live_pair` | `pass` | `GREEN` | `current` | `RED` | negative exemplar archive on opening pacing; spot audit confirmed work-level opening promise miss despite positive alias history |
 | `manual_meridian_archivist` | `wuxguide` | `unslotted_live_pair` | `new_live_pair` | `pass` | `GREEN` | `current` | `GREEN` | provisional keep; not a discard candidate, but not a fresh declared-contract opening exemplar certification |
 
@@ -77,8 +92,17 @@ Freshness closeout artifact:
 - `RED` triage pair is archive-first, not repair-first
 - practical reading:
   - if a row still says `provisional keep`, `repair-first`, `whole-run YELLOW`, `UNTRIAGED`, or similar qualifier, do not treat it as deployable `GREENPLUS` even if the alias column still shows `GREENPLUS`
+- for immediate material-side deployment, apply the donor-structure overlay after quality/benchmark reading:
+  - current deployable material = `golden_canary_deepclone_probe_a_fullblock_v1`
+  - all other rows = benchmark/reference inventory until donor structure is applied and recorded
 
 ## 6. Update Log
+
+- immediate material deployment overlay recorded under `docs/2026-04-29/material-side-immediate-deployment-overlay.md`
+  - operator effect:
+    - current immediately deployable material is `golden_canary_deepclone_probe_a_fullblock_v1` only
+    - the deciding condition is donor structure applied and visible at material-side authority, not just `GREENPLUS` prestige
+    - earlier deployable `GREENPLUS` closeouts remain quality/reference evidence, but do not clear this immediate-deployment overlay by themselves
 
 - `golden_canary_deepclone_probe_a_fullblock_v1` initial benchmark + deployable closeout recorded under:
   - `docs/2026-04-20/golden_canary_deepclone_probe_a_fullblock_v1_initial_greenplus_benchmark.md`
@@ -104,7 +128,7 @@ Freshness closeout artifact:
     - `chaebol_ent_empire` leaves provisional keep after a manual opening-authority closeout reconciles the live `B03/B04/B08` receipt chain
     - `pantech_cyworld_reborn` leaves provisional keep after a manual opening-authority closeout reconciles the live `B01/B02/B03` conversion chain despite the heuristic ticket gap
     - `wuxia_heavenly_physician` closes the 2026-04-11 freshness gap through a bounded benchmark-preservation reread and leaves repaired provisional keep after a manual opening-authority closeout reconciles the live `B02/B03/B04/B06` permission chain
-    - all five rows now count as current sell-in top shelf instead of historical-only `GREENPLUS` snapshots
+    - under the then-current quality-shelf law, all five rows counted as current sell-in top shelf instead of historical-only `GREENPLUS` snapshots
 
 - `office_checkup_next_day` bounded authority-first repair recorded under `docs/2026-04-11/office_checkup_next_day_repair_note.md`
   - operator effect:

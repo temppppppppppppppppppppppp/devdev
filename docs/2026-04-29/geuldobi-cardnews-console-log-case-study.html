@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>콘솔 로그로 읽는 글도비 제작 공정</title>
+  <style>
+    :root {
+      --paper: #f7f3ea;
+      --paper-2: #fbfaf6;
+      --ink: #202329;
+      --muted: #6e746f;
+      --teal: #1c8c82;
+      --teal-soft: #dcefeb;
+      --coral: #e56b5d;
+      --coral-soft: #f7ddd7;
+      --line: #d8d0c0;
+      --console: #1f2328;
+      --console-ink: #d7f0e9;
+      --gold: #c89b3c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #ded8cb;
+      color: var(--ink);
+      font-family:
+        "Pretendard",
+        "Noto Sans KR",
+        "Apple SD Gothic Neo",
+        "Malgun Gothic",
+        Arial,
+        sans-serif;
+      letter-spacing: 0;
+    }
+
+    body.single-card {
+      background: #fff;
+    }
+
+    body.single-card .deck {
+      padding: 0;
+      gap: 0;
+    }
+
+    body.single-card .card {
+      box-shadow: none;
+      border: 0;
+    }
+
+    body.single-card .card:not(.selected-card) {
+      display: none;
+    }
+
+    .deck {
+      display: grid;
+      gap: 40px;
+      justify-content: center;
+      padding: 40px 0;
+    }
+
+    .card {
+      position: relative;
+      width: 1080px;
+      height: 1350px;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, var(--paper-2), var(--paper));
+      border: 1px solid rgba(32, 35, 41, 0.08);
+      box-shadow: 0 18px 50px rgba(32, 35, 41, 0.2);
+      padding: 86px 88px 74px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 34px;
+      border: 1px solid rgba(32, 35, 41, 0.08);
+      pointer-events: none;
+    }
+
+    .card::after {
+      content: attr(data-card);
+      position: absolute;
+      right: 76px;
+      bottom: 52px;
+      font-size: 22px;
+      color: rgba(32, 35, 41, 0.42);
+      font-weight: 700;
+    }
+
+    .header {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+      min-height: 54px;
+    }
+
+    .eyebrow {
+      color: var(--teal);
+      font-size: 26px;
+      line-height: 1.25;
+      font-weight: 800;
+    }
+
+    .tag {
+      flex: 0 0 auto;
+      padding: 10px 18px;
+      border: 1px solid rgba(28, 140, 130, 0.34);
+      color: var(--teal);
+      background: rgba(220, 239, 235, 0.56);
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .main {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      align-content: center;
+      gap: 34px;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      font-weight: 900;
+      letter-spacing: 0;
+      color: var(--ink);
+    }
+
+    h1 {
+      font-size: 82px;
+      line-height: 1.07;
+      max-width: 880px;
+    }
+
+    h2 {
+      font-size: 68px;
+      line-height: 1.12;
+      max-width: 900px;
+    }
+
+    .lead {
+      margin: 0;
+      max-width: 850px;
+      color: #383b40;
+      font-size: 34px;
+      line-height: 1.48;
+      font-weight: 700;
+    }
+
+    .console {
+      width: 100%;
+      border: 1px solid rgba(32, 35, 41, 0.1);
+      background: var(--console);
+      color: var(--console-ink);
+      padding: 24px 28px;
+      font-family:
+        "Cascadia Mono",
+        "Consolas",
+        "D2Coding",
+        monospace;
+      font-size: 25px;
+      line-height: 1.42;
+      white-space: pre-wrap;
+    }
+
+    .console .dim {
+      color: #8ea79f;
+    }
+
+    .reason {
+      border-left: 8px solid var(--coral);
+      background: rgba(247, 221, 215, 0.42);
+      padding: 22px 28px 22px 26px;
+      font-size: 28px;
+      line-height: 1.44;
+      font-weight: 800;
+      color: #3d3432;
+    }
+
+    .footer {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 28px;
+      min-height: 54px;
+      color: var(--muted);
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .visual {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(4, 1fr);
+      align-items: stretch;
+    }
+
+    .visual.three {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .visual.two {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .node {
+      min-height: 116px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.56);
+      padding: 20px 18px;
+      display: grid;
+      align-content: center;
+      gap: 8px;
+    }
+
+    .node strong {
+      color: var(--ink);
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .node span {
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.25;
+      font-weight: 700;
+    }
+
+    .path {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .step {
+      flex: 1;
+      min-height: 104px;
+      border-top: 6px solid var(--teal);
+      background: rgba(255, 255, 255, 0.6);
+      padding: 18px;
+      font-size: 22px;
+      line-height: 1.24;
+      font-weight: 900;
+      display: grid;
+      place-items: center;
+      text-align: center;
+    }
+
+    .arrow {
+      flex: 0 0 24px;
+      height: 2px;
+      background: var(--line);
+      position: relative;
+    }
+
+    .arrow::after {
+      content: "";
+      position: absolute;
+      right: -2px;
+      top: -5px;
+      width: 10px;
+      height: 10px;
+      border-top: 2px solid var(--line);
+      border-right: 2px solid var(--line);
+      transform: rotate(45deg);
+    }
+
+    .stamp {
+      display: inline-block;
+      color: var(--teal);
+      border: 5px solid var(--teal);
+      padding: 10px 18px;
+      font-size: 36px;
+      line-height: 1;
+      font-weight: 900;
+      transform: rotate(-3deg);
+    }
+
+    .stamp.fix {
+      color: var(--coral);
+      border-color: var(--coral);
+    }
+
+    .small-note {
+      color: var(--muted);
+      font-size: 24px;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    .cover-mark {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      max-width: 680px;
+    }
+
+    .cover-mark div {
+      min-height: 110px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.52);
+      padding: 20px;
+      font-size: 25px;
+      line-height: 1.25;
+      font-weight: 900;
+    }
+
+    .quote {
+      color: var(--teal);
+      font-size: 46px;
+      line-height: 1.25;
+      font-weight: 900;
+      border-left: 10px solid var(--teal);
+      padding-left: 28px;
+    }
+
+    @media print {
+      @page {
+        size: 1080px 1350px;
+        margin: 0;
+      }
+
+      body {
+        background: #fff;
+      }
+
+      .deck {
+        display: block;
+        padding: 0;
+      }
+
+      .card {
+        width: 1080px;
+        height: 1350px;
+        page-break-after: always;
+        box-shadow: none;
+        border: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck">
+    <section class="card" data-card="01 / 17">
+      <div class="header">
+        <div class="eyebrow">CASE STUDY</div>
+        <div class="tag">Geuldobi</div>
+      </div>
+      <div class="main">
+        <h1>콘솔 로그로 읽는 AI 웹소설 제작 공정</h1>
+        <p class="lead">글도비는 원고 생성기가 아니라, 장편 작품을 끝까지 관리하기 위한 제작 파이프라인입니다.</p>
+        <div class="console">python main_a.py
+V40 SOVEREIGN COCKPIT
+Multi-Genre Production Factory</div>
+        <div class="cover-mark">
+          <div>생성</div>
+          <div>판단</div>
+          <div>기록</div>
+          <div>상태</div>
+        </div>
+      </div>
+      <div class="footer">
+        <span>원본 로그: 0_temp.txt</span>
+        <span>2026-04-29</span>
+      </div>
+    </section>
+
+    <section class="card" data-card="02 / 17">
+      <div class="header">
+        <div class="eyebrow">PREMISE</div>
+        <div class="tag">LLM</div>
+      </div>
+      <div class="main">
+        <h2>LLM은 구조화된 언어를 더 안정적으로 다룹니다</h2>
+        <div class="console">anchors.bible
+anchors.arcs
+anchors.style_guide
+stage_attempts
+director_selections</div>
+        <p class="lead">LLM에게 모든 것을 자유 산문으로 맡기면 장편의 설정과 상태가 흐려집니다. 그래서 글도비는 작품을 JSON, anchor, table, verdict 같은 구조로 나눠 다룹니다.</p>
+        <div class="reason">DB와 JSON은 개발자 취향이 아니라, LLM이 장편 제작을 안정적으로 다루게 하는 제작 언어입니다.</div>
+      </div>
+      <div class="footer"><span>자유 산문 -> 구조화된 제작 언어</span></div>
+    </section>
+
+    <section class="card" data-card="03 / 17">
+      <div class="header">
+        <div class="eyebrow">START</div>
+        <div class="tag">Genre</div>
+      </div>
+      <div class="main">
+        <h2>글도비는 빈 채팅창에서 시작하지 않습니다</h2>
+        <div class="console">V40 GENRE SELECTOR
+장르별 전문 공정 선택
+투자 (Investment Fiction)</div>
+        <p class="lead">사용자는 먼저 장르를 고릅니다. 이 순간부터 시스템은 해당 장르에 맞는 제작 규칙과 판단 기준을 준비합니다.</p>
+        <div class="reason">장르는 분위기가 아니라 실패 조건입니다. 투자물은 자본, 거래, 회수 전략이 무너지면 작품이 무너집니다.</div>
+      </div>
+      <div class="footer"><span>장르 = 판단 기준</span></div>
+    </section>
+
+    <section class="card" data-card="04 / 17">
+      <div class="header">
+        <div class="eyebrow">PROJECT MEMORY</div>
+        <div class="tag">DB</div>
+      </div>
+      <div class="main">
+        <h2>선택한 장르는 프로젝트의 기억이 됩니다</h2>
+        <div class="console">투자 전문 공정이 선택되었습니다.
+HUD 시스템: INVESTMENT
+프로젝트 장르 정보 저장: 투자</div>
+        <div class="path">
+          <div class="step">선택</div>
+          <div class="arrow"></div>
+          <div class="step">저장</div>
+          <div class="arrow"></div>
+          <div class="step">다음 단계 기준</div>
+        </div>
+        <p class="lead">장르 선택은 일회성 UI 입력이 아닙니다. 프로젝트 DB에 저장되어 이후 단계의 기준이 됩니다.</p>
+      </div>
+      <div class="footer"><span>genre_info anchor</span></div>
+    </section>
+
+    <section class="card" data-card="05 / 17">
+      <div class="header">
+        <div class="eyebrow">BOOTSTRAP</div>
+        <div class="tag">Factory</div>
+      </div>
+      <div class="main">
+        <h2>글을 쓰기 전에 제작실을 먼저 켭니다</h2>
+        <div class="console">Vector DB integrity check complete
+Director Guard 연결 완료
+Writer Guard/Genre 연결 완료
+Quality Dashboard 활성화</div>
+        <div class="visual">
+          <div class="node"><strong>Memory</strong><span>Vector DB</span></div>
+          <div class="node"><strong>Director</strong><span>판단</span></div>
+          <div class="node"><strong>Guard</strong><span>제약</span></div>
+          <div class="node"><strong>Dashboard</strong><span>품질</span></div>
+        </div>
+        <div class="reason">LLM이 쓴 결과를 나중에 감으로 평가하는 것이 아니라, 처음부터 추적과 심사를 전제로 제작합니다.</div>
+      </div>
+      <div class="footer"><span>원고보다 먼저 켜지는 운영 장치들</span></div>
+    </section>
+
+    <section class="card" data-card="06 / 17">
+      <div class="header">
+        <div class="eyebrow">STAGE 0</div>
+        <div class="tag">Baseline</div>
+      </div>
+      <div class="main">
+        <h2>Stage 0은 원고 작성이 아니라 기준선 장착입니다</h2>
+        <div class="console">Bible Selection
+Roadmap Selection
+로드맵 선택 완료
+설계도(50개)와 원고 역사가 무결하게 통합되었습니다.</div>
+        <p class="lead">Bible은 세계관과 설정의 기준선이고, Roadmap은 장기 전개 설계입니다. Stage 0은 이 기준 자료를 런타임에 연결합니다.</p>
+        <div class="path">
+          <div class="step">Bible</div>
+          <div class="arrow"></div>
+          <div class="step">Roadmap</div>
+          <div class="arrow"></div>
+          <div class="step">DB Anchor</div>
+        </div>
+      </div>
+      <div class="footer"><span>작품 기준선을 런타임에 장착</span></div>
+    </section>
+
+    <section class="card" data-card="07 / 17">
+      <div class="header">
+        <div class="eyebrow">NARRATION CONTRACT</div>
+        <div class="tag">POV</div>
+      </div>
+      <div class="main">
+        <h2>주인공 설정은 취향 입력이 아니라 서술 계약입니다</h2>
+        <div class="console">주인공의 세계관 출신을 선택하세요
+주인공의 유형을 선택하세요
+서술 시점을 선택하세요
+외부 시점 삽입 정책을 선택하세요
+주인공 설정이 Bible에 저장됨</div>
+        <div class="visual two">
+          <div class="node"><strong>회귀 정보</strong><span>언제, 왜, 무엇을 아는가</span></div>
+          <div class="node"><strong>POV 정책</strong><span>누가 무엇을 볼 수 있는가</span></div>
+        </div>
+        <div class="reason">시점 규칙이 흔들리면 독자는 같은 작품을 읽고 있다고 느끼기 어렵습니다.</div>
+      </div>
+      <div class="footer"><span>Bible에 저장되는 서술 규칙</span></div>
+    </section>
+
+    <section class="card" data-card="08 / 17">
+      <div class="header">
+        <div class="eyebrow">STYLE GUIDE</div>
+        <div class="tag">Stage 0</div>
+      </div>
+      <div class="main">
+        <h2>참조 문체를 감이 아니라 기준선으로 만듭니다</h2>
+        <div class="console">문체 분석 시작: 1화, 4,247,609자
+통계 분석
+리듬 분석
+LLM 심층 분석
+Anti-AI 패턴 생성
+StyleGuide DB 저장 완료</div>
+        <div class="visual three">
+          <div class="node"><strong>리듬</strong><span>문장 호흡</span></div>
+          <div class="node"><strong>샘플</strong><span>모범 문단</span></div>
+          <div class="node"><strong>금지 패턴</strong><span>AI식 표현</span></div>
+        </div>
+        <div class="reason">웹소설 문체는 예쁜 문장보다 읽기 리듬이 중요합니다. 그래서 문체도 기록 가능한 제작 기준으로 바꿉니다.</div>
+      </div>
+      <div class="footer"><span>style_guide anchor</span></div>
+    </section>
+
+    <section class="card" data-card="09 / 17">
+      <div class="header">
+        <div class="eyebrow">WORK GUARD</div>
+        <div class="tag">Optional</div>
+      </div>
+      <div class="main">
+        <h2>작품별 금지선은 별도 Guard로 다룹니다</h2>
+        <div class="console">작품가드 설정
+라이브러리에서 가져오기
+기본 템플릿으로 초기화
+현재 프로젝트 작품가드 미리보기</div>
+        <p class="lead">이 실행에서는 작품가드 가져오기가 완료되지는 않았습니다. 하지만 시스템에는 작품별 금지선과 감각을 별도 계약으로 다루는 경로가 있습니다.</p>
+        <div class="reason">작품마다 망가지면 안 되는 선이 다릅니다. 투자물에서는 손익 구조와 자본 흐름의 설득력이 특히 중요합니다.</div>
+      </div>
+      <div class="footer"><span>작품별 금지선과 유지해야 할 감각</span></div>
+    </section>
+
+    <section class="card" data-card="10 / 17">
+      <div class="header">
+        <div class="eyebrow">STAGE 2</div>
+        <div class="tag">Arc</div>
+      </div>
+      <div class="main">
+        <h2>장편은 바로 원고로 가지 않습니다</h2>
+        <div class="console">Stage 2: Arc Tactical Design
+몇 번 아크까지 단계하시겠습니까?
+1 ~ 4
+ConstraintDB 초기화 완료</div>
+        <p class="lead">Stage 2는 장기 Roadmap을 실제 제작 가능한 Arc 전술서로 바꾸는 단계입니다. 이 사례에서는 Arc 1~4가 설계 대상이 됩니다.</p>
+        <div class="path">
+          <div class="step">Roadmap</div>
+          <div class="arrow"></div>
+          <div class="step">Arc 1</div>
+          <div class="step">Arc 2</div>
+          <div class="step">Arc 3</div>
+          <div class="step">Arc 4</div>
+        </div>
+      </div>
+      <div class="footer"><span>큰 전개와 실제 회차 사이의 중간 설계</span></div>
+    </section>
+
+    <section class="card" data-card="11 / 17">
+      <div class="header">
+        <div class="eyebrow">ENRICH</div>
+        <div class="tag">Blocks</div>
+      </div>
+      <div class="main">
+        <h2>기획 블록을 제작 가능한 정보로 보강합니다</h2>
+        <div class="console">Batch 1~4 range enrich start
+Block 1 task done
+Block 2 task done
+Block 3 task done
+Block 4 task done
+Enrich Phase completed</div>
+        <div class="visual two">
+          <div class="node"><strong>기획 문장</strong><span>아이디어와 전개 방향</span></div>
+          <div class="node"><strong>제작 정보</strong><span>목표, 제약, 인과, 상태 변화</span></div>
+        </div>
+        <div class="reason">기획과 생산 사이의 간극을 줄여야 이후 생성물이 덜 흔들립니다.</div>
+      </div>
+      <div class="footer"><span>기획은 원고 지시서로 번역되어야 한다</span></div>
+    </section>
+
+    <section class="card" data-card="12 / 17">
+      <div class="header">
+        <div class="eyebrow">CONTINUITY</div>
+        <div class="tag">Welding</div>
+      </div>
+      <div class="main">
+        <h2>앞뒤가 끊기지 않게 연결부를 먼저 맞춥니다</h2>
+        <div class="console">Arc 1-2 고유 명사 앵커링 완료
+Arc 1-2 인과율 용접 완료
+Arc 2-3 인과율 용접 완료
+Arc 3-4 인과율 용접 완료</div>
+        <div class="path">
+          <div class="step">Arc 1</div>
+          <div class="arrow"></div>
+          <div class="step">Arc 2</div>
+          <div class="arrow"></div>
+          <div class="step">Arc 3</div>
+          <div class="arrow"></div>
+          <div class="step">Arc 4</div>
+        </div>
+        <div class="reason">장편에서 흔한 실패는 앞에서 만든 사건이 뒤에서 사라지는 것입니다.</div>
+      </div>
+      <div class="footer"><span>고유명사, 사건, 상태 연결</span></div>
+    </section>
+
+    <section class="card" data-card="13 / 17">
+      <div class="header">
+        <div class="eyebrow">PREFLIGHT</div>
+        <div class="tag">Risk</div>
+      </div>
+      <div class="main">
+        <h2>생성은 Preflight 이후에 시작됩니다</h2>
+        <div class="console">Preflight 병렬 분석 시작
+arc_drive 완료
+preflight 완료
+constraint 완료
+FourPhase-Director 대면
+Pre-Director 검증 체인 시작</div>
+        <div class="path">
+          <div class="step">Preflight</div>
+          <div class="arrow"></div>
+          <div class="step">FourPhase</div>
+          <div class="arrow"></div>
+          <div class="step">Pre-Director</div>
+          <div class="arrow"></div>
+          <div class="step">Director</div>
+        </div>
+        <div class="reason">한 번에 생성하면 실패 원인을 알기 어렵습니다. 단계가 나뉘어야 어디서 흔들렸는지 추적할 수 있습니다.</div>
+      </div>
+      <div class="footer"><span>요구 조건과 위험 조건을 먼저 모은다</span></div>
+    </section>
+
+    <section class="card" data-card="14 / 17">
+      <div class="header">
+        <div class="eyebrow">DIRECTOR</div>
+        <div class="tag">Verdict</div>
+      </div>
+      <div class="main">
+        <h2>합격은 판단과 재심사를 거쳐 기록됩니다</h2>
+        <div class="console">Director PASS (score=100)
+Director PASS (score=95)
+Director PASS_WITH_FIX (score=90)
+Director 재심사 #1 호출 중
+재심사 #1: PASS (score=100)</div>
+        <div>
+          <span class="stamp">PASS</span>
+          <span class="stamp">PASS</span>
+          <span class="stamp fix">FIX</span>
+          <span class="stamp">PASS</span>
+        </div>
+        <div class="reason">Python은 증거를 모으고, Director가 서사적 판단을 내립니다. 그리고 그 판단은 DB에 남습니다.</div>
+      </div>
+      <div class="footer"><span>director_selections, stage_attempts</span></div>
+    </section>
+
+    <section class="card" data-card="15 / 17">
+      <div class="header">
+        <div class="eyebrow">CARRYOVER</div>
+        <div class="tag">State</div>
+      </div>
+      <div class="main">
+        <h2>장편은 기억을 잃는 순간 무너집니다</h2>
+        <div class="console">ConstraintDB 업데이트 완료
+StateExtractor context ready
+Stage2 Carryover Authority
+assets=20억원
+assets=23억원
+portfolio_position</div>
+        <p class="lead">Arc가 통과된 뒤에는 위치, 자산, 소지품, 포트폴리오 같은 상태가 다음 Arc로 넘어갑니다.</p>
+        <div class="reason">투자물에서 자산과 포지션은 장식이 아니라 플롯의 핵심 상태입니다. 이전 결과를 잊으면 다음 이야기가 무너집니다.</div>
+      </div>
+      <div class="footer"><span>상태는 다음 Arc의 출발 조건이 된다</span></div>
+    </section>
+
+    <section class="card" data-card="16 / 17">
+      <div class="header">
+        <div class="eyebrow">STAGE 3</div>
+        <div class="tag">Blueprint</div>
+      </div>
+      <div class="main">
+        <h2>Arc가 끝나면 바로 원고가 아니라 Blueprint로 갑니다</h2>
+        <div class="console">Stage 2: Arc Tactical Design [완료]
+Stage 3: Episode Blueprinting
+Arc 설계: 4개 완료
+예상 총 에피소드: 17
+Three Phase Blueprint Generator 시작</div>
+        <div class="visual two">
+          <div class="node"><strong>4개 Arc</strong><span>전술 설계 완료</span></div>
+          <div class="node"><strong>17화</strong><span>회차 설계 가능</span></div>
+        </div>
+        <div class="reason">큰 전술을 실제 회차 생산으로 옮기려면, 원고 전에 회차 설계도가 한 번 더 필요합니다.</div>
+      </div>
+      <div class="footer"><span>Stage 3 시작 지점까지 확인된 사례</span></div>
+    </section>
+
+    <section class="card" data-card="17 / 17">
+      <div class="header">
+        <div class="eyebrow">SUMMARY</div>
+        <div class="tag">Pipeline</div>
+      </div>
+      <div class="main">
+        <h2>글도비는 AI 글쓰기보다 AI 제작 공정에 가깝습니다</h2>
+        <div class="console">anchors
+stage_attempts
+director_selections
+llm_calls
+cost_log
+ui_events</div>
+        <p class="quote">콘솔 로그는 화면이고, DB는 기억입니다.</p>
+        <p class="lead">글도비는 생성, 판단, 기록, 상태 동기화를 분리해 장편 제작을 관리합니다.</p>
+        <div class="reason">좋은 문장을 한 번 뽑는 것보다, 긴 작품이 끝까지 같은 세계와 같은 판단 기준을 유지하게 만드는 것이 더 어렵기 때문입니다.</div>
+      </div>
+      <div class="footer"><span>생성 / 판단 / 기록 / 상태</span></div>
+    </section>
+  </main>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const card = Number(params.get("card"));
+    if (Number.isInteger(card) && card > 0) {
+      const cards = Array.from(document.querySelectorAll(".card"));
+      document.body.classList.add("single-card");
+      cards.forEach((element, index) => {
+        if (index + 1 === card) {
+          element.classList.add("selected-card");
+        }
+      });
+    }
+  </script>
+</body>
+</html>
