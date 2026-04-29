@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from modules.core.partial_fix_contract import build_partial_fix_eval, normalize_guard_result
+from modules.core.stage4_runtime_route import stage4_reject_bucket_from_route
 
 if TYPE_CHECKING:
     from modules.core.stage4_interview_round import Stage4InterviewRound
@@ -151,7 +152,7 @@ class Stage4RetryRuntime:
             return False
         if not bool(fix_pack_contract.get("ready")):
             return False
-        if str(previous_attempt.get("reject_bucket", "") or "").strip() != "post_select_conflict":
+        if stage4_reject_bucket_from_route(previous_attempt) != "post_select_conflict":
             return False
         if str(previous_attempt.get("fix_scope", "") or "").strip() != "full":
             return False
@@ -1166,6 +1167,11 @@ class Stage4RetryRuntime:
             for key in (
                 "director_verdict",
                 "final_verdict",
+                "runtime_route_payload_version",
+                "runtime_route_verdict",
+                "runtime_route_action",
+                "runtime_route_reason",
+                "runtime_route_taxonomy",
                 "gate_basis",
                 "repair_scope",
                 "selection_reason",
@@ -1233,7 +1239,7 @@ class Stage4RetryRuntime:
             prev_score = int(previous_attempt.get("score", 0)) if previous_attempt else 0
         except (ValueError, TypeError):
             prev_score = 0
-        reject_bucket = str(previous_attempt.get("reject_bucket", "") or "") if previous_attempt else ""
+        reject_bucket = stage4_reject_bucket_from_route(previous_attempt)
         fix_scope = str(previous_attempt.get("fix_scope", "") if previous_attempt else "").strip()
         if reject_bucket == "post_select_conflict" and fix_scope != "full":
             previous_attempt = dict(previous_attempt or {})

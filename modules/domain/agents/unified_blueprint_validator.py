@@ -60,28 +60,41 @@ _STOP_LINE_COMMON_TOKENS = {
     "이후",
     "화",
 }
+_PREVALIDATION_AUTHORITY_TAXONOMY = {
+    "scene_specificity": "evidence_only",
+    "scenario_density": "evidence_only",
+    "scene_completeness": "runtime_route_guard",
+    "opening_transition": "runtime_route_guard",
+    "episode_progression": "director_required",
+    "arc_compliance": "director_required",
+    "arc_timeline": "director_required",
+    "capital_unit": "director_required",
+    "dead_npc": "director_required",
+    "fact_lock_item": "director_required",
+    "fact_lock_location": "director_required",
+    "fact_lock_provenance": "director_required",
+    "fact_lock_person": "director_required",
+    "fact_lock_institution": "director_required",
+    "opening_anchor": "director_required",
+    "mission_clarity": "director_required",
+    "timeline_specificity": "director_required",
+    "protagonist_state": "director_required",
+    "tactical_semantic_fidelity": "director_required",
+    "work_identity_opening": "director_required",
+}
+_PREVALIDATION_TAXONOMY_LEVELS = (
+    "evidence_only",
+    "director_required",
+    "runtime_route_guard",
+    "absolute_invariant",
+)
 _BINDING_PREVALIDATION_CATEGORIES = {
     "scene_completeness",
-    "episode_progression",
-    "arc_compliance",
-    "arc_timeline",
-    "capital_unit",
-    "dead_npc",
-    "fact_lock_item",
-    "fact_lock_location",
-    "fact_lock_provenance",
-    "opening_anchor",
-    "mission_clarity",
-    "timeline_specificity",
-    "protagonist_state",
-    "fact_lock_institution",
-    "tactical_semantic_fidelity",
     "opening_transition",
-    "work_identity_opening",
 }
-# MAJOR/CRITICAL binding prevalidation issues are structural contract breaches.
-# They should never be routed through local faux-inplace repair.
-_BINDING_PREVALIDATION_REGENERATE_CATEGORIES = set(_BINDING_PREVALIDATION_CATEGORIES)
+# MAJOR/CRITICAL binding prevalidation issues are runtime-route guard breaches.
+# Semantic/canon findings stay as evidence for Director adjudication.
+_BINDING_PREVALIDATION_REGENERATE_CATEGORIES = {"scene_completeness", "opening_transition"}
 # T7.H3 / Tranche 1 sub-edit 1.5: opening_transition alias mismatch는 구조적 binding 위반이
 # 아니라 type 라벨만 정규화하면 되는 1-line 수정 가능 케이스이다. 다른 binding category가
 # 동시에 firing되지 않고 opening_transition alias가 유일한 binding 위반이면 inplace 허용.
@@ -122,9 +135,68 @@ _GENERIC_PERSON_ROLE_NAME_SUFFIXES = (
 
 def _is_generic_person_role_name_token(name: str) -> bool:
     token = str(name or "").strip()
-    return not token or token in _GENERIC_PERSON_ROLE_NAMES or any(
-        token.endswith(suffix) for suffix in _GENERIC_PERSON_ROLE_NAME_SUFFIXES
+    return (
+        not token
+        or token in _GENERIC_PERSON_ROLE_NAMES
+        or any(token.endswith(suffix) for suffix in _GENERIC_PERSON_ROLE_NAME_SUFFIXES)
     )
+
+
+def _classify_prevalidation_authority(category: str) -> str:
+    normalized = str(category or "").strip()
+    taxonomy = _PREVALIDATION_AUTHORITY_TAXONOMY.get(normalized, "evidence_only")
+    return taxonomy if taxonomy in _PREVALIDATION_TAXONOMY_LEVELS else "evidence_only"
+
+
+def _annotate_prevalidation_issues(issues: list[dict]) -> list[dict]:
+    if not isinstance(issues, list):
+        return []
+
+    annotated: list[dict] = []
+    for issue in issues:
+        if not isinstance(issue, dict):
+            continue
+        category = str(issue.get("category", "") or "").strip()
+        authority_level = _classify_prevalidation_authority(category)
+        item = dict(issue)
+        item.setdefault("authority_level", authority_level)
+        if authority_level in {"evidence_only", "director_required"}:
+            item.setdefault("decision_boundary", "director_verdict_required")
+            item.setdefault("must_not_auto_apply", True)
+        elif authority_level == "runtime_route_guard":
+            item.setdefault("decision_boundary", "runtime_route_layer")
+            item.setdefault("runtime_route_guard", True)
+        else:
+            item.setdefault("decision_boundary", "absolute_invariant")
+        annotated.append(item)
+    return annotated
+
+
+def _summarize_prevalidation_authority(issues: list[dict]) -> dict[str, list[str]]:
+    summary: dict[str, list[str]] = {level: [] for level in _PREVALIDATION_TAXONOMY_LEVELS}
+    seen: dict[str, set[str]] = {level: set() for level in _PREVALIDATION_TAXONOMY_LEVELS}
+    for issue in issues if isinstance(issues, list) else []:
+        if not isinstance(issue, dict):
+            continue
+        category = str(issue.get("category", "") or "").strip()
+        if not category:
+            continue
+        authority_level = _classify_prevalidation_authority(category)
+        if category in seen[authority_level]:
+            continue
+        seen[authority_level].add(category)
+        summary[authority_level].append(category)
+    return {level: categories for level, categories in summary.items() if categories}
+
+
+def _build_prevalidation_authority_fields(authority_summary: dict[str, list[str]]) -> dict[str, object]:
+    return {
+        "prevalidation_authority_taxonomy": authority_summary,
+        "evidence_only_prevalidation_categories": authority_summary.get("evidence_only", []),
+        "director_required_prevalidation_categories": authority_summary.get("director_required", []),
+        "runtime_route_guard_categories": authority_summary.get("runtime_route_guard", []),
+        "absolute_invariant_categories": authority_summary.get("absolute_invariant", []),
+    }
 
 
 _TEMPORAL_DEICTIC_RE = re.compile(r"(\d+)\s*(?:년|개월|달|주|일)\s*(?:전|후|뒤)")
@@ -901,10 +973,8 @@ class UnifiedBlueprintValidator:
         regenerate_categories = [
             category for category in binding_categories if category in _BINDING_PREVALIDATION_REGENERATE_CATEGORIES
         ]
-        # T7.H3 / Tranche 1 sub-edit 1.5: opening_transition alias mismatch는 1-line 수정으로
-        # 충분하다. opening_transition이 유일한 binding category이면 inplace 허용으로 격하한다.
-        # 다른 binding category가 함께 발생하면(예: opening_transition + protagonist_state)
-        # 구조적 위반으로 간주하여 기존대로 full regenerate를 강제한다.
+        # T7.H3 / Tranche 1 sub-edit 1.5: opening_transition alias mismatch stays
+        # a bounded runtime-route repair. Semantic co-fires no longer widen it.
         opening_transition_inplace_eligible = (
             len(regenerate_categories) == 1
             and regenerate_categories[0] in _BINDING_PREVALIDATION_INPLACE_ALIAS_CATEGORIES
@@ -937,11 +1007,16 @@ class UnifiedBlueprintValidator:
         else:
             merged_scope = str(fix_scope or "inplace")
             merged_scope_reasoning = str(
-                fix_scope_reasoning
-                or "Binding Python prevalidation invariants require bounded repair before plain PASS."
+                fix_scope_reasoning or "Runtime-route prevalidation guard requires bounded repair before plain PASS."
             )
-        merged_verdict = "PASS_WITH_FIX" if verdict in {"PASS", "PASS_WITH_WARNING"} else verdict
-        return merged_verdict, merged_feedback, merged_reason, merged_scope, merged_scope_reasoning, binding_issues
+        return verdict, merged_feedback, merged_reason, merged_scope, merged_scope_reasoning, binding_issues
+
+    @staticmethod
+    def _resolve_binding_runtime_route_verdict(director_verdict: str, binding_issues: list[dict]) -> str:
+        normalized = str(director_verdict or "").strip()
+        if normalized in {"PASS", "PASS_WITH_WARNING"} and binding_issues:
+            return "PASS_WITH_FIX"
+        return normalized
 
     @staticmethod
     def _build_runtime_route_authority_payload(
@@ -951,12 +1026,14 @@ class UnifiedBlueprintValidator:
         runtime_gate_basis: str = "",
         runtime_route_action: str = "",
         runtime_route_reason: str = "",
+        runtime_route_taxonomy: str = "",
     ) -> dict[str, str]:
         director_layer = str(director_verdict or "").strip()
         route_layer = str(runtime_route_verdict or director_layer or "").strip()
         payload = {
             "director_verdict": director_layer,
             "runtime_route_verdict": route_layer,
+            "runtime_route_payload_version": "runtime-route-v1",
             "verdict_contract_version": "verdict-layer-v1",
             "final_judgment_authority": "director_llm",
             "runtime_gate_authority": "python_runtime_routing_gate",
@@ -968,6 +1045,8 @@ class UnifiedBlueprintValidator:
             payload["runtime_route_action"] = str(runtime_route_action)
         if runtime_route_reason:
             payload["runtime_route_reason"] = str(runtime_route_reason)
+        if runtime_route_taxonomy:
+            payload["runtime_route_taxonomy"] = str(runtime_route_taxonomy)
         return payload
 
     @staticmethod
@@ -1184,6 +1263,7 @@ class UnifiedBlueprintValidator:
         director_fix_scope = fix_scope
         fix_scope_reasoning = str(compare_result.get("fix_scope_reasoning", "") or "")
         director_fix_scope_reasoning = fix_scope_reasoning
+        selected_pre_issues = _annotate_prevalidation_issues(selected_pre_result.get("issues", []))
         (
             verdict,
             feedback,
@@ -1193,7 +1273,7 @@ class UnifiedBlueprintValidator:
             binding_issues,
         ) = self._apply_binding_prevalidation_contract(
             verdict=verdict,
-            issues=selected_pre_result.get("issues", []),
+            issues=selected_pre_issues,
             feedback=feedback,
             verdict_reason=verdict_reason,
             fix_scope=fix_scope,
@@ -1206,19 +1286,23 @@ class UnifiedBlueprintValidator:
             if regenerate_only_categories
             else ""
         )
-        route_changed_by_binding = bool(binding_issues and verdict != director_verdict)
+        runtime_route_verdict = self._resolve_binding_runtime_route_verdict(director_verdict, binding_issues)
+        binding_route_required = bool(binding_issues and director_verdict != "REJECT")
         runtime_route_action = ""
-        if route_changed_by_binding:
+        if binding_route_required:
             runtime_route_action = "regenerate_required" if fix_scope == "full" else "repair_required"
-        revision_required = bool(revision_required or verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING"))
-        issue_fix_pack = self._build_issue_fix_pack(selected_pre_result.get("issues", []))
+        revision_required = bool(
+            revision_required or binding_route_required or verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
+        )
+        issue_fix_pack = self._build_issue_fix_pack(selected_pre_issues)
         fix_pack = _normalize_stage3_fix_pack(compare_result) or issue_fix_pack
-        advisory_fix_pack = self._build_advisory_fix_pack(selected_pre_result.get("issues", []))
+        advisory_fix_pack = self._build_advisory_fix_pack(selected_pre_issues)
+        authority_summary = _summarize_prevalidation_authority(selected_pre_issues)
 
         result = {
             "verdict": verdict,
             "phase": "director_compare+python_prevalidate",
-            "issues": selected_pre_result.get("issues", []),
+            "issues": selected_pre_issues,
             "summary": selection_reason,
             "score": compare_result.get("score", 0),
             "feedback": feedback,
@@ -1242,15 +1326,17 @@ class UnifiedBlueprintValidator:
             "director_fix_scope_reasoning": director_fix_scope_reasoning,
             "binding_prevalidation_issue_count": len(binding_issues),
             "binding_prevalidation_categories": binding_categories,
+            **_build_prevalidation_authority_fields(authority_summary),
         }
         result.update(
             self._build_runtime_route_authority_payload(
                 director_verdict=director_verdict,
-                runtime_route_verdict=verdict,
-                runtime_gate_basis="binding_prevalidation_contract" if route_changed_by_binding else "",
+                runtime_route_verdict=runtime_route_verdict,
+                runtime_gate_basis="binding_prevalidation_contract" if binding_route_required else "",
                 runtime_route_action=runtime_route_action,
                 runtime_route_reason=regenerate_only_reason
-                or ("binding prevalidation repair required" if route_changed_by_binding else ""),
+                or ("runtime-route prevalidation repair required" if binding_route_required else ""),
+                runtime_route_taxonomy="runtime_route_guard" if binding_route_required else "",
             )
         )
         if regenerate_only_categories:
@@ -1442,7 +1528,8 @@ class UnifiedBlueprintValidator:
         director_feedback = director_result.get("feedback", "")
         director_score = _safe_int(director_result.get("score", 50), 50)
 
-        all_issues = pre_result["issues"][:]
+        prevalidation_issues = _annotate_prevalidation_issues(pre_result["issues"][:])
+        all_issues = prevalidation_issues[:]
         if director_verdict == "REJECT":
             all_issues.append(
                 {
@@ -1455,8 +1542,8 @@ class UnifiedBlueprintValidator:
             )
 
         final_verdict = director_verdict
-        python_warnings, quality_risk = self._build_python_warning_entries(pre_result["issues"])
-        advisory_fix_pack = self._build_advisory_fix_pack(pre_result["issues"])
+        python_warnings, quality_risk = self._build_python_warning_entries(prevalidation_issues)
+        advisory_fix_pack = self._build_advisory_fix_pack(prevalidation_issues)
         director_fix_scope = str(director_result.get("fix_scope", "") or "")
         director_fix_scope_reasoning = str(director_result.get("fix_scope_reasoning", "") or "")
         (
@@ -1468,7 +1555,7 @@ class UnifiedBlueprintValidator:
             binding_issues,
         ) = self._apply_binding_prevalidation_contract(
             verdict=final_verdict,
-            issues=pre_result["issues"],
+            issues=prevalidation_issues,
             feedback=director_feedback,
             verdict_reason=director_reason,
             fix_scope=director_fix_scope,
@@ -1481,10 +1568,12 @@ class UnifiedBlueprintValidator:
             if regenerate_only_categories
             else ""
         )
-        route_changed_by_binding = bool(binding_issues and final_verdict != director_verdict)
+        runtime_route_verdict = self._resolve_binding_runtime_route_verdict(director_verdict, binding_issues)
+        binding_route_required = bool(binding_issues and director_verdict != "REJECT")
         runtime_route_action = ""
-        if route_changed_by_binding:
+        if binding_route_required:
             runtime_route_action = "regenerate_required" if fix_scope == "full" else "repair_required"
+        authority_summary = _summarize_prevalidation_authority(prevalidation_issues)
         self._sync_prevalidation_ensemble_meta(
             blueprint if isinstance(blueprint, dict) else None,
             python_warnings=python_warnings,
@@ -1500,10 +1589,10 @@ class UnifiedBlueprintValidator:
             "score": director_score,
             "score_breakdown": {
                 "director_score": director_score,
-                "pre_issues_count": len(pre_result["issues"]),
+                "pre_issues_count": len(prevalidation_issues),
             },
-            "feedback": director_feedback if final_verdict in ("REJECT", "PASS_WITH_FIX") else "",
-            "pre_issues": len(pre_result["issues"]),
+            "feedback": director_feedback if runtime_route_verdict in ("REJECT", "PASS_WITH_FIX") else "",
+            "pre_issues": len(prevalidation_issues),
             "confidence": 0.9 if director_score >= 70 else 0.6,
             "fix_scope": fix_scope,
             "fix_scope_reasoning": fix_scope_reasoning,
@@ -1511,7 +1600,9 @@ class UnifiedBlueprintValidator:
             "selection_reason": director_result.get("selection_reason", "") or director_reason,
             "verdict_reason": director_result.get("verdict_reason", "") or director_reason,
             "quality_risk": quality_risk,
-            "revision_required": final_verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING"),
+            "revision_required": bool(
+                binding_route_required or final_verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
+            ),
             "candidate_count": 1,
             "director_feedback": str(director_result.get("feedback", "") or ""),
             "director_verdict_reason": str(director_result.get("reason", "") or ""),
@@ -1519,15 +1610,17 @@ class UnifiedBlueprintValidator:
             "director_fix_scope_reasoning": director_fix_scope_reasoning,
             "binding_prevalidation_issue_count": len(binding_issues),
             "binding_prevalidation_categories": binding_categories,
+            **_build_prevalidation_authority_fields(authority_summary),
         }
         result.update(
             self._build_runtime_route_authority_payload(
                 director_verdict=director_verdict,
-                runtime_route_verdict=final_verdict,
-                runtime_gate_basis="binding_prevalidation_contract" if route_changed_by_binding else "",
+                runtime_route_verdict=runtime_route_verdict,
+                runtime_gate_basis="binding_prevalidation_contract" if binding_route_required else "",
                 runtime_route_action=runtime_route_action,
                 runtime_route_reason=regenerate_only_reason
-                or ("binding prevalidation repair required" if route_changed_by_binding else ""),
+                or ("runtime-route prevalidation repair required" if binding_route_required else ""),
+                runtime_route_taxonomy="runtime_route_guard" if binding_route_required else "",
             )
         )
         if regenerate_only_categories:
@@ -2089,6 +2182,7 @@ class UnifiedBlueprintValidator:
 
     @staticmethod
     def _build_python_prevalidation_result(issues: list[dict]) -> dict:
+        issues = _annotate_prevalidation_issues(issues)
         has_critical = any(issue["severity"] == "CRITICAL" for issue in issues)
         major_count = sum(1 for issue in issues if issue["severity"] == "MAJOR")
         critical_items = [issue["issue"] for issue in issues if issue["severity"] == "CRITICAL"]
@@ -2097,6 +2191,7 @@ class UnifiedBlueprintValidator:
             "has_critical": has_critical,
             "has_major_excess": major_count >= 3,
             "critical_summary": "; ".join(critical_items) if critical_items else "",
+            "prevalidation_authority_taxonomy": _summarize_prevalidation_authority(issues),
         }
 
     @staticmethod
@@ -2493,9 +2588,7 @@ class UnifiedBlueprintValidator:
                         if _is_generic_person_role_name_token(locked_name):
                             continue
                         if locked_name and locked_role and locked_name not in integrated:
-                            competing_re = re.compile(
-                                r"(?<![가-힣])([가-힣]{2,4})\s*" + re.escape(locked_role)
-                            )
+                            competing_re = re.compile(r"(?<![가-힣])([가-힣]{2,4})\s*" + re.escape(locked_role))
                             competing = {
                                 match.group(1).strip()
                                 for match in competing_re.finditer(integrated)
