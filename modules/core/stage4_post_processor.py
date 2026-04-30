@@ -17,6 +17,7 @@ from modules.core.project_support import resolve_project_pov_contract
 from modules.core.quality_signal_metrics import compute_quality_signal_bundle, extract_warning_count
 from modules.core.soft_failure import report_soft_failure, resolve_project_log_dir
 from modules.core.stage4_post_pass_runtime import Stage4PostPassRuntime
+from modules.core.stage4_run_health import classify_stage4_run_health
 from modules.core.stage4_truth_manifest import build_human_facing_draft_text, build_stage4_truth_manifest
 
 
@@ -241,6 +242,7 @@ class Stage4PostProcessor:
             settlement_path=self._relativize_artifact_path(packet_path),
             fully_settled=True,
         )
+        run_health = classify_stage4_run_health(attempt_artifact_meta=attempt_artifact_meta)
         return {
             "packet_version": "stage4_settlement_packet_v1",
             "stage": 4,
@@ -258,6 +260,7 @@ class Stage4PostProcessor:
             "quality": {
                 "labels": dict(quality_labels or {}) if isinstance(quality_labels, dict) else {},
                 "signals": dict(quality_signals or {}) if isinstance(quality_signals, dict) else {},
+                "run_health": run_health,
             },
             "settlement": {
                 "episode_bible": dict(bible_delta or {}) if isinstance(bible_delta, dict) else {},
@@ -277,6 +280,7 @@ class Stage4PostProcessor:
                 "state_log_table": "state_logs",
             },
             "truth_manifest": truth_manifest,
+            "run_health": run_health,
         }
 
     def _persist_stage4_settlement_packet(
@@ -1122,6 +1126,7 @@ class Stage4PostProcessor:
         final_manuscript: str,
         final_state_updates: dict,
         quality_labels,
+        attempt_artifact_meta: dict | None = None,
     ):
         db = self.ctx.current_project.db
         quality_signals = None
@@ -1150,6 +1155,7 @@ class Stage4PostProcessor:
                     ),
                     warning_count=extract_warning_count(final_state_updates),
                 )
+                quality_signals["run_health"] = classify_stage4_run_health(attempt_artifact_meta=attempt_artifact_meta)
                 db.save_episode_quality_signal(next_ep, quality_signals)
             except Exception as signal_err:
                 self._report_soft_failure(
@@ -1655,6 +1661,7 @@ class Stage4PostProcessor:
             final_manuscript=final_manuscript,
             final_state_updates=final_state_updates,
             quality_labels=_quality_labels,
+            attempt_artifact_meta=attempt_artifact_meta,
         )
 
         post_pass_payload = self._run_pass_result_post_pass_pipeline(

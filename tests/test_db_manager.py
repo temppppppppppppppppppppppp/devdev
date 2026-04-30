@@ -862,6 +862,7 @@ def test_save_and_summarize_episode_quality_signals(db):
             "burstiness": 11.5,
             "complexity": 31.2,
             "signal_summary": {"sentence_count": 42},
+            "run_health": {"success_classes": ["pure_pass"], "pure_pass": True},
         },
     )
     db.save_episode_quality_signal(
@@ -874,6 +875,11 @@ def test_save_and_summarize_episode_quality_signals(db):
             "burstiness": 13.0,
             "complexity": 34.4,
             "signal_summary": {"sentence_count": 50},
+            "run_health": {
+                "success_classes": ["repaired_pass", "retry_heavy_pass"],
+                "repaired_pass": True,
+                "retry_heavy_pass": True,
+            },
         },
     )
 
@@ -882,10 +888,14 @@ def test_save_and_summarize_episode_quality_signals(db):
 
     assert row is not None
     assert row["ai_slop_hits"][0]["pattern"] == "어느새"
+    assert row["signal_summary"]["run_health"]["success_classes"] == ["repaired_pass", "retry_heavy_pass"]
     assert summary["available"] is True
     assert summary["latest_ep"] == 8
     assert summary["signals"]["ced"]["status"] in {"good", "watch", "alert"}
     assert summary["latest_signal_summary"]["sentence_count"] == 50
+    assert summary["latest_run_health"]["retry_heavy_pass"] is True
+    assert summary["run_health_counts"] == {"pure_pass": 1, "repaired_pass": 1, "retry_heavy_pass": 1}
+    assert summary["recent"][1]["run_health"]["success_classes"] == ["repaired_pass", "retry_heavy_pass"]
 
 
 def test_save_and_read_episode_quality_observations(db):
