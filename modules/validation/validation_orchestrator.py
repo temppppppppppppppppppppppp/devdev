@@ -1112,6 +1112,45 @@ class ValidationOrchestrator:
         return warning_lines
 
     @staticmethod
+    def _collect_blocking_structured_advisories(blocking_result: dict) -> list[dict]:
+        advisories: list[dict] = []
+        seen: set[str] = set()
+        for raw_advisory in blocking_result.get("structured_advisories", []) or []:
+            if not isinstance(raw_advisory, dict):
+                continue
+            record_ids: list[str] = []
+            records = raw_advisory.get("patch_target_records")
+            if isinstance(records, list):
+                for record in records:
+                    if not isinstance(record, dict):
+                        continue
+                    record_id = str(
+                        record.get("patch_target_id")
+                        or record.get("scene_id")
+                        or record.get("summary")
+                        or record.get("field_path")
+                        or ""
+                    ).strip()
+                    if record_id:
+                        record_ids.append(record_id)
+            identity = "|".join(
+                part
+                for part in (
+                    str(raw_advisory.get("patch_target_id") or "").strip(),
+                    str(raw_advisory.get("check") or "").strip(),
+                    str(raw_advisory.get("category") or "").strip(),
+                    str(raw_advisory.get("message") or "").strip(),
+                    ",".join(record_ids),
+                )
+                if part
+            ) or str(raw_advisory)
+            if identity in seen:
+                continue
+            seen.add(identity)
+            advisories.append(dict(raw_advisory))
+        return advisories
+
+    @staticmethod
     def _is_suspected_critical_blocking_failure(failure: object) -> bool:
         if not isinstance(failure, dict):
             return False
@@ -1127,19 +1166,21 @@ class ValidationOrchestrator:
         failures = blocking_result.get("failures", []) or []
         suspected_critical_failures = self._collect_suspected_critical_blocking_failures(failures)
         warning_lines = self._collect_blocking_warning_lines(blocking_result)
+        structured_advisories = self._collect_blocking_structured_advisories(blocking_result)
         degraded_checks = [
             str(raw_check).strip()
             for raw_check in (blocking_result.get("degraded_checks", []) or [])
             if str(raw_check).strip()
         ]
 
-        if not failures and not warning_lines and not degraded_checks:
+        if not failures and not warning_lines and not degraded_checks and not structured_advisories:
             return None
 
         return {
             "source": "BlockingValidator",
             "failures": failures,
             "warnings": warning_lines,
+            "structured_advisories": structured_advisories,
             "degraded_checks": degraded_checks,
             "feedback": self._generate_blocking_feedback(blocking_result),
             "suspected_critical_failures": suspected_critical_failures,
