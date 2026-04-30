@@ -1,0 +1,20 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Malgun Gothic, Arial, sans-serif", "fontSize": "25px", "primaryColor": "#fef3c7", "primaryBorderColor": "#d97706", "lineColor": "#334155", "tertiaryColor": "#ffffff"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 65, "rankSpacing": 85}} }%%
+flowchart TD
+    TITLE["<div style='width:900px; text-align:center; line-height:1.35'><b>S4 원고 생성 / 검증 / 정착 상세도</b><br/>현재 비용·응답지연·재시도 병목이 가장 크게 관측되는 구간</div>"]
+    A["<div style='width:900px; text-align:left; line-height:1.38'><b>1. 입력</b><br/>S3 설계도 + 설계도 계보, 이전 최종 승인 원고, 사실 장부, 세계상태, 정본 사실, 연속성 투영, 맥락 캐시, 세션 메모리<br/>S4는 독자-facing 원고를 만들지만, 최종 승인 전까지는 후보 산출물임</div>"]
+    B["<div style='width:900px; text-align:left; line-height:1.38'><b>2. 최신성 사전 점검 / 맥락 조립</b><br/>설계도와 계보 로드 → 계보 해시와 최종 승인 원고 대조<br/>오래됨/누락이면 S3 재생성 또는 판정 조정으로 되돌림<br/>최신이면 필수 맥락 + 재시도 피드백을 조립</div>"]
+    C["<div style='width:900px; text-align:left; line-height:1.38'><b>3. 후보 원고 생성 / Director</b><br/>작가 에이전트가 후보 원고 생성<br/>Python 사전 점검은 차단자가 아니라 경고/보조 조언<br/>Director가 후보 선택과 의미 판정 수행<br/>이 구간이 Stage4 비용과 응답지연의 주요 LLM 호출 표면</div>"]
+    D["<div style='width:900px; text-align:left; line-height:1.38'><b>4. 런타임 경로 / 선택 후 점검</b><br/>Director 판정은 아직 임시 판정<br/>런타임 경로 관문: 품질 하한, 수정 범위, 거절 경로 정규화<br/>선택 후 연속성/히스토리 점검은 늦게 실행되는 실패 우선 관문<br/>선택 후 충돌은 PASS/PWF도 REJECT/전체 재작성으로 하향 가능</div>"]
+    E["<div style='width:900px; text-align:left; line-height:1.38'><b>5. PASS / PWF / REJECT 분기</b><br/>PASS: 정착 전 시도 장부 + 해시/경로 기록 후 정착 처리<br/>PWF: 국소 수정 + Director 재감리 후에만 승인 가능<br/>REJECT: 거절 후보 + 재시도 스냅샷 저장, 라운드 남으면 맥락 재조립 후 재시도<br/>라운드 소진: 사람 검토 또는 보호된 건너뜀</div>"]
+    F["<div style='width:900px; text-align:left; line-height:1.38'><b>6. 정착 / 최종 승인</b><br/>PASS 후 정착 처리: 길이 관문 + DB 트랜잭션<br/>DB 성공: 정착 패킷, 진실 명세, 사람이 읽는 txt 내보내기, 품질/정착 보조 증거 기록<br/>완전 정착 상태만 최종 승인 맥락으로 진입<br/>정착 실패 시 실패 상태로 강등</div>"]
+    G["<div style='width:900px; text-align:left; line-height:1.38'><b>7. 출력 / 증거</b><br/>원고 DB 행, 최종 승인 맥락 접근자, 시도 장부, Director 선택 보조 기록, LLM 호출 장부, 맥락 캐시 장부, 후보/거절/최종 산출물, 품질/정착 보조 증거</div>"]
+    H["<div style='width:900px; text-align:left; line-height:1.38'><b>AX 검토 포인트</b><br/>비용 병목: 작가 + Director + 재시도 동시 증폭<br/>늦은 실패: 선택 후 충돌이 비싼 호출 뒤에 터짐<br/>정본 연결: 최종 시도 해시와 원고 row 연결 강화 필요<br/>캐시 정책: 적중률보다 최신성 지문이 중요</div>"]
+    TITLE --> A --> B --> C --> D --> E --> F --> G --> H
+    classDef title fill:#111827,color:#ffffff,stroke:#111827,font-size:30px;
+    classDef main fill:#fef3c7,stroke:#d97706,color:#111827;
+    classDef out fill:#f0fdf4,stroke:#16a34a,color:#111827;
+    classDef risk fill:#fee2e2,stroke:#dc2626,color:#111827;
+    class TITLE title;
+    class A,B,C,D,E,F main;
+    class G out;
+    class H risk;
