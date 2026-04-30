@@ -257,6 +257,34 @@ def test_get_final_accepted_episode_context_blocks_downstream_override(db):
     assert context["final_verdict"] == "PASS"
 
 
+def test_get_final_accepted_episode_context_range_omits_non_final_rows(db):
+    db.save_manuscript(12, "제목12", "정상 확정 원고")
+    db.save_stage_attempt(
+        stage=4,
+        verdict="PASS",
+        attempt_num=1,
+        ep_num=12,
+        arc_num=1,
+        score=98,
+        attempt_key="s4:ep12:arc1:a1:sess",
+    )
+    db.save_manuscript(13, "제목13", "정착 실패 원고")
+    db.save_stage_attempt(
+        stage=4,
+        verdict="SETTLEMENT_FAILED",
+        attempt_num=1,
+        ep_num=13,
+        arc_num=1,
+        score=0,
+        attempt_key="s4:ep13:arc1:a1:sess",
+    )
+
+    rows = db.get_final_accepted_episode_context_range(12, 14)
+
+    assert [row["ep_num"] for row in rows] == [12]
+    assert rows[0]["content"] == "정상 확정 원고"
+
+
 def test_get_final_accepted_episode_context_labels_legacy_manuscript_only(db):
     db.save_manuscript(10, "제목10", "레거시 원고")
 
