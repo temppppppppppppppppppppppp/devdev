@@ -99,6 +99,11 @@ def test_save_blueprint_persists_lineage_sidecar(db):
             "source_prev_manuscript_hash": "h" * 64,
             "source_prev_manuscript_created_at": "2026-04-29T00:00:00",
             "genre_strategy_contract_id": "investment_business_power.action_focused.v1",
+            "genre_strategy_contract_hash": "abc123",
+            "genre_strategy_contract_authority_level": "route",
+            "genre_strategy_contract_strategy": "action_focused",
+            "genre_strategy_contract_source": "_ensemble_meta.genre_strategy_contract",
+            "genre_strategy_contract_coverage_outcome": "route_contract_applied",
             "lineage_complete": True,
             "lineage_missing_reason": "",
         },
@@ -114,6 +119,11 @@ def test_save_blueprint_persists_lineage_sidecar(db):
     assert lineage["source_prev_manuscript_hash"] == "h" * 64
     assert lineage["source_prev_manuscript_created_at"] == "2026-04-29T00:00:00"
     assert lineage["genre_strategy_contract_id"] == "investment_business_power.action_focused.v1"
+    assert lineage["genre_strategy_contract_hash"] == "abc123"
+    assert lineage["genre_strategy_contract_authority_level"] == "route"
+    assert lineage["genre_strategy_contract_strategy"] == "action_focused"
+    assert lineage["genre_strategy_contract_source"] == "_ensemble_meta.genre_strategy_contract"
+    assert lineage["genre_strategy_contract_coverage_outcome"] == "route_contract_applied"
     assert lineage["lineage_complete"] is True
     assert lineage["lineage_missing_reason"] == ""
 

@@ -42,6 +42,7 @@ from modules.core.cross_stage_authority_packet import (
     extract_explicit_cross_stage_authority_packet,
 )
 from modules.core.final_accepted_context import has_final_accepted_context_accessor, load_final_accepted_manuscript_row
+from modules.core.genre_contract_transport import render_stage4_genre_contract_packet
 from modules.core.genre_schema_builder import is_wuxia
 from modules.core.non_wuxia_recovery_policy import normalize_chain_link_for_genre, normalize_genre_type
 from modules.core.semantic_query_broker import SemanticQueryBroker
@@ -1696,6 +1697,7 @@ class Stage4ContextBuilder:
             "[작품 추적 슬롯 요약]",
             "[Stage4 Opening Scene Authority]",
             "[Stage4 Work Identity Authority]",
+            "[Stage4 Genre Strategy Contract]",
             AUTHORITATIVE_CONTINUITY_PROJECTION_HEADER,
             _STAGE4_NUMERIC_CARRYOVER_AUTHORITY_HEADER,
         )
@@ -2363,6 +2365,17 @@ class Stage4ContextBuilder:
                 )
         except Exception as work_identity_err:
             logging.debug("[WorkGuard] Stage4 authority packet build failed (non-blocking): %s", work_identity_err)
+
+        try:
+            genre_contract_packet = render_stage4_genre_contract_packet(blueprint)
+            if genre_contract_packet:
+                tier0_parts.insert(0, genre_contract_packet)
+                logging.info(
+                    "[Stage4] genre strategy contract packet injected (%d chars)",
+                    len(genre_contract_packet),
+                )
+        except Exception as genre_contract_err:
+            logging.debug("[Stage4] genre contract packet build failed (non-blocking): %s", genre_contract_err)
 
         try:
             boundary_npcs = list(cp_entities.get("npcs") or [])

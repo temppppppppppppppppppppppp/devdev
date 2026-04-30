@@ -7,32 +7,28 @@ from datetime import UTC, datetime
 from typing import Any
 
 from modules.core.final_accepted_context import load_final_accepted_manuscript_row
+from modules.core.genre_contract_transport import extract_stage3_genre_contract_summary
 
 BLUEPRINT_LINEAGE_SCHEMA_VERSION = "stage3-blueprint-lineage-v1"
 FRONTIER_BASIS_VERSION = "stage3-frontier-basis-v1"
 
 
-def _compact_contract_id(blueprint: dict[str, Any]) -> str:
-    ensemble_meta = blueprint.get("_ensemble_meta")
-    if not isinstance(ensemble_meta, dict):
-        return ""
-
-    contract = ensemble_meta.get("genre_strategy_contract")
-    if isinstance(contract, dict):
-        contract_id = str(contract.get("contract_id") or "").strip()
-        if contract_id:
-            return contract_id
-
-    prompt_envelope = ensemble_meta.get("prompt_envelope")
-    contracts = prompt_envelope.get("genre_strategy_contracts") if isinstance(prompt_envelope, dict) else None
-    if isinstance(contracts, list):
-        for item in contracts:
-            if not isinstance(item, dict):
-                continue
-            contract_id = str(item.get("contract_id") or "").strip()
-            if contract_id:
-                return contract_id
-    return ""
+def _attach_contract_summary(meta: dict[str, Any], blueprint: dict[str, Any]) -> None:
+    summary = extract_stage3_genre_contract_summary(blueprint)
+    if not summary:
+        return
+    field_map = {
+        "contract_id": "genre_strategy_contract_id",
+        "contract_hash": "genre_strategy_contract_hash",
+        "authority_level": "genre_strategy_contract_authority_level",
+        "strategy_name": "genre_strategy_contract_strategy",
+        "source": "genre_strategy_contract_source",
+        "coverage_outcome": "genre_strategy_contract_coverage_outcome",
+    }
+    for source_key, meta_key in field_map.items():
+        value = str(summary.get(source_key) or "").strip()
+        if value:
+            meta[meta_key] = value
 
 
 def build_stage3_blueprint_lineage_meta(
@@ -62,9 +58,7 @@ def build_stage3_blueprint_lineage_meta(
     }
 
     if isinstance(blueprint, dict):
-        contract_id = _compact_contract_id(blueprint)
-        if contract_id:
-            meta["genre_strategy_contract_id"] = contract_id
+        _attach_contract_summary(meta, blueprint)
 
     if prev_ep <= 0:
         meta["lineage_complete"] = True

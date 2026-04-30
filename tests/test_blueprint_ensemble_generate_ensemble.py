@@ -9,7 +9,11 @@ from modules.core.prompt_loader import PromptLoader
 from modules.core.response_schemas import BLUEPRINT_SCHEMA
 from modules.core.tactical_intrusion_contract import detect_tactical_intrusion_signature
 from modules.domain.agents.base_agent import AgentErrorType
-from modules.domain.agents.blueprint_ensemble import BlueprintEnsembleGenerator, build_genre_strategy_contract
+from modules.domain.agents.blueprint_ensemble import (
+    BlueprintEnsembleGenerator,
+    build_genre_strategy_contract,
+    build_genre_strategy_contract_coverage_entry,
+)
 
 
 def _make_agent(root: Path | None = None):
@@ -514,6 +518,19 @@ def test_build_genre_strategy_contract_keeps_verdict_authority_out_of_python():
     assert contract["authority_level"] != "verdict"
 
 
+def test_build_genre_strategy_contract_coverage_marks_non_action_lanes_explicit():
+    action = build_genre_strategy_contract_coverage_entry(GenreTypes.INVESTMENT, "action_focused")
+    emotion = build_genre_strategy_contract_coverage_entry(GenreTypes.INVESTMENT, "emotion_focused")
+    dialogue = build_genre_strategy_contract_coverage_entry(GenreTypes.INVESTMENT, "dialogue_focused")
+
+    assert action["coverage_outcome"] == "route_contract_applied"
+    assert action["contract_id"] == "investment_business_power.action_focused.v1"
+    assert emotion["coverage_outcome"] == "no_route_specific_contract_required"
+    assert dialogue["coverage_outcome"] == "no_route_specific_contract_required"
+    assert emotion["strategy_name"] == "emotion_focused"
+    assert dialogue["strategy_name"] == "dialogue_focused"
+
+
 def test_resolve_blueprint_ensemble_genre_uses_style_guide_when_bible_genre_absent():
     agent = _make_agent()
 
@@ -567,6 +584,26 @@ def test_resolve_blueprint_ensemble_genre_defaults_to_wuxia_without_genre_signal
     agent.context.db.load_anchor.return_value = {}
 
     assert agent._resolve_blueprint_ensemble_genre() == GenreTypes.WUXIA
+
+
+def test_resolve_blueprint_ensemble_genre_warns_when_investment_signal_defaults_to_wuxia(caplog):
+    agent = _make_agent()
+
+    def load_anchor(name):
+        if name == "bible":
+            return {"notes": "investment pressure appears, but no routed genre field is present"}
+        if name == "style_guide":
+            return {}
+        return {}
+
+    agent.context.db.load_anchor.side_effect = load_anchor
+
+    with caplog.at_level("WARNING"):
+        resolved = agent._resolve_blueprint_ensemble_genre()
+
+    assert resolved == GenreTypes.WUXIA
+    assert "genre defaulted to wuxia" in caplog.text
+    assert "bible" in caplog.text
 
 
 def test_prepare_blueprint_ensemble_context_applies_style_guide_genre_contract_source():
@@ -663,6 +700,60 @@ def test_generate_ensemble_style_guide_investment_adds_prompt_envelope_contract(
     assert contract_meta["strategy_name"] == "action_focused"
     assert contract_meta["contract_id"] == "investment_business_power.action_focused.v1"
     assert contract_meta["authority_level"] == "route"
+    coverage = envelope_meta["genre_strategy_contract_coverage"][0]
+    assert coverage["strategy_name"] == "action_focused"
+    assert coverage["coverage_outcome"] == "route_contract_applied"
+    assert coverage["contract_id"] == "investment_business_power.action_focused.v1"
+
+
+def test_generate_ensemble_investment_non_action_lanes_add_no_contract_coverage():
+    agent = _make_agent()
+    prepared = {
+        "arc_focus": "focus",
+        "genre": GenreTypes.INVESTMENT,
+        "constraints_str": "constraints",
+        "tactical_excerpt": "tactical",
+        "prev_info": "prev",
+        "hud_context": "hud",
+        "cache_name": "cache/bp",
+        "constraint_block": {},
+        "archive_appendix_meta": {"enabled": False, "raw_chars": 0, "consumed_chars": 0, "dropped_chars": 0},
+    }
+    raw_candidates = [
+        {
+            "_strategy": "emotion_focused",
+            "_scene_count": 4,
+            "_length": 700,
+            "scene_breakdown": {"scene_1": {"summary": "emotional pressure"}},
+            "integrated_scenario": "x" * 700,
+        },
+        {
+            "_strategy": "dialogue_focused",
+            "_scene_count": 4,
+            "_length": 700,
+            "scene_breakdown": {"scene_1": {"summary": "dialogue pressure"}},
+            "integrated_scenario": "y" * 700,
+        },
+    ]
+    agent._prepare_blueprint_ensemble_context = MagicMock(return_value=prepared)
+    agent._select_blueprint_ensemble_strategies = MagicMock(
+        return_value=[{"name": "emotion_focused"}, {"name": "dialogue_focused"}]
+    )
+    agent._run_blueprint_ensemble_workers = MagicMock(return_value=(raw_candidates, []))
+    agent._qualify_blueprint_candidates = MagicMock(return_value=(raw_candidates, []))
+    agent._finalize_blueprint_candidates = MagicMock(return_value=({"best": True}, raw_candidates))
+
+    agent.generate_ensemble(ep_num=11, arc_data={}, constraint_block={}, single_strategy="")
+
+    envelope_meta = agent._finalize_blueprint_candidates.call_args.kwargs["prompt_envelope_meta"]
+    coverage = {
+        item["strategy_name"]: item["coverage_outcome"] for item in envelope_meta["genre_strategy_contract_coverage"]
+    }
+    assert coverage == {
+        "emotion_focused": "no_route_specific_contract_required",
+        "dialogue_focused": "no_route_specific_contract_required",
+    }
+    assert "genre_strategy_contracts" not in envelope_meta
 
 
 def test_style_guide_investment_action_focused_final_candidate_preserves_contract_meta():
