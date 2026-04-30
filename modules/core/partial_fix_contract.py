@@ -136,6 +136,12 @@ def _normalize_single_patch_target(
         record["text_anchor"] = text_anchor
     if paragraph_span:
         record["paragraph_span"] = paragraph_span
+    if isinstance(item, dict):
+        if item.get("visible_markdown_headers_required") is False:
+            record["visible_markdown_headers_required"] = False
+        repair_guidance = _compact_text(item.get("repair_guidance"), limit=220)
+        if repair_guidance:
+            record["repair_guidance"] = repair_guidance
     record["patch_target_id"] = build_patch_target_id(record)
     return record
 
@@ -149,7 +155,7 @@ def normalize_patch_target_records(
     default_target_kind: str = "",
     limit: int = 6,
 ) -> tuple[list[str], list[dict[str, Any]]]:
-    if isinstance(raw_targets, (str, dict)):
+    if isinstance(raw_targets, str | dict):
         items = [raw_targets]
     elif isinstance(raw_targets, list):
         items = list(raw_targets)
@@ -229,7 +235,9 @@ def normalize_repair_trace_entries(
             continue
         target_record = records[min(idx, len(records) - 1)] if records else {}
         target = _compact_text(entry.get("target") or target_record.get("summary"), limit=80)
-        target_kind = _compact_text(entry.get("target_kind") or target_record.get("target_kind") or default_target_kind, limit=80)
+        target_kind = _compact_text(
+            entry.get("target_kind") or target_record.get("target_kind") or default_target_kind, limit=80
+        )
         patch_target_id = _compact_text(entry.get("patch_target_id") or target_record.get("patch_target_id"), limit=32)
         old_excerpt = _compact_text(entry.get("old_excerpt"), limit=excerpt_limit)
         new_excerpt = _compact_text(entry.get("new_excerpt"), limit=excerpt_limit)
@@ -294,6 +302,11 @@ def build_partial_fix_eval(
         "success_condition_met": _coerce_bool_or_none(success_condition_met),
         "fallback_reason": normalized_fallback_reason,
     }
-    if not normalized_is_patch_attempt and not patch_target_id and not normalized_target_kind and not normalized_fallback_reason:
+    if (
+        not normalized_is_patch_attempt
+        and not patch_target_id
+        and not normalized_target_kind
+        and not normalized_fallback_reason
+    ):
         return {}
     return payload
