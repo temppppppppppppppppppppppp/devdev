@@ -134,6 +134,32 @@ def build_genre_strategy_contract(genre: object, strategy_name: object) -> dict:
     return contract
 
 
+def build_genre_strategy_contract_coverage_entry(genre: object, strategy_name: object) -> dict:
+    """Build per-lane coverage proof for route-level genre strategy contracts."""
+    normalized_genre = _normalize_genre_value(genre)
+    normalized_strategy = str(strategy_name or "").strip() or "unknown"
+    contract = build_genre_strategy_contract(genre, strategy_name)
+    if contract:
+        return {
+            "schema_version": GENRE_STRATEGY_CONTRACT_SCHEMA_VERSION,
+            "strategy_name": normalized_strategy,
+            "genre_type": contract.get("genre_type") or normalized_genre,
+            "coverage_outcome": "route_contract_applied",
+            "contract_id": contract.get("contract_id", ""),
+            "contract_hash": contract.get("contract_hash", ""),
+            "authority_level": contract.get("authority_level", "route"),
+        }
+    return {
+        "schema_version": GENRE_STRATEGY_CONTRACT_SCHEMA_VERSION,
+        "strategy_name": normalized_strategy,
+        "genre_type": normalized_genre,
+        "coverage_outcome": "no_route_specific_contract_required",
+        "contract_id": "",
+        "contract_hash": "",
+        "authority_level": "route",
+    }
+
+
 def format_genre_strategy_contract_prompt(contract: dict) -> str:
     if not contract:
         return ""
@@ -1238,6 +1264,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
         ]
         if genre_strategy_contracts:
             prompt_envelope_meta["genre_strategy_contracts"] = genre_strategy_contracts
+        prompt_envelope_meta["genre_strategy_contract_coverage"] = [
+            build_genre_strategy_contract_coverage_entry(context_bundle["genre"], strategy.get("name", ""))
+            for strategy in active_strategies
+        ]
         top_lanes = ", ".join(
             f"{item['lane']}={item['chars']}" for item in (prompt_envelope_meta.get("dominant_lanes") or [])[:3]
         )

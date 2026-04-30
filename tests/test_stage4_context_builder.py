@@ -1503,6 +1503,18 @@ class TestBuildMandatoryContext:
         }
         assert "writer mandatory" in result["mandatory_context"]
 
+    def test_apply_context_budget_protects_genre_contract_packet(self, caplog):
+        cb = Stage4ContextBuilder(_make_ctx())
+        genre_packet = "[Stage4 Genre Strategy Contract]\n" + ("contract " * 120)
+        generic_block = "[generic]\n" + ("generic " * 220)
+
+        with caplog.at_level("INFO"):
+            trimmed_sections = cb._apply_context_budget([genre_packet, generic_block], total_budget_chars=900)
+
+        assert trimmed_sections[0].startswith("[Stage4 Genre Strategy Contract]")
+        assert len(trimmed_sections[0]) > len(trimmed_sections[1])
+        assert any("[SC:TRIM:PROTECTED]" in rec.message for rec in caplog.records)
+
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="")
     def test_build_mandatory_context_injects_series_summary_once(self, _mock_build):
         ctx = _make_ctx()
@@ -2599,6 +2611,60 @@ class TestBuildMandatoryContext:
         assert text.index("total_assets: 20000000 won (EP1 carryover baseline)") < text.index(
             "capital: 10000000 won (EP1 carryover baseline)"
         )
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_surfaces_stage3_genre_contract_transport(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.current_project.genre = {"name": "investment", "type": "investment"}
+        ctx.sys.guard = MagicMock()
+        ctx.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": [],
+            "mandatory_scene_engines": [],
+            "registry_profiles": [],
+        }
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=2,
+            arc_data={"arc_no": 1},
+            arc_tactical="Use business pressure.",
+            prev_text="previous manuscript body",
+            prev_ending="the liquidation remains unresolved",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="investment",
+            v50_modules_available=False,
+            blueprint={
+                "summary": "business pressure",
+                "_ensemble_meta": {
+                    "genre_strategy_contract": {
+                        "contract_id": "investment_business_power.action_focused.v1",
+                        "contract_hash": "abc123",
+                        "authority_level": "route",
+                        "strategy_name": "action_focused",
+                        "genre_type": "investment",
+                    },
+                    "prompt_envelope": {
+                        "genre_strategy_contract_coverage": [
+                            {
+                                "strategy_name": "action_focused",
+                                "coverage_outcome": "route_contract_applied",
+                            }
+                        ]
+                    },
+                },
+            },
+        )
+
+        text = result["mandatory_context"]
+        assert "[Stage4 Genre Strategy Contract]" in text
+        assert "contract_id: investment_business_power.action_focused.v1" in text
+        assert "coverage_outcome: route_contract_applied" in text
+        assert "source: _ensemble_meta.genre_strategy_contract" in text
 
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_build_mandatory_context_falls_back_to_cross_stage_numeric_packet_when_fact_ledger_missing(
