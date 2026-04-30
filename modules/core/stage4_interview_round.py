@@ -1314,7 +1314,113 @@ class Stage4InterviewRound:
             if text:
                 lines.append(f"{prefix}[COVERAGE] {text}")
 
+        structured_advisories = self._collect_structured_repair_advisories(validation_result)
+        if limit_per_key is not None:
+            structured_advisories = structured_advisories[:limit_per_key]
+        for advisory in structured_advisories:
+            line = self._format_structured_repair_advisory_line(advisory)
+            if line:
+                lines.append(f"{prefix}{line}")
+
         return lines
+
+    @staticmethod
+    def _collect_structured_repair_advisories(validation_result: dict | None) -> list[dict]:
+        if not isinstance(validation_result, dict):
+            return []
+        advisories: list[dict] = []
+        seen: set[str] = set()
+        for key in (
+            "structured_repair_advisories",
+            "structured_advisories",
+            "blocking_structured_advisories",
+        ):
+            raw_items = validation_result.get(key)
+            if isinstance(raw_items, dict):
+                items = [raw_items]
+            elif isinstance(raw_items, list):
+                items = raw_items
+            else:
+                continue
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                identity = Stage4InterviewRound._structured_repair_advisory_identity(item)
+                if identity in seen:
+                    continue
+                seen.add(identity)
+                advisories.append(dict(item))
+        return advisories
+
+    @staticmethod
+    def _structured_repair_advisory_identity(advisory: dict) -> str:
+        records = advisory.get("patch_target_records")
+        record_ids: list[str] = []
+        if isinstance(records, list):
+            for record in records:
+                if not isinstance(record, dict):
+                    continue
+                record_id = str(
+                    record.get("patch_target_id")
+                    or record.get("scene_id")
+                    or record.get("summary")
+                    or record.get("field_path")
+                    or ""
+                ).strip()
+                if record_id:
+                    record_ids.append(record_id)
+        return "|".join(
+            part
+            for part in (
+                str(advisory.get("patch_target_id") or "").strip(),
+                str(advisory.get("check") or "").strip(),
+                str(advisory.get("category") or "").strip(),
+                str(advisory.get("type") or "").strip(),
+                str(advisory.get("message") or "").strip(),
+                ",".join(record_ids),
+            )
+            if part
+        ) or str(advisory)
+
+    @staticmethod
+    def _format_structured_repair_advisory_line(advisory: dict) -> str:
+        if not isinstance(advisory, dict):
+            return ""
+        category = str(advisory.get("category") or advisory.get("check") or advisory.get("type") or "").strip()
+        message = str(advisory.get("message") or advisory.get("description") or "").strip()
+        target_kind = str(advisory.get("target_kind") or "").strip()
+        severity = str(advisory.get("severity") or "").strip()
+        records = advisory.get("patch_target_records")
+        scene_ids: list[str] = []
+        spans: list[str] = []
+        if isinstance(records, list):
+            for record in records[:4]:
+                if not isinstance(record, dict):
+                    continue
+                scene_id = str(record.get("scene_id") or "").strip()
+                if scene_id and scene_id not in scene_ids:
+                    scene_ids.append(scene_id)
+                paragraph_span = record.get("paragraph_span")
+                if isinstance(paragraph_span, dict):
+                    start = paragraph_span.get("start")
+                    end = paragraph_span.get("end")
+                    if start is not None and end is not None:
+                        spans.append(f"{start}-{end}")
+        no_header = (
+            advisory.get("visible_markdown_headers_required") is False
+            or advisory.get("markdown_header_required") is False
+        )
+        parts = [part for part in (category, severity, target_kind, message) if part]
+        if scene_ids:
+            parts.append("scenes=" + ",".join(scene_ids))
+        if spans:
+            parts.append("paragraph_spans=" + ",".join(spans))
+        if no_header:
+            parts.append("no visible Markdown scene headers required")
+        if not parts:
+            return ""
+        label = "[SCENE]" if "scene" in " ".join(parts).lower() else "[REPAIR]"
+        return f"{label} " + " | ".join(parts)
 
     def _collect_validation_warning_lines(self, validation_results: list[dict], *, limit: int = 20) -> list[str]:
         merged: list[str] = []
@@ -6203,6 +6309,7 @@ class Stage4InterviewRound:
         bv_result = bv_result if isinstance(bv_result, dict) else {}
         bv_failures = bv_result.get("failures", []) or []
         bv_advisory_warnings = self._collect_blocking_validator_advisory_warnings(bv_result)
+        bv_structured_advisories = self._collect_blocking_validator_structured_advisories(bv_result)
 
         self._apply_blocking_validator_failures(
             validation_result=validation_result,
@@ -6214,6 +6321,7 @@ class Stage4InterviewRound:
         self._apply_blocking_validator_advisories(
             validation_result=validation_result,
             bv_advisory_warnings=bv_advisory_warnings,
+            bv_structured_advisories=bv_structured_advisories,
             candidate_index=candidate_index,
             next_ep=next_ep,
             round_num=round_num,
@@ -6277,19 +6385,25 @@ class Stage4InterviewRound:
         *,
         validation_result: dict,
         bv_advisory_warnings: list[str],
+        bv_structured_advisories: list[dict] | None = None,
         candidate_index: int,
         next_ep: int,
         round_num: int,
     ) -> None:
-        if not bv_advisory_warnings:
+        bv_structured_advisories = [dict(item) for item in bv_structured_advisories or [] if isinstance(item, dict)]
+        if not bv_advisory_warnings and not bv_structured_advisories:
             return
         for advisory_warning in bv_advisory_warnings:
             validation_result["warnings"].append(f"[Python검증-ADVISORY] {advisory_warning}")
+        if bv_structured_advisories:
+            validation_result.setdefault("blocking_structured_advisories", []).extend(bv_structured_advisories)
+            validation_result.setdefault("structured_repair_advisories", []).extend(bv_structured_advisories)
         validation_result["warning_count"] = len(validation_result["warnings"])
-        validation_result["focus_points"].append(f"Python 검증 advisory {len(bv_advisory_warnings)}건 (Director 참고)")
+        advisory_count = max(len(bv_advisory_warnings), len(bv_structured_advisories))
+        validation_result["focus_points"].append(f"Python 검증 advisory {advisory_count}건 (Director 참고)")
         _bv_detail_lines = "\n".join(f"    - {w}" for w in bv_advisory_warnings)
         self.ctx.ui.log(
-            f"      ⚠️ 후보{candidate_index} Python 검증 advisory {len(bv_advisory_warnings)}건 → Director에 전달\n{_bv_detail_lines}",
+            f"      ⚠️ 후보{candidate_index} Python 검증 advisory {advisory_count}건 → Director에 전달\n{_bv_detail_lines}",
             stage="stage4",
             component="python_prevalidation",
             ep_num=next_ep,
@@ -6298,8 +6412,9 @@ class Stage4InterviewRound:
             level="warning",
             meta={
                 "candidate_index": candidate_index,
-                "advisory_count": len(bv_advisory_warnings),
+                "advisory_count": advisory_count,
                 "advisory_details": bv_advisory_warnings,
+                "structured_advisories": bv_structured_advisories,
             },
         )
 
@@ -6320,6 +6435,21 @@ class Stage4InterviewRound:
                 bv_advisory_warnings.append(warning_text)
                 bv_seen_warnings.add(warning_text)
         return bv_advisory_warnings
+
+    @staticmethod
+    def _collect_blocking_validator_structured_advisories(bv_result: dict | None) -> list[dict]:
+        bv_result = bv_result if isinstance(bv_result, dict) else {}
+        advisories: list[dict] = []
+        seen: set[str] = set()
+        for raw_advisory in bv_result.get("structured_advisories", []) or []:
+            if not isinstance(raw_advisory, dict):
+                continue
+            identity = Stage4InterviewRound._structured_repair_advisory_identity(raw_advisory)
+            if identity in seen:
+                continue
+            seen.add(identity)
+            advisories.append(dict(raw_advisory))
+        return advisories
 
     def _execute_pass_with_fix_loop(
         self,

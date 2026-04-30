@@ -10,6 +10,7 @@ Python-based mandatory validation pipeline.
 
 import logging
 
+from modules.core.partial_fix_contract import normalize_patch_target_records
 from modules.validation.threshold_helper import _threshold as _threshold  # noqa: F401
 
 
@@ -56,6 +57,7 @@ class BlockingValidator:
     def validate(self, manuscript: str, validation_context: dict) -> dict:
         failures = []
         warnings = []
+        structured_advisories = []
 
         dead_npc_check = self._check_dead_npc_resurrection(manuscript, validation_context)
         if not dead_npc_check["passed"]:
@@ -96,7 +98,8 @@ class BlockingValidator:
         degraded_checks = []
         if relationship_check.get("degraded"):
             degraded_checks.append(relationship_check.get("check", "relationship_consistency"))
-            logging.warning(f"[BlockingValidator] {relationship_check.get('check', 'relationship_consistency')} 검증 degraded: {relationship_check.get('error', '')}"
+            logging.warning(
+                f"[BlockingValidator] {relationship_check.get('check', 'relationship_consistency')} 검증 degraded: {relationship_check.get('error', '')}"
             )
             warnings.append(f"degraded: {relationship_check.get('check', 'relationship_consistency')}")
         if not relationship_check["passed"]:
@@ -105,7 +108,8 @@ class BlockingValidator:
         information_check = self._check_information_consistency(manuscript, validation_context)
         if information_check.get("degraded"):
             degraded_checks.append(information_check.get("check", "information_consistency"))
-            logging.warning(f"[BlockingValidator] {information_check.get('check', 'information_consistency')} 검증 degraded: {information_check.get('error', '')}"
+            logging.warning(
+                f"[BlockingValidator] {information_check.get('check', 'information_consistency')} 검증 degraded: {information_check.get('error', '')}"
             )
             warnings.append(f"degraded: {information_check.get('check', 'information_consistency')}")
         if not information_check["passed"]:
@@ -114,7 +118,8 @@ class BlockingValidator:
         # [I-C03] 모든 일관성 검증이 degraded면 경고
         if len(degraded_checks) >= 2:
             self._degraded_count += 1
-            logging.warning(f"[C-03] ALL consistency checks degraded ({self._degraded_count}회 누적): {degraded_checks}"
+            logging.warning(
+                f"[C-03] ALL consistency checks degraded ({self._degraded_count}회 누적): {degraded_checks}"
             )
 
         if self.enable_justification_checks:
@@ -141,6 +146,9 @@ class BlockingValidator:
                     f"{scene_completeness_check.get('check', 'scene_completeness')}: "
                     f"{scene_completeness_check.get('warning')}"
                 )
+                scene_advisory = self._build_scene_completeness_advisory(scene_completeness_check)
+                if scene_advisory:
+                    structured_advisories.append(scene_advisory)
 
         if validation_context.get("mode") == "MANUSCRIPT":
             cliffhanger_check = self._check_cliffhanger_ending(manuscript, validation_context)
@@ -152,6 +160,7 @@ class BlockingValidator:
             "passed": len(failures) == 0,
             "failures": failures,
             "warnings": warnings,
+            "structured_advisories": structured_advisories,
             "message": f"REJECT - 차단 검증 실패 ({len(failures)}건)" if failures else "PASS",
             "failure_count": len(failures),
         }
@@ -213,6 +222,67 @@ class BlockingValidator:
 
     def _check_cliffhanger_ending(self, manuscript: str, context: dict) -> dict:
         return self.scene_checks._check_cliffhanger_ending(manuscript, context)
+
+    @staticmethod
+    def _build_scene_completeness_advisory(scene_check: dict) -> dict:
+        if not isinstance(scene_check, dict):
+            return {}
+
+        details = scene_check.get("details") if isinstance(scene_check.get("details"), dict) else {}
+        incomplete = details.get("incomplete") or details.get("incomplete_scenes")
+        if isinstance(incomplete, str):
+            incomplete_items = [incomplete]
+        elif isinstance(incomplete, list):
+            incomplete_items = [str(item).strip() for item in incomplete if str(item).strip()]
+        else:
+            incomplete_items = []
+
+        suggested_repair = " ".join(str(scene_check.get("suggestion", "") or "").split()).strip()
+        target_items = [
+            {
+                "summary": f"{scene_id}: strengthen semantic scene materialization",
+                "scene_id": scene_id,
+                "target_kind": "scene_structure",
+            }
+            for scene_id in incomplete_items[:6]
+        ]
+        if not target_items:
+            target_items.append(
+                {
+                    "summary": "scene_completeness: strengthen semantic scene materialization",
+                    "target_kind": "scene_structure",
+                }
+            )
+
+        patch_targets, patch_target_records = normalize_patch_target_records(
+            target_items,
+            stage="stage4",
+            container_kind="manuscript",
+            default_target_kind="scene_structure",
+        )
+        for record in patch_target_records:
+            record["visible_markdown_headers_required"] = False
+            if suggested_repair:
+                record["repair_guidance"] = suggested_repair
+
+        message = " ".join(str(scene_check.get("warning", "") or "").split()).strip()
+        return {
+            "source": "BlockingValidator",
+            "type": "scene_structure_advisory",
+            "category": "scene_completeness",
+            "check": str(scene_check.get("check") or "scene_completeness"),
+            "target_kind": "scene_structure",
+            "severity": str(scene_check.get("severity") or "ADVISORY"),
+            "advisory_only": bool(scene_check.get("advisory_only", True)),
+            "authority": str(scene_check.get("authority") or "director"),
+            "message": message,
+            "details": dict(details),
+            "suggested_repair": suggested_repair,
+            "visible_markdown_headers_required": False,
+            "markdown_header_required": False,
+            "patch_targets": patch_targets,
+            "patch_target_records": patch_target_records,
+        }
 
     def _extract_keywords(self, text: str, max_keywords: int = 3) -> list[str]:
         return self.consistency_checks._extract_keywords(text, max_keywords=max_keywords)
