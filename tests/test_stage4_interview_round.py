@@ -33,6 +33,7 @@ from modules.core.stage4_interview_round import (
     _build_stage4_raw_rationale_records,
     _build_stage4_selection_surface_raw_record,
     _build_stage4_session_contract_projection,
+    _PassResultLoggingPayload,
     _RoundOutcomeTracePayload,
     _Stage4AttemptContractPacket,
     _Stage4AttemptPreludePayload,
@@ -9282,6 +9283,10 @@ class TestLane2DirectorSemantics:
         pass_result = MagicMock(name="pass_result")
         finalized = {"status": "pass"}
         ir._finalize_pass_result = MagicMock(return_value=finalized)
+        repair_evidence = {
+            "schema_version": "stage4_structured_repair_evidence_v1",
+            "advisory_count": 1,
+        }
 
         result = ir._finalize_round_pass_path(
             pass_result=pass_result,
@@ -9298,6 +9303,7 @@ class TestLane2DirectorSemantics:
                 validation_warnings=["warn"],
                 is_patch=True,
                 trace_patch_trace={"mode": "patch"},
+                structured_repair_evidence=repair_evidence,
             ),
             initial_verdict="PASS",
             initial_score=81,
@@ -9321,6 +9327,63 @@ class TestLane2DirectorSemantics:
         assert kwargs["validation_warnings"] == ["warn"]
         assert kwargs["is_patch"] is True
         assert kwargs["trace_patch_trace"]["mode"] == "patch"
+        assert kwargs["structured_repair_evidence"] == repair_evidence
+
+    def test_finalize_pass_result_attaches_structured_repair_evidence_to_state_updates(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        pass_result = SimpleNamespace(final_state_updates={"hp": 10}, attempt_artifact_meta={})
+        repair_evidence = {
+            "schema_version": "stage4_structured_repair_evidence_v1",
+            "advisory_count": 1,
+        }
+        ir._build_pass_result_logging_payload = MagicMock(
+            return_value=_PassResultLoggingPayload(
+                log_artifact_meta={},
+                session_selection_reason="selection",
+                session_verdict_reason="verdict",
+                session_runtime_advisory="",
+                session_retry_directives="",
+                session_gate_semantics={},
+                session_fix_pack={},
+            )
+        )
+        ir._sync_pass_result_selection_rationale = MagicMock()
+        ir._emit_pass_result_logs = MagicMock()
+
+        result = ir._finalize_pass_result(
+            pass_result=pass_result,
+            next_ep=1,
+            round_num=0,
+            round_ctx=round_ctx,
+            chief_writer=MagicMock(),
+            director_result={"verdict": "PASS"},
+            trace_director_result={"verdict": "PASS"},
+            director_feedback="feedback",
+            initial_verdict="PASS",
+            initial_score=90,
+            final_verdict="PASS",
+            final_score=90,
+            selected="A",
+            reason="ok",
+            error_category="",
+            attempt_key="attempt-1",
+            selection_artifact_meta={},
+            validation_warnings=[],
+            is_patch=False,
+            is_patch_fallback=False,
+            trace_patch_trace={},
+            tot_used=False,
+            mad_used=False,
+            asp_manuscript="",
+            structured_repair_evidence=repair_evidence,
+        )
+
+        assert result is pass_result
+        assert pass_result.final_state_updates["hp"] == 10
+        assert pass_result.final_state_updates["_stage4_structured_repair_evidence"] == repair_evidence
+        ir._emit_pass_result_logs.assert_called_once()
 
     def test_build_pass_result_logging_payload_snapshots_trace_candidate_when_attempt_meta_missing(self):
         ctx = _make_ctx()

@@ -227,6 +227,7 @@ class _RoundOutcomeTracePayload:
     trace_patch_trace: dict
     is_patch: bool
     validation_warnings: list[str]
+    structured_repair_evidence: dict[str, object] | None = None
 
 
 @dataclass
@@ -1450,6 +1451,45 @@ class Stage4InterviewRound:
                 break
 
         return merged[:limit]
+
+    def _build_stage4_structured_repair_evidence(self, validation_results: list[dict]) -> dict[str, object]:
+        candidates: list[dict[str, object]] = []
+        total_advisories = 0
+        for idx, validation_result in enumerate(validation_results or []):
+            if not isinstance(validation_result, dict):
+                continue
+            advisories = self._collect_structured_repair_advisories(validation_result)
+            if not advisories:
+                continue
+            evidence_lines = [
+                line
+                for advisory in advisories
+                for line in [self._format_structured_repair_advisory_line(advisory)]
+                if line
+            ]
+            total_advisories += len(advisories)
+            candidates.append(
+                {
+                    "candidate_label": ["A", "B", "C"][idx] if idx < 3 else str(idx + 1),
+                    "advisory_count": len(advisories),
+                    "advisories": copy.deepcopy(advisories),
+                    "evidence_lines": evidence_lines,
+                }
+            )
+        if not candidates:
+            return {}
+        return {
+            "schema_version": "stage4_structured_repair_evidence_v1",
+            "source": "stage4_validation_results",
+            "authority": "python_validation_companion",
+            "authority_note": (
+                "Structured repair evidence is companion diagnostic context; "
+                "Director remains final quality authority."
+            ),
+            "candidate_count": len(candidates),
+            "advisory_count": total_advisories,
+            "candidates": candidates,
+        }
 
     # ═══════════════════════════════════════════════════════════════════════
     # Retry feedback / failure signature helpers
@@ -5393,6 +5433,7 @@ class Stage4InterviewRound:
             trace_patch_trace=trace_patch_trace,
             is_patch=bool(is_patch or trace_patch_trace),
             validation_warnings=validation_warnings,
+            structured_repair_evidence=self._build_stage4_structured_repair_evidence(validation_results),
         )
 
     def _finalize_round_reject_path(
@@ -5610,6 +5651,7 @@ class Stage4InterviewRound:
             tot_used=tot_used,
             mad_used=mad_used,
             asp_manuscript=asp_manuscript,
+            structured_repair_evidence=trace_payload.structured_repair_evidence,
         )
 
     def _finalize_reject_result(
@@ -5692,7 +5734,15 @@ class Stage4InterviewRound:
         tot_used: bool,
         mad_used: bool,
         asp_manuscript: str,
+        structured_repair_evidence: dict | None = None,
     ):
+        if isinstance(structured_repair_evidence, dict) and structured_repair_evidence:
+            final_state_updates = getattr(pass_result, "final_state_updates", {})
+            if isinstance(final_state_updates, dict):
+                pass_result.final_state_updates = {
+                    **final_state_updates,
+                    "_stage4_structured_repair_evidence": copy.deepcopy(structured_repair_evidence),
+                }
         logging_payload = self._build_pass_result_logging_payload(
             pass_result=pass_result,
             next_ep=next_ep,

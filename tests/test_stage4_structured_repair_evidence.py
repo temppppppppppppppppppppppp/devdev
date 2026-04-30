@@ -145,6 +145,35 @@ def test_stage4_weak_transition_record_formats_as_structured_scene_evidence():
     ]
 
 
+def test_stage4_structured_repair_evidence_payload_preserves_candidate_records():
+    rounder = Stage4InterviewRound(SimpleNamespace(ui=SimpleNamespace(log=MagicMock())))
+
+    payload = rounder._build_stage4_structured_repair_evidence(
+        [
+            {
+                "structured_repair_advisories": [
+                    {
+                        "category": "scene_completeness",
+                        "severity": "ADVISORY",
+                        "target_kind": "scene_structure",
+                        "message": "scene body needs materialization",
+                        "visible_markdown_headers_required": False,
+                        "patch_target_records": [{"summary": "scene_2", "scene_id": "scene_2"}],
+                    }
+                ]
+            }
+        ]
+    )
+
+    assert payload["schema_version"] == "stage4_structured_repair_evidence_v1"
+    assert payload["authority"] == "python_validation_companion"
+    assert payload["advisory_count"] == 1
+    assert payload["candidates"][0]["candidate_label"] == "A"
+    assert payload["candidates"][0]["advisories"][0]["patch_target_records"][0]["scene_id"] == "scene_2"
+    assert "Director remains final quality authority" in payload["authority_note"]
+    assert "scenes=scene_2" in payload["candidates"][0]["evidence_lines"][0]
+
+
 def test_fix_pack_guidance_preserves_patch_target_record_header_contract():
     writer = ChiefWriter.__new__(ChiefWriter)
 
