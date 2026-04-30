@@ -1664,12 +1664,20 @@ class ChiefWriter(BaseAgent):
                     value = str(record.get(key, "") or "").strip()
                     if value:
                         record_parts.append(f"{key}={value}")
+                patch_target_id = str(record.get("patch_target_id", "") or "").strip()
+                if patch_target_id:
+                    record_parts.append(f"patch_target_id={patch_target_id}")
                 paragraph_span = record.get("paragraph_span")
                 if isinstance(paragraph_span, dict):
                     start = paragraph_span.get("start")
                     end = paragraph_span.get("end")
                     if start is not None and end is not None:
                         record_parts.append(f"paragraph_span={start}-{end}")
+                if record.get("visible_markdown_headers_required") is False:
+                    record_parts.append("visible_markdown_headers_required=false")
+                repair_guidance = " ".join(str(record.get("repair_guidance", "") or "").split()).strip()[:160]
+                if repair_guidance:
+                    record_parts.append(f"repair_guidance={repair_guidance}")
                 if record_parts:
                     lines.append("  - " + " | ".join(record_parts))
         must_fix = normalized.get("must_fix") or []
