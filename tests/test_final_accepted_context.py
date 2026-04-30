@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 from modules.core.final_accepted_context import (
     has_final_accepted_context_accessor,
     load_final_accepted_manuscript_row,
+    load_final_accepted_manuscript_rows,
     load_final_accepted_manuscript_text,
 )
 
@@ -74,3 +75,65 @@ def test_load_final_accepted_manuscript_row_ignores_unconfigured_mock_rows():
 
     assert load_final_accepted_manuscript_row(db, 3) is None
     assert has_final_accepted_context_accessor(db) is False
+
+
+class _RangeDb:
+    def __init__(self):
+        self.single_calls = []
+
+    def get_final_accepted_episode_context_range(self, start_ep, end_ep):
+        return [
+            {
+                "ep_num": start_ep,
+                "title": "range",
+                "content": "range accepted",
+                "authority_status": "stage4_final_accepted",
+                "source_kind": "range",
+            },
+            {
+                "ep_num": end_ep,
+                "title": "outside",
+                "content": "outside accepted",
+                "authority_status": "stage4_final_accepted",
+                "source_kind": "range",
+            },
+            {"ep_num": start_ep + 1, "content": "", "authority_status": "blocked_by_non_final_stage4_attempt"},
+        ]
+
+    def get_final_accepted_episode_context(self, ep_num, *, stage=4):
+        self.single_calls.append(ep_num)
+        return None
+
+
+def test_load_final_accepted_manuscript_rows_prefers_range_accessor_and_filters_bounds():
+    db = _RangeDb()
+
+    rows = load_final_accepted_manuscript_rows(db, 3, 5)
+
+    assert rows == [
+        {
+            "ep_num": 3,
+            "title": "range",
+            "content": "range accepted",
+            "final_context_status": "stage4_final_accepted",
+            "final_context_source": "range",
+            "content_hash": "",
+            "manuscript_created_at": "",
+        }
+    ]
+    assert db.single_calls == []
+
+
+def test_load_final_accepted_manuscript_rows_omits_blocked_contexts_without_raw_fallback():
+    db = _FinalContextDb(
+        {
+            "ep_num": 4,
+            "content": "",
+            "authority_status": "blocked_by_non_final_stage4_attempt",
+            "source_kind": "stage_attempts",
+            "usable": False,
+        }
+    )
+
+    assert load_final_accepted_manuscript_rows(db, 4, 5) == []
+    assert db.get_manuscript_called is False

@@ -9,6 +9,26 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+FINAL_ACCEPTED_STAGE_VERDICTS = frozenset({"PASS", "PASS_WITH_FIX", "PASS_WITH_WARNING"})
+NON_FINAL_STAGE_VERDICTS = frozenset({"REJECT", "FAILED", "ERROR", "SETTLEMENT_FAILED"})
+RETRY_HYDRATABLE_STAGE_VERDICTS = frozenset({"REJECT"})
+
+
+def normalize_stage_verdict(value: object) -> str:
+    return str(value or "").strip().upper()
+
+
+def is_final_accepted_stage_verdict(value: object) -> bool:
+    return normalize_stage_verdict(value) in FINAL_ACCEPTED_STAGE_VERDICTS
+
+
+def is_non_final_stage_verdict(value: object) -> bool:
+    return normalize_stage_verdict(value) in NON_FINAL_STAGE_VERDICTS
+
+
+def is_retry_hydratable_stage_verdict(value: object) -> bool:
+    return normalize_stage_verdict(value) in RETRY_HYDRATABLE_STAGE_VERDICTS
+
 
 def _content_from_row(row: object) -> str:
     if isinstance(row, Mapping):
@@ -89,6 +109,59 @@ def load_final_accepted_manuscript_row(db: object, ep_num: int) -> dict[str, Any
     result.setdefault("final_context_status", "legacy_manuscript_fallback")
     result.setdefault("final_context_source", "get_manuscript")
     return result
+
+
+def load_final_accepted_manuscript_rows(db: object, start_ep: int, end_ep: int) -> list[dict[str, Any]]:
+    """Return final-accepted manuscript rows for ``[start_ep, end_ep)``.
+
+    The helper keeps bulk readers on the same authority surface as single-episode
+    readers. It intentionally omits blocked/non-final episodes instead of
+    falling back to raw manuscript rows after an authority accessor has rejected
+    the episode.
+    """
+
+    if db is None:
+        return []
+    try:
+        start = int(start_ep or 0)
+        end = int(end_ep or 0)
+    except (TypeError, ValueError):
+        return []
+    if start <= 0 or end <= start:
+        return []
+
+    range_getter = getattr(db, "get_final_accepted_episode_context_range", None)
+    if callable(range_getter):
+        try:
+            rows = range_getter(start, end)
+        except TypeError:
+            rows = range_getter(start_ep=start, end_ep=end)
+        except Exception:
+            rows = []
+        if isinstance(rows, list):
+            normalized: list[dict[str, Any]] = []
+            for row in rows:
+                if not isinstance(row, Mapping):
+                    continue
+                content = _content_from_row(row)
+                if not content:
+                    continue
+                normalized.append(
+                    {
+                        "ep_num": int(row.get("ep_num") or 0),
+                        "title": str(row.get("title") or ""),
+                        "content": content,
+                        "final_context_status": str(
+                            row.get("authority_status") or row.get("final_context_status") or ""
+                        ),
+                        "final_context_source": str(row.get("source_kind") or row.get("final_context_source") or ""),
+                        "content_hash": str(row.get("content_hash") or ""),
+                        "manuscript_created_at": str(row.get("manuscript_created_at") or row.get("created_at") or ""),
+                    }
+                )
+            return [row for row in normalized if start <= int(row.get("ep_num") or 0) < end]
+
+    return [row for ep in range(start, end) if (row := load_final_accepted_manuscript_row(db, ep)) is not None]
 
 
 def load_final_accepted_manuscript_text(db: object, ep_num: int) -> str:

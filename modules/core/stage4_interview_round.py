@@ -19,7 +19,7 @@ from modules.core.artifact_logging import (
 )
 from modules.core.constants import smart_truncate
 from modules.core.context_advisor import RetrievalSources
-from modules.core.final_accepted_context import load_final_accepted_manuscript_row
+from modules.core.final_accepted_context import is_retry_hydratable_stage_verdict, load_final_accepted_manuscript_row
 from modules.core.jsonl_io import append_jsonl_record
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.partial_fix_contract import (
@@ -2590,7 +2590,7 @@ class Stage4InterviewRound:
 
         latest_row = same_episode_rows[0]
         latest_verdict = str(latest_row.get("verdict") or "").strip().upper()
-        if latest_verdict != "REJECT":
+        if not is_retry_hydratable_stage_verdict(latest_verdict):
             return {}
 
         hydrated = self._hydrate_stage4_previous_attempt_from_row(
