@@ -1576,6 +1576,15 @@ class DBManager:
         generated_at = str(stage3_meta.get("generated_at") or "").strip()
         source_prev_manuscript_hash = str(stage3_meta.get("source_prev_manuscript_hash") or "").strip()
         genre_strategy_contract_id = str(stage3_meta.get("genre_strategy_contract_id") or "").strip()
+        genre_strategy_contract_hash = str(stage3_meta.get("genre_strategy_contract_hash") or "").strip()
+        genre_strategy_contract_authority_level = str(
+            stage3_meta.get("genre_strategy_contract_authority_level") or ""
+        ).strip()
+        genre_strategy_contract_strategy = str(stage3_meta.get("genre_strategy_contract_strategy") or "").strip()
+        genre_strategy_contract_source = str(stage3_meta.get("genre_strategy_contract_source") or "").strip()
+        genre_strategy_contract_coverage_outcome = str(
+            stage3_meta.get("genre_strategy_contract_coverage_outcome") or ""
+        ).strip()
         lineage_missing_reason = str(stage3_meta.get("lineage_missing_reason") or "").strip()
         if not any(
             (
@@ -1584,6 +1593,9 @@ class DBManager:
                 generated_at,
                 source_prev_manuscript_hash,
                 genre_strategy_contract_id,
+                genre_strategy_contract_hash,
+                genre_strategy_contract_source,
+                genre_strategy_contract_coverage_outcome,
                 lineage_missing_reason,
             )
         ):
@@ -1604,10 +1616,15 @@ class DBManager:
                 source_prev_manuscript_hash,
                 source_prev_manuscript_created_at,
                 genre_strategy_contract_id,
+                genre_strategy_contract_hash,
+                genre_strategy_contract_authority_level,
+                genre_strategy_contract_strategy,
+                genre_strategy_contract_source,
+                genre_strategy_contract_coverage_outcome,
                 lineage_complete,
                 lineage_missing_reason,
                 updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             """,
             (
                 int(ep_num or 0),
@@ -1618,6 +1635,11 @@ class DBManager:
                 source_prev_manuscript_hash,
                 str(stage3_meta.get("source_prev_manuscript_created_at") or "").strip(),
                 genre_strategy_contract_id,
+                genre_strategy_contract_hash,
+                genre_strategy_contract_authority_level,
+                genre_strategy_contract_strategy,
+                genre_strategy_contract_source,
+                genre_strategy_contract_coverage_outcome,
                 lineage_complete,
                 lineage_missing_reason,
             ),
