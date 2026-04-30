@@ -63,6 +63,9 @@ spikes/
 /temp_*.txt
 /temp_triage_test.json
 /temp/
+/tmp_ax_package_verify_*/
+/AX팀_외부전달패키지_*.zip
+/AX팀_외부전달패키지_*.zip.sha256
 
 # === Gemini 관련 ===
 .gemini/
