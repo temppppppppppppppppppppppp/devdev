@@ -2,6 +2,7 @@
 [B-1-1] Stage4 Post-Processor — PASS 후처리 및 세션 종료 로직 분리
 """
 
+import copy
 import hashlib
 import json
 import logging
@@ -189,6 +190,14 @@ class Stage4PostProcessor:
                 pass
         return str(path)
 
+    @staticmethod
+    def _normalize_stage4_structured_repair_evidence(value) -> dict:
+        if not isinstance(value, dict):
+            return {}
+        if value.get("schema_version") or isinstance(value.get("candidates"), list):
+            return copy.deepcopy(value)
+        return {}
+
     def _write_human_facing_manuscript_export(
         self,
         *,
@@ -218,6 +227,7 @@ class Stage4PostProcessor:
         post_pass_payload: dict,
         output_dir,
         attempt_artifact_meta: dict | None = None,
+        structured_repair_evidence: dict | None = None,
     ) -> dict:
         txt_path = self._build_human_facing_manuscript_path(output_dir=output_dir, next_ep=next_ep)
         packet_path = self._build_stage4_settlement_packet_path(output_dir=output_dir, next_ep=next_ep)
@@ -243,6 +253,14 @@ class Stage4PostProcessor:
             fully_settled=True,
         )
         run_health = classify_stage4_run_health(attempt_artifact_meta=attempt_artifact_meta)
+        quality_payload = {
+            "labels": dict(quality_labels or {}) if isinstance(quality_labels, dict) else {},
+            "signals": dict(quality_signals or {}) if isinstance(quality_signals, dict) else {},
+            "run_health": run_health,
+        }
+        normalized_repair_evidence = self._normalize_stage4_structured_repair_evidence(structured_repair_evidence)
+        if normalized_repair_evidence:
+            quality_payload["structured_repair_evidence"] = normalized_repair_evidence
         return {
             "packet_version": "stage4_settlement_packet_v1",
             "stage": 4,
@@ -257,11 +275,7 @@ class Stage4PostProcessor:
                 "human_facing_txt_path": self._relativize_artifact_path(txt_path),
             },
             "stage3_meta": stage3_meta,
-            "quality": {
-                "labels": dict(quality_labels or {}) if isinstance(quality_labels, dict) else {},
-                "signals": dict(quality_signals or {}) if isinstance(quality_signals, dict) else {},
-                "run_health": run_health,
-            },
+            "quality": quality_payload,
             "settlement": {
                 "episode_bible": dict(bible_delta or {}) if isinstance(bible_delta, dict) else {},
                 "actual_truth": dict(actual_truth or {}) if isinstance(actual_truth, dict) else {},
@@ -272,6 +286,12 @@ class Stage4PostProcessor:
                 "meta_save_failed": bool(post_pass_payload.get("meta_save_failed", False))
                 if isinstance(post_pass_payload, dict)
                 else False,
+                "atomic_metadata_save_failed": bool(post_pass_payload.get("atomic_metadata_save_failed", False))
+                if isinstance(post_pass_payload, dict)
+                else False,
+                "metadata_failure_detail": str(post_pass_payload.get("metadata_failure_detail", "") or "")
+                if isinstance(post_pass_payload, dict)
+                else "",
             },
             "artifacts": {
                 "settlement_packet_path": self._relativize_artifact_path(packet_path),
@@ -297,6 +317,7 @@ class Stage4PostProcessor:
         post_pass_payload: dict,
         output_dir,
         attempt_artifact_meta: dict | None = None,
+        structured_repair_evidence: dict | None = None,
     ) -> Path:
         packet_path = self._build_stage4_settlement_packet_path(output_dir=output_dir, next_ep=next_ep)
         packet = self._build_stage4_settlement_packet(
@@ -311,6 +332,7 @@ class Stage4PostProcessor:
             post_pass_payload=post_pass_payload,
             output_dir=output_dir,
             attempt_artifact_meta=attempt_artifact_meta,
+            structured_repair_evidence=structured_repair_evidence,
         )
         packet_path.write_text(
             json.dumps(packet, ensure_ascii=False, indent=2, sort_keys=True, default=str), encoding="utf-8"
@@ -332,7 +354,13 @@ class Stage4PostProcessor:
         return {
             key: value
             for key, value in final_state_updates.items()
-            if key not in {"_director_quality_labels", "_stage4_attempt_key", "_stage4_attempt_artifact_meta"}
+            if key
+            not in {
+                "_director_quality_labels",
+                "_stage4_attempt_key",
+                "_stage4_attempt_artifact_meta",
+                "_stage4_structured_repair_evidence",
+            }
         }
 
     def _build_stage4_settlement_status_payload(
@@ -1127,6 +1155,7 @@ class Stage4PostProcessor:
         final_state_updates: dict,
         quality_labels,
         attempt_artifact_meta: dict | None = None,
+        structured_repair_evidence: dict | None = None,
     ):
         db = self.ctx.current_project.db
         quality_signals = None
@@ -1156,6 +1185,13 @@ class Stage4PostProcessor:
                     warning_count=extract_warning_count(final_state_updates),
                 )
                 quality_signals["run_health"] = classify_stage4_run_health(attempt_artifact_meta=attempt_artifact_meta)
+                normalized_repair_evidence = self._normalize_stage4_structured_repair_evidence(
+                    structured_repair_evidence
+                )
+                if normalized_repair_evidence:
+                    signal_summary = dict(quality_signals.get("signal_summary", {}) or {})
+                    signal_summary["structured_repair_evidence"] = normalized_repair_evidence
+                    quality_signals["signal_summary"] = signal_summary
                 db.save_episode_quality_signal(next_ep, quality_signals)
             except Exception as signal_err:
                 self._report_soft_failure(
@@ -1316,16 +1352,6 @@ class Stage4PostProcessor:
             atomic_metadata_saved = False
             atomic_metadata_failure_detail = "atomic metadata save returned False"
 
-        if not atomic_metadata_saved:
-            return {
-                "actual_truth": delta["actual_truth"],
-                "bible_delta": bible_delta,
-                "state_truth_owner_contract": delta.get("state_truth_owner_contract", {}),
-                "meta_save_failed": True,
-                "atomic_metadata_save_failed": True,
-                "metadata_failure_detail": atomic_metadata_failure_detail,
-            }
-
         self.post_pass_runtime._run_post_pass_advisories(
             next_ep=next_ep,
             final_manuscript=final_manuscript,
@@ -1344,8 +1370,8 @@ class Stage4PostProcessor:
             "bible_delta": bible_delta,
             "state_truth_owner_contract": delta.get("state_truth_owner_contract", {}),
             "meta_save_failed": delta["meta_save_failed"],
-            "atomic_metadata_save_failed": False,
-            "metadata_failure_detail": "",
+            "atomic_metadata_save_failed": not atomic_metadata_saved,
+            "metadata_failure_detail": atomic_metadata_failure_detail,
         }
 
     def _run_pass_result_post_settlement_side_effects(
@@ -1480,11 +1506,15 @@ class Stage4PostProcessor:
         quality_labels = None
         stage4_attempt_key = ""
         attempt_artifact_meta = {}
+        structured_repair_evidence = {}
         if isinstance(final_state_updates, dict):
             quality_labels = final_state_updates.get("_director_quality_labels")
             stage4_attempt_key = self._extract_stage4_settlement_attempt_key(final_state_updates)
             raw_artifact_meta = final_state_updates.get("_stage4_attempt_artifact_meta")
             attempt_artifact_meta = dict(raw_artifact_meta or {}) if isinstance(raw_artifact_meta, dict) else {}
+            structured_repair_evidence = self._normalize_stage4_structured_repair_evidence(
+                final_state_updates.get("_stage4_structured_repair_evidence")
+            )
             final_state_updates = self._strip_stage4_internal_state_updates(final_state_updates)
         final_manuscript = self._normalize_reader_facing_manuscript(final_manuscript)
         approved_hud_updates, hud_update_error = self._resolve_approved_hud_updates(
@@ -1495,6 +1525,7 @@ class Stage4PostProcessor:
             "quality_labels": quality_labels,
             "attempt_key": stage4_attempt_key,
             "attempt_artifact_meta": attempt_artifact_meta,
+            "structured_repair_evidence": structured_repair_evidence,
             "final_manuscript": final_manuscript,
             "final_state_updates": final_state_updates,
             "approved_hud_updates": approved_hud_updates,
@@ -1634,6 +1665,7 @@ class Stage4PostProcessor:
         hud_update_error = settlement_inputs["hud_update_error"]
         settlement_status_context = settlement_inputs["settlement_status_context"]
         attempt_artifact_meta = settlement_inputs["attempt_artifact_meta"]
+        structured_repair_evidence = settlement_inputs["structured_repair_evidence"]
 
         if len(final_manuscript or "") < int(ManuscriptLimits.MIN_LENGTH):
             return self._handle_post_normalization_artifact_contract_failure(
@@ -1662,6 +1694,7 @@ class Stage4PostProcessor:
             final_state_updates=final_state_updates,
             quality_labels=_quality_labels,
             attempt_artifact_meta=attempt_artifact_meta,
+            structured_repair_evidence=structured_repair_evidence,
         )
 
         post_pass_payload = self._run_pass_result_post_pass_pipeline(
@@ -1704,6 +1737,7 @@ class Stage4PostProcessor:
                 post_pass_payload=post_pass_payload,
                 output_dir=output_dir,
                 attempt_artifact_meta=attempt_artifact_meta,
+                structured_repair_evidence=structured_repair_evidence,
             )
         except Exception as packet_err:
             logging.error("[S4-SETTLEMENT] settlement packet save failed ep=%d: %s", next_ep, packet_err)
