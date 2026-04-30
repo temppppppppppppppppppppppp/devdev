@@ -184,7 +184,11 @@ def test_hard_incomplete_when_episode_bible_save_fails(tmp_path: Path) -> None:
 
     assert result is False
     assert _derive_completeness_status(result, soft_ops) == "hard_incomplete"
-    pp.ctx.audit_event.assert_any_call("episode_bible_save_failed", "save_episode_bible 실패", {"ep": 3})
+    pp.ctx.audit_event.assert_any_call(
+        "episode_bible_save_failed",
+        "save_episode_bible 실패",
+        {"ep": 3, "error": "bible write failed"},
+    )
 
 
 def test_soft_degraded_when_state_log_save_fails(tmp_path: Path) -> None:
@@ -209,6 +213,10 @@ def test_soft_degraded_when_world_state_atomic_save_fails(tmp_path: Path) -> Non
     assert result is True
     assert "save_world_state_atomic" in soft_ops
     assert _derive_completeness_status(result, soft_ops) == "hard_complete_soft_degraded"
+    settlement = json.loads((tmp_path / "ep_0003.settlement.json").read_text(encoding="utf-8"))
+    assert settlement["settlement"]["meta_save_failed"] is False
+    assert settlement["settlement"]["atomic_metadata_save_failed"] is True
+    assert settlement["settlement"]["metadata_failure_detail"] == "fact ledger write failed"
 
 
 def test_soft_clean_when_no_stage4_soft_failures_exist(tmp_path: Path) -> None:

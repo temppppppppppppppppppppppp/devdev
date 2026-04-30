@@ -1689,7 +1689,7 @@ class Stage4PostPassRuntime:
         fact_ledger_persisted,
         world_state_snapshot,
         fact_ledger_snapshot,
-    ) -> None:
+    ) -> dict[str, object]:
         persisted_rollbacks = []
         world_state_restored_via_rollback = False
         fact_ledger_restored_via_rollback = False
@@ -1720,7 +1720,7 @@ class Stage4PostPassRuntime:
         failure_detail = str(meta_err)
         self._report_soft_failure(
             operation="save_world_state_atomic",
-            message="world state/fact ledger atomic save failed and Stage4 settlement was blocked",
+            message="world state/fact ledger atomic save failed; Stage4 settlement continues as soft-degraded",
             exc=meta_err,
             ep_num=next_ep,
             extra={
@@ -1729,7 +1729,7 @@ class Stage4PostPassRuntime:
                 "persisted_rollbacks": persisted_rollbacks,
             },
         )
-        self.ctx.ui.log(f"   ❌ [TF-C10] 메타데이터 원자적 저장 실패 (정산 차단): {failure_detail}")
+        self.ctx.ui.log(f"   ⚠️ [TF-C10] 메타데이터 원자적 저장 실패 (soft-degraded): {failure_detail}")
         return {
             "atomic_metadata_saved": False,
             "atomic_metadata_failure_detail": failure_detail,
@@ -1741,8 +1741,9 @@ class Stage4PostPassRuntime:
     def _save_world_state_atomic(self, *, next_ep, actual_truth, final_state_updates, bible_delta, arc_data=None):
         """[B-1-9a:A4] WorldState + FactLedger 원자적 갱신 + 롤백.
 
-        Returns a settlement-blocking status payload. If either durable truth store
-        fails, the caller must treat the PASS settlement as not fully settled.
+        Returns a soft-degradation status payload. If either auxiliary truth store
+        fails, rollback/snapshot recovery runs and PASS settlement continues with
+        explicit atomic_metadata_save_failed evidence.
         """
         meta_db = getattr(self.ctx.current_project, "db", None)
         payloads = self._build_atomic_state_payloads(

@@ -159,6 +159,54 @@ class TestProcessPassResult:
         assert status_payloads[-1]["manuscript_persisted"] is True
         pp.ctx.current_project.db.save_ui_event.assert_called()
 
+    def test_structured_repair_evidence_reaches_settlement_packet_and_quality_sidecar(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        repair_evidence = {
+            "schema_version": "stage4_structured_repair_evidence_v1",
+            "authority": "python_validation_companion",
+            "authority_note": "Director remains final quality authority.",
+            "advisory_count": 1,
+            "candidates": [
+                {
+                    "candidate_label": "A",
+                    "advisory_count": 1,
+                    "advisories": [
+                        {
+                            "category": "scene_completeness",
+                            "patch_target_records": [{"scene_id": "scene_2"}],
+                        }
+                    ],
+                    "evidence_lines": ["[SCENE] scene_completeness | scenes=scene_2"],
+                }
+            ],
+        }
+
+        result = pp.process_pass_result(
+            next_ep=2,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="테스트",
+            final_state_updates={
+                "hp": 20,
+                "_director_quality_labels": {"score": 92, "verdict": "PASS"},
+                "_stage4_structured_repair_evidence": repair_evidence,
+            },
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        settlement = json.loads((tmp_path / "ep_0002.settlement.json").read_text(encoding="utf-8"))
+        assert settlement["quality"]["structured_repair_evidence"] == repair_evidence
+        assert "_stage4_structured_repair_evidence" not in settlement["settlement"]["final_state_updates"]
+        quality_signals = pp.ctx.current_project.db.save_episode_quality_signal.call_args.args[1]
+        assert quality_signals["signal_summary"]["structured_repair_evidence"] == repair_evidence
+        update_args = pp.ctx.current_project.db.update_martial_tracker.call_args.args
+        assert "_stage4_structured_repair_evidence" not in update_args[1]
+
     def test_returns_false_on_db_failure(self, tmp_path):
         pp = self._make_pp()
         pp.ctx.current_project.db.save_manuscript.side_effect = RuntimeError("DB error")
@@ -746,6 +794,54 @@ class TestProcessPassResult:
                 "soft_physical_state": "신경계 피로 Moderate",
             },
         )
+
+    def test_run_pass_result_post_pass_pipeline_keeps_atomic_metadata_failure_soft(self):
+        pp = self._make_pp()
+        pp.post_pass_runtime._submit_manager_async = MagicMock(
+            return_value={
+                "bible_future": None,
+                "current_state": {"state": "snapshot"},
+                "lore_list": ["lore"],
+                "active_seeds": ["seed-1"],
+                "causal_history": "history",
+            }
+        )
+        pp.post_pass_runtime._memorize_and_validate = MagicMock()
+        pp.post_pass_runtime._collect_manager_and_build_delta = MagicMock(
+            return_value={
+                "bible_delta": {"relationship_changes": []},
+                "actual_truth": {"location": "gate"},
+                "state_truth_owner_contract": {},
+                "meta_save_failed": False,
+            }
+        )
+        pp.post_pass_runtime._save_world_state_atomic = MagicMock(
+            return_value={
+                "atomic_metadata_saved": False,
+                "atomic_metadata_failure_detail": "fact ledger write failed",
+            }
+        )
+        pp.post_pass_runtime._run_post_pass_advisories = MagicMock()
+
+        result = pp._run_pass_result_post_pass_pipeline(
+            next_ep=6,
+            final_manuscript="test manuscript",
+            final_title="episode title",
+            final_state_updates={"hp": 10},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 2},
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+            quality_labels={"score": 94},
+            quality_signals={"ced_score": 0.5},
+            detect_npc_overexposure_fn=lambda *_args, **_kwargs: None,
+            detect_cross_episode_repetition_fn=lambda *_args, **_kwargs: None,
+            v50_modules_available=False,
+        )
+
+        assert result["meta_save_failed"] is False
+        assert result["atomic_metadata_save_failed"] is True
+        assert result["metadata_failure_detail"] == "fact ledger write failed"
+        pp.post_pass_runtime._run_post_pass_advisories.assert_called_once()
 
     def test_finalize_pass_result_session_saves_costs_and_flushes(self):
         pp = self._make_pp()
@@ -2740,7 +2836,7 @@ class TestAtomicMetadataSave:
         pp.ctx.fact_ledger.save.assert_called_once()
 
     def test_transaction_rollback_on_failure(self, tmp_path):
-        """[TF-C10] FactLedger.save 실패 시 PASS 정산을 차단한다."""
+        """[TF-C10] FactLedger.save 실패는 soft-degraded로 기록하고 PASS 정산은 계속한다."""
         pp = self._make_pp_with_metadata()
         pp.ctx.current_project.db.save_manuscript.return_value = True
         pp.ctx.fact_ledger.save.side_effect = RuntimeError("DB write error")
@@ -2757,7 +2853,7 @@ class TestAtomicMetadataSave:
             extract_chain_link_fn=lambda *_args, **_kwargs: {},
         )
 
-        assert result is False
+        assert result is True
         pp.ctx.world_state.rollback_to.assert_not_called()
 
     def test_sequential_mode_rolls_back_persisted_world_state(self):
@@ -3182,7 +3278,7 @@ class TestAtomicMetadataSave:
             extract_chain_link_fn=lambda *_args, **_kwargs: {},
         )
 
-        assert result is False
+        assert result is True
         log_calls = [str(call.args[0]) for call in pp.ctx.ui.log.call_args_list if call.args]
         assert any("WorldState save 실패: world write fail" in text for text in log_calls)
         assert any("메타데이터 원자적 저장 실패" in text for text in log_calls)
@@ -3205,7 +3301,7 @@ class TestAtomicMetadataSave:
             extract_chain_link_fn=lambda *_args, **_kwargs: {},
         )
 
-        assert result is False
+        assert result is True
         log_calls = [str(call.args[0]) for call in pp.ctx.ui.log.call_args_list if call.args]
         assert any("FactLedger save 실패: ledger write fail" in text for text in log_calls)
         assert any("메타데이터 원자적 저장 실패" in text for text in log_calls)
