@@ -1,7 +1,36 @@
 {
   "version": "clickup-queue-sync-v1",
-  "updated_at": "2026-04-26T06:01:47.728937+00:00",
+  "updated_at": "2026-04-30T03:27:01.731781+00:00",
   "list_id": "901817292518",
   "queue_state_path": "docs/temp/queue-state.json",
-  "tasks": {}
+  "tasks": {
+    "frontier-lag-clean-5arc-stabilization": {
+      "task_id": "86exeh91k",
+      "name": "frontier-lag-clean-5arc-stabilization",
+      "desired_status": "Ready",
+      "resolved_status": "ready",
+      "synced_at": "2026-04-30T03:26:59.378237+00:00"
+    },
+    "security-secrets-config": {
+      "task_id": "86exeh91n",
+      "name": "security-secrets-config",
+      "desired_status": "Parked",
+      "resolved_status": "parked",
+      "synced_at": "2026-04-30T03:27:00.083308+00:00"
+    },
+    "security-runtime-settings-vertex": {
+      "task_id": "86exeh91y",
+      "name": "security-runtime-settings-vertex",
+      "desired_status": "Parked",
+      "resolved_status": "parked",
+      "synced_at": "2026-04-30T03:27:01.067041+00:00"
+    },
+    "security-desktop-release-guardrails": {
+      "task_id": "86exeh929",
+      "name": "security-desktop-release-guardrails",
+      "desired_status": "Parked",
+      "resolved_status": "parked",
+      "synced_at": "2026-04-30T03:27:01.731781+00:00"
+    }
+  }
 }
