@@ -5,7 +5,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 INDEX_FIELDS = [
     "run_id",
     "recorded_at",
@@ -32,6 +31,33 @@ def _load_report_module():
     assert spec.loader is not None
     spec.loader.exec_module(module)
     return module
+
+
+def test_operator_line_report_surfaces_stage4_run_health_counts(tmp_path):
+    module = _load_report_module()
+    _write_record(
+        tmp_path,
+        run_id="run-a",
+        status="completed",
+        stage4_diagnostic_packet={
+            "schema_version": "stage4_diagnostic_packet_v1",
+            "stage4_run_health_counts": {
+                "pure_pass": 2,
+                "repaired_pass": 1,
+                "retry_heavy_pass": 1,
+            },
+        },
+    )
+
+    payload = module.build_benchmark_operator_line_report(
+        workspace_root=tmp_path,
+        benchmark_root=tmp_path / "benchmarks",
+    )
+
+    line = payload["record_report_lines"][0]["operator_report_line"]
+    assert "pure=2" in line
+    assert "repaired=1" in line
+    assert "retry_heavy=1" in line
 
 
 def _write_record(
@@ -235,8 +261,7 @@ def test_build_benchmark_operator_line_report_surfaces_audit_and_record_lines(tm
     text = module.format_report_text(payload)
     assert "Audit: status=clean; ci_gate=pass; gate_basis=clean; headline=no remediation needed" in text
     assert (
-        f"run_id={run_a}; status=operational_failure; companion_state=linked; "
-        "linked=supporting_context_md; missing=-"
+        f"run_id={run_a}; status=operational_failure; companion_state=linked; linked=supporting_context_md; missing=-"
     ) in text
 
 
@@ -260,9 +285,7 @@ def test_build_benchmark_operator_line_report_includes_explicit_compare_pairs(tm
             "right_run_id": run_b,
             "verdict": "better",
             "changed_sections": ["run_meta", "stage_metrics", "watchpoints"],
-            "operator_report_line": (
-                "status=clean; ci_gate=pass; gate_basis=clean; headline=no remediation needed"
-            ),
+            "operator_report_line": ("status=clean; ci_gate=pass; gate_basis=clean; headline=no remediation needed"),
         }
     ]
     text = module.format_report_text(payload)
@@ -294,9 +317,7 @@ def test_build_benchmark_operator_line_report_can_append_latest_live_pair(tmp_pa
             "right_run_id": run_b,
             "verdict": "better",
             "changed_sections": ["run_meta", "stage_metrics", "watchpoints"],
-            "operator_report_line": (
-                "status=clean; ci_gate=pass; gate_basis=clean; headline=no remediation needed"
-            ),
+            "operator_report_line": ("status=clean; ci_gate=pass; gate_basis=clean; headline=no remediation needed"),
         }
     ]
 
