@@ -21,6 +21,12 @@ from modules.core.advisory_authority import (
 
 from .constants import MARTIAL_METRICS  # 👈 상수 임포트
 from .db_bootstrap_runtime import DBBootstrapRuntime
+from .final_accepted_context import (
+    FINAL_ACCEPTED_STAGE_VERDICTS,
+    NON_FINAL_STAGE_VERDICTS,
+    is_final_accepted_stage_verdict,
+    is_non_final_stage_verdict,
+)
 from .quality_signal_metrics import build_signal_stat
 from .stage4_run_health import extract_stage4_run_health, summarize_stage4_run_health_counts
 
@@ -606,8 +612,8 @@ class DBManager:
             finally:
                 cur.close()
 
-    _FINAL_ACCEPTED_STAGE_VERDICTS = {"PASS", "PASS_WITH_FIX", "PASS_WITH_WARNING"}
-    _NON_FINAL_STAGE_VERDICTS = {"REJECT", "FAILED", "ERROR", "SETTLEMENT_FAILED"}
+    _FINAL_ACCEPTED_STAGE_VERDICTS = set(FINAL_ACCEPTED_STAGE_VERDICTS)
+    _NON_FINAL_STAGE_VERDICTS = set(NON_FINAL_STAGE_VERDICTS)
 
     def _latest_stage_attempt_for_episode(self, ep_num: int, *, stage: int = 4) -> dict | None:
         with self._lock:
@@ -651,7 +657,7 @@ class DBManager:
         latest_verdict = str((latest_attempt or {}).get("verdict") or "").strip().upper()
         override = bool((latest_attempt or {}).get("downstream_override_applied"))
 
-        if latest_attempt and (latest_verdict in self._NON_FINAL_STAGE_VERDICTS or override):
+        if latest_attempt and (is_non_final_stage_verdict(latest_verdict) or override):
             return {
                 "ep_num": episode,
                 "content": "",
@@ -669,7 +675,7 @@ class DBManager:
             return None
 
         content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
-        accepted_attempt = latest_attempt if latest_verdict in self._FINAL_ACCEPTED_STAGE_VERDICTS else None
+        accepted_attempt = latest_attempt if is_final_accepted_stage_verdict(latest_verdict) else None
         if accepted_attempt:
             status = "stage4_final_accepted"
             source_kind = "db_manuscript_plus_stage_attempt"
@@ -689,6 +695,30 @@ class DBManager:
             "final_verdict": latest_verdict,
             "usable": True,
         }
+
+    def get_final_accepted_episode_context_range(
+        self,
+        start_ep: int,
+        end_ep: int,
+        *,
+        stage: int = 4,
+    ) -> list[dict]:
+        """Return usable final-accepted contexts for ``[start_ep, end_ep)``."""
+
+        try:
+            start = int(start_ep or 0)
+            end = int(end_ep or 0)
+        except (TypeError, ValueError):
+            return []
+        if start <= 0 or end <= start:
+            return []
+
+        rows: list[dict] = []
+        for ep_num in range(start, end):
+            context = self.get_final_accepted_episode_context(ep_num, stage=stage)
+            if isinstance(context, dict) and context.get("usable") and str(context.get("content") or ""):
+                rows.append(context)
+        return rows
 
     # 📂 modules/core/db_manager.py 내부에 추가
 
@@ -4006,8 +4036,7 @@ class DBManager:
         query = (
             "SELECT selected_strategy "
             "FROM director_selections "
-            "WHERE COALESCE(NULLIF(final_verdict, ''), verdict) = 'PASS' "
-            "AND COALESCE(downstream_override_applied, 0) = 0 "
+            f"WHERE {self._director_selection_final_pass_predicate()} "
             "AND selected_strategy IS NOT NULL AND selected_strategy != '' "
         )
         params: list[object] = []
@@ -4039,6 +4068,12 @@ class DBManager:
         for strategy, cnt in counts.items():
             result[strategy] = round(cnt / total, 2)
         return result
+
+    @staticmethod
+    def _director_selection_final_pass_predicate() -> str:
+        """SQL predicate for historical Director rows usable as accepted companion evidence."""
+
+        return "COALESCE(NULLIF(final_verdict, ''), verdict) = 'PASS' AND COALESCE(downstream_override_applied, 0) = 0"
 
     def get_selection_analysis(self, lookback: int = 100) -> list[dict]:
         """최근 Director 선택 기록 조회 (편향 분석용)."""

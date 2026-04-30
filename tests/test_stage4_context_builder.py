@@ -251,6 +251,63 @@ class TestContextTailPreservation:
         assert len(excerpt) <= 220
         assert "TAIL-MS" in excerpt
 
+    def test_fetch_manuscript_excerpt_uses_final_accepted_range_authority(self):
+        class FinalAcceptedRangeDb:
+            def __init__(self):
+                self.raw_range_called = False
+
+            def get_final_accepted_episode_context_range(self, start_ep, end_ep):
+                return [
+                    {
+                        "ep_num": 7,
+                        "content": "FINAL-HEAD\n" + ("F" * 900) + "\nFINAL-TAIL",
+                        "authority_status": "stage4_final_accepted",
+                        "source_kind": "test",
+                    }
+                ]
+
+            def get_final_accepted_episode_context(self, ep_num, *, stage=4):
+                return None
+
+            def get_manuscripts_range(self, start_ep, end_ep):
+                self.raw_range_called = True
+                return [{"ep_num": 7, "content": "RAW SHOULD NOT WIN"}]
+
+        ctx = _make_ctx()
+        ctx.db = FinalAcceptedRangeDb()
+        cb = Stage4ContextBuilder(ctx)
+
+        excerpt = cb._fetch_manuscript_excerpt(7, 7, max_chars=220)
+
+        assert "FINAL-TAIL" in excerpt
+        assert "RAW SHOULD NOT WIN" not in excerpt
+        assert ctx.db.raw_range_called is False
+
+    def test_fetch_manuscript_excerpt_does_not_raw_fallback_after_blocked_context(self):
+        class BlockedFinalAcceptedDb:
+            def __init__(self):
+                self.raw_range_called = False
+
+            def get_final_accepted_episode_context(self, ep_num, *, stage=4):
+                return {
+                    "ep_num": ep_num,
+                    "content": "",
+                    "authority_status": "blocked_by_non_final_stage4_attempt",
+                    "source_kind": "stage_attempts",
+                    "usable": False,
+                }
+
+            def get_manuscripts_range(self, start_ep, end_ep):
+                self.raw_range_called = True
+                return [{"ep_num": 7, "content": "RAW SHOULD NOT WIN"}]
+
+        ctx = _make_ctx()
+        ctx.db = BlockedFinalAcceptedDb()
+        cb = Stage4ContextBuilder(ctx)
+
+        assert cb._fetch_manuscript_excerpt(7, 7, max_chars=220) == ""
+        assert ctx.db.raw_range_called is False
+
 
 class TestSuggestAmbientNpcs:
     def test_suggest_ambient_npcs_office(self):
