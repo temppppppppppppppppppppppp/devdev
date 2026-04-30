@@ -25,6 +25,11 @@ def test_quality_summary_endpoint_reads_project_sidecar(tmp_path, monkeypatch):
             "burstiness": 9.4,
             "complexity": 28.8,
             "signal_summary": {"sentence_count": 37},
+            "run_health": {
+                "success_classes": ["repaired_pass", "retry_heavy_pass"],
+                "repaired_pass": True,
+                "retry_heavy_pass": True,
+            },
         },
     )
     db.close()
@@ -38,6 +43,12 @@ def test_quality_summary_endpoint_reads_project_sidecar(tmp_path, monkeypatch):
     assert payload["data"]["available"] is True
     assert payload["data"]["latest_ep"] == 3
     assert payload["data"]["signals"]["ced"]["value"] == 1.1
+    assert payload["data"]["run_health_counts"] == {
+        "pure_pass": 0,
+        "repaired_pass": 1,
+        "retry_heavy_pass": 1,
+    }
+    assert payload["data"]["latest_run_health"]["success_classes"] == ["repaired_pass", "retry_heavy_pass"]
 
 
 def test_quality_summary_endpoint_prefers_workspace_projects_root(tmp_path, monkeypatch):
@@ -136,6 +147,10 @@ def test_quality_dashboard_endpoint_combines_result_and_patterns(tmp_path, monke
             "burstiness": 9.4,
             "complexity": 28.8,
             "signal_summary": {"sentence_count": 37},
+            "run_health": {
+                "success_classes": ["repaired_pass"],
+                "repaired_pass": True,
+            },
         },
     )
     db.save_episode_quality_label(
@@ -239,11 +254,13 @@ def test_quality_dashboard_endpoint_combines_result_and_patterns(tmp_path, monke
     assert data["quality_summary"]["latest_ep"] == 3
     assert data["result_summary"]["available"] is True
     assert data["result_summary"]["verdict"] == "PASS_WITH_FIX"
+    assert data["result_summary"]["run_health"]["success_classes"] == ["repaired_pass"]
     assert len(data["result_summary"]["fix_now"]) >= 1
     assert data["result_summary"]["keep_next"]
     assert data["result_summary"]["avoid_next"]
     assert any("씬 다양성" in issue for issue in data["result_summary"]["issues"])
     assert data["compare_rows"][0]["ep_num"] == 3
+    assert data["compare_rows"][0]["run_health"]["repaired_pass"] is True
     assert data["stage_stats"][0]["stage"] == 4
     assert data["failure_patterns"]["top_types"][0]["type"] == "scene_variety"
     assert data["runtime_health"]["available"] is True

@@ -19,9 +19,11 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.canary_path_utils import resolve_workspace_project_dir  # noqa: E402, I001
+from modules.core.stage4_run_health import classify_stage4_run_health  # noqa: E402
 
 
 PASS_LIKE_VERDICTS = {"PASS", "PASS_WITH_WARNING", "PASS_WITH_FIX"}
+RUN_HEALTH_COUNT_FIELDS = ("pure_pass", "repaired_pass", "retry_heavy_pass")
 CORE_LOG_RELATIVE_PATHS = (
     "logs/stage2_direct_supervised_result.json",
     "logs/stage3_direct_supervised_result.json",
@@ -61,6 +63,9 @@ INDEX_FIELDNAMES = [
     "s3_cost_usd",
     "s4_attempts",
     "s4_pass_like",
+    "s4_pure_pass",
+    "s4_repaired_pass",
+    "s4_retry_heavy_pass",
     "s4_duration_ms",
     "s4_tokens",
     "s4_cost_usd",
@@ -81,6 +86,9 @@ class StageAggregate:
     attempt_count: int = 0
     pass_like_count: int = 0
     reject_count: int = 0
+    pure_pass_count: int = 0
+    repaired_pass_count: int = 0
+    retry_heavy_pass_count: int = 0
     total_duration_ms: int = 0
     avg_duration_ms: int = 0
     total_cost_usd: float = 0.0
@@ -379,6 +387,14 @@ def _aggregate_rows(
         aggregate.latest_episode = max(aggregate.latest_episode, _safe_int(row.get(episode_key)))
         if _is_pass_like(row):
             aggregate.pass_like_count += 1
+            if stage_label == "stage4":
+                run_health = classify_stage4_run_health(attempt_artifact_meta=row)
+                if bool(run_health.get("pure_pass")):
+                    aggregate.pure_pass_count += 1
+                if bool(run_health.get("repaired_pass")):
+                    aggregate.repaired_pass_count += 1
+                if bool(run_health.get("retry_heavy_pass")):
+                    aggregate.retry_heavy_pass_count += 1
     aggregate.reject_count = max(aggregate.attempt_count - aggregate.pass_like_count, 0)
     return aggregate.finalize()
 
@@ -424,6 +440,9 @@ def _build_index_row(
         "s3_cost_usd": f"{stage3.total_cost_usd:.6f}",
         "s4_attempts": str(stage4.attempt_count),
         "s4_pass_like": str(stage4.pass_like_count),
+        "s4_pure_pass": str(stage4.pure_pass_count),
+        "s4_repaired_pass": str(stage4.repaired_pass_count),
+        "s4_retry_heavy_pass": str(stage4.retry_heavy_pass_count),
         "s4_duration_ms": str(stage4.total_duration_ms),
         "s4_tokens": str(stage4.total_tokens),
         "s4_cost_usd": f"{stage4.total_cost_usd:.6f}",
@@ -555,6 +574,9 @@ def _write_stage_metrics_csv(path: Path, stage_metrics: dict[str, StageAggregate
         "attempt_count",
         "pass_like_count",
         "reject_count",
+        "pure_pass_count",
+        "repaired_pass_count",
+        "retry_heavy_pass_count",
         "total_duration_ms",
         "avg_duration_ms",
         "total_cost_usd",
@@ -573,6 +595,9 @@ def _write_stage_metrics_csv(path: Path, stage_metrics: dict[str, StageAggregate
                     "attempt_count": metric.attempt_count,
                     "pass_like_count": metric.pass_like_count,
                     "reject_count": metric.reject_count,
+                    "pure_pass_count": metric.pure_pass_count,
+                    "repaired_pass_count": metric.repaired_pass_count,
+                    "retry_heavy_pass_count": metric.retry_heavy_pass_count,
                     "total_duration_ms": metric.total_duration_ms,
                     "avg_duration_ms": metric.avg_duration_ms,
                     "total_cost_usd": f"{metric.total_cost_usd:.6f}",
@@ -721,9 +746,8 @@ def _build_stage4_diagnostic_packet(
         episode_rows,
         pathology_source="post_select_conflict",
     )
-    settled_director_divergence_count = (
-        int(issue_counts.get("final_verdict_mismatches", 0) or 0)
-        + int(issue_counts.get("director_verdict_mismatches", 0) or 0)
+    settled_director_divergence_count = int(issue_counts.get("final_verdict_mismatches", 0) or 0) + int(
+        issue_counts.get("director_verdict_mismatches", 0) or 0
     )
     return {
         "schema_version": "stage4_diagnostic_packet_v1",
@@ -732,6 +756,11 @@ def _build_stage4_diagnostic_packet(
         "stage4_attempt_count": int(stage4_metrics.attempt_count),
         "stage4_pass_like_count": int(stage4_metrics.pass_like_count),
         "stage4_reject_count": int(stage4_metrics.reject_count),
+        "stage4_run_health_counts": {
+            "pure_pass": int(stage4_metrics.pure_pass_count),
+            "repaired_pass": int(stage4_metrics.repaired_pass_count),
+            "retry_heavy_pass": int(stage4_metrics.retry_heavy_pass_count),
+        },
         "runtime_summary_freshness_status": str(runtime_freshness.get("status", "") or ""),
         "runtime_summary_scope_status": str(runtime_freshness.get("scope_status", "") or ""),
         "proof_digest_status": str(proof_digest.get("status", "") or "") if isinstance(proof_digest, dict) else "",

@@ -10,8 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.audit_benchmark_companion_links import audit_benchmark_companion_links
-from scripts.compare_benchmark_records import compare_benchmark_records
+from scripts.audit_benchmark_companion_links import audit_benchmark_companion_links  # noqa: E402
+from scripts.compare_benchmark_records import compare_benchmark_records  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -100,14 +100,44 @@ def build_benchmark_operator_line_report(
 def _build_record_operator_report_line(record: dict[str, Any]) -> str:
     linked = ",".join(str(item) for item in record.get("linked_surfaces", [])) or "-"
     missing = ",".join(str(item) for item in record.get("missing_surfaces", [])) or "-"
+    stage4_diagnostic_packet = _resolve_record_stage4_diagnostic_packet(record)
+    run_health_fragments: list[str] = []
+    if isinstance(stage4_diagnostic_packet, dict):
+        run_health_counts = stage4_diagnostic_packet.get("stage4_run_health_counts", {})
+        if isinstance(run_health_counts, dict):
+            for key, label in (
+                ("pure_pass", "pure"),
+                ("repaired_pass", "repaired"),
+                ("retry_heavy_pass", "retry_heavy"),
+            ):
+                count = _coerce_positive_int(run_health_counts.get(key))
+                if count > 0:
+                    run_health_fragments.append(f"{label}={count}")
     bits = [
         f"run_id={record.get('run_id', '')}",
         f"status={record.get('status', '')}",
         f"companion_state={record.get('companion_state', '')}",
         f"linked={linked}",
         f"missing={missing}",
+        *run_health_fragments,
     ]
     return "; ".join(bits)
+
+
+def _resolve_record_stage4_diagnostic_packet(record: dict[str, Any]) -> dict[str, Any]:
+    packet = record.get("stage4_diagnostic_packet", {})
+    if isinstance(packet, dict) and packet:
+        return packet
+    record_root = Path(str(record.get("record_root", "") or ""))
+    manifest_path = record_root / "manifest.json"
+    if not manifest_path.exists():
+        return {}
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    packet = manifest.get("stage4_diagnostic_packet", {}) if isinstance(manifest, dict) else {}
+    return dict(packet) if isinstance(packet, dict) else {}
 
 
 def _append_latest_live_pair(
@@ -199,11 +229,7 @@ def _build_compare_merge_audit_proof_signal_summary(diff: dict[str, Any]) -> str
             open_item_count = _coerce_positive_int(follow_up.get("open_item_count"))
             if open_item_count > 0:
                 fragments.append(f"open={open_item_count}")
-            consequence_markers = {
-                str(item)
-                for item in follow_up.get("consequence_markers", [])
-                if str(item or "")
-            }
+            consequence_markers = {str(item) for item in follow_up.get("consequence_markers", []) if str(item or "")}
             if "remaining_blocker" in consequence_markers:
                 fragments.append("blocker")
             addendum_finding_count = _coerce_positive_int(follow_up.get("addendum_finding_count"))
@@ -245,16 +271,22 @@ def _build_compare_native_proof_signal_summary(diff: dict[str, Any]) -> str:
                 fragments.append(f"diag={packet_status}")
             if _stage4_diagnostic_is_stale(stage4_diagnostic_packet):
                 fragments.append("stale_summary")
-            cove_advisory_count = _coerce_positive_int(
-                stage4_diagnostic_packet.get("cove_runtime_advisory_count")
-            )
+            cove_advisory_count = _coerce_positive_int(stage4_diagnostic_packet.get("cove_runtime_advisory_count"))
             if cove_advisory_count > 0:
                 fragments.append(f"cove_advisory={cove_advisory_count}")
-            semantic_retry_count = _coerce_positive_int(
-                stage4_diagnostic_packet.get("cove_semantic_fail_closed_count")
-            )
+            semantic_retry_count = _coerce_positive_int(stage4_diagnostic_packet.get("cove_semantic_fail_closed_count"))
             if semantic_retry_count > 0:
                 fragments.append(f"semantic_retry={semantic_retry_count}")
+            run_health_counts = stage4_diagnostic_packet.get("stage4_run_health_counts", {})
+            if isinstance(run_health_counts, dict):
+                for key, label in (
+                    ("pure_pass", "pure"),
+                    ("repaired_pass", "repaired"),
+                    ("retry_heavy_pass", "retry_heavy"),
+                ):
+                    count = _coerce_positive_int(run_health_counts.get(key))
+                    if count > 0:
+                        fragments.append(f"{label}={count}")
             proof_warn_count = _stage4_diagnostic_total_proof_warn(stage4_diagnostic_packet)
             if proof_warn_count > 0:
                 fragments.append(f"proof_warn={proof_warn_count}")

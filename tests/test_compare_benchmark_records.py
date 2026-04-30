@@ -5,7 +5,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 INDEX_FIELDS = [
     "run_id",
     "recorded_at",
@@ -32,6 +31,27 @@ def _load_compare_module():
     assert spec.loader is not None
     spec.loader.exec_module(module)
     return module
+
+
+def test_stage4_diagnostic_packet_preserves_run_health_counts():
+    module = _load_compare_module()
+
+    packet = module._normalize_stage4_diagnostic_packet(
+        {
+            "schema_version": "stage4_diagnostic_packet_v1",
+            "stage4_run_health_counts": {
+                "pure_pass": 2,
+                "repaired_pass": 1,
+                "retry_heavy_pass": 1,
+            },
+        }
+    )
+    counts = module._stage4_diagnostic_count_summary(packet)
+
+    assert packet["stage4_run_health_counts"]["pure_pass"] == 2
+    assert counts["pure_pass"] == 2
+    assert counts["repaired_pass"] == 1
+    assert counts["retry_heavy_pass"] == 1
 
 
 def _write_record(
@@ -116,7 +136,11 @@ def _write_record(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
-    if runtime_audit_summary_payload is not None or proof_digest_status is not None or guarded_summary_payload is not None:
+    if (
+        runtime_audit_summary_payload is not None
+        or proof_digest_status is not None
+        or guarded_summary_payload is not None
+    ):
         logs_dir = record_root / "logs"
         logs_dir.mkdir(parents=True, exist_ok=True)
         payload = runtime_audit_summary_payload or {
@@ -1184,10 +1208,7 @@ def test_compare_benchmark_records_surfaces_companion_merge_audit_watchpoints(tm
         "severity": "warn",
         "scope": "post_run_merge_audit_md",
         "side": "left",
-        "message": (
-            "left merge audit residual markers: "
-            "partially_realized,not_resolved,blocker,remaining_watchpoints"
-        ),
+        "message": ("left merge audit residual markers: partially_realized,not_resolved,blocker,remaining_watchpoints"),
     } in watchpoints
     assert {
         "id": "post_run_merge_audit_finding_breakdown",
@@ -1531,16 +1552,14 @@ def test_compare_benchmark_records_companion_merge_audit_clean_summary_is_info_o
         "message": "right merge audit summary: status=final",
     } in watchpoints
     assert not any(
-        item["id"] == "post_run_merge_audit_severity_attention" and item.get("side") == "right"
-        for item in watchpoints
+        item["id"] == "post_run_merge_audit_severity_attention" and item.get("side") == "right" for item in watchpoints
     )
     assert not any(
         item["id"] == "post_run_merge_audit_remaining_watchpoints" and item.get("side") == "right"
         for item in watchpoints
     )
     assert not any(
-        item["id"] == "post_run_merge_audit_residual_attention" and item.get("side") == "right"
-        for item in watchpoints
+        item["id"] == "post_run_merge_audit_residual_attention" and item.get("side") == "right" for item in watchpoints
     )
 
 
@@ -1721,8 +1740,7 @@ def test_compare_benchmark_records_surfaces_missing_target_hygiene_with_remediat
         "scope": "benchmark_companion_links",
         "side": "right",
         "message": (
-            "right benchmark companion state is missing_target "
-            "for post_run_evidence_json,supporting_context_md"
+            "right benchmark companion state is missing_target for post_run_evidence_json,supporting_context_md"
         ),
     } in watchpoints
     assert {

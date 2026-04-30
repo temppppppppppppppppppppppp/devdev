@@ -138,6 +138,8 @@ def _run_pass(pp: Stage4PostProcessor, tmp_path: Path, *, with_artifact_meta: bo
                 "_stage4_attempt_key": "s4:ep3:arc1:a1:test",
                 "_stage4_attempt_artifact_meta": {
                     "attempt_key": "s4:ep3:arc1:a1:test",
+                    "attempt_num": 1,
+                    "final_verdict": "PASS",
                     "artifact_path": artifact_file.relative_to(tmp_path).as_posix(),
                 },
             }
@@ -237,3 +239,5 @@ def test_soft_clean_when_no_stage4_soft_failures_exist(tmp_path: Path) -> None:
     assert (
         truth_manifest["entries"]["human_facing_draft"]["normalization"]["title_header_normalization_applied"] is True
     )
+    assert settlement["run_health"]["success_class"] == "pure_pass"
+    assert settlement["quality"]["run_health"]["pure_pass"] is True

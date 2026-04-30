@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.compare_benchmark_records import (
+from scripts.compare_benchmark_records import (  # noqa: E402
     REMEDIATION_SURFACE_PRIORITY,
     _build_operator_report_line,
     _build_operator_summary,
@@ -19,13 +19,11 @@ from scripts.compare_benchmark_records import (
     _display_relative_path,
     _resolve_benchmark_root,
     load_benchmark_record,
-)
+)  # noqa: E402
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Audit archived benchmark companion-link coverage read-only."
-    )
+    parser = argparse.ArgumentParser(description="Audit archived benchmark companion-link coverage read-only.")
     parser.add_argument(
         "--strict",
         action="store_true",
@@ -109,6 +107,11 @@ def audit_benchmark_companion_links(
                 "sidecar_path": (
                     str(companion_links.get("source_path", "") or "") if isinstance(companion_links, dict) else ""
                 ),
+                "stage4_diagnostic_packet": (
+                    dict(record.get("stage4_diagnostic_packet") or {})
+                    if isinstance(record.get("stage4_diagnostic_packet"), dict)
+                    else {}
+                ),
                 "linked_surfaces": linked_surfaces,
                 "missing_surfaces": missing_surfaces,
                 "remediation_hints": remediation_hints,
@@ -187,10 +190,11 @@ def format_audit_text(payload: dict[str, Any]) -> str:
         count_by_surface = remediation_summary.get("count_by_surface", {})
         highest_priority_surface = str(remediation_summary.get("highest_priority_surface", "") or "")
         if hint_count > 0:
-            surface_bits = [
-                f"{surface}={count}"
-                for surface, count in sorted(count_by_surface.items())
-            ] if isinstance(count_by_surface, dict) else []
+            surface_bits = (
+                [f"{surface}={count}" for surface, count in sorted(count_by_surface.items())]
+                if isinstance(count_by_surface, dict)
+                else []
+            )
             lines.append(
                 "Remediation summary: "
                 f"hint_count={hint_count}"
@@ -222,10 +226,7 @@ def format_audit_text(payload: dict[str, Any]) -> str:
             remediation_hints = record.get("remediation_hints", [])
             if isinstance(remediation_hints, list):
                 for hint in remediation_hints:
-                    lines.append(
-                        "  remediation: "
-                        f"{hint.get('surface')} -> {hint.get('suggested_command')}"
-                    )
+                    lines.append(f"  remediation: {hint.get('surface')} -> {hint.get('suggested_command')}")
     return "\n".join(lines)
 
 
@@ -307,11 +308,7 @@ def _build_remediation_summary(remediation_hints: list[dict[str, str]]) -> dict[
         if not surface:
             continue
         count_by_surface[surface] = count_by_surface.get(surface, 0) + 1
-    surfaces_by_priority = [
-        surface
-        for surface in REMEDIATION_SURFACE_PRIORITY
-        if count_by_surface.get(surface, 0) > 0
-    ]
+    surfaces_by_priority = [surface for surface in REMEDIATION_SURFACE_PRIORITY if count_by_surface.get(surface, 0) > 0]
     return {
         "hint_count": len(remediation_hints),
         "count_by_surface": count_by_surface,
@@ -373,10 +370,7 @@ def _build_remediation_hints(
                 "surface": surface,
                 "current_value": raw_value,
                 "suggested_flag": flag,
-                "suggested_command": (
-                    f"python scripts/link_benchmark_companions.py {run_id} "
-                    f"{flag} {replacement}"
-                ),
+                "suggested_command": (f"python scripts/link_benchmark_companions.py {run_id} {flag} {replacement}"),
             }
         )
     return hints

@@ -1735,6 +1735,9 @@ def _build_result_summary(
     latest_label: dict | None,
     quality_summary: dict,
 ) -> dict:
+    latest_run_health = (
+        dict(quality_summary.get("latest_run_health") or {}) if isinstance(quality_summary, dict) else {}
+    )
     if not latest_ep or not latest_label:
         return {
             "available": False,
@@ -1746,6 +1749,7 @@ def _build_result_summary(
             "open_review": "",
             "issues": [],
             "signal_alerts": [],
+            "run_health": latest_run_health,
             "next_action": "Stage 4 PASS 원고가 누적되면 결과 요약이 표시됩니다.",
         }
 
@@ -1778,6 +1782,7 @@ def _build_result_summary(
         "open_review": open_review,
         "issues": issues[:3],
         "signal_alerts": signal_alerts,
+        "run_health": latest_run_health,
         "fix_now": fix_now,
         "keep_next": keep_next,
         "avoid_next": avoid_next,
@@ -1793,6 +1798,10 @@ def _build_compare_rows(labels: list[dict], signals: list[dict]) -> list[dict]:
     for ep_num in ep_nums[:8]:
         label = label_map.get(ep_num, {})
         signal = signal_map.get(ep_num, {})
+        signal_summary = signal.get("signal_summary") if isinstance(signal, dict) else {}
+        run_health = {}
+        if isinstance(signal_summary, dict):
+            run_health = dict(signal_summary.get("run_health") or {})
         rows.append(
             {
                 "ep_num": ep_num,
@@ -1803,6 +1812,7 @@ def _build_compare_rows(labels: list[dict], signals: list[dict]) -> list[dict]:
                 "compression": signal.get("compression_ratio"),
                 "burstiness": signal.get("burstiness"),
                 "complexity": signal.get("complexity"),
+                "run_health": run_health,
             }
         )
     return rows
@@ -2129,9 +2139,7 @@ def _extract_proof_warning_taxonomy_counts(summary: dict | None) -> dict[str, di
         if not isinstance(taxonomy_counts, dict):
             continue
         counts = {
-            str(field): count
-            for field, value in taxonomy_counts.items()
-            if (count := _positive_issue_count(value)) > 0
+            str(field): count for field, value in taxonomy_counts.items() if (count := _positive_issue_count(value)) > 0
         }
         if counts:
             stage_counts[str(stage_key)] = counts
@@ -2348,9 +2356,7 @@ def _mark_runtime_summary_freshness_against_stage4(runtime_audit_summary: dict, 
     tag = str(runtime_audit_summary.get("tag", "") or "").strip()
     run_scope = runtime_audit_summary.get("run_scope", {})
     run_scope = run_scope if isinstance(run_scope, dict) else {}
-    summary_timestamp = str(
-        runtime_audit_summary.get("timestamp") or run_scope.get("summary_timestamp") or ""
-    ).strip()
+    summary_timestamp = str(runtime_audit_summary.get("timestamp") or run_scope.get("summary_timestamp") or "").strip()
     latest_stage4_ts = str(stage4_context.get("latest_ts") or "").strip()
     summary_dt = _parse_dashboard_timestamp(summary_timestamp)
     latest_stage4_dt = _parse_dashboard_timestamp(latest_stage4_ts)
