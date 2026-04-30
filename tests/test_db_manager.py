@@ -150,6 +150,71 @@ def test_save_blueprint_lineage_sidecar_respects_outer_transaction_rollback(db):
     assert db.get_blueprint_lineage(3) is None
 
 
+def test_save_blueprint_lineage_sidecar_updates_and_clears_stale_rows(db):
+    db.save_blueprint(
+        4,
+        {
+            "ep_num": 4,
+            "_stage3_meta": {
+                "lineage_schema_version": "stage3-blueprint-lineage-v1",
+                "frontier_basis_version": "stage3-frontier-basis-v1",
+                "generated_at": "old",
+                "source_prev_manuscript_ep": 3,
+                "source_prev_manuscript_hash": "a" * 64,
+                "lineage_complete": True,
+            },
+        },
+    )
+    db.save_blueprint(
+        4,
+        {
+            "ep_num": 4,
+            "_stage3_meta": {
+                "lineage_schema_version": "stage3-blueprint-lineage-v1",
+                "frontier_basis_version": "stage3-frontier-basis-v1",
+                "generated_at": "new",
+                "source_prev_manuscript_ep": 3,
+                "source_prev_manuscript_hash": "b" * 64,
+                "lineage_complete": True,
+            },
+        },
+    )
+
+    lineage = db.get_blueprint_lineage(4)
+    assert lineage["generated_at"] == "new"
+    assert lineage["source_prev_manuscript_hash"] == "b" * 64
+
+    db.save_blueprint(4, {"ep_num": 4, "summary": "legacy overwrite without lineage"})
+
+    assert db.get_blueprint_lineage(4) is None
+
+
+def test_save_blueprint_lineage_sidecar_persists_no_prior_episode_contract(db):
+    db.save_blueprint(
+        1,
+        {
+            "ep_num": 1,
+            "_stage3_meta": {
+                "lineage_schema_version": "stage3-blueprint-lineage-v1",
+                "frontier_basis_version": "stage3-frontier-basis-v1",
+                "generated_at": "2026-04-30T00:00:00+00:00",
+                "source_prev_manuscript_ep": 0,
+                "source_prev_manuscript_hash": "",
+                "source_prev_manuscript_created_at": "",
+                "lineage_complete": True,
+                "lineage_missing_reason": "no_prior_episode",
+            },
+        },
+    )
+
+    lineage = db.get_blueprint_lineage(1)
+
+    assert lineage["source_prev_manuscript_ep"] == 0
+    assert lineage["source_prev_manuscript_hash"] == ""
+    assert lineage["lineage_complete"] is True
+    assert lineage["lineage_missing_reason"] == "no_prior_episode"
+
+
 def test_save_and_get_manuscript_and_latest_episode_number(db):
     db.save_manuscript(1, "제목1", "내용1")
     db.save_manuscript(5, "제목5", "내용5")

@@ -48,12 +48,44 @@ def _strip_stable_provisional_item_names(text: str) -> str:
     return cleaned
 
 
-def _stage3_lineage_matches_prev_manuscript(*, ep_num: int, blueprint: dict, prev_manuscript_text: str) -> bool:
+_LINEAGE_SIGNAL_KEYS = {
+    "lineage_schema_version",
+    "frontier_basis_version",
+    "generated_at",
+    "source_prev_manuscript_ep",
+    "source_prev_manuscript_hash",
+    "source_prev_manuscript_created_at",
+    "lineage_complete",
+    "lineage_missing_reason",
+    "genre_strategy_contract_id",
+}
+
+
+def _blueprint_lineage_meta(
+    *,
+    blueprint: dict,
+    blueprint_lineage: dict | None = None,
+) -> tuple[dict[str, Any], str]:
+    if isinstance(blueprint_lineage, dict) and any(blueprint_lineage.get(key) for key in _LINEAGE_SIGNAL_KEYS):
+        return dict(blueprint_lineage), "db_blueprint_lineage"
     stage3_meta = blueprint.get("_stage3_meta") if isinstance(blueprint, dict) else {}
     if not isinstance(stage3_meta, dict):
+        return {}, ""
+    return dict(stage3_meta), "_stage3_meta"
+
+
+def _stage3_lineage_matches_prev_manuscript(
+    *,
+    ep_num: int,
+    blueprint: dict,
+    prev_manuscript_text: str,
+    blueprint_lineage: dict | None = None,
+) -> bool:
+    lineage_meta, _source = _blueprint_lineage_meta(blueprint=blueprint, blueprint_lineage=blueprint_lineage)
+    if not lineage_meta:
         return False
 
-    recorded_prev_hash = str(stage3_meta.get("source_prev_manuscript_hash") or "").strip()
+    recorded_prev_hash = str(lineage_meta.get("source_prev_manuscript_hash") or "").strip()
     if not recorded_prev_hash or not prev_manuscript_text:
         return False
 
@@ -62,7 +94,7 @@ def _stage3_lineage_matches_prev_manuscript(*, ep_num: int, blueprint: dict, pre
         return False
 
     try:
-        recorded_prev_ep = int(stage3_meta.get("source_prev_manuscript_ep") or 0)
+        recorded_prev_ep = int(lineage_meta.get("source_prev_manuscript_ep") or 0)
     except (TypeError, ValueError):
         recorded_prev_ep = 0
     if recorded_prev_ep and recorded_prev_ep != int(ep_num or 0) - 1:
@@ -76,14 +108,15 @@ def detect_stage4_frontier_staleness(
     blueprint: dict,
     arc_data: dict,
     prev_manuscript_text: str,
+    blueprint_lineage: dict | None = None,
 ) -> dict:
     """Detect hard stale-frontier pressure without rewriting narrative facts."""
 
     prev_text = compact_frontier_text(prev_manuscript_text, max_chars=8000)
-    stage3_meta = blueprint.get("_stage3_meta") if isinstance(blueprint, dict) else {}
+    lineage_meta, lineage_source = _blueprint_lineage_meta(blueprint=blueprint, blueprint_lineage=blueprint_lineage)
     recorded_prev_hash = ""
-    if isinstance(stage3_meta, dict):
-        recorded_prev_hash = str(stage3_meta.get("source_prev_manuscript_hash") or "").strip()
+    if lineage_meta:
+        recorded_prev_hash = str(lineage_meta.get("source_prev_manuscript_hash") or "").strip()
     current_prev_hash = hashlib.sha256(str(prev_manuscript_text or "").encode("utf-8")).hexdigest() if prev_text else ""
     if recorded_prev_hash and current_prev_hash and recorded_prev_hash != current_prev_hash:
         return {
@@ -94,13 +127,14 @@ def detect_stage4_frontier_staleness(
                 "ep_num": int(ep_num or 0),
                 "recorded_prev_manuscript_hash": recorded_prev_hash,
                 "current_prev_manuscript_hash": current_prev_hash,
-                "source": "stage3_meta+accepted_prev_manuscript",
+                "source": f"{lineage_source or 'stage3_meta'}+accepted_prev_manuscript",
             },
         }
     stage3_lineage_matches_prev = _stage3_lineage_matches_prev_manuscript(
         ep_num=ep_num,
         blueprint=blueprint,
         prev_manuscript_text=prev_manuscript_text,
+        blueprint_lineage=blueprint_lineage,
     )
 
     if not has_completed_investment_order(prev_text):
@@ -155,6 +189,7 @@ def detect_stage4_frontier_staleness(
             "frontier_wti_months": sorted(frontier_months),
             "order_replay_terms": order_replay_terms[:6],
             "source": "accepted_prev_manuscript+stage3_frontier",
+            "lineage_source": lineage_source or "",
             "stage3_lineage_matches_prev_manuscript": stage3_lineage_matches_prev,
         },
     }
@@ -165,23 +200,24 @@ def frontier_status_satisfied_by_stage3_lineage(
     blueprint: dict,
     frontier_status: dict,
     prev_manuscript_text: str,
+    blueprint_lineage: dict | None = None,
 ) -> bool:
     if not isinstance(blueprint, dict) or not isinstance(frontier_status, dict):
         return False
     if frontier_status.get("status") != "requires_actual_manuscript_revalidation":
         return False
 
-    stage3_meta = blueprint.get("_stage3_meta", {})
+    lineage_meta, _lineage_source = _blueprint_lineage_meta(blueprint=blueprint, blueprint_lineage=blueprint_lineage)
     status_evidence = frontier_status.get("evidence", {})
-    if not isinstance(stage3_meta, dict) or not isinstance(status_evidence, dict):
+    if not lineage_meta or not isinstance(status_evidence, dict):
         return False
 
     try:
-        recorded_prev_ep = int(stage3_meta.get("source_prev_manuscript_ep") or 0)
+        recorded_prev_ep = int(lineage_meta.get("source_prev_manuscript_ep") or 0)
         accepted_ep = int(status_evidence.get("accepted_ep") or 0)
     except (TypeError, ValueError):
         return False
-    recorded_prev_hash = str(stage3_meta.get("source_prev_manuscript_hash") or "").strip()
+    recorded_prev_hash = str(lineage_meta.get("source_prev_manuscript_hash") or "").strip()
     accepted_hash = str(status_evidence.get("accepted_manuscript_hash") or "").strip()
     current_prev_hash = (
         hashlib.sha256(str(prev_manuscript_text or "").encode("utf-8")).hexdigest() if prev_manuscript_text else ""

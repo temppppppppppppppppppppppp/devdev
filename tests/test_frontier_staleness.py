@@ -2,6 +2,7 @@ import hashlib
 
 from modules.core.frontier_staleness import (
     detect_stage4_frontier_staleness,
+    frontier_status_satisfied_by_stage3_lineage,
     mark_downstream_frontier_requires_revalidation,
 )
 
@@ -50,8 +51,57 @@ def test_detect_stage4_frontier_staleness_flags_stage3_meta_hash_mismatch_withou
 
     assert result["stale"] is True
     assert result["severity"] == "hard"
-    assert result["evidence"]["source"] == "stage3_meta+accepted_prev_manuscript"
+    assert result["evidence"]["source"] == "_stage3_meta+accepted_prev_manuscript"
     assert result["evidence"]["recorded_prev_manuscript_hash"] == stale_hash
+
+
+def test_detect_stage4_frontier_staleness_prefers_db_lineage_sidecar_over_stale_json_meta():
+    prev_text = "확정된 WTI 원유 선물 3월물 포지션을 점검한다."
+    prev_hash = hashlib.sha256(prev_text.encode("utf-8")).hexdigest()
+    stale_hash = hashlib.sha256(b"old blueprint json lineage").hexdigest()
+
+    result = detect_stage4_frontier_staleness(
+        ep_num=6,
+        blueprint={
+            "summary": "확정 포지션을 리스크 관리한다.",
+            "_stage3_meta": {
+                "source_prev_manuscript_ep": 5,
+                "source_prev_manuscript_hash": stale_hash,
+            },
+        },
+        blueprint_lineage={
+            "ep_num": 6,
+            "source_prev_manuscript_ep": 5,
+            "source_prev_manuscript_hash": prev_hash,
+            "frontier_basis_version": "stage3-frontier-basis-v1",
+            "lineage_complete": True,
+        },
+        arc_data={},
+        prev_manuscript_text=prev_text,
+    )
+
+    assert result["stale"] is False
+
+
+def test_detect_stage4_frontier_staleness_uses_db_lineage_sidecar_when_json_meta_missing():
+    prev_text = "새로 확정된 계약 체결 완료. 모두가 서명본을 확인했다."
+    stale_hash = hashlib.sha256(b"old accepted contract").hexdigest()
+
+    result = detect_stage4_frontier_staleness(
+        ep_num=6,
+        blueprint={"summary": "다음 법적 압박으로 넘어간다."},
+        blueprint_lineage={
+            "ep_num": 6,
+            "source_prev_manuscript_ep": 5,
+            "source_prev_manuscript_hash": stale_hash,
+            "lineage_complete": True,
+        },
+        arc_data={},
+        prev_manuscript_text=prev_text,
+    )
+
+    assert result["stale"] is True
+    assert result["evidence"]["source"] == "db_blueprint_lineage+accepted_prev_manuscript"
 
 
 def test_detect_stage4_frontier_staleness_allows_verified_stage3_lineage_to_carry_same_position():
@@ -74,6 +124,28 @@ def test_detect_stage4_frontier_staleness_allows_verified_stage3_lineage_to_carr
 
     assert result["stale"] is False
     assert result["severity"] == "none"
+
+
+def test_frontier_status_satisfied_by_db_lineage_sidecar():
+    prev_text = "WTI 원유 선물 3월물 매수 포지션에 15억 원 진입 완료. 딸깍."
+    prev_hash = hashlib.sha256(prev_text.encode("utf-8")).hexdigest()
+
+    satisfied = frontier_status_satisfied_by_stage3_lineage(
+        blueprint={"_stage3_meta": {"source_prev_manuscript_ep": 5, "source_prev_manuscript_hash": "stale"}},
+        blueprint_lineage={
+            "ep_num": 6,
+            "source_prev_manuscript_ep": 5,
+            "source_prev_manuscript_hash": prev_hash,
+            "lineage_complete": True,
+        },
+        frontier_status={
+            "status": "requires_actual_manuscript_revalidation",
+            "evidence": {"accepted_ep": 5, "accepted_manuscript_hash": prev_hash},
+        },
+        prev_manuscript_text=prev_text,
+    )
+
+    assert satisfied is True
 
 
 def test_detect_stage4_frontier_staleness_still_flags_new_month_with_verified_stage3_lineage():
