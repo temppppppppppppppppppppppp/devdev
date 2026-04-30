@@ -17,6 +17,7 @@ from modules.core.project_support import resolve_project_pov_contract
 from modules.core.quality_signal_metrics import compute_quality_signal_bundle, extract_warning_count
 from modules.core.soft_failure import report_soft_failure, resolve_project_log_dir
 from modules.core.stage4_post_pass_runtime import Stage4PostPassRuntime
+from modules.core.stage4_truth_manifest import build_human_facing_draft_text, build_stage4_truth_manifest
 
 
 class Stage4PostProcessor:
@@ -196,7 +197,10 @@ class Stage4PostProcessor:
         output_dir,
     ) -> Path:
         file_path = self._build_human_facing_manuscript_path(output_dir=output_dir, next_ep=next_ep)
-        file_path.write_text(f"# {final_title}\n\n{final_manuscript}", encoding="utf-8")
+        file_path.write_text(
+            build_human_facing_draft_text(title=final_title, manuscript=final_manuscript),
+            encoding="utf-8",
+        )
         return file_path
 
     def _build_stage4_settlement_packet(
@@ -212,6 +216,7 @@ class Stage4PostProcessor:
         quality_signals,
         post_pass_payload: dict,
         output_dir,
+        attempt_artifact_meta: dict | None = None,
     ) -> dict:
         txt_path = self._build_human_facing_manuscript_path(output_dir=output_dir, next_ep=next_ep)
         packet_path = self._build_stage4_settlement_packet_path(output_dir=output_dir, next_ep=next_ep)
@@ -225,6 +230,17 @@ class Stage4PostProcessor:
         bible_delta = post_pass_payload.get("bible_delta", {}) if isinstance(post_pass_payload, dict) else {}
         title = str(final_title or f"제{next_ep}화").strip() or f"제{next_ep}화"
         manuscript_hash = hashlib.sha256(str(final_manuscript or "").encode("utf-8")).hexdigest()
+        project_root = getattr(getattr(getattr(self.ctx, "current_project", None), "paths", None), "root", None)
+        truth_manifest = build_stage4_truth_manifest(
+            ep_num=next_ep,
+            title=title,
+            db_manuscript=final_manuscript,
+            draft_path=self._relativize_artifact_path(txt_path),
+            artifact_meta=attempt_artifact_meta,
+            project_root=project_root,
+            settlement_path=self._relativize_artifact_path(packet_path),
+            fully_settled=True,
+        )
         return {
             "packet_version": "stage4_settlement_packet_v1",
             "stage": 4,
@@ -260,6 +276,7 @@ class Stage4PostProcessor:
                 "episode_bible_table": "episode_bibles",
                 "state_log_table": "state_logs",
             },
+            "truth_manifest": truth_manifest,
         }
 
     def _persist_stage4_settlement_packet(
@@ -275,6 +292,7 @@ class Stage4PostProcessor:
         quality_signals,
         post_pass_payload: dict,
         output_dir,
+        attempt_artifact_meta: dict | None = None,
     ) -> Path:
         packet_path = self._build_stage4_settlement_packet_path(output_dir=output_dir, next_ep=next_ep)
         packet = self._build_stage4_settlement_packet(
@@ -288,6 +306,7 @@ class Stage4PostProcessor:
             quality_signals=quality_signals,
             post_pass_payload=post_pass_payload,
             output_dir=output_dir,
+            attempt_artifact_meta=attempt_artifact_meta,
         )
         packet_path.write_text(
             json.dumps(packet, ensure_ascii=False, indent=2, sort_keys=True, default=str), encoding="utf-8"
@@ -1454,9 +1473,12 @@ class Stage4PostProcessor:
     ) -> dict:
         quality_labels = None
         stage4_attempt_key = ""
+        attempt_artifact_meta = {}
         if isinstance(final_state_updates, dict):
             quality_labels = final_state_updates.get("_director_quality_labels")
             stage4_attempt_key = self._extract_stage4_settlement_attempt_key(final_state_updates)
+            raw_artifact_meta = final_state_updates.get("_stage4_attempt_artifact_meta")
+            attempt_artifact_meta = dict(raw_artifact_meta or {}) if isinstance(raw_artifact_meta, dict) else {}
             final_state_updates = self._strip_stage4_internal_state_updates(final_state_updates)
         final_manuscript = self._normalize_reader_facing_manuscript(final_manuscript)
         approved_hud_updates, hud_update_error = self._resolve_approved_hud_updates(
@@ -1466,6 +1488,7 @@ class Stage4PostProcessor:
         return {
             "quality_labels": quality_labels,
             "attempt_key": stage4_attempt_key,
+            "attempt_artifact_meta": attempt_artifact_meta,
             "final_manuscript": final_manuscript,
             "final_state_updates": final_state_updates,
             "approved_hud_updates": approved_hud_updates,
@@ -1604,6 +1627,7 @@ class Stage4PostProcessor:
         approved_hud_updates = settlement_inputs["approved_hud_updates"]
         hud_update_error = settlement_inputs["hud_update_error"]
         settlement_status_context = settlement_inputs["settlement_status_context"]
+        attempt_artifact_meta = settlement_inputs["attempt_artifact_meta"]
 
         if len(final_manuscript or "") < int(ManuscriptLimits.MIN_LENGTH):
             return self._handle_post_normalization_artifact_contract_failure(
@@ -1672,6 +1696,7 @@ class Stage4PostProcessor:
                 quality_signals=_quality_signals,
                 post_pass_payload=post_pass_payload,
                 output_dir=output_dir,
+                attempt_artifact_meta=attempt_artifact_meta,
             )
         except Exception as packet_err:
             logging.error("[S4-SETTLEMENT] settlement packet save failed ep=%d: %s", next_ep, packet_err)
