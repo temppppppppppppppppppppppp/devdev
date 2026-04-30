@@ -107,11 +107,27 @@ class DBBootstrapRuntime:
                 source_prev_manuscript_hash TEXT,
                 source_prev_manuscript_created_at TEXT,
                 genre_strategy_contract_id TEXT,
+                genre_strategy_contract_hash TEXT,
+                genre_strategy_contract_authority_level TEXT,
+                genre_strategy_contract_strategy TEXT,
+                genre_strategy_contract_source TEXT,
+                genre_strategy_contract_coverage_outcome TEXT,
                 lineage_complete INTEGER DEFAULT 0,
                 lineage_missing_reason TEXT,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """
+        )
+        self.owner._ensure_columns_exist(
+            "blueprint_lineage",
+            self.owner._column_def_pairs(
+                ("genre_strategy_contract_hash", "TEXT"),
+                ("genre_strategy_contract_authority_level", "TEXT"),
+                ("genre_strategy_contract_strategy", "TEXT"),
+                ("genre_strategy_contract_source", "TEXT"),
+                ("genre_strategy_contract_coverage_outcome", "TEXT"),
+            ),
+            log_label="blueprint_lineage",
         )
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_blueprint_lineage_prev_ep ON blueprint_lineage(source_prev_manuscript_ep)"
