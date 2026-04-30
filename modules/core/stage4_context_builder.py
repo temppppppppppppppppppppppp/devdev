@@ -41,7 +41,11 @@ from modules.core.cross_stage_authority_packet import (
     collect_numeric_carryover_entries,
     extract_explicit_cross_stage_authority_packet,
 )
-from modules.core.final_accepted_context import has_final_accepted_context_accessor, load_final_accepted_manuscript_row
+from modules.core.final_accepted_context import (
+    has_final_accepted_context_accessor,
+    load_final_accepted_manuscript_row,
+    load_final_accepted_manuscript_rows,
+)
 from modules.core.genre_contract_transport import render_stage4_genre_contract_packet
 from modules.core.genre_schema_builder import is_wuxia
 from modules.core.non_wuxia_recovery_policy import normalize_chain_link_for_genre, normalize_genre_type
@@ -1633,11 +1637,7 @@ class Stage4ContextBuilder:
             return ""
         try:
             if has_final_accepted_context_accessor(db):
-                manuscripts = [
-                    row
-                    for ep in range(int(start_ep or 0), int(end_ep or 0) + 1)
-                    if (row := load_final_accepted_manuscript_row(db, ep))
-                ]
+                manuscripts = load_final_accepted_manuscript_rows(db, int(start_ep or 0), int(end_ep or 0) + 1)
             else:
                 manuscripts = db.get_manuscripts_range(start_ep, end_ep + 1)
         except Exception as e:
@@ -1993,9 +1993,7 @@ class Stage4ContextBuilder:
             _excerpt_max = _threshold("context.lookback_excerpt_chars", 5000)
             db = self.ctx.current_project.db
             if has_final_accepted_context_accessor(db):
-                manuscripts = [
-                    row for ep in range(start_ep, end_ep) if (row := load_final_accepted_manuscript_row(db, ep))
-                ]
+                manuscripts = load_final_accepted_manuscript_rows(db, start_ep, end_ep)
             else:
                 # [V66.1] B-4: 발췌 전용 쿼리 (첫 200자만 DB에서 조회)
                 manuscripts = db.get_recent_manuscript_excerpts(before_ep=next_ep, limit=10, max_chars=_excerpt_max)
@@ -2623,15 +2621,7 @@ class Stage4ContextBuilder:
         _tier1_rows: list[dict] = []
         try:
             if has_final_accepted_context_accessor(_db):
-                for _prev_ep in range(_tier1_start, next_ep):
-                    _row = load_final_accepted_manuscript_row(_db, _prev_ep)
-                    if _row:
-                        _tier1_rows.append(
-                            {
-                                "ep_num": _prev_ep,
-                                "content": _row.get("content", "") if isinstance(_row, dict) else str(_row),
-                            }
-                        )
+                _tier1_rows = load_final_accepted_manuscript_rows(_db, _tier1_start, next_ep)
             elif hasattr(_db, "get_manuscripts_range"):
                 _tier1_rows = _db.get_manuscripts_range(_tier1_start, next_ep) or []
             else:
