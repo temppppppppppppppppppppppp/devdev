@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 
 from modules.core.stage4_post_processor import Stage4PostProcessor
 
-
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_CANDIDATES = (
     ROOT / "docs/2026-03-13/stage4-pass-artifact-contract.json",
@@ -126,12 +125,28 @@ def _make_processor(tmp_path: Path, *, with_world_state: bool = False) -> Stage4
     return Stage4PostProcessor(ctx)
 
 
-def _run_pass(pp: Stage4PostProcessor, tmp_path: Path) -> bool:
+def _run_pass(pp: Stage4PostProcessor, tmp_path: Path, *, with_artifact_meta: bool = False) -> bool:
+    final_manuscript = "stage4 manuscript " * 400
+    final_state_updates = {"warning_count": 0}
+    if with_artifact_meta:
+        artifact_path = tmp_path / "logs" / "artifacts" / "stage4" / "ep_0003" / "attempt_01"
+        artifact_path.mkdir(parents=True, exist_ok=True)
+        artifact_file = artifact_path / "final_manuscript__A.txt"
+        artifact_file.write_text(final_manuscript, encoding="utf-8")
+        final_state_updates.update(
+            {
+                "_stage4_attempt_key": "s4:ep3:arc1:a1:test",
+                "_stage4_attempt_artifact_meta": {
+                    "attempt_key": "s4:ep3:arc1:a1:test",
+                    "artifact_path": artifact_file.relative_to(tmp_path).as_posix(),
+                },
+            }
+        )
     return pp.process_pass_result(
         next_ep=3,
-        final_manuscript="stage4 manuscript " * 400,
+        final_manuscript=final_manuscript,
         final_title="episode title",
-        final_state_updates={"warning_count": 0},
+        final_state_updates=final_state_updates,
         blueprint={"scene_breakdown": []},
         arc_data={"arc_no": 1},
         output_dir=tmp_path,
@@ -197,7 +212,7 @@ def test_soft_degraded_when_world_state_atomic_save_fails(tmp_path: Path) -> Non
 def test_soft_clean_when_no_stage4_soft_failures_exist(tmp_path: Path) -> None:
     pp = _make_processor(tmp_path)
 
-    result = _run_pass(pp, tmp_path)
+    result = _run_pass(pp, tmp_path, with_artifact_meta=True)
     soft_ops = _soft_failure_ops(tmp_path)
 
     assert result is True
@@ -214,3 +229,11 @@ def test_soft_clean_when_no_stage4_soft_failures_exist(tmp_path: Path) -> None:
     assert settlement["settlement"]["meta_save_failed"] is False
     assert settlement["artifacts"]["settlement_packet_path"].endswith("ep_0003.settlement.json")
     assert settlement["artifacts"]["human_facing_txt_path"].endswith("ep_0003.txt")
+    truth_manifest = settlement["truth_manifest"]
+    assert truth_manifest["manifest_version"] == "stage4_truth_manifest_v1"
+    assert truth_manifest["equivalent"] is True
+    assert truth_manifest["fully_settled"] is True
+    assert truth_manifest["entries"]["db_manuscript"]["normalized_hash"]
+    assert (
+        truth_manifest["entries"]["human_facing_draft"]["normalization"]["title_header_normalization_applied"] is True
+    )
