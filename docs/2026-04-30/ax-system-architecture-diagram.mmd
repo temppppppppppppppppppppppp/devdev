@@ -1,0 +1,196 @@
+flowchart TB
+    subgraph P0["0. 작품 재료"]
+        P0A["리서치 / 기획안"]
+        P0B["Stage 0 전처리"]
+        P0C["Phase 0 설계"]
+        P0D["작품 보호 규칙(work_guard)<br/>초안/동결"]
+        P0E["TR / BI"]
+        P0F["BI 회차 로드맵<br/>(plot_roadmap) 계약"]
+        P0A --> P0B --> P0C --> P0D --> P0E --> P0F
+    end
+
+    subgraph C0["특수 실행 제어 / 목표 계산"]
+        C0A["실행 제어기<br/>(OneStop / FrontierLag)"]
+        C0B["S3 목표 회차"]
+        C0C["S4 진행 경계 회차"]
+        C0D["되돌림 / 초기화 / 카나리아 정리"]
+        C0A --> C0B
+        C0A --> C0C
+    end
+
+    subgraph S2["1. Stage2 아크 기획"]
+        S2A["아크 맥락 로드"]
+        S2B["아크 후보 / 전술 흐름 생성"]
+        S2C["Director 감리"]
+        S2D{"Stage2 판정"}
+        S2E["PASS/PWF 확정 처리"]
+        S2F["PASS_WITH_FIX 부분 수정 루프"]
+        S2G["REJECT / 재시도 증거"]
+        S2H["단계 간 권한 패킷<br/>(cross_stage_authority_packet)"]
+        S2I["시도 장부 / 선택 보조 기록<br/>(stage_attempts / director_selections)"]
+        S2J["DB 아크 / 아크 산출물"]
+        S2K["StageTracker 재사용 표면"]
+        S2A --> S2B --> S2C --> S2D
+        S2D -->|"PASS"| S2E
+        S2D -->|"PASS_WITH_FIX"| S2F --> S2C
+        S2D -->|"REJECT"| S2G
+        S2E --> S2H --> S2J --> S2K
+        S2E --> S2I
+        S2G --> S2I
+    end
+
+    subgraph S3["2. Stage3 회차 Blueprint(설계도)"]
+        S3A["목표 회차 결정"]
+        S3B["이전 최종 승인 원고 로드"]
+        S3C["Stage3 의미 맥락 묶음"]
+        S3D["설계 제약 컴파일러<br/>(BlueprintConstraintCompiler)"]
+        S3E["3단계 blueprint 실행 루프"]
+        S3F["검증 / 재시도 조정"]
+        S3G{"Stage3 판정"}
+        S3H["blueprint_lineage 부착"]
+        S3I["blueprints / 시도 장부 저장"]
+        S3J["plans/blueprints/*.txt 참조 산출물"]
+        S3A --> S3B --> S3C --> S3D --> S3E --> S3F --> S3G
+        S3G -->|"PASS/PWF"| S3H --> S3I
+        S3G -->|"REJECT"| S3F
+        S3I -.참조용.-> S3J
+    end
+
+    subgraph S4["3. Stage4 회차 원고 생성 / 검증"]
+        S4A["blueprint + lineage 로드"]
+        S4A2["최신성 사전 점검<br/>lineage 해시 vs 최종 승인"]
+        S4A3["누락/오래됨이면<br/>Stage3 재생성 / 판정 조정"]
+        S4B["Stage4 맥락 조립기<br/>(Stage4ContextBuilder)"]
+        S4C["라운드 맥락<br/>필수 맥락 + 재시도 피드백"]
+        S4D["ChiefWriter 후보 원고 생성<br/>r0 후보군 / r>0 수정·재작성"]
+        S4D2["Python 사전 점검<br/>경고/보조 조언만"]
+        S4E["Director 후보 선택·판정<br/>선택 후보 + 의미 판정"]
+        S4E2["director_selections<br/>선택 보조 기록"]
+        S4F["런타임 경로 관문<br/>품질 하한 + 수정 범위/묶음(fix_scope/fix_pack)"]
+        S4G["선택 후 연속성/히스토리<br/>병렬, 실패 우선"]
+        S4H{"정착 경로"}
+        S4I["정착 전 PASS 시도<br/>시도 장부 + 해시/경로"]
+        S4J["PASS_WITH_FIX 루프<br/>국소 수정 + Director 재감리"]
+        S4K["REJECT / 전체 재작성 재시도<br/>거절 후보(rejected_best) + 재시도 스냅샷"]
+        S4L["blueprint 재생성 피드백"]
+        S4M["최종 원고 산출물"]
+        S4N["정착 패킷 / truth_manifest / txt 내보내기"]
+        S4O["fully_settled 최종 승인 진실"]
+        S4P["PASS 후 정착 처리<br/>길이 관문 + DB 트랜잭션"]
+        S4Q["SETTLEMENT_FAILED 강등"]
+        S4R["PASS 후 보조 증거<br/>episode_bible + 상태 로그 + 품질"]
+        S4S["최대 라운드 소진<br/>사람 검토 / 보호된 건너뜀"]
+        S4A --> S4A2
+        S4A2 -->|"최신"| S4B
+        S4A2 -->|"누락 / 오래됨"| S4A3 --> S3E
+        S4B --> S4C --> S4D --> S4D2 --> S4E
+        S4E --> S4E2
+        S4E --> S4F --> S4G --> S4H
+        S4H -->|"PASS"| S4I --> S4P
+        S4H -->|"PASS_WITH_FIX"| S4J --> S4E
+        S4H -->|"REJECT / 선택 후 충돌"| S4K
+        S4K -->|"라운드 남음"| S4B
+        S4K -->|"라운드 소진"| S4S
+        S4K --> S4L --> S3E
+        S4P -->|"DB 성공"| S4R --> S4N --> S4O --> S4M
+        S4P -->|"실패"| S4Q
+    end
+
+    subgraph M["4. 장기기억 / 권한 보조 계층"]
+        M1["최종 승인 맥락 접근자<br/>(final_accepted_context, 물리 테이블 아님)"]
+        M2["manuscripts DB 행"]
+        M3["FactLedger anchor"]
+        M4["WorldState anchor"]
+        M5["정본 사실(canonical_facts)"]
+        M6["blueprint_lineage<br/>(설계도 계보)"]
+        M7["연속성 투영 / bridge proposals"]
+        M8["맥락 캐시 / 세션 메모리 envelope<br/>(보조 계층)"]
+    end
+
+    subgraph O["5. 관측 / 증거"]
+        O1["시도 장부(stage_attempts)"]
+        O2["선택 보조 기록(director_selections)"]
+        O3["LLM 호출 장부(llm_calls)"]
+        O4["맥락 캐시 장부(context_cache_attempts)"]
+        O5["episode_production.jsonl"]
+        O6["후보 / 거절 / 최종 산출물"]
+        O7["품질 / 정착 보조 증거"]
+        O8["정착 기록(settlement.json / truth_manifest)"]
+        O9["런타임 감사 / 대시보드 증명"]
+        O10["attempt_raw_rationale"]
+        O11["episode_bibles / state_logs / ui_events"]
+    end
+
+    subgraph AX["6. AX 핵심 검토 지점"]
+        AX1["비용/지연: ChiefWriter + Director + 재시도"]
+        AX2["토큰: 필수 맥락 + 출력 예산"]
+        AX3["캐시: 적중률보다 최신성 식별 지문"]
+        AX4["권한: Director 판정 / 런타임 경로 / 정착 판정 분리"]
+        AX5["신뢰: 승인 해시 / 산출물 연결 / 되돌림 시 무효화"]
+    end
+
+    P0F --> S2A
+    C0B -.목표 회차 보조.-> S3A
+    C0C -.진행 경계 보조.-> S4A
+    S2H --> S3D
+    S2J --> S3A
+    S2J -.특수 실행 제어 입력.-> C0A
+    S2K --> S3A
+    S2I -.증거.-> O1
+    S2I -.증거.-> O2
+
+    S3I --> S4A
+    S3H --> M6
+    M1 --> S3B
+    M2 --> S3B
+
+    M1 --> S4C
+    M2 --> S4C
+    M3 --> S4C
+    M4 --> S4C
+    M5 --> S4C
+    M6 --> S4A
+    M6 --> S4A2
+    M7 --> S4G
+    M8 --> S4C
+    M8 --> S4D
+    M8 --> S4E
+
+    S4D -.LLM 호출.-> O3
+    S4E -.LLM 호출.-> O3
+    S4E2 -.보조 기록.-> O2
+    S4C -.캐시 관측.-> O4
+    S4F -.경로 증거.-> O1
+    S4G -.충돌 증거.-> O1
+    S4K -.원시 판단 근거.-> O10
+    S4M --> M2
+    S4O --> M1
+    S4R --> M3
+    S4R --> M4
+    S4R --> M5
+    S4I --> O6
+    S4P --> O1
+    S4R --> O7
+    S4R --> O11
+    S4N --> O8
+    S4Q --> O1
+    S4K --> O1
+    S4K --> O5
+    C0D --> M3
+    C0D --> M4
+    C0D --> M2
+    C0D --> O1
+    C0D -.현재 보강 필요 지점.-> M6
+    C0D -.현재 보강 필요 지점.-> M5
+    C0D -.현재 보강 필요 지점.-> M7
+
+    O1 --> AX1
+    O3 --> AX1
+    O3 --> AX2
+    O4 --> AX3
+    O8 --> AX4
+    O9 --> AX5
+    S4F --> AX4
+    S4H --> AX4
+    M1 --> AX5
+    M6 --> AX5

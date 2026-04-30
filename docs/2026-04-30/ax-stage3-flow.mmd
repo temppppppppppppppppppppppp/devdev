@@ -1,0 +1,16 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Malgun Gothic, Arial, sans-serif", "fontSize": "25px", "primaryColor": "#ecfeff", "primaryBorderColor": "#0891b2", "lineColor": "#334155", "tertiaryColor": "#ffffff"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 65, "rankSpacing": 85}} }%%
+flowchart TD
+    TITLE["<div style='width:900px; text-align:center; line-height:1.35'><b>S3 회차 설계도 상세도</b><br/>아크 계획과 최종 승인 원고를 합쳐 S4가 따라야 할 회차별 설계도를 만드는 구간</div>"]
+    A["<div style='width:900px; text-align:left; line-height:1.38'><b>1. 입력</b><br/>S2 아크 / 단계 간 권한 패킷, BI 회차 로드맵, 이전 최종 승인 원고, 정본 사실/세계상태/인물 상태<br/>OneStop / FrontierLag는 목표 회차 지정에 도움을 줄 수 있지만 본선 권한은 아님</div>"]
+    B["<div style='width:900px; text-align:left; line-height:1.38'><b>2. 목표 회차와 최종 승인 맥락</b><br/>목표 회차 결정 → 최종 승인 맥락 로드 → 의미 맥락 묶음 구성<br/>비최종 원고 row는 최종 승인 맥락 접근자에서 차단되어야 함</div>"]
+    C["<div style='width:900px; text-align:left; line-height:1.38'><b>3. 설계 제약 컴파일</b><br/>필수 장면, 금지사항, 회차 목표, 이월 정보, 장르 제약을 구조화<br/>S4가 원고를 쓰기 전에 반드시 지켜야 할 계약을 정리하는 단계</div>"]
+    D["<div style='width:900px; text-align:left; line-height:1.38'><b>4. 설계도 생성 / 검증</b><br/>3단계 설계도 실행 루프: 초안 → 검증 → 보강<br/>PASS/PWF만 S4 입력 후보가 됨<br/>REJECT는 검증/재시도 조정으로 되돌아감</div>"]
+    E["<div style='width:900px; text-align:left; line-height:1.38'><b>5. 계보 / 저장</b><br/>저장: DB blueprints, 시도 장부, 참조용 txt 산출물<br/>핵심: 설계도 계보에 이전 승인 원고 해시/source를 붙여 S4 최신성 사전 점검의 근거로 사용</div>"]
+    F["<div style='width:900px; text-align:left; line-height:1.38'><b>AX 검토 포인트</b><br/>stale 위험: 이전 승인 원고 해시와 설계도 계보 불일치<br/>토큰 위험: 의미 맥락 묶음이 커질수록 S4 전체 비용 증가<br/>권한 위험: 참조 txt보다 DB 계보/판정이 우선이어야 함</div>"]
+    TITLE --> A --> B --> C --> D --> E --> F
+    classDef title fill:#111827,color:#ffffff,stroke:#111827,font-size:30px;
+    classDef main fill:#ecfeff,stroke:#0891b2,color:#111827;
+    classDef risk fill:#fee2e2,stroke:#dc2626,color:#111827;
+    class TITLE title;
+    class A,B,C,D,E main;
+    class F risk;

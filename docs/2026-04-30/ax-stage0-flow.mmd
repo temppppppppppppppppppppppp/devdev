@@ -1,0 +1,17 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Malgun Gothic, Arial, sans-serif", "fontSize": "25px", "primaryColor": "#eef2ff", "primaryBorderColor": "#4f46e5", "lineColor": "#334155", "tertiaryColor": "#ffffff"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 65, "rankSpacing": 85}} }%%
+flowchart TD
+    TITLE["<div style='width:900px; text-align:center; line-height:1.35'><b>S0 재료 정리 / 작품 계약 상세도</b><br/>이후 생산이 흔들리지 않도록 작품 정본과 운영 계약을 고정하는 구간</div>"]
+    A["<div style='width:900px; text-align:left; line-height:1.38'><b>1. 입력 재료</b><br/>원천 리서치, 기획안, 장르/독자 약속, 작품별 로컬 자료, 운영 정책<br/>운영 정책에는 UTF-8, 원본 보존, 복사본 기반 검증, work_guard 표준이 포함됨</div>"]
+    B["<div style='width:900px; text-align:left; line-height:1.38'><b>2. Stage 0 전처리</b><br/>원천 재료를 생산 가능한 재료로 정리<br/>이 단계에서 모호하거나 너무 넓은 재료가 남으면 S2/S3/S4 전체 토큰 비용이 커짐</div>"]
+    C["<div style='width:900px; text-align:left; line-height:1.38'><b>3. Phase 0 설계</b><br/>작품 정체성, 주인공 욕망, 보상 구조, 장르 기대, 독자 약속을 정리<br/>웹소설 생산에서 필력보다 중요한 반복 패턴과 대리만족 구조를 명시하는 구간</div>"]
+    D["<div style='width:900px; text-align:left; line-height:1.38'><b>4. 작품 보호 규칙</b><br/>금지 변형, 유지해야 할 약속, 캐릭터/세계관 훼손 금지 기준을 초안화하고 동결<br/>TR 전 재료 기준을 고정해 이후 단계가 작품 정체성을 벗어나지 않게 함</div>"]
+    E["<div style='width:900px; text-align:left; line-height:1.38'><b>5. TR / BI 생성</b><br/>TR: 블록/아크/전개 재료<br/>BI: 인물, 세계, 회차 로드맵, 장르 계약<br/>BI 회차 로드맵은 S2/S3/S4가 읽는 상위 기준</div>"]
+    F["<div style='width:900px; text-align:left; line-height:1.38'><b>6. 출력 / 다음 단계</b><br/>S2 입력: 아크 후보 생성 기준<br/>S3 입력: 회차 설계도 기준<br/>S4 입력: 작품 정체성, 장르 제약, 금지사항<br/>사람 검토 포인트: 작품이 무엇을 약속하는지 명확한가</div>"]
+    G["<div style='width:900px; text-align:left; line-height:1.38'><b>AX 검토 포인트</b><br/>토큰 위험: 원천 재료가 너무 넓으면 이후 모든 호출이 비싸짐<br/>정본 위험: TR/BI와 보호 규칙이 어긋나면 S4에서 늦게 터짐<br/>원본 위험: 원본 산출물 직접 수정 금지, 복사본 기반 검증 유지</div>"]
+    TITLE --> A --> B --> C --> D --> E --> F --> G
+    classDef title fill:#111827,color:#ffffff,stroke:#111827,font-size:30px;
+    classDef main fill:#eef2ff,stroke:#4f46e5,color:#111827;
+    classDef risk fill:#fee2e2,stroke:#dc2626,color:#111827;
+    class TITLE title;
+    class A,B,C,D,E,F main;
+    class G risk;

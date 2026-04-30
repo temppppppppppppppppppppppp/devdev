@@ -1,0 +1,42 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Malgun Gothic, Arial, sans-serif", "fontSize": "26px", "primaryColor": "#eef2ff", "primaryBorderColor": "#4f46e5", "lineColor": "#334155", "tertiaryColor": "#ffffff", "clusterBkg": "#f8fafc", "clusterBorder": "#cbd5e1"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 70, "rankSpacing": 95}} }%%
+flowchart TD
+    TITLE["<div style='width:720px; text-align:center; line-height:1.35'><b>AX 검토용 글도비 LLM 파이프라인 구성도</b><br/>PDF 확대/인쇄용 한국어 요약<br/><span style='font-size:20px'>세부 코드 식별자는 본문 표와 상세 Mermaid에 분리</span></div>"]
+
+    A["<div style='width:760px; text-align:left; line-height:1.35'><b>1. 작품 재료 계약</b><br/>리서치 · 기획안 → 0단계 전처리 → 0단계 설계<br/>작품 보호 규칙 초안/동결 → TR / BI → <b>BI 회차 로드맵 계약</b></div>"]
+
+    B["<div style='width:760px; text-align:left; line-height:1.35'><b>특수 실행 제어</b><br/>OneStop / FrontierLag는 핵심 단계축이 아니라 보조 실행 기능<br/>3단계 목표 회차와 4단계 진행 경계 회차 계산에 개입<br/>되돌림/초기화/카나리아 정리는 진행 상태와 권한 보조 증거를 재정렬해야 함</div>"]
+
+    C["<div style='width:760px; text-align:left; line-height:1.35'><b>2. 2단계 아크 기획</b><br/>아크 맥락 로드 → 아크 후보/전술 흐름 생성 → 감독 에이전트 감리<br/>승인/수정승인: 확정 처리 + <b>단계 간 권한 패킷</b> + DB 아크 저장<br/>수정승인/거절: 부분 수정 루프 또는 재시도 증거를 시도 장부에 기록</div>"]
+
+    D["<div style='width:760px; text-align:left; line-height:1.35'><b>3. 3단계 회차 설계도</b><br/>목표 회차 결정 → 이전 최종 승인 원고 로드 → 의미 맥락 묶음 구성<br/>설계 제약 컴파일러 → 3단계 설계도 실행 루프 → 검증/재시도<br/>승인/수정승인: 설계도 + 시도 장부 저장, <b>설계도 계보 부착</b></div>"]
+
+    E["<div style='width:760px; text-align:left; line-height:1.35'><b>4. 4단계 원고 생성 / 검증</b><br/>설계도 + 계보 로드 → 최신성 사전 점검<br/>맥락 조립기가 필수 맥락과 재시도 피드백을 조립<br/>작가 에이전트 후보 원고 생성 → 감독 전 사전 경고 → 감독 의미 검토</div>"]
+
+    F["<div style='width:760px; text-align:left; line-height:1.35'><b>5. 4단계 런타임 경로 결정</b><br/>감독 판정은 이 시점에서 아직 임시 판정<br/>런타임 경로 관문: 품질 하한 + 수정 범위/묶음<br/>후보 선택 후 연속성/히스토리 점검은 늦게 실행되는 실패 우선 관문<br/>선택 후 충돌은 승인/수정승인을 거절/전체 재작성으로 하향 가능</div>"]
+
+    G["<div style='width:760px; text-align:left; line-height:1.35'><b>6. 수정승인 / 재시도 / 정착</b><br/>수정승인: 국소 수정 + 감독 재감리 후에만 승인 가능<br/>거절: 거절 후보 + 재시도 스냅샷으로 다음 라운드 진입<br/>승인: 정착 전 시도에 시도 장부 + 해시/경로 기록<br/>승인 후 정착 처리: 길이 관문 + DB 트랜잭션</div>"]
+
+    H["<div style='width:760px; text-align:left; line-height:1.35'><b>7. 최종 승인 진실</b><br/>DB 성공 → 승인 후 보조 증거 → 정착 패킷 / 진실 명세 / 사람이 읽는 txt 내보내기<br/><b>완전 정착</b> 상태만 최종 승인 맥락으로 진입<br/>정착 실패 시 실패 상태로 강등</div>"]
+
+    I["<div style='width:760px; text-align:left; line-height:1.35'><b>8. 장기기억 / 권한 보조 계층</b><br/>최종 승인 맥락 접근자는 물리 테이블이 아니라 읽기 계층<br/>원고 DB 행, 사실 장부 기준점, 세계상태 기준점, 정본 사실<br/>설계도 계보, 연속성 투영, 맥락 캐시, 세션 메모리<br/>제공사 캐시/세션 기억은 정본이 아니라 보조 계층</div>"]
+
+    J["<div style='width:760px; text-align:left; line-height:1.35'><b>9. 관측 / 증거</b><br/>시도 장부: 재시도/권한 장부<br/>감독 선택 보조 기록: 최종 정본 아님<br/>LLM 호출 장부: 토큰 / 지연 / 비용<br/>맥락 캐시 장부: 캐시 생성/적중/건너뜀/오류<br/>생산 로그, 산출물, 원시 판단 근거, 품질/정착 보조 증거</div>"]
+
+    K["<div style='width:760px; text-align:left; line-height:1.35'><b>10. AX 핵심 검토 지점</b><br/>비용/지연: 작가 에이전트 + 감독 에이전트 + 재시도<br/>토큰: 필수 맥락 + 출력 예산<br/>캐시: 적중률보다 최신성 식별 지문<br/>권한: 감독 판정 / 런타임 경로 / 정착 판정 분리<br/>신뢰: 승인 해시 / 산출물 연결 / 되돌림 시 무효화</div>"]
+
+    TITLE --> A --> C --> D --> E --> F --> G --> H --> I --> J --> K
+    A -.특수 실행 제어.-> B
+    B -.목표 회차 / 진행 경계 보조.-> D
+    B -.진행 경계 / 되돌림 보조.-> E
+
+    classDef title fill:#111827,color:#ffffff,stroke:#111827,font-size:32px;
+    classDef main fill:#eef2ff,stroke:#4f46e5,color:#111827;
+    classDef sidecar fill:#ecfeff,stroke:#0891b2,color:#111827;
+    classDef evidence fill:#f0fdf4,stroke:#16a34a,color:#111827;
+    classDef hot fill:#fee2e2,stroke:#dc2626,color:#111827;
+    class TITLE title;
+    class A,C,D,E,F,G,H main;
+    class B sidecar;
+    class I sidecar;
+    class J evidence;
+    class K hot;

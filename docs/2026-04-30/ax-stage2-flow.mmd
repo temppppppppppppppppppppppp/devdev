@@ -1,0 +1,16 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Malgun Gothic, Arial, sans-serif", "fontSize": "25px", "primaryColor": "#ede9fe", "primaryBorderColor": "#7c3aed", "lineColor": "#334155", "tertiaryColor": "#ffffff"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 65, "rankSpacing": 85}} }%%
+flowchart TD
+    TITLE["<div style='width:900px; text-align:center; line-height:1.35'><b>S2 아크 기획 상세도</b><br/>작품 재료를 아크 단위 전술 흐름으로 바꾸고 S3가 읽을 권한 패킷을 남기는 구간</div>"]
+    A["<div style='width:900px; text-align:left; line-height:1.38'><b>1. 입력</b><br/>BI / TR / 회차 로드맵, 작품 보호 규칙, 이전 아크, 현재 진행 상태, 장르 제약<br/>S2는 아직 원고를 쓰지 않고, 회차군이 어떤 보상과 갈등을 줄지 설계함</div>"]
+    B["<div style='width:900px; text-align:left; line-height:1.38'><b>2. 아크 후보 생성</b><br/>아크 맥락 로드 → 아크 후보 생성 → 전술 흐름 구성<br/>전술 흐름은 갈등, 선택, 보상, 전환점, 다음 훅을 회차군 단위로 정리하는 상위 설계</div>"]
+    C["<div style='width:900px; text-align:left; line-height:1.38'><b>3. Director 감리</b><br/>장르 적합성, 정합성, 밀도, 후속 회차 사용 가능성 점검<br/>Director 판정은 S2 아크가 S3/S4에 넘길 만큼 견고한지 보는 의미 판단</div>"]
+    D["<div style='width:900px; text-align:left; line-height:1.38'><b>4. 판정 분기</b><br/>PASS: 아크 확정<br/>PWF: 부분 수정 후 재감리<br/>REJECT: 재시도 증거 저장 후 재생성<br/>PWF/REJECT 근거는 이후 재시도와 운영 감사에 남아야 함</div>"]
+    E["<div style='width:900px; text-align:left; line-height:1.38'><b>5. 저장 / 인계</b><br/>저장: DB 아크, 아크 산출물, 시도 장부, Director 선택 보조 기록<br/>인계: 단계 간 권한 패킷을 S3 설계 제약으로 전달<br/>이 패킷이 S3의 회차 설계도 품질을 좌우함</div>"]
+    F["<div style='width:900px; text-align:left; line-height:1.38'><b>AX 검토 포인트</b><br/>비용 위험: Director 재감리 루프가 길어지면 Stage3 이전부터 비용 증가<br/>권한 위험: S2 계획이 오래되면 S3/S4가 stale 계획을 따라갈 수 있음<br/>관측 필요: S2 판정과 후속 회차 실패의 연결 추적</div>"]
+    TITLE --> A --> B --> C --> D --> E --> F
+    classDef title fill:#111827,color:#ffffff,stroke:#111827,font-size:30px;
+    classDef main fill:#ede9fe,stroke:#7c3aed,color:#111827;
+    classDef risk fill:#fee2e2,stroke:#dc2626,color:#111827;
+    class TITLE title;
+    class A,B,C,D,E main;
+    class F risk;

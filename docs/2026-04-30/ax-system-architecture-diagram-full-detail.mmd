@@ -1,0 +1,62 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Malgun Gothic, Arial, sans-serif", "fontSize": "24px", "primaryColor": "#eef2ff", "primaryBorderColor": "#4f46e5", "lineColor": "#334155", "tertiaryColor": "#ffffff", "clusterBkg": "#f8fafc", "clusterBorder": "#cbd5e1"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 65, "rankSpacing": 80}} }%%
+flowchart TD
+    TITLE["<div style='width:900px; text-align:center; line-height:1.35'><b>AX 검토용 글도비 LLM 파이프라인 상세 구성도</b><br/>S0 → S2 → S3 → S4 기준축 전체 상세판<br/><span style='font-size:20px'>OneStop / FrontierLag는 본선이 아니라 특수 실행 제어 기능</span></div>"]
+
+    CORE["<div style='width:900px; text-align:left; line-height:1.35'><b>핵심 기준축</b><br/>S0 재료 정리 / 작품 계약 → S2 아크 기획 → S3 회차 설계도 → S4 원고 생성·검증·정착<br/>비용/응답지연 병목은 주로 S4에서 커지지만, 원인은 S0/S2/S3의 stale 재료·권한·계보에서 올라올 수 있음</div>"]
+
+    S0["<div style='width:900px; text-align:left; line-height:1.38'><b>S0. 재료 정리 / 작품 계약</b><br/>입력: 원천 리서치, 기획안, 장르/독자 약속, 로컬 자료, 운영 정책<br/>흐름: Stage 0 전처리 → Phase 0 설계 → 작품 보호 규칙 초안/동결 → TR / BI → BI 회차 로드맵 계약<br/>출력: S2가 읽는 아크 기준, S3가 읽는 회차 기준, S4가 읽는 작품 정체성·금지사항<br/>AX 관점: 원천 재료가 넓거나 모순되면 이후 모든 LLM 호출의 토큰과 재시도가 커짐</div>"]
+
+    S2A["<div style='width:900px; text-align:left; line-height:1.38'><b>S2. 아크 기획 - 생성</b><br/>입력: BI/TR, 보호 규칙, 이전 아크, 현재 진행 상태, 장르 제약<br/>아크 맥락 로드 → 아크 후보 생성 → 전술 흐름 구성<br/>전술 흐름은 회차군의 갈등, 보상, 선택, 다음 훅을 정리하는 상위 설계</div>"]
+
+    S2B["<div style='width:900px; text-align:left; line-height:1.38'><b>S2. 아크 기획 - 감리/판정</b><br/>Director 감리: 장르 적합성, 정합성, 밀도, 후속 회차 사용 가능성 점검<br/>PASS: 아크 확정<br/>PWF: 부분 수정 후 재감리<br/>REJECT: 재시도 증거 저장 후 재생성</div>"]
+
+    S2C["<div style='width:900px; text-align:left; line-height:1.38'><b>S2. 아크 기획 - 저장/인계</b><br/>저장: DB 아크, 아크 산출물, 시도 장부, Director 선택 보조 기록<br/>인계: 단계 간 권한 패킷을 S3 설계 제약으로 전달<br/>AX 관점: S2 계획이 오래되거나 모호하면 S3/S4가 stale 계획을 따라갈 수 있음</div>"]
+
+    S3A["<div style='width:900px; text-align:left; line-height:1.38'><b>S3. 회차 설계도 - 입력 구성</b><br/>입력: S2 아크, BI 회차 로드맵, 이전 최종 승인 원고, 정본 사실/세계상태/인물 상태<br/>목표 회차 결정 → 최종 승인 맥락 로드 → 의미 맥락 묶음 구성<br/>비최종 원고 row는 최종 승인 맥락 접근자에서 차단되어야 함</div>"]
+
+    S3B["<div style='width:900px; text-align:left; line-height:1.38'><b>S3. 회차 설계도 - 생성/검증</b><br/>설계 제약 컴파일: 필수 장면, 금지사항, 회차 목표, carryover를 구조화<br/>3단계 설계도 실행 루프: 초안 → 검증 → 보강<br/>REJECT는 검증/재시도 조정으로 되돌아가고, PASS/PWF만 S4 입력 후보가 됨</div>"]
+
+    S3C["<div style='width:900px; text-align:left; line-height:1.38'><b>S3. 회차 설계도 - 계보/저장</b><br/>저장: DB blueprints, 시도 장부, 참조용 txt 산출물<br/>핵심: 설계도 계보에 이전 승인 원고 해시/source를 붙여 S4 최신성 사전 점검의 근거로 사용<br/>AX 관점: 설계도 계보가 stale이면 S4에서 비싼 생성/검토 뒤 충돌이 늦게 발견됨</div>"]
+
+    S4A["<div style='width:900px; text-align:left; line-height:1.38'><b>S4. 원고 생성 - 최신성/맥락 조립</b><br/>설계도 + 계보 로드 → 최신성 사전 점검<br/>오래됨/누락이면 S3 재생성 또는 판정 조정으로 되돌림<br/>맥락 조립: 최종 승인 맥락, 사실 장부, 세계상태, 정본 사실, 연속성 투영, 맥락 캐시, 세션 메모리, 재시도 피드백</div>"]
+
+    S4B["<div style='width:900px; text-align:left; line-height:1.38'><b>S4. 원고 생성 - 후보/Director</b><br/>작가 에이전트가 후보 원고 생성<br/>Python 사전 점검은 차단자가 아니라 경고/보조 조언<br/>Director가 후보 선택과 의미 판정 수행<br/>이 구간이 Stage4 비용과 응답지연의 주요 LLM 호출 표면</div>"]
+
+    S4C["<div style='width:900px; text-align:left; line-height:1.38'><b>S4. 원고 생성 - 런타임 경로/선택 후 점검</b><br/>Director 판정은 아직 임시 판정<br/>런타임 경로 관문: 품질 하한, 수정 범위, 거절 경로 정규화<br/>선택 후 연속성/히스토리 점검은 늦게 실행되는 실패 우선 관문<br/>선택 후 충돌은 PASS/PWF도 REJECT/전체 재작성으로 하향 가능</div>"]
+
+    S4D["<div style='width:900px; text-align:left; line-height:1.38'><b>S4. 원고 생성 - PWF/REJECT/PASS 분기</b><br/>PASS: 정착 전 시도 장부 + 해시/경로 기록 후 정착 처리<br/>PWF: 국소 수정 + Director 재감리 후에만 승인 가능<br/>REJECT: 거절 후보 + 재시도 스냅샷 저장, 라운드 남으면 맥락 재조립 후 재시도<br/>라운드 소진: 사람 검토 또는 보호된 건너뜀</div>"]
+
+    S4E["<div style='width:900px; text-align:left; line-height:1.38'><b>S4. 원고 생성 - 정착/최종 승인</b><br/>PASS 후 정착 처리: 길이 관문 + DB 트랜잭션<br/>DB 성공: 정착 패킷, 진실 명세, 사람이 읽는 txt 내보내기, 품질/정착 보조 증거 기록<br/>완전 정착 상태만 최종 승인 맥락으로 진입<br/>정착 실패 시 실패 상태로 강등</div>"]
+
+    MEM["<div style='width:900px; text-align:left; line-height:1.38'><b>장기기억 / 권한 보조 계층</b><br/>최종 승인 맥락 접근자: 물리 테이블이 아니라 정착 완료 원고를 읽는 계층<br/>원고 DB 행, 사실 장부, 세계상태, 정본 사실, 설계도 계보, 연속성 투영, 맥락 캐시, 세션 메모리로 구성<br/>제공사 캐시/세션 기억은 비용 보조 계층이며 정본 권한이 아님</div>"]
+
+    OBS["<div style='width:900px; text-align:left; line-height:1.38'><b>관측 / 증거 계층</b><br/>시도 장부: 판정, 실패 범주, 경로, duration, 산출물 경로<br/>Director 선택 보조 기록: 선택 이유와 보조 근거, 최종 정본 아님<br/>LLM 호출 장부: 입력/출력/캐시 토큰, 비용 추정, 응답지연<br/>맥락 캐시 장부, 생산 로그, 상태 로그, 후보/거절/최종 산출물, 품질/정착 보조 증거</div>"]
+
+    SPECIAL["<div style='width:900px; text-align:left; line-height:1.38'><b>특수 실행 제어</b><br/>OneStop / FrontierLag는 S2/S3/S4 본선이 아니라 실행 편의 기능<br/>역할: S3 목표 회차 계산, S4 진행 경계 회차 계산, 되돌림/초기화/카나리아 정리 보조<br/>현재 보강 포인트: 되돌림 시 설계도 계보, 정본 사실, 연속성 보조 증거 무효화 경계 명확화</div>"]
+
+    AX["<div style='width:900px; text-align:left; line-height:1.38'><b>AX 핵심 검토 지점</b><br/>비용/응답지연: 작가 에이전트 + Director + 재시도 루프<br/>토큰: 필수 맥락과 출력 예산을 역할별로 분리할 필요<br/>캐시: 적중률보다 최신성 식별 지문과 stale-source 억제 증명이 중요<br/>권한: Director 판정, 런타임 경로, 선택 후 점검, 정착 판정을 1급 필드로 분리할 필요<br/>신뢰: 최종 승인 해시, 산출물 연결, 되돌림 시 무효화가 반복 생산 안정성의 핵심</div>"]
+
+    TITLE --> CORE --> S0 --> S2A --> S2B --> S2C --> S3A --> S3B --> S3C --> S4A --> S4B --> S4C --> S4D --> S4E --> MEM --> OBS --> SPECIAL --> AX
+    S3C -.계보 근거.-> S4A
+    S4E -.최종 승인 맥락 갱신.-> MEM
+
+    classDef title fill:#111827,color:#ffffff,stroke:#111827,font-size:30px;
+    classDef core fill:#f8fafc,stroke:#64748b,color:#111827;
+    classDef s0 fill:#eef2ff,stroke:#4f46e5,color:#111827;
+    classDef s2 fill:#ede9fe,stroke:#7c3aed,color:#111827;
+    classDef s3 fill:#ecfeff,stroke:#0891b2,color:#111827;
+    classDef s4 fill:#fef3c7,stroke:#d97706,color:#111827;
+    classDef mem fill:#f0fdf4,stroke:#16a34a,color:#111827;
+    classDef obs fill:#f1f5f9,stroke:#64748b,color:#111827;
+    classDef special fill:#fff7ed,stroke:#ea580c,color:#111827;
+    classDef ax fill:#fee2e2,stroke:#dc2626,color:#111827;
+    class TITLE title;
+    class CORE core;
+    class S0 s0;
+    class S2A,S2B,S2C s2;
+    class S3A,S3B,S3C s3;
+    class S4A,S4B,S4C,S4D,S4E s4;
+    class MEM mem;
+    class OBS obs;
+    class SPECIAL special;
+    class AX ax;
