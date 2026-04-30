@@ -1,7 +1,7 @@
 # Stage3 Genre Contract Resolver Fallback Execution SSOT
 
 Date: 2026-04-29
-Status: implementation-in-progress - resolver fallback patch staged
+Status: closed - merged via PR #126
 Track: system
 Canonical Path: `docs/2026-04-29/stage3-genre-contract-resolver-fallback-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage3-genre-contract-resolver-fallback-execution-ssot.md`
@@ -196,3 +196,39 @@ Validation:
 - Pass 3, acceptance: PASS. The `0_카나리아`-shaped `style_guide.genre=investment` path now reaches the action-focused investment contract and finalized candidate metadata preserves the route-level contract.
 
 Estimated implementation confidence: 96%.
+
+## 11. Closure Note - 2026-04-30
+
+Closure state: CLOSED.
+
+The resolver fallback item is no longer active temp-queue work.
+
+Closure evidence:
+
+- PR #126, `[codex] Fix Stage3 genre contract resolver fallback`, merged into `main` on 2026-04-29.
+- GitHub issue #120 is closed as completed.
+- The current workspace HEAD `3a5cf102e383a97b7be1feee28367443e29661e3` includes the resolver fallback implementation.
+- Follow-up coverage proof issue #134 is also closed as completed, so this item should not remain queued as a live blocker.
+
+Validation evidence from the merged PR:
+
+- `python -m py_compile modules/domain/agents/blueprint_ensemble.py tests/test_blueprint_ensemble_generate_ensemble.py` -> passed
+- `python -m pytest tests/test_blueprint_ensemble_generate_ensemble.py -q` -> 81 passed
+- `python -m pytest tests/test_stage23_stage4_readiness_wave1.py -k "tactical_intrusion or intrusion" -q` -> 6 passed, 5 deselected
+- `python scripts/check_utf8_hygiene.py modules/domain/agents/blueprint_ensemble.py tests/test_blueprint_ensemble_generate_ensemble.py docs/2026-04-29/stage3-genre-contract-resolver-fallback-execution-ssot.md docs/temp/stage3-genre-contract-resolver-fallback-execution-ssot.md` -> passed
+- `python scripts/ops_validator.py --strict` -> passed
+- `git diff --check` -> passed
+
+Residual risk:
+
+- No active #120 implementation risk remains.
+- Broader genre-contract transport and multi-lane proof work was tracked separately by #134 and is closed.
+- Future regressions should be opened as new issues rather than reactivating this temp mirror.
+
+3-pass closure audit:
+
+- Pass 1 - realization state: PASS. The implementation landed on `main`, the issue is closed, and the acceptance target was covered by deterministic tests.
+- Pass 2 - authority and scope: PASS. The fix resolves routing metadata only and does not mutate bible, factsheets, style guide, or narrative canon.
+- Pass 3 - queue cleanup readiness: PASS. The temp mirror may be removed and the aggregate roadmap/queue-state refreshed.
+
+Estimated closure confidence: 96%.
