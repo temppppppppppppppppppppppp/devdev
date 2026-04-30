@@ -1598,9 +1598,11 @@ class DBManager:
 
     def _upsert_blueprint_lineage_from_payload(self, ep_num: int, data_dict: object) -> None:
         if not isinstance(data_dict, dict):
+            self.cursor.execute("DELETE FROM blueprint_lineage WHERE ep_num = ?", (int(ep_num or 0),))
             return
         stage3_meta = data_dict.get("_stage3_meta")
         if not isinstance(stage3_meta, dict):
+            self.cursor.execute("DELETE FROM blueprint_lineage WHERE ep_num = ?", (int(ep_num or 0),))
             return
         lineage_schema_version = str(stage3_meta.get("lineage_schema_version") or "").strip()
         frontier_basis_version = str(stage3_meta.get("frontier_basis_version") or "").strip()
@@ -1630,6 +1632,7 @@ class DBManager:
                 lineage_missing_reason,
             )
         ):
+            self.cursor.execute("DELETE FROM blueprint_lineage WHERE ep_num = ?", (int(ep_num or 0),))
             return
         try:
             source_prev_manuscript_ep = int(stage3_meta.get("source_prev_manuscript_ep") or 0)

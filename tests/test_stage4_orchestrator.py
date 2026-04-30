@@ -1657,6 +1657,67 @@ class TestHandleRoundOutcomeErrorPaths:
         orch._preflight_validate_blueprint.assert_called_once()
         orch._log_escalation_event.assert_not_called()
 
+    def test_prepare_current_episode_inputs_prefers_db_lineage_sidecar_over_stale_json_meta(self, orch_with_ctx):
+        orch = orch_with_ctx
+        prev_text = "새로 확정된 계약 체결 완료. 모두가 서명본을 확인했다."
+        prev_hash = hashlib.sha256(prev_text.encode("utf-8")).hexdigest()
+        stale_hash = hashlib.sha256(b"stale json lineage").hexdigest()
+        orch._ctx.current_project.arcs = [{"arc_no": 1, "ep_start": 1, "ep_end": 3, "tactical_doc": ""}]
+        orch._ctx.current_project.get_blueprint.return_value = {
+            "ep_num": 2,
+            "_frontier_status": {
+                "status": "requires_actual_manuscript_revalidation",
+                "evidence": {"accepted_ep": 1, "accepted_manuscript_hash": prev_hash},
+            },
+            "_stage3_meta": {"source_prev_manuscript_ep": 1, "source_prev_manuscript_hash": stale_hash},
+        }
+        orch._ctx.current_project.db.get_manuscript.return_value = {"content": prev_text}
+        orch._ctx.current_project.db.get_blueprint_lineage.return_value = {
+            "ep_num": 2,
+            "source_prev_manuscript_ep": 1,
+            "source_prev_manuscript_hash": prev_hash,
+            "lineage_complete": True,
+        }
+        orch._preflight_validate_blueprint = MagicMock(return_value={"ok": True})
+        orch._log_escalation_event = MagicMock()
+
+        result = orch._prepare_current_episode_inputs(next_ep=2)
+
+        assert result is not None
+        orch._ctx.current_project.db.get_blueprint_lineage.assert_called_once_with(2)
+        orch._preflight_validate_blueprint.assert_called_once()
+        orch._log_escalation_event.assert_not_called()
+
+    def test_prepare_current_episode_inputs_blocks_mismatched_db_lineage_even_if_json_matches(self, orch_with_ctx):
+        orch = orch_with_ctx
+        prev_text = "새로 확정된 계약 체결 완료. 모두가 서명본을 확인했다."
+        prev_hash = hashlib.sha256(prev_text.encode("utf-8")).hexdigest()
+        stale_hash = hashlib.sha256(b"stale db lineage").hexdigest()
+        orch._ctx.current_project.arcs = [{"arc_no": 1, "ep_start": 1, "ep_end": 2, "tactical_doc": ""}]
+        orch._ctx.current_project.get_blueprint.return_value = {
+            "ep_num": 2,
+            "summary": "다음 법적 압박으로 넘어간다.",
+            "_stage3_meta": {"source_prev_manuscript_ep": 1, "source_prev_manuscript_hash": prev_hash},
+        }
+        orch._ctx.current_project.save_episode_blueprint = MagicMock()
+        orch._ctx.current_project.db.get_manuscript.return_value = {"content": prev_text}
+        orch._ctx.current_project.db.get_blueprint_lineage.return_value = {
+            "ep_num": 2,
+            "source_prev_manuscript_ep": 1,
+            "source_prev_manuscript_hash": stale_hash,
+            "lineage_complete": True,
+        }
+        orch._preflight_validate_blueprint = MagicMock(return_value={"ok": True})
+        orch._log_escalation_event = MagicMock()
+
+        result = orch._prepare_current_episode_inputs(next_ep=2)
+
+        assert result is None
+        assert orch._stage4_completion_blocked is True
+        orch._preflight_validate_blueprint.assert_not_called()
+        orch._log_escalation_event.assert_called_once()
+        assert orch._log_escalation_event.call_args.args[:2] == (2, "STAGE4_FRONTIER_STALE_PREFLIGHT")
+
     def test_handle_round_outcome_keeps_pass_when_cove_verify_raises(
         self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path
     ):

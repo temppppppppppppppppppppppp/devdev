@@ -1383,6 +1383,13 @@ JSON으로 출력:
         frontier_status_value = ""
         if isinstance(frontier_status, dict):
             frontier_status_value = str(frontier_status.get("status") or "")
+        blueprint_lineage = None
+        try:
+            lineage_getter = getattr(db, "get_blueprint_lineage", None)
+            if callable(lineage_getter):
+                blueprint_lineage = lineage_getter(next_ep)
+        except Exception:
+            blueprint_lineage = None
         if frontier_status_value in {
             "requires_actual_manuscript_revalidation",
             "requires_director_frontier_adjudication",
@@ -1392,6 +1399,7 @@ JSON으로 출력:
                 blueprint=blueprint,
                 frontier_status=frontier_status,
                 prev_manuscript_text=prev_manuscript_text,
+                blueprint_lineage=blueprint_lineage if isinstance(blueprint_lineage, dict) else None,
             )
             if marker_satisfied:
                 self.ctx.ui.log(
@@ -1417,6 +1425,7 @@ JSON으로 출력:
             blueprint=blueprint,
             arc_data=arc_data,
             prev_manuscript_text=prev_manuscript_text,
+            blueprint_lineage=blueprint_lineage if isinstance(blueprint_lineage, dict) else None,
         )
         if stale_check.get("stale") and stale_check.get("severity") == "hard":
             reasons = stale_check.get("reasons") or []
