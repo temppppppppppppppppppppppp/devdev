@@ -7,7 +7,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 COMPANION_LINKS_FILENAME = "benchmark_companion_links.json"
 STAGE_ORDER = ("stage2", "stage3", "stage4")
@@ -15,6 +14,9 @@ STAGE_INT_FIELDS = (
     "attempt_count",
     "pass_like_count",
     "reject_count",
+    "pure_pass_count",
+    "repaired_pass_count",
+    "retry_heavy_pass_count",
     "total_duration_ms",
     "avg_duration_ms",
     "total_tokens",
@@ -25,6 +27,9 @@ STAGE_SIGNAL_DIRECTIONS = {
     "attempt_count": "lower_is_better",
     "pass_like_count": "higher_is_better",
     "reject_count": "lower_is_better",
+    "pure_pass_count": "higher_is_better",
+    "repaired_pass_count": "lower_is_better",
+    "retry_heavy_pass_count": "lower_is_better",
     "total_duration_ms": "lower_is_better",
     "total_cost_usd": "lower_is_better",
     "total_tokens": "lower_is_better",
@@ -155,7 +160,9 @@ def load_benchmark_record(
 ) -> dict[str, Any]:
     workspace = Path(workspace_root).resolve()
     benchmark_dir = _resolve_benchmark_root(workspace, benchmark_root)
-    record_root, index_row = _resolve_record_root(str(identifier), workspace_root=workspace, benchmark_root=benchmark_dir)
+    record_root, index_row = _resolve_record_root(
+        str(identifier), workspace_root=workspace, benchmark_root=benchmark_dir
+    )
     manifest = _load_json(record_root / "manifest.json")
     stage_metrics = _load_stage_metrics(record_root, manifest=manifest)
     runtime_audit_summary = _load_runtime_audit_summary(record_root)
@@ -460,7 +467,9 @@ def _load_runtime_audit_summary(record_root: Path) -> dict[str, Any]:
     payload = _load_json(summary_path)
     proof_digest = payload.get("proof_digest", {}) if isinstance(payload, dict) else {}
     operational_metadata = proof_digest.get("operational_metadata", {}) if isinstance(proof_digest, dict) else {}
-    stage4_live_session = operational_metadata.get("stage4_live_session", {}) if isinstance(operational_metadata, dict) else {}
+    stage4_live_session = (
+        operational_metadata.get("stage4_live_session", {}) if isinstance(operational_metadata, dict) else {}
+    )
     return {
         "available": True,
         "summary_role": str(payload.get("summary_role", "") or ""),
@@ -484,7 +493,9 @@ def _load_runtime_audit_summary(record_root: Path) -> dict[str, Any]:
             _coerce_bool(stage4_live_session.get("patch_exercised")) if isinstance(stage4_live_session, dict) else False
         ),
         "stage4_target_ep_reached": (
-            _coerce_bool(stage4_live_session.get("target_ep_reached")) if isinstance(stage4_live_session, dict) else False
+            _coerce_bool(stage4_live_session.get("target_ep_reached"))
+            if isinstance(stage4_live_session, dict)
+            else False
         ),
         "stage4_complete_emitted": (
             _coerce_bool(stage4_live_session.get("stage4_complete_emitted"))
@@ -570,9 +581,13 @@ def _load_companion_links(record_root: Path, *, workspace_root: Path) -> dict[st
     merge_audit_raw = str(payload.get("post_run_merge_audit_md", "") or "") if isinstance(payload, dict) else ""
     supporting_context_raw = str(payload.get("supporting_context_md", "") or "") if isinstance(payload, dict) else ""
     evidence_path = _resolve_existing_path(evidence_raw, workspace_root=workspace_root) if evidence_raw else None
-    merge_audit_path = _resolve_existing_path(merge_audit_raw, workspace_root=workspace_root) if merge_audit_raw else None
+    merge_audit_path = (
+        _resolve_existing_path(merge_audit_raw, workspace_root=workspace_root) if merge_audit_raw else None
+    )
     supporting_context_path = (
-        _resolve_existing_path(supporting_context_raw, workspace_root=workspace_root) if supporting_context_raw else None
+        _resolve_existing_path(supporting_context_raw, workspace_root=workspace_root)
+        if supporting_context_raw
+        else None
     )
     return {
         "available": True,
@@ -630,9 +645,7 @@ def _load_companion_evidence(
         "final_authority_status": (
             str(final_authority.get("status", "") or "") if isinstance(final_authority, dict) else ""
         ),
-        "gate_repair_status": (
-            str(gate_repair.get("status", "") or "") if isinstance(gate_repair, dict) else ""
-        ),
+        "gate_repair_status": (str(gate_repair.get("status", "") or "") if isinstance(gate_repair, dict) else ""),
         "stage4_diagnostic_packet": _normalize_stage4_diagnostic_packet(
             payload.get("stage4_diagnostic_packet", {}) if isinstance(payload, dict) else {}
         ),
@@ -711,9 +724,7 @@ def _extract_stage4_diagnostic_packet_from_runtime_summary(payload: object) -> d
         "proof_issue_counts": issue_counts,
         "proof_warning_taxonomy_counts": taxonomy_counts,
         "runtime_advisory_warn_count": _coerce_int(
-            taxonomy_counts.get("runtime_advisory_warn")
-            or issue_counts.get("runtime_advisory_mismatches")
-            or 0
+            taxonomy_counts.get("runtime_advisory_warn") or issue_counts.get("runtime_advisory_mismatches") or 0
         ),
     }
     return _normalize_stage4_diagnostic_packet(derived)
@@ -725,6 +736,12 @@ def _normalize_stage4_diagnostic_packet(value: object) -> dict[str, Any]:
     proof_issue_counts = _positive_int_dict(value.get("proof_issue_counts", {}))
     proof_warning_taxonomy_counts = _positive_int_dict(value.get("proof_warning_taxonomy_counts", {}))
     source_counts = _positive_int_dict(value.get("source_counts", {}))
+    raw_run_health_counts = value.get("stage4_run_health_counts", {})
+    stage4_run_health_counts = {
+        key: _coerce_int(raw_count)
+        for key, raw_count in (raw_run_health_counts if isinstance(raw_run_health_counts, dict) else {}).items()
+        if str(key) in {"pure_pass", "repaired_pass", "retry_heavy_pass"} and _coerce_int(raw_count) > 0
+    }
     packet = {
         "schema_version": str(value.get("schema_version", "") or ""),
         "authority_role": str(value.get("authority_role", "") or ""),
@@ -733,6 +750,7 @@ def _normalize_stage4_diagnostic_packet(value: object) -> dict[str, Any]:
         "stage4_attempt_count": _coerce_int(value.get("stage4_attempt_count")),
         "stage4_pass_like_count": _coerce_int(value.get("stage4_pass_like_count")),
         "stage4_reject_count": _coerce_int(value.get("stage4_reject_count")),
+        "stage4_run_health_counts": stage4_run_health_counts,
         "runtime_summary_freshness_status": str(value.get("runtime_summary_freshness_status", "") or ""),
         "runtime_summary_scope_status": str(value.get("runtime_summary_scope_status", "") or ""),
         "proof_digest_status": str(value.get("proof_digest_status", "") or ""),
@@ -788,7 +806,12 @@ def _stage4_diagnostic_packet_has_signal(packet: dict[str, Any]) -> bool:
     )
     if any(_coerce_int(packet.get(field)) > 0 for field in count_fields):
         return True
-    return bool(packet.get("proof_issue_counts") or packet.get("proof_warning_taxonomy_counts") or packet.get("source_counts"))
+    return bool(
+        packet.get("proof_issue_counts")
+        or packet.get("proof_warning_taxonomy_counts")
+        or packet.get("source_counts")
+        or packet.get("stage4_run_health_counts")
+    )
 
 
 def _stage4_diagnostic_total_proof_warn(packet: dict[str, Any]) -> int:
@@ -808,6 +831,9 @@ def _stage4_diagnostic_count_summary(packet: dict[str, Any]) -> dict[str, int]:
         "post_select_conflict": _coerce_int(packet.get("post_select_conflict_count")),
         "proof_warn": _stage4_diagnostic_total_proof_warn(packet),
         "settled_director_divergence": _coerce_int(packet.get("settled_director_divergence_count")),
+        "pure_pass": _coerce_int((packet.get("stage4_run_health_counts") or {}).get("pure_pass")),
+        "repaired_pass": _coerce_int((packet.get("stage4_run_health_counts") or {}).get("repaired_pass")),
+        "retry_heavy_pass": _coerce_int((packet.get("stage4_run_health_counts") or {}).get("retry_heavy_pass")),
     }
 
 
@@ -967,10 +993,7 @@ def _build_companion_link_remediation_hints(
                 "surface": surface,
                 "current_value": raw_value,
                 "suggested_flag": flag,
-                "suggested_command": (
-                    f"python scripts/link_benchmark_companions.py {run_id} "
-                    f"{flag} {replacement}"
-                ),
+                "suggested_command": (f"python scripts/link_benchmark_companions.py {run_id} {flag} {replacement}"),
             }
         )
     return hints
@@ -1004,11 +1027,7 @@ def _build_remediation_summary(remediation_hints: list[dict[str, str]]) -> dict[
         if not surface:
             continue
         count_by_surface[surface] = count_by_surface.get(surface, 0) + 1
-    surfaces_by_priority = [
-        surface
-        for surface in REMEDIATION_SURFACE_PRIORITY
-        if count_by_surface.get(surface, 0) > 0
-    ]
+    surfaces_by_priority = [surface for surface in REMEDIATION_SURFACE_PRIORITY if count_by_surface.get(surface, 0) > 0]
     return {
         "hint_count": len(remediation_hints),
         "count_by_surface": count_by_surface,
@@ -1021,9 +1040,7 @@ def _build_operator_summary(remediation_summary: dict[str, Any]) -> dict[str, An
     hint_count = int(remediation_summary.get("hint_count", 0) or 0)
     highest_priority_surface = str(remediation_summary.get("highest_priority_surface", "") or "")
     surfaces_by_priority = [
-        str(surface)
-        for surface in remediation_summary.get("surfaces_by_priority", [])
-        if str(surface or "")
+        str(surface) for surface in remediation_summary.get("surfaces_by_priority", []) if str(surface or "")
     ]
     needs_remediation = hint_count > 0
     if highest_priority_surface:
@@ -1160,11 +1177,7 @@ def _count_markdown_list_items_under_heading(lines: list[str], heading: str) -> 
 
 def _detect_merge_audit_residual_markers(text: str) -> list[str]:
     lowered = str(text or "").lower()
-    markers = [
-        marker_id
-        for marker_id, phrase in MERGE_AUDIT_RESIDUAL_MARKERS
-        if phrase in lowered
-    ]
+    markers = [marker_id for marker_id, phrase in MERGE_AUDIT_RESIDUAL_MARKERS if phrase in lowered]
     if "## remaining watchpoints" in lowered:
         markers.append("remaining_watchpoints")
     return markers
@@ -1328,7 +1341,9 @@ def _extract_merge_audit_validation(lines: list[str]) -> dict[str, Any]:
             collecting_result_signals = False
             continue
         if current_replay_probe is not None:
-            result_now_emits_match = re.match(r"^(?:[-*]|\d+\.)\s+result\s+now\s+emits\s*:\s*$", stripped, re.IGNORECASE)
+            result_now_emits_match = re.match(
+                r"^(?:[-*]|\d+\.)\s+result\s+now\s+emits\s*:\s*$", stripped, re.IGNORECASE
+            )
             if result_now_emits_match:
                 collecting_result_signals = True
                 continue
@@ -1495,18 +1510,11 @@ def _build_companion_merge_audit_watchpoints(
                 severity="warn",
                 scope="post_run_merge_audit_md",
                 side=side,
-                message=(
-                    f"{side} merge audit records {remaining_watchpoint_count} "
-                    "remaining watchpoints"
-                ),
+                message=(f"{side} merge audit records {remaining_watchpoint_count} remaining watchpoints"),
             )
         )
 
-    residual_markers = [
-        str(item)
-        for item in companion_merge_audit.get("residual_markers", [])
-        if str(item or "")
-    ]
+    residual_markers = [str(item) for item in companion_merge_audit.get("residual_markers", []) if str(item or "")]
     if residual_markers:
         watchpoints.append(
             _watchpoint(
@@ -1514,10 +1522,7 @@ def _build_companion_merge_audit_watchpoints(
                 severity="warn",
                 scope="post_run_merge_audit_md",
                 side=side,
-                message=(
-                    f"{side} merge audit residual markers: "
-                    + ",".join(residual_markers)
-                ),
+                message=(f"{side} merge audit residual markers: " + ",".join(residual_markers)),
             )
         )
 
@@ -1546,11 +1551,7 @@ def _build_companion_merge_audit_watchpoints(
     findings = companion_merge_audit.get("findings", [])
     if isinstance(findings, list):
         top_finding = max(
-            (
-                finding
-                for finding in findings
-                if isinstance(finding, dict) and str(finding.get("severity", "") or "")
-            ),
+            (finding for finding in findings if isinstance(finding, dict) and str(finding.get("severity", "") or "")),
             key=lambda item: MERGE_AUDIT_SEVERITY_RANK.get(str(item.get("severity", "") or ""), -1),
             default=None,
         )
@@ -1559,8 +1560,7 @@ def _build_companion_merge_audit_watchpoints(
             top_finding_title = str(top_finding.get("title", "") or "")
             if (
                 top_finding_title
-                and MERGE_AUDIT_SEVERITY_RANK.get(top_finding_severity, -1)
-                >= MERGE_AUDIT_SEVERITY_RANK["medium"]
+                and MERGE_AUDIT_SEVERITY_RANK.get(top_finding_severity, -1) >= MERGE_AUDIT_SEVERITY_RANK["medium"]
             ):
                 watchpoints.append(
                     _watchpoint(
@@ -1568,10 +1568,7 @@ def _build_companion_merge_audit_watchpoints(
                         severity="warn",
                         scope="post_run_merge_audit_md",
                         side=side,
-                        message=(
-                            f"{side} merge audit top finding [{top_finding_severity}]: "
-                            f"{top_finding_title}"
-                        ),
+                        message=(f"{side} merge audit top finding [{top_finding_severity}]: {top_finding_title}"),
                     )
                 )
 
@@ -1659,11 +1656,7 @@ def _build_companion_merge_audit_watchpoints(
         addendum_finding_count = _coerce_int(follow_up.get("addendum_finding_count"))
         if addendum_finding_count > 0:
             summary_bits.append(f"addendum_findings={addendum_finding_count}")
-        consequence_markers = [
-            str(item)
-            for item in follow_up.get("consequence_markers", [])
-            if str(item or "")
-        ]
+        consequence_markers = [str(item) for item in follow_up.get("consequence_markers", []) if str(item or "")]
         if consequence_markers:
             summary_bits.append(f"consequence_markers={len(consequence_markers)}")
         if summary_bits:
@@ -1677,11 +1670,7 @@ def _build_companion_merge_audit_watchpoints(
                 )
             )
 
-        open_markers = [
-            str(item)
-            for item in follow_up.get("open_markers", [])
-            if str(item or "")
-        ]
+        open_markers = [str(item) for item in follow_up.get("open_markers", []) if str(item or "")]
         if open_item_count > 0:
             marker_suffix = f" ({','.join(open_markers)})" if open_markers else ""
             watchpoints.append(
@@ -1690,10 +1679,7 @@ def _build_companion_merge_audit_watchpoints(
                     severity="warn",
                     scope="post_run_merge_audit_md",
                     side=side,
-                    message=(
-                        f"{side} merge audit follow-up still lists {open_item_count} open items"
-                        f"{marker_suffix}"
-                    ),
+                    message=(f"{side} merge audit follow-up still lists {open_item_count} open items{marker_suffix}"),
                 )
             )
 
@@ -1704,10 +1690,7 @@ def _build_companion_merge_audit_watchpoints(
                     severity="info",
                     scope="post_run_merge_audit_md",
                     side=side,
-                    message=(
-                        f"{side} merge audit consequence markers: "
-                        + ",".join(consequence_markers)
-                    ),
+                    message=(f"{side} merge audit consequence markers: " + ",".join(consequence_markers)),
                 )
             )
         if "remaining_blocker" in consequence_markers:
@@ -1925,8 +1908,7 @@ def _build_watchpoints(
                         scope="benchmark_companion_links",
                         side=side,
                         message=(
-                            f"{side} benchmark companion state is missing_target "
-                            f"for {','.join(missing_surfaces)}"
+                            f"{side} benchmark companion state is missing_target for {','.join(missing_surfaces)}"
                         ),
                     )
                 )
@@ -1937,10 +1919,7 @@ def _build_watchpoints(
                             severity="info",
                             scope="benchmark_companion_links",
                             side=side,
-                            message=(
-                                f"{side} remediation {hint.get('surface')}: "
-                                f"{hint.get('suggested_command')}"
-                            ),
+                            message=(f"{side} remediation {hint.get('surface')}: {hint.get('suggested_command')}"),
                         )
                     )
             if bool(companion_links.get("post_run_evidence_json_missing")):
@@ -2130,7 +2109,11 @@ def _build_watchpoints(
                     message=f"{side} record child_exit_code is {structured_child_exit_code}",
                 )
             )
-        if structured_before_ep is not None and structured_after_ep is not None and structured_after_ep > structured_before_ep:
+        if (
+            structured_before_ep is not None
+            and structured_after_ep is not None
+            and structured_after_ep > structured_before_ep
+        ):
             watchpoints.append(
                 _watchpoint(
                     "stage4_rerun_progress_recorded",
@@ -2138,12 +2121,15 @@ def _build_watchpoints(
                     scope=structured_scope,
                     side=side,
                     message=(
-                        f"{side} record advanced latest_written_ep from "
-                        f"{structured_before_ep} to {structured_after_ep}"
+                        f"{side} record advanced latest_written_ep from {structured_before_ep} to {structured_after_ep}"
                     ),
                 )
             )
-        if structured_target_ep is not None and structured_after_ep is not None and structured_after_ep < structured_target_ep:
+        if (
+            structured_target_ep is not None
+            and structured_after_ep is not None
+            and structured_after_ep < structured_target_ep
+        ):
             watchpoints.append(
                 _watchpoint(
                     "stage4_target_gap_remaining",
@@ -2200,7 +2186,7 @@ def _build_watchpoints(
             )
 
         cost_delta = stage4_delta.get("total_cost_usd", 0.0)
-        if isinstance(cost_delta, (int, float)) and abs(float(cost_delta)) >= 1e-9:
+        if isinstance(cost_delta, int | float) and abs(float(cost_delta)) >= 1e-9:
             if float(cost_delta) < 0:
                 watchpoints.append(
                     _watchpoint(
@@ -2306,10 +2292,7 @@ def _render_text(diff: dict[str, Any], *, left_label: str, right_label: str) -> 
         f"Changed sections: {', '.join(delta['changed_sections']) if delta['changed_sections'] else 'none'}",
     ]
     if delta["run_meta"]:
-        run_meta_bits = [
-            f"{key}={change['before']} -> {change['after']}"
-            for key, change in delta["run_meta"].items()
-        ]
+        run_meta_bits = [f"{key}={change['before']} -> {change['after']}" for key, change in delta["run_meta"].items()]
         lines.append("Run meta: " + "; ".join(run_meta_bits))
     for stage in STAGE_ORDER:
         stage_delta = delta["stage_metrics"].get(stage)
@@ -2318,15 +2301,11 @@ def _render_text(diff: dict[str, Any], *, left_label: str, right_label: str) -> 
         field_bits = [f"{field}_delta={value}" for field, value in stage_delta.items()]
         lines.append(f"{stage}: " + "; ".join(field_bits))
     if delta["watchpoints"]:
-        watchpoint_bits = [
-            f"{item['id']}[{item.get('side', 'shared')}]"
-            for item in delta["watchpoints"]
-        ]
+        watchpoint_bits = [f"{item['id']}[{item.get('side', 'shared')}]" for item in delta["watchpoints"]]
         lines.append("Watchpoints: " + ", ".join(watchpoint_bits))
     if delta["remediation_hints"]:
         remediation_bits = [
-            f"{item['side']}:{item['surface']} -> {item['suggested_command']}"
-            for item in delta["remediation_hints"]
+            f"{item['side']}:{item['surface']} -> {item['suggested_command']}" for item in delta["remediation_hints"]
         ]
         lines.append("Remediation hints: " + " | ".join(remediation_bits))
     operator_report_line = str(delta.get("operator_report_line", "") or "")
@@ -2335,8 +2314,7 @@ def _render_text(diff: dict[str, Any], *, left_label: str, right_label: str) -> 
     remediation_summary = delta.get("remediation_summary", {})
     if isinstance(remediation_summary, dict) and int(remediation_summary.get("hint_count", 0) or 0) > 0:
         surface_bits = [
-            f"{surface}={count}"
-            for surface, count in sorted(remediation_summary.get("count_by_surface", {}).items())
+            f"{surface}={count}" for surface, count in sorted(remediation_summary.get("count_by_surface", {}).items())
         ]
         highest_priority_surface = str(remediation_summary.get("highest_priority_surface", "") or "")
         lines.append(

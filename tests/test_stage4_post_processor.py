@@ -474,6 +474,12 @@ class TestProcessPassResult:
                     "verdict": "PASS",
                     "consistency_checklist": {"scene_variety": "ISSUE"},
                 },
+                "_stage4_attempt_artifact_meta": {
+                    "attempt_num": 5,
+                    "artifact_path": "logs/artifacts/stage4/ep_0002/attempt_05/patched_after_fix__A.txt",
+                    "patch_strategy": "inplace",
+                    "final_verdict": "PASS",
+                },
                 "warnings": ["길이 편차"],
             },
             blueprint={"scene_breakdown": []},
@@ -488,6 +494,7 @@ class TestProcessPassResult:
         saved_signals = pp.ctx.current_project.db.save_episode_quality_signal.call_args.args[1]
         assert saved_signals["ced_score"] > 0
         assert saved_signals["ai_slop_score"] > 0
+        assert saved_signals["run_health"]["success_classes"] == ["repaired_pass", "retry_heavy_pass"]
 
     def test_save_pass_result_primary_db_returns_false_and_writes_dump(self, tmp_path):
         pp = self._make_pp()

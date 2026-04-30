@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.archive_benchmark_record import archive_benchmark_record
+from scripts.archive_benchmark_record import archive_benchmark_record, collect_stage_metrics
 
 
 def _make_project(root: Path) -> Path:
@@ -247,6 +247,47 @@ def test_archive_benchmark_record_creates_bundle_and_index(tmp_path, monkeypatch
     assert manifest["archive_evidence"]["reproducibility_status"] == "local_only_non_reproducible"
     assert manifest["archive_evidence"]["repo_tracking_policy"] == "benchmark_record_directories_ignored_by_git"
     assert manifest["archive_evidence"]["copied_file_count"] == len(manifest["copied_files"])
+
+
+def test_collect_stage_metrics_counts_stage4_run_health_classes(tmp_path):
+    project = tmp_path / "projects" / "demo"
+    (project / "logs").mkdir(parents=True)
+    (project / "logs" / "episode_production.jsonl").write_text(
+        "\n".join(
+            [
+                json.dumps(
+                    {
+                        "ep": 1,
+                        "attempt_key": "s4:ep1:a1",
+                        "attempt_num": 1,
+                        "artifact_path": "logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__A.txt",
+                        "final_verdict": "PASS",
+                    },
+                    ensure_ascii=False,
+                ),
+                json.dumps(
+                    {
+                        "ep": 2,
+                        "attempt_key": "s4:ep2:a5",
+                        "attempt_num": 5,
+                        "artifact_path": "logs/artifacts/stage4/ep_0002/attempt_05/patched_after_fix__A.txt",
+                        "patch_strategy": "inplace",
+                        "final_verdict": "PASS",
+                    },
+                    ensure_ascii=False,
+                ),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    metrics = collect_stage_metrics(project)
+
+    assert metrics["stage4"].pass_like_count == 2
+    assert metrics["stage4"].pure_pass_count == 1
+    assert metrics["stage4"].repaired_pass_count == 1
+    assert metrics["stage4"].retry_heavy_pass_count == 1
 
 
 def test_archive_benchmark_record_demotes_completed_when_target_ep_not_reached(tmp_path, monkeypatch):

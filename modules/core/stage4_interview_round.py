@@ -9085,12 +9085,30 @@ class Stage4InterviewRound:
             logging.debug("[stage_attempts] Stage4 record failed (non-blocking): %s", _sa_err)
 
     @staticmethod
-    def _build_stage4_attempt_return_payload(prelude: _Stage4AttemptPreludePayload) -> dict[str, str]:
+    def _build_stage4_attempt_return_payload(
+        prelude: _Stage4AttemptPreludePayload,
+        *,
+        round_num: int,
+        verdict: str | None,
+        initial_verdict: str,
+        is_patch: bool,
+        is_patch_fallback: bool,
+        patch_strategy: str,
+        structural_attempted: bool,
+    ) -> dict[str, object]:
         return {
             "attempt_key": prelude.attempt_key,
             "candidate_key": prelude.artifact_meta["candidate_key"],
             "content_hash": prelude.artifact_meta["content_hash"],
             "artifact_path": prelude.artifact_meta["artifact_path"],
+            "attempt_num": round_num + 1,
+            "artifact_class": Path(str(prelude.artifact_meta.get("artifact_path") or "")).name.split("__", 1)[0],
+            "initial_verdict": str(initial_verdict or "").strip(),
+            "final_verdict": str(verdict or "").strip(),
+            "is_patch": bool(is_patch),
+            "is_patch_fallback": bool(is_patch_fallback),
+            "patch_strategy": str(patch_strategy or prelude.normalized_patch_strategy or "").strip(),
+            "structural_attempted": bool(structural_attempted),
         }
 
     def _record_s4_attempt(
@@ -9186,4 +9204,13 @@ class Stage4InterviewRound:
             reject_bucket=reject_bucket,
             prelude=prelude,
         )
-        return self._build_stage4_attempt_return_payload(prelude)
+        return self._build_stage4_attempt_return_payload(
+            prelude,
+            round_num=round_num,
+            verdict=verdict,
+            initial_verdict=initial_verdict,
+            is_patch=is_patch,
+            is_patch_fallback=patch_fallback,
+            patch_strategy=patch_strategy,
+            structural_attempted=structural_attempted,
+        )

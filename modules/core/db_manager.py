@@ -22,6 +22,7 @@ from modules.core.advisory_authority import (
 from .constants import MARTIAL_METRICS  # 👈 상수 임포트
 from .db_bootstrap_runtime import DBBootstrapRuntime
 from .quality_signal_metrics import build_signal_stat
+from .stage4_run_health import extract_stage4_run_health, summarize_stage4_run_health_counts
 
 
 # [V44] DB 에러 심각도 분류
@@ -2742,6 +2743,9 @@ class DBManager:
         """최종 원고 기준 Python-only 품질 신호 저장."""
         if not isinstance(signals, dict):
             return
+        signal_summary = dict(signals.get("signal_summary", {}) or {})
+        if isinstance(signals.get("run_health"), dict):
+            signal_summary["run_health"] = dict(signals["run_health"])
 
         with self._lock:
             nested = self.conn.in_transaction
@@ -2757,7 +2761,7 @@ class DBManager:
                     float(signals.get("compression_ratio", 0.0) or 0.0),
                     float(signals.get("burstiness", 0.0) or 0.0),
                     float(signals.get("complexity", 0.0) or 0.0),
-                    json.dumps(signals.get("signal_summary", {}) or {}, ensure_ascii=False),
+                    json.dumps(signal_summary, ensure_ascii=False),
                 ),
             )
             if not nested:
@@ -2880,9 +2884,11 @@ class DBManager:
                 "signals": {},
                 "recent": [],
                 "latest_ai_slop_hits": [],
+                "run_health_counts": {},
             }
 
         latest = recent_rows[-1]
+        run_health_counts = summarize_stage4_run_health_counts(recent_rows)
         signals = {
             "ced": build_signal_stat(field="ced_score", recent_rows=recent_rows, mode="lower_better"),
             "ai_slop": build_signal_stat(field="ai_slop_score", recent_rows=recent_rows, mode="lower_better"),
@@ -2904,11 +2910,14 @@ class DBManager:
                     "compression_ratio": row.get("compression_ratio", 0.0),
                     "burstiness": row.get("burstiness", 0.0),
                     "complexity": row.get("complexity", 0.0),
+                    "run_health": extract_stage4_run_health(row),
                 }
                 for row in recent_rows
             ],
             "latest_ai_slop_hits": latest.get("ai_slop_hits", [])[:5],
             "latest_signal_summary": latest.get("signal_summary", {}),
+            "latest_run_health": extract_stage4_run_health(latest),
+            "run_health_counts": run_health_counts,
         }
 
     def get_episode_quality_label(self, ep_num: int) -> dict | None:
