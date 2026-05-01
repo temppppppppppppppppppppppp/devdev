@@ -1,6 +1,6 @@
 # healthy_heir_group_succession
 
-Title: 회귀한 외동 후계자는 그룹을 지킨다
+Title: 재벌가 외동아들은 그룹을 지킨다
 Family: blockguide
 Status: Stage0 preprocess PASS
 
@@ -45,6 +45,16 @@ Status: Stage0 preprocess PASS
 - live Phase0:
   - `treatments/phase0/healthy_heir_group_succession_phase0_design.json`
 - TR:
-  - not present
+  - `treatments/healthy_heir_group_succession_tr_block_070_draft.json`
 - BI:
-  - not present
+  - `bible/10_bi_healthy_heir_group_succession.json`
+
+## 6. 2026-05-01 Fast-Block Update
+
+- user pacing lock:
+  - `TR 2~6` is one webnovel block and must contain the main incident plus at least one additional incident.
+- applied opening structure:
+  - main incident: southern cold warehouse closure hold
+  - additional incident: PF guarantee auto-extension notice / bank deadline ignition
+- protagonist lock:
+  - Do-yoon is not optimized around kindness or cruelty. He is self-interested, efficient, and converts discarded rights into usable authority.

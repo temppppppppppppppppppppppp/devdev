@@ -1,0 +1,64 @@
+{
+  "primary_profile": "business_growth_profile",
+  "secondary_profile": "tech_startup_profile",
+  "resource_axis": [
+    "전력망 권리: PPA, transformer slot, grid interconnection, power SLA 검토권",
+    "자료 접근권: 원본 계약서, 납기표, engineer report, outage log, site permit 문서",
+    "현장 접근권: 선우일렉 공장, 데이터센터 부지, 조선소 yard, 냉각수/송전 corridor",
+    "조직 권한: 72시간 review right, audit authority, technical verification team, contract renegotiation seat, board observer, Strategic Power TF",
+    "자본 배분권: pilot budget, project finance 구조, capex 순서 조정권"
+  ],
+  "power_axis": [
+    "전력망 병목을 AI 성장의 숨은 관문으로 읽는 판단력",
+    "미래 기억을 현재 계약/SLA/납기표/site evidence로 바꾸는 proof assembly",
+    "proof를 칭찬이 아니라 결재권, 검토권, audit권, 협상석, 예산권으로 환전하는 능력",
+    "valuable operator를 구제해서 전문 proof 생산자로 쓰는 효율적 인재 운용",
+    "AI narrative를 전력/냉각/계통/자본 구조로 끌어내리는 board combat 능력"
+  ],
+  "control_axis": [
+    "도윤이 power SLA를 멈추지 않으면 선우디지털의 AI 계약이 손실 계약으로 닫히는 상태",
+    "도윤이 transformer slot과 HVDC report를 묶지 않으면 선우일렉의 납기/안전/신뢰가 동시에 터지는 상태",
+    "도윤이 site/cooling permit을 확인하지 않으면 데이터센터 증설이 부지 단계에서 멈추는 상태",
+    "도윤이 board observer/TF authority를 얻지 못하면 각 계열사가 각자 합리적인 결정을 하다가 그룹 단위 power-grid gate를 놓치는 상태",
+    "도윤이 pilot budget과 project finance 구조를 쥐지 못하면 전력망 선점이 말뿐인 전략으로 남는 상태"
+  ],
+  "payoff_axis": [
+    "72시간 계약 재검토권",
+    "원본 SLA/납기표/source document 접근권",
+    "선우일렉 현장 audit권",
+    "HVDC technical verification team 임시 authority",
+    "site/cooling permit review authority",
+    "cloud contract renegotiation seat",
+    "chairman direct-report line",
+    "board observer seat",
+    "pilot budget allocation authority",
+    "Strategic Power TF leader"
+  ],
+  "failure_axis": [
+    "AI deal은 성공처럼 보이나 power SLA penalty로 손실 계약이 되는 상태",
+    "변압기 납기 지연과 안전 사고가 동시에 터져 선우일렉 신뢰가 무너지는 상태",
+    "좌천된 engineer report가 폐기되어 HVDC 기회와 operator를 모두 잃는 상태",
+    "데이터센터 부지가 냉각수/site permit에서 막혀 capex가 sunk cost가 되는 상태",
+    "도윤이 미래를 안다고 떠들어 월권/망상 프레임에 갇히는 상태",
+    "권한 receipt 없이 board에서 칭찬만 받고 다음 gate가 열리지 않는 상태",
+    "도윤의 행동이 효율적 이득이 아니라 착한 구원자로 읽히는 상태"
+  ],
+  "hud_interpretation": {
+    "capital": "현금보다 power-grid control capital로 읽는다: 전력권리, 자료접근권, audit권, 협상석, board seat, pilot budget, TF authority",
+    "deal_type": "AI/cloud contract review, PPA renegotiation, transformer slot allocation, HVDC validation, site permit correction, offshore substation/MRO package, project finance",
+    "resource_power_hud": "서도윤 authority ladder + 선우그룹 계열사 control map + power bottleneck proof chain을 함께 보여주는 no-UI business HUD",
+    "business_lines": "선우일렉, 선우오션, 선우에너지, 선우디지털, 선우건설, 선우캐피탈",
+    "company_state": "AI narrative와 전력망 현실이 얼마나 분리돼 있는지, 그리고 도윤이 그 간극을 결재권으로 얼마나 잠갔는지의 상태"
+  },
+  "domain_lines_interpretation": {
+    "AI/data center": "독자 hook과 화제성의 전면부지만, 실제 승부는 전력/냉각/SLA/capex에서 난다",
+    "power grid": "작품의 핵심 moat. 누구나 AI를 말하지만 도윤은 grid gate를 산다",
+    "chaebol succession": "왕좌 싸움이 아니라 권한 receipt 누적으로 책임 범위가 커지는 ladder",
+    "project finance": "후반 확장용 자본 엔진. 돈자랑이 아니라 risk allocation과 offtake 구조로 쓴다"
+  },
+  "selection_rationale": [
+    "주 전장은 반복매출/공급망/운영권/권한을 장악하는 business_growth_profile이다",
+    "보조 전장은 AI/data center/cloud 계약을 기술/제품/인프라 gate로 읽는 tech_startup_profile이다",
+    "investment_market_profile은 보조 후보였지만, 초기 쾌감이 주가/가격 베팅이 아니라 전력 권리와 결재권 선점이므로 제외한다"
+  ]
+}

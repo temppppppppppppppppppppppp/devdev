@@ -1,0 +1,125 @@
+{
+  "work_identity": {
+    "work_id": "imf_allsector_rights_heir",
+    "title": "재벌가 후계자는 버려진 권리를 산다",
+    "logline": "1997년 IMF 직전으로 돌아온 재벌 후계자 강태준이 적자 창고, 해지될 회선, 부실채권, 버려진 공장과 낡은 호텔에서 미래의 권리를 읽고 돈보다 먼저 권한을 회수한다.",
+    "time_anchor": "1997년 11월 IMF 직전",
+    "primary_arena": "세강그룹 비상자산 매각 회의와 IMF 권리 회수 전장",
+    "protagonist": "강태준",
+    "primary_profile": "business_growth_profile",
+    "secondary_profile": "investment_market_profile"
+  },
+  "canonical_sources": [
+    "사용자 지시: 단일 섹터가 아니라 모두 하되, 웹소설 페이싱은 빠르고 1block은 2~6화 분량이며, 주인공은 선악보다 이득과 효율을 우선한다.",
+    "material_ssot/20_pitch/synthesis/imf_allsector_rights_heir_working_synthesis.md",
+    "material_ssot/20_pitch/canon/imf_allsector_rights_heir.md"
+  ],
+  "reference_only_sources": [
+    "C:\\Users\\User\\Desktop\\재료 생산 R&D 랩\\docs\\2026-04-29\\no-fantasy-chaebol-money-donor-translation-spec-v0.md",
+    "C:\\Users\\User\\Desktop\\재료 생산 R&D 랩\\docs\\2026-04-21\\chaebol-investment-4donor-parallel-usage-report-v1.md",
+    "C:\\Users\\User\\Desktop\\재료 생산 R&D 랩\\docs\\2026-04-16\\bulhaeng-chaebol-ep0001-0050-doctrine-review.md",
+    "C:\\Users\\User\\Desktop\\재료 생산 R&D 랩\\docs\\2026-04-21\\jusigui-sin-ep0001-0050-doctrine-review.md",
+    "C:\\Users\\User\\Desktop\\재료 생산 R&D 랩\\docs\\2026-04-29\\jaebeol-jangnam-value-ep0001-0050-doctrine-review.md",
+    "treatments/preprocess/healthy_heir_group_succession/source_manifest.json",
+    "work_guards/healthy_heir_group_succession.yaml"
+  ],
+  "core_materials": [
+    "all-sector rights rollup: 냉장물류, PC방/초고속인터넷, PCS/통신단말, NPL/워크아웃, 반도체 부품소재, 도심 부동산/데이터센터, 엔터/IP를 한 그룹 지배력 사다리로 묶는다.",
+    "opening representative spike: 남서 냉장창고 매각 결재 직전, 태준이 손익표의 냉장 인증 유지 비용과 입찰 자격 column을 분리해 매각을 보류시킨다.",
+    "mandatory side event: 같은 첫 TR block 안에서 전산실이 해지하려던 PC방/초고속 회선 장기계약과 게임 유통권 표지를 찾아 다음 섹터를 조기 점화한다.",
+    "protagonist self-interest: 태준은 회사를 구한다는 말보다, 버려지는 권리를 자신이 통제하면 더 큰 이득과 지분 명분이 생긴다는 이유로 움직인다.",
+    "reward vector: 현금보다 자료 접근권, 매각 보류권, 계약 해지 보류권, 30일 권리 실사권, 우선매수권, 사장단 안건권, sector TF owner 권한이 먼저 떨어진다.",
+    "proof discipline: 회귀 기억은 위험 범위를 좁히는 데만 쓰고, proof는 현재 원장, 계약서, 채권 약정, 회선 계약, 인증 파일, 담보권 문서로 만든다.",
+    "donor adoption: `재벌가 장남은 가치를 본다`의 value-to-seat ladder를 core로 쓰고, `불행재벌`의 proof-receipt-gate cadence, `주식의 신`의 carrier/platform proof, `흙수저`의 asset conversion을 specialist로 붙인다."
+  ],
+  "npc_pool": [
+    {
+      "name_or_role": "강태준",
+      "narrative_use": "주인공. 회귀 전 세강그룹 해체 잔여자산 정리 담당자였고, 회귀 후 버려진 권리를 자기 권한으로 회수한다.",
+      "why_this_work": "선악보다 이득과 효율을 우선하는 all-sector 권리 수집자의 얼굴"
+    },
+    {
+      "name_or_role": "강문식",
+      "narrative_use": "세강그룹 창업주 회장. 태준을 바로 믿지 않고, proof를 권한으로 바꿔 줄 authority witness.",
+      "why_this_work": "감정 인정이 아니라 제한 권한을 주는 첫 결재권자"
+    },
+    {
+      "name_or_role": "최도겸 CFO",
+      "narrative_use": "비상자산 매각을 총괄하는 합리적 반대자. 현금 유동성만 보면 태준과 충돌한다.",
+      "why_this_work": "IMF 현금흐름 압박과 권리 보존 논리가 맞붙는 관문"
+    },
+    {
+      "name_or_role": "윤세라",
+      "narrative_use": "세강물류 회계 과장. 냉장창고 원장과 계약서 별첨을 검증하는 첫 helper.",
+      "why_this_work": "감탄자가 아니라 proof carrier"
+    },
+    {
+      "name_or_role": "박기웅",
+      "narrative_use": "전산실/통신계약 담당자. 해지될 회선 계약과 PC방 유통권 표지를 들고 있는 부 사건 helper.",
+      "why_this_work": "첫 block 안에서 두 번째 사건을 현실 문서로 점화"
+    },
+    {
+      "name_or_role": "권오찬",
+      "narrative_use": "남서 냉장창고 현장소장. 숙련인력과 인증 유지 조건을 증언한다.",
+      "why_this_work": "사람 보호를 숙련자산과 인증 보존 이득으로 전환"
+    },
+    {
+      "name_or_role": "동진은행 구조조정팀장",
+      "narrative_use": "NPL/워크아웃 아크의 외부 gatekeeper.",
+      "why_this_work": "담보권과 우선매수권 receipt를 외부에서 인정하는 인물"
+    },
+    {
+      "name_or_role": "세강전자 부품공장장",
+      "narrative_use": "버려질 반도체 부품 하청사의 납품 인증과 공정 know-how를 증명한다.",
+      "why_this_work": "장기 기술 자산 전환의 witness"
+    }
+  ],
+  "crisis_pool": [
+    "남서 냉장창고 매각 결재 직전: 팔면 단기 현금은 생기지만 콜드체인 입찰 자격과 숙련 shift를 잃는다.",
+    "PC방/초고속 회선 장기계약 해지: 손해 계약처럼 보이지만 회선권, 결제망, 게임 유통권의 초기 관문이다.",
+    "IMF 유동성 압박: CFO는 현금화가 합리적이고, 태준은 일부 자산을 팔지 않는 권리를 따내야 한다.",
+    "PCS 컨소시엄 자격 상실: 주파수와 대리점망이 아니라 당장의 보증금 부담으로만 보이는 위기.",
+    "NPL 매입 경쟁: 은행과 외국계 펀드가 담보권과 우선매수권을 다르게 본다.",
+    "반도체 부품 하청사 폐업: 부채만 보이면 폐업이 맞지만 납품 인증과 공정 know-how가 남는다.",
+    "도심 호텔 매각: 객실 사업은 낡았지만 전력, 통신, 냉각, 입지가 데이터센터 권리로 바뀐다.",
+    "엔터/IP 헐값 매각: IMF 때 잘라내는 광고/음악/게임 IP가 이후 플랫폼 유통권으로 변한다."
+  ],
+  "hard_constraints": [
+    "no visible value UI, no status window, no magic skill, no supernatural appraisal",
+    "미래 지식은 선언하지 않고 현재 자료로만 proof를 만든다.",
+    "주인공은 착한 관리자나 구원자가 아니라 이득과 효율을 먼저 계산하는 자기중심적 후계자다.",
+    "모든 TR block은 2~6화 episode-bundle로 확장 가능한 밀도를 가져야 하며, 주 사건 외 별도 부 사건 1개 이상을 포함한다.",
+    "reward는 현금/칭찬보다 권리와 권한으로 먼저 지급한다.",
+    "각 섹터는 독립 에피소드가 아니라 이전 섹터 권한 영수증으로 열린다.",
+    "IMF 배경을 감상적 회고로 쓰지 말고 계약, 채권, 회선, 인증, 담보권, 매각 결재로 장면화한다.",
+    "임원, 은행, 현장 책임자를 바보 악역으로 만들지 않는다.",
+    "사람을 지키는 장면은 숙련자산, 인증, 계약권, 회수 가능 권리 보존이라는 이득으로 증명한다."
+  ],
+  "do_not_fake": [
+    "냉장물류를 단순 창고로 쓰지 말고 인증 유지 비용, 납품 이력, 입찰 자격, 온도 이탈 기록으로 쪼갠다.",
+    "PC방/초고속인터넷을 추억 소재로만 쓰지 말고 회선 장기계약, 결제망, 게임 유통권으로 쓴다.",
+    "NPL을 싸게 산다는 말로 뭉개지 말고 담보권, 전환권, 우선매수권, 채권단 동의 조건을 구분한다.",
+    "반도체 소재/부품을 미래 대박 키워드로만 쓰지 말고 납품 인증, 설비 납기, 공정 know-how로 쓴다.",
+    "도심 부동산을 시세차익으로만 쓰지 말고 전력/통신/냉각/장기 임차권으로 본다.",
+    "엔터/IP를 스타 발굴 미담으로 쓰지 말고 저작권, 편성권, 광고 inventory, 게임/음악 유통권으로 쓴다.",
+    "주인공이 선해서 돕는 장면 금지. 돕는다면 그 이유가 이득과 효율로 증명되어야 한다."
+  ],
+  "manual_audit_note": "바로 써도 되는 재료: all-sector 권리 ladder, opening 냉장창고 주 사건, PC방/회선권 부 사건, 권한 영수증 reward model. 아직 비어 있는 재료: 실제 IMF 금융 약정 세부, PCS 컨소시엄 현실 용어, 반도체 부품 인증 디테일, 데이터센터 전환 법적 조건. 상상으로 때우면 안 되는 재료: 채권 약정, 회선 장기계약, 입찰 자격, 납품 인증, 우선매수권, 담보권 조건. Stage0 수동 감리 판정: Phase0 진입 가능. 부족한 실무 세부는 arc별 TR 진입 직전 do_not_fake 항목으로 보강한다.",
+  "terminology_pool": [
+    "매각 보류권",
+    "자료 접근권",
+    "권리 실사권",
+    "우선매수권",
+    "계약 해지 보류권",
+    "콜드체인 입찰 자격",
+    "회선 장기계약",
+    "게임 유통권",
+    "NPL 담보권",
+    "워크아웃 전환권",
+    "납품 인증",
+    "전력/통신/냉각 권리",
+    "광고 inventory"
+  ],
+  "time_anchor": "1997년 11월",
+  "primary_arena": "세강그룹 비상자산 매각 회의"
+}

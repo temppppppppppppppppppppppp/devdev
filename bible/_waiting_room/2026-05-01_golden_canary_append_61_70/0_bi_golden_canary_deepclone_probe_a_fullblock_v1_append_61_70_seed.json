@@ -1,0 +1,65 @@
+{
+  "_schema_version": "blockguide.append_bi_seed.v1",
+  "_work_id": "golden_canary_deepclone_probe_a_fullblock_v1_append_61_70",
+  "_family": "blockguide",
+  "_status": "waiting_room_bi_seed_after_block_061",
+  "_canonical_scope": "append-only seed. This file does not replace the sealed baseline BI.",
+  "_source_phase0": "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
+  "_source_tr": "treatments/golden_canary_deepclone_probe_a_fullblock_v1_append_61_70_tr_block_061_draft.json",
+  "_baseline_bi": "bible/0_bi_golden_canary_deepclone_probe_a_fullblock_v1.json",
+  "_reserve_ref": "docs/2026-04-19/golden-canary-deepclone-probe-a-fullblock-rollout-reserve-61-70.md",
+  "BIAppendSeed": {
+    "title": "골든 루트: 애프터 컨트롤 웨이브",
+    "core_promise": "135조를 번 회귀자가 더 큰 수익보다 접근권, 거절권, 후계 검증권을 먼저 사서 평화가 다시 거래 대상이 되지 않게 만든다.",
+    "baseline_truth": "Block 1-60은 봉인된 골든 루트 완결선이다. 61-70은 완결을 늘이는 에필로그가 아니라 post-victory governance append wave다.",
+    "protagonist_contract": {
+      "name": "한시우",
+      "priority": "착함/악함보다 이득, 효율, 통제권, 유출 방지",
+      "forbidden_softening": [
+        "가족이라서 예외를 주는 선역화",
+        "국가급 요청이라서 비공식 미팅을 허용하는 권위 숭배",
+        "돈이 충분하니 모두를 돕는 자선 엔딩",
+        "회귀 비밀을 고백해 감정 보상으로 닫는 방식"
+      ],
+      "reader_pleasure": "막대한 돈을 가진 사람이 더 큰 투자보다 '안 만나도 되는 권리'와 '내 규칙 밖에서는 아무도 못 들어오는 상태'를 사는 대리만족"
+    },
+    "pacing_contract": {
+      "block_unit": "one block equals 2-6 episodes",
+      "minimum_density": "each block must include one primary incident and at least one secondary incident",
+      "same_block_receipt": "every block must end with a concrete receipt in access, authority, protection, rule-change, signboard, or refusal right",
+      "no_slow_epilogue_rule": "post-victory peace must be tested through procedures, requests, and blocked access rather than warm reflection"
+    },
+    "append_arc_map": [
+      {
+        "arc_id": "APP-01",
+        "block_range": "61-70",
+        "title": "승리 이후 접근권을 격리하고 후계 검증권을 설계한다",
+        "function": "late authority, post-victory governance, legacy conversion, next-generation control, peace durability",
+        "reward_ladder": [
+          "Block 61: right-to-ignore authority",
+          "Block 62: successor screening veto sheet",
+          "Block 63: sovereign line formalization",
+          "Block 64: hostile courtship refusal",
+          "Block 65: governance codex custody",
+          "Block 66: rescue-on-my-terms precedent",
+          "Block 67: family constitution rewrite",
+          "Block 68: peace stress test pass",
+          "Block 69: irreversible handoff with ownership core retained",
+          "Block 70: new orbit closure"
+        ]
+      }
+    ],
+    "current_plot_roadmap": [
+      {
+        "block_id": "Block 61",
+        "title": "금고 격리일",
+        "purpose": "post-golden quarantine",
+        "primary_incident": "135조 이후 외부 접근 요청 전면 격리",
+        "secondary_incident": "가족 선지급 청탁 차단과 국부펀드 비공식 AI 미팅 격하",
+        "receipt": "post-golden quarantine protocol + solicitation ledger + right-to-ignore authority",
+        "next_gate": "Block 62 successor screening"
+      }
+    ],
+    "promotion_rule": "Final append BI generation is blocked until the 61-70 TR wave is complete and a source TR handoff gate passes. Until then this is a waiting-room BI seed only."
+  }
+}

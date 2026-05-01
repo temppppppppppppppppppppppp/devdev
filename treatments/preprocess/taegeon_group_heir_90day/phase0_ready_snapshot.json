@@ -1,0 +1,10 @@
+{
+  "identity_locked": true,
+  "profile_locked": true,
+  "material_sufficient": true,
+  "manual_audit_pass": true,
+  "remaining_risks": [
+    "BI 생성은 TR 70블록 draft와 source TR handoff gate PASS 후에만 가능하다.",
+    "도메인 세부는 실제 기업/법무 사실 단정이 아니라 장르적 proof로 유지한다."
+  ]
+}

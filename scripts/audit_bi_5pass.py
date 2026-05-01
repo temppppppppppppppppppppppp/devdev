@@ -339,7 +339,9 @@ def main() -> int:
     expected_title = phase0_naming_surface["canonical_title"]
     phase0_allowed_titles = phase0_naming_surface["allowed_titles"]
     expected_protagonist = phase0["protagonist"]["name"]
-    expected_npcs = [phase0["protagonist"]["name"], *[npc["name"] for npc in phase0["phase0_design"]["npc_timeline"]]]
+    expected_npcs = unique_preserve_order(
+        [phase0["protagonist"]["name"], *[npc["name"] for npc in phase0["phase0_design"]["npc_timeline"]]]
+    )
 
     serialized = json.dumps(bi, ensure_ascii=False)
     garbled_matches = GARBLED_RE.findall(serialized)

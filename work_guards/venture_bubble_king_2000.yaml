@@ -1,0 +1,123 @@
+work_identity:
+  work_id: venture_bubble_king_2000
+  work_type: tech_startup_regression_rights_rollup
+  family: blockguide
+  one_line_truth: "2000년 닷컴버블 직전으로 돌아온 방계 심사역이 망할 회사 지분이 아니라 IDC, PG, PC방, 모바일 과금, 검색/커뮤니티, 광고 inventory의 살아남는 권리만 사들여 인터넷 생태계의 관문이 된다"
+  protagonist_weapon:
+    - "회귀 전 플랫폼 그룹 해체 경험으로 어떤 권리가 버블 뒤에도 살아남는지 아는 기억"
+    - "현재 계약서, 서버 로그, 정산표, 회선 약정으로 proof를 만드는 권리 실사력"
+    - "착한 구원이나 악한 과시보다 이득과 효율을 먼저 계산하는 자기중심성"
+    - "지분투자보다 독점 실사권, 담보권, 옵션, 접근권, 정산권을 먼저 요구하는 태도"
+  business_axes:
+    - "IDC/서버/도메인"
+    - "PG/소액결제/정산"
+    - "PC방/게임 유통/회선"
+    - "모바일 콘텐츠/단축번호 과금"
+    - "검색/커뮤니티/계정"
+    - "오픈마켓/택배/가격비교"
+    - "검색광고/제휴마케팅/IP"
+  control_axes:
+    - "독점 실사권"
+    - "서버실 출입권"
+    - "도메인 escrow"
+    - "PG 테스트권"
+    - "회선 재협상권"
+    - "단축번호 과금 협상권"
+    - "광고 inventory 장부화 권한"
+  mandatory_lexicon:
+    - "IDC 임대권"
+    - "서버 랙"
+    - "도메인 escrow"
+    - "PG 테스트 계약"
+    - "소액결제"
+    - "PC방 회선"
+    - "모바일 과금"
+    - "검색 트래픽"
+    - "광고 inventory"
+    - "옵션 계약"
+    - "담보권"
+  forbidden_flattenings:
+    - "닷컴버블을 주가 맞히기나 상장 차익으로만 쓰는 전개"
+    - "주인공이 착해서 망한 회사를 구해 주는 전개"
+    - "주 사건만 있고 별도 부 사건이 없는 얇은 block"
+    - "부 사건이 다음 gate로 이어지지 않는 장식용 잡담"
+    - "reward가 현금, 칭찬, 감탄으로만 닫히는 전개"
+    - "권리 proof 없이 말싸움으로 계약을 뒤집는 전개"
+    - "VC, 전략실, 채권자, 통신사를 바보 악역으로 만드는 전개"
+    - "회귀 지식으로 미래 회사명만 찍는 전개"
+    - "BI를 TR 70블록 전 생성하는 stage jump"
+  tracking_slots:
+    - "도윤 평가 상승: 방계 심사역 -> 권리 담보 설계자 -> 결제/회선 gate owner -> 플랫폼 holding 설계자"
+    - "권한 ladder: 자료 열람 -> 독점 실사권 -> 옵션/담보권 -> 서버실/정산 접근권 -> 과금 협상권 -> 이사회 안건권"
+    - "sector proof chain: IDC -> PG -> PC방/게임 -> 모바일 과금 -> 검색/커뮤니티 -> 오픈마켓 -> 광고/IP"
+    - "self-interest ledger: 모든 도움과 보류는 도윤의 권리, 정보 우위, 퇴로, 실행권으로 회수되어야 한다"
+  first_block_reward:
+    - "TR Block 001: 클릭스퀘어 지분투자를 거절하고 IDC 임대권, PG 테스트 계약, 도메인 escrow를 담보로 요구한다"
+    - "TR Block 001 side event: PC방 회선/게임 유통권 표지와 모바일 과금 단축번호 gate가 열린다"
+    - "TR Block 001 receipt: 72시간 독점 실사권, 자료 열람권, 옵션 계약 협상 테이블"
+  crisis_doctrine:
+    - "선독: 버블 붕괴 순서를 기억한다"
+    - "대비: 현재 계약서와 서버 로그, 정산표를 먼저 확보한다"
+    - "최소 피해: 거품 지분 대신 권리 담보를 잡아 손실을 제한한다"
+    - "즉시 보상: 매 block마다 권리, 접근권, 정산권, 옵션, 다음 gate 중 하나를 지급한다"
+  mandatory_scene_engines:
+    - "주 사건 + 별도 부 사건 동시 진행. 모든 TR block은 2~6화 episode-bundle 밀도를 가져야 한다"
+    - "IR, 계약서, 서버 로그, 정산표에서 빠진 권리 column을 찾아낸다"
+    - "authority witness가 proof를 보고 제한 권한이나 접근권을 준다"
+  protagonist_evaluation:
+    admiration_axes:
+      - "선해서가 아니라 이득과 효율을 정확히 계산해서 움직인다"
+      - "망할 회사에서 살아남는 권리만 골라낸다"
+      - "현재 자료로 증명하고 계약상 권리로 회수한다"
+      - "손실을 회피하는 데 그치지 않고 다음 gate를 연다"
+    forbidden_praise_patterns:
+      - "착해서 인정받는다"
+      - "방계라 불쌍해서 봐준다"
+      - "미래를 알아서 맞혔다"
+      - "적이 멍청해서 당했다"
+      - "위기 속에서도 사람을 구해 모두 감동했다"
+    observer_tiers:
+      - "클릭스퀘어 CFO"
+      - "민지아 법무 helper"
+      - "오준혁 IDC 운영팀장"
+      - "노은채 PC방 운영자"
+      - "한경수 회장"
+      - "백승민 전략실장"
+      - "채권자/VC/통신사 파트너"
+    evaluation_thresholds:
+      - "TR Block 001 안에 지분투자 거절과 권리 담보 요구가 동시에 찍힌다"
+      - "TR 2~6 안에 IDC, PG, PC방, 모바일 gate가 모두 보인다"
+      - "각 block은 same-block cider receipt와 다음 gate를 남긴다"
+  role_fit_constraints:
+    - name: "회장 즉시 굴복 금지"
+      role: "한경수"
+      disallowed_actions:
+        - "한마디에 전권을 넘기기"
+        - "감동해서 도윤을 믿기"
+        - "방계라 불쌍해서 기회 주기"
+      exceptions:
+        - "proof를 본 뒤 제한 권한과 결과 조건을 거는 행동"
+    - name: "전략실 바보화 금지"
+      role: "백승민"
+      disallowed_actions:
+        - "기본 통신망 가치도 못 보는 인물화"
+        - "이유 없는 악의"
+        - "도윤 말에 바로 굴복"
+      exceptions:
+        - "통신 본류 권리 보호를 위해 도윤의 권리 회수를 견제"
+    - name: "helper 감탄자화 금지"
+      role: "민지아 / 오준혁 / 노은채"
+      disallowed_actions:
+        - "놀라기만 하기"
+        - "근거 없이 도윤 편 들기"
+      exceptions:
+        - "자신의 문서, 서버, 매출 근거가 도윤의 조건과 맞을 때 협조"
+custom_rules:
+  - "1 TR block은 downstream 2~6화 episode-bundle이다"
+  - "모든 TR block에는 주 사건 1개와 별도 부 사건 1개 이상이 있어야 한다"
+  - "부 사건은 다음 섹터 gate가 되어야 하며 장식이면 FAIL"
+  - "도윤의 모든 행동은 immediate benefit과 cost가 보여야 한다"
+  - "대가 없는 선의, 감정형 보복, 체면형 손실 감수는 금지한다"
+  - "권리 보존은 도윤의 정보 우위, 접근권, 옵션, 정산권, 퇴로 확보로 돌아와야 한다"
+  - "첫 block direct line 후보: 회사는 안 삽니다. 서버실 열쇠와 결제권만 사죠"
+  - "BI는 TR 70블록과 source handoff gate PASS 전까지 생성하지 않는다"

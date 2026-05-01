@@ -1,0 +1,26 @@
+{
+  "work_id": "shipbuilding_ocean_heir",
+  "title": "망한 조선재벌의 후계자가 돌아왔다",
+  "manual_audit_pass": true,
+  "phase0_ready": true,
+  "identity_locked": true,
+  "profile_locked": true,
+  "material_sufficient": true,
+  "remaining_risks": [
+    "실존 STX 직접 모사 위험을 계속 제거해야 한다",
+    "조선/해운 전문 디테일이 회의실 말싸움으로 납작해지지 않게 블록마다 보조 사건을 강제해야 한다",
+    "수주를 전부 막는 금욕형 경영물로 drift하지 않게 조건부 수주/재협상 보상을 유지해야 한다"
+  ],
+  "profile_lock_ref": "treatments/preprocess/shipbuilding_ocean_heir/profile_lock.json",
+  "source_manifest_ref": "treatments/preprocess/shipbuilding_ocean_heir/source_manifest.json",
+  "material_bundle_summary_ref": "treatments/preprocess/shipbuilding_ocean_heir/material_bundle_summary.json",
+  "pitch_authority": "material_ssot/20_pitch/canon/shipbuilding_ocean_heir.md",
+  "readiness": {
+    "selection_ready": true,
+    "phase0_ready": true,
+    "first_block_cider_ledger_rows_2_to_6_all_true": true,
+    "block_1_used_as_opening_rescue": false,
+    "block_7_plus_used_as_opening_rescue": false
+  },
+  "next_action": "Create Phase0 design, work_guard, and TR blocks 1-5 under treatment-production cap."
+}

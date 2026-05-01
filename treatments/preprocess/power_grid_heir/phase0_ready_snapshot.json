@@ -1,0 +1,16 @@
+{
+  "identity_locked": true,
+  "profile_locked": true,
+  "material_sufficient": true,
+  "manual_audit_pass": true,
+  "remaining_risks": [
+    "전력 SLA/PPA/backup obligation 문구는 TR Block 001~006 집필 전 계약 기능 단위로 한 번 더 구체화 필요",
+    "변압기 납기/검사/test certificate/production slot 세부는 선우일렉 block 진입 전 보강 필요",
+    "HVDC 기술 설명은 과잉 강의가 되지 않게 engineer report와 board proof 수준으로 제한 필요",
+    "cooling water/site permit은 실제 행정 절차를 그대로 복제하기보다 허가 calendar, 주민 민원, capex delay 기능으로 정확히 운용 필요",
+    "project finance/covenant/offtake는 ARC-03 이후 전개 전 추가 전문 재료 필요",
+    "도윤의 자기중심성이 착한 구원자로 drift될 위험 — 모든 action_purpose에 immediate gain/cost와 mid-long gain을 명시해야 함",
+    "서강준/서민재를 바보 악역으로 flattening할 위험 — 각자 KPI, investor narrative, 제조 리스크 논리가 있어야 함",
+    "TR block을 episode처럼 축소할 위험 — 모든 block은 2-6화 bundle과 parallel incident를 가진다"
+  ]
+}

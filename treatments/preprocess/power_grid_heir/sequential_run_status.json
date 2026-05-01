@@ -1,0 +1,14 @@
+{
+  "work_id": "power_grid_heir",
+  "run_class": "sequential_production",
+  "last_sequential_block_pass": 70,
+  "last_episode_draft_pass": 3,
+  "next_unit_type": "prose_generation",
+  "next_block_id": null,
+  "manual_audit_ready": true,
+  "resume_basis": "ep003_draft_ready_b001_complete",
+  "latest_episode_draft": "projects/power_grid_heir/drafts/ep_0003.txt",
+  "latest_episode_audit": "docs/2026-05-01/power_grid_heir_ep003_prose_audit.md",
+  "updated_at": "2026-05-01",
+  "notes": "TR 001-070 production, audits, source TR handoff gate, adversarial reward 3-pass, BI deterministic sync, BI 5-pass, EP001-010 production packet, and EP001-EP003 prose drafts/audits are complete. B001 is prose-covered. Next recommended unit is EP004 manuscript from B002, expanding the speaking-right receipt into SLA/side letter/grid schedule conflict toward a 72-hour review right. Root shelf promotion has not been performed."
+}

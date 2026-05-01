@@ -1,0 +1,108 @@
+work_identity:
+  work_id: power_grid_heir
+  work_type: modern_fantasy_business_power_grid_chaebol
+  family: blockguide
+  one_line_truth: "회귀한 방계 재벌 3세가 AI 회사가 아니라 AI가 통과해야 하는 전력망 권리와 결재권을 사서, 모두가 그의 전력 관문을 통과하게 만드는 이야기"
+  protagonist_weapon:
+    - "미래 AI 인프라 붕괴 기억으로 위험 범위를 좁히되, 현재 계약서와 현장 기록으로만 proof를 만드는 판단력"
+    - "power SLA, transformer slot, HVDC report, site permit, PPA, project finance를 하나의 권한 chain으로 묶는 실사 감각"
+    - "proof를 칭찬이 아니라 검토권, audit권, 협상석, board seat, 예산권으로 환전하는 결재권 구매 태도"
+  business_axes:
+    - "AI/data center 전력 SLA와 PPA"
+    - "변압기/HVDC/전력기기 납기와 계통 접속"
+    - "데이터센터 부지, 냉각수, site permit"
+    - "조선소 offshore substation/MRO 반복매출"
+    - "전력 offtake와 project finance"
+  control_axes:
+    - "72시간 review right"
+    - "원본 계약/SLA 접근권"
+    - "선우일렉 site audit권"
+    - "technical verification team authority"
+    - "contract renegotiation seat"
+    - "chairman direct-report line"
+    - "board observer seat"
+    - "pilot budget allocation authority"
+    - "Strategic Power TF leader"
+  mandatory_lexicon:
+    - "power SLA"
+    - "PPA"
+    - "transformer slot"
+    - "HVDC report"
+    - "site permit"
+    - "cooling water"
+    - "offtake"
+    - "board minutes"
+    - "권한 영수증"
+    - "결재권"
+  forbidden_flattenings:
+    - "AI 회사나 주가를 찍어 맞히는 미래지식 치트물"
+    - "시스템창, 가치 숫자, 초능력 감정, 마법 감정"
+    - "주인공이 착해서 사람을 구하고 모두 감동하는 구원자물"
+    - "회의실 설명만 있고 공장, 부지, 조선소, 데이터센터 현장 proof가 없는 전개"
+    - "서강준, 서민재, 임원, 엔지니어, 금융 담당자를 바보 악역으로 만들기"
+    - "reward가 돈, 칭찬, 감탄으로만 닫히고 권한 receipt가 없는 전개"
+    - "TR block을 episode 1개처럼 얇게 쓰는 전개"
+    - "전력망, PPA, HVDC, project finance를 vague consulting으로 뭉개기"
+  tracking_slots:
+    - "권한 ladder: review right -> audit권 -> technical team -> renegotiation seat -> board observer -> TF leader"
+    - "power-grid proof chain: SLA -> transformer -> HVDC -> site/cooling -> MRO -> PPA/offtake -> Strategic Power TF"
+    - "도윤 평가 상승: 방계 3세 -> 자료를 멈춘 사람 -> 전력 gate를 보는 후계자 -> 그룹의 AI 인프라 관문"
+    - "self-interest ledger: 모든 도움과 구제는 immediate gain/cost와 mid-long strategic gain을 남긴다"
+  mandatory_scene_engines:
+    - "화려한 AI narrative를 계약 별첨, 납기표, 현장 기록, board minutes로 재분류해 같은 블록 안 권한 receipt로 환전한다"
+    - "각 TR block은 2-6화 bundle로 확장 가능해야 하며 A-event와 B-event를 동시에 움직인다"
+    - "valuable operator를 구할 때도 선의가 아니라 proof 생산, 손실 통제, 협상권 확보의 이득 구조를 먼저 보인다"
+  protagonist_evaluation:
+    admiration_axes:
+      - "남들이 AI를 말할 때 전력 관문을 먼저 본다"
+      - "미래를 안다고 떠들지 않고 현재 자료로 인정하게 만든다"
+      - "사람도 감정이 아니라 숙련자산과 proof 생산자로 보존한다"
+      - "맞는 말보다 결재권을 먼저 산다"
+      - "빠르지만 무례함이 아니라 낭비 제거로 보인다"
+    forbidden_praise_patterns:
+      - "착해서 인정받는다"
+      - "미래를 알아서 그냥 맞혔다"
+      - "재벌 3세라서 봐준다"
+      - "상대가 멍청해서 이겼다"
+      - "좋은 말로 모두를 설득했다"
+    observer_tiers:
+      - "서문호 회장"
+      - "한세린 HVDC engineer"
+      - "서강준 제조/전력 라인"
+      - "서민재 AI/cloud 라인"
+      - "이사회 risk committee"
+      - "외부 AI/data center 고객"
+    evaluation_thresholds:
+      - "TR 2~6 안에 72시간 review right, site audit권, technical team, site review authority, renegotiation seat가 모두 visible reward로 찍힌다"
+      - "모든 블록은 same-block 권한 영수증 또는 다음 gate를 남긴다"
+      - "큰 손실 뒤에는 반격 예약이나 권한 seed가 즉시 남아야 한다"
+  role_fit_constraints:
+    - name: "회장 즉시 신뢰 금지"
+      role: "서문호"
+      disallowed_actions:
+        - "한 번에 도윤을 전적으로 믿기"
+        - "손자라서 권한 주기"
+        - "감동해서 결재 바꾸기"
+      exceptions:
+        - "현재 문서와 현장 proof가 맞을 때 제한 권한을 주는 행동"
+    - name: "rival 바보화 금지"
+      role: "서강준 / 서민재"
+      disallowed_actions:
+        - "기본 계약서도 못 읽는 무능 캐릭터화"
+        - "이유 없는 질투와 악의만으로 방해"
+        - "한마디에 굴복하기"
+      exceptions:
+        - "자기 KPI, investor narrative, 제조 안정성 논리로 합리적으로 반대"
+    - name: "operator 감탄자화 금지"
+      role: "한세린 / 백인호 / 윤재식"
+      disallowed_actions:
+        - "주인공에게 놀라기만 하기"
+        - "근거 없이 주인공 편 들기"
+      exceptions:
+        - "자신의 전문 근거가 도윤의 권한 chain과 맞을 때 조건부 협력"
+custom_rules:
+  - "이번 생엔 맞는 말을 하지 않는다. 결재권을 산다."
+  - "감정은 회의록에 안 남습니다. 서명이나 하세요."
+  - "각 block action_purpose에는 immediate와 cost, 그리고 mid_term 또는 long_term 중 하나 이상이 있어야 한다."
+  - "반격 예약 없는 손해는 금지한다."
+  - "conference-room proof 뒤에는 반드시 문서, 숫자, 현장, 권한 witness 중 둘 이상을 붙인다."

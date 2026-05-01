@@ -1,0 +1,710 @@
+{
+  "work_id": "imf_allsector_rights_heir",
+  "updated_at": "2026-05-01",
+  "stage0_manual_audit_pass": true,
+  "phase0_manual_audit_pass": true,
+  "work_guard_status": "PASS",
+  "tr_blocks": [
+    {
+      "block_no": 1,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Block 001 contains main cold-chain rights event and side telecom/PC-room rights event.",
+        "Protagonist action is self-interested: he asks for rights audit authority, not moral recognition.",
+        "Same-block cider receipt exists: sale and contract termination are paused."
+      ]
+    },
+    {
+      "block_no": 2,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event is cold-chain original P/L retrieval.",
+        "Side event is telecom termination exhibit review.",
+        "Same-block receipt is source access and rights comparison table authority."
+      ]
+    },
+    {
+      "block_no": 3,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event is cold-chain bid qualification separation.",
+        "Side event is PC-room line right separation.",
+        "Representative reevaluation happens through reacquisition-cost proof."
+      ]
+    },
+    {
+      "block_no": 4,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event is 30-day cold-chain rights audit authority.",
+        "Side event is telecom termination hold entering the same audit scope.",
+        "Authority is limited, conditional, and document-based."
+      ]
+    },
+    {
+      "block_no": 5,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event is skilled cold-storage shift registration.",
+        "Side event is night line-quality proof for PC-room supply rights.",
+        "Human protection is reframed as preserving an execution asset."
+      ]
+    },
+    {
+      "block_no": 6,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event is official cold-storage sale hold.",
+        "Side event is PC-room/game distribution pilot gate.",
+        "Opening bundle closes with next-sector authority rather than praise or cash."
+      ]
+    },
+    {
+      "block_no": 7,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event is the CFO cashflow counterattack and priority-purchase clause.",
+        "Side event converts the PC-room pilot into a no-capex line-quality test.",
+        "The protagonist trades scope down for rights options, preserving self-interest and efficiency."
+      ]
+    },
+    {
+      "block_no": 8,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Defeat block: one cold-storage customer is lost.",
+        "Side event is the line-provider cost increase notice.",
+        "Same-block receipt remains: liability negotiation rights and competitive quote rights."
+      ]
+    },
+    {
+      "block_no": 9,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event is the cold-storage sale-hold approval.",
+        "Side event is the telecom termination-hold approval plus access to agency lease data.",
+        "The loss from Block 008 is converted into conditional approvals."
+      ]
+    },
+    {
+      "block_no": 10,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Arc 01 exits through first rights-audit TF owner authority.",
+        "Side event opens PC-room/game and telecom agency data access.",
+        "Next production unit is Block 011; BI remains blocked until TR70 plus source handoff gate."
+      ]
+    },
+    {
+      "block_no": 11,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Arc 02 enters through PC-room line-quality testing.",
+        "Side event creates PCS agency lease overlap mapping.",
+        "Reward is test authority and overlap-table authority."
+      ]
+    },
+    {
+      "block_no": 12,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event preserves game-distribution priority negotiation rights.",
+        "Side event links update distribution testing to line-quality proof.",
+        "Demand is narrowed to a small test right."
+      ]
+    },
+    {
+      "block_no": 13,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event opens PC-room small-payment settlement testing.",
+        "Side event opens handset installment receivable risk review.",
+        "Settlement is used as the next-sector gate."
+      ]
+    },
+    {
+      "block_no": 14,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event fixes the 12-store PC-room pilot sample.",
+        "Side event secures field checks for four PCS-overlap candidates.",
+        "Store selection functions as rights-data sampling."
+      ]
+    },
+    {
+      "block_no": 15,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event absorbs IT department KPI defense into the pilot conditions.",
+        "Side event secures raw line-log access.",
+        "Helper remains a role with its own KPI, not an admirer."
+      ]
+    },
+    {
+      "block_no": 16,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event converts first night sales data into line/settlement proof.",
+        "Side event opens installation-route investigation for PCS candidates.",
+        "Small revenue is reframed as control data."
+      ]
+    },
+    {
+      "block_no": 17,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Defeat block: two pilot stores are lost to termination penalties.",
+        "Side event secures competitor-line quote weaknesses.",
+        "Same-block receipt is penalty formula data."
+      ]
+    },
+    {
+      "block_no": 18,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event maps PC-room installation routes.",
+        "Side event creates the PCS agency shadow map.",
+        "Next-sector gate is paid as field-check authority."
+      ]
+    },
+    {
+      "block_no": 19,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event secures daily settlement ledger access.",
+        "Side event secures coupon/stay-time data pre-read rights.",
+        "Protagonist chooses data priority over immediate cash."
+      ]
+    },
+    {
+      "block_no": 20,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Arc 02 exits through telecom consortium briefing access.",
+        "Side event opens agency-network diligence material access.",
+        "Next production unit is Block 021; BI remains blocked until TR70 plus source handoff gate."
+      ]
+    },
+    {
+      "block_no": 21,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Arc 03 opens with agency lease lists.",
+        "Side event marks NPL collateral-address overlap.",
+        "Telecom is framed through location and collateral, not spectrum alone."
+      ]
+    },
+    {
+      "block_no": 22,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event is agency deposit prioritization.",
+        "Side event opens handset installment receivable condition review.",
+        "Cash shortage is converted into a selection filter."
+      ]
+    },
+    {
+      "block_no": 23,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event reclassifies handset inventory through consignment terms.",
+        "Side event secures receivable recovery-rate data.",
+        "Inventory becomes a lock-in tool rather than a cost dump."
+      ]
+    },
+    {
+      "block_no": 24,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event secures agency-network diligence rights.",
+        "Side event inserts two NPL-overlap sites into the diligence appendix.",
+        "The block follows the arc principle: agency network before spectrum."
+      ]
+    },
+    {
+      "block_no": 25,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event breaks down the foreign equipment quote by maintenance rights.",
+        "Side event opens Sekang Electronics supplier-certification materials.",
+        "Telecom equipment opens the parts/materials seed."
+      ]
+    },
+    {
+      "block_no": 26,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Defeat block: deposit payment fails and participation share drops.",
+        "Side event secures collateral-tracing authority for the failed site.",
+        "The protagonist accepts the loss and keeps operating rights."
+      ]
+    },
+    {
+      "block_no": 27,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event reprices handset installment receivables.",
+        "Side event requests Dongjin Bank comparable receivable lists.",
+        "Telecom receivables become the NPL gate."
+      ]
+    },
+    {
+      "block_no": 28,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event secures partial NPL collateral-list access from Dongjin Bank.",
+        "Side event converts handset receivables into bank collateral categories.",
+        "External bank gate opens through data exchange, not deference."
+      ]
+    },
+    {
+      "block_no": 29,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event converts small participation share into an agency operating-rights package.",
+        "Side event secures repurchase-option negotiation rights for NPL-overlap agencies.",
+        "The defeat from Block 026 is recovered as control authority."
+      ]
+    },
+    {
+      "block_no": 30,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Arc 03 exits through a limited NPL collateral-rights list.",
+        "Side event links Sekang Electronics supplier certification to the collateral list.",
+        "Next production unit is Block 031; BI remains blocked until TR70 plus source handoff gate."
+      ]
+    },
+    {
+      "block_no": 31,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Arc 04 opens with an NPL collateral-rights map.",
+        "Side event opens manufacturing and urban-infra collateral detail sheets.",
+        "NPL is treated as a sector-order map rather than a single finance event."
+      ]
+    },
+    {
+      "block_no": 32,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event counters the foreign NPL fund's cash bid with options.",
+        "Side event separates Sekang Electronics certification collateral.",
+        "The protagonist avoids cash competition and takes rights options."
+      ]
+    },
+    {
+      "block_no": 33,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event secures creditors' meeting observer status.",
+        "Side event secures workout-company material requests.",
+        "Authority remains limited to attendance and operating-plan drafting."
+      ]
+    },
+    {
+      "block_no": 34,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event finds and revives the conversion-right clause.",
+        "Side event opens supplier-certification originals and equipment delivery tables.",
+        "NPL proof bridges into the manufacturing arc."
+      ]
+    },
+    {
+      "block_no": 35,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Defeat block: most of the NPL bundle is abandoned due to cash limits.",
+        "Side event preserves hotel power/telecom contract copies.",
+        "Same-block receipt is core-collateral selection and conversion-right priority review."
+      ]
+    },
+    {
+      "block_no": 36,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event recovers the defeat through operating-improvement conditional priority purchase rights.",
+        "Side event preserves hotel-contract future-review appendices.",
+        "Cash disadvantage is converted into recovery-rate conditions."
+      ]
+    },
+    {
+      "block_no": 37,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event separates certification-maintenance labor in the workout meeting.",
+        "Side event links telecom maintenance rights to component certification.",
+        "Human protection is reframed as certification and recovery-rate preservation."
+      ]
+    },
+    {
+      "block_no": 38,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event verifies the plant manager's documents.",
+        "Side event preserves customer power-quality requirement copies.",
+        "The helper functions as a proof carrier."
+      ]
+    },
+    {
+      "block_no": 39,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event reclassifies factory collateral as a component-materials rights bundle.",
+        "Side event preserves hotel power-quality seed.",
+        "Collateral is converted into the next sector's rights object."
+      ]
+    },
+    {
+      "block_no": 40,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Arc 04 exits through manufacturing turnaround-plan authority and internal manufacturing TF.",
+        "Side event separates urban-infra review material.",
+        "Next production unit is Block 041; BI remains blocked until TR70 plus source handoff gate."
+      ]
+    },
+    {
+      "block_no": 41,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Arc 05 opens through supplier-certification preservation.",
+        "Side event moves hotel power contracts into the urban-infra review file.",
+        "The protagonist values certification as recoverable rights, not moral factory rescue."
+      ]
+    },
+    {
+      "block_no": 42,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event secures equipment delivery rescheduling and a minimum-equipment preservation list.",
+        "Side event preserves hotel cooling-equipment records.",
+        "Cash-heavy replacement is avoided in favor of scheduling rights."
+      ]
+    },
+    {
+      "block_no": 43,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event handles supplier backlash through trial-supply and quality-liability terms.",
+        "Side event ties bank collateral pressure to hotel power contracts.",
+        "Opponents protect their own interests rather than acting as fools."
+      ]
+    },
+    {
+      "block_no": 44,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event registers process know-how and core skilled-worker contract holds.",
+        "Side event callbacks cold-chain skilled-shift proof.",
+        "Human protection is converted into rights-asset preservation."
+      ]
+    },
+    {
+      "block_no": 45,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event secures a 45-day certification-maintenance grace period.",
+        "Side event separates hotel/office power, telecom, cooling, and lease rights from collateral pressure.",
+        "Manufacturing and urban-infra gates remain linked but not flattened."
+      ]
+    },
+    {
+      "block_no": 46,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Defeat block: the main customer cancels delivery.",
+        "Side event repurposes PC-room/telecom customer data for replacement demand.",
+        "Same-block receipt preserves certification-extension terms and replacement-demand access."
+      ]
+    },
+    {
+      "block_no": 47,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event secures replacement-volume pilot authority.",
+        "Side event reuses PC-room/telecom customer data as manufacturing demand.",
+        "The loss from Block 046 is recovered as minimum-shipment proof."
+      ]
+    },
+    {
+      "block_no": 48,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event approves the component-materials rights bundle.",
+        "Side event marks hotel power/telecom/cooling as the next rights-bundle candidate.",
+        "Scattered proof is consolidated into one rights sheet."
+      ]
+    },
+    {
+      "block_no": 49,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event secures conditional long-term supply-term negotiation rights.",
+        "Side event links power-quality requirements to future urban-infra contracts.",
+        "Small replacement volume is converted into supply-chain authority."
+      ]
+    },
+    {
+      "block_no": 50,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Arc 05 exits through component-materials interim PASS and urban-infra rights diligence.",
+        "Side event opens hotel power/telecom/cooling diligence.",
+        "Next production unit is Block 051; BI remains blocked until TR70 plus source handoff gate."
+      ]
+    },
+    {
+      "block_no": 51,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Arc 06 opens through hotel power-room access and telecom/cooling review rights.",
+        "Side event preserves advertising inventory contract copies.",
+        "The hotel is reframed as infrastructure rights rather than real estate."
+      ]
+    },
+    {
+      "block_no": 52,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event secures restricted long-term lease negotiation rights.",
+        "Side event adds tenant SLA improvement conditions.",
+        "The protagonist avoids buying the whole hotel and buys the useful conversion slot."
+      ]
+    },
+    {
+      "block_no": 53,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event isolates the cooling-stable zone and small server-room pilot design right.",
+        "Side event calls back cold-chain skilled-shift proof.",
+        "Cooling is converted from facility cost into a future rights object."
+      ]
+    },
+    {
+      "block_no": 54,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event resolves tenant opposition through conditional SLA consent.",
+        "Side event preserves advertising inventory quality clauses.",
+        "Opposition remains rational and tied to outage risk."
+      ]
+    },
+    {
+      "block_no": 55,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event secures backup backbone test rights.",
+        "Side event adds traffic measurement clauses for advertising inventory.",
+        "The PC-room network arc is recovered as urban-infrastructure proof."
+      ]
+    },
+    {
+      "block_no": 56,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Defeat block: fire inspection blocks immediate server-room conversion.",
+        "Side event preserves a reduced advertising-server test right.",
+        "Same-block receipt is the legal conversion checklist and small lawful test path."
+      ]
+    },
+    {
+      "block_no": 57,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event recovers the defeat through a two-rack lawful IDC pilot.",
+        "Side event secures simultaneous advertising-server test slots.",
+        "The protagonist chooses a small legal proof over a large illegal conversion."
+      ]
+    },
+    {
+      "block_no": 58,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event secures advertising-delivery log pre-read rights.",
+        "Side event compares PC-room and game-update logs.",
+        "Small cash revenue is traded for reusable data rights."
+      ]
+    },
+    {
+      "block_no": 59,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event separates traffic measurement plus power/cooling usage-right conditions.",
+        "Side event separates advertising-log use rights as IP material.",
+        "Visible rent is partially conceded to buy invisible measurement rights."
+      ]
+    },
+    {
+      "block_no": 60,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Arc 06 exits through urban-infrastructure rights bundle interim PASS.",
+        "Side event opens advertising/IP material access and game/music distribution contract lists.",
+        "Next production unit is Block 061; BI remains blocked until TR70 plus source handoff gate."
+      ]
+    },
+    {
+      "block_no": 61,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Arc 07 opens through advertising inventory priority allocation rights.",
+        "Side event secures music distribution minimum-guarantee sheets.",
+        "Unsold inventory is converted into a rights-holding input."
+      ]
+    },
+    {
+      "block_no": 62,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event secures music sample distribution rights and PC-room micro-settlement rights.",
+        "Side event links advertising cross-exposure to the next programming-right gate.",
+        "The protagonist narrows the ask instead of buying the entire catalogue."
+      ]
+    },
+    {
+      "block_no": 63,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event secures late-night test programming rights.",
+        "Side event preserves advertising cross-settlement and PC-room coupon settlement proof.",
+        "IP is treated as measurable rights proof rather than sentimental content."
+      ]
+    },
+    {
+      "block_no": 64,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event consolidates seven sector rights into one list.",
+        "Side event secures holding legal memo authority and board pre-review.",
+        "Sector gains are converted into the next authority gate."
+      ]
+    },
+    {
+      "block_no": 65,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event survives the presidents' backlash by lowering the list into an official review table.",
+        "Side event opens the foreign-fund LOI.",
+        "Opposition is grounded in rational IMF cash pressure."
+      ]
+    },
+    {
+      "block_no": 66,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Defeat block: a foreign cash offer forces partial rights cashout.",
+        "Side event preserves resale-condition drafting and repurchase-option negotiation rights.",
+        "The protagonist accepts loss and keeps the recovery path."
+      ]
+    },
+    {
+      "block_no": 67,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event recovers the defeat through repurchase options and co-operation rights.",
+        "Side event keeps advertising/IP log-use clauses alive after cashout.",
+        "Visible price is traded for future control."
+      ]
+    },
+    {
+      "block_no": 68,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event drafts the three-stage rights holding structure.",
+        "Side event adds debt-repayment allocation from cashout proceeds.",
+        "All sector receipts are joined into one authority ladder."
+      ]
+    },
+    {
+      "block_no": 69,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "Main event passes the chairman's self-interest test through conditions and loss limits.",
+        "Side event secures rights-library installation approval and monthly reporting rights.",
+        "The protagonist states the benefit-efficiency doctrine directly."
+      ]
+    },
+    {
+      "block_no": 70,
+      "manual_audit_pass": true,
+      "verdict": "PASS",
+      "notes": [
+        "TR exit converts the emergency sale list into the rights-holding agenda.",
+        "Side event secures rights-library owner and 90-day holding TF owner authority.",
+        "TR 70 is ready for BI build and 5-pass source handoff audit."
+      ]
+    }
+  ],
+  "bi_status": "generated_and_5pass_source_handoff_pass_adversarial_3pass"
+}

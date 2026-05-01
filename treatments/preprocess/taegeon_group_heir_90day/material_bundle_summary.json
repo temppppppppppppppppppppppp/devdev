@@ -1,0 +1,114 @@
+{
+  "events": [
+    "2026년 그룹 해체 회의실에서 서도윤이 몰락을 확인한다.",
+    "2008년 사장단회의 직전으로 회귀한다.",
+    "태건물류 300명 감축안이 평균 손실표로 결재 직전까지 올라온다.",
+    "평택센터 핵심 거래처가 긴급 해지 통보를 보낸다.",
+    "서도윤이 손실표의 평균값이 반품 코드와 계약 별첨 누락을 숨긴다고 지적한다.",
+    "서문성이 감축안 결재를 48시간 보류하고 자료열람권을 준다."
+  ],
+  "npc_candidates": [
+    "서도윤: 29세 외동 후계자, 자기 이득과 효율 중심의 회귀자",
+    "서문성: 창업주 회장, 제한 권한을 주는 검증자",
+    "최민석: 태건물류 대표, 경기 탓 프레임의 opening opponent",
+    "강해린: 감사실 과장, 조건부 helper",
+    "윤재호: CFO, PF/IR 리스크 gatekeeper"
+  ],
+  "crisis_candidates": [
+    "감축안 결재 속도전",
+    "거래처 긴급 해지 통보",
+    "반품 코드 R-17 누락",
+    "PF 만기표 은폐",
+    "은행 콜 신뢰 붕괴"
+  ],
+  "terms": [
+    "반품 코드 R-17",
+    "계약 별첨",
+    "14일 자료열람권",
+    "감사실 동행 검토권",
+    "PF 만기표",
+    "은행 콜",
+    "90일 경영진단권"
+  ],
+  "scene_details": [
+    "사장단회의에서 후계자가 선의가 아니라 비용 구조 문제로 감축안을 멈춘다.",
+    "평택센터 거래처 해지 통보가 secondary incident로 들어와 회의 압박을 키운다.",
+    "회장실에서 서도윤은 돈이 아니라 자료 접근권을 요구한다.",
+    "감사실 helper는 감동이 아니라 원장 대조 가능성 때문에 붙는다."
+  ],
+  "notes": "Fresh candidate material summary. Title: 회귀한 외동 후계자는 그룹을 지킨다. Protagonist: 서도윤. 태건그룹 business lines are logistics, PF, finance/IR, manufacturing/materials, AI infra.",
+  "opening_bundle_contract": {
+    "bundle_window": "TR 2~6",
+    "macro_battlefield": "태건물류 손실표 조작과 인력감축안 보류전",
+    "macro_battlefield_map": [
+      "사장단회의 감축안",
+      "본사 원장 접근권",
+      "평택센터 반품 코드",
+      "계약 별첨 누락",
+      "감사실 동행권",
+      "PF 만기표 입장권"
+    ],
+    "bundle_goal": "독자가 6블록 안에 서도윤이 말뿐인 후계자가 아니라 현재 자료로 권한을 따내는 사람임을 체감한다.",
+    "first_signboard_block": 2,
+    "representative_reevaluation_block": 3,
+    "next_battlefield_ticket_block": 6,
+    "timing_reconciliation_note": "첫 macro battlefield는 물류지만, 2~6 안에 PF/IR 티켓을 열어 같은 전장 체류감을 줄인다."
+  },
+  "first_block_cider_ledger": [
+    {
+      "block_no": 2,
+      "has_cider": true,
+      "cider_elements": [
+        "proof",
+        "access_shift",
+        "protection"
+      ],
+      "visible_reward_token": "평택센터 야간 출입권 + 반품 코드 원장",
+      "pain_only_exit": false
+    },
+    {
+      "block_no": 3,
+      "has_cider": true,
+      "cider_elements": [
+        "reevaluation",
+        "reward_token",
+        "authority_shift"
+      ],
+      "visible_reward_token": "감축안 1차 철회 + TF 실무자 지명권",
+      "pain_only_exit": false
+    },
+    {
+      "block_no": 4,
+      "has_cider": true,
+      "cider_elements": [
+        "proof",
+        "next_gate",
+        "access_shift"
+      ],
+      "visible_reward_token": "PF 만기표 열람권 + 법무 동석권",
+      "pain_only_exit": false
+    },
+    {
+      "block_no": 5,
+      "has_cider": true,
+      "cider_elements": [
+        "reevaluation",
+        "next_gate"
+      ],
+      "visible_reward_token": "은행 콜 미팅 배석권",
+      "pain_only_exit": false
+    },
+    {
+      "block_no": 6,
+      "has_cider": true,
+      "cider_elements": [
+        "authority_shift",
+        "next_gate",
+        "reward_token"
+      ],
+      "visible_reward_token": "90일 경영진단권 초안",
+      "pain_only_exit": false
+    }
+  ],
+  "phase0_ready_snapshot_ref": "treatments/preprocess/taegeon_group_heir_90day/phase0_ready_snapshot.json"
+}

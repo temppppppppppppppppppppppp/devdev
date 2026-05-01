@@ -1,0 +1,302 @@
+{
+  "_schema_version": "blockguide.phase0.v1",
+  "_work_id": "pharma_cdmo_industry_heir",
+  "_family": "blockguide",
+  "_work_guard": "work_guards/pharma_cdmo_industry_heir.yaml",
+  "project": {
+    "title_ko": "회귀자는 버려진 제약공장을 샀다",
+    "core_premise": "강태오는 IMF 직후 부도난 제약공장을 헐값에 인수해 GMP, 병원 납품, 글로벌 CDMO, 콜드체인, 병원 데이터, 원료소재, 소비재 안전표준, 공급망 금융을 차례로 장악한다.",
+    "format": "현대판타지 + 회귀 + 제약 CDMO + 산업재벌",
+    "logline": "한 번 죽어 본 제약 공급망 실무자 강태오는 1997년으로 돌아와 버려진 공장을 산다. 그는 신약을 발명하지 않는다. 대신 남들이 외면한 품질문서, 감사권, 납품권, 온도기록, 청구 데이터를 모아 대한민국 산업의 보이지 않는 표준이 된다.",
+    "start_year": 1997,
+    "end_year": 2012
+  },
+  "setting": {
+    "group_background": "태림그룹 제약 계열은 IMF로 자금난에 빠졌고, 부평 2공장은 임금체불과 불량 원료 의혹으로 폐쇄 직전이다.",
+    "execution_doctrine": "좋은 약보다 먼저 좋은 생산기록. 착한 구원보다 장기계약. 신약 개발보다 인증, 납품, 물류, 데이터, 금융의 관문을 장악한다.",
+    "starter_company": {
+      "name": "태오바이오",
+      "state": "부도 직전 공장 인수 법인",
+      "assets": [
+        "강태오의 미래 공급망 기억",
+        "부평 2공장 설비와 품질문서 접근권",
+        "윤세린의 QA 실무 지식",
+        "IMF로 헐값이 된 원료/설비/냉장차"
+      ],
+      "liabilities": [
+        "임금체불",
+        "식약처 실사 리스크",
+        "불량 배치 책임 전가",
+        "기존 오너 라인의 방해"
+      ]
+    },
+    "generalized_loop_law": {
+      "one_line": "각 block은 현장 압박을 실행으로 바꾸고, 공적 검증을 사적 권한/계약으로 잠근 뒤, 다음 산업 gate를 연다.",
+      "primary_reward_model": "reward as certification/access/control asset",
+      "loop_chain": [
+        "operational_pressure",
+        "self-interested_execution",
+        "public_proof",
+        "private_receipt",
+        "authority_or_contract_shift",
+        "next_industry_gate"
+      ],
+      "success_conditions": [
+        "주인공의 immediate gain과 cost가 보인다.",
+        "같은 block 안에서 최소 2개 사건축 또는 전환이 있다.",
+        "보상은 인증, 문서권, 납품권, 계약권, 데이터권, 금융조건 중 하나로 남는다.",
+        "ending은 다음 감사, 계약, 납품, 확장 gate로 닫힌다."
+      ],
+      "failure_modes": [
+        "천재 신약 개발 shortcut",
+        "환자 미담으로 reward를 대체",
+        "공장/감사/납품 사건을 하나로 뭉개는 저밀도 block",
+        "public proof만 있고 private receipt 없음",
+        "공짜 승계 또는 선의 기반 지원"
+      ]
+    }
+  },
+  "protagonist": {
+    "name": "강태오",
+    "world_origin": "현대인",
+    "incarnation_type": "회귀자",
+    "regression_point": {
+      "death_year": 2026,
+      "death_cause": "바이오 공급망 붕괴와 배신 후 의료물류 사고 책임을 떠안고 사망",
+      "return_year": 1997,
+      "return_month": "1997년 12월",
+      "return_age": 31,
+      "return_context": "태림제약 구매/품질 사이에서 버려진 말단 실무자"
+    },
+    "core_desire": "다시는 남의 불량 배치와 공급망 사고를 대신 뒤집어쓰지 않는다. 모든 산업이 자기 품질표와 조건표를 지나가게 만든다.",
+    "self_interest_rule": "사람을 살려도, 공장을 살려도, 협력사를 구해도 반드시 계약, 데이터, 인증, 납품권, 지분, 우선권으로 회수한다.",
+    "pov": "강태오 중심 3인칭 제한"
+  },
+  "phase0_design": {
+    "opening_bundle_contract": {
+      "bundle_window": "TR 2~6",
+      "macro_battlefield": "부도 제약공장 인수와 첫 GMP/병원 납품 proof 고정",
+      "macro_battlefield_map": [
+        "부도 공장 매입과 품질문서 접근권 확보",
+        "식약처 실사 조기 대응",
+        "대학병원 긴급 납품으로 public proof 생성",
+        "병원 구매실 직통선과 장기계약 receipt 확보",
+        "글로벌 제약사 샘플 감사 ticket 확보"
+      ],
+      "bundle_goal": "TR 2~6 안에 공장 인수, 감사 proof, 병원 납품 receipt, 글로벌 audit ticket을 모두 독자에게 보여준다.",
+      "first_signboard_block": 2,
+      "representative_reevaluation_block": 3,
+      "next_battlefield_ticket_block": 5,
+      "timing_reconciliation_note": "공장 정상화는 10블록 이상 이어져도 첫 독자 보상은 TR 2~6 안에서 이미 지급되어야 한다."
+    },
+    "arcs": [
+      {
+        "arc_id": "ARC-01",
+        "title": "부도 공장과 첫 GMP",
+        "block_range": "1-10",
+        "time_window": "1997년 12월~1998년 4월",
+        "capital_target": "5억 -> 35억 + GMP 조건부 통과",
+        "front_sectors": [
+          "제약 공장 인수",
+          "GMP/품질보증"
+        ],
+        "support_sectors": [
+          "병원 납품",
+          "원료 재고",
+          "임금체불 정리"
+        ],
+        "main_opponents": [
+          "한재국",
+          "기존 공장장",
+          "오민석"
+        ],
+        "block_slots": [
+          {"block": 1, "title": "부도 공장 경매장", "function": "강태오가 회귀 직후 부도 공장 입찰과 식약처 실사 조기 통보를 동시에 잡는다."},
+          {"block": 2, "title": "품질문서 금고", "function": "공장 소유권보다 배치기록과 deviation 문서를 먼저 확보한다."},
+          {"block": 3, "title": "실사 전날의 배치", "function": "오민석 감사관 앞에서 숨겨진 불량 원료 라인을 드러내고 실사 실패를 조건부 통과로 바꾼다."},
+          {"block": 4, "title": "병원에서 온 전화", "function": "대학병원 긴급 납품 위기를 이용해 첫 병원 구매실 직통선을 딴다."},
+          {"block": 5, "title": "샘플 네 박스", "function": "국내 납품 proof를 글로벌 제약사 샘플 감사 ticket으로 바꾼다."},
+          {"block": 6, "title": "월급보다 책임선", "function": "임금체불을 전부 갚지 않고도 QA/생산 핵심 인력을 성과 조건으로 묶는다."},
+          {"block": 7, "title": "한재국의 불량 배치", "function": "기존 오너 라인이 떠넘긴 불량 배치 책임을 역으로 계약 파기 근거로 쓴다."},
+          {"block": 8, "title": "첫 장기 납품서", "function": "병원 긴급 납품을 6개월 장기계약으로 바꾼다."},
+          {"block": 9, "title": "감사관의 메모", "function": "오민석이 태오바이오를 관리대상이 아니라 모범 개선 사례로 기록한다."},
+          {"block": 10, "title": "공장은 팔리지 않는다", "function": "한재국의 재매입 제안을 거절하고 공장을 CDMO 관문으로 고정한다."}
+        ]
+      },
+      {
+        "arc_id": "ARC-02",
+        "title": "콜드체인과 백신 물류",
+        "block_range": "11-20",
+        "time_window": "1998년 5월~1999년 3월",
+        "capital_target": "35억 -> 120억 + 전국 냉장배송망",
+        "front_sectors": ["콜드체인", "백신/혈액제제"],
+        "support_sectors": ["공항 물류", "온도기록", "병원 배송"],
+        "main_opponents": ["냉장물류 조합", "박도현", "한재국"],
+        "block_slots": [
+          {"block": 11, "title": "두 시간 끊긴 온도계", "function": "온도기록 단절 사고를 잡아 냉장배송 표준을 제안한다."},
+          {"block": 12, "title": "공항 냉장창고", "function": "부도난 공항 냉장창고를 장기 임차하고 백신 통관 병목을 먹는다."},
+          {"block": 13, "title": "혈액제제 새벽차", "function": "새벽 배송 실패 위기를 병원 우선배송권으로 바꾼다."},
+          {"block": 14, "title": "스티커 하나의 가격", "function": "온도 라벨과 기록지를 표준화해 폐기율을 줄인다."},
+          {"block": 15, "title": "조합의 파업 통보", "function": "물류 조합 파업을 대체 운송망 proof로 쓴다."},
+          {"block": 16, "title": "냉장차 열두 대", "function": "낡은 냉장차를 싸게 사되 데이터 기록 장치를 붙인다."},
+          {"block": 17, "title": "병원 셋, 같은 기록", "function": "세 병원이 같은 온도기록 양식을 쓰게 만든다."},
+          {"block": 18, "title": "폐기된 백신", "function": "경쟁사의 폐기 사고를 이용해 태오바이오 조건표를 올린다."},
+          {"block": 19, "title": "전국 냉장지도", "function": "배송망을 지도로 묶어 병원 확장을 준비한다."},
+          {"block": 20, "title": "백신보다 기록", "function": "태오바이오는 약보다 먼저 기록을 파는 회사로 재평가된다."}
+        ]
+      },
+      {
+        "arc_id": "ARC-03",
+        "title": "병원 데이터와 보험 등재",
+        "block_range": "21-30",
+        "time_window": "1999년 4월~2001년 2월",
+        "capital_target": "120억 -> 420억 + 병원/약국 데이터 표준",
+        "front_sectors": ["병원 데이터", "보험/청구"],
+        "support_sectors": ["약국 POS", "EMR", "구매실"],
+        "main_opponents": ["대형병원 전산실", "보험심사 라인", "경쟁 제약사"],
+        "block_slots": [
+          {"block": 21, "title": "구매실의 엑셀", "function": "병원 구매실 엑셀을 납품/청구 데이터 표준으로 바꾸기 시작한다."},
+          {"block": 22, "title": "약국 POS의 빈칸", "function": "약국 판매기록 누락을 잡아 처방 수요 예측권을 얻는다."},
+          {"block": 23, "title": "보험 코드의 문장", "function": "보험 등재 문구 하나를 바꿔 납품 가능 시장을 넓힌다."},
+          {"block": 24, "title": "전산실의 반격", "function": "병원 전산실이 접근권을 막자 태오는 구매실 비용절감 proof로 우회한다."},
+          {"block": 25, "title": "심사 보류 통지", "function": "보험 심사 보류를 경쟁사의 약점 공개로 되친다."},
+          {"block": 26, "title": "첫 데이터 계약", "function": "병원 납품권에 익명화 청구 데이터 접근권을 붙인다."},
+          {"block": 27, "title": "처방 패턴", "function": "처방 패턴을 보고 생산계획과 재고를 맞춘다."},
+          {"block": 28, "title": "약국 연합", "function": "동네 약국 연합을 묶어 소량 재고 회전권을 얻는다."},
+          {"block": 29, "title": "데이터는 처방보다 빠르다", "function": "데이터 예측으로 병원 품절을 막아 경쟁사를 밀어낸다."},
+          {"block": 30, "title": "표준 청구서", "function": "태오바이오 양식이 병원/약국 공통 청구서가 된다."}
+        ]
+      },
+      {
+        "arc_id": "ARC-04",
+        "title": "원료의약품과 정밀화학",
+        "block_range": "31-40",
+        "time_window": "2001년 3월~2004년 6월",
+        "capital_target": "420억 -> 1800억 + API/소재 공급권",
+        "front_sectors": ["원료의약품", "정밀화학"],
+        "support_sectors": ["특수가스", "필터/배지", "반도체 소재"],
+        "main_opponents": ["일본 원료상", "중국 중간체 업체", "국내 화학 대기업"],
+        "block_slots": [
+          {"block": 31, "title": "원료 한 드럼", "function": "원료 한 드럼이 멈추면 완제 라인이 선다는 병목을 잡는다."},
+          {"block": 32, "title": "특허 회피 지도", "function": "특허 만료와 회피 루트를 생산계획으로 바꾼다."},
+          {"block": 33, "title": "중간체의 계절", "function": "중국 중간체 가격 변동을 선제 계약으로 먹는다."},
+          {"block": 34, "title": "일본 상사의 전화", "function": "일본 원료상이 가격을 올리자 대체 합성 라인을 증명한다."},
+          {"block": 35, "title": "필터가 없으면 약도 없다", "function": "공정 필터/배지 공급을 장악한다."},
+          {"block": 36, "title": "화학공장 밤샘 시험", "function": "작은 화학공장의 합성 시험을 품질 문서로 연결한다."},
+          {"block": 37, "title": "반도체 클린룸의 냄새", "function": "제약 청정관리 경험을 반도체 소재 납품 조건으로 확장한다."},
+          {"block": 38, "title": "대기업의 합작 제안", "function": "국내 화학 대기업의 합작을 지분보다 공급권 중심으로 바꾼다."},
+          {"block": 39, "title": "원료 우선권", "function": "원료 공급 우선권을 완제약 생산권보다 위에 둔다."},
+          {"block": 40, "title": "소재가 산업을 고른다", "function": "태오바이오는 약을 만드는 회사에서 산업 소재 관문으로 격상된다."}
+        ]
+      },
+      {
+        "arc_id": "ARC-05",
+        "title": "먹는 것, 바르는 것, 맞는 것",
+        "block_range": "41-50",
+        "time_window": "2004년 7월~2007년 12월",
+        "capital_target": "1800억 -> 7200억 + 소비재 안전표준",
+        "front_sectors": ["건기식", "화장품", "식품안전"],
+        "support_sectors": ["홈쇼핑", "마트 PB", "원료 인증"],
+        "main_opponents": ["홈쇼핑 MD", "화장품 ODM", "식품 대기업"],
+        "block_slots": [
+          {"block": 41, "title": "캡슐 하나의 원가", "function": "건기식 캡슐 원가와 원료 인증을 묶어 홈쇼핑 판을 연다."},
+          {"block": 42, "title": "바르는 GMP", "function": "제약 품질 기준을 화장품 ODM에 적용한다."},
+          {"block": 43, "title": "식품 클레임", "function": "마트 PB 식품 클레임을 안전표준 계약으로 바꾼다."},
+          {"block": 44, "title": "홈쇼핑 17분", "function": "홈쇼핑 17분 편성을 원료 신뢰 proof로 채운다."},
+          {"block": 45, "title": "ODM의 배신", "function": "화장품 ODM이 레시피를 빼돌리자 원료 인증망으로 제압한다."},
+          {"block": 46, "title": "마트의 리콜", "function": "식품 리콜 위기를 태오 표준의 필요성으로 환전한다."},
+          {"block": 47, "title": "먹는 것과 맞는 것", "function": "건기식/의약품/식품 원료 추적을 하나로 묶는다."},
+          {"block": 48, "title": "브랜드보다 인증", "function": "소비자 브랜드 대신 인증마크를 장악한다."},
+          {"block": 49, "title": "PB 계약서", "function": "마트 PB 계약에 원료/품질/물류 조건표를 붙인다."},
+          {"block": 50, "title": "안전표준의 이름", "function": "태오 표준이 소비재 시장의 보이지 않는 간판이 된다."}
+        ]
+      },
+      {
+        "arc_id": "ARC-06",
+        "title": "임상 리스크와 공급망 금융",
+        "block_range": "51-60",
+        "time_window": "2008년 1월~2010년 12월",
+        "capital_target": "7200억 -> 2조 8000억 + 바이오 금융 조건표",
+        "front_sectors": ["임상 리스크", "공급망 금융"],
+        "support_sectors": ["특허 담보", "보험", "리스"],
+        "main_opponents": ["바이오 벤처", "증권사 IB", "보험사"],
+        "block_slots": [
+          {"block": 51, "title": "임상 2상의 빈칸", "function": "임상 실패 가능성을 생산/보험 조건으로 가격화한다."},
+          {"block": 52, "title": "특허 담보대출", "function": "특허를 담보로 보되 생산권을 담보보다 먼저 잡는다."},
+          {"block": 53, "title": "공장 리스 금융", "function": "바이오 벤처 설비를 리스 구조로 묶어 생산권을 확보한다."},
+          {"block": 54, "title": "보험사가 모르는 위험", "function": "임상 리스크 보험을 생산 데이터와 연결한다."},
+          {"block": 55, "title": "벤처의 폭주", "function": "허황된 신약 발표를 막고 위탁생산 조건을 강화한다."},
+          {"block": 56, "title": "IB의 밸류에이션", "function": "증권사 밸류에이션을 생산 가능성 기준으로 뒤집는다."},
+          {"block": 57, "title": "실패한 파이프라인", "function": "실패한 파이프라인의 설비와 특허를 싼값에 흡수한다."},
+          {"block": 58, "title": "데이터 보험료", "function": "병원 데이터로 임상 보험료를 낮춘다."},
+          {"block": 59, "title": "생산권이 담보다", "function": "태오바이오는 돈이 아니라 생산권을 담보로 빌려준다."},
+          {"block": 60, "title": "바이오 은행", "function": "바이오 기업들이 은행보다 태오 조건표를 먼저 묻는다."}
+        ]
+      },
+      {
+        "arc_id": "ARC-07",
+        "title": "국가 산업 표준",
+        "block_range": "61-70",
+        "time_window": "2011년 1월~2012년 12월",
+        "capital_target": "2조 8000억 -> 9조 + 국가 산업 표준 관문",
+        "front_sectors": ["국가 산업 표준", "글로벌 CDMO"],
+        "support_sectors": ["의료 데이터", "소재", "물류", "금융"],
+        "main_opponents": ["관료 라인", "글로벌 빅파마", "재벌 연합"],
+        "block_slots": [
+          {"block": 61, "title": "표준위원회 초대장", "function": "정부 표준위원회가 태오를 부르지만 그는 참석권보다 조건표를 요구한다."},
+          {"block": 62, "title": "빅파마의 단가표", "function": "글로벌 빅파마가 단가를 누르자 태오는 병목 소재로 맞선다."},
+          {"block": 63, "title": "재벌 연합의 역제안", "function": "재벌 연합이 공동 투자를 제안하지만 생산권 없는 돈은 거절한다."},
+          {"block": 64, "title": "데이터 주권", "function": "병원 데이터와 제조 데이터를 국내 표준 안에 봉인한다."},
+          {"block": 65, "title": "공급망 정지 하루", "function": "하루 정지 사고로 태오 표준 없이는 산업이 멈춘다는 proof가 나온다."},
+          {"block": 66, "title": "조건표를 쓰는 나라", "function": "정부가 태오 조건표를 국가 조달 기준으로 차용한다."},
+          {"block": 67, "title": "빅파마와 같은 테이블", "function": "태오가 글로벌 빅파마와 대등한 CDMO 장기계약을 체결한다."},
+          {"block": 68, "title": "산업은 약보다 넓다", "function": "제약, 식품, 소재, 물류, 금융 라인이 하나의 운영지도에 묶인다."},
+          {"block": 69, "title": "모든 공장의 문서", "function": "태오 표준이 여러 산업 공장의 문서 양식으로 들어간다."},
+          {"block": 70, "title": "생산 표준의 주인", "function": "강태오는 약을 만든 재벌이 아니라 산업이 통과하는 표준의 주인이 된다."}
+        ]
+      }
+    ],
+    "npc_timeline": [
+      {"name": "강태오", "entry_block": 1, "active_blocks": "1-70", "function": "회귀자이자 산업 표준 설계자", "turning_blocks": [1, 10, 30, 50, 70], "final_state": "국가 산업 표준과 글로벌 CDMO 관문을 장악한다."},
+      {"name": "윤세린", "entry_block": 1, "active_blocks": "1-70", "function": "QA witness/translator", "turning_blocks": [2, 6, 35, 69], "final_state": "태오 표준의 품질 총괄이 된다."},
+      {"name": "한재국", "entry_block": 1, "active_blocks": "1-20", "function": "첫 내부 적대자", "turning_blocks": [3, 7, 10], "final_state": "버린 공장이 관문이 되는 것을 보고 밀려난다."},
+      {"name": "오민석", "entry_block": 3, "active_blocks": "3-66", "function": "제도 gatekeeper", "turning_blocks": [3, 9, 61, 66], "final_state": "태오 표준을 제도권 언어로 인정한다."},
+      {"name": "박도현", "entry_block": 4, "active_blocks": "4-58", "function": "병원 구매/데이터 receipt owner", "turning_blocks": [4, 8, 21, 58], "final_state": "병원 데이터와 구매 표준을 태오와 묶는다."},
+      {"name": "리처드 케인", "entry_block": 5, "active_blocks": "5-67", "function": "글로벌 CDMO bridge", "turning_blocks": [5, 15, 40, 67], "final_state": "글로벌 빅파마 장기계약을 여는 파트너가 된다."}
+    ],
+    "foreshadow_map": [
+      {"id": "F-001", "thread": "부평 2공장의 숨겨진 deviation report", "planted_blocks": [1, 2], "payoff_blocks": [7, 10], "status": "planned", "payoff": "한재국 라인의 불량 배치 책임을 역으로 계약 파기와 공장 장악 근거로 쓴다."},
+      {"id": "F-002", "thread": "온도기록 데이터", "planted_blocks": [4, 11], "payoff_blocks": [17, 58, 64], "status": "planned", "payoff": "냉장물류 proof가 병원 데이터와 임상 리스크 보험의 근거가 된다."},
+      {"id": "F-003", "thread": "병원 구매실 엑셀", "planted_blocks": [4, 21], "payoff_blocks": [26, 30], "status": "planned", "payoff": "병원/약국 청구 데이터 표준으로 확장된다."},
+      {"id": "F-004", "thread": "원료 한 드럼 병목", "planted_blocks": [31], "payoff_blocks": [39, 40, 62], "status": "planned", "payoff": "완제약보다 원료소재 우선권이 더 강한 통제권임을 증명한다."},
+      {"id": "F-005", "thread": "태오 조건표", "planted_blocks": [8, 30, 60], "payoff_blocks": [66, 70], "status": "planned", "payoff": "국가 산업 표준과 조달 기준으로 격상된다."}
+    ],
+    "opponent_transition_plan": [
+      {"arc": "ARC-01", "section_rotation": "부도 공장과 첫 GMP", "block_range": "1-10", "primary_opponent": "한재국", "secondary_opponent": "기존 공장장", "weakness_pool": ["공장 소유권만 보고 품질문서 통제권을 가볍게 본다.", "실사 대응을 로비와 연기로 해결할 수 있다고 믿는다.", "임금체불 직원들이 생산 책임선보다 돈만 원한다고 오판한다."]},
+      {"arc": "ARC-02", "section_rotation": "콜드체인과 백신 물류", "block_range": "11-20", "primary_opponent": "냉장물류 조합", "secondary_opponent": "경쟁 병원 납품사", "weakness_pool": ["운송 단가만 보고 온도기록 데이터의 계약 가치를 모른다.", "파업으로 가격을 올릴 수 있다고 믿지만 대체망 proof를 내준다.", "폐기 사고를 숨기다가 태오 표준의 필요성을 키운다."]},
+      {"arc": "ARC-03", "section_rotation": "병원 데이터와 보험 등재", "block_range": "21-30", "primary_opponent": "대형병원 전산실", "secondary_opponent": "보험심사 라인", "weakness_pool": ["데이터 접근권을 방어하면서 구매실 비용절감 압박을 못 본다.", "보험 문구 하나가 생산/납품 시장을 바꾸는 걸 과소평가한다.", "약국 소량 재고 데이터를 하찮게 여긴다."]},
+      {"arc": "ARC-04", "section_rotation": "원료의약품과 정밀화학", "block_range": "31-40", "primary_opponent": "일본 원료상", "secondary_opponent": "국내 화학 대기업", "weakness_pool": ["완제약만 보고 중간체 병목을 놓친다.", "가격 협상력이 공급 우선권보다 강하다고 착각한다.", "제약 청정관리 경험이 반도체 소재로 넘어가는 걸 늦게 본다."]},
+      {"arc": "ARC-05", "section_rotation": "소비재 안전표준", "block_range": "41-50", "primary_opponent": "화장품 ODM", "secondary_opponent": "식품 대기업", "weakness_pool": ["브랜드와 광고를 인증보다 강하게 본다.", "리콜 위기가 표준 계약의 proof가 되는 걸 모른다.", "원료 추적을 비용으로만 본다."]},
+      {"arc": "ARC-06", "section_rotation": "임상 리스크와 공급망 금융", "block_range": "51-60", "primary_opponent": "증권사 IB", "secondary_opponent": "바이오 벤처", "weakness_pool": ["임상 스토리를 생산 가능성보다 높게 평가한다.", "특허 담보만 보고 생산권 담보를 놓친다.", "실패한 파이프라인도 설비/데이터로 회수될 수 있음을 모른다."]},
+      {"arc": "ARC-07", "section_rotation": "국가 산업 표준", "block_range": "61-70", "primary_opponent": "글로벌 빅파마", "secondary_opponent": "재벌 연합", "weakness_pool": ["단가 협상력으로 표준권을 누를 수 있다고 믿는다.", "돈으로 지분을 사면 생산권도 따라온다고 착각한다.", "하루 정지 사고가 국가 표준 proof가 되는 것을 막지 못한다."]}
+    ],
+    "capital_curve": [
+      {"block": 1, "title": "부도 공장 경매장", "capital_after": "5억 + 공장 우선협상권"},
+      {"block": 10, "title": "공장은 팔리지 않는다", "capital_after": "35억 + GMP 조건부 통과"},
+      {"block": 20, "title": "백신보다 기록", "capital_after": "120억 + 전국 냉장배송망"},
+      {"block": 30, "title": "표준 청구서", "capital_after": "420억 + 병원/약국 데이터 표준"},
+      {"block": 40, "title": "소재가 산업을 고른다", "capital_after": "1800억 + API/소재 공급권"},
+      {"block": 50, "title": "안전표준의 이름", "capital_after": "7200억 + 소비재 안전표준"},
+      {"block": 60, "title": "바이오 은행", "capital_after": "2조 8000억 + 바이오 금융 조건표"},
+      {"block": 70, "title": "생산 표준의 주인", "capital_after": "9조 + 국가 산업 표준 관문"}
+    ],
+    "defeat_blocks": [
+      {"block": 7, "loss": "불량 배치 책임을 일부 떠안고 현금 3억을 소모하지만 한재국 라인을 자른다."},
+      {"block": 15, "loss": "물류 파업으로 납품 지연 페널티를 맞지만 대체 운송망 proof를 얻는다."},
+      {"block": 25, "loss": "보험 심사 보류로 매출이 밀리지만 경쟁사 로비 증거를 잡는다."},
+      {"block": 45, "loss": "ODM 배신으로 단기 브랜드 계약을 잃지만 원료 인증망을 회수한다."},
+      {"block": 55, "loss": "벤처 폭주로 투자금 일부를 잃지만 생산권 조건을 강화한다."},
+      {"block": 65, "loss": "공급망 정지 하루로 여론을 맞지만 국가 표준 proof를 만든다."}
+    ]
+  }
+}
