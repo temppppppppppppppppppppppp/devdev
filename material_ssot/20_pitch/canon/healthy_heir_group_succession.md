@@ -1,6 +1,6 @@
 # healthy_heir_group_succession
 
-Title: 회귀한 외동 후계자는 그룹을 지킨다
+Title: 재벌가 외동아들은 그룹을 지킨다
 Work ID: `healthy_heir_group_succession`
 Family: `blockguide`
 Primary Profile: `business_growth_profile`
@@ -42,6 +42,9 @@ Status: canonical pitch
   - 2026-04-29
 - selection verdict:
   - PASS (P0 12/12, P1 11/11, Blocker 0)
+- 2026-05-01 intake sharpening:
+  - `material_ssot/20_pitch/intake/fresh_20260501_batch01/01_healthy_heir_coldchain_sector.md`
+  - `C:\Users\User\Desktop\재료 생산 R&D 랩\docs\2026-05-01\next-work-concept-chaebol-coldchain-heir.md`
 
 This file is the canonical pitch authority for `healthy_heir_group_succession`. Downstream preprocess, `Phase0`, `TR`, `BI`, and `work_guard` artifacts do not yet exist in the 글도비 lane; when they are created they must treat this file as the upstream pitch truth, not the synthesis source or the R&D scratch docs.
 
@@ -198,3 +201,134 @@ This file is the canonical pitch authority for `healthy_heir_group_succession`. 
   - capex schedule, 설비 납기, 인증 lead time, 생산 라인 우선순위
   - 생산권 term sheet, 우선협상권, 공급 조건, 인증 조건
   - `좋은 말로 설득했다`, `대충 감으로 맞혔다`, `유능한 척하니 모두 믿었다` 같은 vague consulting 장면
+
+## 5. 2026-05-01 Coldchain Sharpening Canon
+
+This section supersedes softer title/copy variants while preserving the existing work id and no-fantasy group-succession lane.
+
+- locked title:
+  - `재벌가 외동아들은 그룹을 지킨다`
+- locked first-arc copy:
+  - `닫을 곳이 틀렸습니다`
+- primary ad hook:
+  - `적자 센터가 아니었다. 입찰권이 묶인 마지막 냉장 거점이었다.`
+- core click sentence:
+  - `합리적으로 버린 것들이 그룹을 무너뜨렸다. 회귀한 후계자는 그 버려진 권리를 하나씩 회수한다.`
+- back-cover copy:
+  - `한서그룹은 하나의 대형 사고로 무너지지 않았다. 물류센터 하나, PF 보증 하나, 공시 문장 하나, 설비 발주 하나가 늦게 연결되며 무너졌다. 회귀한 외동 후계자 서도윤은 미래를 예언하지 않는다. 지금 회의실의 빈칸, 계약서의 조건, 현장의 예외코드로 모두가 손실이라 버린 권리를 먼저 회수한다. 첫 번째 균열은 폐쇄 직전의 남부 냉장센터였다.`
+
+### 5A. Episode 1 Cold Open
+
+- future liquidation presentation
+- Hanseo Group assets sold in pieces
+- disposal list line: `Southern Cold Warehouse - sold after closure`
+- Do-yoon remembers this was the first wrong closure
+- cut to present board agenda: `Southern Cold Warehouse closure approval`
+- Do-yoon does not shout or reveal regression
+- he asks for the table split by product group, certification condition, and contract penalty
+- episode 1 ending:
+  - `서문석의 펜이 결재란 위에서 멈췄다.`
+
+### 5B. First 15 Episode Runway
+
+- episode 1: future liquidation list overlaps with present closure agenda; Seo Moon-seok's pen stops; raw data is ordered
+- episode 2: average return rate is split by product, time band, center, and penalty; closure approval is held for 48 hours
+- episode 3: certification renewal schedule and major-retailer bid condition prove the center is a ticket, not only a loss
+- episode 4: Do-yoon accepts a failure condition; site, contract, and ledger access open for a 14-day test
+- episode 5: exception-code trail shows avoidable penalty concentration; external validator is appointed
+- episode 6: recoverable rights are separated from real losses; 90-day diagnosis authority opens
+- episode 7: field workers distrust him; no-headcount-before-classification rule earns shift-board cooperation
+- episode 8: major retailer threatens exclusion; Do-yoon wins a 30-day bid qualification hold
+- episode 9: CFO attacks through liquidity and rating pressure; one finance analyst joins the temporary TF
+- episode 10: temporary TF becomes real; same missing-column pattern appears in construction/PF collateral appraisal
+- episode 11: PF maturity table shows construction stop-loss can trigger cross-default; Do-yoon gets bank-meeting observer seat
+- episode 12: Seo Moon-seok gives one impossible condition; waiver memo access opens
+- episode 13: bank meeting reframes disclosure order; Do-yoon gains a limited speaking slot
+- episode 14: IR rumor pressure forces disclosure timing judgment; Do-yoon gains market-facing timing seat
+- episode 15: three-sector late-decision map creates chairman-direct future management diagnosis office
+
+### 5C. Money Object Glossary
+
+- `return-rate table`: false average vs true product/center/time split
+- `certification renewal schedule`: ticking clock
+- `retail bid qualification`: hidden right
+- `delivery penalty clause`: immediate damage if closed
+- `exception code memo`: field truth carrier
+- `shift board`: human cost and process bottleneck
+- `14-day loss reclassification`: first authority tool
+- `90-day diagnosis authority`: first seat
+- `PF maturity table`: second-sector time bomb
+- `collateral reappraisal memo`: bank-room proof surface
+- `IR Q&A sequence`: market-facing trust object
+
+Each object must stop a wrong decision, create a witness, unlock a document, separate real loss from recoverable right, or open the next sector.
+
+### 5D. Reader Pleasure Map
+
+- competence: real business knots solved through documents, not magic
+- relief: employees and assets are protected through process, not sentiment
+- authority growth: each proof pays as a named token
+- grandfather trust: Seo Moon-seok yields because the paper trail leaves him no better option
+- sector expansion: every boring document becomes time, money, or power
+
+Early scene ratio:
+
+- 40 percent business proof and confrontation
+- 20 percent founder-grandfather trust tension
+- 20 percent field or counterparty reality check
+- 10 percent future-collapse memory
+- 10 percent quiet personal cost
+
+### 5E. Arc Authority Escalation
+
+- Arc 01 logistics/cold-chain: diagnosis authority
+- Arc 02 construction/PF: external negotiation authority
+- Arc 03 finance/IR: market-facing authority
+- Arc 04 materials/manufacturing: capital allocation authority
+- Arc 05 bio/new business: future-business control authority
+
+Season endpoint:
+
+- `chairman-direct future management diagnosis office`
+- `group strategy co-authority`
+- public acknowledgement that succession has begun operationally
+
+Do not crown Do-yoon too early. The pleasure is watching a young successor make the group need him.
+
+### 5F. Character Cost Lock
+
+- Arc 01 cost: employees distrust him because audits usually precede layoffs
+- Arc 02 cost: banks suspect he is hiding founder incapacity
+- Arc 03 cost: IR timing forces him to admit old decisions were late without humiliating Seo Moon-seok
+- Arc 04 cost: capex reallocation creates affiliate enemies
+- Arc 05 cost: production-right negotiation forces a choice between quick cash sale and long-term control
+
+Cost rule:
+
+- no melodramatic self-pity
+- pressure authority, trust, or timing
+- make the next receipt feel earned
+
+### 5G. Updated Harness Guard
+
+Hard pass:
+
+- TR 2~6 is treated as one fast webnovel block and contains at least two active incidents
+- opening main incident is southern cold warehouse closure hold
+- opening additional incident is PF guarantee auto-extension notice / bank deadline ignition
+- Do-yoon acts from self-interest and efficiency, not from kindness or cruelty
+- regression memory guides suspicion, present proof wins the room, authority receipt closes the block
+- every early block converts proof into a named authority token
+- opposition has a rational KPI or risk reason
+- employee-protection scenes pay through skilled-labor, certification, contract-right, or leverage preservation
+- Seo Moon-seok does not emotionally surrender; he yields to verifiable paper trail
+
+Hard fail:
+
+- TR 2~6 spends all five episodes on only the cold-chain closure without another active incident
+- Do-yoon is written as a morally good rescuer first
+- Do-yoon wins through vague genius speech
+- future memory is used as proof surface
+- cold-chain problem resolves without contract, certification, penalty, or field evidence
+- first reward is only praise, cash, or family approval
+- the story becomes revenge-family melodrama instead of business-growth succession

@@ -1,0 +1,9 @@
+{
+  "work_id": "venture_bubble_king_2000",
+  "run_class": "sequential_production",
+  "last_sequential_block_pass": 65,
+  "next_unit_type": "block",
+  "next_block_id": "Block 066",
+  "manual_audit_ready": true,
+  "notes": "TR Blocks 061-065 were created after adding ARC-07 block slots to Phase0. Same-order 5-block cap reached; next production window resumes at Block 066, the planned ARC-07 defeat block."
+}

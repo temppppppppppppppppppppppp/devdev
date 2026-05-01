@@ -1,0 +1,134 @@
+{
+  "events": [
+    "IMF 직후 부도난 제약공장 인수",
+    "예정보다 앞당겨진 식약처/GMP 실사",
+    "대학병원 긴급 납품 위기",
+    "불량 배치 책임 전가와 품질문서 탈취전",
+    "글로벌 제약사 위탁생산 샘플 감사",
+    "콜드체인 온도기록 사고",
+    "병원 EMR/약국 청구 데이터 표준화",
+    "원료의약품과 정밀화학 소재 국산화",
+    "식품/화장품/건기식 안전표준 확장",
+    "임상 리스크 보험과 공급망 금융"
+  ],
+  "npc_candidates": [
+    "강태오: 미래를 아는 회귀자이지만 미래 신약보다 인증/생산/계약을 먼저 먹는 인물",
+    "윤세린: 품질보증팀장, 첫 proof의 witness이자 공장 현실을 아는 translator",
+    "한재국: 제약 계열사 전무, 부실 공장을 버리려다 핵심 생산권을 잃는 내부 적",
+    "오민석: 식약처 감사관, 규정과 문서로 public proof를 확인하는 gatekeeper",
+    "박도현: 대학병원 구매실장, 긴급 납품을 장기 계약으로 바꾸는 receipt owner",
+    "리처드 케인: 글로벌 제약사 위탁생산 담당, 국내 proof를 글로벌 LOI로 환전"
+  ],
+  "crisis_candidates": [
+    "임금체불 직원들이 공장 출입문을 막아 첫 생산이 지연된다.",
+    "식약처 실사 직전 배치기록과 실제 생산동선이 맞지 않는다.",
+    "병원 납품 물량이 없으면 환자 피해와 언론 리스크가 동시에 터진다.",
+    "한재국 라인이 불량 원료 계약을 주인공에게 떠넘긴다.",
+    "콜드체인 온도 기록이 끊겨 납품 전체가 폐기될 위기.",
+    "글로벌 감사에서 deviation report가 숨겨진 것이 드러난다."
+  ],
+  "terms": [
+    "GMP",
+    "batch record",
+    "deviation report",
+    "validation",
+    "QA",
+    "QC",
+    "무균충전",
+    "원료의약품",
+    "콜드체인",
+    "온도기록",
+    "LOI",
+    "위탁생산",
+    "보험 등재",
+    "병원 구매실",
+    "청구 데이터",
+    "공급망 금융"
+  ],
+  "scene_details": [
+    "첫 장면은 공장을 싸게 사는 장면만으로 끝나지 않고, 같은 block 안에서 감사와 긴급납품 위기를 함께 연다.",
+    "첫 reward는 공장 소유권보다 품질문서 접근권과 임시 생산 책임선이다.",
+    "첫 public proof는 식약처 실사나 병원 납품 성공으로 보이고, private receipt는 병원 구매실장/감사관/품질팀장의 태도 변화로 잠근다.",
+    "주인공은 환자를 살려도 미담이 아니라 장기 납품권과 데이터 접근권을 산다.",
+    "바이오 CDMO는 중반 이후 콜드체인, 데이터, 소재, 소비재 안전표준, 금융으로 확장된다."
+  ],
+  "opening_bundle_contract": {
+    "bundle_window": "TR 2~6",
+    "macro_battlefield": "부도 제약공장 인수와 첫 GMP/병원 납품 proof 고정",
+    "macro_battlefield_map": [
+      "부도 공장 매입과 현장 장악",
+      "식약처/GMP 실사 조기 도래",
+      "대학병원 긴급 납품 위기",
+      "품질문서와 생산 책임선 확보",
+      "병원 장기 납품권 또는 글로벌 샘플 감사 ticket 확보"
+    ],
+    "bundle_goal": "TR 2~6 안에 공장 인수 -> 감사 proof -> 병원 납품 receipt -> 장기계약/글로벌 audit ticket을 모두 visible하게 만든다.",
+    "first_signboard_block": 2,
+    "representative_reevaluation_block": 3,
+    "next_battlefield_ticket_block": 5,
+    "timing_reconciliation_note": "공장 정상화 arc는 10블록까지 가도 되지만 독자는 TR 2~6 안에서 이미 감사 통과, 납품권, 다음 audit ticket을 받아야 한다."
+  },
+  "first_block_cider_ledger": [
+    {
+      "block_no": 2,
+      "has_cider": true,
+      "cider_elements": [
+        "proof",
+        "authority_shift",
+        "next_gate"
+      ],
+      "visible_reward_token": "공장 출입권과 품질문서 접근권",
+      "bridge_or_payback_note": "공장 소유보다 생산 책임선이 먼저 열린다.",
+      "pain_only_exit": false
+    },
+    {
+      "block_no": 3,
+      "has_cider": true,
+      "cider_elements": [
+        "proof",
+        "reevaluation",
+        "reward_token"
+      ],
+      "visible_reward_token": "식약처 실무자가 실사 대응권을 인정",
+      "bridge_or_payback_note": "감사 통과가 병원 납품의 전제 proof가 된다.",
+      "pain_only_exit": false
+    },
+    {
+      "block_no": 4,
+      "has_cider": true,
+      "cider_elements": [
+        "protection",
+        "access_shift",
+        "authority_shift"
+      ],
+      "visible_reward_token": "대학병원 긴급 납품권과 구매실 직통선",
+      "bridge_or_payback_note": "환자 위기를 계약 접근권으로 산다.",
+      "pain_only_exit": false
+    },
+    {
+      "block_no": 5,
+      "has_cider": true,
+      "cider_elements": [
+        "proof",
+        "next_gate",
+        "reward_token"
+      ],
+      "visible_reward_token": "글로벌 제약사 샘플 감사 ticket",
+      "bridge_or_payback_note": "국내 proof가 CDMO 다음 전장으로 이어진다.",
+      "pain_only_exit": false
+    },
+    {
+      "block_no": 6,
+      "has_cider": true,
+      "cider_elements": [
+        "recovery_asset",
+        "authority_shift",
+        "next_gate"
+      ],
+      "visible_reward_token": "품질보증팀장과 생산반장의 충성 아닌 계산된 합류",
+      "bridge_or_payback_note": "사람을 구하는 것이 아니라 공장을 움직일 책임선을 산다.",
+      "pain_only_exit": false
+    }
+  ],
+  "notes": "Stage 0 material sufficient for Phase0. The work should not become miracle-drug genius fantasy; it is a production-standard, certification, supply-chain, and data-control tycoon story."
+}

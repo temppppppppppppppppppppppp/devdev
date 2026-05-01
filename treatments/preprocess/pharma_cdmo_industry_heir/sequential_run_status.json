@@ -1,0 +1,8 @@
+{
+  "run_class": "sequential_production",
+  "last_sequential_block_pass": 30,
+  "next_unit_type": "block",
+  "next_block_id": "Block 031",
+  "manual_audit_ready": true,
+  "notes": "Stage0 and Phase0 created in this wave. Block 001 through Block 030 fixed, manually audited, and 10-block audit gates PASS for 001-010, 011-020, and 021-030. Continue with Block 031; BI is blocked until 70-block TR and source TR gate PASS."
+}

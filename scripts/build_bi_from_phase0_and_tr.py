@@ -253,7 +253,13 @@ def derive_partner_location_sector_distribution(
                 if not name or name in seen_names:
                     continue
                 seen_names.add(name)
-                partners.append({"name": name, "cadence": arc["arc_id"], "objective": arc["title"]})
+                partners.append(
+                    {
+                        "name": name,
+                        "cadence": as_text(arc.get("block_range")) or as_text(arc.get("title")),
+                        "objective": arc["title"],
+                    }
+                )
 
     location_pool = unique_preserve_order(
         [as_text(block.get("location", {}).get("place")) for block in treatment_blocks if isinstance(block, dict)]
@@ -363,28 +369,83 @@ def build_key_npcs(
         }
     ]
     for npc in npc_timeline:
+        if as_text(npc.get("name")) == protagonist["name"]:
+            continue
         turning_points = npc.get("turning_points") or npc.get("key_turning_points") or []
+        try:
+            first_block = int(npc.get("first_block") or npc.get("entry_block") or 1)
+        except (TypeError, ValueError):
+            first_block = 1
+        final_status = (
+            as_text(npc.get("final_status"))
+            or as_text(npc.get("trajectory"))
+            or as_text(npc.get("credit_balance_rule"))
+            or npc["role"]
+        )
+        entry = as_text(npc.get("entry"))
+        credit_rule = as_text(npc.get("credit_balance_rule"))
+        desc_parts = [as_text(npc.get("role"))]
+        if entry:
+            desc_parts.append(f"진입점: {entry}")
+        if credit_rule:
+            desc_parts.append(credit_rule)
         key_npcs.append(
             {
                 "name": npc["name"],
                 "role": npc["role"],
-                "desc": f"{npc['role']}. 작품 전개에서 본격적으로 영향력을 행사한다.",
-                "first_block": npc["first_block"],
-                "final_status": npc["final_status"],
+                "desc": ". ".join(part for part in desc_parts if part),
+                "first_block": first_block,
+                "final_status": final_status,
                 "key_turning_points": turning_points,
             }
         )
     return key_npcs
 
 
+def normalize_arc_slot(slot: Any, *, fallback_block: int, fallback_title: str, fallback_function: str) -> dict[str, Any]:
+    if isinstance(slot, dict):
+        title = as_text(slot.get("title")) or as_text(slot.get("event")) or fallback_title
+        function = as_text(slot.get("function")) or title or fallback_function
+        block = slot.get("block")
+        try:
+            block_no = int(block)
+        except (TypeError, ValueError):
+            block_no = fallback_block
+        return {"block": block_no, "title": title, "function": function}
+
+    text = as_text(slot)
+    if text:
+        if ":" in text:
+            block_text, title_text = text.split(":", 1)
+            try:
+                block_no = int(block_text.strip())
+            except ValueError:
+                block_no = fallback_block
+            title = title_text.strip() or fallback_title
+            return {"block": block_no, "title": title, "function": title}
+        return {"block": fallback_block, "title": text, "function": text}
+
+    return {"block": fallback_block, "title": fallback_title, "function": fallback_function}
+
+
 def build_arc_sheets(arcs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for arc in arcs:
+        start_block, end_block = parse_block_range(arc["block_range"])
         if arc.get("block_slots"):
-            first_slot = arc["block_slots"][0]
-            last_slot = arc["block_slots"][-1]
+            first_slot = normalize_arc_slot(
+                arc["block_slots"][0],
+                fallback_block=start_block,
+                fallback_title=arc["title"],
+                fallback_function=arc.get("entry_function", arc["title"]),
+            )
+            last_slot = normalize_arc_slot(
+                arc["block_slots"][-1],
+                fallback_block=end_block,
+                fallback_title=arc["title"],
+                fallback_function=arc.get("exit_function", arc["title"]),
+            )
         else:
-            start_block, end_block = parse_block_range(arc["block_range"])
             first_slot = {
                 "block": start_block,
                 "title": arc["title"],
@@ -398,13 +459,13 @@ def build_arc_sheets(arcs: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "block_range": arc["block_range"],
                 "time_window": arc["time_window"],
                 "capital_target": arc.get("capital_target") or arc.get("authority_target") or "",
-                "front_sectors": arc["front_sectors"],
-                "support_sectors": arc["support_sectors"],
-                "main_opponents": arc["main_opponents"],
-                "new_npcs": arc["new_npcs"],
-                "emotion_curve": arc["emotion_curve"],
-                "quiet_blocks": arc["quiet_blocks"],
-                "defeat_blocks": arc["defeat_blocks"],
+                "front_sectors": arc.get("front_sectors", []),
+                "support_sectors": arc.get("support_sectors", []),
+                "main_opponents": arc.get("main_opponents", []),
+                "new_npcs": arc.get("new_npcs", []),
+                "emotion_curve": arc.get("emotion_curve", ""),
+                "quiet_blocks": arc.get("quiet_blocks", []),
+                "defeat_blocks": arc.get("defeat_blocks", []),
                 "entry_function": first_slot["function"],
                 "exit_function": last_slot["function"],
             }
@@ -418,11 +479,21 @@ def build_historical_events(
 ) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     for arc in arcs:
+        start_block, end_block = parse_block_range(arc["block_range"])
         if arc.get("block_slots"):
-            first_slot = arc["block_slots"][0]
-            last_slot = arc["block_slots"][-1]
+            first_slot = normalize_arc_slot(
+                arc["block_slots"][0],
+                fallback_block=start_block,
+                fallback_title=arc["title"],
+                fallback_function=arc.get("entry_function", arc["title"]),
+            )
+            last_slot = normalize_arc_slot(
+                arc["block_slots"][-1],
+                fallback_block=end_block,
+                fallback_title=arc["title"],
+                fallback_function=arc.get("exit_function", arc["title"]),
+            )
         else:
-            start_block, end_block = parse_block_range(arc["block_range"])
             first_slot = {
                 "block": start_block,
                 "title": arc["title"],
@@ -443,12 +514,24 @@ def build_historical_events(
             }
         )
     for defeat in defeats:
+        result = (
+            as_text(defeat.get("success_pattern"))
+            or as_text(defeat.get("type"))
+            or as_text(defeat.get("loss"))
+            or "setback"
+        )
+        summary = (
+            as_text(defeat.get("summary"))
+            or as_text(defeat.get("hidden_gain"))
+            or as_text(defeat.get("loss"))
+            or result
+        )
         events.append(
             {
                 "type": "defeat",
                 "block": defeat["block"],
-                "result": defeat["success_pattern"],
-                "summary": defeat["summary"],
+                "result": result,
+                "summary": summary,
             }
         )
     return events

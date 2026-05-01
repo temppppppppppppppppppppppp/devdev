@@ -1,0 +1,133 @@
+{
+  "work_identity": {
+    "work_id": "power_grid_heir",
+    "title": "회귀한 재벌 3세는 전력망을 산다",
+    "logline": "미래의 AI/data center 전쟁이 전력망에서 무너지는 것을 본 재벌 3세가, AI 회사를 사는 대신 AI 기업들이 통과해야 하는 전력 권리와 결재권을 선점한다.",
+    "time_anchor": "near-future return to early AI infrastructure boom",
+    "primary_arena": "선우그룹 전력망/데이터센터/중공업 인프라 전장",
+    "protagonist": "서도윤",
+    "primary_profile": "business_growth_profile",
+    "secondary_profile": "tech_startup_profile"
+  },
+  "canonical_sources": [
+    "2026-05-01 user-approved concept: Korean chaebol group + power grid / AI infrastructure modern fantasy",
+    "2026-05-01 pacing contract: 1block = 2-6 episodes, each block needs at least one parallel/secondary incident",
+    "2026-05-01 protagonist contract: self-centered, profit/efficiency/gain first; neither good nor evil required",
+    "2026-05-01 refined concept notes in current Codex session"
+  ],
+  "reference_only_sources": [
+    "platform trend synthesis discussed in current session: Naver/Munpia/Kakao modern fantasy preference for fast reward, clear authority movement, business-power concreteness",
+    "repo comparable lane: treatments/preprocess/healthy_heir_group_succession as stage0 shape reference only",
+    "repo blockguide harness: docs/blockguide/treatment-planning-harness.md",
+    "repo blockguide harness: docs/blockguide/treatment-production-harness-v2.md",
+    "repo BI harness: docs/blockguide/bi-production-harness-v1.md"
+  ],
+  "core_materials": [
+    "선우그룹 structure: 선우일렉(변압기/HVDC/전력기기), 선우오션(조선/해상변전/MRO), 선우에너지(SMR/발전/수소), 선우디지털(데이터센터/클라우드/AI 인프라), 선우건설(전력 corridor/냉각수/site permit), 선우캐피탈(project finance)",
+    "future memory engine: 도윤은 미래 AI 인프라 붕괴 순서를 알지만, 현재 판에서는 계약서, 납기표, 전력 SLA, site permit, outage log, transformer slot, board minutes로만 proof를 만든다",
+    "opening representative spike candidate: AI 데이터센터 계약이 화려하게 승인되는 순간, 도윤은 power SLA와 변압기 납기 병목이 손실 폭탄임을 짚고 72시간 계약 재검토권을 요구한다",
+    "first reward retention route: 72시간 review right -> 원본 계약/SLA 접근권 -> 선우일렉 현장 audit권 -> 기술검증팀 임시 authority -> site review authority -> cloud contract renegotiation seat",
+    "block pacing rule: 한 block 안에는 A-event(보이는 위기)와 B-event(숨은 권한/수익 위기)가 같이 움직여야 하며, receipt는 권한/접근권/협상석/예산권으로 남아야 한다",
+    "self-interest rule: 도윤이 사람을 구하는 이유는 선량함이 아니라 valuable operator 보존, 손실 축소, 협상권 확보, 평판 비용 절감, 다음 gate 개방이다",
+    "authority receipt ladder: 72-hour review right, source-doc access, site access, audit authority, technical verification team, contract renegotiation seat, chairman direct line, board observer seat, pilot budget allocation, Strategic Power TF leader",
+    "opponent logic: 서강준은 안정 cashflow와 제조 리스크를 지키는 rational uncle, 서민재는 AI/cloud narrative를 장악한 cousin이며 둘 다 멍청한 악역이 아니다",
+    "signboard line: 이번 생엔 맞는 말을 하지 않는다. 결재권을 산다.",
+    "tone line: 감정은 회의록에 안 남습니다. 서명이나 하세요."
+  ],
+  "npc_pool": [
+    {
+      "name_or_role": "서도윤",
+      "narrative_use": "주인공. 미래 전력망 붕괴 기억으로 위험 범위를 좁히고, 현재 문서로 proof를 만들어 결재권을 사는 branch-line 재벌 3세",
+      "why_this_work": "자기중심성/효율/권한 receipt를 모두 운반하는 핵심 엔진"
+    },
+    {
+      "name_or_role": "서문호",
+      "narrative_use": "선우그룹 회장. 도윤의 첫 authority witness이자 최종 board authority gate",
+      "why_this_work": "한 번에 믿지 않고 proof와 책임 감당력을 단계적으로 검증한다"
+    },
+    {
+      "name_or_role": "서강준",
+      "narrative_use": "제조/전력 계열을 장악한 uncle opponent",
+      "why_this_work": "안정 cashflow와 납기 리스크를 지키려는 합리적 반대자로 power-grid 전장을 날카롭게 만든다"
+    },
+    {
+      "name_or_role": "서민재",
+      "narrative_use": "AI/cloud narrative를 장악한 cousin rival",
+      "why_this_work": "화려한 AI deal과 보이지 않는 power SLA 폭탄의 대비를 만든다"
+    },
+    {
+      "name_or_role": "한세린",
+      "narrative_use": "좌천된 HVDC engineer / technical operator",
+      "why_this_work": "도윤의 방향을 현장 기술 proof로 바꾸는 첫 operator"
+    },
+    {
+      "name_or_role": "백인호",
+      "narrative_use": "선우캐피탈 structured finance operator",
+      "why_this_work": "전력 권리를 capex/project finance/credit 구조로 환전한다"
+    },
+    {
+      "name_or_role": "윤재식",
+      "narrative_use": "선우오션 shipyard field manager",
+      "why_this_work": "해상변전/MRO/조선소 idle asset을 proof로 보여주는 현장 witness"
+    }
+  ],
+  "crisis_pool": [
+    "AI 데이터센터 계약의 power SLA bomb: cloud revenue보다 penalty와 전력 조달 비용이 먼저 커지는 위기",
+    "변압기 납기 slot 병목: 해외 고객 납기와 국내 데이터센터 증설이 같은 slot을 먹는 위기",
+    "하청 안전 은폐: delivery schedule을 맞추려다 사고/중단/평판 비용이 터지는 위기",
+    "좌천된 HVDC engineer report 묵살: 맞는 보고서가 권한 부재 때문에 폐기되는 위기",
+    "냉각수/site permit bomb: 데이터센터 부지가 전력보다 냉각수와 주민 민원에서 막히는 위기",
+    "선우오션 idle yard 재분류: scrap으로 팔 asset이 해상변전 platform/MRO 권리로 바뀌는 위기",
+    "cloud contract loss structure: AI narrative는 이겼지만 전력 cost와 SLA penalty 때문에 손실 계약이 되는 위기",
+    "competitor outage: 외부 정전/데이터센터 사고가 선우그룹 board fight의 public proof가 되는 위기",
+    "breach-of-duty attack: 도윤의 공격적 권한 선점이 배임/월권 프레임으로 역공당하는 위기",
+    "Strategic Power TF launch: 전력망을 산다는 비전이 공식 예산/조직/책임으로 잠기는 최종 opening gate"
+  ],
+  "hard_constraints": [
+    "male protagonist only",
+    "no visible value UI, no system window, no magic appraisal, no supernatural stock-price answer",
+    "회귀 지식은 위험 범위를 좁히는 장치이고 proof는 현재 문서/숫자/현장/권한 witness에서 나온다",
+    "TR block은 episode가 아니라 2-6화 bundle이다",
+    "각 block에는 최소 A-event와 B-event가 있어야 하며, B-event는 권한/수익/자료/협상석과 연결돼야 한다",
+    "각 block reward는 칭찬/돈만으로 닫히면 안 되고 권한 receipt나 next gate로 남아야 한다",
+    "도윤은 착해서 움직이지 않는다. 효율, 비용 절감, valuable operator 보존, 협상력 확보 때문에 움직인다",
+    "서문호는 즉시 신뢰하지 않는다. proof가 누적될 때만 권한을 내준다",
+    "서강준/서민재/임원/엔지니어/금융 담당자는 각자 KPI와 책임 논리가 있는 rational actor다",
+    "conference-room-only 전개 금지. 문서 proof 뒤에는 현장, 납기표, 공장, 부지, 조선소, 데이터센터가 붙어야 한다",
+    "직접 대사 hard lock: 이번 생엔 맞는 말을 하지 않는다. 결재권을 산다.",
+    "직접 대사 hard lock: 감정은 회의록에 안 남습니다. 서명이나 하세요."
+  ],
+  "do_not_fake": [
+    "전력 SLA: 대충 계약 위반이라고 쓰지 말고 capacity, uptime, penalty, PPA, backup obligation의 구조로 장면화한다",
+    "변압기 납기: 단순 부품 부족이 아니라 production slot, test certificate, grid interconnection schedule의 병목으로 다룬다",
+    "HVDC: 마법 기술처럼 쓰지 말고 송전 손실, 장거리 전력 이동, 계통 접속, engineer report의 언어로 제한한다",
+    "data center: 서버가 아니라 전력, 냉각수, site permit, PPA, SLA, load forecast의 운영물로 다룬다",
+    "SMR: 만능 발전기로 쓰지 말고 규제/인허가/정치/장기 option으로만 단계적으로 연다",
+    "project finance: 돈이 많아서 해결이 아니라 capex, covenant, offtake, credit risk, collateral로 장면화한다",
+    "shipyard/MRO: 조선소 asset을 뜬금없는 만능 공장으로 쓰지 말고 yard slot, offshore substation, maintenance contract로 제한한다",
+    "board politics: 감정싸움이 아니라 배임, 월권, 예산권, risk committee, minutes로 공격/방어한다",
+    "한국 재벌: 실존 그룹 비방/복제 금지. 선우그룹은 fictional conglomerate로 운용한다",
+    "시장 트렌드: 플랫폼 일반론만으로 장면을 채우지 말고 매 block에 문서/현장/권한 receipt를 남긴다"
+  ],
+  "terminology_pool": [
+    "power SLA",
+    "PPA",
+    "transformer slot",
+    "HVDC",
+    "grid interconnection",
+    "load forecast",
+    "cooling water permit",
+    "site permit",
+    "backup obligation",
+    "offshore substation",
+    "MRO",
+    "project finance",
+    "covenant",
+    "offtake",
+    "board observer",
+    "Strategic Power TF",
+    "권한 영수증",
+    "결재권"
+  ],
+  "manual_audit_note": "바로 쓸 수 있는 재료: 전력 SLA bomb, 변압기 납기 slot, HVDC 좌천 보고서, site/cooling permit, cloud loss contract, board observer/TF authority ladder. 비어 있는 재료: 구체적 전력 단가, PPA 문구, 변압기 검사/납기 세부, HVDC 기술 수치, 데이터센터 냉각수 인허가 디테일, PF covenant 문구. 상상으로 때우면 안 되는 재료: 전력망/데이터센터/프로젝트금융/이사회 절차. TR 전개에서는 숫자 흉내보다 문서의 기능과 권한 receipt를 우선 정확히 잡는다."
+}

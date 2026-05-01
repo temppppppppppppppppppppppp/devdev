@@ -1,0 +1,105 @@
+work_identity:
+  work_id: pharma_cdmo_industry_heir
+  family: blockguide
+  work_type: pharma_cdmo_industry_tycoon
+  one_line_truth: IMF 직후 부도난 제약공장을 산 회귀자가 신약 천재가 아니라 GMP, 생산기록, 병원 납품권, 콜드체인, 의료 데이터, 원료소재, 공급망 금융을 장악해 모든 산업의 생산 표준이 된다.
+  protagonist_weapon:
+    - 미래 제약/바이오 공급망 사고와 산업 성장 경로에 대한 기억
+    - 품질문서, 인증, 납품, 온도기록, 청구 데이터의 실제 통제력을 보는 눈
+    - 선악보다 이득과 효율을 먼저 계산하는 자기중심성
+  business_axes:
+    - 제약 CDMO
+    - GMP/품질보증
+    - 병원 납품/청구 데이터
+    - 콜드체인
+    - 원료의약품/정밀화학
+    - 소비재 안전표준
+    - 공급망 금융
+  control_axes:
+    - 품질문서 접근권
+    - 감사 대응권
+    - 병원 구매실 직통선
+    - 글로벌 CDMO audit ticket
+    - 온도기록 데이터
+    - 생산권 담보
+    - 국가 표준 조건표
+  forbidden_flattenings:
+    - 신약 천재가 단번에 치료제를 개발한다
+    - 사람을 살렸으니 모두 감동한다
+    - 공장 인수만 하고 감사/납품/계약 사건이 없는 얇은 block
+    - GMP나 콜드체인을 용어 장식으로만 사용한다
+    - 착해서 손해를 감수한다
+    - 바이오 안에서만 머물고 전 산업 표준으로 확장하지 않는다
+  tracking_slots:
+    - visible pressure -> execution -> public proof -> private receipt -> observer shift -> next gate의 기본 loop
+    - 모든 TR block은 2~6화 episode-bundle이며 최소 2개 사건축 또는 전환을 포함한다
+    - reward는 현금보다 인증권, 문서권, 납품권, 계약권, 데이터권, 공급망 금융권으로 환전된다
+    - 바이오 CDMO proof가 콜드체인, 병원 데이터, 원료소재, 소비재 안전표준, 금융 조건표로 확장된다
+  mandatory_scene_engines:
+    - 공장 인수 압력이 품질문서 확보, 실사 대응, 감사 proof, private receipt로 이어지는 장면
+    - 병원 긴급 납품 위기가 장기 납품권, 구매실 직통선, 데이터 접근권으로 환전되는 장면
+    - 콜드체인 또는 배치기록 사고가 온도기록/편차보고/책임선 재배치로 해결되는 장면
+  protagonist_evaluation:
+    admiration_axes:
+      - 남들이 폐공장으로 보는 것을 인증권과 생산권으로 본다
+      - 환자 미담보다 납품권, 데이터, 장기계약을 먼저 계산한다
+      - 식약처, 병원, 글로벌 제약사를 각각 다른 receipt gate로 다룬다
+      - 미래 지식을 신약 정답지가 아니라 공급망 우선순위와 책임선 설계에 쓴다
+      - 돈을 생산 표준과 산업 통제권으로 바꾼다
+    forbidden_praise_patterns:
+      - 착해서 공장을 살렸다
+      - 신약 천재라서 모두 이겼다
+      - 회귀빨로 찍었더니 맞았다
+      - 환자를 살려 모두 감동했다
+    observer_tiers:
+      - 품질보증팀장 윤세린
+      - 식약처 감사관 오민석
+      - 대학병원 구매실장 박도현
+      - 대기업 제약 전무 한재국
+      - 글로벌 제약사 외주생산 담당 리처드 케인
+    evaluation_thresholds:
+      - Block 001 안에 공장 인수 압력과 식약처 실사 조기 통보가 동시에 열려야 한다
+      - Block 002 안에 품질문서 확보와 책임선 재배치 실행이 visible해야 한다
+      - Block 003 안에 첫 GMP proof 또는 병원 납품 proof가 visible해야 한다
+      - Block 004~005 안에 private receipt와 글로벌 audit ticket이 열려야 한다
+mandatory_rules:
+  - 모든 TR block은 2~6화 분량 episode-bundle로 읽고, 같은 block 안에 최소 2개 사건축 또는 전환을 넣는다.
+  - 주인공 행동은 immediate gain과 cost가 보여야 한다.
+  - 대가 없는 선의, 환자 미담, 공짜 구원은 금지한다.
+  - reward는 돈보다 인증권, 문서권, 납품권, 계약권, 데이터권, 공급망 금융권으로 남겨야 한다.
+  - public proof는 private receipt로 잠근다.
+  - 각 block은 same-block cider receipt가 있어야 한다.
+slot_catalog:
+  pressure_slots:
+    - 부도 공장
+    - 식약처 실사
+    - 병원 긴급 납품
+    - 불량 배치
+    - 콜드체인 사고
+    - 보험 심사 보류
+  execution_slots:
+    - 공장 인수
+    - 품질문서 확보
+    - 생산 책임선 재배치
+    - 긴급 납품
+    - 장기계약 전환
+    - 표준 양식 배포
+  proof_slots:
+    - 감사 통과
+    - 병원 납품 성공
+    - 폐기율 감소
+    - 보험코드 반영
+    - 글로벌 audit 통과
+  receipt_slots:
+    - 구매실 직통선
+    - 품질책임자 임명
+    - LOI
+    - 장기 납품계약
+    - 데이터 접근권
+    - 공급망 금융 조건표
+custom_rules:
+  - opening TR 2~6 안에 공장 인수, 감사 proof, 병원 납품 receipt, 글로벌 audit ticket이 모두 보여야 한다.
+  - Block 001은 회귀와 공장 입찰뿐 아니라 식약처 실사 조기 통보까지 열어야 한다.
+  - 회귀 지식은 정답지가 아니라 우선순위 선택권으로 쓴다.
+  - 착하지 않아도 된다. 악하지 않아도 된다. 반드시 효율적이어야 한다.
+  - 바이오 CDMO는 첫 독점 엔진이고, 최종 이미지는 국가 산업 표준 운영자다.

@@ -1,0 +1,15 @@
+{
+  "work_id": "power_grid_heir",
+  "last_audit_block": "Block 070",
+  "audit_pass": true,
+  "audit_date": "2026-05-01",
+  "issues": [],
+  "source_tr_handoff_gate": "PASS",
+  "source_tr_handoff_gate_path": "treatments/audit_reports/power_grid_heir_source_tr_handoff_gate.md",
+  "adversarial_reward_3pass": "PASS",
+  "adversarial_reward_3pass_path": "docs/2026-05-01/power_grid_heir_adversarial_reward_3pass_audit.md",
+  "bi_5pass": "PASS",
+  "bi_path": "bible/_waiting_room/2026-05-01_power_grid_heir/0_bi_power_grid_heir.json",
+  "bi_5pass_path": "bible/audit_reports/power_grid_heir_bi_5pass.md",
+  "notes": "Block 001-070 self-audit PASS through the 61-70 gate. Source TR handoff gate PASS, adversarial reward 3-pass PASS, and BI 5-pass PASS are recorded. Waiting-room BI is generated; root shelf promotion has not been performed."
+}

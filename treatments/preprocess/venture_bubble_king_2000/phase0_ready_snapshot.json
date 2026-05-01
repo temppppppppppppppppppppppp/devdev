@@ -1,0 +1,11 @@
+{
+  "identity_locked": true,
+  "profile_locked": true,
+  "material_sufficient": true,
+  "manual_audit_pass": true,
+  "remaining_risks": [
+    "실제 2000년 IT 산업 디테일은 본문 생산 중 공식/1차 자료로 세부 보강 필요",
+    "버블 붕괴 장면이 투자 수익률로만 보이지 않도록 매 block 권리 receipt를 강제",
+    "주인공의 효율 중심 판단이 냉혈 포즈로만 보이지 않도록 immediate benefit과 cost를 매 block 명시"
+  ]
+}

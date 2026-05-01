@@ -1,0 +1,65 @@
+{
+  "events": [
+    "2000년 1월 상장 직전 닷컴 IR에서 주인공이 지분투자 대신 IDC 장기 임대권과 PG 테스트 계약을 담보로 요구한다.",
+    "버블 균열이 시작되며 회사의 평가액보다 서버실, 도메인, 트래픽 로그, 결제 모듈이 더 중요해진다.",
+    "PC방 회선과 게임 유통 계약이 결제 모듈 proof로 연결된다.",
+    "모바일 콘텐츠 단축번호와 과금 계약이 통신사 내부 gate로 열린다.",
+    "검색/커뮤니티 트래픽, 오픈마켓 정산, 광고 inventory가 하나의 플랫폼 holding structure로 묶인다."
+  ],
+  "npc_candidates": [
+    "서도윤: 회귀자, 태성텔레콤 방계, 벤처 심사역",
+    "한경수: 태성텔레콤 회장, 제한 권한 부여자",
+    "민지아: 법무/계약 helper, 옵션과 담보권 고정",
+    "오준혁: IDC 운영팀장, 서버실 proof carrier",
+    "노은채: PC방 프랜차이즈 운영자, 결제/게임 유통 proof carrier",
+    "장태오: VC 대표, 버블 hype와 지분평가 적대자",
+    "백승민: 태성텔레콤 전략실장, 내부 회선/모바일 권리 적대자"
+  ],
+  "crisis_candidates": [
+    "상장 연기와 현금 고갈",
+    "IDC 임대료 연체와 서버 반출 통지",
+    "결제 모듈 테스트 계약 회수",
+    "PC방 회선 해지와 게임 유통권 분리",
+    "통신사 단축번호 과금권 내부 회수",
+    "검색/커뮤니티 트래픽 무상 인수 시도",
+    "광고 inventory를 장부 밖 홍보비로 뭉개는 전략실 압박"
+  ],
+  "terms": [
+    "IDC 장기 임대권",
+    "서버 랙",
+    "도메인 포트폴리오",
+    "트래픽 로그",
+    "PG 테스트 계약",
+    "소액결제",
+    "PC방 회선",
+    "게임 유통권",
+    "모바일 콘텐츠 단축번호",
+    "검색 광고 inventory",
+    "옵션 계약",
+    "담보권"
+  ],
+  "scene_details": [
+    "IR 회의장에서 지분평가표가 아니라 서버 임대권 별첨을 꺼내게 만드는 장면",
+    "IDC 야간 서버실에서 유령회원과 실제 회선 트래픽을 분리하는 장면",
+    "PC방 야간 매출표와 결제 실패 로그가 같은 proof로 묶이는 장면",
+    "통신사 전략실 회의에서 단축번호 과금권이 모바일 콘텐츠 gate로 바뀌는 장면",
+    "버블 붕괴 후 줄 선 닷컴 회사들이 현금 대신 권리를 내놓는 장면"
+  ],
+  "notes": "Stage0 material is enough for Phase0. The work must keep fast pacing: each TR block is a 2~6 episode bundle with one main event and at least one separate side event that opens a later gate.",
+  "opening_bundle_contract": {
+    "bundle_window": "TR 2~6",
+    "macro_battlefield": "상장 직전 닷컴 IR과 IDC/PG 권리 담보 battlefield",
+    "macro_battlefield_map": [
+      "B2 투자금 대신 IDC 임대권과 PG 테스트 계약을 담보로 요구",
+      "B3 상장 일정 균열 속에서 권리 담보의 우선순위를 증명",
+      "B4 서버실과 도메인 escrow를 실제 접근권으로 확보",
+      "B5 PC방 결제 proof와 모바일 과금 gate를 동시에 연다",
+      "B6 버블 붕괴 첫 매물이 나오며 검색/커뮤니티 gate가 열린다"
+    ],
+    "bundle_goal": "도윤을 버블 투자자가 아니라 망할 회사에서 살아남을 권리만 고르는 자기중심적 플랫폼 설계자로 재평가시킨다.",
+    "first_signboard_block": 2,
+    "representative_reevaluation_block": 3,
+    "next_battlefield_ticket_block": 5,
+    "timing_reconciliation_note": "1 block은 2~6화 episode-bundle이므로 opening window 안에서 IDC, PG, PC방, 모바일 gate가 모두 보이고 각 block은 별도 부 사건을 함께 품는다."
+  }
+}

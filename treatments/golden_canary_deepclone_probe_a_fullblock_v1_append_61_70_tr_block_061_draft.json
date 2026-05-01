@@ -1,0 +1,132 @@
+{
+  "_schema": "blockguide.treatment.append.v1",
+  "_work_id": "golden_canary_deepclone_probe_a_fullblock_v1_append_61_70",
+  "_family": "blockguide",
+  "_source_baseline_work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
+  "_source_baseline_tr": "treatments/golden_canary_deepclone_probe_a_fullblock_v1_tr_block_070_draft.json",
+  "_source_baseline_bi": "bible/0_bi_golden_canary_deepclone_probe_a_fullblock_v1.json",
+  "_phase0_ref": "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
+  "_reserve_ref": "docs/2026-04-19/golden-canary-deepclone-probe-a-fullblock-rollout-reserve-61-70.md",
+  "_baseline_freeze_rule": "Block 1-60 is sealed. This draft is append-only and must not rewrite the frozen ladder.",
+  "_total_blocks_planned": 10,
+  "_current_saved_blocks": 1,
+  "_block_numbering": "append-only Block 61-70",
+  "_draft_status": "block_061_draft_3pass_pass_bi_seed_created",
+  "_production_note": "User pacing rule applied: one block is a 2-6 episode bundle, and each block must carry at least one secondary incident plus same-block reader reward. Han Si-u remains gain-first and efficiency-first.",
+  "blocks": [
+    {
+      "block_id": "Block 61",
+      "title": "금고 격리일",
+      "content": {
+        "context": "2025년 1월 첫째 주. `Block 60`에서 골든 루트를 닫은 지 72시간도 지나지 않았는데, 한시우의 패밀리오피스에는 축하 인사보다 접근 요청이 먼저 쌓인다. 국부펀드, 사모펀드, 가문 친척, 정치권 인맥, 대형 은행 PB들이 모두 '평화를 함께 관리하자'는 말로 135조의 문을 두드린다. 한시우에게 이 창은 후일담이 아니라, 평화가 다시 거래 대상이 되기 전에 접근권 자체를 격리해야 하는 첫 post-victory governance window다.",
+        "event_villain": "표면 적대자는 축하 방문과 투자 제안이지만, 실제 적대 사건은 '한 번만 만나 달라'는 요청이 운용권의 우회로가 되는 것이다. 동시에 보조 사건으로, 한태준 쪽 친척이 가족 신탁 배당을 담보로 비상 자금 선지급을 요구하고, 한 해외 국부펀드 라인은 비공식 AI 공동펀드 미팅을 잡으려 한다. 가족 요청과 국가급 접근이 같은 날 들어오며, 한시우가 하나를 허용하면 다른 모든 문도 열리는 구조가 된다.",
+        "solution": "한시우는 돈을 더 벌 기회를 고르는 대신, 30일 접근 격리령을 먼저 내린다. 모든 요청은 미팅이 아니라 quarantine ledger에 등록하고, 가족 쪽 선지급은 신탁 규칙 밖이라 거절한다. 국부펀드 라인에는 비공식 미팅 대신 KYC, 이해상충 신고, 공개 RFP 조건을 요구한다. 그는 마이클에게 '내 시간과 침묵도 자산이다. 공짜로 만나 주면 그 순간 가격이 생긴다'고 못 박는다. 주 사건은 접근 격리령 발동, 보조 사건은 가족 선지급 차단과 국부펀드 비공식 라인 격하로 동시에 닫힌다.",
+        "reward": "한시우는 `post-golden quarantine protocol`, `solicitation ledger`, `right-to-ignore authority`를 확보한다. 숫자는 늘지 않지만, 더 큰 보상은 누구를 만나지 않을 권리와 접근을 가격표 밖으로 빼는 권한이다. 마이클은 모든 초청장을 ledger에 꽂아 넣으며 '이제 네가 산 건 돈이 아니라 거절권이네'라고 인정한다."
+      },
+      "stakes": "여기서 한 번이라도 사적인 만남을 허용하면, Block 59-60의 방화벽은 평화의 장식이 되고 패밀리오피스는 다시 청탁 시장으로 바뀐다.",
+      "power_shift": {
+        "protagonist": "135조 보유자에서 접근권과 거절권을 가격화하지 않는 금고 관리자",
+        "antagonist": "축하와 협력 명분으로 우회 접근하려던 외부 라인은 모두 ledger 밖에서는 아무것도 얻지 못하는 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "마이클 천",
+          "before": "최종 exit를 함께 본 평생 파트너",
+          "after": "한시우의 거절권을 운용 규칙으로 실행하는 gatekeeper"
+        },
+        {
+          "target": "한태준 쪽 친척 라인",
+          "before": "가족 배당을 현금 선지급으로 바꾸려는 청탁선",
+          "after": "신탁 규칙 밖에서는 가족 이름도 결재권이 되지 않는다는 첫 사례"
+        },
+        {
+          "target": "해외 국부펀드 라인",
+          "before": "비공식 AI 공동펀드 미팅을 요구하는 국가급 접근자",
+          "after": "비공식 접촉권을 잃고 공개 RFP와 이해상충 신고선으로 내려앉은 후보"
+        }
+      ],
+      "foreshadow": [
+        "quarantine ledger의 접근자 등급표는 Block 62 successor screening의 첫 기준표가 된다.",
+        "국부펀드 라인의 공개 RFP 조건은 Block 63 sovereign line의 합법 전장으로 이어진다.",
+        "가족 선지급 차단은 Block 67 family constitution rewrite의 선례가 된다."
+      ],
+      "callback": [
+        "Block 59의 governance firewall authority가 실제 접근 차단 명령으로 작동한다.",
+        "Block 60의 peaceful witness ending은 감정 엔딩이 아니라 거래 대상이 되지 않는 평화라는 조건으로 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "cold_satisfaction",
+        "intensity": 6
+      },
+      "tension_level": 5,
+      "pov_character": "한시우",
+      "location": {
+        "place": "패밀리오피스 임시 보안회의실",
+        "type": "실내",
+        "macro_battlefield": "post-golden access quarantine"
+      },
+      "time_span": {
+        "duration": "3일",
+        "in_story_time": "2025년 1월 첫째 주"
+      },
+      "genre_ext": {
+        "type": "investment_family_office_control",
+        "capital_before": "135조",
+        "capital_after": "135조 + 접근 격리권",
+        "capital_delta": "0",
+        "profit_loss": "0",
+        "method": "모든 접근 요청을 미팅이 아니라 격리 ledger로 전환하고, 가족과 국가급 접근 모두 같은 규칙에 묶는다.",
+        "investment_type": "governance / access control",
+        "deal_type": "access quarantine protocol",
+        "leverage_used": [
+          "Block 59 governance firewall",
+          "Block 60 family trust seal",
+          "마이클 천 execution gatekeeper line",
+          "135조 보유자의 협상 무응답권"
+        ],
+        "opponent": {
+          "name": "축하 방문으로 포장된 접근 청탁선",
+          "type": "접근권 우회자",
+          "weakness_exploited": "그들은 한시우가 평화를 지키려면 좋은 관계를 유지해야 한다고 착각한다."
+        },
+        "historical_event": {
+          "name": "post-2024 crypto and AI capital crowding",
+          "year": 2025,
+          "month": "1월",
+          "how_exploited": "시장 열기가 아니라 접근 과열을 먼저 식힌다."
+        },
+        "time_pressure": "새해 첫 공식 일정이 잡히기 전 72시간 안에 모든 접근 요청의 처리 규칙을 잠가야 한다.",
+        "knowledge_used": "돈을 번 뒤 무너지는 것은 투자 실패보다 접근권 유출이라는 전생의 가족 붕괴 감각",
+        "risk_level": "중간. 수익 기회는 버리지만 운용권 유출을 막는다.",
+        "business_sector": "family office governance",
+        "section_rotation": "post-victory governance",
+        "success_pattern": "새 수익이 아니라 거절권, 격리 ledger, 공개 절차를 같은 블록 안에서 획득한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_receipt",
+          "receipt_line": "post-golden quarantine protocol과 right-to-ignore authority를 확보한다.",
+          "pain_only_exit": false
+        },
+        "episode_bundle_density": {
+          "episode_window": "2-4 episodes",
+          "primary_incident": "135조 이후 외부 접근 요청 전면 격리",
+          "secondary_incident": "가족 선지급 청탁 차단과 국부펀드 비공식 AI 미팅 격하",
+          "reader_reward": "한시우가 더 큰 돈이 아니라 만나지 않을 권리를 산다.",
+          "next_block_ticket": "successor screening 기준표"
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "knowledge_used": "전생에서 가문이 자산보다 접근권과 지배구조 누수로 무너졌다는 기억",
+        "slip_up": "미래 사건 예언 없음"
+      },
+      "block_no": 61,
+      "foreshadow_targets": [
+        62,
+        63,
+        67
+      ]
+    }
+  ]
+}

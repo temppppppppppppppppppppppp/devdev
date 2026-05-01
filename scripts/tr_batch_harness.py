@@ -548,6 +548,21 @@ def relation_after_signature(relation: dict[str, Any]) -> str:
     )
 
 
+def relation_signatures_compatible(previous_after: str, current_before: str) -> bool:
+    if previous_after == current_before:
+        return True
+    if previous_after in current_before or current_before in previous_after:
+        return True
+    prev_tokens = set(TOKEN_RE.findall(previous_after.lower()))
+    curr_tokens = set(TOKEN_RE.findall(current_before.lower()))
+    if not prev_tokens or not curr_tokens:
+        return False
+    overlap = prev_tokens & curr_tokens
+    if len(overlap) >= 2:
+        return True
+    return min(len(prev_tokens), len(curr_tokens)) <= 2 and len(overlap) >= 1
+
+
 def is_allowed_meta_path(path: str) -> bool:
     for prefix in ALLOWED_META_PATH_PREFIXES:
         if path == prefix or path.startswith(f"{prefix}[") or path.startswith(f"{prefix}."):
@@ -627,7 +642,7 @@ def compute_npc_continuity_mismatches(blocks: list[dict[str, Any]]) -> list[dict
             before_sig = relation_before_signature(relation)
             after_sig = relation_after_signature(relation)
             prev_sig = state.get(target, "")
-            if prev_sig and before_sig and before_sig != prev_sig:
+            if prev_sig and before_sig and not relation_signatures_compatible(prev_sig, before_sig):
                 issues.append(
                     {
                         "block_no": block_no,
@@ -682,6 +697,25 @@ def count_unresolved_foreshadows(blocks: list[dict[str, Any]]) -> int:
     unresolved = 0
     for foreshadow_source in blocks:
         plant_no = parse_block_no(foreshadow_source.get("block_id")) or 0
+        explicit_targets = extract_numeric_refs(foreshadow_source.get("foreshadow_targets"))
+        if explicit_targets:
+            combined_seed = " ".join(as_text(item) for item in ensure_list(foreshadow_source.get("foreshadow")))
+            source_tokens = set(TOKEN_RE.findall(combined_seed.lower()))
+            for target in explicit_targets:
+                if target < 1 or target > len(blocks):
+                    unresolved += 1
+                    continue
+                callbacks = ensure_list(blocks[target - 1].get("callback"))
+                callback_sources = extract_callback_sources(blocks[target - 1])
+                resolved = plant_no in callback_sources
+                for callback in callbacks:
+                    callback_tokens = set(TOKEN_RE.findall(as_text(callback).lower()))
+                    if len(source_tokens & callback_tokens) >= 2:
+                        resolved = True
+                        break
+                if not resolved:
+                    unresolved += 1
+            continue
         for foreshadow in ensure_list(foreshadow_source.get("foreshadow")):
             text = as_text(foreshadow)
             if not text:
@@ -791,7 +825,12 @@ def analyze_opening_pacing(blocks: list[dict[str, Any]]) -> dict[str, Any]:
     result["next_battlefield_ticket_block"] = first_signal_blocks["next_battlefield_ticket"]
 
     signal_blocks = [block_no for block_no in first_signal_blocks.values() if block_no is not None]
-    first_reader_signal_block = min(signal_blocks) if signal_blocks else None
+    window_signal_blocks = [
+        block_no
+        for block_no in signal_blocks
+        if OPENING_READER_EARNING_SIGNAL_START <= block_no <= OPENING_READER_EARNING_SIGNAL_END
+    ]
+    first_reader_signal_block = min(window_signal_blocks or signal_blocks) if signal_blocks else None
     result["first_reader_earning_signal_block"] = first_reader_signal_block
 
     window_entries = [
