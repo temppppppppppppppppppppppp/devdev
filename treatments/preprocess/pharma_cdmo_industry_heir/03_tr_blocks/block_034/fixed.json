@@ -1,0 +1,178 @@
+{
+  "block_id": "Block 34",
+  "title": "일본 상사의 전화",
+  "content": {
+    "context": "중국 중간체 우선공급권이 체결되자 일본 원료상은 태오가 단순 구매자가 아니라 대체 루트를 만들고 있다는 걸 눈치챈다. 금요일 오후, 일본 상사 담당자는 부평 2공장으로 전화를 걸어 다음 lot의 가격을 다시 올리고, 품질성적서 원본 제공은 본사 승인 뒤로 미루겠다고 통보한다.",
+    "event_villain": "일본 원료상은 '성적서가 없으면 규제 대응도 없다'며 원료 공급을 인질로 잡고, 국내 화학 대기업은 그 빈틈을 노려 대체 합성 라인 검증을 자신들 중앙연구소 명의로만 진행하자고 제안한다. 제안서 마지막 줄에는 생산권과 기술이전 자료 열람권이 대기업 쪽으로 넘어가는 조항이 숨어 있다.",
+    "solution": "태오는 전화를 길게 끌지 않는다. 특허 회피 지도와 불순물 프로파일을 맞물려, 부평 2공장 파일럿 슬롯에서 소량 대체 합성 검증을 바로 걸겠다고 선언한다. 첫 사건 beat는 일본 상사가 품질성적서를 늦추는 순간, 태오가 lot별 사본권과 중국 중간체 impurity data를 비교표로 만들어 QA 책임자에게 검증 개시 서명을 받는 장면이다. 둘째 beat는 국내 화학 대기업의 공동개발 제안서에서 생산권 이전 문구를 붉은 펜으로 지우고, 검증은 대기업 설비를 빌리되 결과 보고서와 기술이전 폴더는 부평 2공장 명의로 남기게 하는 장면이다.",
+    "reward": "태오는 대체 합성 라인 1회 검증권, dual-source 원료 조항, 품질성적서 비교 프로토콜, 기술이전 폴더 열람권, 부평 2공장 명의의 파일럿 검증 보고서 작성권을 얻는다. 일본 원료상은 성적서 지연을 협박으로 쓰기 어려워지고, 국내 화학 대기업은 설비 사용료는 받지만 생산권을 가져가지 못한다."
+  },
+  "stakes": "일본 원료상이 품질성적서와 가격을 동시에 쥐면 중국 중간체 우선공급권은 아직 검증되지 않은 재료 묶음으로 남는다.",
+  "power_shift": {
+    "protagonist": "원료 공급망을 묶는 사람에서 대체 합성 라인을 증명해 원료 공급자의 독점권을 깨는 사람으로 올라선다.",
+    "antagonist": "일본 원료상은 성적서 지연 협박을 잃고, 국내 화학 대기업은 검증 설비를 빌려주면서도 생산권 장악에는 실패한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "일본 원료상 담당자",
+      "before": "가격과 품질성적서 제공 시점을 통제하는 게이트키퍼",
+      "after": "태오의 dual-source 조항 요구를 계산해야 하는 협상 상대"
+    },
+    {
+      "target": "국내 화학 대기업 사업개발팀",
+      "before": "대체 합성 라인을 미끼로 생산권과 기술자료를 가져가려는 잠재 포식자",
+      "after": "설비 사용료는 받되 결과 보고서 권리는 넘겨받지 못한 제한 파트너"
+    },
+    {
+      "target": "부평 2공장 QA 책임자",
+      "before": "원본 성적서가 늦으면 라인을 멈출 수밖에 없다고 보는 관리자",
+      "after": "비교 프로토콜과 파일럿 검증 보고서로 대체 라인의 신뢰도를 판단하는 공동 책임자"
+    }
+  ],
+  "foreshadow": [
+    "품질성적서 비교 프로토콜은 공정 필터와 배지 검증 때 lot별 성능 비교 방식으로 재사용된다.",
+    "dual-source 원료 조항은 후반 일본 원료상과 국내 화학 대기업을 동시에 견제하는 공급권 기본 조항이 된다.",
+    "기술이전 폴더 열람권은 이후 생산권 협상에서 태오가 문서 주도권을 잃지 않는 방패가 된다."
+  ],
+  "callback": [
+    "A급 중간체 우선공급권과 불순물 프로파일이 대체 합성 라인 비교 데이터로 소비된다.",
+    "파일럿 배치 2회 우선 슬롯이 이번 대체 합성 검증권으로 실제 사용된다.",
+    "lot별 품질성적서 사본권은 일본 원료상이 원본을 늦추는 협박을 무력화하는 근거가 된다."
+  ],
+  "emotional_beat": {
+    "protagonist_feeling": "태오는 상대의 전화를 끊고도 손이 떨리지 않는 자신을 확인한다. 원료상 한 곳의 허락이 아니라, 검증 가능한 두 번째 길을 쥐었기 때문이다.",
+    "reader_catharsis": "상대가 성적서를 늦추며 가격을 올리려는 순간, 주인공이 비교 데이터와 파일럿 검증권으로 '그럼 다른 길도 증명하겠다'고 되받는 사이다."
+  },
+  "tension_level": 9,
+  "pov_character": "강태오",
+  "location": {
+    "place": "부평 2공장 QA실, 일본 상사 국제전화 회의, 국내 화학 대기업 파일럿 설비 협상실",
+    "type": "quality_dual_source_negotiation",
+    "macro_battlefield": "일본 원료상 독점과 대체 합성 라인 검증"
+  },
+  "time_span": {
+    "duration": "6일",
+    "in_story_time": "2001년 4월 말"
+  },
+  "genre_ext": {
+    "capital_before": "7천 1백만 + 원료 한 드럼 우선 배정권 + 90일 지역 물류창고 전용 슬롯 + lot별 품질성적서 사본권 + 첫 출고 지시권 + 재고담보 사전검토권 + 부평 2공장 생산 슬롯 보호 메모 + 비침해 생산계획 검토권 + 파일럿 배치 2회 우선 슬롯 + 공정변경 QA 문서 사본권 + 법무 사전검토 메모 접근권 + A급 중간체 6개월 우선공급권 + 톤당 가격밴드 계약 + 불순물 프로파일 선제 제출권 + 2회 분할입고권 + 원료재고 담보 term sheet",
+    "capital_after": "5천 9백만 + 원료 한 드럼 우선 배정권 + 90일 지역 물류창고 전용 슬롯 + lot별 품질성적서 사본권 + 첫 출고 지시권 + 재고담보 사전검토권 + 부평 2공장 생산 슬롯 보호 메모 + 비침해 생산계획 검토권 + 파일럿 배치 1회 잔여 슬롯 + 공정변경 QA 문서 사본권 + 법무 사전검토 메모 접근권 + A급 중간체 6개월 우선공급권 + 톤당 가격밴드 계약 + 불순물 프로파일 선제 제출권 + 2회 분할입고권 + 원료재고 담보 term sheet + 대체 합성 라인 1회 검증권 + dual-source 원료 조항 + 품질성적서 비교 프로토콜 + 기술이전 폴더 열람권 + 부평 2공장 명의 파일럿 검증 보고서 작성권",
+    "capital_delta": "-1천 2백만 현금, -파일럿 배치 1회 소진, +대체 합성 검증권, +dual-source 조항, +품질 비교 프로토콜, +기술이전 폴더 열람권",
+    "profit_loss": "설비 사용료와 검증비로 현금은 줄지만, 일본 원료상 단독 공급가 인상분을 견제할 두 번째 원료 라인을 확보한다.",
+    "method": "품질성적서 사본, 불순물 프로파일, 파일럿 슬롯을 묶어 대체 합성 라인을 검증하고 dual-source 계약 조항으로 고정한다.",
+    "investment_type": "파일럿 설비 사용료 + QA 비교시험 비용",
+    "deal_type": "대체 합성 검증권 및 dual-source 원료 조항",
+    "leverage_used": "중간체 우선공급권과 불순물 프로파일, 파일럿 배치 슬롯, 품질성적서 사본권",
+    "opponent": {
+      "name": "일본 원료상 + 국내 화학 대기업",
+      "type": "원료의약품 대체 합성 및 생산권 복합 압박 세력",
+      "weakness_exploited": "원료의약품 대체 합성 및 생산권의 병목을 문서·권리·책임선으로 잠그는 강태오의 방식을 과소평가한다."
+    },
+    "time_pressure": "일본 원료상 다음 lot 가격 인상 확정 전 6일",
+    "knowledge_used": "dual-source 공급계약, 품질성적서 비교, impurity profile, 파일럿 합성 검증, 기술이전 문서권",
+    "risk_level": "상",
+    "business_sector": "원료의약품 대체 합성 및 생산권",
+    "section_rotation": "원료의약품과 정밀화학",
+    "success_pattern": "독점 공급자의 협박을 데이터와 검증권으로 두 번째 공급 경로로 바꾼다.",
+    "opening_progression": {
+      "public_signboard_event": "일본 원료상이 국제전화로 다음 lot 가격 인상과 품질성적서 원본 지연을 통보한다.",
+      "representative_reevaluation": "QA 책임자는 태오를 공급가 협상자가 아니라 대체 합성 라인을 검증 가능한 문서로 만드는 사람으로 다시 본다.",
+      "next_battlefield_ticket": "품질성적서 비교 프로토콜이 필터/배지 공급 부족과 공정 검증 전장으로 이어진다."
+    },
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "dual_source_validation_right_receipt",
+      "receipt_line": "태오는 가격 인상 전화를 dual-source 원료 조항과 부평 2공장 명의 파일럿 검증 보고서 작성권으로 되받아친다.",
+      "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "독점 공급자의 협박을 데이터와 검증권으로 두 번째 공급 경로로 바꾼다.",
+      "recognition_signal": "일본 원료상 담당자의 시선 변화: 태오의 dual-source 조항 요구를 계산해야 하는 협상 상대",
+      "reward_signal": "태오는 가격 인상 전화를 dual-source 원료 조항과 부평 2공장 명의 파일럿 검증 보고서 작성권으로 되받아친다.",
+      "growth_signal": "원료 공급망을 묶는 사람에서 대체 합성 라인을 증명해 원료 공급자의 독점권을 깨는 사람으로 올라선다.",
+      "expectation_signal": "품질성적서 비교 프로토콜이 필터/배지 공급 부족과 공정 검증 전장으로 이어진다.",
+      "reader_feel": "독자는 「일본 상사의 전화」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 태오는 가격 인상 전화를 dual-source 원료 조항과 부평 2공장 명의 파일럿 검증 보고서 작성권으로 되받아친다. 성장 장면: 원료 공급망을 묶는 사람에서 대체 합성 라인을 증명해 원료 공급자의 독점권을 깨는 사람으로 올라선다. 다음 기대감: 품질성적서 비교 프로토콜이 필터/배지 공급 부족과 공정 검증 전장으로 이어진다.",
+      "mature_success_signal": "강태오는 일본 상사의 전화의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "독점 공급자의 협박을 데이터와 검증권으로 두 번째 공급 경로로 바꾼다.",
+        "recognition": "일본 원료상 담당자의 시선 변화: 태오의 dual-source 조항 요구를 계산해야 하는 협상 상대",
+        "reward": "태오는 가격 인상 전화를 dual-source 원료 조항과 부평 2공장 명의 파일럿 검증 보고서 작성권으로 되받아친다.",
+        "growth": "원료 공급망을 묶는 사람에서 대체 합성 라인을 증명해 원료 공급자의 독점권을 깨는 사람으로 올라선다.",
+        "expectation": "품질성적서 비교 프로토콜이 필터/배지 공급 부족과 공정 검증 전장으로 이어진다.",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 일본 원료상 담당자의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 품질성적서 비교 프로토콜이 필터/배지 공급 부족과 공정 검증 전장으로 이어진다."
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "중국 중간체 우선공급권이 체결되자 일본 원료상은 태오가 단순 구매자가 아니라 대체 루트를 만들고 있다는 걸 눈치챈다. 금요일 오후, 일본 상사 담당자는 부평 2공장으로 전화를 걸어 다음 lot의 가격을 다시 올리고, 품질성적서 원본 제공은 본사 승인 뒤로 미루겠다고 통보한다.",
+      "proof_action": "태오는 전화를 길게 끌지 않는다. 특허 회피 지도와 불순물 프로파일을 맞물려, 부평 2공장 파일럿 슬롯에서 소량 대체 합성 검증을 바로 걸겠다고 선언한다.",
+      "proof_axis": "dual-source 공급계약, 품질성적서 비교, impurity profile, 파일럿 합성 검증, 기술이전 문서권",
+      "recognition_or_resistance_signal": "일본 원료상 담당자 -> 태오의 dual-source 조항 요구를 계산해야 하는 협상 상대",
+      "receipt_asset": "태오는 가격 인상 전화를 dual-source 원료 조항과 부평 2공장 명의 파일럿 검증 보고서 작성권으로 되받아친다.",
+      "reward_asset_classes": [
+        "quality_responsibility",
+        "raw_materials"
+      ],
+      "next_regulated_gate": "품질성적서 비교 프로토콜이 필터/배지 공급 부족과 공정 검증 전장으로 이어진다.",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 일본 원료상 담당자의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 품질성적서 비교 프로토콜이 필터/배지 공급 부족과 공정 검증 전장으로 이어진다.",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "business_memory",
+    "timeline_knowledge": "태오는 전생에서 일본 원료상이 성적서와 원료 공급을 묶어 한국 제네릭 업체의 출시 일정을 늦췄던 패턴을 기억한다.",
+    "butterfly_effect": "성적서 지연을 대체 합성 검증 트리거로 바꾸면서 일본 원료상의 단일 지배력이 빠르게 약해진다.",
+    "death_flag": false,
+    "regression_hint": "일본 상사의 목소리가 전생의 출시 지연 회의와 겹쳐 들리는 짧은 감각으로만 처리한다.",
+    "future_prep": "품질 비교 프로토콜과 기술이전 폴더 열람권이 필터/배지 검증 및 후속 소재 생산권 협상에 쓰인다."
+  },
+  "block_no": 34,
+  "foreshadow_targets": [
+    {
+      "target_block": 35,
+      "target_event": "필터가 없으면 약도 없다"
+    },
+    {
+      "target_block": 40,
+      "target_event": "소재 공급권 결산"
+    }
+  ],
+  "callback_sources": [
+    {
+      "source_block": 33,
+      "source_event": "중간체의 계절"
+    },
+    {
+      "source_block": 32,
+      "source_event": "특허 회피 지도"
+    },
+    {
+      "source_block": 31,
+      "source_event": "원료 한 드럼"
+    }
+  ]
+}

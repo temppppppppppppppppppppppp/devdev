@@ -1,6 +1,23 @@
 {
   "_schema": "tr.v1",
   "_work_id": "power_grid_heir",
+  "_authority_chain": [
+    "treatments/preprocess/power_grid_heir/source_manifest.json",
+    "treatments/preprocess/power_grid_heir/material_bundle_summary.json",
+    "treatments/preprocess/power_grid_heir/profile_lock.json",
+    "treatments/preprocess/power_grid_heir/phase0_ready_snapshot.json",
+    "treatments/phase0/power_grid_heir_phase0_design.json",
+    "work_guards/power_grid_heir.yaml",
+    "treatments/audit_reports/power_grid_heir_source_tr_handoff_gate.md",
+    "docs/2026-05-01/power_grid_heir_adversarial_reward_3pass_audit.md",
+    "material_ssot/00_governance/donor-review-and-adoption-contract-v1.md",
+    "bible/audit_reports/power_grid_heir_root_bi_5pass.md",
+    "treatments/audit_reports/power_grid_heir_greenplus_qualityup_adversarial_3x_audit.md",
+    "treatments/audit_reports/power_grid_heir_consistency_adversarial_3x_audit.md",
+    "treatments/audit_reports/power_grid_heir_downstream_episode_pacing_hint_attachment_audit.md",
+    "treatments/audit_reports/power_grid_heir_greenplus_immediate_use_candidate_consistency_3pass_audit.md",
+    "treatments/audit_reports/power_grid_heir_immediate_deployment_adversarial_3x_closeout.md"
+  ],
   "_total_blocks": 70,
   "_saved_blocks": 70,
   "_phase0_ref": "treatments/phase0/power_grid_heir_phase0_design.json",
@@ -106,6 +123,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서문호가 도윤의 자료 보는 눈을 처음 의식한다.",
           "next_battlefield_ticket": "원본 SLA 별첨 확인이 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "2",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 회장이 승인 서명을 하기 직전이다.",
+            "proof": "episode 1-2: 발언권 확보 / 결재 회의 제동 proof - 미래를 말하지 않고 현재 별첨의 빈칸으로 회의를 멈춘다.",
+            "receipt": "episode 2-3: 서명 직전 회의가 멈추고 도윤은 원본 SLA 별첨을 물을 발언권을 얻는다.",
+            "next_gate": "episode 3: 원본 SLA 별첨 확인이 열린다."
+          },
+          "range_reason": "Block 1 '서명 전 별첨' converts 승인 회의 제동 pressure into 발언권 확보 / 결재 회의 제동 proof, lands 발언권 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -239,6 +270,20 @@
           "public_signboard_event": "AI 계약 승인이 72시간 검토 건으로 공식 전환된다.",
           "representative_reevaluation": "서문호가 도윤을 조건부 책임을 걸 수 있는 사람으로 본다.",
           "next_battlefield_ticket": "grid schedule과 변압기 납기표 대조가 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 고객사는 당일 오후까지 승인 의향서를 요구하고, 도윤에게 허용된 시간은 72시간뿐이다.",
+            "proof": "episode 1-2: 자료 접근권 / 계약 검토권 확보 proof - 계약을 깨지 않고 시간을 사서 자료 접근권으로 바꾼다.",
+            "receipt": "episode 3: 승인이 72시간 미뤄지고 도윤은 원본 SLA, side letter, grid schedule 접근권을 얻는다.",
+            "next_gate": "episode 3: grid schedule과 변압기 납기표 대조가 열린다."
+          },
+          "range_reason": "Block 2 '72시간' converts 검토권 확보 pressure into 자료 접근권 / 계약 검토권 확보 proof, lands 자료접근권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -375,6 +420,20 @@
           "public_signboard_event": "AI 계약 검토가 선우일렉 현장 audit으로 확장된다.",
           "representative_reevaluation": "서문호가 계약 검토와 현장 납기가 한 문제임을 인정한다.",
           "next_battlefield_ticket": "현장 audit 중 묵살된 HVDC report를 찾을 길이 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 72시간 review 안에 현장 확인까지 끝내야 한다.",
+            "proof": "episode 1-2: 현장 audit권 / 납기표 감사 proof - 도덕 폭로가 아니라 중단 비용 계산으로 감사권을 얻는다.",
+            "receipt": "episode 3: 도윤은 48시간 한정 선우일렉 site audit권을 얻고 전력 별첨을 현장 권한으로 환전한다.",
+            "next_gate": "episode 3: 현장 audit 중 묵살된 HVDC report를 찾을 길이 열린다."
+          },
+          "range_reason": "Block 3 '같은 검사 라인' converts 현장 audit권 확보 pressure into 현장 audit권 / 납기표 감사 proof, lands 현장접근권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -512,6 +571,20 @@
           "public_signboard_event": "묵살된 HVDC report가 회장 승인 technical verification 대상이 된다.",
           "representative_reevaluation": "김라희와 한세린이 도윤을 감정가가 아니라 비용 구조를 보는 사람으로 인식한다.",
           "next_battlefield_ticket": "고객사 backup 비용과 site/cooling permit 검토가 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 72시간 review 종료 전 기술 검증 결과가 필요하다.",
+            "proof": "episode 1-2: 기술검증팀 authority / operator 조건부 복귀 proof - 사람을 구제하지 않고 보고서 검증권과 operator를 동시에 확보한다.",
+            "receipt": "episode 2-3: 한세린이 조건부 lead로 호출되고 도윤은 technical verification team 임시 authority를 얻는다.",
+            "next_gate": "episode 3: 고객사 backup 비용과 site/cooling permit 검토가 열린다."
+          },
+          "range_reason": "Block 4 '좌천된 보고서' converts operator 확보 pressure into 기술검증팀 authority / operator 조건부 복귀 proof, lands 팀권한 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -651,6 +724,20 @@
           "public_signboard_event": "전력 검토가 데이터센터 부지와 냉각수 허가 검토로 확장된다.",
           "representative_reevaluation": "한세린과 서문호가 도윤의 전력망 시야가 site risk까지 닿는 것을 본다.",
           "next_battlefield_ticket": "cloud contract loss structure와 renegotiation seat 검토가 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 부지 최종 서명 전에 허가 calendar를 확인해야 한다.",
+            "proof": "episode 1-2: site review authority / 부지 허가 검토권 확보 proof - 전기 문제를 열과 물의 허가 문제로 재분류해 다음 권한을 얻는다.",
+            "receipt": "episode 3: 도윤은 선우건설 부지 자료와 broker 계약서를 열람하는 site review authority를 얻는다.",
+            "next_gate": "episode 3: cloud contract loss structure와 renegotiation seat 검토가 열린다."
+          },
+          "range_reason": "Block 5 '물의 허가' converts 부지 review authority pressure into site review authority / 부지 허가 검토권 확보 proof, lands 부지검토권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -789,6 +876,20 @@
           "public_signboard_event": "AI 계약이 전력 책임표 기반 재협상 건으로 전환된다.",
           "representative_reevaluation": "서문호와 김라희가 도윤의 검토를 계약을 살리는 조건으로 인정한다.",
           "next_battlefield_ticket": "경쟁사 outage와 이사회 risk committee로 이어질 public proof seed가 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 고객사 답변 기한 전 재협상 조건을 내야 한다.",
+            "proof": "episode 1-2: 계약 재협상석 / 손실 계약 재분류 proof - AI 계약을 깨지 않고 손실 구조를 드러내 협상석을 얻는다.",
+            "receipt": "episode 3: 도윤은 고객사 재협상 회의의 정식 배석자가 되고 AI 계약은 그의 전력 책임표를 통과해야 한다.",
+            "next_gate": "episode 3: 경쟁사 outage와 이사회 risk committee로 이어질 public proof seed가 열린다."
+          },
+          "range_reason": "Block 6 '매출표 아래 전기료' converts 계약 재협상석 확보 pressure into 계약 재협상석 / 손실 계약 재분류 proof, lands 협상석 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -928,6 +1029,20 @@
           "public_signboard_event": "경쟁사 outage가 선우의 기술 Q&A 요구로 번진다.",
           "representative_reevaluation": "한세린과 고객사 기술팀이 도윤을 홍보가 아니라 책임 경계를 세우는 사람으로 본다.",
           "next_battlefield_ticket": "서민재와 서강준의 월권 프레임 반격이 준비된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 고객사 기술팀은 그날 안에 추가 보장 여부를 결정하려 한다.",
+            "proof": "episode 1-2: 외부 proof channel / 기술 Q&A slot 확보 proof - 남의 사고를 홍보하지 않고 외부 평가 채널로 바꾼다.",
+            "receipt": "episode 2-3: 고객사 기술 Q&A slot이 열리고 도윤은 외부 proof channel을 얻는다.",
+            "next_gate": "episode 3: 서민재와 서강준의 월권 프레임 반격이 준비된다."
+          },
+          "range_reason": "Block 7 '남의 정전' converts 외부 proof channel pressure into 외부 proof channel / 기술 Q&A slot 확보 proof, lands 외부평가채널 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -1067,6 +1182,20 @@
           "public_signboard_event": "도윤의 월권 문제가 공식 검토된다.",
           "representative_reevaluation": "서문호가 도윤의 속도를 위험하게 보면서도 조직 공백을 확인한다.",
           "next_battlefield_ticket": "risk committee 자료 접근과 minutes gap 검토가 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 고객사 최종 답변 전 risk owner를 정해야 한다.",
+            "proof": "episode 1-2: 반격 예약 / 월권 프레임 방어 proof - 권한 일부를 잃지만 다음 반격에 필요한 공식 agenda를 얻는 피로스 승리",
+            "receipt": "episode 3: 검토권 일부는 깎였지만 risk owner 공백이 committee agenda로 올라간다.",
+            "next_gate": "episode 3: risk committee 자료 접근과 minutes gap 검토가 열린다."
+          },
+          "range_reason": "Block 8 '월권 메모' converts 월권 프레임 pressure into 반격 예약 / 월권 프레임 방어 proof, lands 반격예약 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -1206,6 +1335,20 @@
           "public_signboard_event": "AI 계약의 최종 책임자 칸이 비어 있다는 사실이 공식 문서로 드러난다.",
           "representative_reevaluation": "서문호가 도윤에게 최종 검증 자료실을 열어 준다.",
           "next_battlefield_ticket": "회장 직보선과 통합 exception owner 논의가 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 고객사 최종 답변 전 escalation line을 제시해야 한다.",
+            "proof": "episode 1-2: 이사회 자료 접근권 / 책임 공백 문서화 proof - 자기 이름을 먼저 밀지 않고 빈 책임자 칸을 조직이 보게 만든다.",
+            "receipt": "episode 2-3: 도윤은 risk committee 자료실과 board minutes 원본 접근권을 얻는다.",
+            "next_gate": "episode 3: 회장 직보선과 통합 exception owner 논의가 열린다."
+          },
+          "range_reason": "Block 9 '빈 책임자 칸' converts 책임 공백 문서화 pressure into 이사회 자료 접근권 / 책임 공백 문서화 proof, lands 자료실접근권 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -1347,6 +1490,20 @@
           "public_signboard_event": "AI 계약은 전력 책임표가 붙은 조건부 재협상안으로 나간다.",
           "representative_reevaluation": "도윤은 전력망 리스크를 통합 보고할 수 있는 사람으로 인정된다.",
           "next_battlefield_ticket": "선우일렉 transformer allocation table이 다음 전장으로 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 고객사에 조건부 재협상안을 보내야 하는 최종 시점이다.",
+            "proof": "episode 1-2: 회장 직보선 / 통합 책임권 확보 proof - 전권이 아니라 시간 제한과 책임 비용을 걸어 필요한 결재권만 산다.",
+            "receipt": "episode 3-4: 서문호가 30일 한정 회장 직보선과 exception owner 권한을 승인한다.",
+            "next_gate": "episode 4: 선우일렉 transformer allocation table이 다음 전장으로 열린다."
+          },
+          "range_reason": "Block 10 '직보선' converts 직보선 확보 pressure into 회장 직보선 / 통합 책임권 확보 proof, lands 직보선 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -1487,6 +1644,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "공장장이 도윤의 질문이 생산이 아니라 certificate 병목을 겨냥했다는 걸 안다.",
           "next_battlefield_ticket": "하청 안전 은폐와 검사 중단 비용 검토가 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 고객사 grid 접속 일정에 맞춰 장비 출하 확약을 줘야 한다.",
+            "proof": "episode 1-2: allocation table 접근권 / 검사 라인 병목 재분류 proof - 납기를 생산 완료가 아니라 인증 발급 gate로 재분류한다.",
+            "receipt": "episode 3-4: 도윤은 transformer allocation table 원본과 검사실 예약표 접근권을 얻는다.",
+            "next_gate": "episode 4: 하청 안전 은폐와 검사 중단 비용 검토가 열린다."
+          },
+          "range_reason": "Block 11 '검사 라인의 빈칸' converts 검사 certificate gate pressure into allocation table 접근권 / 검사 라인 병목 재분류 proof, lands 원본표접근권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -1625,6 +1796,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서강준은 도윤을 감정론자가 아니라 비용으로 안전을 묶는 상대로 본다.",
           "next_battlefield_ticket": "해외 고객 slot 양보 협상의 비용 근거가 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 보험 갱신 전 현장 audit 여부가 결정된다.",
+            "proof": "episode 1-2: 하청 safety audit권 / 안전 이슈 비용화 proof - 도덕 폭로가 아니라 납기 안정 비용표로 safety audit권을 얻는다.",
+            "receipt": "episode 2-3: 하청 safety audit권과 보험 갱신표 접근권이 도윤에게 열린다.",
+            "next_gate": "episode 3: 해외 고객 slot 양보 협상의 비용 근거가 열린다."
+          },
+          "range_reason": "Block 12 '보험료의 안전' converts 안전 이슈 비용화 pressure into 하청 safety audit권 / 안전 이슈 비용화 proof, lands 감사권 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -1764,6 +1949,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "해외 고객과 국내 고객 모두 도윤의 책임표를 검토 대상으로 받는다.",
           "next_battlefield_ticket": "서강준의 안정 현금흐름 반격이 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 해외 고객과 국내 고객 모두 주중 답변을 요구한다.",
+            "proof": "episode 1-2: allocation committee 초안권 / 고객 slot 재배치 협상 proof - 둘 중 하나를 버리지 않고 책임 경계를 쪼개 committee 필요성을 만든다.",
+            "receipt": "episode 3: 도윤은 transformer allocation committee 초안 작성권을 얻고 slot 배분 논의를 공식화한다.",
+            "next_gate": "episode 3: 서강준의 안정 현금흐름 반격이 열린다."
+          },
+          "range_reason": "Block 13 '두 고객의 같은 라인' converts 고객 slot 재배치 pressure into allocation committee 초안권 / 고객 slot 재배치 협상 proof, lands 초안권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -1903,6 +2102,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서문호는 도윤이 상대 논리를 흡수해 다음 권리로 바꾸는 것을 본다.",
           "next_battlefield_ticket": "supplier option 선점 협상이 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 국내 AI 고객과 해외 고객 모두 다음 납기 답변을 기다린다.",
+            "proof": "episode 1-2: 현금흐름 원본 접근권 / 안정 cashflow 반격 수용 proof - 권한 일부를 잃지만 상대 논리를 흡수해 다음 구매 권리 안건을 만든다.",
+            "receipt": "episode 3: 도윤은 권한 일부를 잃지만 현금흐름 원본과 supplier option 검토 안건을 얻는다.",
+            "next_gate": "episode 3: supplier option 선점 협상이 열린다."
+          },
+          "range_reason": "Block 14 '서강준의 현금흐름' converts 현금흐름 반격 pressure into 현금흐름 원본 접근권 / 안정 cashflow 반격 수용 proof, lands 반격예약 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -2041,6 +2254,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서강준과 구매팀은 옵션 비용이 아니라 certificate priority가 핵심임을 인정한다.",
           "next_battlefield_ticket": "공장 line idle-time 재분류와 partial delivery 리스크가 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 해외 고객과 국내 AI 고객의 다음 답변 전 supplier option 조건을 잡아야 한다.",
+            "proof": "episode 1-2: supplier option 초안권 / 공급 옵션 선점 proof - 옵션을 비용이 아니라 certificate priority를 사는 권리로 바꾼다.",
+            "receipt": "episode 2-3: 도윤은 supplier option term sheet 초안권과 supplier call 동석권을 얻는다.",
+            "next_gate": "episode 3: 공장 line idle-time 재분류와 partial delivery 리스크가 열린다."
+          },
+          "range_reason": "Block 15 '옵션을 사는 값' converts 공급 옵션 선점 pressure into supplier option 초안권 / 공급 옵션 선점 proof, lands 구매권리 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -2180,6 +2407,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "공장장과 구매팀은 도윤이 제조 손실까지 권리표로 나눈다는 것을 확인한다.",
           "next_battlefield_ticket": "partial delivery 실패와 손실 회수 가능성 검토가 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: supplier call 전에 취소 조항과 우선 검사권을 정리해야 한다.",
+            "proof": "episode 1-2: idle-time 재분류권 / 라인 대기시간 권리화 proof - 멈춘 시간을 손실이 아니라 일부 회수 가능한 권리로 나눈다.",
+            "receipt": "episode 2-3: 도윤은 idle-time 재분류표 작성권과 supplier cancellation clause 협상권을 얻는다.",
+            "next_gate": "episode 3: partial delivery 실패와 손실 회수 가능성 검토가 열린다."
+          },
+          "range_reason": "Block 16 '멈춘 라인의 가격' converts idle-time 재분류 pressure into idle-time 재분류권 / 라인 대기시간 권리화 proof, lands 재분류권 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -2319,6 +2560,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서문호는 도윤이 실패를 숨기지 않고 책임분으로 쪼개는지 본다.",
           "next_battlefield_ticket": "allocation committee에서 supplier 책임과 검사 우선권을 다룰 근거가 생긴다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 국내 고객과 해외 고객 모두 같은 날 출하 결과를 확인한다.",
+            "proof": "episode 1-2: 실패 손실 통제 / 반쪽 출하 실패 proof - 실패를 인정하되 손실을 분해해 반격 예약과 고객 이탈 방지선을 남긴다.",
+            "receipt": "episode 3: 반쪽 출하 실패에도 supplier 책임분 문서와 검증 완료분 우선 접속안이 남는다.",
+            "next_gate": "episode 3: allocation committee에서 supplier 책임과 검사 우선권을 다룰 근거가 생긴다."
+          },
+          "range_reason": "Block 17 '반쪽 출하' converts 부분 실패 pressure into 실패 손실 통제 / 반쪽 출하 실패 proof, lands 반격카드 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -2458,6 +2713,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서강준은 도윤이 전권보다 제한 권한으로 판을 잠그는 방식을 경계한다.",
           "next_battlefield_ticket": "해외 고객 조건부 수락이 offshore substation 수요 seed로 이어진다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 국내 고객에게 검증 완료분 우선 접속안을 확정해야 한다.",
+            "proof": "episode 1-2: checklist owner / 배분위원회 한정 권한 proof - 권한을 크게 먹지 않고 제한 권한으로 책임 충돌을 정리한다.",
+            "receipt": "episode 2-3: 도윤은 30일 한정 allocation checklist owner가 되고 고객 양쪽의 조건부 문서를 확보한다.",
+            "next_gate": "episode 3: 해외 고객 조건부 수락이 offshore substation 수요 seed로 이어진다."
+          },
+          "range_reason": "Block 18 '배분위원회' converts 한정 checklist owner pressure into checklist owner / 배분위원회 한정 권한 proof, lands 한정위원권 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -2597,6 +2866,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서문호는 도윤이 제조 손실 회수표를 새 사업 option으로 연결하는 것을 본다.",
           "next_battlefield_ticket": "선우오션 조선소 현장 검토가 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: idle yard scrap 결정 전 feasibility hold를 걸어야 한다.",
+            "proof": "episode 1-2: feasibility hold / offshore substation seed proof - scrap 결정을 새 사업 option 검토권으로 보류시킨다.",
+            "receipt": "episode 3-4: idle yard scrap 결정이 2주 보류되고 도윤은 offshore substation/MRO feasibility note 작성권을 얻는다.",
+            "next_gate": "episode 4: 선우오션 조선소 현장 검토가 열린다."
+          },
+          "range_reason": "Block 19 '조선소의 빈 야드' converts 조선소 gate seed pressure into feasibility hold / offshore substation seed proof, lands 보류권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -2736,6 +3019,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서문호는 도윤이 과장된 매출보다 현장 검토권을 먼저 요구하는 것을 본다.",
           "next_battlefield_ticket": "선우오션 idle yard 현장 전장이 열린다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 2주 보류 기간 안에 현장 검토를 시작해야 한다.",
+            "proof": "episode 1-2: site walk 권한 / 조선소 gate 진입 proof - 매출을 확정하지 않고 현장 검토권만 얻어 다음 전장 입장권으로 바꾼다.",
+            "receipt": "episode 3-4: 도윤은 선우오션 idle yard site walk 권한과 윤재식 현장 partner를 얻는다.",
+            "next_gate": "episode 4: 선우오션 idle yard 현장 전장이 열린다."
+          },
+          "range_reason": "Block 20 '야드로 가는 표' converts 조선소 gate pressure into site walk 권한 / 조선소 gate 진입 proof, lands 전장입장권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -2875,6 +3172,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "윤재식은 도윤이 추상 사업성이 아니라 크레인 동선부터 보는 것을 확인한다.",
           "next_battlefield_ticket": "측량표를 들고 offshore substation 설계 검토로 넘어갈 수 있다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "2",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: scrap buyer 계약금 마감 전 측량 hold를 문서로 남겨야 한다.",
+            "proof": "episode 1-2: yard slot 측량권 / 현장 측량 hold proof - 현장 전체가 아니라 측량 가능한 구간만 선점해 다음 설계 검토권으로 넘어간다.",
+            "receipt": "episode 2-3: 도윤은 yard slot 측량권과 원본 보전 기록 열람권을 얻는다.",
+            "next_gate": "episode 3: 측량표를 들고 offshore substation 설계 검토로 넘어갈 수 있다."
+          },
+          "range_reason": "Block 21 '녹슨 야드 번호' converts 현장 물성 확인 pressure into yard slot 측량권 / 현장 측량 hold proof, lands 접근권 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -3014,6 +3325,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "설계실장은 도윤이 완성 설계를 강요하지 않고 불가능 사유부터 문서화하는 것을 본다.",
           "next_battlefield_ticket": "제한 설계 검토 결과가 안전정지와 yard slot 재배치의 기준표가 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 해외 고객에게 기술 검토 memo를 보내기 전 preliminary matrix를 확정해야 한다.",
+            "proof": "episode 1-2: preliminary design review authority / 제한 설계 검토 proof - 완성 약속을 피하고 불가능 사유를 문서화해 다음 검증 권한을 산다.",
+            "receipt": "episode 3: 도윤은 offshore substation preliminary design review authority와 module 규격 봉인 자료를 얻는다.",
+            "next_gate": "episode 3: 제한 설계 검토 결과가 안전정지와 yard slot 재배치의 기준표가 된다."
+          },
+          "range_reason": "Block 22 '해상 변전소의 동선' converts 제한 설계 검토 pressure into preliminary design review authority / 제한 설계 검토 proof, lands 검토권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -3152,6 +3477,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "장필수는 도윤이 안전을 감정으로 소비하지 않고 공식 log와 비용으로 처리하는 것을 본다.",
           "next_battlefield_ticket": "재가동 checklist가 윤재식의 현장 동선 검증으로 이어진다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: scrap buyer penalty가 붙기 전 작업 중지와 재가동 조건을 공식화해야 한다.",
+            "proof": "episode 1-2: safety stop log / 안전정지 기록화 proof - 권한 수치를 잃는 대신 기록 가능한 안전 절차를 얻는 피로스 승리",
+            "receipt": "episode 3: 도윤은 권한 수치 두 칸을 잃지만 safety stop log와 재가동 checklist를 얻는다.",
+            "next_gate": "episode 3: 재가동 checklist가 윤재식의 현장 동선 검증으로 이어진다."
+          },
+          "range_reason": "Block 23 '멈춘 크레인' converts 손실을 남기는 안전정지 pressure into safety stop log / 안전정지 기록화 proof, lands 손실 속 영수증 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -3291,6 +3630,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "윤재식은 도윤이 좋은 말보다 불가능 구간을 인정하는 효율을 선택하는 것을 본다.",
           "next_battlefield_ticket": "pilot zone load test 자료를 MRO 사전실사 문서로 넘길 수 있다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: scrap buyer가 할인 명분을 확정하기 전 pilot zone 검증 범위를 문서화해야 한다.",
+            "proof": "episode 1-2: pilot zone load test 권한 / 현장 witness memo proof - 가능 구역을 줄여 권한 범위를 작게 만들고 대신 검증 가능성을 높인다.",
+            "receipt": "episode 2-3: 도윤은 윤재식의 현장 witness memo와 pilot zone load test 권한을 얻는다.",
+            "next_gate": "episode 3: pilot zone load test 자료를 MRO 사전실사 문서로 넘길 수 있다."
+          },
+          "range_reason": "Block 24 '윤재식의 빨간 선' converts 현장 witness 확보 pressure into pilot zone load test 권한 / 현장 witness memo proof, lands 현장증언 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -3431,6 +3784,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "법무팀은 도윤이 반복매출 욕심보다 책임 제외 문구를 먼저 박는 것을 보고 답변 봉쇄를 푼다.",
           "next_battlefield_ticket": "외부 MRO 경쟁사의 선제 메일이 다음 정보전과 yard slot 재배치 압박으로 이어진다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 해외 고객의 due diligence slot 배정 회신 전 readiness letter 범위를 확정해야 한다.",
+            "proof": "episode 1-2: MRO due diligence slot / readiness letter 초안권 proof - 매출을 약속하지 않고 실사 슬롯과 문서 초안권만 받아 반복매출 option을 작게 연다.",
+            "receipt": "episode 2-3: 도윤은 MRO technical due diligence slot과 readiness letter 초안권을 얻는다.",
+            "next_gate": "episode 3: 외부 MRO 경쟁사의 선제 메일이 다음 정보전과 yard slot 재배치 압박으로 이어진다."
+          },
+          "range_reason": "Block 25 '정비 계약의 첫 줄' converts 사전실사 seed pressure into MRO due diligence slot / readiness letter 초안권 proof, lands 실사슬롯 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -3571,6 +3938,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "해외 고객 기술팀은 도윤이 유출을 숨기지 않고 version log로 통제하는 것을 본다.",
           "next_battlefield_ticket": "자료실 접근 기록이 yard slot 재배치 압박의 출처를 좁힌다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 해외 고객이 실사 슬롯을 보류하기 전 version log data room을 열어야 한다.",
+            "proof": "episode 1-2: MRO data room 관리자 권한 / version log 자료실 전환 proof - 평판 공격을 자료 접근권 장악과 고객 신뢰 유지로 환전한다.",
+            "receipt": "episode 3: 도윤은 MRO data room 관리자 권한과 leak 후보 접근자 명단을 얻는다.",
+            "next_gate": "episode 3: 자료실 접근 기록이 yard slot 재배치 압박의 출처를 좁힌다."
+          },
+          "range_reason": "Block 26 '새는 도면' converts 정보전 통제 pressure into MRO data room 관리자 권한 / version log 자료실 전환 proof, lands 자료통제권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -3709,6 +4090,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "장필수는 도윤이 무리한 확장이 아니라 줄여서 통제하는 방식을 택하는 것을 본다.",
           "next_battlefield_ticket": "작아진 pilot zone에서 offshore test를 치러야 한다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: scrap buyer의 할인 확정 전 하역 지점과 반출 순서를 바꿔야 한다.",
+            "proof": "episode 1-2: yard slot schedule authority / slot 재배치권 proof - 권리 면적을 줄이는 대신 정보 노출과 할인 비용을 낮춘다.",
+            "receipt": "episode 2-3: 도윤은 임시 yard slot schedule authority와 새 pilot zone 기준표를 얻는다.",
+            "next_gate": "episode 3: 작아진 pilot zone에서 offshore test를 치러야 한다."
+          },
+          "range_reason": "Block 27 '빈 슬롯의 가격' converts slot 재배치 pressure into yard slot schedule authority / slot 재배치권 proof, lands 일정통제권 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -3847,6 +4242,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "해외 고객 기술팀은 도윤이 실패를 숨기지 않고 원인과 retest 범위로 쪼개는 것을 본다.",
           "next_battlefield_ticket": "failure mode report가 recurring revenue proof의 원가표가 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "4",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 해외 고객이 실사 취소를 통보하기 전 failure mode report와 retest 범위를 보내야 한다.",
+            "proof": "episode 1-3: failure mode report / retest right 확보 proof - 실질 실패를 인정하고 권한 수치를 잃지만 retest right와 책임 matrix를 남긴다.",
+            "receipt": "episode 3-4: 도윤은 권한 수치 세 칸을 잃지만 failure mode report와 retest right를 얻는다.",
+            "next_gate": "episode 4: failure mode report가 recurring revenue proof의 원가표가 된다."
+          },
+          "range_reason": "Block 28 '바다 위의 실패' converts 실패 기록화 pressure into failure mode report / retest right 확보 proof, lands 실패 속 영수증 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -3985,6 +4394,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "재무팀은 도윤이 큰 매출을 부풀리지 않고 risk-reduction fee로 작게 묶는 것을 본다.",
           "next_battlefield_ticket": "작은 반복매출 proof가 board observer 후보 gate로 넘어간다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: board 보고 전에 반복매출 proof를 과장 없는 숫자로 만들어야 한다.",
+            "proof": "episode 1-2: paid inspection retainer 의향서 / service menu 초안권 proof - 큰 계약을 포기하고 작은 retainer로 반복성과 신뢰를 먼저 산다.",
+            "receipt": "episode 2-3: 도윤은 paid inspection retainer 의향서와 service menu 초안권을 얻는다.",
+            "next_gate": "episode 3: 작은 반복매출 proof가 board observer 후보 gate로 넘어간다."
+          },
+          "range_reason": "Block 29 '반복매출의 작은 숫자' converts 반복매출 씨앗 pressure into paid inspection retainer 의향서 / service menu 초안권 proof, lands 반복매출증거 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -4124,6 +4547,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서문호는 도윤이 의결권보다 제한 관찰권을 먼저 사는 것을 보고 board 후보로 올린다.",
           "next_battlefield_ticket": "데이터센터 전력비 agenda slot이 cloud margin과 PPA 재협상 전장을 연다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: AI 데이터센터 본계약 재상정 전 전력비 agenda slot을 확보해야 한다.",
+            "proof": "episode 1-2: board observer 후보 gate / 제한 observer 후보권 proof - 의결권을 탐하지 않고 제한 관찰권으로 다음 전장의 결재선에 들어간다.",
+            "receipt": "episode 3-4: 도윤은 power infrastructure board observer 후보와 risk committee minutes 접근권을 얻는다.",
+            "next_gate": "episode 4: 데이터센터 전력비 agenda slot이 cloud margin과 PPA 재협상 전장을 연다."
+          },
+          "range_reason": "Block 30 '관찰석의 이름' converts board gate pressure into board observer 후보 gate / 제한 observer 후보권 proof, lands board gate in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -4264,6 +4701,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서문호는 도윤이 AI 계약을 취소하지 않고 비용표를 붙여 판단 기준을 바꾸는 것을 본다.",
           "next_battlefield_ticket": "전력비 표가 PPA 재협상석의 근거가 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: AI 데이터센터 본계약 board 보고서가 확정되기 전 전력비 별첨을 본문 옆에 붙여야 한다.",
+            "proof": "episode 1-2: power-adjusted margin table 작성권 / 전력비 별첨 열람권 proof - 성장 narrative를 부수지 않고 비용표를 붙여 board 판단 기준을 바꾼다.",
+            "receipt": "episode 2-3: 도윤은 power-adjusted margin table 작성권과 고객별 전력비 별첨 열람권을 얻는다.",
+            "next_gate": "episode 3: 전력비 표가 PPA 재협상석의 근거가 된다."
+          },
+          "range_reason": "Block 31 '전기료 아래 매출표' converts 전력비 수익성 반전 pressure into power-adjusted margin table 작성권 / 전력비 별첨 열람권 proof, lands 원가표작성권 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -4402,6 +4853,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "전력 판매 파트너는 도윤이 가격 인하보다 피크 부하 예측을 먼저 가져온 것을 본다.",
           "next_battlefield_ticket": "냉각 전력 분리 계량 항목이 냉각수 permit 전장으로 이어진다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: AI 데이터센터 본계약 고객에게 공급 안정 답변을 내기 전 limited amendment 문을 열어야 한다.",
+            "proof": "episode 1-2: PPA limited renegotiation seat / limited amendment draft proof - 가격이 아니라 계량과 부하 예측으로 닫힌 협상 문을 연다.",
+            "receipt": "episode 2-3: 도윤은 PPA limited renegotiation seat와 offtake draft 작성권을 얻는다.",
+            "next_gate": "episode 3: 냉각 전력 분리 계량 항목이 냉각수 permit 전장으로 이어진다."
+          },
+          "range_reason": "Block 32 'PPA의 첫 괄호' converts PPA opening pressure into PPA limited renegotiation seat / limited amendment draft proof, lands 협상석 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -4540,6 +5005,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서문호는 도윤이 일정 손실을 감수하고 permit 리스크를 숨기지 않는 것을 본다.",
           "next_battlefield_ticket": "빈 주민 설명회 날짜가 지역 broker와 민원 calendar 전장을 연다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 본계약 고객에게 공급 안정 답변을 내기 전 냉각수 permit calendar를 board에 올려야 한다.",
+            "proof": "episode 1-2: cooling permit calendar / 인허가 원본 접근권 proof - 일정 손실을 인정하고 숨은 permit 리스크를 board milestone으로 바꾼다.",
+            "receipt": "episode 3: 도윤은 권한 수치 두 칸을 잃지만 cooling permit calendar와 환경청 원본 접근권을 얻는다.",
+            "next_gate": "episode 3: 빈 주민 설명회 날짜가 지역 broker와 민원 calendar 전장을 연다."
+          },
+          "range_reason": "Block 33 '물 허가의 빈 날짜' converts 인허가 손실 공개 pressure into cooling permit calendar / 인허가 원본 접근권 proof, lands 손실 속 인허가권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -4678,6 +5157,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서문호는 도윤이 민원을 달래는 척하지 않고 병목을 쪼개 option으로 사는 것을 본다.",
           "next_battlefield_ticket": "분리된 site risk가 서민재의 investor narrative 반격에서 공격 재료가 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 환경청 보완 요청 재제출 전 주민 설명회 날짜와 토지 option을 분리해야 한다.",
+            "proof": "episode 1-2: complaint calendar 관리권 / conditional land option proof - 돈으로 침묵을 사지 않고 병목을 쪼개 일정과 option을 장악한다.",
+            "receipt": "episode 2-3: 도윤은 complaint calendar 관리권과 세 필지 conditional option을 얻는다.",
+            "next_gate": "episode 3: 분리된 site risk가 서민재의 investor narrative 반격에서 공격 재료가 된다."
+          },
+          "range_reason": "Block 34 '민원 달력' converts 지역 민원 calendar pressure into complaint calendar 관리권 / conditional land option proof, lands 민원일정통제 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -4815,6 +5308,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서문호는 도윤이 박수를 빼앗는 대신 공식 기준표를 박는 쪽을 고르는 것을 본다.",
           "next_battlefield_ticket": "investor Q&A 기준이 고객사 SLA penalty 협상으로 이어진다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 공식 investor deck 확정 전 power-risk appendix를 승인받아야 한다.",
+            "proof": "episode 1-2: investor Q&A response right / power-risk appendix 승인권 proof - 상대의 박수는 놔두고 공식 판단 기준표를 삽입해 다음 협상권을 확보한다.",
+            "receipt": "episode 3: 도윤은 investor Q&A response right와 power-risk appendix 승인권을 얻는다.",
+            "next_gate": "episode 3: investor Q&A 기준이 고객사 SLA penalty 협상으로 이어진다."
+          },
+          "range_reason": "Block 35 '투자자 앞의 화살표' converts 투자자 narrative 반격 pressure into investor Q&A response right / power-risk appendix 승인권 proof, lands 공식자료삽입권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -4955,6 +5462,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "고객 법무팀은 도윤이 안심 문구보다 penalty cap 구조를 먼저 내놓는 것을 본다.",
           "next_battlefield_ticket": "dashboard가 외부 정전 사건의 public proof와 연결된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 고객이 해지권 확대 통보를 보내기 전 penalty cap 구조를 다시 열어야 한다.",
+            "proof": "episode 1-2: SLA penalty renegotiation seat / power-risk dashboard 운영권 proof - 책임을 부정하지 않고 milestone별로 쪼개 고객 해지권 확대를 보류시킨다.",
+            "receipt": "episode 3-4: 도윤은 고객 SLA penalty renegotiation seat와 power-risk dashboard 운영권을 얻는다.",
+            "next_gate": "episode 4: dashboard가 외부 정전 사건의 public proof와 연결된다."
+          },
+          "range_reason": "Block 36 '벌금의 주파수' converts 고객 penalty 협상 pressure into SLA penalty renegotiation seat / power-risk dashboard 운영권 proof, lands 고객협상권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -5095,6 +5616,20 @@
           "public_signboard_event": "경쟁 데이터센터 47분 정전 속보가 시장에 퍼진다.",
           "representative_reevaluation": "고객 법무팀은 도윤이 남의 사고를 조롱하지 않고 benchmark로 쓰는 것을 본다.",
           "next_battlefield_ticket": "incident benchmark가 site portfolio 재배열 기준으로 넘어간다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 정전 속보가 시장에 번지기 전 선우그룹의 공식 risk management note를 정해야 한다.",
+            "proof": "episode 1-2: public outage proof package / customer incident briefing right proof - 남의 실패를 비난이 아니라 자신의 리스크 관리 체계 검증 자료로 환전한다.",
+            "receipt": "episode 2-3: 도윤은 public outage proof package 작성권과 customer incident briefing right를 얻는다.",
+            "next_gate": "episode 3: incident benchmark가 site portfolio 재배열 기준으로 넘어간다."
+          },
+          "range_reason": "Block 37 '남의 정전 속보' converts 외부 proof pressure into public outage proof package / customer incident briefing right proof, lands 외부증거 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -5234,6 +5769,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서문호는 도윤이 예쁜 조감도보다 write-off와 기능 분산을 고르는 것을 본다.",
           "next_battlefield_ticket": "site portfolio map이 정식 board observer seat 심사의 핵심 증거가 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 고객 SLA dashboard 다음 업데이트 전에 부지별 milestone을 확정해야 한다.",
+            "proof": "episode 1-2: site portfolio map 승인권 / 대표 부지 write-off 권한 proof - 일부 sunk cost를 인정하고 단일 부지 리스크를 기능별 portfolio로 분산한다.",
+            "receipt": "episode 3: 도윤은 권한 수치 두 칸을 잃지만 site portfolio map 승인권과 write-off 권한을 얻는다.",
+            "next_gate": "episode 3: site portfolio map이 정식 board observer seat 심사의 핵심 증거가 된다."
+          },
+          "range_reason": "Block 38 '버리는 부지' converts 부지 재배열 pressure into site portfolio map 승인권 / 대표 부지 write-off 권한 proof, lands 손실 속 포트폴리오권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -5373,6 +5922,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서문호는 도윤이 표결권보다 agenda와 minutes를 먼저 먹는 것을 확인한다.",
           "next_battlefield_ticket": "observer seat가 pilot budget 후보 gate의 심사석을 연다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 다음 budget screening 전에 observer seat로 agenda pre-read 권한을 확보해야 한다.",
+            "proof": "episode 1-2: power infrastructure observer seat / agenda pre-read 권한 proof - 표결권을 포기하고 agenda와 minutes를 장악해 board 판단 구조 안으로 들어간다.",
+            "receipt": "episode 3: 도윤은 90일 한정 power infrastructure observer seat와 agenda pre-read 권한을 얻는다.",
+            "next_gate": "episode 3: observer seat가 pilot budget 후보 gate의 심사석을 연다."
+          },
+          "range_reason": "Block 39 '관찰석의 표결권' converts 정식 관찰석 pressure into power infrastructure observer seat / agenda pre-read 권한 proof, lands 정식관찰권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -5514,6 +6077,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "재무기획실은 도윤이 예산 자체보다 예산이 열리는 조건표를 먼저 요구하는 것을 본다.",
           "next_battlefield_ticket": "screening table이 project finance covenant 전장으로 이어진다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: AI 데이터센터 본계약 예산안이 부서별 청구서로 굳기 전 candidate screening table을 열어야 한다.",
+            "proof": "episode 1-2: pilot budget candidate gate / screening table owner 권한 proof - 돈 자체가 아니라 돈을 여는 심사표를 장악해 다음 project finance 전장으로 넘어간다.",
+            "receipt": "episode 3-4: 도윤은 pilot budget candidate gate와 screening table owner 권한을 얻는다.",
+            "next_gate": "episode 4: screening table이 project finance covenant 전장으로 이어진다."
+          },
+          "range_reason": "Block 40 '예산 전의 심사표' converts 예산 후보 gate pressure into pilot budget candidate gate / screening table owner 권한 proof, lands 예산후보gate in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -5654,6 +6231,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "백인호는 도윤이 예산 승인보다 covenant gap memo를 먼저 요구하는 것을 본다.",
           "next_battlefield_ticket": "debt service model이 credit risk 반대의 숫자 전장이 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: AI 데이터센터 budget screening이 일반 capex로 굳기 전 PF covenant 검토표에 올려야 한다.",
+            "proof": "episode 1-2: PF covenant exception review right / debt service model 열람권 proof - 승인 대신 예외 검토권을 사서 예산표를 금융 조건표로 바꾼다.",
+            "receipt": "episode 2-3: 도윤은 PF covenant exception review right와 debt service model 열람권을 얻는다.",
+            "next_gate": "episode 3: debt service model이 credit risk 반대의 숫자 전장이 된다."
+          },
+          "range_reason": "Block 41 '차입금의 조건표' converts PF covenant opening pressure into PF covenant exception review right / debt service model 열람권 proof, lands 금융검토권 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -5793,6 +6384,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "백인호는 도윤이 불리한 숫자를 숨기지 않는 것을 보고 다음 proof 검증자로 남는다.",
           "next_battlefield_ticket": "sensitivity table의 빈 수요 증명 칸이 offtake letter 전장을 연다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: pilot budget 후보가 완전 보류되기 전 sensitivity table의 빈칸을 열어야 한다.",
+            "proof": "episode 1-2: credit risk model 접근권 / sensitivity table 작성권 proof - 권한 손실을 감수하고 합리적 반대자를 다음 proof의 검증자로 보존한다.",
+            "receipt": "episode 3: 도윤은 권한 수치 한 칸을 잃지만 credit risk model 접근권과 sensitivity table 작성권을 얻는다.",
+            "next_gate": "episode 3: sensitivity table의 빈 수요 증명 칸이 offtake letter 전장을 연다."
+          },
+          "range_reason": "Block 42 '백인호의 붉은 숫자' converts credit risk 반대 pressure into credit risk model 접근권 / sensitivity table 작성권 proof, lands 손실 속 검증표 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -5933,6 +6538,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "백인호는 도윤이 매출 확약보다 금융 모델에 넣을 제한 수요 문장을 고르는 것을 본다.",
           "next_battlefield_ticket": "conditional offtake indication이 은행단 haircut 협상으로 넘어간다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 은행단 예비 call 전에 수요 증명 빈칸에 넣을 문장을 확보해야 한다.",
+            "proof": "episode 1-2: conditional offtake indication / customer demand verification package proof - 매출 확약을 포기하고 금융 모델에 들어갈 제한 수요 문장을 얻는다.",
+            "receipt": "episode 2-3: 도윤은 conditional offtake indication과 customer demand verification package를 얻는다.",
+            "next_gate": "episode 3: conditional offtake indication이 은행단 haircut 협상으로 넘어간다."
+          },
+          "range_reason": "Block 43 '수요의 첫 문장' converts offtake seed pressure into conditional offtake indication / customer demand verification package proof, lands 수요증명seed in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -6073,6 +6692,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "백인호는 도윤이 haircut에 화내지 않고 step-down schedule부터 요구하는 것을 본다.",
           "next_battlefield_ticket": "haircut basis table이 담보 재평가 손실 전장으로 이어진다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: pilot budget 후보 심사가 일반 capex 우회로 굳기 전 은행단 term sheet data room을 열어야 한다.",
+            "proof": "episode 1-2: bank haircut basis table / term sheet data room 접근권 proof - 깎인 숫자를 받아들이되 숫자가 회복되는 계단과 자료실 권한을 얻는다.",
+            "receipt": "episode 3: 도윤은 bank haircut basis table과 term sheet data room 접근권을 얻는다.",
+            "next_gate": "episode 3: haircut basis table이 담보 재평가 손실 전장으로 이어진다."
+          },
+          "range_reason": "Block 44 '은행단의 할인율' converts 은행단 haircut pressure into bank haircut basis table / term sheet data room 접근권 proof, lands 은행자료실 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -6214,6 +6847,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "백인호는 도윤이 낮은 담보 가치를 인정하고 회복 조건을 먼저 묶는 것을 본다.",
           "next_battlefield_ticket": "collateral repricing protocol이 PPA/offtake package 설계 전장으로 이어진다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "4",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: PPA/offtake package 설계 전 담보 재평가 기준과 carve-out 후보를 risk minutes에 남겨야 한다.",
+            "proof": "episode 1-3: collateral repricing protocol / covenant carve-out 후보권 proof - 실질 손실을 인정하고 담보 회복 조건과 covenant 예외 후보를 남기는 패배형 진전",
+            "receipt": "episode 3-4: 도윤은 권한 수치 세 칸을 잃지만 collateral repricing protocol과 covenant carve-out 후보권을 얻는다.",
+            "next_gate": "episode 4: collateral repricing protocol이 PPA/offtake package 설계 전장으로 이어진다."
+          },
+          "range_reason": "Block 45 '깎인 담보표' converts 담보 재평가 손실 pressure into collateral repricing protocol / covenant carve-out 후보권 proof, lands 패배 속 재평가권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -6354,6 +7001,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "백인호는 도윤이 확약을 억지로 받지 않고 확약 순서를 금융표로 묶는 것을 본다.",
           "next_battlefield_ticket": "synchronized term grid가 경쟁사 credit scare 대응 자료가 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 은행단 다음 term sheet 수정 전 세 당사자의 조건 순서를 하나의 grid에 묶어야 한다.",
+            "proof": "episode 1-2: PPA/offtake synchronized term grid / three-party condition memo proof - 확약을 강요하지 않고 확약이 강해지는 순서를 장악해 financing proof를 만든다.",
+            "receipt": "episode 3: 도윤은 PPA/offtake synchronized term grid와 three-party condition memo를 얻는다.",
+            "next_gate": "episode 3: synchronized term grid가 경쟁사 credit scare 대응 자료가 된다."
+          },
+          "range_reason": "Block 46 '묶인 전력의 가격' converts 조건 묶음 설계 pressure into PPA/offtake synchronized term grid / three-party condition memo proof, lands 조건묶음권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -6495,6 +7156,20 @@
           "public_signboard_event": "경쟁 데이터센터 컨소시엄의 신용등급 전망 하향 속보가 뜬다.",
           "representative_reevaluation": "백인호는 도윤이 경쟁사를 조롱하지 않고 credit model 비교표로 쓰는 것을 본다.",
           "next_battlefield_ticket": "comparison memo가 pilot budget 조건부 승인 전장의 근거가 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 은행단이 업계 haircut 상향을 확정하기 전 선우의 comparison memo를 제출해야 한다.",
+            "proof": "episode 1-2: credit scare comparison memo / 은행단 재검토 call 우선권 proof - 남의 신용 하락을 비난이 아니라 선우의 리스크 선제관리 증거로 환전한다.",
+            "receipt": "episode 3: 도윤은 credit scare comparison memo와 은행단 재검토 call 우선권을 얻는다.",
+            "next_gate": "episode 3: comparison memo가 pilot budget 조건부 승인 전장의 근거가 된다."
+          },
+          "range_reason": "Block 47 '남의 신용등급 경보' converts 외부 신용 proof pressure into credit scare comparison memo / 은행단 재검토 call 우선권 proof, lands 신용외부증거 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -6635,6 +7310,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "백인호는 도윤이 전액 승인보다 carve-out이 붙은 tranche 순서를 고르는 것을 본다.",
           "next_battlefield_ticket": "tranche schedule이 risk committee minutes 확보 전장으로 이어진다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: AI 데이터센터 본계약 집행 일정 전에 첫 tranche와 다음 tranche 조건을 확정해야 한다.",
+            "proof": "episode 1-2: pilot budget conditional approval / tranche schedule owner 권한 proof - 돈의 총액보다 열리는 순서와 carve-out 조건을 장악한다.",
+            "receipt": "episode 3-4: 도윤은 pilot budget conditional approval과 tranche schedule owner 권한을 얻는다.",
+            "next_gate": "episode 4: tranche schedule이 risk committee minutes 확보 전장으로 이어진다."
+          },
+          "range_reason": "Block 48 '열리는 돈의 순서' converts 조건부 예산 승인 pressure into pilot budget conditional approval / tranche schedule owner 권한 proof, lands 조건부예산 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -6775,6 +7464,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "백인호는 도윤이 긴 설명보다 회의록 세 문장을 더 중요하게 보는 것을 확인한다.",
           "next_battlefield_ticket": "risk minutes 문장이 3000억 allocation authority 심사로 넘어간다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: allocation authority 심사 전 risk minutes 문구가 확정되어야 한다.",
+            "proof": "episode 1-2: risk committee minutes 문장 삽입권 / PF appendix custodian 권한 proof - 권한을 긴 설명이 아니라 삭제하기 어려운 회의록 문장으로 고정한다.",
+            "receipt": "episode 2-3: 도윤은 risk committee minutes 주 문장 삽입권과 PF appendix custodian 권한을 얻는다.",
+            "next_gate": "episode 3: risk minutes 문장이 3000억 allocation authority 심사로 넘어간다."
+          },
+          "range_reason": "Block 49 '회의록의 문장' converts 회의록 권한화 pressure into risk committee minutes 문장 삽입권 / PF appendix custodian 권한 proof, lands 회의록권한 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -6915,6 +7618,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서문호는 도윤이 돈 자체보다 돈을 여닫는 손잡이를 요구하는 것을 보고 권한을 부여한다.",
           "next_battlefield_ticket": "allocation authority가 에너지 option portfolio와 Strategic Power TF draft 전장을 연다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "4",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: first tranche drawdown 전 allocation authority와 stop right를 확정해야 한다.",
+            "proof": "episode 1-3: 3000억 pilot budget allocation authority / tranche stop right proof - 돈의 소유권이 아니라 다음 tranche를 여닫는 권한을 장악한다.",
+            "receipt": "episode 3-4: 도윤은 3000억 pilot budget allocation authority와 tranche stop right를 얻는다.",
+            "next_gate": "episode 4: allocation authority가 에너지 option portfolio와 Strategic Power TF draft 전장을 연다."
+          },
+          "range_reason": "Block 50 '삼천억의 손잡이' converts 자본 엔진 확보 pressure into 3000억 pilot budget allocation authority / tranche stop right proof, lands 자본배분권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -7055,6 +7772,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서문호는 도윤이 첫 stop right를 돈 아끼기가 아니라 claim 통제에 쓰는 것을 본다.",
           "next_battlefield_ticket": "SMR option memo가 regulatory calendar 전장으로 넘어간다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: investor deck 업데이트 전 SMR-powered 문구를 option 검토 문구로 낮춰야 한다.",
+            "proof": "episode 1-2: SMR option review right / 기술 홍보 예산 hold proof - 기술을 죽이지 않고 홍보 예산과 claim 문구를 option gate에 묶는다.",
+            "receipt": "episode 3-4: 도윤은 SMR option review right와 기술 홍보 예산 hold 권한을 얻는다.",
+            "next_gate": "episode 4: SMR option memo가 regulatory calendar 전장으로 넘어간다."
+          },
+          "range_reason": "Block 51 '만능 발전기의 첫 줄' converts SMR 만능론 제동 pressure into SMR option review right / 기술 홍보 예산 hold proof, lands 기술claim통제 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -7194,6 +7925,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "오태선은 도윤이 정책 인맥보다 허가 순서표를 먼저 요구하는 것을 본다.",
           "next_battlefield_ticket": "regulatory calendar가 backup mix와 option portfolio의 시간가치 기준이 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: investor deck appendix 확정 전 SMR 규제 빈칸과 질문표를 정리해야 한다.",
+            "proof": "episode 1-2: regulatory calendar 작성권 / policy question list 접근권 proof - 정책 인맥을 바로 사지 않고 질문과 회의록으로 증거 생산 구조를 먼저 만든다.",
+            "receipt": "episode 2-3: 도윤은 regulatory calendar 작성권과 policy question list 원본 접근권을 얻는다.",
+            "next_gate": "episode 3: regulatory calendar가 backup mix와 option portfolio의 시간가치 기준이 된다."
+          },
+          "range_reason": "Block 52 '허가 달력의 빈칸' converts 규제 calendar pressure into regulatory calendar 작성권 / policy question list 접근권 proof, lands 규제일정권 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -7332,6 +8077,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "선우디지털 계약 라인은 도윤이 backup 기술도 cloud margin과 penalty로 계산하는 것을 본다.",
           "next_battlefield_ticket": "dispatch model이 정책 자문 라인의 압박을 검증하는 표가 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 고객 SLA dashboard 다음 update 전 backup response time을 숫자로 넣어야 한다.",
+            "proof": "episode 1-2: firming stack dispatch model / backup vendor RFI authority proof - 단일 해법을 버리고 시간, 비용, 규제, 금융 조건을 scoring하는 조합표를 만든다.",
+            "receipt": "episode 2-3: 도윤은 firming stack dispatch model과 backup vendor RFI authority를 얻는다.",
+            "next_gate": "episode 3: dispatch model이 정책 자문 라인의 압박을 검증하는 표가 된다."
+          },
+          "range_reason": "Block 53 '백업 전력의 조합표' converts backup mix 설계 pressure into firming stack dispatch model / backup vendor RFI authority proof, lands 백업조합표 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -7471,6 +8230,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "백인호는 도윤이 자문료를 끊지 않고 산출물 tranche로 묶는 것을 본다.",
           "next_battlefield_ticket": "conflict log와 witness 후보 명단이 기술 과장 역풍의 방어선이 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 정책 windows가 닫히기 전 자문 라인을 끊지 않으면서도 proof tranche를 걸어야 한다.",
+            "proof": "episode 1-2: policy deliverable escrow / conflict log access proof - 돈을 완전히 막지 않고 영수증이 있어야 열리는 자문료 구조로 바꾼다.",
+            "receipt": "episode 3: 도윤은 권한 수치 한 칸을 잃지만 policy deliverable escrow와 conflict log access를 얻는다.",
+            "next_gate": "episode 3: conflict log와 witness 후보 명단이 기술 과장 역풍의 방어선이 된다."
+          },
+          "range_reason": "Block 54 '자문료의 빈 영수증' converts 정책 자문 압박 pressure into policy deliverable escrow / conflict log access proof, lands 손실 속 자문통제 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -7611,6 +8384,20 @@
           "public_signboard_event": "SMR로 AI 데이터센터 전력난을 해결한다는 과장 기사가 시장에 퍼진다.",
           "representative_reevaluation": "서문호는 도윤이 시장 박수보다 claim gate와 correction note를 택하는 것을 본다.",
           "next_battlefield_ticket": "technical claim gate가 장기 energy option portfolio 전장으로 이어진다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "4",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 기사 확산과 investor follow-up 전 public correction note와 claim gate를 확정해야 한다.",
+            "proof": "episode 1-3: technical claim approval right / public correction note 권한 proof - 실질 평판 손실을 인정하고 기술 claim gate와 correction authority를 남긴다.",
+            "receipt": "episode 3-4: 도윤은 권한 수치 두 칸을 잃지만 technical claim approval right와 public correction note 권한을 얻는다.",
+            "next_gate": "episode 4: technical claim gate가 장기 energy option portfolio 전장으로 이어진다."
+          },
+          "range_reason": "Block 55 '과장된 원자로 문구' converts 기술 과장 역풍 pressure into technical claim approval right / public correction note 권한 proof, lands 손실 속 claim gate in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -7752,6 +8539,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "오태선은 도윤이 SMR을 죽이지 않고 점수표의 한 칸으로 낮추는 것을 본다.",
           "next_battlefield_ticket": "option scoring sheet가 외부 regulatory witness 검증으로 넘어간다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 다음 tranche 배정 전 기술별 proof-budget 기준을 확정해야 한다.",
+            "proof": "episode 1-2: energy option portfolio scoring authority / proof-budget allocation matrix proof - 기술을 고르지 않고 기술별 proof와 risk score를 기준으로 예산권을 장악한다.",
+            "receipt": "episode 3-4: 도윤은 energy option portfolio scoring authority와 proof-budget allocation matrix를 얻는다.",
+            "next_gate": "episode 4: option scoring sheet가 외부 regulatory witness 검증으로 넘어간다."
+          },
+          "range_reason": "Block 56 '옵션의 점수표' converts 장기 option portfolio pressure into energy option portfolio scoring authority / proof-budget allocation matrix proof, lands 옵션점수권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -7892,6 +8693,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "임혜원은 도윤이 칭찬보다 어려운 질문을 요구하는 것을 보고 문서를 검토한다.",
           "next_battlefield_ticket": "red-team question docket이 오태선과의 조건부 동맹 기준이 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: TF draft 작성 전 내부 option portfolio가 외부 질문을 버티는지 확인해야 한다.",
+            "proof": "episode 1-2: external regulatory witness statement / red-team question docket proof - 우호적 지지를 사지 않고 비우호적 질문을 사서 proof의 신뢰도를 높인다.",
+            "receipt": "episode 2-3: 도윤은 external regulatory witness statement와 red-team question docket을 얻는다.",
+            "next_gate": "episode 3: red-team question docket이 오태선과의 조건부 동맹 기준이 된다."
+          },
+          "range_reason": "Block 57 '외부 증인의 질문' converts 외부 규제 witness pressure into external regulatory witness statement / red-team question docket proof, lands 외부검증권 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -8033,6 +8848,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "오태선은 도윤이 적을 누르는 대신 공동 책임으로 묶는 것을 보고 악수한다.",
           "next_battlefield_ticket": "conditional alliance memo가 Strategic Power TF draft로 넘어간다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "2-3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: TF draft 작성 전 에너지 계열 실행 좌석과 claim 책임을 묶어야 한다.",
+            "proof": "episode 1-2: conditional alliance memo / energy co-sponsor seat 동의서 proof - 적을 누르지 않고 공동 책임과 claim gate를 붙인 실행 동맹으로 묶는다.",
+            "receipt": "episode 2-3: 도윤은 conditional alliance memo와 energy co-sponsor seat 동의서를 얻는다.",
+            "next_gate": "episode 3: conditional alliance memo가 Strategic Power TF draft로 넘어간다."
+          },
+          "range_reason": "Block 58 '사장의 조건부 악수' converts 조건부 동맹 pressure into conditional alliance memo / energy co-sponsor seat 동의서 proof, lands 조건부동맹 in-block, and opens the next power-grid gate; keep downstream expansion inside 2-3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -8173,6 +9002,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "백인호는 도윤이 자기 견제 장치를 일부러 draft에 넣는 것을 본다.",
           "next_battlefield_ticket": "TF draft가 Strategic Power TF board agenda로 올라간다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: Strategic Power TF board agenda 상정 전 draft governance를 확정해야 한다.",
+            "proof": "episode 1-2: Strategic Power TF draft 작성권 / four-seat governance table proof - 자기 권한을 줄이는 모양을 만들고 실제 핵심 손잡이는 allocation owner로 남긴다.",
+            "receipt": "episode 3-4: 도윤은 Strategic Power TF draft 작성권과 four-seat governance table을 얻는다.",
+            "next_gate": "episode 4: TF draft가 Strategic Power TF board agenda로 올라간다."
+          },
+          "range_reason": "Block 59 'TF 초안의 빈 의자' converts TF draft pressure into Strategic Power TF draft 작성권 / four-seat governance table proof, lands TF초안권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -8314,6 +9157,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "서문호는 도윤이 정식 권력기구보다 감사형 pilot agenda를 먼저 요구하는 것을 보고 승인한다.",
           "next_battlefield_ticket": "pilot TF agenda가 마지막 승계/board control 전장을 연다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "4",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 다음 AI 인프라 tranche 집행 전 TF agenda와 reporting cadence를 board에 올려야 한다.",
+            "proof": "episode 1-3: Strategic Power pilot TF agenda / board reporting cadence 권한 proof - 정식 권력기구가 아니라 감사형 pilot agenda로 시작해 board reporting cadence를 장악한다.",
+            "receipt": "episode 3-4: 도윤은 90일 Strategic Power pilot TF agenda와 board reporting cadence를 얻는다.",
+            "next_gate": "episode 4: pilot TF agenda가 마지막 승계/board control 전장을 연다."
+          },
+          "range_reason": "Block 60 '전력 TF의 첫 의제' converts TF board agenda pressure into Strategic Power pilot TF agenda / board reporting cadence 권한 proof, lands TF의제권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -8454,6 +9311,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "정태오는 도윤이 권한 확장보다 안건 요건을 먼저 제시하는 것을 본다.",
           "next_battlefield_ticket": "agenda checklist가 배임/월권 legal memo 방어 자료가 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 첫 TF 회의가 무산되기 전 agenda filter의 범위를 확정해야 한다.",
+            "proof": "episode 1-2: pilot TF agenda filter right / agenda admissibility checklist 승인권 proof - 권한을 키우는 대신 안건 기준을 좁혀 첫 회의를 살린다.",
+            "receipt": "episode 3-4: 도윤은 pilot TF agenda filter right와 agenda admissibility checklist 승인권을 얻는다.",
+            "next_gate": "episode 4: agenda checklist가 배임/월권 legal memo 방어 자료가 된다."
+          },
+          "range_reason": "Block 61 '첫 의제의 칼집' converts TF agenda 공격 pressure into pilot TF agenda filter right / agenda admissibility checklist 승인권 proof, lands 의제필터권 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -8593,6 +9464,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "윤하경은 도윤이 법무 memo를 무시하지 않고 발동 절차로 바꾸는 것을 본다.",
           "next_battlefield_ticket": "safe-harbor protocol이 외부 mega customer power gate 협상으로 넘어간다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 첫 실제 tranche stop 사건이 오기 전 legal safe-harbor protocol을 확정해야 한다.",
+            "proof": "episode 1-2: legal safe-harbor protocol / stop right execution log proof - 권한 손실을 감수하고 실제로 쓸 수 있는 방어 절차를 만든다.",
+            "receipt": "episode 3: 도윤은 권한 수치 한 칸을 잃지만 legal safe-harbor protocol과 stop right execution log를 얻는다.",
+            "next_gate": "episode 3: safe-harbor protocol이 외부 mega customer power gate 협상으로 넘어간다."
+          },
+          "range_reason": "Block 62 '월권이라는 문장' converts 월권 memo pressure into legal safe-harbor protocol / stop right execution log proof, lands 손실 속 법무방어 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -8732,6 +9617,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "노스브릿지AI는 도윤이 대형 고객에게도 예외를 주지 않는 것을 본다.",
           "next_battlefield_ticket": "대형 고객 due diligence가 서민재 narrative와 서강준 제조 논리의 결합 공격을 부른다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "4",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 노스브릿지AI가 경쟁사와도 협상하기 전 due diligence slot을 잡아야 한다.",
+            "proof": "episode 1-3: mega customer power due diligence seat / grid reservation question list proof - 고객을 바로 잡지 않고 고객도 통과해야 할 전력 관문을 만들어 성장 기회를 통제한다.",
+            "receipt": "episode 3-4: 도윤은 mega customer power due diligence seat와 grid reservation question list를 얻는다.",
+            "next_gate": "episode 4: 대형 고객 due diligence가 서민재 narrative와 서강준 제조 논리의 결합 공격을 부른다."
+          },
+          "range_reason": "Block 63 '메가 고객의 전력 관문' converts mega customer gate pressure into mega customer power due diligence seat / grid reservation question list proof, lands 대형고객gate in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -8872,6 +9771,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "정태오는 도윤이 fast-track을 막는 대신 책임 서명을 늘리는 것을 본다.",
           "next_battlefield_ticket": "joint sign-off map이 public pressure 속 stop right 발동의 방어선이 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 노스브릿지AI LOI follow-up 전에 fast-track 예외의 책임 서명 요건을 확정해야 한다.",
+            "proof": "episode 1-2: cross-affiliate delivery dependency map / joint sign-off requirement 승인권 proof - 반대 논리를 따로 꺾지 않고 같은 책임 서명표에 묶어 서로를 견제하게 만든다.",
+            "receipt": "episode 3: 도윤은 cross-affiliate delivery dependency map과 joint sign-off requirement 승인권을 얻는다.",
+            "next_gate": "episode 3: joint sign-off map이 public pressure 속 stop right 발동의 방어선이 된다."
+          },
+          "range_reason": "Block 64 '두 논리의 합병' converts 결합 반격 pressure into cross-affiliate delivery dependency map / joint sign-off requirement 승인권 proof, lands 공동책임서명 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -9013,6 +9926,20 @@
           "public_signboard_event": "선우그룹 내부 TF가 200MW AI 고객을 지연시킨다는 기사가 시장에 퍼진다.",
           "representative_reevaluation": "은행단은 도윤이 여론 손실을 감수하고 safe-harbor 절차로 돈을 멈추는 것을 본다.",
           "next_battlefield_ticket": "stop execution record가 누적 권한 receipt 전수 회수 전장으로 넘어간다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "4",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 노스브릿지AI LOI deadline과 first tranche drawdown 전에 KPI breach를 기록하고 board emergency review를 열어야 한다.",
+            "proof": "episode 1-3: first tranche stop execution record / board emergency review slot proof - 대형 여론 손실을 감수하고 TF가 실제로 돈을 멈출 수 있다는 첫 기록을 남긴다.",
+            "receipt": "episode 3-4: 도윤은 권한 수치 여섯 칸을 잃지만 first tranche stop execution record와 board emergency review slot을 얻는다.",
+            "next_gate": "episode 4: stop execution record가 누적 권한 receipt 전수 회수 전장으로 넘어간다."
+          },
+          "range_reason": "Block 65 '멈춘 돈의 헤드라인' converts 큰 손실과 public pressure pressure into first tranche stop execution record / board emergency review slot proof, lands 큰손실속작동증거 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -9154,6 +10081,20 @@
           "public_signboard_event": "없음",
           "representative_reevaluation": "정태오는 도윤이 성공만 숨기지 않고 손실까지 같은 원장에 올리는 것을 본다.",
           "next_battlefield_ticket": "receipt ledger가 risk committee 승부의 핵심 증거가 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: board emergency review 전에 누적 receipt를 exhibit으로 승인받아야 한다.",
+            "proof": "episode 1-2: power-gate receipt ledger / board emergency review exhibit 승인권 proof - 성과와 손실을 한 원장에 넣어 월권 프레임을 절차 프레임으로 바꾼다.",
+            "receipt": "episode 3-4: 도윤은 power-gate receipt ledger와 board emergency review exhibit 승인권을 얻는다.",
+            "next_gate": "episode 4: receipt ledger가 risk committee 승부의 핵심 증거가 된다."
+          },
+          "range_reason": "Block 66 '영수증의 원장' converts 누적 receipt 회수 pressure into power-gate receipt ledger / board emergency review exhibit 승인권 proof, lands 누적영수증 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -9296,6 +10237,20 @@
           "public_signboard_event": "태우그룹이 AI 인프라 손실을 이사회 리스크 위원회 안건으로 올렸다는 소문이 돈다.",
           "representative_reevaluation": "정태오는 서도윤이 손실을 감추지 않고 결재권의 가격표로 쓰는 것을 본다.",
           "next_battlefield_ticket": "위원회 판단이 Strategic Power TF 출범 표결의 방패가 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 출범 표결 전에 위원회 판단을 확보하지 못하면 TF는 여론과 손실 책임으로 묶인다.",
+            "proof": "episode 1-2: risk committee validation / launch vote docket 확보 proof - 직함을 요구하지 않고 표결에 필요한 절차 유효성만 먼저 산다",
+            "receipt": "episode 3: 서도윤은 risk committee validation finding과 launch vote docket을 얻는다.",
+            "next_gate": "episode 3: 위원회 판단이 Strategic Power TF 출범 표결의 방패가 된다."
+          },
+          "range_reason": "Block 67 '리스크 위원회의 표' converts 위원회 판단 pressure into risk committee validation / launch vote docket 확보 proof, lands 위원회판단 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -9437,6 +10392,20 @@
           "public_signboard_event": "태우그룹이 AI 인프라 전력 관문 조직을 공식 출범시킨다는 내부 공지가 돈다.",
           "representative_reevaluation": "서문호는 서도윤이 승리 연설 대신 routing 조항의 문구를 고치는 것을 본다.",
           "next_battlefield_ticket": "출범 charter가 서문호의 조건부 승계 신호를 부른다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 고객 LOI와 은행 drawdown 재개 전까지 TF charter가 없으면 모든 협상이 다시 개별 계열사 싸움으로 쪼개진다.",
+            "proof": "episode 1-2: Strategic Power TF charter / launch vote PASS proof - 상대가 원하는 제한 일부를 팔아 핵심 결재 경로를 산다",
+            "receipt": "episode 3: Strategic Power TF launch vote가 PASS 되고, 서도윤은 official TF charter custody와 mandatory power-gate protocol 초안을 쥔다.",
+            "next_gate": "episode 3: 출범 charter가 서문호의 조건부 승계 신호를 부른다."
+          },
+          "range_reason": "Block 68 '출범 표결' converts 출범 표결 pressure into Strategic Power TF charter / launch vote PASS proof, lands 출범표결 in-block, and opens the next power-grid gate; keep downstream expansion inside 3 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -9577,6 +10546,20 @@
           "public_signboard_event": "공식 발표는 없지만 AI 인프라 안건 배포선에 Strategic Power TF leader가 추가된다.",
           "representative_reevaluation": "서문호는 서도윤이 후계자라는 단어를 버리고 경로만 가져가는 것을 본다.",
           "next_battlefield_ticket": "chairman minutes가 final power-gate protocol 서명의 근거가 된다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "3",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: 출범 표결 직후 권한 경로를 고정하지 못하면 계열사들이 charter 해석 싸움으로 시간을 끈다.",
+            "proof": "episode 1-2: chairman conditional signal / direct board cadence signature proof - 이름값을 포기하고 실제 안건 이동 경로를 산다",
+            "receipt": "episode 3-4: 서도윤은 chairman conditional signal, direct board cadence signature, final protocol 서명 슬롯을 얻는다.",
+            "next_gate": "episode 4: chairman minutes가 final power-gate protocol 서명의 근거가 된다."
+          },
+          "range_reason": "Block 69 '서문호의 조건' converts 조건부 신호 pressure into chairman conditional signal / direct board cadence signature proof, lands 조건부신호 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {
@@ -9717,6 +10700,20 @@
           "public_signboard_event": "태우그룹 AI 인프라 투자가 Strategic Power TF sign-off 조건으로 재개된다는 내부 공지가 내려간다.",
           "representative_reevaluation": "서문호는 후계자라는 단어 없이도 모든 AI 인프라 안건이 서도윤의 책상을 지나가게 된 것을 본다.",
           "next_battlefield_ticket": "90일 KPI review와 실제 전력 조달 전쟁이 다음 시즌의 전장으로 남는다."
+        },
+        "downstream_episode_pacing_hint": {
+          "recommended_episode_count": "4",
+          "acceptable_episode_range": "3-4",
+          "stretch_cap": "4",
+          "do_not_expand_to": "5 or more episodes without a new Director-approved macro-battlefield",
+          "must_land_inside_range": {
+            "pressure": "episode 1: Northbridge LOI와 bank drawdown 재개를 같은 날 묶지 못하면 조건부 수락은 다시 협상장으로 돌아간다.",
+            "proof": "episode 1-3: group AI infrastructure gatekeeper / mandatory power-gate protocol lock proof - 승리 선언을 버리고 모든 계약 부속서에 결재 경로를 심는다",
+            "receipt": "episode 4: 서도윤은 Strategic Power TF leader appointment, mandatory power-gate protocol, group AI infrastructure gatekeeper 지위를 얻는다.",
+            "next_gate": "episode 4: 90일 KPI review와 실제 전력 조달 전쟁이 다음 시즌의 전장으로 남는다."
+          },
+          "range_reason": "Block 70 '전력망을 산 후계자' converts 최종 protocol pressure into group AI infrastructure gatekeeper / mandatory power-gate protocol lock proof, lands 최종관문 in-block, and opens the next power-grid gate; keep downstream expansion inside 3-4 episodes.",
+          "reward_engine_guard": "family, succession, or social recognition may signal pressure or reevaluation only; the reward engine stays with review right, audit right, negotiation seat, board/TF authority, budget control, or status receipt."
         }
       },
       "regression_ext": {

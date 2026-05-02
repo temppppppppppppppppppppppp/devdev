@@ -25,7 +25,7 @@
     },
     {
       "target": "대학병원 전산실",
-      "before": "약국 POS까지 연결되는 것을 보고 Block 024의 강한 차단 근거를 준비한다",
+      "before": "약국 POS까지 연결되는 것을 보고 강한 차단 근거를 준비한다",
       "after": "익명 집계표가 보험 문구 근거로 쓰이는 것을 보고 전산실 차단을 본격 준비한다"
     },
     {
@@ -40,14 +40,14 @@
     }
   ],
   "foreshadow": [
-    "심사 재검토 메모는 Block 025 심사 보류 통지에서 경쟁사 로비와 연결된다.",
-    "보험 문구 수정안은 Block 030 표준 청구서의 문장 구조가 된다.",
-    "전산실의 본격 차단 준비는 Block 024 전산실의 반격으로 즉시 터진다."
+    "심사 재검토 메모는 심사 보류 통지에서 경쟁사 로비와 연결된다.",
+    "보험 문구 수정안은 표준 청구서의 문장 구조가 된다.",
+    "전산실의 본격 차단 준비는 전산실의 반격으로 즉시 터진다."
   ],
   "callback": [
-    "Block 022의 품절 시간대 접근권과 우선공급 품목 예측권이 보험 문구 수정 근거로 쓰인다.",
-    "Block 021의 납품/폐기/정산 번호 매칭권이 병원 비용절감 근거로 붙는다.",
-    "Block 018의 폐기율 절감 정산표가 청구 문구의 경제성 근거로 회수된다."
+    "품절 시간대 접근권과 우선공급 품목 예측권이 보험 문구 수정 근거로 쓰인다.",
+    "납품/폐기/정산 번호 매칭권이 병원 비용절감 근거로 붙는다.",
+    "폐기율 절감 정산표가 청구 문구의 경제성 근거로 회수된다."
   ],
   "emotional_beat": {
     "type": "wording_leverage",
@@ -92,13 +92,67 @@
     "opening_progression": {
       "public_signboard_event": "보조품목 보험 반려가 '냉장 백신 투여 전후 폐기율 감소 및 품절 방지용 관리품목' 문구 수정안으로 바뀐다",
       "representative_reevaluation": "사립병원, 보험심사 실무자, 기존 납품사가 태오바이오를 단순 공급자가 아니라 청구 문구를 바꾸는 데이터 보유자로 본다",
-      "next_battlefield_ticket": "전산실이 익명 집계표의 보험 근거 사용을 문제 삼으며 Block 024 전산실의 반격으로 이어진다"
+      "next_battlefield_ticket": "전산실이 익명 집계표의 보험 근거 사용을 문제 삼으며 전산실의 반격으로 이어진다"
     },
     "block_cider": {
       "has_cider": true,
       "receipt_type": "coverage_wording_receipt",
       "receipt_line": "강태오는 품절 예측표와 폐기율 데이터를 보험 코드 문구 수정안, 심사 재검토 메모, 우선공급 가능 품목군 확대권으로 바꾼다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "품절 예측 데이터를 보험 문구 수정안으로 바꿔 납품 가능 시장을 넓히는 문장 레버리지 승리",
+      "recognition_signal": "사립병원 구매이사의 시선 변화: 보험 반려 비용을 떠넘기려다 문구 수정안과 우선공급 예측표를 병원 명의로 올리는 쪽으로 묶인다",
+      "reward_signal": "강태오는 품절 예측표와 폐기율 데이터를 보험 코드 문구 수정안, 심사 재검토 메모, 우선공급 가능 품목군 확대권으로 바꾼다.",
+      "growth_signal": "강태오는 보험 코드를 새로 만들지 않고 문구를 바꿔 품절 예측 데이터가 청구 근거가 되는 길을 연다.",
+      "expectation_signal": "전산실이 익명 집계표의 보험 근거 사용을 문제 삼으며 전산실의 반격으로 이어진다",
+      "reader_feel": "독자는 「보험 코드의 문장」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 품절 예측표와 폐기율 데이터를 보험 코드 문구 수정안, 심사 재검토 메모, 우선공급 가능 품목군 확대권으로 바꾼다. 성장 장면: 강태오는 보험 코드를 새로 만들지 않고 문구를 바꿔 품절 예측 데이터가 청구 근거가 되는 길을 연다. 다음 기대감: 전산실이 익명 집계표의 보험 근거 사용을 문제 삼으며 전산실의 반격으로 이어진다",
+      "mature_success_signal": "강태오는 보험 코드의 문장의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "품절 예측 데이터를 보험 문구 수정안으로 바꿔 납품 가능 시장을 넓히는 문장 레버리지 승리",
+        "recognition": "사립병원 구매이사의 시선 변화: 보험 반려 비용을 떠넘기려다 문구 수정안과 우선공급 예측표를 병원 명의로 올리는 쪽으로 묶인다",
+        "reward": "강태오는 품절 예측표와 폐기율 데이터를 보험 코드 문구 수정안, 심사 재검토 메모, 우선공급 가능 품목군 확대권으로 바꾼다.",
+        "growth": "강태오는 보험 코드를 새로 만들지 않고 문구를 바꿔 품절 예측 데이터가 청구 근거가 되는 길을 연다.",
+        "expectation": "전산실이 익명 집계표의 보험 근거 사용을 문제 삼으며 전산실의 반격으로 이어진다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 사립병원 구매이사의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 전산실이 익명 집계표의 보험 근거 사용을 문제 삼으며 전산실의 반격으로 이어진다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "약국 POS 빈칸 시험표 첫 주, 사립병원 구매실에 이상한 반려 통지가 들어온다. 보조품목은 백신과 같이 쓰였지만 보험 코드상 별도 청구 문구가 없어 병원 비용으로 처리하라는 내용이다. 병원은 태오바이오에 납품 단가를 낮추라고 압박하고, 약국은 품절 시간대가 계속 찍힌다.",
+      "proof_action": "태오는 보험 코드를 새로 만들겠다고 덤비지 않는다. 대신 문장 하나를 바꾼다. '백신 보조품목'이 아니라 '냉장 백신 투여 전후 폐기율 감소 및 품절 방지용 관리품목'으로 적게 한다. 근거는 환자 정보가 아니라 약국 POS의 품절 시간대, 병원 납품표, 폐기율 절감 정산표다.",
+      "proof_axis": "전생에서 보험 등재의 첫 균열은 거창한 신코드가 아니라 기존 코드 문구의 용도 문장 변경에서 시작됐다는 기억",
+      "recognition_or_resistance_signal": "사립병원 구매이사 -> 보험 반려 비용을 떠넘기려다 문구 수정안과 우선공급 예측표를 병원 명의로 올리는 쪽으로 묶인다",
+      "receipt_asset": "강태오는 품절 예측표와 폐기율 데이터를 보험 코드 문구 수정안, 심사 재검토 메모, 우선공급 가능 품목군 확대권으로 바꾼다.",
+      "reward_asset_classes": [
+        "rights_control_asset"
+      ],
+      "next_regulated_gate": "전산실이 익명 집계표의 보험 근거 사용을 문제 삼으며 전산실의 반격으로 이어진다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 사립병원 구매이사의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 전산실이 익명 집계표의 보험 근거 사용을 문제 삼으며 전산실의 반격으로 이어진다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {

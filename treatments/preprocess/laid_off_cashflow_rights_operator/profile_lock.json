@@ -1,0 +1,41 @@
+{
+  "primary_profile": "business_growth_profile",
+  "secondary_profile": "office_power_profile",
+  "resource_axis": [
+    "반품권, 위약금, 재납품 우선권, 브랜드 라이선스, AS 대행권처럼 버려진 권리 묶음",
+    "ERP 로그, 계약서 원본, 창고 SKU 이동표, 품질/하역/정산 proof처럼 다음 gate를 여는 증거 자산",
+    "SPV 계좌, escrow, 회수권 waterfall, 데이터 feed, 표준 계약처럼 반복 운영이 가능한 구조 자산",
+    "물류 슬롯, 생산 슬롯, 해외 channel review, 장기 생산권처럼 공급망 병목을 통제하는 권리"
+  ],
+  "power_axis": [
+    "상대가 현금 합의로 닫으려는 문제를 서명과 공식 receipt로 다시 열게 만드는 협상력",
+    "감사/법무/품질/현장 operator를 통해 문서 proof를 조직 절차로 고정하는 힘",
+    "이전 block receipt 없이는 다음 gate가 열리지 않는 누적 권리 구조",
+    "상대가 도윤을 제거하면 정산/품질/물류/생산 risk도 같이 커지는 운영 의존성"
+  ],
+  "control_axis": [
+    "데이터 접근권과 계약 검토권을 선점해 다음 파일을 볼 수 있는 상태",
+    "반품창고, AS 대행, 품질 검증, 물류 슬롯, 생산 슬롯을 하나의 권리 운영 pipeline으로 묶는 상태",
+    "도윤권리운영/SPV/표준 계약이 공급사와 다온 사이의 판단 gate가 되는 상태",
+    "현장 operator와 validator가 도윤의 receipt chain에 묶여 경쟁자가 쉽게 복제하지 못하는 상태"
+  ],
+  "payoff_axis": [
+    "해고 보류보다 유용한 계정 연장/파일 열람권/계약 검토권 receipt",
+    "현금보다 오래 남는 우선사용권, 반복 처리 물량, 유지보수 MSA, 생산 슬롯 receipt",
+    "상대의 공격이 도윤의 공식 권한이나 proof packet으로 바뀌는 cider/payoff",
+    "70-block 권리 receipt index와 권리 운영 헌장으로 도윤의 운영자 정체성이 확정되는 payoff"
+  ],
+  "failure_axis": [
+    "계정 만료나 access revoke로 다음 파일을 못 보는 상태",
+    "현금 합의/no-further-claim으로 권리 묶음이 닫히는 상태",
+    "품질/물류/생산 proof가 부족해 납품권이나 슬롯이 보류되는 상태",
+    "투자자/경쟁 플랫폼/파트너가 운영권을 포획해 도윤의 판단 gate를 빼앗는 상태"
+  ],
+  "hud_interpretation": {
+    "capital": "현금 잔액뿐 아니라 도윤이 실제로 굴릴 수 있는 접근권, 계약권, 운영권, 회수권, 생산권, 데이터 feed를 합산한 성장 자원.",
+    "deal_type": "투자 거래가 아니라 block마다 판을 바꾸는 진행 액션: 반품권 인정, 외주계약 열람, AS 대행 약정, 물류 슬롯 협상, 생산 슬롯 배정, 데이터 표준 채택.",
+    "resource_power_hud": "돈줄 후보, proof 상태, 권리 receipt, 다음 gate, operator/validator 확보 상태를 같이 보여주는 Resource-Power HUD.",
+    "business_lines": "정산, 반품/리퍼브, AS/품질, 물류/출입권, 제조/생산 슬롯, 데이터 표준, 해외 channel 등 active domain lines.",
+    "company_state": "다온리테일 내부 구조조정과 외부 SPV/권리 운영 pipeline이 충돌하는 현재 운영 무대."
+  }
+}

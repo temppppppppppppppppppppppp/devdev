@@ -1,0 +1,139 @@
+{
+  "block_id": "Block 25",
+  "title": "미수금 aging의 순서",
+  "content": {
+    "context": "서림초 4주 PO와 은성재활병원 1주 시험식 approval이 생기자 해문푸드서비스 대표는 은행 운전자금을 기대한다. 하지만 은행이 보는 data-room 첫 화면은 다르다. 30일 미만 채권, 60일 초과 채권, 90일 넘은 민간 미수, 검수대기 병원 채권이 한 장부에 섞여 있다. 도윤은 미수금이 전부 나쁜 빚은 아니지만, 순서 없이 섞인 미수금은 전부 나쁜 빚으로 보인다는 걸 안다.",
+    "event_villain": "채권은행 신용심사팀은 해문푸드서비스의 매출채권 장부를 부실채권 더미로 보고 운전자금 검토를 반려한다. 서림초 4주 PO도 실제 검수 전이라 확정매출이 아니고, 은성재활병원 1주 시험식은 approval일 뿐 채권이 아니며, 성우전자 emergency PO와 오래된 민간 사업장 미수는 회수 순서가 불분명하다는 이유다. 해문푸드서비스 대표는 장부 전체를 담보로 잡아 달라고 우기고, 명성급식은 은행에 위생점검 grace 상태와 병원 반려 기록을 함께 흘린다.",
+    "solution": "도윤은 장부 전체를 담보로 올리지 않는다. 그는 미수금을 네 칸으로 자른다. 첫째, 서림초 검수 완료분과 교육청 접수번호가 붙은 4주 PO는 공공기관 확정예정 채권으로 묶는다. 둘째, 은성재활병원 1주 시험식 approval은 검수 전까지 채권이 아니라 검수대기 pipeline으로 분류한다. 셋째, 성우전자 emergency PO 잔금은 온도 SLA 확인서가 붙은 단기 민간 채권으로 뺀다. 넷째, 90일 초과 민간 미수는 담보에서 제외하고 회수위임 목록으로 내린다. 대신 서민재에게 lockbox 계좌, 검수표 제출 순서, factoring advance cap, 과거채권 제외표를 한 장으로 제출한다.",
+    "reward": "은행은 운전자금을 바로 승인하지 않는다. 그러나 신용심사팀은 서림초 검수 완료분에 한해 lockbox 입금 계좌를 열고, 공공기관 확정예정 채권과 온도 SLA가 붙은 단기 민간 채권에 대해 factoring 예비 term sheet를 발급한다. 은성재활병원 시험식은 검수 완료 전 advance 대상에서 제외되지만, 검수표가 붙으면 2차 검토에 올리겠다는 메모가 남는다. 도윤은 돈을 받은 게 아니다. 그는 은행이 읽을 수 있는 회수 순서표를 만들어 급식 계약 bundle을 금융 언어로 번역했다."
+  },
+  "incident_beats": [
+    "은행 신용심사팀이 섞인 미수금 장부, 위생점검 grace, 병원 반려 기록을 이유로 운전자금 검토를 반려한다",
+    "도윤이 공공 확정예정 채권, 병원 검수대기 pipeline, 단기 민간 채권, 90일 초과 회수위임 미수를 분리해 lockbox 계좌와 factoring 예비 term sheet receipt를 확보한다"
+  ],
+  "stakes": "미수금 장부 전체를 담보로 올리면 오래된 민간 연체가 서림초 PO와 병원 시험식까지 오염시킨다. 하지만 회수 순서를 만들지 못하면 공동구매 선입금, 병원식 소량 batch 손실, 학교 급식 운영비를 버틸 금융 proof가 사라진다.",
+  "power_shift": {
+    "protagonist": "학교와 병원 운영 proof를 만든 operator에서 미수금 회수 순서를 금융기관 언어로 바꾸는 credit-structurer로 이동한다.",
+    "antagonist": "은행 신용심사팀과 명성급식은 섞인 장부와 위생 리스크로 financing gate를 닫으려 하지만, 도윤의 aging 분류와 제외표 때문에 좋은 채권까지 전부 부실로 묶지는 못한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "서민재",
+      "before": "도윤의 현장 proof는 인정하지만 해문푸드서비스 장부를 그대로는 은행에 올릴 수 없는 구조조정팀장",
+      "after": "lockbox, 검수표 제출 순서, factoring cap, 과거채권 제외표를 받고 신용심사팀 예비 term sheet를 끌어낸다",
+      "continuity_anchor_before": "도윤이 인증 취소가 아니라 재가동 전 검증 리스크로 쪼개는 것을 보고 48시간 검토 연장을 승인한다"
+    },
+    {
+      "target": "해문푸드서비스 대표",
+      "before": "매출채권 장부 전체를 담보로 잡아 운전자금을 받고 싶어 하는 대표",
+      "after": "90일 초과 민간 미수가 담보에서 제외되자 불만을 보이지만, 좋은 채권이 오염되지 않는다는 계산을 받아들인다",
+      "continuity_anchor_before": "도윤이 4종을 버리고 1종만 남기자 매출 축소를 불만스러워하지만 병원식 책임 범위를 처음으로 본다"
+    },
+    {
+      "target": "채권은행 신용심사팀",
+      "before": "해문푸드서비스의 미수금 장부를 부실채권 더미로 보고 운전자금 검토를 반려한다",
+      "after": "서림초 검수 완료분 lockbox와 일부 채권 factoring 예비 term sheet만 제한적으로 연다"
+    },
+    {
+      "target": "명성급식",
+      "before": "위생점검 grace와 병원 반려 기록을 은행에 흘려 financing gate를 막으려는 경쟁자",
+      "after": "병원 반려 4종과 시험식 1종이 장부에서 분리되면서 전체 부실 프레임을 완성하지 못한다",
+      "continuity_anchor_before": "전면 납품은 막지만 1주 시험식 approval까지는 차단하지 못한다"
+    }
+  ],
+  "foreshadow": [
+    "lockbox 계좌와 factoring 예비 term sheet는 후속 국면의 소액 운전자금 한도와 급여 지급 안정 receipt의 전단계가 된다.",
+    "과거채권 제외표는 후속 국면 구매위원회에서 내부정보·부실채권 프레임을 방어하는 문서로 쓰인다.",
+    "은성재활병원 시험식의 advance 제외는 병원식 검수표를 반드시 회수해야 하는 압박으로 남는다.",
+    "장기 민간 미수 회수위임 목록은 해당 아크 후반에 도윤이 통째 회생이 아니라 권리만 사는 방식을 다시 증명한다."
+  ],
+  "callback": [
+    "후속 국면의 서림초 4주 제한 PO, 주간 검수표, 교육청 접수번호를 공공기관 확정예정 채권으로 분류한다.",
+    "후속 국면의 은성재활병원 1주 시험식 approval과 병동 제한 검수표를 병원 검수대기 pipeline으로 분리한다.",
+    "후속 국면의 성우전자 emergency substitute PO와 온도 SLA pass 확인서를 단기 민간 채권으로 제한 분류한다.",
+    "후속 국면의 SPV escrow waterfall을 lockbox 구조의 초안으로 재사용한다."
+  ],
+  "emotional_beat": {
+    "type": "bad_debt_to_credit_order_cider",
+    "intensity": 8
+  },
+  "tension_level": 8,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "채권은행 신용심사 회의실 / 해문푸드서비스 data-room / lockbox 계좌 개설 창구",
+    "type": "receivables aging and preliminary factoring negotiation"
+  },
+  "time_span": {
+    "duration": "하루",
+    "in_story_time": "은성재활병원 시험식 approval 직후"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "일반 반찬 4종 공식 반려 / 닭채소 다짐 저염 연하식 1종 / 1주 120식 시험식 approval / lot 추적 라벨 / 알레르기 교차오염 확인란 / 영양성분 분석 접수번호 / 병동 제한 검수표 / 병원 도착 온도 사진 조건",
+    "capital_after": "공공기관 확정예정 채권 분류표 / 병원 검수대기 pipeline / 단기 민간 채권 분리 / 90일 초과 민간 미수 회수위임 목록 / lockbox 입금 계좌 / factoring 예비 term sheet / advance 제외표",
+    "capital_delta": "0억",
+    "profit_loss": "즉시 운전자금 승인 실패, lockbox와 제한 factoring 예비 term sheet 확보",
+    "method": "미수금 장부 전체를 담보로 잡지 않고 회수 가능성과 검수 상태에 따라 채권을 분리해 은행이 읽을 수 있는 순서표를 만든다.",
+    "investment_type": "distressed cafeteria receivables structuring",
+    "deal_type": "receivables aging split / lockbox setup / preliminary factoring term sheet",
+    "leverage_used": [
+      "서림초 4주 제한 대체공급 PO",
+      "주간 검수표",
+      "교육청 emergency extension 접수번호",
+      "은성재활병원 1주 시험식 approval",
+      "병동 제한 검수표",
+      "성우전자 emergency substitute PO",
+      "온도 SLA pass 확인서",
+      "SPV escrow waterfall"
+    ],
+    "opponent": {
+      "name": "채권은행 신용심사팀 / 명성급식 / 해문푸드서비스 대표",
+      "type": "bank credit gate, competitor risk-frame attack, and distressed operator overcollateralization pressure",
+      "weakness_exploited": "은행은 섞인 미수금 장부를 싫어하지만, 검수표와 지급 주체가 분리된 채권에는 제한 factoring 검토를 열 수밖에 없다"
+    },
+    "historical_event": null,
+    "time_pressure": "공동구매 선입금과 병원식 소량 batch 비용이 누적되기 전 lockbox와 factoring 예비 조건을 받아야 한다.",
+    "knowledge_used": "회귀 전 해문푸드서비스 valuation은 매출 규모보다 공공·병원·민간 미수금 aging을 분리한 뒤부터 은행 credit으로 읽혔다는 기억",
+    "risk_level": "중고위험",
+    "business_sector": "급식 운영 / 매출채권 / 은행 credit / factoring / lockbox",
+    "section_rotation": "급식 계약은 느리게 끊기지 않는다",
+    "success_pattern": "나쁜 장부를 좋은 채권과 분리해 금융기관이 읽을 수 있는 회수 순서로 환전",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "receivables_aging_finance_receipt",
+      "receipt_line": "공공기관 확정예정 채권 분류표, 병원 검수대기 pipeline, 단기 민간 채권 분리표, 90일 초과 회수위임 목록, lockbox 입금 계좌, factoring 예비 term sheet receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 해문푸드서비스의 미수금은 총액보다 aging 순서와 지급 주체 분리가 은행 credit의 핵심이었다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 인수자는 장부 전체를 담보로 올렸다가 오래된 민간 미수 때문에 공공 PO와 병원 검수대기 채권까지 부실로 할인당했다.",
+      "changed_event": "이번에는 도윤이 90일 초과 민간 미수를 제외하고 공공, 병원, 단기 민간 채권을 분리해 lockbox와 예비 factoring 조건을 먼저 얻는다.",
+      "ripple_effect": "급식 계약 bundle은 즉시 현금화되지는 않지만, 반복 PO와 검수표가 금융 proof로 읽히는 구조를 얻는다."
+    },
+    "death_flag": {
+      "avoided": "좋은 채권과 나쁜 미수를 섞어 은행 financing gate가 완전히 닫히는 미래",
+      "method": "aging 분류, 검수 상태 분리, 과거채권 제외표, lockbox, factoring cap으로 회수 순서를 문서화한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 은행이 반려하기 전부터 90일 초과 민간 미수 제외표와 lockbox 구조를 준비해 둔다.",
+      "suspicion_from": "서민재와 해문푸드서비스 대표"
+    },
+    "future_prep": {
+      "action": "lockbox와 factoring 예비 term sheet를 구매위원회 제한입찰 자격 심사 자료로 묶는다.",
+      "target_event": "후속 국면 구매위원회는 책임을 산다"
+    }
+  },
+  "block_no": 25,
+  "foreshadow_targets": [
+    26,
+    29
+  ]
+}

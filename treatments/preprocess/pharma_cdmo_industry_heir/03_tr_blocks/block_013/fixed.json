@@ -40,9 +40,9 @@
     "냉장물류 조합의 실패한 할증 압박은 조합 파업 통보로 되돌아온다."
   ],
   "callback": [
-    "Block 012의 공항 우선 도크 슬롯과 통관 실무자 직통번호가 새벽 반출과 병원 긴급 배송에 쓰인다.",
-    "Block 011의 기록 공백 배송업체가 약점 때문에 야간 냉장차를 내주게 된다.",
-    "Block 008의 병원 우선협상권이 응급 혈액제제 시험권으로 안쪽까지 파고든다."
+    "공항 우선 도크 슬롯과 통관 실무자 직통번호가 새벽 반출과 병원 긴급 배송에 쓰인다.",
+    "기록 공백 배송업체가 약점 때문에 야간 냉장차를 내주게 된다.",
+    "병원 우선협상권이 응급 혈액제제 시험권으로 안쪽까지 파고든다."
   ],
   "emotional_beat": {
     "type": "urgent_control",
@@ -94,6 +94,60 @@
       "receipt_type": "priority_delivery_receipt",
       "receipt_line": "강태오는 새벽 배송 한 번으로 응급 혈액제제 우선배송 시험권, 새벽 검수 확인서, 야간 냉장차 우선 배차권, 병원 응급실 직통선을 확보한다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "새벽 응급 배송 압박을 이용해 병원 안쪽 우선배송 시험권과 야간 냉장차 배차권을 확보하는 고압 운영 승리",
+      "recognition_signal": "박도현의 시선 변화: 응급 혈액제제 새벽 배송이 성공하자 태오바이오를 일반 납품사가 아니라 응급 배송 시험 파트너로 올린다",
+      "reward_signal": "강태오는 새벽 배송 한 번으로 응급 혈액제제 우선배송 시험권, 새벽 검수 확인서, 야간 냉장차 우선 배차권, 병원 응급실 직통선을 확보한다.",
+      "growth_signal": "강태오는 공항 도크와 통관 직통번호를 새벽 응급 배송으로 전환해 병원 안쪽 프로토콜에 들어갈 권리를 얻는다.",
+      "expectation_signal": "야간 냉장차 우선 배차권과 새벽 검수 확인서가 온도 라벨 표준화와 조합 파업 전장으로 이어진다",
+      "reader_feel": "독자는 「혈액제제 새벽차」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 새벽 배송 한 번으로 응급 혈액제제 우선배송 시험권, 새벽 검수 확인서, 야간 냉장차 우선 배차권, 병원 응급실 직통선을 확보한다. 성장 장면: 강태오는 공항 도크와 통관 직통번호를 새벽 응급 배송으로 전환해 병원 안쪽 프로토콜에 들어갈 권리를 얻는다. 다음 기대감: 야간 냉장차 우선 배차권과 새벽 검수 확인서가 온도 라벨 표준화와 조합 파업 전장으로 이어진다",
+      "mature_success_signal": "강태오는 혈액제제 새벽차의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "새벽 응급 배송 압박을 이용해 병원 안쪽 우선배송 시험권과 야간 냉장차 배차권을 확보하는 고압 운영 승리",
+        "recognition": "박도현의 시선 변화: 응급 혈액제제 새벽 배송이 성공하자 태오바이오를 일반 납품사가 아니라 응급 배송 시험 파트너로 올린다",
+        "reward": "강태오는 새벽 배송 한 번으로 응급 혈액제제 우선배송 시험권, 새벽 검수 확인서, 야간 냉장차 우선 배차권, 병원 응급실 직통선을 확보한다.",
+        "growth": "강태오는 공항 도크와 통관 직통번호를 새벽 응급 배송으로 전환해 병원 안쪽 프로토콜에 들어갈 권리를 얻는다.",
+        "expectation": "야간 냉장차 우선 배차권과 새벽 검수 확인서가 온도 라벨 표준화와 조합 파업 전장으로 이어진다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 박도현의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 야간 냉장차 우선 배차권과 새벽 검수 확인서가 온도 라벨 표준화와 조합 파업 전장으로 이어진다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "공항 냉장창고 우선 도크를 잡은 지 일주일 뒤, 대학병원 혈액은행에서 새벽 4시 전까지 혈액제제 보충분을 받아야 한다는 연락이 온다. 기존 납품사는 야간 냉장차 배차를 못 맞추고, 병원 응급실은 수술 세 건을 앞두고 있다. 강태오는 환자 이야기에 흔들리지 않는다.",
+      "proof_action": "태오는 조합 할증을 그대로 내지 않는다. 공항 우선 도크 2시간을 새벽 시간대로 당겨 쓰고, 민경철의 창고 인력을 임시 검수자로 세운다.",
+      "proof_axis": "전생에서 병원 응급 콜드체인은 일반 납품보다 적은 물량으로도 표준 양식을 안쪽 프로토콜에 밀어 넣을 수 있었다는 기억",
+      "recognition_or_resistance_signal": "박도현 -> 응급 혈액제제 새벽 배송이 성공하자 태오바이오를 일반 납품사가 아니라 응급 배송 시험 파트너로 올린다",
+      "receipt_asset": "강태오는 새벽 배송 한 번으로 응급 혈액제제 우선배송 시험권, 새벽 검수 확인서, 야간 냉장차 우선 배차권, 병원 응급실 직통선을 확보한다.",
+      "reward_asset_classes": [
+        "rights_control_asset"
+      ],
+      "next_regulated_gate": "야간 냉장차 우선 배차권과 새벽 검수 확인서가 온도 라벨 표준화와 조합 파업 전장으로 이어진다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 박도현의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 야간 냉장차 우선 배차권과 새벽 검수 확인서가 온도 라벨 표준화와 조합 파업 전장으로 이어진다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {

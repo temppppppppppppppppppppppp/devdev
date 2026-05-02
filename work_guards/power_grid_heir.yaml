@@ -106,3 +106,18 @@ custom_rules:
   - "각 block action_purpose에는 immediate와 cost, 그리고 mid_term 또는 long_term 중 하나 이상이 있어야 한다."
   - "반격 예약 없는 손해는 금지한다."
   - "conference-room proof 뒤에는 반드시 문서, 숫자, 현장, 권한 witness 중 둘 이상을 붙인다."
+material_side_donor_review:
+  decision: adopted
+  scope: "Generalized immediate-deployment donor-structure law only; no donor proper nouns, scene order, or asset skin is imported."
+  adopted_law:
+    - "current-document proof before future-memory payoff"
+    - "pressure -> proof -> right/control/cash/status receipt -> next power-grid gate"
+    - "same-block receipt for every TR block"
+    - "family, succession, or heir recognition is pressure/evaluation only, never the reward engine"
+    - "one TR block remains a dense downstream episode bundle narrowed by block-specific pacing hints"
+  contamination_guard:
+    - "no donor proper nouns, donor organization names, or donor scene order"
+    - "no generic chaebol succession reward replacing power-grid, AI infrastructure, PPA, SLA, transformer, HVDC, site permit, project-finance, board, budget, or TF rights"
+    - "no future prophecy or status UI replacing present contracts, side letters, schedules, engineer reports, site permits, outage logs, or board minutes"
+    - "no charity rescue, family praise, or succession recognition as a block reward"
+    - "power-grid and AI infrastructure rights remain the work canon"

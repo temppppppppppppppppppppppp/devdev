@@ -1,0 +1,140 @@
+{
+  "block_id": "Block 29",
+  "title": "반복매출은 담보가 된다",
+  "content": {
+    "context": "위생 시정명령 종결 접수까지 나오자 해문푸드서비스 대표는 이번엔 운전자금 한도가 바로 열릴 거라고 기대한다. 도윤은 숫자를 다시 본다. 서림초 4주 제한 PO, 은성재활병원 1주 시험식, 성우전자 보조 라인, 3개 사업장 구매대행 코드, 6개 품목 margin cap, lockbox. 반복매출의 모양은 생겼지만 아직 전부 제한 조건이다. 은행이 살 건 미래 매출이 아니라, 검수표와 입금 경로가 묶인 아주 작은 담보다.",
+    "event_villain": "채권은행 신용심사팀은 한도 승인을 또 미룬다. 서림초 PO는 4주 제한이고, 병원식은 1주 시험식이며, 위생 시정명령은 종결 접수일 뿐 완전 무결한 점수가 아니라고 본다. 게다가 폐기 손실과 대체 납품 비용 때문에 이번 주 급여 지급액이 모자란다. 해문푸드서비스 대표는 장기 미수까지 담보에 넣자고 압박하고, 명성급식은 은행에 제한입찰 참석권은 정식 공급권이 아니라는 의견서를 보낸다.",
+    "solution": "도윤은 큰 한도를 요구하지 않는다. 그는 한도 대상을 세 칸으로 좁힌다. 첫째, 서림초 검수 완료분과 다음 주 검수 예정분은 lockbox 선입금 경로로 묶는다. 둘째, 은성재활병원 trial SKU는 검수 완료 전 advance 대상에서 빼고, 검수표 제출 후 2차 검토로 돌린다. 셋째, 6개 margin cap 품목과 SPV 구매대행 코드는 원가 변동 상한 proof로 붙인다. 대신 은행에는 급여 지급 안정용 소액 운전자금 한도, lockbox 자동상환, 신규 발주 대금 선결제 제한, 대표 개인 인출 금지 조건을 제안한다.",
+    "reward": "은행은 해문푸드서비스 전체 운전자금을 승인하지 않는다. 그러나 서림초 4주 PO의 검수 완료분과 lockbox 입금 경로를 근거로 소액 운전자금 한도를 연다. 조건은 빡빡하다. 자금 사용처는 급여, 대체 납품, 6개 margin cap 품목 선결제에 한정되고, 대표 개인 인출은 금지된다. 은성재활병원 시험식은 검수표 제출 전까지 한도에서 빠진다. 도윤은 큰 돈을 얻지 못했다. 하지만 반복매출이 처음으로 담보 언어로 읽히고, 다음 주 운영을 버틸 급여 지급 안정 receipt가 생겼다."
+  },
+  "incident_beats": [
+    "은행이 4주 제한 PO, 1주 시험식, 시정명령 종결 접수의 조건부 성격과 폐기 손실을 이유로 전체 운전자금 한도를 다시 미룬다",
+    "도윤이 lockbox, 검수표, margin cap, SPV 구매대행 코드를 묶어 급여·대체납품·선결제 제한 소액 운전자금 한도와 급여 지급 안정 receipt를 확보한다"
+  ],
+  "stakes": "큰 한도를 무리하게 요구하면 은행은 제한 PO와 시험식의 조건부 성격을 이유로 financing gate를 닫는다. 반대로 소액 한도라도 못 받으면 폐기 손실, 대체 납품 비용, 급여 지급 압박이 다음 주 운영을 끊고 구매위원회 제한입찰 참석권도 실물 proof 없이 죽는다.",
+  "power_shift": {
+    "protagonist": "위생 리스크를 닫은 hygiene-risk closer에서 반복 PO와 검수표를 금융 담보로 번역하는 working-capital operator로 이동한다.",
+    "antagonist": "은행 신용심사팀과 명성급식은 조건부 매출과 제한입찰 프레임으로 한도를 닫으려 하지만, 도윤의 lockbox·margin cap·사용처 제한 구조 때문에 소액 한도까지 막지는 못한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "채권은행 신용심사팀",
+      "before": "제한 PO와 시험식만으로는 반복매출 담보성이 약하다고 보는 심사 주체",
+      "after": "lockbox 자동상환, 검수표, margin cap, 사용처 제한 조건을 보고 소액 운전자금 한도를 승인한다",
+      "continuity_anchor_before": "서림초 검수 완료분 lockbox와 일부 채권 factoring 예비 term sheet만 제한적으로 연다"
+    },
+    {
+      "target": "서민재",
+      "before": "예비 term sheet는 끌어냈지만 실제 한도 승인에는 조심스러운 구조조정팀장",
+      "after": "도윤의 제한 한도 제안을 신용심사팀에 올려 급여 지급 안정용 한도를 받아낸다"
+    },
+    {
+      "target": "해문푸드서비스 대표",
+      "before": "장기 미수까지 담보로 잡아 더 큰 운전자금을 받고 싶어 하는 대표",
+      "after": "대표 개인 인출 금지와 사용처 제한 조건 때문에 불만을 보이지만 급여 지급 안정 receipt를 받아들인다",
+      "continuity_anchor_before": "도윤이 폐기비를 손실로 확정하고 누락 인정서에 서명시키자 운영 통제권이 더 줄어든다"
+    },
+    {
+      "target": "명성급식",
+      "before": "제한입찰 참석권은 정식 공급권이 아니라며 은행 한도 차단 의견서를 보내는 경쟁자",
+      "after": "정식 공급권 프레임은 유지하지만, lockbox와 검수 완료분 기반 소액 한도까지 막지는 못한다",
+      "continuity_anchor_before": "재고가 폐기 확인서와 신규 lot로 분리되면서 익명 제보의 타격을 줄이지 못한다"
+    }
+  ],
+  "foreshadow": [
+    "소액 운전자금 한도와 급여 지급 안정 receipt는 후속 국면의 반품 물류 pilot에서 급식 route 안정매출 proof로 쓰인다.",
+    "은성재활병원 trial SKU가 한도에서 제외된 것은 병원 검수표 회수 압박으로 남는다.",
+    "대표 개인 인출 금지 조건은 해문푸드서비스 대표의 통제권 불만을 더 키운다.",
+    "반복매출이 담보로 읽힌 첫 사례는 해당 아크의 PEF 흡수 압박 때 도윤 portfolio의 금융 proof로 다시 회수된다."
+  ],
+  "callback": [
+    "후속 국면의 lockbox와 factoring 예비 term sheet를 실제 소액 운전자금 한도로 회수한다.",
+    "후속 국면의 시정명령 종결 접수와 폐기 손실을 한도 필요액과 리스크 종료 proof로 동시에 사용한다.",
+    "후속 국면의 6개 변동 품목 margin cap과 SPV 구매대행 코드를 원가 변동 상한 proof로 쓴다.",
+    "후속 국면의 서림초 주간 검수표와 4주 PO를 반복매출 담보의 핵심으로 삼는다."
+  ],
+  "emotional_beat": {
+    "type": "small_working_capital_cider",
+    "intensity": 8
+  },
+  "tension_level": 8,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "채권은행 신용심사 회의실 / 해문푸드서비스 급여 지급 화면 / lockbox 계좌 관리 화면",
+    "type": "working-capital limit negotiation"
+  },
+  "time_span": {
+    "duration": "하루",
+    "in_story_time": "위생 시정명령 종결 접수 다음 날"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "유통기한 임박 재고 폐기 확인서 / 폐기 사진 log / 신규 식자재 lot 추적표 / 조리일지 소급 작성 금지 확인 / 누락 인정서 / 이후 작성권 위임서 / 대체 납품 기록 / 시정명령 종결 접수",
+    "capital_after": "소액 운전자금 한도 / lockbox 자동상환 조건 / 급여 지급 안정 receipt / 대체 납품 비용 한도 사용 승인 / 6개 margin cap 품목 선결제 승인 / 대표 개인 인출 금지 / 병원 trial SKU advance 제외 메모",
+    "capital_delta": "소액 한도",
+    "profit_loss": "전체 운전자금 승인 실패, 급여·대체납품·선결제 제한 소액 한도 확보",
+    "method": "제한 PO를 과장하지 않고 검수 완료분, lockbox, margin cap, 사용처 제한으로 은행이 감당 가능한 작은 담보 구조를 만든다.",
+    "investment_type": "distressed cafeteria working-capital bridge",
+    "deal_type": "limited working-capital line / lockbox repayment / use-of-funds control",
+    "leverage_used": [
+      "서림초 4주 제한 PO",
+      "서림초 주간 검수표",
+      "lockbox 입금 계좌",
+      "factoring 예비 term sheet",
+      "시정명령 종결 접수",
+      "6개 변동 품목 margin cap",
+      "SPV 구매대행 코드",
+      "대체 납품 기록",
+      "급여 지급 예정표"
+    ],
+    "opponent": {
+      "name": "채권은행 신용심사팀 / 명성급식 / 해문푸드서비스 대표",
+      "type": "bank credit gate, competitor limited-right discounting, and distressed operator overdraw pressure",
+      "weakness_exploited": "은행은 전체 회생 한도는 싫어하지만, 검수 완료분과 lockbox 자동상환이 붙은 급여 안정용 소액 한도는 리스크를 계산할 수 있다"
+    },
+    "historical_event": null,
+    "time_pressure": "급여 지급일과 다음 주 대체 납품 전에 소액 한도를 열지 못하면 운영 proof가 끊긴다.",
+    "knowledge_used": "회귀 전 해문푸드서비스는 대형 대출이 아니라 검수 완료분 lockbox 기반 소액 한도부터 은행 credit을 회복했다는 기억",
+    "risk_level": "중고위험",
+    "business_sector": "급식 운영 / 은행 credit / 운전자금 / lockbox / 반복매출 담보",
+    "section_rotation": "급식 계약은 느리게 끊기지 않는다",
+    "success_pattern": "큰 financing을 포기하고 검수 완료 반복매출을 작은 담보로 환전",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "small_working_capital_line_receipt",
+      "receipt_line": "소액 운전자금 한도, lockbox 자동상환 조건, 급여 지급 안정 receipt, 대체 납품 비용 한도 사용 승인, 6개 margin cap 품목 선결제 승인, 대표 개인 인출 금지 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 해문푸드서비스는 전체 대출이 아니라 서림초 검수 완료분 lockbox와 급여 안정용 소액 한도에서 은행 credit을 되찾았다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 인수자는 장기 미수와 병원 시험식까지 담보로 밀어 넣다 전체 운전자금 심사가 보류됐고, 급여 지급 실패로 운영이 흔들렸다.",
+      "changed_event": "이번에는 도윤이 한도 대상을 검수 완료분과 사용처 제한으로 좁혀 소액 운전자금과 급여 지급 안정 receipt를 먼저 얻는다.",
+      "ripple_effect": "급식 계약 bundle은 아직 큰 금융 신용을 얻지 못했지만, 반복매출이 담보로 읽히는 첫 은행 기록을 만든다."
+    },
+    "death_flag": {
+      "avoided": "큰 한도 욕심 때문에 전체 financing gate가 닫히고 급여 지급 실패로 운영 proof가 끊기는 미래",
+      "method": "검수 완료분, lockbox 자동상환, margin cap, 사용처 제한으로 소액 한도만 먼저 연다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 은행이 전체 한도를 반려하기 전부터 급여 안정용 소액 한도와 대표 인출 금지 조건을 준비해 둔다.",
+      "suspicion_from": "서민재와 해문푸드서비스 대표"
+    },
+    "future_prep": {
+      "action": "소액 운전자금 한도와 급식 route 안정매출 proof를 삼진콜드 복귀 빈 차의 반품 물류 pilot 제안에 붙인다.",
+      "target_event": "후속 국면 빈 차의 반품 박스"
+    }
+  },
+  "block_no": 29,
+  "foreshadow_targets": [
+    30,
+    60
+  ]
+}

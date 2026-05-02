@@ -1,0 +1,190 @@
+{
+  "block_id": "Block 50",
+  "title": "안전표준의 이름",
+  "content": {
+    "context": "PB 계약서 첫 장에 원료/품질/물류 조건표가 올라가자, 유통사와 제조사는 태오의 표준을 각자 다른 이름으로 부르기 시작한다. 어떤 곳은 태오 인증, 어떤 곳은 PB 조건표, 어떤 곳은 리콜 프로토콜이라고 부른다. 이름이 흩어지면 사용료와 책임도 흩어진다.",
+    "event_villain": "식품 대기업은 태오 표준이라는 이름을 빼고 '공동 안전 캠페인'으로 포장하자고 한다. 홈쇼핑 MD는 채널별 자체 인증으로 나누면 더 팔기 쉽다고 주장하고, 광고대행사는 브랜드 로고 아래 작은 배지로 처리하자고 한다. 은행 투자심사부는 이름이 없는 표준은 7200억 평가의 독립 자산으로 보기 어렵다고 말한다.",
+    "solution": "태오는 이름을 감정으로 고집하지 않는다. 첫 사건 beat는 인증마크 사용료, PB 조건표, 통합 원료 원장, 리콜 의사결정권을 하나의 사용규정집으로 묶고, '태오 세이프티 스탠더드'라는 이름 아래 데이터, 계약, 매대, 방송 조건을 모두 연결하는 장면이다. 둘째 beat는 식품 대기업과 홈쇼핑이 자체 명칭을 주장하자, 태오가 이름을 쓰지 않으면 인증마크 사용료, PB 조건표, 리콜 의사결정권, 원료 출고 hold권이 동시에 정지되는 cross-default 조항을 넣어 서명하게 하는 장면이다.",
+    "reward": "태오는 태오 세이프티 스탠더드 명명권, 소비재 안전표준 3년 라이선스 계약, 인증마크 사용료 통합 징수권, PB/홈쇼핑/ODM cross-default 조항, 소비자 클레임 데이터 공동대시보드 운영권, 7200억 기업가치 평가서를 얻는다. 태오 표준은 보이지 않는 간판이 되어 건기식, 화장품, 식품 매대 뒤에서 시장의 허락 기준이 된다."
+  },
+  "stakes": "안전표준의 이름이 채널과 제조사마다 흩어지면 쌓은 권리들은 각자의 부속 조항으로 분해되고 반복 수익과 시장 인식이 사라진다.",
+  "power_shift": {
+    "protagonist": "소비재 계약 설계자에서 시장이 공유하는 안전표준의 이름과 사용료를 소유한 표준 권력자로 격상된다.",
+    "antagonist": "식품 대기업, 홈쇼핑, 광고대행사는 태오 표준을 각자 이름으로 흡수하거나 희석하기 어려워진다."
+  },
+  "relationship_delta": [
+    {
+      "target": "식품 대기업",
+      "before": "태오 표준을 공동 캠페인으로 희석하려는 제조사",
+      "after": "태오 세이프티 스탠더드 명칭과 cross-default를 계약에 넣는 라이선스 사용자",
+      "anchor_before": "72시간 사전통보와 리콜 비용 분담을 감수해야 하는 공동 책임자"
+    },
+    {
+      "target": "홈쇼핑 MD",
+      "before": "채널별 자체 인증으로 쪼개 팔려는 편성 담당자",
+      "after": "태오 표준명과 인증 고정 시간을 유지해야 하는 채널 파트너",
+      "anchor_before": "환불률과 클레임 해결 시간 비교표를 보고 12초 인증 고정권을 내주는 채널 파트너"
+    },
+    {
+      "target": "은행 투자심사부",
+      "before": "이름 없는 안전 운영권을 독립 자산으로 평가하기 어려워하는 심사자",
+      "after": "명명권, 라이선스, 통합 징수권을 보고 7200억 기업가치 평가를 확정하는 금융 파트너",
+      "anchor_before": "선급 주문, capacity window, 소재 평가권을 현금흐름으로 보고 1800억 가치평가와 운전자금 한도를 승인하는 파트너"
+    }
+  ],
+  "foreshadow": [
+    "소비자 클레임 데이터 공동대시보드 운영권은 다음 ARC의 공급망 금융과 보험료 산정 전장으로 이어진다.",
+    "소비재 안전표준 3년 라이선스 계약은 후반부 국가 산업 표준 전장의 전초가 된다.",
+    "cross-default 조항은 빅파마와 글로벌 유통사가 태오 표준을 우회하려 할 때도 방어 장치가 된다."
+  ],
+  "callback": [
+    "PB 조건표 본문 삽입권과 인증마크 월정산권이 표준 라이선스 계약의 본문이 된다.",
+    "태오 안전인증마크 사용권과 1.2% 사용료 조항이 통합 징수권으로 회수된다.",
+    "통합 원료 lot 원장이 소비자 클레임 데이터 공동대시보드의 데이터 기반이 된다.",
+    "리콜 의사결정권이 cross-default 조항의 실제 정지권으로 묶인다.",
+    "원료 인증 chain-of-custody는 태오 표준 이름의 첫 근거로 회수된다."
+  ],
+  "emotional_beat": {
+    "protagonist_feeling": "태오는 자기 이름이 붙는 순간의 달콤함보다, 그 이름이 책임을 피하지 못하게 만드는 무게를 먼저 느낀다.",
+    "reader_catharsis": "상대들이 표준을 각자 이름으로 흩뜨리려 할 때, 주인공이 명명권과 cross-default 조항으로 시장의 보이지 않는 간판을 자기 손에 고정하는 사이다."
+  },
+  "tension_level": 10,
+  "pov_character": "강태오",
+  "location": {
+    "place": "은행 투자심사 회의실과 소비재 안전표준 라이선스 서명장",
+    "type": "consumer_safety_standard_naming_room",
+    "macro_battlefield": "소비재 안전표준 명명권과 반복 라이선스"
+  },
+  "time_span": {
+    "duration": "9일",
+    "in_story_time": "2004년 10월 초"
+  },
+  "genre_ext": {
+    "capital_before": "6200억 + API/소재 공급권 + 은행 운전자금 120억 한도 + 원료 인증망 독점 사용권 + 통합 원료 lot 원장 작성권 + 태오 안전인증마크 1차 사용권 + 인증 위반 SKU 출고 hold권 + 인증마크 사용료 1.2% 조항 + PB 24개 SKU 본계약 + 원료/품질/물류 조건표 본문 삽입권 + 원료 변경 72시간 사전통보권 + 물류 이탈 공동판정권 + 인증마크 사용료 월정산권 + 대체 SKU 매대 보전권",
+    "capital_after": "7200억 + 소비재 안전표준 + 태오 세이프티 스탠더드 명명권 + 소비재 안전표준 3년 라이선스 계약 + 인증마크 사용료 통합 징수권 + PB/홈쇼핑/ODM cross-default 조항 + 소비자 클레임 데이터 공동대시보드 운영권",
+    "capital_delta": "+1000억 평가 상승, +소비재 안전표준, +명명권, +3년 라이선스, +통합 징수권, +cross-default 조항, +클레임 데이터 대시보드 운영권",
+    "profit_loss": "채널별 자체 인증 제안을 거절해 단기 프로모션은 줄지만 표준명, 사용료, 데이터 운영권을 통합해 반복 수익과 평가가치를 얻는다.",
+    "method": "인증마크, PB 조건표, 통합 원료 원장, 리콜 의사결정권을 하나의 명명권과 라이선스 규정집으로 묶는다.",
+    "investment_type": "표준 라이선스 체계 구축 + 클레임 데이터 대시보드 운영",
+    "deal_type": "소비재 안전표준 3년 라이선스 및 명명권 계약",
+    "leverage_used": "PB 조건표와 월정산권, 인증마크 사용료, 통합 원료 원장, 리콜 의사결정권, chain-of-custody",
+    "opponent": {
+      "name": "식품 대기업 + 홈쇼핑 MD + 광고대행사 + 은행 투자심사부",
+      "type": "소비재 안전표준 / 건기식 / 화장품 / 식품안전 복합 압박 세력",
+      "weakness_exploited": "소비재 안전표준 / 건기식 / 화장품 / 식품안전의 병목을 문서·권리·책임선으로 잠그는 강태오의 방식을 과소평가한다."
+    },
+    "time_pressure": "소비재 안전표준 라이선스 발표와 은행 재평가 마감 전 9일",
+    "knowledge_used": "표준 명명권, 인증마크 라이선스, cross-default, 통합 징수, 클레임 데이터 대시보드, 기업가치 평가",
+    "risk_level": "최상",
+    "business_sector": "소비재 안전표준 / 건기식 / 화장품 / 식품안전",
+    "section_rotation": "소비재 안전표준 결산",
+    "success_pattern": "흩어진 권리와 데이터에 하나의 이름을 붙여 시장이 우회하기 어려운 반복 라이선스로 만든다.",
+    "opening_progression": {
+      "public_signboard_event": "식품 대기업과 홈쇼핑이 태오 표준을 공동 캠페인과 채널별 자체 인증으로 나누자고 제안한다.",
+      "representative_reevaluation": "은행과 유통사는 태오바이오를 제품 공급사가 아니라 소비재 안전표준의 이름과 사용료를 가진 회사로 다시 평가한다.",
+      "next_battlefield_ticket": "소비자 클레임 데이터 공동대시보드와 라이선스 반복 수익이 다음 ARC의 공급망 금융, 보험료 산정, 글로벌 채널 협상으로 이어진다."
+    },
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "consumer_safety_standard_naming_receipt",
+      "receipt_line": "태오는 흩어지려던 인증과 조건표를 태오 세이프티 스탠더드 명명권, 3년 라이선스, 7200억 가치평가로 묶어낸다.",
+      "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "흩어진 권리와 데이터에 하나의 이름을 붙여 시장이 우회하기 어려운 반복 라이선스로 만든다.",
+      "recognition_signal": "식품 대기업의 시선 변화: 태오 세이프티 스탠더드 명칭과 cross-default를 계약에 넣는 라이선스 사용자",
+      "reward_signal": "태오는 흩어지려던 인증과 조건표를 태오 세이프티 스탠더드 명명권, 3년 라이선스, 7200억 가치평가로 묶어낸다.",
+      "growth_signal": "소비재 계약 설계자에서 시장이 공유하는 안전표준의 이름과 사용료를 소유한 표준 권력자로 격상된다.",
+      "expectation_signal": "소비자 클레임 데이터 공동대시보드와 라이선스 반복 수익이 다음 ARC의 공급망 금융, 보험료 산정, 글로벌 채널 협상으로 이어진다.",
+      "reader_feel": "독자는 「안전표준의 이름」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 태오는 흩어지려던 인증과 조건표를 태오 세이프티 스탠더드 명명권, 3년 라이선스, 7200억 가치평가로 묶어낸다. 성장 장면: 소비재 계약 설계자에서 시장이 공유하는 안전표준의 이름과 사용료를 소유한 표준 권력자로 격상된다. 다음 기대감: 소비자 클레임 데이터 공동대시보드와 라이선스 반복 수익이 다음 ARC의 공급망 금융, 보험료 산정, 글로벌 채널 협상으로 이어진다.",
+      "mature_success_signal": "강태오는 안전표준의 이름의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "흩어진 권리와 데이터에 하나의 이름을 붙여 시장이 우회하기 어려운 반복 라이선스로 만든다.",
+        "recognition": "식품 대기업의 시선 변화: 태오 세이프티 스탠더드 명칭과 cross-default를 계약에 넣는 라이선스 사용자",
+        "reward": "태오는 흩어지려던 인증과 조건표를 태오 세이프티 스탠더드 명명권, 3년 라이선스, 7200억 가치평가로 묶어낸다.",
+        "growth": "소비재 계약 설계자에서 시장이 공유하는 안전표준의 이름과 사용료를 소유한 표준 권력자로 격상된다.",
+        "expectation": "소비자 클레임 데이터 공동대시보드와 라이선스 반복 수익이 다음 ARC의 공급망 금융, 보험료 산정, 글로벌 채널 협상으로 이어진다.",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 식품 대기업의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 소비자 클레임 데이터 공동대시보드와 라이선스 반복 수익이 다음 ARC의 공급망 금융, 보험료 산정, 글로벌 채널 협상으로 이어진다."
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "PB 계약서 첫 장에 원료/품질/물류 조건표가 올라가자, 유통사와 제조사는 태오의 표준을 각자 다른 이름으로 부르기 시작한다. 어떤 곳은 태오 인증, 어떤 곳은 PB 조건표, 어떤 곳은 리콜 프로토콜이라고 부른다. 이름이 흩어지면 사용료와 책임도 흩어진다.",
+      "proof_action": "태오는 이름을 감정으로 고집하지 않는다. 첫 사건 beat는 인증마크 사용료, PB 조건표, 통합 원료 원장, 리콜 의사결정권을 하나의 사용규정집으로 묶고, '태오 세이프티 스탠더드'라는 이름 아래 데이터, 계약, 매대, 방송 조건을 모두 연결하는 장면이다.",
+      "proof_axis": "표준 명명권, 인증마크 라이선스, cross-default, 통합 징수, 클레임 데이터 대시보드, 기업가치 평가",
+      "recognition_or_resistance_signal": "식품 대기업 -> 태오 세이프티 스탠더드 명칭과 cross-default를 계약에 넣는 라이선스 사용자",
+      "receipt_asset": "태오는 흩어지려던 인증과 조건표를 태오 세이프티 스탠더드 명명권, 3년 라이선스, 7200억 가치평가로 묶어낸다.",
+      "reward_asset_classes": [
+        "rights_control_asset"
+      ],
+      "next_regulated_gate": "소비자 클레임 데이터 공동대시보드와 라이선스 반복 수익이 다음 ARC의 공급망 금융, 보험료 산정, 글로벌 채널 협상으로 이어진다.",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 식품 대기업의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 소비자 클레임 데이터 공동대시보드와 라이선스 반복 수익이 다음 ARC의 공급망 금융, 보험료 산정, 글로벌 채널 협상으로 이어진다.",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "business_memory",
+    "timeline_knowledge": "태오는 전생에서 표준의 이름을 빼앗긴 회사가 데이터와 권리를 갖고도 하청처럼 남았던 사례를 기억한다.",
+    "butterfly_effect": "태오 세이프티 스탠더드라는 이름이 시장에 박히면서 태오바이오는 소비재 표준의 반복 사용료와 데이터 운영권을 가진 회사가 된다.",
+    "death_flag": false,
+    "regression_hint": "태오가 평가서의 매출 칸보다 표준명과 사용료 칸을 먼저 확인하는 행동으로만 암시한다.",
+    "future_prep": "명명권, cross-default, 클레임 데이터 대시보드는 다음 공급망 금융과 국가 산업 표준 전장의 핵심 무기가 된다."
+  },
+  "block_no": 50,
+  "foreshadow_targets": [
+    {
+      "target_block": 51,
+      "target_event": "공급망 금융 전장"
+    },
+    {
+      "target_block": 70,
+      "target_event": "국가 산업 표준 결산"
+    }
+  ],
+  "callback_sources": [
+    {
+      "source_block": 49,
+      "source_event": "PB 계약서"
+    },
+    {
+      "source_block": 48,
+      "source_event": "브랜드보다 인증"
+    },
+    {
+      "source_block": 47,
+      "source_event": "먹는 것과 맞는 것"
+    },
+    {
+      "source_block": 46,
+      "source_event": "마트의 리콜"
+    },
+    {
+      "source_block": 41,
+      "source_event": "캡슐 하나의 원가"
+    }
+  ]
+}

@@ -1,0 +1,156 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "62",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 062 draft only. Waiting-room production continuation; not root canonical, not BI, not immediate-use.",
+  "blocks": [
+    {
+      "block_id": "Block 62",
+      "block_no": 62,
+      "title": "총판권은 정산일과 슬롯에서 온다",
+      "episode_span_intent": "2~6화 분량. 달러 정산권, 물류 슬롯, 데이터 reference를 묶어 해외 총판권 조건을 재협상하고, 완전 총판이 아닌 조건부 channel review를 확보하는 블록.",
+      "content": {
+        "context": "SableWorks는 현지 파트너 자료를 보강해 온다. 베트남 창고, 현지 리퍼브 업체, 통관 브로커, 예상 물량. 하지만 조건은 여전히 조심스럽다. 완전 총판권은 어렵고 현지 파트너와 공동 운영을 검토하자는 말이다. 도윤은 총판권이라는 단어에 매달리지 않는다. 그 권리가 무엇에서 오는지를 본다. 달러 정산일을 맞추는 능력, 물류 슬롯을 증명한 기록, 품질/유지보수 비용을 줄인 proof, 데이터 표준 reference. 총판권은 명패가 아니라 조건표다.",
+        "event_villain": "첫 번째 사건은 현지 파트너의 선점 주장이다. 베트남 파트너 민카이가 기존 창고와 통관 브로커를 갖고 있으니 자신들이 운영권을 가져야 한다고 주장한다. SableWorks도 현지 실행 경험을 이유로 민카이 쪽에 기운다. 도윤은 현지 창고를 부정하지 않는다. 대신 달러 정산일 오류, D-RN 물류 슬롯, 품질 보증 구조, 다온 reference를 한 장에 묶어 자신이 관리할 수 있는 권리 범위를 제안한다.",
+        "second_incident": "두 번째 사건은 정산일 검증이다. 민카이가 제시한 예상 현금흐름표에는 통관 지연 12일과 달러 결제일 차이가 빠져 있다. 김원재가 제한용 달러 계좌 경험을 바탕으로 결제일 mismatch를 짚고, 도윤은 그 차이를 현지 파트너가 아니라 도윤권리운영의 정산 검증권으로 묶는다. 현지 창고는 민카이가 쓰되, 정산 검증과 물류 slot proof는 도윤이 잡는 구조다.",
+        "solution": "도윤은 완전 총판을 요구하지 않는다. 조건부 channel review, 현지 파트너 공동 운영, 도윤권리운영 정산 검증권, 물류 slot proof 제출권, 품질 보증 구조 설계권, 90일 후 자동 확대 검토 clause. 총판권은 작지만 실제 권리는 더 선명하다. SableWorks는 완전 총판 대신 review를 열고, 민카이는 정산 검증권을 내준다.",
+        "reward": "블록 끝에서 도윤은 해외 완전 총판권을 얻지 않는다. 대신 SableWorks 조건부 해외 channel review, 민카이 공동 운영 원칙서, 도윤권리운영 정산 검증권, 물류 slot proof 제출권, 해외 품질 보증 구조 설계권, 90일 후 자동 확대 검토 clause를 얻는다. 도윤은 말한다. 총판권은 명패가 아니라, 누가 늦는 돈을 먼저 보는지입니다."
+      },
+      "stakes": "완전 총판권을 무리하게 요구하면 현지 파트너와 SableWorks가 동시에 닫힌다. 조건부 review 안에서 정산 검증권과 물류/보증 proof를 잡아야 해외 권리 구조가 도윤에게 남는다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "민카이가 현지 창고와 통관 브로커를 근거로 운영권을 주장하자, 도윤이 달러 정산/물류/품질/data proof를 묶어 자기 권리 범위를 제안함",
+        "incident_2": "민카이 현금흐름표에서 통관 지연과 달러 결제일 mismatch가 빠진 것이 드러나자, 도윤이 정산 검증권을 확보함",
+        "next_actionable_gate": "현지 파트너 선불금 요구, escrow 구조, 해외 보증 상품, 투자자 실사 준비",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 총판이라는 큰 이름보다 정산 검증권과 자동 확대 clause를 고른다. 늦는 돈을 먼저 보는 권리가 실제 운영권이기 때문이다.",
+        "morality_position": "현지 파트너와 공정하게 나누는 모양을 취하지만 핵심은 도윤권리운영이 정산일과 물류 proof를 통제하는 것이다.",
+        "efficiency_choice": "완전 총판 요구로 판을 닫지 않고 조건부 review와 자동 확대 clause로 다음 gate를 산다."
+      },
+      "power_shift": {
+        "protagonist": "해외 SPV due-diligence checklist와 reference packet을 가진 해외 gate 운영자 -> 조건부 해외 channel review와 정산 검증권을 가진 해외 권리 협상자",
+        "antagonist": "민카이/SableWorks: 현지 운영권 주장자 / 신중한 공급사 -> 정산 검증권과 자동 확대 clause를 인정한 해외 상대",
+        "system": "해외 SPV checklist와 reference packet -> SableWorks 조건부 해외 channel review + 민카이 공동 운영 원칙서 + 도윤권리운영 정산 검증권 + 물류 slot proof 제출권 + 해외 품질 보증 구조 설계권 + 90일 후 자동 확대 검토 clause"
+      },
+      "relationship_delta": [
+        {
+          "target": "SableWorks",
+          "before": "현지 파트너 자료 보완 요청을 받아야 하는 해외 공급사",
+          "after": "조건부 channel review와 자동 확대 검토 clause를 여는 공급사"
+        },
+        {
+          "target": "민카이",
+          "before": "아직 전면 등장 전인 현지 파트너",
+          "after": "현지 창고를 가졌지만 정산 검증권을 도윤에게 내주는 공동 운영 후보"
+        },
+        {
+          "target": "김원재",
+          "before": "달러 계좌와 settlement advice를 열어 준 은행 FX gatekeeper",
+          "after": "해외 결제일 mismatch를 짚어 정산 검증권의 근거를 제공하는 FX witness"
+        }
+      ],
+      "foreshadow": [
+        "현지 파트너 선불금 요구",
+        "해외 escrow 구조",
+        "보증 상품",
+        "투자자 실사"
+      ],
+      "callback": [
+        "달러 계좌 경험이 해외 정산 검증권으로 회수됨",
+        "물류 슬롯 receipt가 overseas slot proof로 회수됨",
+        "다온 reference packet이 SableWorks channel review 근거로 회수됨"
+      ],
+      "emotional_beat": {
+        "type": "conditional_distribution_right",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "SableWorks 해외 channel review / 베트남 현지 파트너 화상회의 / 김원재 FX 검토 메모",
+        "type": "해외 총판 협상 / 현지 파트너 / 달러 정산"
+      },
+      "time_span": {
+        "duration": "1주",
+        "in_story_time": "2027년 3월 첫째 주"
+      },
+      "genre_ext": {
+        "capital_before": "동남아 유통 SPV due-diligence checklist + 익명화 국내 reference packet + SableWorks 현지 파트너 자료 보완 요청서 + 다온 해외 reference 사용 확인서 + 달러 정산/물류 슬롯/보증 책임 통합 검토 gate",
+        "capital_after": "SableWorks 조건부 해외 channel review + 민카이 공동 운영 원칙서 + 도윤권리운영 정산 검증권 + 물류 slot proof 제출권 + 해외 품질 보증 구조 설계권 + 90일 후 자동 확대 검토 clause",
+        "capital_delta": "해외 checklist와 reference packet을 조건부 channel review, 정산 검증권, 물류 proof 제출권, 자동 확대 clause로 전환",
+        "profit_loss": "완전 총판권은 미확보. 정산 검증권과 확대 검토권 확보",
+        "method": "총판 명패 대신 정산일과 물류 proof를 통제하는 조건부 channel review 구조로 진입",
+        "deal_type": "conditional overseas channel review / settlement verification right",
+        "leverage_used": [
+          "해외 due-diligence checklist",
+          "다온 reference packet",
+          "달러 정산 경험",
+          "D-RN 물류 슬롯",
+          "품질 보증 구조"
+        ],
+        "opponent": {
+          "name": "민카이/SableWorks",
+          "type": "현지 운영권 주장자 / 신중한 공급사",
+          "weakness_exploited": "현지 창고가 있어도 통관 지연과 달러 결제일 mismatch를 관리하지 못하면 channel 운영권이 불안정하다는 점"
+        },
+        "time_pressure": "SableWorks가 민카이 단독 운영으로 기울기 전 조건부 review 구조를 잡아야 함",
+        "risk_level": "고위험",
+        "business_sector": "해외 총판권 / 달러 정산 / 물류 proof",
+        "section_rotation": "ARC-07 distribution negotiation turn",
+        "success_pattern": "완전 총판권은 미루고 정산 검증권과 자동 확대 clause를 얻는 조건부 승리",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "conditional_channel_review_and_settlement_right",
+          "receipt_line": "총판권은 명패가 아니라, 누가 늦는 돈을 먼저 보는지입니다.",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "조건부 channel review",
+          "정산 검증권",
+          "물류 proof 제출권",
+          "해외 보증 구조 설계권",
+          "자동 확대 clause"
+        ],
+        "document_evidence": [
+          "channel review minutes",
+          "공동 운영 원칙서",
+          "정산 검증권 조항",
+          "slot proof 제출권",
+          "자동 확대 clause"
+        ],
+        "field_validation": [
+          "통관 지연 12일 누락",
+          "달러 결제일 mismatch 확인",
+          "90일 확대 검토 설정"
+        ],
+        "witness_carrier": [
+          "SableWorks review 메일",
+          "민카이 현금흐름표",
+          "김원재 FX 메모",
+          "다온 reference packet"
+        ],
+        "receipt": [
+          "SableWorks 조건부 해외 channel review",
+          "민카이 공동 운영 원칙서",
+          "도윤권리운영 정산 검증권",
+          "물류 slot proof 제출권",
+          "해외 품질 보증 구조 설계권",
+          "90일 후 자동 확대 검토 clause"
+        ],
+        "next_gate": "현지 파트너 선불금 요구, escrow 구조, 해외 보증 상품, 투자자 실사 준비"
+      },
+      "foreshadow_targets": [
+        63,
+        64,
+        65
+      ]
+    }
+  ]
+}

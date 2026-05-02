@@ -1,0 +1,154 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "59",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 059 draft only. Waiting-room production continuation; not root canonical, not BI, not immediate-use.",
+  "blocks": [
+    {
+      "block_id": "Block 59",
+      "block_no": 59,
+      "title": "다온이 빌리러 온다",
+      "episode_span_intent": "2~6화 분량. 다온이 도윤의 정산 인프라와 데이터 표준을 임대하려 접촉하고, 도윤이 임대료 대신 데이터 접근권 협상석을 여는 블록.",
+      "content": {
+        "context": "다온은 처음엔 조용히 지켜본다. 그러다 리커버넷 표준과 도윤권리운영 표준이 제조사 사이에서 비교되자, 다온 정산본부가 먼저 연락한다. 다온은 도윤의 정산 ledger와 데이터 표준을 일정 기간 임대하고 싶다고 한다. 이유는 간단하다. 자기들도 반품권, 폐기권, 보증 책임 파일이 너무 흩어져 있다. 도윤은 웃지 않는다. 다온이 빌리러 온 순간, 임대료보다 비싼 것은 데이터 접근권이다.",
+        "event_villain": "첫 번째 사건은 임대료 제안이다. 다온 정산본부는 월 1,200만 원 사용료와 기술지원비를 제안한다. 조건은 다온 내부 데이터는 외부 반출 금지, 도윤권리운영은 처리 결과 요약만 받는 구조다. 도윤은 거절한다. 요약 결과만 받으면 도윤은 다시 외주 도구 납품자가 된다. 그는 익명화된 원본 field 접근, 반품권 aging feed, 보증 책임 잔액 feed, 폐기권 소멸일 feed를 요구한다.",
+        "second_incident": "두 번째 사건은 내부 보안 벽이다. 다온 보안팀은 데이터 접근권 요구를 과하다고 막고, 정산본부는 임대료를 올리겠다고 한다. 도윤은 가격을 듣지 않는다. 임대료가 오르면 더더욱 내부 도구 납품으로 묶인다. 그는 접근권 범위를 좁힌다. 개인 정보 제거, 거래처명 hash, 금액 band, 권리 소멸일, 책임 잔액, 처리 상태. 원본이 아니라 권리 판단에 필요한 field다.",
+        "solution": "도윤은 다온을 고객으로 받지 않는다. 데이터 provider 겸 검증 상대로 만든다. 30일 파일럿, 익명화 권리 feed, 결과 요약이 아니라 field-level 검증권, 다온 내부 적용 시 도윤권리운영 표준명 표기, 리커버넷 비교 금지 기간. 다온은 임대료를 내겠다고 왔지만, 도윤은 데이터를 받는다.",
+        "reward": "블록 끝에서 도윤은 다온 임대 계약을 아직 체결하지 않는다. 대신 다온 정산 인프라 30일 파일럿 협의서, 익명화 반품권/보증책임/폐기권 feed 접근권 초안, field-level 검증권, 표준명 표기 조항, 리커버넷 비교 금지 기간 초안을 얻는다. 도윤은 말한다. 돈은 월마다 옵니다. 데이터는 다음 권리를 데려옵니다."
+      },
+      "stakes": "다온을 단순 임대 고객으로 받으면 도윤권리운영은 도구 판매자로 축소된다. 익명화 feed와 field-level 검증권을 얻어야 ARC-06이 데이터 권한 receipt로 닫힌다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "다온 정산본부가 월 1,200만 원 임대료와 요약 결과 구조를 제안하자, 도윤이 익명화 원본 field 접근권을 요구함",
+        "incident_2": "보안팀이 데이터 접근권을 막자, 도윤이 개인정보 제거와 hash/band/feed 범위로 좁혀 field-level 검증권을 확보함",
+        "next_actionable_gate": "임대료보다 데이터 접근권 최종 협상, 다온 파일럿 조건, 리커버넷 비교 금지, 해외 SPV gate",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 임대료에 끌리지 않는다. 다온 내부 권리 feed가 들어오면 다음 제조사와 해외 SPV 권리를 읽는 눈이 커지기 때문이다.",
+        "morality_position": "다온 정산 효율 개선처럼 보이지만 핵심은 도윤권리운영이 대기업 내부 권리 feed를 합법적으로 보는 것이다.",
+        "efficiency_choice": "임대료 협상 대신 접근 field 범위를 좁혀 보안 벽을 통과한다."
+      },
+      "power_shift": {
+        "protagonist": "권리 회수 데이터 표준 v0와 금융권 인정 메모를 가진 표준 gate 운영자 -> 다온 익명화 권리 feed 협상석을 가진 데이터 접근권 협상자",
+        "antagonist": "다온 정산본부/보안팀: 임대료 제안자 / 데이터 접근 차단자 -> 익명화 feed와 field-level 검증권을 협상해야 하는 대기업 상대",
+        "system": "데이터 표준 v0와 정산 인프라 gate -> 다온 정산 인프라 30일 파일럿 협의서 + 익명화 반품권/보증책임/폐기권 feed 접근권 초안 + field-level 검증권 + 도윤권리운영 표준명 표기 조항 + 리커버넷 비교 금지 기간 초안"
+      },
+      "relationship_delta": [
+        {
+          "target": "다온 정산본부",
+          "before": "과거 도윤의 원소속 조직",
+          "after": "도윤권리운영 표준을 빌리러 오는 역의존 고객 후보"
+        },
+        {
+          "target": "다온 보안팀",
+          "before": "아직 전면 등장 전인 보안 gatekeeper",
+          "after": "원본 접근을 막지만 익명화 field 범위 협상을 열어 주는 gatekeeper"
+        },
+        {
+          "target": "리커버넷",
+          "before": "8항목 간소화 표준을 냈지만 책임선 누락을 지적받는 경쟁 플랫폼",
+          "after": "다온 비교 평가 대상이 되지만 비교 금지 기간에 묶일 경쟁자"
+        }
+      ],
+      "foreshadow": [
+        "데이터 접근권 최종 receipt",
+        "해외 SPV 확장 문의",
+        "다온과 리커버넷 비교전",
+        "권리 운영 헌장"
+      ],
+      "callback": [
+        "데이터 표준 v0가 다온 임대 문의로 회수됨",
+        "정산 ledger 초안이 파일럿 협의서로 회수됨",
+        "표준명 표기 조항이 도윤권리운영 브랜드 권리로 확장됨"
+      ],
+      "emotional_beat": {
+        "type": "former_company_dependency",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "다온 정산본부 회의실 / 보안팀 검토실 / 도윤권리운영 표준 파일럿 협상석",
+        "type": "대기업 임대 문의 / 보안 gate / 데이터 접근권"
+      },
+      "time_span": {
+        "duration": "4일",
+        "in_story_time": "2027년 2월 첫째 주"
+      },
+      "genre_ext": {
+        "capital_before": "권리 회수 데이터 표준 v0 + 필수 14항목 표 + 증빙 hash 공개 범위 + 영진팩토리 현장 검수 반영란 + 한빛캐피탈 담보 심사 보조자료 인정 메모 + 제조사 2곳 조건부 채택 의향서",
+        "capital_after": "다온 정산 인프라 30일 파일럿 협의서 + 익명화 반품권/보증책임/폐기권 feed 접근권 초안 + field-level 검증권 + 도윤권리운영 표준명 표기 조항 + 리커버넷 비교 금지 기간 초안",
+        "capital_delta": "데이터 표준 v0와 금융권 인정 메모를 다온 파일럿 협의서, 익명화 feed 접근권, field-level 검증권으로 전환",
+        "profit_loss": "월 임대료는 미확정. 데이터 접근권 초안 확보",
+        "method": "임대료보다 익명화 field 접근권과 표준명 표기 조항을 먼저 요구",
+        "deal_type": "enterprise pilot / anonymized rights feed / data access negotiation",
+        "leverage_used": [
+          "데이터 표준 v0",
+          "한빛캐피탈 인정 메모",
+          "제조사 조건부 채택",
+          "다온 내부 파일 혼선",
+          "리커버넷 비교 압박"
+        ],
+        "opponent": {
+          "name": "다온 정산본부/보안팀",
+          "type": "임대료 제안자 / 데이터 접근 차단자",
+          "weakness_exploited": "다온도 권리 파일이 흩어져 있어 외부 표준을 빌리지 않으면 내부 정산 효율을 빠르게 올리기 어렵다는 점"
+        },
+        "time_pressure": "리커버넷이 비교 제안을 넣기 전 다온 파일럿 조건을 잠가야 함",
+        "risk_level": "고위험",
+        "business_sector": "대기업 인프라 임대 / 데이터 접근권 / 표준명 권리",
+        "section_rotation": "ARC-06 reverse-dependency turn",
+        "success_pattern": "임대료를 확정하지 않고 대기업 내부 익명화 feed와 검증권을 여는 권리형 승리",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "enterprise_pilot_and_anonymized_feed_gate",
+          "receipt_line": "돈은 월마다 옵니다. 데이터는 다음 권리를 데려옵니다.",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "다온 30일 파일럿",
+          "익명화 권리 feed 접근권",
+          "field-level 검증권",
+          "표준명 표기 조항"
+        ],
+        "document_evidence": [
+          "파일럿 협의서",
+          "익명화 feed 초안",
+          "보안팀 검토 메모",
+          "표준명 표기 조항",
+          "비교 금지 초안"
+        ],
+        "field_validation": [
+          "월 1,200만 원 임대료 제안",
+          "익명화 field 범위 협상",
+          "리커버넷 비교 금지 기간 초안"
+        ],
+        "witness_carrier": [
+          "다온 정산본부 문의",
+          "보안팀 차단 메모",
+          "리커버넷 비교 가능성",
+          "도윤권리운영 표준 v0"
+        ],
+        "receipt": [
+          "다온 정산 인프라 30일 파일럿 협의서",
+          "익명화 반품권/보증책임/폐기권 feed 접근권 초안",
+          "field-level 검증권",
+          "도윤권리운영 표준명 표기 조항",
+          "리커버넷 비교 금지 기간 초안"
+        ],
+        "next_gate": "임대료보다 데이터 접근권 최종 협상, 다온 파일럿 조건, 리커버넷 비교 금지, 해외 SPV gate"
+      },
+      "foreshadow_targets": [
+        60,
+        61,
+        62
+      ]
+    }
+  ]
+}

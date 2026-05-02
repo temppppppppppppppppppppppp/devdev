@@ -80,9 +80,24 @@ Current governance anchors:
 
 Current immediate material deployment:
 
-- `golden_canary_deepclone_probe_a_fullblock_v1` only
-- reason: current donorized full-block gold sample with donor structure applied and visible
-- other `GREENPLUS` / `GREEN` pairs remain benchmark/reference inventory until donor structure is applied and recorded
+- `golden_canary_deepclone_probe_a_fullblock_v1`
+- `distressed_asset_heir`
+- `distressed_company_buyer`
+- `venture_bubble_king_2000`
+- `telecom_gate_monopoly_1997`
+- `pharma_cdmo_industry_heir`
+- `shipbuilding_ocean_heir`
+- `power_grid_heir`
+- `healthy_heir_group_succession`
+- `laid_off_cashflow_rights_operator`
+- reason: current immediate-deployment rows have donor structure applied or adopted in visible material-side authority and are closed by named overlay/audit artifacts
+- pharma CDMO row carries explicit 70/70 `webnovel_pacing_contract` coverage in TR and BI for immediate writer handoff
+- pharma CDMO row now also carries canonical downstream episode pacing hint coverage at TR 70/70 and BI 70/70, with attachment audit PASS and registry `range_attachment_status=range_complete`
+- power-grid row carries canonical downstream episode pacing hint coverage at TR 70/70 and BI 70/70, donor review/contamination guardrail closeout, and registry `range_attachment_status=range_complete`
+- healthy-heir row now carries donor review/contamination guardrail closeout, BIAmplificationPower, TR/BI `reader_payoff_ladder` 70/70, TR/BI `webnovel_pacing_contract` 70/70, and downstream episode pacing hint TR/BI 70/70 with `range_attachment_status=range_complete`
+- laid-off cashflow-rights/operator row carries root TR/BI, donor review/contamination guardrail closeout, declared-contract opening GREEN, BIAmplificationPower, TR/BI `reader_payoff_ladder` 70/70, TR/BI `webnovel_pacing_contract` 70/70, and downstream episode pacing hint TR/BI 70/70 with `range_attachment_status=range_complete`
+- from 2026-05-02 onward, immediate-deployment claims also require a visible material-side downstream episode pacing hint or equivalent advisory range surface
+- other `GREENPLUS` / `GREEN` pairs remain benchmark/reference inventory until donor structure is applied, recorded, and closed by named overlay promotion
 
 TR block semantics note:
 
@@ -90,6 +105,11 @@ TR block semantics note:
 - default operator reading: one meaningful `TR block` should be dense enough to unfold into roughly `2~6` serialized episodes downstream
 - do not write or audit with the mental model `TR block 1 = episode 1`, `TR block 2 = episode 2`
 - benchmark shorthand such as `block 1` refers to the first reader-earning episode bundle, which the current benchmark operationalizes through `TR blocks 2~6`, not literal `TR block 1`
+- for immediate-use material classification, the material side should expose an advisory downstream episode pacing range per block, for example `recommended_episode_count`, `acceptable_episode_range`, `stretch_cap`, and the proof/receipt/gate that must land inside that range
+- this pacing hint is not an S2 contract or runtime schema change; it is a writer-facing material-side harness surface used to prevent downstream expansion drift before S2 consumes the pair
+- if BI exists, mirror or summarize the same pacing hint in the BI roadmap/payoff surface so TR and BI handoff do not disagree
+- canonical pair-side path for newly touched rows: `TR.blocks[*].genre_ext.downstream_episode_pacing_hint` mirrored to `MasterBible.plot_roadmap[*].genre_ext.downstream_episode_pacing_hint`
+- current immediate-deployment rows admitted before the range gate keep shelf identity; rows without a bounded attachment audit remain pending range attachment until coverage and mismatch counts are recorded
 
 Current path labels at a glance:
 

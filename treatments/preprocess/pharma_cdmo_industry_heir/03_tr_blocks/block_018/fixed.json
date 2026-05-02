@@ -45,9 +45,9 @@
     "기존 납품사의 6개월 양식 사용권은 외부 납품사까지 태오 기록망에 들어오는 첫 장기 사례가 된다."
   ],
   "callback": [
-    "Block 017의 세 병원 공통 양식과 월말 폐기율 정산권이 실제 기록료 선결제로 회수된다.",
-    "Block 016의 차량별 온도기록 장치가 사용 물량과 미사용 물량 손실을 분리하는 근거가 된다.",
-    "Block 014의 폐기율 절감액 30퍼센트 조항이 첫 현금 지급으로 이어진다."
+    "세 병원 공통 양식과 월말 폐기율 정산권이 실제 기록료 선결제로 회수된다.",
+    "차량별 온도기록 장치가 사용 물량과 미사용 물량 손실을 분리하는 근거가 된다.",
+    "폐기율 절감액 30퍼센트 조항이 첫 현금 지급으로 이어진다."
   ],
   "emotional_beat": {
     "type": "cold_monetization",
@@ -99,6 +99,60 @@
       "receipt_type": "cash_and_terms_receipt",
       "receipt_line": "강태오는 남의 백신 폐기 사고를 3천만 기록료 선결제, 라벨 선급금, 6개월 양식 사용권, 조건표 인상으로 바꾼다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "경쟁사의 실제 폐기 사고를 조건표 인상과 첫 기록료 현금화로 바꾸는 냉정한 수익화 승리",
+      "recognition_signal": "지방 종합병원 약제팀장의 시선 변화: 폐기 손실 보고서에 태오 양식 미사용 물량 손실을 별도 기재하며 공통 양식 필요성을 내부 보고한다",
+      "reward_signal": "강태오는 남의 백신 폐기 사고를 3천만 기록료 선결제, 라벨 선급금, 6개월 양식 사용권, 조건표 인상으로 바꾼다.",
+      "growth_signal": "강태오는 남의 백신 폐기 사고를 보상하지 않고, 손실 원인을 기록 차이로 분해해 기록료 선결제와 조건표 인상으로 환전한다.",
+      "expectation_signal": "첫 기록료 현금 유입과 폐기율 데이터가 전국 냉장지도 제작 전장으로 이어진다",
+      "reader_feel": "독자는 「폐기된 백신」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 남의 백신 폐기 사고를 3천만 기록료 선결제, 라벨 선급금, 6개월 양식 사용권, 조건표 인상으로 바꾼다. 성장 장면: 강태오는 남의 백신 폐기 사고를 보상하지 않고, 손실 원인을 기록 차이로 분해해 기록료 선결제와 조건표 인상으로 환전한다. 다음 기대감: 첫 기록료 현금 유입과 폐기율 데이터가 전국 냉장지도 제작 전장으로 이어진다",
+      "mature_success_signal": "강태오는 폐기된 백신의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "경쟁사의 실제 폐기 사고를 조건표 인상과 첫 기록료 현금화로 바꾸는 냉정한 수익화 승리",
+        "recognition": "지방 종합병원 약제팀장의 시선 변화: 폐기 손실 보고서에 태오 양식 미사용 물량 손실을 별도 기재하며 공통 양식 필요성을 내부 보고한다",
+        "reward": "강태오는 남의 백신 폐기 사고를 3천만 기록료 선결제, 라벨 선급금, 6개월 양식 사용권, 조건표 인상으로 바꾼다.",
+        "growth": "강태오는 남의 백신 폐기 사고를 보상하지 않고, 손실 원인을 기록 차이로 분해해 기록료 선결제와 조건표 인상으로 환전한다.",
+        "expectation": "첫 기록료 현금 유입과 폐기율 데이터가 전국 냉장지도 제작 전장으로 이어진다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 지방 종합병원 약제팀장의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 첫 기록료 현금 유입과 폐기율 데이터가 전국 냉장지도 제작 전장으로 이어진다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "세 병원 공동 시험 기준이 시작된 첫 월말, 지방 종합병원에서 경쟁 납품사의 백신 상자 네 개가 결국 폐기된다. 온도 이탈이 컸던 것은 한 상자뿐이지만, 나머지 세 상자는 병원마다 다른 기록 양식과 라벨 번호 불일치 때문에 같이 묶여 버렸다. 강태오는 그 사고를 보며 표정을 바꾸지 않는다.",
+      "proof_action": "태오는 폐기된 백신을 대신 보상하지 않는다. 먼저 세 병원 공통 양식과 경쟁사 양식의 차이를 표로 뽑아, 실제 온도 이탈 한 상자와 기록 불일치 때문에 묶인 세 상자를 분리한다.",
+      "proof_axis": "전생에서 백신 폐기 사고 뒤에는 실제 온도 이탈보다 기록 불일치 때문에 같이 폐기되는 물량이 더 컸다는 기억",
+      "recognition_or_resistance_signal": "지방 종합병원 약제팀장 -> 폐기 손실 보고서에 태오 양식 미사용 물량 손실을 별도 기재하며 공통 양식 필요성을 내부 보고한다",
+      "receipt_asset": "강태오는 남의 백신 폐기 사고를 3천만 기록료 선결제, 라벨 선급금, 6개월 양식 사용권, 조건표 인상으로 바꾼다.",
+      "reward_asset_classes": [
+        "rights_control_asset"
+      ],
+      "next_regulated_gate": "첫 기록료 현금 유입과 폐기율 데이터가 전국 냉장지도 제작 전장으로 이어진다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 지방 종합병원 약제팀장의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 첫 기록료 현금 유입과 폐기율 데이터가 전국 냉장지도 제작 전장으로 이어진다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {

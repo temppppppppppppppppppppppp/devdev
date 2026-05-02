@@ -1,0 +1,184 @@
+{
+  "block_id": "Block 64",
+  "title": "데이터 주권",
+  "content": {
+    "context": "표준위원회 실증분과가 열리자 다음 전장은 데이터로 옮겨간다. 글로벌 빅파마는 제조 batch log와 병원 baseline 데이터를 자사 글로벌 클라우드에 올려야 장기 CDMO 물량을 확정할 수 있다고 요구한다. 재벌 연합은 계열 물류망 데이터를 자신들의 통합 플랫폼에 붙이자고 하고, 병원 데이터위원회는 환자 정보가 해외 서버로 흘러갈 수 있다며 심사를 멈춘다.",
+    "event_villain": "빅파마는 글로벌 품질감사를 이유로 데이터 원본 접근권을 요구하고, 재벌 연합은 국내 플랫폼이라는 이름으로 열람권을 넓히려 한다. 관료 라인은 국제 계약을 위해 일부 예외를 허용하자고 흔들리고, 병원은 원자료 반출 금지 없이는 협조하지 않겠다고 버틴다. 데이터가 표준의 증거가 되는 순간, 모두가 그 증거의 열쇠를 가져가려 한다.",
+    "solution": "태오는 데이터 주권을 구호로 말하지 않는다. 첫 사건 beat는 병원 익명 코호트 질의권과 원료 변경 공동 audit권을 하나의 국내 봉인 구조로 묶는 장면이다. 둘째 beat는 계열 조달 실사권을 활용해 재벌 물류 플랫폼의 외부 반출 통로를 차단하고, 빅파마에는 원본 이전이 아니라 국내 escrow 서버, 열람 key 이중승인, 질의 hash 제출, audit trail 사본만 허용하는 장면이다. 데이터는 이동하지 않고, 검증 권한만 계약된 방식으로 움직인다.",
+    "reward": "태오는 국내 데이터 escrow 서버 운영권, 병원·제조 데이터 원본 반출 금지 조항, 열람 key 이중승인권, 질의 hash 사전등록권, 원료 변경 audit trail 국내 보관권, 데이터 열람 수수료 0.3% 정산권을 얻는다. 병원 데이터와 제조 데이터는 태오 표준 안에 봉인되고, 빅파마와 재벌은 원본이 아니라 검증 절차만 빌려 쓴다."
+  },
+  "stakes": "데이터 원본이 해외 클라우드나 재벌 통합 플랫폼으로 넘어가면 태오의 보험료 산식, 생산권 담보 원장, 원료 audit권은 표준의 근거를 잃고 외부 플랫폼의 하위 기능으로 전락한다.",
+  "power_shift": {
+    "protagonist": "자본과 생산권을 통제하는 표준권자에서 병원 데이터와 제조 데이터를 국가 표준 안에 봉인하는 데이터 주권 운영자로 올라선다.",
+    "antagonist": "빅파마와 재벌 연합은 데이터 원본을 가져가는 대신 태오가 승인한 질의와 audit trail만 사용할 수 있게 된다."
+  },
+  "relationship_delta": [
+    {
+      "target": "글로벌 빅파마 품질감사팀",
+      "before": "글로벌 클라우드 원본 업로드를 품질감사의 전제조건으로 요구하는 감사자",
+      "after": "국내 escrow 서버와 이중승인 key를 통해 제한 열람만 허용받는 외부 검증자"
+    },
+    {
+      "target": "병원 데이터위원회",
+      "before": "환자 정보 해외 반출 가능성 때문에 협조를 멈춘 심사자",
+      "after": "원본 반출 금지, 질의 hash, 열람 로그, 사용료 정산을 조건으로 실증분과에 협조하는 데이터 주권 파트너",
+      "anchor_before": "원자료 반출 없이 질의 hash와 사용료 정산으로 통제권을 유지하는 데이터 제공자"
+    },
+    {
+      "target": "재벌 연합 플랫폼팀",
+      "before": "국내 통합 플랫폼 명목으로 병원·물류·제조 데이터 열람권을 넓히려는 계열망 운영자",
+      "after": "계열 조달 실사권에 묶여 외부 반출 통로를 닫고 audit trail만 제출하는 피감사자"
+    }
+  ],
+  "foreshadow": [
+    "국내 데이터 escrow 서버와 열람 로그는 공급망 정지 사고 때 책임선을 분 단위로 추적하는 proof가 된다.",
+    "원료 변경 audit trail 국내 보관권은 정부가 태오 조건표를 국가 조달 기준으로 차용하는 근거가 된다.",
+    "데이터 열람 수수료 정산권은 글로벌 장기계약에서 태오가 단가 외 수익을 확보하는 항목이 된다."
+  ],
+  "callback": [
+    "병원 익명 코호트 질의권과 보험료 산식 공동검증권이 원본 반출 없는 데이터 사용 구조의 출발점이 된다.",
+    "원료 변경 공동 audit권이 제조 데이터와 원료 audit trail을 국내 보관해야 하는 이유가 된다.",
+    "계열 물류·소재 조달 실사권이 재벌 플랫폼의 외부 반출 통로를 막는 도구가 된다."
+  ],
+  "emotional_beat": {
+    "protagonist_feeling": "태오는 데이터 주권이라는 말을 쉽게 믿지 않는다. 서버 위치보다 중요한 건 누가 원본을 움직이고, 누가 열람 key를 돌리고, 누가 로그를 돈으로 정산하는지다.",
+    "reader_catharsis": "빅파마와 재벌이 데이터 원본을 가져가려는 순간, 주인공이 국내 escrow 서버와 이중승인 key로 병원·제조 데이터를 표준 안에 봉인하는 사이다."
+  },
+  "tension_level": 10,
+  "pov_character": "강태오",
+  "location": {
+    "place": "표준위원회 데이터 실증분과와 태오바이오 데이터 escrow 관제실",
+    "type": "data_sovereignty_escrow_room",
+    "macro_battlefield": "병원·제조 데이터 주권과 표준 검증"
+  },
+  "time_span": {
+    "duration": "14일",
+    "in_story_time": "2011년 6월"
+  },
+  "genre_ext": {
+    "capital_before": "5조 2000억 + 바이오 금융 조건표 + 국가 산업표준위원회 정식 안건 상정권 + 병목 소재 우선배정권 + 글로벌 빅파마 단가 하한선 + 원료 변경 공동 audit권 + 장기 CDMO 물량 LOI + 생산권 없는 자본 배제 조항 + 표준 준수 담보금 3000억 예치권 + 생산권 우선전환권 + 공동투자 표결권 제한 + 계열 물류·소재 조달 실사권 + 표준 위반 시 정부 조달 추천 보류권",
+    "capital_after": "6조 4000억 + 바이오 금융 조건표 + 국가 산업표준위원회 정식 안건 상정권 + 글로벌 빅파마 단가 하한선 + 원료 변경 공동 audit권 + 장기 CDMO 물량 LOI + 생산권 우선전환권 + 표준 위반 시 정부 조달 추천 보류권 + 국내 데이터 escrow 서버 운영권 + 병원·제조 데이터 원본 반출 금지 조항 + 열람 key 이중승인권 + 질의 hash 사전등록권 + 원료 변경 audit trail 국내 보관권 + 데이터 열람 수수료 0.3% 정산권",
+    "capital_delta": "+1조 2000억 평가 상승, +국내 데이터 escrow 서버 운영권, +원본 반출 금지, +열람 key 이중승인권, +질의 hash 사전등록권, +audit trail 국내 보관권, +데이터 열람 수수료 0.3%",
+    "profit_loss": "글로벌 클라우드 편의성과 재벌 플랫폼 확장성을 포기하는 대신, 데이터 원본 통제와 열람 수수료, audit trail 권한을 확보한다.",
+    "method": "병원 cohort, 제조 batch log, 원료 변경 audit trail을 국내 escrow 서버와 이중승인 key, 질의 hash, 열람 로그로 묶는다.",
+    "investment_type": "데이터 주권 인프라 운영",
+    "deal_type": "국내 데이터 escrow 및 원본 반출 금지 계약",
+    "leverage_used": "병원 익명 코호트 질의권, 원료 변경 공동 audit권, 계열 조달 실사권, 표준 위반 조달 보류권",
+    "opponent": {
+      "name": "글로벌 빅파마 품질감사팀",
+      "type": "데이터 원본 접근 요구자",
+      "weakness_exploited": "품질감사 명분이면 병원·제조 데이터 원본 열쇠까지 가져갈 수 있다고 믿는다."
+    },
+    "time_pressure": "실증분과 데이터 제출 마감 전 14일",
+    "knowledge_used": "데이터 escrow, 이중승인 key, 질의 hash, audit trail, 원본 반출 금지, 데이터 열람 수수료",
+    "risk_level": "최상",
+    "business_sector": "의료 데이터 / 제조 데이터 / 국가 산업 표준",
+    "section_rotation": "국가 산업 표준 전개",
+    "success_pattern": "데이터 원본 이동을 막고 검증 절차와 열람 수수료만 계약된 방식으로 움직인다.",
+    "opening_progression": {
+      "public_signboard_event": "글로벌 빅파마와 재벌 연합이 병원·제조 데이터 원본 접근권을 요구한다.",
+      "representative_reevaluation": "병원, 관료, 외부 감사자는 태오를 데이터 제공자가 아니라 원본과 검증 절차를 분리하는 데이터 주권 운영자로 다시 본다.",
+      "next_battlefield_ticket": "국내 escrow 서버와 audit trail이 공급망 정지 하루의 책임선 proof로 이어진다."
+    },
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "data_sovereignty_escrow_receipt",
+      "receipt_line": "태오는 병원·제조 데이터 원본 반출을 막고 국내 escrow 서버, 이중승인 key, audit trail 보관권, 데이터 열람 수수료를 확보한다.",
+      "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "데이터 원본 이동을 막고 검증 절차와 열람 수수료만 계약된 방식으로 움직인다.",
+      "recognition_signal": "글로벌 빅파마 품질감사팀의 시선 변화: 국내 escrow 서버와 이중승인 key를 통해 제한 열람만 허용받는 외부 검증자",
+      "reward_signal": "태오는 병원·제조 데이터 원본 반출을 막고 국내 escrow 서버, 이중승인 key, audit trail 보관권, 데이터 열람 수수료를 확보한다.",
+      "growth_signal": "자본과 생산권을 통제하는 표준권자에서 병원 데이터와 제조 데이터를 국가 표준 안에 봉인하는 데이터 주권 운영자로 올라선다.",
+      "expectation_signal": "국내 escrow 서버와 audit trail이 공급망 정지 하루의 책임선 proof로 이어진다.",
+      "reader_feel": "독자는 「데이터 주권」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 태오는 병원·제조 데이터 원본 반출을 막고 국내 escrow 서버, 이중승인 key, audit trail 보관권, 데이터 열람 수수료를 확보한다. 성장 장면: 자본과 생산권을 통제하는 표준권자에서 병원 데이터와 제조 데이터를 국가 표준 안에 봉인하는 데이터 주권 운영자로 올라선다. 다음 기대감: 국내 escrow 서버와 audit trail이 공급망 정지 하루의 책임선 proof로 이어진다.",
+      "mature_success_signal": "강태오는 데이터 주권의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "데이터 원본 이동을 막고 검증 절차와 열람 수수료만 계약된 방식으로 움직인다.",
+        "recognition": "글로벌 빅파마 품질감사팀의 시선 변화: 국내 escrow 서버와 이중승인 key를 통해 제한 열람만 허용받는 외부 검증자",
+        "reward": "태오는 병원·제조 데이터 원본 반출을 막고 국내 escrow 서버, 이중승인 key, audit trail 보관권, 데이터 열람 수수료를 확보한다.",
+        "growth": "자본과 생산권을 통제하는 표준권자에서 병원 데이터와 제조 데이터를 국가 표준 안에 봉인하는 데이터 주권 운영자로 올라선다.",
+        "expectation": "국내 escrow 서버와 audit trail이 공급망 정지 하루의 책임선 proof로 이어진다.",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 글로벌 빅파마 품질감사팀의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 국내 escrow 서버와 audit trail이 공급망 정지 하루의 책임선 proof로 이어진다."
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "표준위원회 실증분과가 열리자 다음 전장은 데이터로 옮겨간다. 글로벌 빅파마는 제조 batch log와 병원 baseline 데이터를 자사 글로벌 클라우드에 올려야 장기 CDMO 물량을 확정할 수 있다고 요구한다.",
+      "proof_action": "태오는 데이터 주권을 구호로 말하지 않는다. 첫 사건 beat는 병원 익명 코호트 질의권과 원료 변경 공동 audit권을 하나의 국내 봉인 구조로 묶는 장면이다.",
+      "proof_axis": "데이터 escrow, 이중승인 key, 질의 hash, audit trail, 원본 반출 금지, 데이터 열람 수수료",
+      "recognition_or_resistance_signal": "글로벌 빅파마 품질감사팀 -> 국내 escrow 서버와 이중승인 key를 통해 제한 열람만 허용받는 외부 검증자",
+      "receipt_asset": "태오는 병원·제조 데이터 원본 반출을 막고 국내 escrow 서버, 이중승인 key, audit trail 보관권, 데이터 열람 수수료를 확보한다.",
+      "reward_asset_classes": [
+        "cdmo_slot",
+        "contract_right",
+        "data_audit_right"
+      ],
+      "next_regulated_gate": "국내 escrow 서버와 audit trail이 공급망 정지 하루의 책임선 proof로 이어진다.",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 글로벌 빅파마 품질감사팀의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 국내 escrow 서버와 audit trail이 공급망 정지 하루의 책임선 proof로 이어진다.",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "business_memory",
+    "timeline_knowledge": "태오는 전생에서 병원·제조 데이터가 해외 플랫폼과 대기업 통합망에 흩어지며 국내 표준이 검증 근거를 잃었던 흐름을 기억한다.",
+    "butterfly_effect": "병원 데이터와 제조 데이터가 태오 표준 안에 봉인되며 글로벌 장기계약도 국내 검증 절차를 통과해야 한다.",
+    "death_flag": false,
+    "regression_hint": "태오가 서버 홍보 문구보다 key 승인표와 audit trail 보관 위치를 먼저 확인하는 행동으로만 암시한다.",
+    "future_prep": "데이터 escrow와 audit trail은 공급망 정지 사고의 책임선 추적과 국가 조달 기준 차용의 핵심 증거가 된다."
+  },
+  "block_no": 64,
+  "foreshadow_targets": [
+    {
+      "target_block": 65,
+      "target_event": "공급망 정지 하루"
+    },
+    {
+      "target_block": 66,
+      "target_event": "조건표를 쓰는 나라"
+    },
+    {
+      "target_block": 67,
+      "target_event": "빅파마와 같은 테이블"
+    }
+  ],
+  "callback_sources": [
+    {
+      "source_block": 58,
+      "source_event": "데이터 보험료"
+    },
+    {
+      "source_block": 62,
+      "source_event": "빅파마의 단가표"
+    },
+    {
+      "source_block": 63,
+      "source_event": "재벌 연합의 역제안"
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "block_id": "Block 59",
+  "title": "운용사라는 말을 먼저 쓰면 진다",
+  "content": {
+    "context": "대표 인센티브까지 묶이자 LP proof room의 마지막 질문은 이름으로 온다. 그래서 당신들은 운용사인가, 자문사인가, 아니면 그냥 SPV인가. 도윤은 대답을 미루지 않는다. 하지만 '운용사'라는 단어를 먼저 쓰는 순간 규제와 모집 리스크가 열린다는 것도 안다.",
+    "event_villain": "백승환 법무팀은 도윤 SPV가 사실상 펀드 운용을 하면서 라이선스 없이 LP를 모으는 것 아니냐고 찌른다. 채권단 보수 라인은 이름이 불명확하면 리파이낸싱 심사에서 제외해야 한다고 말한다. 외부 LP는 공개모집으로 보일 여지가 있으면 observer seat도 철회할 수 있다고 경고한다. 도윤이 독립 운용사를 선언하면 멋있지만, 아직 법적 receipt가 없다.",
+    "solution": "도윤은 이름을 낮춘다. 그는 도윤 SPV를 'fund manager'가 아니라 'portfolio servicing operator'로 표기하고, LP 접촉은 reverse inquiry와 one-on-one diligence로 제한한다. 법무법인에는 no-public-offering memo와 role-boundary opinion을 의뢰한다. 은행에는 servicing operator, PEF, LP observer, portfolio company의 권한표를 붙인 independent operator condition sheet를 낸다. 회계법인 limited assurance는 투자권유가 아니라 receipt 검토라는 문구로 분리한다.",
+    "reward": "법무법인은 공개모집 아님 memo와 role-boundary opinion 초안을 낸다. LP는 observer seat를 유지하되 자료 배포를 one-on-one diligence room 안으로 제한한다. 은행은 independent operator condition sheet를 리파이낸싱 심사 부속서로 받는다. 백승환 법무팀은 무인가 운용 프레임을 철회하지 않지만, 즉시 거래 중단 사유로 확정하지 못한다. 도윤은 큰 이름을 얻지 않았다. 대신 아직 쓸 수 있는 이름과 아직 쓰면 안 되는 이름을 분리해, 다음 가격표를 법적으로 열었다."
+  },
+  "incident_beats": [
+    "백승환 법무팀과 채권단 보수 라인이 도윤 SPV를 무인가 운용 또는 공개모집 프레임으로 걸며 리파이낸싱 제외를 압박한다",
+    "도윤이 fund manager 선언을 피하고 portfolio servicing operator, reverse inquiry, one-on-one diligence, role-boundary opinion으로 구조를 낮춘다",
+    "no-public-offering memo, role-boundary opinion 초안, independent operator condition sheet, LP observer seat 유지, 은행 심사 부속서 접수 receipt가 확보된다"
+  ],
+  "stakes": "독립 운용사라는 이름을 빨리 쓰면 멋은 있지만 규제 리스크가 열린다. 이름을 너무 낮추면 LP와 은행은 도윤을 임시 작업자로 본다. 도윤은 아직 가능한 명칭으로 법적 통로를 열고, 다음 리파이낸싱 가격표까지 버텨야 한다.",
+  "power_shift": {
+    "protagonist": "현장 인센티브를 묶은 incentive-architect에서 독립 운용자 조건을 법적 명칭과 역할 경계로 잠그는 compliance-operator로 이동한다.",
+    "antagonist": "백승환 법무팀은 무인가 운용 프레임으로 거래를 닫으려 하지만, 도윤의 role-boundary opinion과 condition sheet 때문에 즉시 차단하지 못한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "백승환 법무팀",
+      "before": "도윤 SPV를 무인가 운용과 공개모집 프레임으로 묶으려는 법무 gate",
+      "after": "no-public-offering memo와 role-boundary opinion 때문에 즉시 거래 중단 사유로 확정하지 못한다",
+      "continuity_anchor_before": "hash-linked receipt index를 받고 legal discount 문구를 보류한다"
+    },
+    {
+      "target": "외부 LP 견제자",
+      "before": "자료 배포가 공개모집처럼 보이면 observer seat도 철회하려는 LP",
+      "after": "one-on-one diligence room 제한 조건으로 observer seat를 유지한다",
+      "continuity_anchor_before": "operator pool이 equity control 이전이 아니라 현장 인센티브라는 side memo를 proof room에 넣는다"
+    },
+    {
+      "target": "서민재",
+      "before": "법적 명칭이 불명확하면 리파이낸싱 심사에 올리기 어렵다고 보는 은행 담당자",
+      "after": "independent operator condition sheet를 심사 부속서로 접수한다",
+      "continuity_anchor_before": "bank-signed servicing mandate와 fee escrow를 bridge covenant 보조 proof로 받아들인다"
+    },
+    {
+      "target": "윤태식",
+      "before": "회계법인 이름을 쓰지 않으면 법무 리스크를 못 넘긴다고 보는 전 상사",
+      "after": "도윤이 외부 법무 opinion으로 이름 리스크를 넘기자 개입 명분을 잃는다",
+      "continuity_anchor_before": "conflict clean letter만 내주고 interim management 명의는 가져오지 못한다"
+    }
+  ],
+  "foreshadow": [
+    "independent operator condition sheet는 리파이낸싱 심사에서 도윤 SPV를 임시 작업자가 아니라 조건부 운용 주체로 읽게 만든다.",
+    "no-public-offering memo는 최종 legality proof의 한 축으로 남는다.",
+    "role-boundary opinion은 LP reverse inquiry와 은행 mandate를 동시에 방어한다.",
+    "아직 쓰지 않은 운용사 이름은 이후 정식 출범의 미끼가 된다."
+  ],
+  "callback": [
+    "conflict clean letter와 자료 반출 없음 확인서를 role-boundary opinion의 사실관계로 넣는다.",
+    "operator pool과 servicing fee escrow를 portfolio servicing operator의 실체로 사용한다.",
+    "LP observer seat와 one-on-one diligence room을 공개모집 프레임 방어에 연결한다.",
+    "governance rights term sheet를 independent operator condition sheet로 정리한다."
+  ],
+  "emotional_beat": {
+    "type": "compliance_name_cider",
+    "intensity": 8
+  },
+  "tension_level": 9,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "법무법인 회의실 / 은행 리파이낸싱 심사 부속서 접수 창구 / LP diligence room",
+    "type": "operator role-boundary and no-public-offering compliance gate"
+  },
+  "time_span": {
+    "duration": "이틀",
+    "in_story_time": "portfolio operator pool 서명 직후"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "portfolio operator pool / deferred earn-out unit 조건표 / bad-leaver clawback / outside payment 금지 재확인 / cashflow scorecard trigger / LP key-person risk 완화 side memo / 백승환 retention bonus 제안 waterfall 위반 risk 기록",
+    "capital_after": "no-public-offering memo 초안 / role-boundary opinion 초안 / independent operator condition sheet / one-on-one diligence room 제한 / LP observer seat 유지 / 은행 리파이낸싱 심사 부속서 접수 / limited assurance 투자권유 아님 문구",
+    "capital_delta": "무인가 운용 프레임 즉시 차단 / LP observer seat 유지 / independent operator condition sheet 확보 / 은행 심사 부속서 접수",
+    "profit_loss": "독립 운용사라는 큰 이름은 아직 쓰지 못하지만, 법적으로 쓸 수 있는 servicing operator 지위를 확보한다.",
+    "method": "fund manager 선언을 피하고 portfolio servicing operator, reverse inquiry, one-on-one diligence, role-boundary opinion으로 법적 경계를 먼저 만든다.",
+    "investment_type": "independent operator compliance gate",
+    "deal_type": "role-boundary opinion / no-public-offering memo / independent operator condition sheet",
+    "leverage_used": [
+      "portfolio operator pool",
+      "servicing fee escrow",
+      "conflict clean letter",
+      "LP observer seat",
+      "one-on-one diligence room",
+      "limited assurance role separation",
+      "governance rights term sheet",
+      "bank-signed servicing mandate"
+    ],
+    "opponent": {
+      "name": "백승환 법무팀 / 채권단 보수 라인 / 외부 LP 견제자 / 윤태식",
+      "type": "unauthorized-manager legal framing, refinancing exclusion pressure, LP solicitation-risk gate, and institutional-brand pressure",
+      "weakness_exploited": "상대는 이름의 모호성을 공격하지만, 역할과 자료 배포 경계를 먼저 정하면 즉시 거래 중단 사유로 만들기 어렵다"
+    },
+    "historical_event": null,
+    "time_pressure": "리파이낸싱 심사 부속서 마감 전 no-public-offering memo와 role-boundary opinion 초안을 받아야 한다.",
+    "knowledge_used": "회귀 전 너무 빨리 운용사라고 말한 팀이 공개모집 프레임에 걸려 LP와 은행이 동시에 빠졌다는 기억",
+    "risk_level": "극고위험",
+    "business_sector": "operator compliance / LP reverse inquiry / refinancing legal review / independent manager condition",
+    "section_rotation": "PEF가 사려는 건 회사가 아니다",
+    "success_pattern": "무인가 운용 프레임을 낮은 명칭과 role-boundary receipt로 방어",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "operator_compliance_gate_receipt",
+      "receipt_line": "no-public-offering memo 초안, role-boundary opinion 초안, independent operator condition sheet, one-on-one diligence room 제한, LP observer seat 유지, 은행 리파이낸싱 심사 부속서 접수 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 독립 운용사 명칭을 너무 빨리 쓴 팀이 공개모집과 무인가 운용 프레임에 걸려 리파이낸싱 심사에서 빠졌다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 operator는 독립 운용사를 선언하다 법무 gate에서 막혔다.",
+      "changed_event": "이번에는 도윤이 portfolio servicing operator로 낮춰 쓰고, one-on-one diligence와 role-boundary opinion을 먼저 만든다.",
+      "ripple_effect": "LP observer seat는 유지되고, 은행은 independent operator condition sheet를 심사 부속서로 접수한다."
+    },
+    "death_flag": {
+      "avoided": "무인가 운용과 공개모집 프레임으로 LP와 은행이 동시에 닫히는 미래",
+      "method": "no-public-offering memo, role-boundary opinion, one-on-one diligence 제한, independent operator condition sheet로 방어한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 법무팀이 묻기도 전에 '운용사라고 쓰지 마세요'라고 자료 제목을 고친다.",
+      "suspicion_from": "백승환 법무팀과 외부 LP 견제자"
+    },
+    "future_prep": {
+      "action": "independent operator condition sheet를 리파이낸싱 가격표의 조건부 운용자 proof로 제출한다.",
+      "target_event": "리파이낸싱 역전"
+    }
+  },
+  "block_no": 59,
+  "foreshadow_targets": [
+    60,
+    69,
+    70
+  ]
+}

@@ -264,22 +264,22 @@
       }
     ],
     "foreshadow_map": [
-    {
-      "seed": "전생 보증 리스트의 첫 계약명",
-      "payoff": "조건부 수주 재협상"
-    },
-    {
-      "seed": "엔진 납기표의 밀린 슬롯",
-      "payoff": "내부 병목 개편"
-    },
-    {
-      "seed": "해외 조선소 실사서의 인건비 부표",
-      "payoff": "해외 인수 거부권"
-    },
-    {
-      "seed": "채권단 담당자의 별도 메모 요청",
-      "payoff": "그룹 리스크 조정실 공식화"
-    }
+      {
+        "seed": "전생 보증 리스트의 첫 계약명",
+        "payoff": "조건부 수주 재협상"
+      },
+      {
+        "seed": "엔진 납기표의 밀린 슬롯",
+        "payoff": "내부 병목 개편"
+      },
+      {
+        "seed": "해외 조선소 실사서의 인건비 부표",
+        "payoff": "해외 인수 거부권"
+      },
+      {
+        "seed": "채권단 담당자의 별도 메모 요청",
+        "payoff": "그룹 리스크 조정실 공식화"
+      }
     ],
     "opponent_transition_plan": [
       {
@@ -339,6 +339,37 @@
         "receipt_kind": "next_gate",
         "pain_only_exit": false
       }
+    ],
+    "donor_review": {
+      "decision": "adopted",
+      "scope": "Generalized donor-structure law only; no donor proper nouns, scene order, or asset skin is imported.",
+      "adopted_law": [
+        "current-document proof before future-knowledge payoff",
+        "pressure -> proof -> authority/control/cash/status receipt -> next company gate",
+        "same-block receipt for every TR block",
+        "family or heir recognition is pressure/evaluation only, never the reward engine",
+        "one TR block remains a dense 2-to-6 downstream episode bundle, narrowed by block-specific pacing hints"
+      ],
+      "contamination_guard": [
+        "no donor proper nouns, donor organization names, or donor scene order",
+        "no generic chaebol succession reward replacing shipbuilding, ship-finance, dock, insurance, supplier, market, or approval rights",
+        "no future prophecy or status UI replacing present contracts, tables, logs, term sheets, or receipts",
+        "no charity rescue or family praise as a block reward",
+        "shipbuilding and ship-finance rights remain the work canon"
+      ],
+      "visibility_note": "Donor adoption means translated material-side operating law only; shipbuilding canon remains native."
+    },
+    "contamination_guard": [
+      "no donor proper nouns, donor organization names, or donor scene order",
+      "no generic chaebol succession reward replacing shipbuilding, ship-finance, dock, insurance, supplier, market, or approval rights",
+      "no future prophecy or status UI replacing present contracts, tables, logs, term sheets, or receipts",
+      "no charity rescue or family praise as a block reward",
+      "shipbuilding and ship-finance rights remain the work canon"
+    ],
+    "do_not_fake": [
+      "Do not let generic succession drama replace shipbuilding, ship-finance, dock, insurance, supplier, market, or approval receipts.",
+      "Do not close a block on praise only; close on review right, access right, seat, veto, pricing table, deposit, approval route, or next gate.",
+      "Do not let future memory replace current contract, table, log, term sheet, insurance quote, or bank memo proof."
     ]
   }
 }

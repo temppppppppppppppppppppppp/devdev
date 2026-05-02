@@ -1,0 +1,11 @@
+{
+  "identity_locked": true,
+  "profile_locked": true,
+  "material_sufficient": true,
+  "manual_audit_pass": true,
+  "remaining_risks": [
+    "This is a retroactive Stage 0 authority lock built from already-produced Phase0/TR/BI artifacts; it does not imply root canonical TR/BI promotion.",
+    "Preprocess authority is now present, but registry admission and immediate-use remain separate gates.",
+    "No external reference card or donor packet is newly adopted in this Stage 0 lock."
+  ]
+}

@@ -1,0 +1,184 @@
+{
+  "block_id": "Block 62",
+  "title": "빅파마의 단가표",
+  "content": {
+    "context": "표준위원회 안건이 열리자 글로벌 빅파마가 먼저 단가표를 보낸다. 표에는 대량 발주를 조건으로 한 단가 인하, 납기 위약금, 품질 감사 비용 전가, 원료 변경 승인권이 빅파마 쪽으로 기울어져 있다. 겉으로는 큰 계약이지만, 그대로 받으면 태오의 국가 표준 조건표는 빅파마 하청 단가표 아래에 깔린다.",
+    "event_villain": "빅파마 구매팀은 글로벌 물량을 주겠다며 단가 17% 인하를 요구하고, 원료 변경 승인을 자신들이 갖겠다고 한다. 국내 관료 라인은 해외 대형 계약을 놓치지 말라며 압박하고, 일부 재벌 계열 제약사는 태오가 가격을 버티지 못하면 자신들이 대신 받겠다고 흘린다. 모두가 물량을 미끼로 표준권을 단가 아래에 넣으려 한다.",
+    "solution": "태오는 단가표를 바로 거절하지 않는다. 첫 사건 beat는 정부 조달 예비표준 검토권을 근거로, 단가가 아니라 병목 소재와 납기 실패 책임을 표준 항목으로 끌어올리는 장면이다. 둘째 beat는 확보한 원료의약품/정밀화학 병목 관리 경험과 실증분과 의제 우선권을 묶어, 원료 변경 승인권을 공동 audit 없이는 움직일 수 없게 만드는 장면이다. 태오는 단가 인하 폭을 줄이는 대신 납기 보장료와 병목 소재 우선배정권을 받아낸다.",
+    "reward": "태오는 병목 소재 우선배정권, 글로벌 빅파마 단가 하한선, 원료 변경 공동 audit권, 납기 보장료 4.5% 조항, 품질 감사 비용 반반 부담 조항, 장기 CDMO 물량 LOI를 얻는다. 빅파마의 단가표는 태오의 소재와 납기 표준표 없이는 작동하지 못한다."
+  },
+  "stakes": "빅파마 단가표를 그대로 받으면 국가 산업표준 논의가 글로벌 물량 유치 명분에 묶이고, 태오는 생산권 담보와 데이터 표준을 단가 인하용 부속조건으로 빼앗긴다.",
+  "power_shift": {
+    "protagonist": "표준위원회 안건권자에서 글로벌 빅파마의 단가표를 소재 병목과 납기 표준으로 재가격화하는 CDMO 협상자로 올라선다.",
+    "antagonist": "글로벌 빅파마는 물량과 단가 압박만으로 태오 표준을 누를 수 없게 된다."
+  },
+  "relationship_delta": [
+    {
+      "target": "글로벌 빅파마 구매팀",
+      "before": "대량 발주를 미끼로 단가 인하와 원료 변경 승인권을 가져가려는 구매자",
+      "after": "병목 소재 우선배정, 공동 audit, 납기 보장료 조항을 받아들여야 하는 장기 고객"
+    },
+    {
+      "target": "산업표준위원회 관료 라인",
+      "before": "해외 대형 계약 실적을 이유로 태오에게 단가 양보를 압박하는 조정자",
+      "after": "단가보다 병목 소재와 납기 책임이 표준 항목임을 인정하는 심사자",
+      "anchor_before": "바이오 금융 조건표를 정식 안건으로 올려야 하는 제도 파트너"
+    },
+    {
+      "target": "재벌 계열 제약사",
+      "before": "태오가 가격을 버티지 못하면 빅파마 물량을 대신 받으려는 후발 주자",
+      "after": "공동 audit과 납기 보장료를 감당하지 못해 대체 수주 명분을 잃은 경쟁자"
+    }
+  ],
+  "foreshadow": [
+    "원료 변경 공동 audit권은 재벌 연합의 공동투자 역제안을 거절할 때 생산권 없는 돈의 한계를 드러낸다.",
+    "납기 보장료와 병목 소재 우선배정권은 데이터 주권 논쟁에서 제조 데이터의 국내 봉인 근거가 된다.",
+    "장기 CDMO 물량 LOI는 후반 글로벌 빅파마와 대등한 장기계약 테이블의 선행 증거가 된다."
+  ],
+  "callback": [
+    "표준위원회 정식 안건 상정권과 정부 조달 예비표준 검토권이 빅파마 단가표를 국가 납기 기준 문제로 바꾼다.",
+    "원료의약품과 정밀화학 병목을 장악했던 과거 성과가 병목 소재 우선배정권의 근거가 된다.",
+    "바이오 금융 조건표는 단가 인하가 아니라 납기와 품질 책임을 가격에 반영하는 비교표로 쓰인다."
+  ],
+  "emotional_beat": {
+    "protagonist_feeling": "태오는 큰 물량 앞에서도 조급해지지 않는다. 싸게 많이 만드는 계약은 자랑이 아니라, 책임을 빼앗기는 서명일 수 있다는 걸 안다.",
+    "reader_catharsis": "빅파마가 물량으로 단가를 찍어누르려는 순간, 주인공이 병목 소재와 납기 보장료를 들고 단가표의 기준을 뒤집는 사이다."
+  },
+  "tension_level": 9,
+  "pov_character": "강태오",
+  "location": {
+    "place": "글로벌 빅파마 구매 협상실과 표준위원회 실증분과 회의실",
+    "type": "global_pharma_price_sheet_room",
+    "macro_battlefield": "글로벌 CDMO 단가와 소재 병목 표준"
+  },
+  "time_span": {
+    "duration": "9일",
+    "in_story_time": "2011년 2월"
+  },
+  "genre_ext": {
+    "capital_before": "3조 3000억 + 바이오 금융 조건표 + 국가 산업표준위원회 정식 안건 상정권 + 바이오 금융 조건표 제출권 + 생산권 담보 원장 비공개 열람권 + 정부 조달 예비표준 검토권 + 실증분과 의제 우선권 + 12개 바이오 term-sheet pipeline + 조건표 심사위원회 의장권 + 구조화 수수료 0.7% + 생산권 담보 원장 + 은행 공동대출 framework",
+    "capital_after": "4조 2000억 + 바이오 금융 조건표 + 국가 산업표준위원회 정식 안건 상정권 + 정부 조달 예비표준 검토권 + 실증분과 의제 우선권 + 병목 소재 우선배정권 + 글로벌 빅파마 단가 하한선 + 원료 변경 공동 audit권 + 납기 보장료 4.5% 조항 + 품질 감사 비용 반반 부담 조항 + 장기 CDMO 물량 LOI + 생산권 담보 원장 + 은행 공동대출 framework",
+    "capital_delta": "+9000억 평가 상승, +병목 소재 우선배정권, +단가 하한선, +원료 변경 공동 audit권, +납기 보장료, +품질 감사 비용 분담, +장기 CDMO 물량 LOI",
+    "profit_loss": "단가 인하 일부를 받아들이지만 납기 보장료와 병목 소재 우선배정으로 수익성과 표준권을 방어한다.",
+    "method": "글로벌 단가표를 병목 소재, 납기 실패 책임, 원료 변경 audit, 품질 감사 비용의 표준 항목으로 재작성한다.",
+    "investment_type": "글로벌 CDMO 단가표 재가격화",
+    "deal_type": "병목 소재 우선배정 및 장기 CDMO 물량 LOI",
+    "leverage_used": "정부 조달 예비표준 검토권, 실증분과 의제 우선권, 원료소재 병목 관리 경험, 바이오 금융 조건표",
+    "opponent": {
+      "name": "글로벌 빅파마 구매팀",
+      "type": "글로벌 CDMO 단가 압박자",
+      "weakness_exploited": "대량 발주와 단가 협상력으로 병목 소재와 납기 책임을 눌러버릴 수 있다고 믿는다."
+    },
+    "time_pressure": "빅파마 분기 발주 배정 전 9일",
+    "knowledge_used": "CDMO 단가표, 원료 변경 audit, 병목 소재, 납기 보장료, 품질 감사 비용, 장기 물량 LOI",
+    "risk_level": "최상",
+    "business_sector": "글로벌 CDMO / 원료소재 / 국가 산업 표준",
+    "section_rotation": "국가 산업 표준 전개",
+    "success_pattern": "물량을 미끼로 한 단가 압박을 소재 병목과 납기 책임 가격표로 되돌린다.",
+    "opening_progression": {
+      "public_signboard_event": "글로벌 빅파마가 대량 발주를 조건으로 단가 17% 인하 단가표를 보낸다.",
+      "representative_reevaluation": "빅파마와 관료 라인은 태오를 단가 양보 대상이 아니라 소재 병목과 납기 책임을 가격화하는 표준 협상자로 다시 본다.",
+      "next_battlefield_ticket": "원료 변경 공동 audit권과 장기 CDMO 물량 LOI가 재벌 연합의 공동투자 역제안 전장으로 이어진다."
+    },
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "global_pharma_price_floor_receipt",
+      "receipt_line": "태오는 빅파마 단가표를 병목 소재 우선배정권, 단가 하한선, 공동 audit권, 납기 보장료 조항으로 재작성한다.",
+      "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "물량을 미끼로 한 단가 압박을 소재 병목과 납기 책임 가격표로 되돌린다.",
+      "recognition_signal": "글로벌 빅파마 구매팀의 시선 변화: 병목 소재 우선배정, 공동 audit, 납기 보장료 조항을 받아들여야 하는 장기 고객",
+      "reward_signal": "태오는 빅파마 단가표를 병목 소재 우선배정권, 단가 하한선, 공동 audit권, 납기 보장료 조항으로 재작성한다.",
+      "growth_signal": "표준위원회 안건권자에서 글로벌 빅파마의 단가표를 소재 병목과 납기 표준으로 재가격화하는 CDMO 협상자로 올라선다.",
+      "expectation_signal": "원료 변경 공동 audit권과 장기 CDMO 물량 LOI가 재벌 연합의 공동투자 역제안 전장으로 이어진다.",
+      "reader_feel": "독자는 「빅파마의 단가표」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 태오는 빅파마 단가표를 병목 소재 우선배정권, 단가 하한선, 공동 audit권, 납기 보장료 조항으로 재작성한다. 성장 장면: 표준위원회 안건권자에서 글로벌 빅파마의 단가표를 소재 병목과 납기 표준으로 재가격화하는 CDMO 협상자로 올라선다. 다음 기대감: 원료 변경 공동 audit권과 장기 CDMO 물량 LOI가 재벌 연합의 공동투자 역제안 전장으로 이어진다.",
+      "mature_success_signal": "강태오는 빅파마의 단가표의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "물량을 미끼로 한 단가 압박을 소재 병목과 납기 책임 가격표로 되돌린다.",
+        "recognition": "글로벌 빅파마 구매팀의 시선 변화: 병목 소재 우선배정, 공동 audit, 납기 보장료 조항을 받아들여야 하는 장기 고객",
+        "reward": "태오는 빅파마 단가표를 병목 소재 우선배정권, 단가 하한선, 공동 audit권, 납기 보장료 조항으로 재작성한다.",
+        "growth": "표준위원회 안건권자에서 글로벌 빅파마의 단가표를 소재 병목과 납기 표준으로 재가격화하는 CDMO 협상자로 올라선다.",
+        "expectation": "원료 변경 공동 audit권과 장기 CDMO 물량 LOI가 재벌 연합의 공동투자 역제안 전장으로 이어진다.",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 글로벌 빅파마 구매팀의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 원료 변경 공동 audit권과 장기 CDMO 물량 LOI가 재벌 연합의 공동투자 역제안 전장으로 이어진다."
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "표준위원회 안건이 열리자 글로벌 빅파마가 먼저 단가표를 보낸다. 표에는 대량 발주를 조건으로 한 단가 인하, 납기 위약금, 품질 감사 비용 전가, 원료 변경 승인권이 빅파마 쪽으로 기울어져 있다. 겉으로는 큰 계약이지만, 그대로 받으면 태오의 국가 표준 조건표는 빅파마 하청 단가표 아래에 깔린다.",
+      "proof_action": "태오는 단가표를 바로 거절하지 않는다. 첫 사건 beat는 정부 조달 예비표준 검토권을 근거로, 단가가 아니라 병목 소재와 납기 실패 책임을 표준 항목으로 끌어올리는 장면이다.",
+      "proof_axis": "CDMO 단가표, 원료 변경 audit, 병목 소재, 납기 보장료, 품질 감사 비용, 장기 물량 LOI",
+      "recognition_or_resistance_signal": "글로벌 빅파마 구매팀 -> 병목 소재 우선배정, 공동 audit, 납기 보장료 조항을 받아들여야 하는 장기 고객",
+      "receipt_asset": "태오는 빅파마 단가표를 병목 소재 우선배정권, 단가 하한선, 공동 audit권, 납기 보장료 조항으로 재작성한다.",
+      "reward_asset_classes": [
+        "cdmo_slot",
+        "contract_right",
+        "data_audit_right"
+      ],
+      "next_regulated_gate": "원료 변경 공동 audit권과 장기 CDMO 물량 LOI가 재벌 연합의 공동투자 역제안 전장으로 이어진다.",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 글로벌 빅파마 구매팀의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 원료 변경 공동 audit권과 장기 CDMO 물량 LOI가 재벌 연합의 공동투자 역제안 전장으로 이어진다.",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "business_memory",
+    "timeline_knowledge": "태오는 전생에서 국내 CDMO가 글로벌 물량을 따내고도 원료 변경 승인권과 감사 비용을 빼앗겨 장기 수익성을 잃었던 흐름을 기억한다.",
+    "butterfly_effect": "글로벌 빅파마 단가표가 태오의 소재와 납기 표준을 통과해야 하는 계약으로 바뀐다.",
+    "death_flag": false,
+    "regression_hint": "태오가 총물량보다 원료 변경 승인란과 납기 위약금 조항을 먼저 긋는 행동으로만 암시한다.",
+    "future_prep": "단가 하한선, 공동 audit권, 장기 물량 LOI는 재벌 역제안과 데이터 주권 논쟁에서 생산권 없는 돈을 걸러내는 기준이 된다."
+  },
+  "block_no": 62,
+  "foreshadow_targets": [
+    {
+      "target_block": 63,
+      "target_event": "재벌 연합의 역제안"
+    },
+    {
+      "target_block": 64,
+      "target_event": "데이터 주권"
+    },
+    {
+      "target_block": 67,
+      "target_event": "빅파마와 같은 테이블"
+    }
+  ],
+  "callback_sources": [
+    {
+      "source_block": 61,
+      "source_event": "표준위원회 초대장"
+    },
+    {
+      "source_block": 40,
+      "source_event": "원료소재 병목 전환"
+    },
+    {
+      "source_block": 60,
+      "source_event": "바이오 은행"
+    }
+  ]
+}

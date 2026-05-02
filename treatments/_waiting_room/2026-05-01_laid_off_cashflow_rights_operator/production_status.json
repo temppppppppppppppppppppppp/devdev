@@ -1,0 +1,821 @@
+{
+  "work_id": "laid_off_cashflow_rights_operator",
+  "title": "해고 직전, 돈줄이 보였다",
+  "status": "immediate_deployment_pass_range_complete_root_registry_admitted",
+  "last_updated": "2026-05-02",
+  "canonical_warning": "Root TR/BI promotion, registry admission, range_complete downstream hint attachment, and immediate-use declaration were performed by explicit immediate-use promotion order on 2026-05-02. Preserve B001-B070; B071+ remains forbidden without separate order.",
+  "block_semantics": "1 TR block = 2~6 serialized episodes. Each block should include at least two incident turns or one incident plus one actionable next gate.",
+  "protagonist_rule": "강도윤 is self-interested and efficiency-driven. He does not act from goodness or evil as a primary engine; he trades help for rights, access, receipts, and next gates.",
+  "artifacts": {
+    "phase0_design": "material_ssot/40_phase0_design/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/phase0_design.json",
+    "work_guard": "work_guards/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator.work_guard.yaml",
+    "bi_seed": "bible/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_bi_seed.json",
+    "tr_blocks": [
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_001_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_002_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_003_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_004_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_005_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_006_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_007_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_008_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_009_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_010_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_011_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_012_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_013_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_014_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_015_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_016_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_017_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_018_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_019_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_020_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_021_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_022_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_023_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_024_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_025_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_026_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_027_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_028_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_029_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_030_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_031_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_032_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_033_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_034_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_035_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_036_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_037_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_038_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_039_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_040_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_041_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_042_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_043_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_044_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_045_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_046_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_047_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_048_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_049_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_050_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_051_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_052_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_053_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_054_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_055_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_056_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_057_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_058_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_059_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_060_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_061_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_062_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_063_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_064_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_065_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_066_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_067_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_068_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_069_draft.json",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_tr_block_070_draft.json"
+    ],
+    "audit_reports": [
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_block_011_020_self_audit.md",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_block_021_030_self_audit.md",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_block_031_040_self_audit.md",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_block_041_050_self_audit.md",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_block_051_060_self_audit.md",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_block_061_070_self_audit.md",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_source_tr_handoff_gate.md",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_bi_5pass_audit.md",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_promotion_readiness_packet_3pass_audit.md",
+      "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_root_phase0_authority_materialization_3pass_audit.md",
+      "treatments/preprocess/laid_off_cashflow_rights_operator/stage0_retroactive_authority_lock_3pass_audit.md",
+      "treatments/preprocess/laid_off_cashflow_rights_operator/work_guard_library_publication_3pass_audit.md"
+    ],
+    "bi_draft": "bible/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/0_bi_laid_off_cashflow_rights_operator.json",
+    "bi_5pass_audit": "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_bi_5pass_audit.md",
+    "aggregate_source_tr": "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_source_tr_blocks_001_070_aggregate.json",
+    "promotion_readiness_audit": "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_promotion_readiness_packet_3pass_audit.md",
+    "root_phase0_design": "treatments/phase0/laid_off_cashflow_rights_operator_phase0_design.json",
+    "root_phase0_materialization_audit": "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_root_phase0_authority_materialization_3pass_audit.md",
+    "promotion_target_normalization_state": "promotion_target_pair",
+    "promotion_target_normalization_verdict": "PASS_NORMALIZED",
+    "preprocess_source_manifest": "treatments/preprocess/laid_off_cashflow_rights_operator/source_manifest.json",
+    "preprocess_profile_lock": "treatments/preprocess/laid_off_cashflow_rights_operator/profile_lock.json",
+    "preprocess_material_bundle_summary": "treatments/preprocess/laid_off_cashflow_rights_operator/material_bundle_summary.json",
+    "preprocess_phase0_ready_snapshot": "treatments/preprocess/laid_off_cashflow_rights_operator/phase0_ready_snapshot.json",
+    "sequential_run_status": "treatments/preprocess/laid_off_cashflow_rights_operator/sequential_run_status.json",
+    "audit_status": "treatments/preprocess/laid_off_cashflow_rights_operator/audit_status.json",
+    "stage0_retroactive_authority_lock_audit": "treatments/preprocess/laid_off_cashflow_rights_operator/stage0_retroactive_authority_lock_3pass_audit.md",
+    "work_guard_library": "work_guards/laid_off_cashflow_rights_operator.yaml",
+    "work_guard_library_publication_audit": "treatments/preprocess/laid_off_cashflow_rights_operator/work_guard_library_publication_3pass_audit.md"
+  },
+  "completed_blocks": [
+    {
+      "block": 1,
+      "title": "계정 만료 72시간",
+      "incident_count": 2,
+      "receipt": "계정 2주 연장 + 반품 정산 특별 검토 권한 + 재납품 우선권 연장 의사 메일",
+      "next_gate": "달러 정산 오류 파일과 폐기 예정 PB 브랜드 라이선스"
+    },
+    {
+      "block": 2,
+      "title": "창고 SKU가 거짓말하지 않는다",
+      "incident_count": 2,
+      "receipt": "공식 창고 출입권 + SKU 열람권 + B동 폐기 보류 공문",
+      "next_gate": "C동 폐기 예정 PB 브랜드 라이선스 사진"
+    },
+    {
+      "block": 3,
+      "title": "현금 말고 권한",
+      "incident_count": 2,
+      "receipt": "계약 검토 담당 등록 + 반품권 인정서 + 재납품 우선권 45일 연장 + 성과보상 협의 문구",
+      "next_gate": "외주계약서 폴더와 C동 PB 브랜드 라이선스 계약번호"
+    },
+    {
+      "block": 4,
+      "title": "외주업체의 역공",
+      "incident_count": 2,
+      "receipt": "법무 동석권 + 외주계약 원본 열람권 + 라온홈 상표 사용권 부속합의 사본 + C동 리퍼브 브랜드 전환 가능성 회의록",
+      "next_gate": "서우패키징 상표권 갱신료 미납과 라온홈 리퍼브 브랜드 전환 협상"
+    },
+    {
+      "block": 5,
+      "title": "폐기 브랜드는 폐기가 아니다",
+      "incident_count": 2,
+      "receipt": "라온홈 상표권 갱신 접수 확인서 + 60일 조건부 우선사용권 + C동 폐기 7일 보류 공문 + 리퍼브 브랜드 전환 검토 의견",
+      "next_gate": "C동 라온홈 리퍼브 가격표, 정산팀 빈자리, SPV 우선협상권"
+    },
+    {
+      "block": 6,
+      "title": "정산팀의 빈자리",
+      "incident_count": 2,
+      "receipt": "정산 특별 검토석 + 법무/감사 동시 동석권 + C동 가격표 작성 권한 + 서우패키징 채권 옵션 초안",
+      "next_gate": "C동 리퍼브 가격표 완성, 서우패키징 채권 옵션 계약, 도윤 현금 고갈 압박"
+    },
+    {
+      "block": 7,
+      "title": "리퍼브 가격표",
+      "incident_count": 2,
+      "receipt": "C동 리퍼브 가격표 v1 + 박만철 현장 operator 등록 + 리퍼브 운영 성과수수료 협의권 + 달러 RMA 파일 제한 열람권",
+      "next_gate": "최문식의 책임 전가, 리퍼브 운영 성과수수료 문구 확정, 서우패키징 채권 옵션금 처리, 달러 RMA 파일"
+    },
+    {
+      "block": 8,
+      "title": "최문식의 꼬리 자르기",
+      "incident_count": 2,
+      "receipt": "외주계약 재검토권 + 그린로지스 penalty 산정권 + 리퍼브 성과수수료 7% 협의 문구 + 샘플 판매/클레임 로그",
+      "next_gate": "서우패키징 옵션금 48시간 처리, 그린로지스 penalty 산정, 첫 SPV 또는 개인사업자 필요, 달러 RMA mismatch 파일"
+    },
+    {
+      "block": 9,
+      "title": "첫 SPV의 이름",
+      "incident_count": 2,
+      "receipt": "도윤권리운영 개인사업자 임시 접수번호 + 향후 SPV 승계 문구 + 서우패키징 채권 옵션 변경계약 + penalty 우선배분 조항",
+      "next_gate": "그린로지스 penalty 산정 공문, 다온 상계 협상 초안, 달러 RMA mismatch 파일, supplier debit note"
+    },
+    {
+      "block": 10,
+      "title": "다음 파일은 달러다",
+      "incident_count": 2,
+      "receipt": "3자 상계 협상 초안 + 그린로지스 620만 원 penalty 산정서 + 성과수수료 별도 산정 문구 + RMA/AS 파일 제한 열람 + C급 부품 회수 상태표 gate",
+      "next_gate": "C급 부품 회수 상태표, AS 대행권 가격표, RMA/AS 파일 제한 열람, 제조사 품질관리자 gate"
+    },
+    {
+      "block": 11,
+      "title": "폐기 라인의 가격",
+      "incident_count": 2,
+      "receipt": "C급 부품 회수 상태표 + AS 대행권 가격표 v0 + 30대 파일럿 검수 조건 + 제조사 품질 기준표 일부 열람 gate",
+      "next_gate": "포장 규격 불량 판정표, 30대 파일럿 검수, 제조사 클레임팀 반격, AS 대행 단가 협상권"
+    },
+    {
+      "block": 12,
+      "title": "품질 기준표",
+      "incident_count": 2,
+      "receipt": "조건부 AS 파일럿 승인권 + 품질 기준표 항목명 공개 + 항목별 판정 사유 일부 열람 + AS 대행 파일럿 약정서 gate",
+      "next_gate": "AS 대행 파일럿 약정서, 한규리 법무 검토, 보증 로고 미사용 조건, 30대 파일럿 검수 시작"
+    },
+    {
+      "block": 13,
+      "title": "파일럿 약정서",
+      "incident_count": 2,
+      "receipt": "AS 대행 파일럿 약정서 초안 + 파일럿 처리 수수료 대당 3,900원 + 실패품 폐기 결정권 + 검수 데이터 열람권 + 성공품 처리 단가 협상권",
+      "next_gate": "30대 파일럿 검수 시작, 첫 포장/품질 클레임, 성공품 처리 단가 협상, 실패품 폐기 기록"
+    },
+    {
+      "block": 14,
+      "title": "첫 파일럿 클레임",
+      "incident_count": 2,
+      "receipt": "검수 데이터 열람권 행사 기록 + 실패품 9대 폐기 결정 기록 + 성공품 21대 추가 단가표 + 포장 규격 위반 부속합의 초안",
+      "next_gate": "AS 대행권 공식 제안, 제조사 로고 미사용 브랜드 조건, 성공품 처리 단가 부속합의, 반복 처리 물량 협상"
+    },
+    {
+      "block": 15,
+      "title": "AS 대행권",
+      "incident_count": 2,
+      "receipt": "월 300대 한도 반복 처리 물량 + 60일 파일럿 연장 초안 + 성공품 처리 단가 부속합의 + 실패품 폐기 수수료 + 검수 데이터 월말 제공권",
+      "next_gate": "브랜드명 미사용 문제, 별도 리퍼브 브랜드 분리안, PB사업부 반발, 반복 처리 물량 배정"
+    },
+    {
+      "block": 16,
+      "title": "브랜드 없는 브랜드",
+      "incident_count": 2,
+      "receipt": "D-RN 내부 처리 라벨 승인 + 보증 제외 물량 라우팅 코드 + 월 300대 상한 내 자동 배정 조항 + 내부몰 제한 판매/AS 가능성 평가 표기 조건",
+      "next_gate": "D-RN 코드가 붙은 42대의 그린로지스 임시 보관장 이동, SKU 로그 추적, 물량 빼돌림 방어, 반복 처리 라인 고정"
+    },
+    {
+      "block": 17,
+      "title": "물량은 코드로 샌다",
+      "incident_count": 2,
+      "receipt": "D-RN 물량 반복 처리 라인 우선 배정권 + 외주 계정 D-RN 라벨 수정 금지 + 박만철/도윤권리운영 동시 승인 조항 + 42대 복귀 지시",
+      "next_gate": "최문식의 내부 프로젝트 포획 제안, 도윤권리운영 SPV 조건, 반복 처리 라인 공식 운영권, 42대 복귀 검수"
+    },
+    {
+      "block": 18,
+      "title": "고용의 탈을 쓴 포획",
+      "incident_count": 2,
+      "receipt": "내부 프로젝트 복귀안 보류 + 도윤권리운영 외부 운영자 사전 등록 요청 + SPV 전환 시 계약 승계 조항 + D-RN 데이터룸 read-only 접근권 + 성과수수료 별도 정산 항목",
+      "next_gate": "첫 31대 처리 정산표, 도윤권리운영 입금 계좌 등록, 박만철 라인 인센티브, PB사업부 cost center 반발"
+    },
+    {
+      "block": 19,
+      "title": "첫 정산표의 빈칸",
+      "incident_count": 2,
+      "receipt": "도윤권리운영 입금 계좌 등록 요청 + D-RN 외부 운영 정산 코드 + 성공품 처리 수익/실패품 폐기 원가 분리표 + 박만철 라인 현장 인센티브 풀 + 첫 31대 순정산 승인 초안",
+      "next_gate": "도윤권리운영 법인 계좌 개설, SPV 설립 서류, 첫 486만 원 입금 보류, 리퍼브 독점 판매권 계약 문안"
+    },
+    {
+      "block": 20,
+      "title": "SPV 첫 계약",
+      "incident_count": 2,
+      "receipt": "도윤권리운영 SPV 첫 계약 초안 + SPV 법인 계좌 개설 즉시 정산금 이전 조항 + D-RN 리퍼브 60일 우선 판매권 + 월 300대 도달 시 독점 판매권 연장 협상 조항 + 달러 RMA mismatch sample gate",
+      "next_gate": "달러 RMA mismatch sample, supplier debit note, 해외 정산일 오류, AI 계약 비교 도구 Mira 도입"
+    },
+    {
+      "block": 21,
+      "title": "AI가 찾은 건 주식이 아니었다",
+      "incident_count": 2,
+      "receipt": "Mira 이상치 표시 로그 + RMA/credit note/정산일 수동 대조표 + 18,740달러 차액 3분류표 + supplier debit note 원본 제한 열람권 + 해외 공급사 계약 파일 read-only gate",
+      "next_gate": "supplier debit note 원본 열람, SableWorks 다음 선적분 할인권, 은행 외환 담당자 김원재, 달러 계좌 필요성"
+    },
+    {
+      "block": 22,
+      "title": "외환 담당자의 절차 벽",
+      "incident_count": 2,
+      "receipt": "supplier debit note 원본 열람 조건 + SableWorks 다음 선적분 할인권 손실 회피 자료 + 김원재 외환 사전 심사 메모 + SPV 달러 계좌 개설 사전 검토권 + 해외 정산 파일 검증 루트",
+      "next_gate": "SableWorks의 부분 인정, 다음 선적분 할인권 귀속 협상, 해외 공급사 독점권 거부, 달러 계좌 정식 개설 조건"
+    },
+    {
+      "block": 23,
+      "title": "부분 인정은 공짜가 아니다",
+      "incident_count": 2,
+      "receipt": "SableWorks 정산 오류 부분 인정 메일 + 다음 선적분 할인권 SPV/D-RN 귀속 확인서 초안 + 우선 공급 협상 gate + 달러 계좌 정식 개설 서류 목록 + Aster Trading 계약 충돌 경고",
+      "next_gate": "Aster Trading의 계약 무효 주장, SableWorks 기존 공급 계약 원본 gate, 달러 계좌 정식 개설 서류, Mira 초안 오류 가능성"
+    },
+    {
+      "block": 24,
+      "title": "기존 수입사의 계약 무효 카드",
+      "incident_count": 2,
+      "receipt": "read-only 접근 로그 무결성 확인서 + Aster Trading 계약 무효 주장 대응 메모 + SableWorks 기존 공급 계약 원본 제한 열람 gate + 달러 계좌 정식 개설 보류 조건 + Mira 초안 재검증 과제",
+      "next_gate": "Mira 초안 오류 검증, 현장 송장/선적 서류 대조, Aster Trading 물량 조항 약점, 달러 계좌 보류 해제 조건"
+    },
+    {
+      "block": 25,
+      "title": "AI 초안이 먼저 틀렸다",
+      "incident_count": 2,
+      "receipt": "Mira 오류 로그 + AI 초안 사용 금지 프로토콜 + 현장 송장/packing list/선적 서류 수동 대조표 + Aster 최소 물량 미달 proof + 달러 계좌 보류 해제용 검증표",
+      "next_gate": "환차익보다 해외 계약 파일 접근권 요구, SableWorks 기존 계약 원본 확대 열람, Aster 물량 미달 통지, 달러 계좌 보류 해제 심사"
+    },
+    {
+      "block": 26,
+      "title": "환차익보다 파일 접근권",
+      "incident_count": 2,
+      "receipt": "SableWorks 기존 계약 원본 annex 확대 열람권 + Aster 물량 미달 공식 통지 초안 작성권 + 해외 계약 파일 정식 접근권 초안 + 달러 계좌 보류 해제 조건부 메모 + 다음 선적분 할인권 귀속 재협상석",
+      "next_gate": "달러 계좌 보류 해제 심사, SableWorks 원본 annex 확대 열람, Aster 물량 미달 공식 통지 발송, 다음 선적분 할인권 귀속 재협상"
+    },
+    {
+      "block": 27,
+      "title": "달러 계좌가 열리는 조건",
+      "incident_count": 2,
+      "receipt": "도윤권리운영 제한용 달러 계좌 개설 확인서 + 해외 정산 검증 전용 사용 조건 + SableWorks settlement advice 1차 접수 receipt + 다음 선적분 할인권 SPV/D-RN 귀속 실행 조건 + 은행 FX 사후 검증 gate",
+      "next_gate": "SableWorks가 도윤권리운영을 다온 직원이 아니라 SPV 운영 주체로 인식, 해외 supplier portal 등록, Aster의 2차 이의 제기, 다음 선적분 할인권 실행"
+    },
+    {
+      "block": 28,
+      "title": "직원이 아니라 계정 주체",
+      "incident_count": 2,
+      "receipt": "SableWorks supplier portal observer 계정 + D-RN 리퍼브 운영자 라벨 + 다음 선적분 할인권 실행 로그 접근권 + Aster 2차 이의 대응 슬롯 + SableWorks가 도윤권리운영을 SPV 운영 주체로 보는 첫 외부 기록",
+      "next_gate": "Aster 2차 이의 대응, 다음 선적분 할인권 실행 로그 검증, 수출입 정산 오류의 총판권 조건 전환, SableWorks priority supplier review"
+    },
+    {
+      "block": 29,
+      "title": "정산 오류는 총판권 조건이 된다",
+      "incident_count": 2,
+      "receipt": "할인권 귀속 미완료 discrepancy report + D-RN 리퍼브 실적 packet + Aster 2차 이의 대응서 초안 + SableWorks priority supplier review agenda + 우선 총판 조건 검토석",
+      "next_gate": "SableWorks priority review 참석, Aster 2차 이의 대응서 제출, 우선 총판 조건표 협상, ARC-03 종료와 물류센터 출입로 권리 파일 오픈"
+    },
+    {
+      "block": 30,
+      "title": "총판권의 문턱",
+      "incident_count": 2,
+      "receipt": "D-RN linked Korea priority channel 조건표 + 90일 조건부 우선 검토권 + Aster cure volume 실패 시 Korea channel 재배정 자동 review clause + SableWorks portal role 90일 유지 확인 + 물류센터 출입로 4.2미터 권리 파일 gate",
+      "next_gate": "ARC-03 21~30 자체 감리, 이후 물류센터 출입로 4.2미터 권리 파일, 감정평가사 최은호, 다온 물류본부, 한강디벨롭 gate"
+    },
+    {
+      "block": 31,
+      "title": "출입로 4.2미터",
+      "incident_count": 2,
+      "receipt": "물류센터 출입로 4.2미터 권리 파일 열람권 + B-3 진입로 현장 실측 동행권 + 대형 트럭 회전반경/대기열 병목 사진 로그 + 사유지 통행권 원문 제한 열람 gate + 감정평가사 최은호 의뢰 초안",
+      "next_gate": "감정평가사 최은호의 출입로 권리 가치 검증, 한강디벨롭의 대체 출입로 주장, 다온 물류본부 임시 하역 시간표, Aster cure volume 타이머와 물류 proof 연결"
+    },
+    {
+      "block": 32,
+      "title": "감정평가사의 숫자",
+      "incident_count": 2,
+      "receipt": "최은호 출입로 병목 가치 산정서 v0 + 시간당 하역 회전수/대기열 지연비용 산식 + 사유지 통행권 원문 발췌본 + 한강디벨롭 대체 출입로 주장 반박 메모 gate + 물류 슬롯 협상용 병목 가치표",
+      "next_gate": "한강디벨롭의 합의금 제안, 도윤의 물류 슬롯 협상석 요구, 다온 물류본부 임시 하역 시간표 압박, 구청 임시 사용 승인 일정 gate"
+    },
+    {
+      "block": 33,
+      "title": "합의금은 싸다",
+      "incident_count": 2,
+      "receipt": "한강디벨롭 현금 합의 제안서 + 현금 합의 거절 기록 + D-RN 물류 슬롯 협상석 + B-3 gate 우선 반입 시간표 검토권 + 개발 회의 배석 gate",
+      "next_gate": "구청 임시 사용 승인 일정, 한강디벨롭 개발 회의, B-3 gate 우선 반입 시간표 초안, 대체 출입로 실제 사용성 검증"
+    },
+    {
+      "block": 34,
+      "title": "인허가 시간표",
+      "incident_count": 2,
+      "receipt": "구청 임시 사용 승인 예상 일정표 + 한강디벨롭 개발 회의록 발췌본 + B-3 gate 우선 반입 시간표 초안 v0 + 북측 대체 출입로 보완 요청 체크리스트 + 인허가 일정 변경 통지권",
+      "next_gate": "북측 대체 출입로 임시 사용 신청서 제출, 구청 현장검증 일정, 다온 B-3 우선 반입 시간표 보류 시도, 대체 출입로 실제 사용성 위기"
+    },
+    {
+      "block": 35,
+      "title": "대체로 반격",
+      "incident_count": 2,
+      "receipt": "B-3 우선 반입 시간표 잠정 보류 통지 + 북측 대체 출입로 임시 사용 신청서 사본 + 구청 현장검증 동행 제한 기록 + 하중 제한 재검증 요청권 + 소방 동선/야간 민원 proof gate",
+      "next_gate": "북측 대체 출입로 조건부 승인 심사, B-3 우선 반입 보류 해제 협상, 임시 철판 보강 비용 견적, 창고 사용권/하역 동선 비용표 작성"
+    },
+    {
+      "block": 36,
+      "title": "하역 proof",
+      "incident_count": 2,
+      "receipt": "임시 철판 보강 비용 견적서 + 소방 동선 우회비 산정표 + 야간 민원 운행 제한 로그 + 기사 대기시간 재산정표 + 창고 내부 하역 동선 비용표 + 임시 창고 사용권 협상석 + B-3 보류 해제 협상 gate",
+      "next_gate": "출입권 일부 개방 조건, C-1 임시 창고 사용권 협상, B-3 보류 해제 회의, 90일 D-RN 장기 물류 슬롯 초안"
+    },
+    {
+      "block": 37,
+      "title": "출입권 일부 개방",
+      "incident_count": 2,
+      "receipt": "B-3 출입권 일부 개방 조건표 + C-1 임시 창고 45일 사용권 협상서 + 북측 대체로 추가비용 전가 조항 초안 + D-RN 90일 장기 물류 슬롯 초안",
+      "next_gate": "다온 물류본부의 공식 협상자 라벨, C-1 임시 창고 사용권 서명, B-3 출입 로그 권한, 제조사 생산 라인 접근 gate"
+    },
+    {
+      "block": 38,
+      "title": "직원이 아니라 협상자",
+      "incident_count": 2,
+      "receipt": "공식 협상자 라벨 + 외부 운영자 부속합의 초안 + 운영자용 요약 출입 로그 권한 + 물량 편차 회의 호출권 + 장기 슬롯 외부 운영자 검토본",
+      "next_gate": "제조사 생산 라인 접근 gate, D-RN 물량 편차 리포트, C-1 임시 창고 첫 반입, 장기 슬롯 조건표 확정 회의"
+    },
+    {
+      "block": 39,
+      "title": "슬롯은 라인으로 이어진다",
+      "incident_count": 2,
+      "receipt": "C-1 첫 반입 운영 로그 packet + D-RN 물량 편차 리포트 + 장기 물류 슬롯 조건표 v1 + 제조사 생산 라인 제한 접근 gate + 포장 압착 클레임 예비 파일",
+      "next_gate": "ARC-04 closing slot receipt, 제조사 품질 클레임 정식 접수, 포장 규격 원본 열람, 노태경 품질관리자 gate"
+    },
+    {
+      "block": 40,
+      "title": "합의금 말고 슬롯",
+      "incident_count": 2,
+      "receipt": "90일 D-RN 장기 물류 슬롯 확정서 + C-1 임시 창고 45일 사용권 서명본 + B-3 우선 반입 시간대 조건부 확정 + 외부 운영자 요약 로그 권한 90일 유지 확인 + 제조사 생산 라인 제한 접근 gate + 포장 규격 원본 열람 요청 접수번호",
+      "next_gate": "제조사 품질 클레임 정식 접수, 포장 규격 원본 열람, 노태경 품질관리자, 경쟁 납품사의 자격 공격"
+    },
+    {
+      "block": 41,
+      "title": "불량은 포장 규격에서 시작됐다",
+      "incident_count": 2,
+      "receipt": "포장 규격 원본 제한 열람권 + 출고 검사표 누락 사유 확인 요청서 + 노태경 과거 보고서 번호 + 20대 추가 샘플 보류권 + C-1 운영 미숙 판정 유예 메모",
+      "next_gate": "노태경 품질관리자 접촉, 포장 규격 원본 제한 열람, 20대 추가 샘플 보류, 제조사 구매본부의 납품권 회수 압박"
+    },
+    {
+      "block": 42,
+      "title": "밀려난 품질관리자",
+      "incident_count": 2,
+      "receipt": "노태경 품질 검증 retainer 초안 + 부적합 원장 제한 열람권 + 포장재 공급사 코드 대조표 + 20대 샘플 재검수 일정 + C-1 운영 미숙 판정 유예 연장 메모",
+      "next_gate": "20대 샘플 재검수, 유지보수 비용표, 제조사 구매본부의 납품권 회수 통지, 경쟁 납품사 등장"
+    },
+    {
+      "block": 43,
+      "title": "납품권 방어는 수리비에서 시작된다",
+      "incident_count": 2,
+      "receipt": "납품권 회수 통지 30일 유예 + 원인별 유지보수 비용표 v0 + 재포장/커넥터/운송 충격 3분류 처리 단가 + 재발 방지 protocol 제출권 + 임시 납품권 방어 gate",
+      "next_gate": "경쟁 납품사의 SPV 자격 공격, 보험사 손해사정 gate, 보증 구조 설계, 30일 유예 타이머"
+    },
+    {
+      "block": 44,
+      "title": "자격 없는 SPV",
+      "incident_count": 2,
+      "receipt": "신규 물량 잠정 정지 통지 + compliance deficiency list + 납품사 등록 요건표 + 제한형 품질 보증보험 사전심사 gate + 신규 물량 정지 조건부 해제 checklist",
+      "next_gate": "제한형 품질 보증보험 사전심사, 보험사 손해사정팀, 보증 한도 구조, 신규 물량 정지 해제 checklist"
+    },
+    {
+      "block": 45,
+      "title": "보험이 권리가 된다",
+      "incident_count": 2,
+      "receipt": "제한형 품질 보증 사전승인서 + 항목별 책임상한표 + 유지보수 예치금 조건표 + 노태경 검수 protocol 인정 메모 + 신규 물량 정지 해제 조건부 checklist + 배수민 B2B 고객 대응 operator gate",
+      "next_gate": "배수민 B2B 영업 operator 접촉, 신규 물량 정지 해제 심사, 첫 유지보수 계약 초안, 제이앤픽스의 고객 대응 이력 공격"
+    },
+    {
+      "block": 46,
+      "title": "영업 operator 배수민",
+      "incident_count": 2,
+      "receipt": "배수민 B2B 고객 대응 operator 계약 초안 + 세림오피스 교체 보류 의향서 + 고객 세 곳 클레임 응답시간표 + 성과수수료/인센티브 풀 문구 + 신규 물량 정지 해제 심사용 고객 대응 packet",
+      "next_gate": "첫 유지보수 계약 초안, 신규 물량 정지 해제 심사, 제이앤픽스의 단가 인하 반격, 대형 클레임 전조"
+    },
+    {
+      "block": 47,
+      "title": "납품권보다 유지보수",
+      "incident_count": 2,
+      "receipt": "D-RN 유지보수 MSA 초안 + 월 최소 처리 수량 120대 + 응답시간 SLA + 항목별 책임상한 부속표 + 고객 세 곳 우선 적용 메모 + 신규 물량 정지 부분 해제 통지",
+      "next_gate": "대형 클레임 전조, 유지보수 MSA 서명, 생산 슬롯 일부 배정 전 조건, 제이앤픽스의 리콜 책임 공격"
+    },
+    {
+      "block": 48,
+      "title": "리콜은 돈이 새는 순서다",
+      "incident_count": 2,
+      "receipt": "생산 슬롯 보류 통지 + 제한 리콜 protocol + 원인 로트 19대 분리표 + 책임상한 유지 메모 + 고객 응답시간 보상 쿠폰 + 긴급 교체 제안 반박 packet + 생산 슬롯 보류 해제 조건표",
+      "next_gate": "생산 슬롯 보류 해제 심사, 포장 규격 변경 승인, 제조사 생산 슬롯 일부 배정, 제이앤픽스 반박 자료"
+    },
+    {
+      "block": 49,
+      "title": "생산 슬롯 일부 배정",
+      "incident_count": 2,
+      "receipt": "변경 포장 규격 테스트 500대 승인 + 조건부 생산 슬롯 일부 배정서 + 도윤권리운영 품질/유지보수 operator code + 제한형 보증 code 연결 메모 + 제이앤픽스 기존 규격 비교 A/B packet + 생산 슬롯 확대 검토 gate",
+      "next_gate": "생산권 receipt, 유지보수 MSA 서명, 1부 권리 포트폴리오 정리, 외부 권리 운영자 확정"
+    },
+    {
+      "block": 50,
+      "title": "생산권 receipt",
+      "incident_count": 2,
+      "receipt": "유지보수 MSA 정식 서명본 + 조건부 생산 슬롯 월 1,200대 확대 검토권 + 도윤권리운영 operator code 1년 유지 확인 + 변경 포장 규격 물량 사후 처리 우선권 + 고객 세 곳 SLA 연장 의향서 + 중소 제조사 폐기권/유휴 라인 문의 gate",
+      "next_gate": "중소 제조사 폐기권 문의, 권리 묶음 가격표, 채권 담보 gate, 플랫폼 정산 인프라 필요성"
+    },
+    {
+      "block": 51,
+      "title": "폐기권 문의가 먼저 왔다",
+      "incident_count": 2,
+      "receipt": "중소 제조사 권리 문의 3건 접수 원장 + 폐기권/유휴 라인 제출 요건표 + 영진팩토리 60일 우선 운영권 검토서 + 무료 자문 금지 문구 + 권리 pipeline scoring gate",
+      "next_gate": "권리 묶음 가격표, 제조사별 scoring, 금융권 담보 제안, 회수권 우선순위 표준"
+    },
+    {
+      "block": 52,
+      "title": "권리 묶음 가격표",
+      "incident_count": 2,
+      "receipt": "권리 묶음 가격표 v1 + 검토착수금 조항 + 성공수수료 band + 60일 우선협상권 표준문구 + 자료 완결도 등급표 + 현장 검수권 옵션표",
+      "next_gate": "금융권 채권 포트폴리오 담보 제안, 착수금 계좌, 회수권 우선순위, 플랫폼 정산 인프라 gate"
+    },
+    {
+      "block": 53,
+      "title": "담보로 잡히는 권리",
+      "incident_count": 2,
+      "receipt": "한빛캐피탈 term sheet 초안 + 프로젝트별 escrow 계좌 조건 + 회수권 waterfall 초안 + 담보 제외 권리 목록 + operator 의사결정권 비침해 조항 + 금융권 추가 실사 gate",
+      "next_gate": "레버리지보다 회수권 선택, 프로젝트별 escrow 구조, 공급사별 미수 위험표, 정산 인프라 gate"
+    },
+    {
+      "block": 54,
+      "title": "레버리지보다 회수권",
+      "incident_count": 2,
+      "receipt": "12억 제한 한도 term sheet + 프로젝트별 escrow 3개 + 제조사별 회수권 우선순위표 + cure period 15일 조항 + 담보 실행 전 operator 판단권 확인 절차 + 자금 배정 우선순위표",
+      "next_gate": "정산 인프라 구축 이유, 공급사별 미수 위험표, 경쟁 플랫폼 공급망 공격, 데이터 표준 초안"
+    },
+    {
+      "block": 55,
+      "title": "정산 인프라를 직접 만든 이유",
+      "incident_count": 2,
+      "receipt": "프로젝트별 정산 ledger 초안 + 데이터 ingest 필드표 v0 + 증빙 파일 hash 원장 + 회수권 우선순위 자동 검토 항목 + 제조사 제출 양식 v0 + 정산 인프라 개발 착수 gate",
+      "next_gate": "경쟁 플랫폼의 공급사 라인 차단, 공급사별 미수 위험표, 첫 산업 데이터 표준 초안, 다온의 인프라 임대 문의"
+    },
+    {
+      "block": 56,
+      "title": "공급망을 끊는 쪽",
+      "incident_count": 2,
+      "receipt": "공급사별 미수 위험표 + 리커버넷 전환 손실 비교표 + pipeline 이탈률 보고서 + 우선협상권 정지 조항 + 자료 접근권 강화 조건표 + 영진팩토리 제출 재개 의향서",
+      "next_gate": "영진팩토리 제출 재개, 공급사별 미수 위험표 확정, 첫 데이터 표준 초안, 다온의 인프라 임대 문의"
+    },
+    {
+      "block": 57,
+      "title": "미수 위험표",
+      "incident_count": 2,
+      "receipt": "공급사별 미수 위험표 v1 + hash 연결 감사 trail + 세오전자 18일 소멸 시한 경고문 + 영진팩토리 현장 검수 일정 + 한빛캐피탈 한도 조건 유지 메모 + 자료 완결도별 착수금 조정표",
+      "next_gate": "첫 산업 데이터 표준 초안, hash 원장 공개 범위, 다온의 인프라 임대 문의, 리커버넷 재반격"
+    },
+    {
+      "block": 58,
+      "title": "첫 데이터 표준",
+      "incident_count": 2,
+      "receipt": "권리 회수 데이터 표준 v0 + 필수 14항목 표 + 증빙 hash 공개 범위 + 영진팩토리 현장 검수 반영란 + 한빛캐피탈 담보 심사 보조자료 인정 메모 + 제조사 2곳 조건부 채택 의향서",
+      "next_gate": "다온의 인프라 임대 문의, 데이터 접근권 협상, 리커버넷의 표준 복제 공격, ARC-06 close"
+    },
+    {
+      "block": 59,
+      "title": "다온이 빌리러 온다",
+      "incident_count": 2,
+      "receipt": "다온 정산 인프라 30일 파일럿 협의서 + 익명화 반품권/보증책임/폐기권 feed 접근권 초안 + field-level 검증권 + 도윤권리운영 표준명 표기 조항 + 리커버넷 비교 금지 기간 초안",
+      "next_gate": "임대료보다 데이터 접근권 최종 협상, 다온 파일럿 조건, 리커버넷 비교 금지, 해외 SPV gate"
+    },
+    {
+      "block": 60,
+      "title": "임대료보다 데이터 권한",
+      "incident_count": 2,
+      "receipt": "다온 정산 인프라 30일 파일럿 계약서 + 익명화 판단 feed 6항목 접근권 + field-level 검증권 + 증빙 hash 검증권 + 도윤권리운영 표준명 표기 확정 + 리커버넷 비교 금지 45일 + 해외 유통 SPV reference 사용권",
+      "next_gate": "해외 유통 SPV 설립 문의, 달러 정산권과 물류 슬롯 결합, 해외 총판권 재협상, 현지 파트너 선불금 요구"
+    },
+    {
+      "block": 61,
+      "title": "해외 SPV 문의",
+      "incident_count": 2,
+      "receipt": "동남아 유통 SPV due-diligence checklist + 익명화 국내 reference packet + SableWorks 현지 파트너 자료 보완 요청서 + 다온 해외 reference 사용 확인서 + 달러 정산/물류 슬롯/보증 책임 통합 검토 gate",
+      "next_gate": "달러 정산권과 물류 슬롯을 결합한 해외 총판권 재협상, 현지 파트너 선불금 요구, 해외 보증 상품 gate"
+    },
+    {
+      "block": 62,
+      "title": "총판권은 정산일과 슬롯에서 온다",
+      "incident_count": 2,
+      "receipt": "SableWorks 조건부 해외 channel review + 민카이 공동 운영 원칙서 + 도윤권리운영 정산 검증권 + 물류 slot proof 제출권 + 해외 품질 보증 구조 설계권 + 90일 후 자동 확대 검토 clause",
+      "next_gate": "현지 파트너 선불금 요구, escrow 구조, 해외 보증 상품, 투자자 실사 준비"
+    },
+    {
+      "block": 63,
+      "title": "선불금의 덫",
+      "incident_count": 2,
+      "receipt": "해외 escrow release 조건표 + 창고 예약권 조건부 영수증 + 통관 slot 우선권 초안 + 고객 샘플 회수권 + 미사용 선금 반환권 + 선불금 지급 전 권리 우선순위 표",
+      "next_gate": "해외 보증 상품, 현지 책임상한, 투자자 실사, 운영권 lock 조항"
+    },
+    {
+      "block": 64,
+      "title": "보증 상품은 국경을 넘는다",
+      "incident_count": 2,
+      "receipt": "해외 품질 보증 packet + 항목별 책임상한 rider 초안 + 민카이 현지 liability 조항 + 고객 설치 오류 제외 문구 + 샘플 회수/교환 protocol + 보험사 해외 rider 사전심사 gate",
+      "next_gate": "투자자 실사, 해외 보증 packet 검증, 운영권 lock, 민카이 책임 회피 재공격"
+    },
+    {
+      "block": 65,
+      "title": "실사 테이블 위의 권리들",
+      "incident_count": 2,
+      "receipt": "investor data room v0 + hash 검증 index + 제한 열람 protocol + 권리별 valuation memo + 민카이 liability weight table + 투자 조건 논의 gate",
+      "next_gate": "투자자의 지분 요구, 운영권 lock 조항, board observer 조건, helper retention 공격"
+    },
+    {
+      "block": 66,
+      "title": "지분보다 운영권",
+      "incident_count": 2,
+      "receipt": "revenue-share note 조건표 + 운영권 lock 조항 + partner 교체권 유지 문구 + 권리 처분 veto 범위 축소안 + 분기별 hash 검증 packet 제공 조건 + 원본 상시 열람 금지 조항",
+      "next_gate": "helper poaching 공격, operator 인센티브 재설계, 장기 생산권 선택, 표준 계약 채택"
+    },
+    {
+      "block": 67,
+      "title": "사람도 권리로 묶는다",
+      "incident_count": 2,
+      "receipt": "배수민/노태경/박만철 retention contract 초안 + success pool waterfall + 고객/품질/현장 원장 non-solicit + 90일 transition receipt + data access revocation protocol + 해외 channel 확대분 인센티브 조항",
+      "next_gate": "전환권 대신 장기 생산권 선택, success pool 첫 적용, 표준 계약 채택, 권리 운영 헌장"
+    },
+    {
+      "block": 68,
+      "title": "전환권보다 장기 생산권",
+      "incident_count": 2,
+      "receipt": "18개월 장기 생산 슬롯 우선협상권 + overseas channel 확대 조건표 + 품질/보증 protocol 유지 의무 + helper success pool 연동 조항 + 투자자 후순위 검토 clause + 장기 생산권 실사 gate",
+      "next_gate": "다온/제조사의 표준 계약 채택, overseas channel 확대, 권리 운영 헌장, source TR handoff gate"
+    },
+    {
+      "block": 69,
+      "title": "표준 계약이 먼저 채택된다",
+      "incident_count": 2,
+      "receipt": "권리 운영 표준 계약 v1 + 다온 조건부 채택 확인서 + 제조사 3곳 표준 계약 채택 의향서 + 회수권 우선순위 공통 조항 + 증빙 hash 공통 조항 + 리커버넷 간소화 계약 비교표 + 장기 생산권 실사 자료 packet",
+      "next_gate": "권리 운영 헌장, 70-block source TR handoff, BI 생성 금지 상태 유지, registry/root promotion 별도 오더"
+    },
+    {
+      "block": 70,
+      "title": "권리 운영 헌장",
+      "incident_count": 2,
+      "receipt": "권리 운영 헌장 v0 + 70-block 권리 receipt index + 표준 계약 v1 적용 우선순위표 + 해외 channel 확대 조건 보류/검토표 + source TR handoff packet + BI 생성 보류 메모 + root promotion 금지 메모",
+      "next_gate": "source TR handoff gate audit, 이후 별도 오더에서 BI 생성 여부 판단, registry/root promotion/immediate overlay 승격 금지 유지"
+    }
+  ],
+  "last_audit": {
+    "unit": "immediate_deployment_adversarial_consistency_1pass_audit",
+    "block_range": "1-70",
+    "title": "Post-admission adversarial consistency audit",
+    "verdict": "PASS_WITH_NONBLOCKING_WATCH",
+    "report": "treatments/audit_reports/laid_off_cashflow_rights_operator_immediate_deployment_adversarial_consistency_1pass_audit.md",
+    "same_turn_repair": "No repair required. No plot rewrite, no root governance rewrite, no code/S2, and no B071+.",
+    "nonblocking_watch": "Whole-run pacing remains whole_run_window_heuristic plus 70/70 payoff/range surfaces, not a separate declared whole-run contract."
+  },
+  "next_best_step": "immediate-deployment sample is available; only downstream episode/manuscript use or further root governance changes should proceed by separate order",
+  "bi_handoff": {
+    "file": "bible/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/0_bi_laid_off_cashflow_rights_operator.json",
+    "audit": "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_bi_5pass_audit.md",
+    "verdict": "PASS",
+    "plot_roadmap_count": 70,
+    "title_mismatch_count": 0,
+    "missing_block_ids": 0,
+    "b071plus_count": 0,
+    "root_bi_created": false,
+    "root_tr_created": false,
+    "scope": "waiting_room_only"
+  },
+  "promotion_readiness_packet": {
+    "aggregate_source_tr": "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_source_tr_blocks_001_070_aggregate.json",
+    "bi": "bible/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/0_bi_laid_off_cashflow_rights_operator.json",
+    "audit": "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_promotion_readiness_packet_3pass_audit.md",
+    "root_phase0_materialization_audit": "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_root_phase0_authority_materialization_3pass_audit.md",
+    "verdict": "PASS_PROMOTION_TARGET_NORMALIZED_ROOT_PHASE0_PRESENT",
+    "pair_consumability": "pass",
+    "pair_canonical_contract": "pass",
+    "promotion_target_normalization": "pass",
+    "strict_tier_a_status": "pass",
+    "tier_b_status": "normalized",
+    "schema_status": "pass",
+    "root_phase0_status": "root-phase0-present",
+    "missing_promoted_bi_slots": 0,
+    "required_fix_targets": [],
+    "findings": [],
+    "alias_refresh_eligible": true,
+    "active_baseline_eligible": false,
+    "preprocess_authority_available": true,
+    "root_phase0_created": true,
+    "root_tr_created": false,
+    "root_bi_created": false,
+    "registry_admitted": false,
+    "immediate_use_declared": false,
+    "b071plus_count": 0,
+    "stage0_authority_lock_audit": "treatments/preprocess/laid_off_cashflow_rights_operator/stage0_retroactive_authority_lock_3pass_audit.md"
+  },
+  "root_phase0_authority_materialization": {
+    "root_phase0": "treatments/phase0/laid_off_cashflow_rights_operator_phase0_design.json",
+    "material_source_phase0": "material_ssot/40_phase0_design/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/phase0_design.json",
+    "bi_source_phase0_pointer": "treatments/phase0/laid_off_cashflow_rights_operator_phase0_design.json",
+    "tr_aggregate_phase0_pointer": "treatments/phase0/laid_off_cashflow_rights_operator_phase0_design.json",
+    "contamination_guard_promoted_slot": "BI.MasterBible.GenreRules.contamination_guard",
+    "validation": {
+      "check_bi_tr_consumability": "pass",
+      "production_pair_normalization_runner_state": "promotion_target_pair",
+      "strict_tier_a_status": "pass",
+      "tier_b_status": "normalized",
+      "schema_status": "pass",
+      "missing_promoted_bi_slots": 0,
+      "required_fix_targets": [],
+      "utf8_hygiene": "pass",
+      "b071plus_count": 0
+    },
+    "boundary_guard": {
+      "root_tr_created": false,
+      "root_bi_created": false,
+      "registry_admitted": false,
+      "immediate_use_declared": false,
+      "b071plus_created": false
+    }
+  },
+  "stage0_preprocess_authority_lock": {
+    "source_manifest": "treatments/preprocess/laid_off_cashflow_rights_operator/source_manifest.json",
+    "profile_lock": "treatments/preprocess/laid_off_cashflow_rights_operator/profile_lock.json",
+    "material_bundle_summary": "treatments/preprocess/laid_off_cashflow_rights_operator/material_bundle_summary.json",
+    "phase0_ready_snapshot": "treatments/preprocess/laid_off_cashflow_rights_operator/phase0_ready_snapshot.json",
+    "sequential_run_status": "treatments/preprocess/laid_off_cashflow_rights_operator/sequential_run_status.json",
+    "audit_status": "treatments/preprocess/laid_off_cashflow_rights_operator/audit_status.json",
+    "audit": "treatments/preprocess/laid_off_cashflow_rights_operator/stage0_retroactive_authority_lock_3pass_audit.md",
+    "manual_audit_pass": true,
+    "router_current_stage": "complete",
+    "production_pair_normalization": {
+      "preprocess_authority_available": true,
+      "strict_tier_a_status": "pass",
+      "tier_b_status": "normalized",
+      "schema_status": "pass",
+      "required_fix_targets": []
+    },
+    "boundary_guard": {
+      "root_tr_created": false,
+      "root_bi_created": false,
+      "registry_admitted": false,
+      "immediate_use_declared": false,
+      "b071plus_created": false
+    },
+    "work_guard_library": "work_guards/laid_off_cashflow_rights_operator.yaml",
+    "work_guard_router_status": "present",
+    "work_guard_publication_audit": "treatments/preprocess/laid_off_cashflow_rights_operator/work_guard_library_publication_3pass_audit.md"
+  },
+  "work_guard_library_publication": {
+    "source_guard": "work_guards/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator.work_guard.yaml",
+    "library_guard": "work_guards/laid_off_cashflow_rights_operator.yaml",
+    "audit": "treatments/preprocess/laid_off_cashflow_rights_operator/work_guard_library_publication_3pass_audit.md",
+    "wg_v1_path_status": "PASS",
+    "wg_v1_work_id_status": "PASS",
+    "same_sha256_as_source": true,
+    "router_status": "present",
+    "boundary_guard": {
+      "root_tr_created": false,
+      "root_bi_created": false,
+      "registry_admitted": false,
+      "immediate_use_declared": false,
+      "b071plus_created": false
+    }
+  },
+  "greenplus_immediate_use_consistency_audit": {
+    "date": "2026-05-02",
+    "report": "treatments/audit_reports/laid_off_cashflow_rights_operator_greenplus_immediate_use_candidate_consistency_3pass_audit.md",
+    "greenplus_bi_tr_consistency": "PASS",
+    "immediate_use_candidate_quality_direction": "PASS_AS_CANDIDATE",
+    "immediate_use_admission": "HOLD",
+    "hold_reason": [
+      "downstream_episode_pacing_hint coverage is 0/70 in TR and 0/70 in BI",
+      "range attachment audit is absent",
+      "root canonical TR and root canonical BI are absent",
+      "registry row and immediate deployment overlay entry are absent",
+      "current B070/BI boundary explicitly preserves not-immediate-use handoff status"
+    ],
+    "counters": {
+      "tr_blocks": 70,
+      "bi_plot_roadmap": 70,
+      "missing_block_ids": 0,
+      "missing_roadmap_ids": 0,
+      "title_mismatch": 0,
+      "genre_ext_mismatch": 0,
+      "block_cider_mismatch": 0,
+      "tr_block_cider": "70/70",
+      "bi_block_cider": "70/70",
+      "tr_reader_payoff_ladder": "0/70",
+      "bi_reader_payoff_ladder": "0/70",
+      "tr_webnovel_pacing_contract": "0/70",
+      "bi_webnovel_pacing_contract": "0/70",
+      "tr_downstream_episode_pacing_hint": "0/70",
+      "bi_downstream_episode_pacing_hint": "0/70",
+      "downstream_hint_mismatch": 0,
+      "b071_plus_scan": "absent"
+    },
+    "machine_checks": {
+      "stage0_handoff_validator": "PASS",
+      "work_guard_v1": "PASS",
+      "bi_tr_consumability": "PASS",
+      "production_pair_normalization": "PASS_STRICT_TIER_A__TIER_B_NORMALIZED__OPEN_MIGRATION_DEBT_FALSE",
+      "opening_pacing_triage": "GREEN_LEGACY_HEURISTIC",
+      "whole_run_pacing_triage": "GREEN_WHOLE_RUN_HEURISTIC"
+    },
+    "forbidden_actions_respected": [
+      "no code or S2 modification",
+      "no B071+ generation",
+      "no TR/BI plot rewrite",
+      "no root canonical promotion",
+      "no BI regeneration",
+      "no registry admission",
+      "no immediate-use declaration"
+    ]
+  },
+  "immediate_deployment_closeout": {
+    "date": "2026-05-02",
+    "status": "PASS",
+    "root_tr": "treatments/laid_off_cashflow_rights_operator_tr_block_070_draft.json",
+    "root_bi": "bible/0_bi_laid_off_cashflow_rights_operator.json",
+    "registry": "material_ssot/00_governance/production-pair-operational-registry-v1.json",
+    "overlay": "docs/2026-04-29/material-side-immediate-deployment-overlay.md",
+    "grade_alias": "material_ssot/00_governance/production_pair_grade_aliases/GREENPLUS_laid_off_cashflow_rights_operator.md",
+    "range_attachment_audit": "treatments/audit_reports/laid_off_cashflow_rights_operator_downstream_episode_pacing_hint_attachment_audit.md",
+    "deployment_artifact": "treatments/audit_reports/laid_off_cashflow_rights_operator_immediate_deployment_adversarial_closeout.md",
+    "counters": {
+      "tr_blocks": 70,
+      "bi_plot_roadmap": 70,
+      "block_cider": "70/70",
+      "reader_payoff_ladder": "70/70",
+      "webnovel_pacing_contract": "70/70",
+      "downstream_episode_pacing_hint": "70/70",
+      "mismatch": 0,
+      "missing_block_ids": 0,
+      "b071_plus": 0
+    },
+    "validations": {
+      "pair_consumability": "PASS",
+      "strict_tier_a": "PASS",
+      "tier_b": "normalized",
+      "schema": "pass",
+      "open_migration_debt": false,
+      "active_baseline_eligible": true,
+      "opening_pacing": "GREEN_declared_contract",
+      "whole_run_pacing": "GREEN"
+    }
+  },
+  "adversarial_consistency_1pass": {
+    "date": "2026-05-02",
+    "status": "PASS_WITH_NONBLOCKING_WATCH",
+    "report": "treatments/audit_reports/laid_off_cashflow_rights_operator_immediate_deployment_adversarial_consistency_1pass_audit.md",
+    "root_pair": "PASS",
+    "tr_bi_mirror": "PASS_MISMATCH_0",
+    "donor_authority": "PASS_ADOPTED_VISIBLE",
+    "registry_overlay_readme": "PASS",
+    "opening_pacing": "GREEN_DECLARED_CONTRACT",
+    "whole_run_pacing": "GREEN_HEURISTIC_NONBLOCKING_WATCH",
+    "b071_plus": 0
+  }
+}

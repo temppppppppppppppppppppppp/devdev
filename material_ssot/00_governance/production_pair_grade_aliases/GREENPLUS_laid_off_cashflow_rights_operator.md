@@ -1,0 +1,25 @@
+# GREENPLUS_laid_off_cashflow_rights_operator
+
+- verdict: `GREENPLUS`
+- work_id: `laid_off_cashflow_rights_operator`
+- family: `blockguide`
+- benchmark_freshness: `current`
+- benchmark_artifact: `treatments/audit_reports/laid_off_cashflow_rights_operator_immediate_deployment_adversarial_closeout.md`
+- root_tr_artifact: `treatments/laid_off_cashflow_rights_operator_tr_block_070_draft.json`
+- root_bi_artifact: `bible/0_bi_laid_off_cashflow_rights_operator.json`
+- material_deployment_status: `immediate_deployable_material`
+- donor_structure_status: `adopted_and_recorded`
+- deployment_artifact: `treatments/audit_reports/laid_off_cashflow_rights_operator_immediate_deployment_adversarial_closeout.md`
+- opening_pacing_triage: `GREEN`
+- whole_run_pacing_triage: `GREEN`
+- schema_status: `pass`
+- open_migration_debt: `no`
+- p0: `6/6`
+- p1: `20/20`
+- full_block_cider: `70/70`
+- reader_payoff_ladder: `70/70`
+- webnovel_pacing_contract: `70/70`
+- downstream_episode_pacing_hint: `70/70`
+- range_attachment_status: `range_complete`
+- range_attachment_artifact: `treatments/audit_reports/laid_off_cashflow_rights_operator_downstream_episode_pacing_hint_attachment_audit.md`
+- operational_note: Root TR/BI promoted under explicit immediate-use order. The sample is a cashflow-rights/operator business-power material where every block turns ERP, contract, SKU, ledger, legal, logistics, production, data, escrow, or standard-contract pressure into a same-block rights/control receipt and a next operator gate.

@@ -45,9 +45,9 @@
     "기존 납품사의 기록 불일치 사고는 다음 폐기된 백신 블록에서 태오 조건표를 올리는 직접 명분이 된다."
   ],
   "callback": [
-    "Block 016의 병원 노선 4대 차량별 온도기록이 세 병원 공통 양식 제안의 실물 proof가 된다.",
-    "Block 015의 경쟁사 3개월 기록 양식 사용권이 외부 납품사까지 같은 양식으로 묶는 근거가 된다.",
-    "Block 014의 폐기율 절감액 30퍼센트 수수료 조항이 월말 정산표 구조로 확장된다."
+    "병원 노선 4대 차량별 온도기록이 세 병원 공통 양식 제안의 실물 proof가 된다.",
+    "경쟁사 3개월 기록 양식 사용권이 외부 납품사까지 같은 양식으로 묶는 근거가 된다.",
+    "폐기율 절감액 30퍼센트 수수료 조항이 월말 정산표 구조로 확장된다."
   ],
   "emotional_beat": {
     "type": "standardization_win",
@@ -99,6 +99,60 @@
       "receipt_type": "data_and_standard_receipt",
       "receipt_line": "강태오는 현금 0원 상태에서 세 병원 공통 온도기록 양식, 월말 폐기율 절감 정산권, 폐기율 데이터 접근권을 확보한다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "현금 없는 상태에서 병원 셋의 검수 기준을 하나로 묶어 데이터 접근권과 월 정산권을 확보하는 표준 확장 승리",
+      "recognition_signal": "박도현의 시선 변화: 대학병원 기준 양식 확인서를 내주며 태오 표준을 다른 병원에 설명할 첫 공적 근거를 제공한다",
+      "reward_signal": "강태오는 현금 0원 상태에서 세 병원 공통 온도기록 양식, 월말 폐기율 절감 정산권, 폐기율 데이터 접근권을 확보한다.",
+      "growth_signal": "강태오는 병원마다 다른 요구를 하나의 온도기록 양식과 월 정산표로 묶어 콜드체인 표준을 병원 연합 단위로 확장한다.",
+      "expectation_signal": "기존 납품사의 기록 불일치 백신 사고가 폐기된 백신 블록의 조건표 인상 명분으로 이어진다",
+      "reader_feel": "독자는 「병원 셋, 같은 기록」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 현금 0원 상태에서 세 병원 공통 온도기록 양식, 월말 폐기율 절감 정산권, 폐기율 데이터 접근권을 확보한다. 성장 장면: 강태오는 병원마다 다른 요구를 하나의 온도기록 양식과 월 정산표로 묶어 콜드체인 표준을 병원 연합 단위로 확장한다. 다음 기대감: 기존 납품사의 기록 불일치 백신 사고가 폐기된 백신 블록의 조건표 인상 명분으로 이어진다",
+      "mature_success_signal": "강태오는 병원 셋, 같은 기록의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "현금 없는 상태에서 병원 셋의 검수 기준을 하나로 묶어 데이터 접근권과 월 정산권을 확보하는 표준 확장 승리",
+        "recognition": "박도현의 시선 변화: 대학병원 기준 양식 확인서를 내주며 태오 표준을 다른 병원에 설명할 첫 공적 근거를 제공한다",
+        "reward": "강태오는 현금 0원 상태에서 세 병원 공통 온도기록 양식, 월말 폐기율 절감 정산권, 폐기율 데이터 접근권을 확보한다.",
+        "growth": "강태오는 병원마다 다른 요구를 하나의 온도기록 양식과 월 정산표로 묶어 콜드체인 표준을 병원 연합 단위로 확장한다.",
+        "expectation": "기존 납품사의 기록 불일치 백신 사고가 폐기된 백신 블록의 조건표 인상 명분으로 이어진다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 박도현의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 기존 납품사의 기록 불일치 백신 사고가 폐기된 백신 블록의 조건표 인상 명분으로 이어진다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "냉장차 네 대가 병원 노선에 투입된 첫 주, 박도현은 강태오를 세 병원 공동 구매회의에 부른다. 대학병원은 파업기간 우선배정권을 유지하고 싶고, 지방 종합병원은 백신 샘플 폐기를 줄이고 싶으며, 사립병원은 비용을 깎고 싶어 한다. 태오바이오는 현금 0원이다.",
+      "proof_action": "태오는 세 병원에 같은 혜택을 주지 않는다. 대학병원에는 파업기간 우선배정권을 연장하되 태오 양식 원본을 기준 양식으로 삼게 한다. 지방 종합병원에는 폐기 후보 백신을 태오 차량별 온도기록과 라벨-원장 매칭으로 판정 유예해 주는 대신 3개월 시험 사용 동의서를 받는다.",
+      "proof_axis": "전생에서 병원 물류 표준은 단일 병원보다 세 병원이 같은 양식을 쓰는 순간 확산 속도가 달라졌다는 기억",
+      "recognition_or_resistance_signal": "박도현 -> 대학병원 기준 양식 확인서를 내주며 태오 표준을 다른 병원에 설명할 첫 공적 근거를 제공한다",
+      "receipt_asset": "강태오는 현금 0원 상태에서 세 병원 공통 온도기록 양식, 월말 폐기율 절감 정산권, 폐기율 데이터 접근권을 확보한다.",
+      "reward_asset_classes": [
+        "rights_control_asset"
+      ],
+      "next_regulated_gate": "기존 납품사의 기록 불일치 백신 사고가 폐기된 백신 블록의 조건표 인상 명분으로 이어진다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 박도현의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 기존 납품사의 기록 불일치 백신 사고가 폐기된 백신 블록의 조건표 인상 명분으로 이어진다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {

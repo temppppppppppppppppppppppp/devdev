@@ -1,0 +1,931 @@
+{
+  "_schema_version": "blockguide.phase0.v1",
+  "_work_id": "telecom_gate_monopoly_1997",
+  "_family": "blockguide",
+  "_primary_profile": "business_growth_profile",
+  "_secondary_profile": "tech_startup_profile",
+  "_pitch_authority": "material_ssot/20_pitch/canon/telecom_gate_monopoly_1997.md",
+  "_preprocess_sources": [
+    "treatments/preprocess/telecom_gate_monopoly_1997/source_manifest.json",
+    "treatments/preprocess/telecom_gate_monopoly_1997/material_bundle_summary.json",
+    "treatments/preprocess/telecom_gate_monopoly_1997/profile_lock.json",
+    "treatments/preprocess/telecom_gate_monopoly_1997/phase0_ready_snapshot.json"
+  ],
+  "_work_guard_draft": "work_guards/telecom_gate_monopoly_1997.yaml",
+  "project": {
+    "title_ko": "1997년, 통신 게이트를 독식했다",
+    "tagline": "번호와 청구서를 잡으면 모든 섹터가 통행료를 낸다",
+    "core_premise": "2026년 플랫폼 결제 전략가였던 강재현은 1997년 IMF 직후 태림그룹 방계 손자의 몸에 빙의해, 모두가 팔아치우려는 PCS 지분, 기지국 유지보수권, 단말 유통망, 카드 청구망을 하나의 월 청구서 게이트로 묶어 통신에서 금융, 게임, 쇼핑, 광고까지 모든 섹터의 입장료를 받는 제국을 만든다.",
+    "format": "현대 한국 business-power 재벌 빙의 통신 플랫폼 독식물",
+    "logline": "강재현은 태림그룹을 착해서 구하지 않는다. 따로 팔리면 고철인 번호, 단말, 유지보수, 청구망을 묶어 자신만 통행료를 받는 게이트로 만든다.",
+    "start_year": 1997,
+    "end_year": 2002,
+    "pov": "3인칭 제한",
+    "external_pov_insert_policy": "핵심 proof 뒤에만 통신사, 채권은행, 법무팀, 본가 임원 POV를 짧게 넣어 강재현의 평가 상승을 영수증처럼 보여 준다."
+  },
+  "setting": {
+    "group_background": "IMF 직후 fictional 태림그룹은 전선, 전자, 카드, 유통, 미디어 계열의 부실을 정리 중이다. 본가는 전통 제조와 건설을 살리기 위해 PCS 컨소시엄 옵션, 기지국 유지보수 자회사, 저가 단말 창고, 카드 청구 대행 계약, PC통신 잔여 관계를 따로 팔려 한다.",
+    "execution_doctrine": "강재현은 계열사를 살리는 사람이 아니라 게이트를 묶는 사람이다. 미래 지식은 방향만 주고, 실제 권한은 현재 문서, SLA, 재고표, 청구 계약, 법무 메모, 조달 오더, 의결권 대리 같은 영수증으로만 획득한다.",
+    "regulatory_context": "1997~2002년 PCS 경쟁, 단말 보조금 압박, IMF 구조조정, 카드 청구망, 부가서비스 정보이용료, PC통신에서 모바일 포털로 넘어가는 전환기를 fictionalized 처리한다. 실존 기업 고유 사건을 그대로 복제하지 않는다.",
+    "starter_company": {
+      "name": "태림모바일서비스",
+      "state": "처음에는 존재하지 않는 JV 제안서다. 강재현이 태림그룹의 버려진 PCS 의결권, 유지보수권, 단말 재고, 카드 청구망을 묶어 만들어야 한다.",
+      "assets": [
+        "PCS residual voting right and proxy path",
+        "태림전선 base-station maintenance SLA and field crews",
+        "태림전자 low-end handset inventory and OEM line",
+        "태림유통 regional store signup channel",
+        "태림카드 billing relationship and settlement table",
+        "태림미디어 PC communication option and early content contacts"
+      ],
+      "liabilities": [
+        "IMF fire-sale deadline",
+        "foreign fund separated purchase pressure",
+        "carrier procurement skepticism",
+        "legal and consumer complaint risk for bundled billing",
+        "dead handset inventory risk",
+        "main-family credit theft",
+        "regulatory uncertainty around phone-bill service fee aggregation"
+      ]
+    }
+  },
+  "protagonist": {
+    "name": "강재현",
+    "age_at_start": 29,
+    "status": "태림그룹 방계 손자이자 구조조정 TF의 부실자산 정리 담당. 본가는 그를 폐품 목록에 줄 긋는 사람으로 본다.",
+    "public_image": "폐품 목록에 줄 긋는 방계 도련님, 본가의 진짜 의사결정에서는 밀린 인물",
+    "true_strength": "전화번호, 단말 유통, 기지국 유지보수, 카드 청구, 부가서비스 정산을 하나의 플랫폼 게이트로 묶어 읽는 2026년식 결제/플랫폼 감각.",
+    "true_weakness": "사람과 계열사를 가치 있는 gate component로 먼저 보기 때문에, 충성·법무·규제 방어를 계산에 늦게 넣으면 실행팀과 사회적 신뢰가 흔들릴 수 있다.",
+    "world_origin": "2026년 플랫폼 결제 전략가",
+    "incarnation_type": "빙의자",
+    "pov": "3인칭 제한",
+    "initial_goal": "72시간 안에 PCS 잔여 의결권, 태림전선 유지보수 SLA, 태림전자 단말 창고, 태림카드 청구 대행 계약을 묶어 구조조정위원회 동석권과 매각 보류권을 확보한다.",
+    "mid_goal": "태림모바일서비스를 번호, 단말, 청구, 콘텐츠, 포털, 쇼핑, 광고가 모두 통과하는 반복 수수료 회사로 만든다.",
+    "final_goal": "2002년까지 국민 휴대폰 번호와 월 청구서 기반의 생활계정 게이트를 장악해 모든 섹터가 태림모바일서비스에 통행료를 내게 만든다."
+  },
+  "phase0_design": {
+    "opening_bundle_contract": {
+      "bundle_window": "TR 2~6",
+      "macro_battlefield": "태림그룹 IMF telecom scrap sale and 태림모바일서비스 gate formation",
+      "macro_battlefield_map": [
+        "restructuring committee and 72-hour sale freeze",
+        "PCS voting documents and base-station maintenance SLA proof",
+        "carrier procurement line and maintenance pilot order",
+        "handset warehouse, regional store channel, and distribution test",
+        "card billing contract, legal memo, billing pilot, JV proposal, and PC communication acquisition review"
+      ],
+      "bundle_goal": "Turn 강재현 from scrap-list branch grandson into the operator who controls PCS voting proxy, maintenance order, handset distribution test, billing pilot, and the next PC communication acquisition gate.",
+      "first_signboard_block": 2,
+      "representative_reevaluation_block": 2,
+      "next_battlefield_ticket_block": 5,
+      "timing_reconciliation_note": "TR 2~6 is the reader-earning opening bundle, not five single episodes. Each block must carry at least two incident beats and same-block receipt. The first next-sector ticket begins at Block 5 through billing pilot code and expands at Block 6 into PC communication acquisition review."
+    },
+    "internal_ladder_lock": [
+      "Stage 1 ARC-01~02: 번호와 청구서를 묶어 첫 게이트를 만든다.",
+      "Stage 2 ARC-03~04: 콘텐츠와 포털을 청구망에 붙여 반복 수수료를 만든다.",
+      "Stage 3 ARC-05~06: 결제 데이터와 유통을 금융/쇼핑/광고로 확장한다.",
+      "Stage 4 ARC-07: 국민 모바일 계정과 월 청구서로 모든 섹터의 통행료를 받는다."
+    ],
+    "first_block_cider_ledger": [
+      {
+        "block_no": 2,
+        "has_cider": true,
+        "cider_elements": [
+          "proof",
+          "reevaluation",
+          "access_shift"
+        ],
+        "visible_reward_token": "구조조정위원회 동석권, 72시간 매각 보류권, 제한 데이터룸 접근권",
+        "incident_beats": [
+          "구조조정위원회 문밖 취급",
+          "PCS 의결권과 유지보수 SLA bundle proof"
+        ],
+        "pain_only_exit": false
+      },
+      {
+        "block_no": 3,
+        "has_cider": true,
+        "cider_elements": [
+          "field_proof",
+          "carrier_reevaluation",
+          "order_receipt"
+        ],
+        "visible_reward_token": "통신사 조달팀 직통선과 첫 기지국 유지보수 오더",
+        "incident_beats": [
+          "기지국 장애 현장 동행",
+          "통신사 조달팀의 유지보수 단가 반박 돌파"
+        ],
+        "pain_only_exit": false
+      },
+      {
+        "block_no": 4,
+        "has_cider": true,
+        "cider_elements": [
+          "distribution_shift",
+          "opponent_counter",
+          "market_slot"
+        ],
+        "visible_reward_token": "지역 독점 판매 테스트권, 단말 구매오더, 통신사 마케팅 슬롯",
+        "incident_beats": [
+          "태림전자 단말 창고 실사",
+          "외국계 펀드의 PCS 옵션 분리매입 방해"
+        ],
+        "pain_only_exit": false
+      },
+      {
+        "block_no": 5,
+        "has_cider": true,
+        "cider_elements": [
+          "legal_receipt",
+          "billing_gate",
+          "next_sector_seed"
+        ],
+        "visible_reward_token": "청구 실험 코드, 수수료 테이블 초안, 법무 검토 메모",
+        "incident_beats": [
+          "태림카드 청구 대행 계약 원본 확인",
+          "법무팀의 통신요금 합산청구 리스크 제동"
+        ],
+        "pain_only_exit": false
+      },
+      {
+        "block_no": 6,
+        "has_cider": true,
+        "cider_elements": [
+          "control_receipt",
+          "cashflow",
+          "next_gate"
+        ],
+        "visible_reward_token": "PCS 컨소시엄 의결권 대리, 첫 정산 수수료, PC통신 업체 인수 검토권",
+        "incident_beats": [
+          "본가 임원의 공 가로채기와 외국계 펀드 가격 압박",
+          "통신사-카드-유통 3자 파일럿 서명"
+        ],
+        "pain_only_exit": false
+      }
+    ],
+    "arcs": [
+      {
+        "arc_id": "ARC-01",
+        "title": "월 청구서 게이트",
+        "block_range": "1-10",
+        "time_window": "1997년 12월~1998년 봄",
+        "internal_stage": "번호와 청구서를 묶어 첫 게이트를 만든다",
+        "capital_target": "권한 없음 -> 매각 보류권 -> 유지보수 오더 -> 단말 판매 테스트 -> 청구 파일럿 -> PCS 의결권 대리 -> 태림모바일서비스 JV",
+        "front_sectors": [
+          "PCS",
+          "기지국 유지보수",
+          "단말 유통",
+          "카드 청구",
+          "부가서비스 정산"
+        ],
+        "support_sectors": [
+          "채권은행",
+          "태림유통",
+          "태림미디어",
+          "법무팀"
+        ],
+        "main_opponents": [
+          "구조조정위원장",
+          "외국계 펀드",
+          "통신사 조달팀 보수파",
+          "본가 기획조정실 임원",
+          "법무팀 리스크 라인"
+        ],
+        "new_npcs": [
+          "강재현",
+          "장문기 구조조정위원장",
+          "노태섭 채권은행 담당자",
+          "허만식 태림전선 현장반장",
+          "송인호 통신사 조달팀 과장",
+          "백도균 외국계 펀드 담당자",
+          "최유진 태림카드 청구대행 담당자",
+          "박선오 태림 법무팀 변호사"
+        ],
+        "emotion_curve": "빙의 후 모욕 -> asset bundle proof -> carrier field proof -> distribution slot -> billing legal receipt -> JV control -> first settlement fee",
+        "quiet_blocks": [
+          7
+        ],
+        "defeat_blocks": [
+          8
+        ],
+        "entry_function": "강재현은 태림그룹의 telecom scraps를 따로 파는 구조조정표 앞에 선다. 그는 그룹을 구하는 게 아니라 게이트가 될 조각만 동결해야 한다.",
+        "exit_function": "태림모바일서비스 JV가 생기고, 강재현은 PC통신 업체 인수 검토권으로 콘텐츠/포털 전장에 들어간다.",
+        "block_slots": [
+          {
+            "block": 1,
+            "title": "폐품 목록에 줄 긋는 도련님",
+            "function": "2026 결제 전략가 강재현이 1997년 태림그룹 방계 손자 몸에 빙의한다. 구조조정위원회는 그에게 PCS 옵션과 유지보수 자회사 매각표 정리를 맡긴다. 첫 구간은 setup이며 opening rescue로 쓰지 않는다.",
+            "incident_beats": [
+              "빙의와 현재 평판 확인",
+              "PCS/전선/전자/카드/유통 fire-sale list 발견"
+            ]
+          },
+          {
+            "block": 2,
+            "title": "전선은 선로가 아닙니다",
+            "function": "강재현이 PCS 잔여 의결권과 태림전선 유지보수 SLA를 묶어 가입자 확보 비용 절감 proof를 제시한다. 장문기는 매각표를 멈추고 72시간 보류권과 데이터룸 접근권을 준다.",
+            "incident_beats": [
+              "문밖 취급과 매각표 삭제 압박",
+              "PCS/SLA bundle proof와 보류권 receipt"
+            ]
+          },
+          {
+            "block": 3,
+            "title": "꺼진 기지국의 값",
+            "function": "통신사 기지국 장애 현장에서 허만식의 현장반이 예상보다 빠르게 복구한다. 강재현은 SLA 위약금 회피와 uptime을 근거로 통신사 조달팀 직통선과 첫 유지보수 오더를 받는다.",
+            "incident_beats": [
+              "기지국 장애 field test",
+              "조달팀 단가 반박과 첫 maintenance order"
+            ]
+          },
+          {
+            "block": 4,
+            "title": "죽은 단말을 싸게 뿌리는 법",
+            "function": "태림전자 창고의 저가 단말 재고와 태림유통 지역 점포망을 묶어 IMF 가계용 PCS 가입 패키지를 설계한다. 외국계 펀드가 PCS 옵션을 분리매입하려 하지만 지역 독점 판매 테스트권과 마케팅 슬롯이 먼저 떨어진다.",
+            "incident_beats": [
+              "단말 창고와 점포망 실사",
+              "외국계 펀드 방해와 distribution test receipt"
+            ]
+          },
+          {
+            "block": 5,
+            "title": "청구서에 붙는 첫 수수료",
+            "function": "태림카드 청구 대행 계약 원본에서 부가서비스 정보이용료 합산 정산 가능성을 본다. 법무팀이 소비자 민원과 규제 리스크로 제동을 걸자, 강재현은 작은 pilot code와 fee table, complaint memo로 legal receipt를 만든다.",
+            "incident_beats": [
+              "billing contract proof",
+              "법무 제동과 pilot code receipt"
+            ]
+          },
+          {
+            "block": 6,
+            "title": "태림모바일서비스",
+            "function": "유지보수 오더, 단말 판매 테스트, 청구 pilot을 한 장의 JV 제안서로 묶는다. 본가 임원이 공을 빼앗으려 하지만 강재현은 3자 pilot 서명과 PCS 의결권 대리, 첫 정산 수수료, PC통신 인수 검토권을 확보한다.",
+            "incident_beats": [
+              "credit theft and foreign fund price pressure",
+              "JV proposal, voting proxy, first settlement fee"
+            ]
+          },
+          {
+            "block": 7,
+            "title": "살릴 사람과 팔 사람",
+            "function": "조용한 block. 강재현은 태림전선 현장반과 카드 청구 담당자를 남기고 쓸모 없는 홍보/총무 라인은 잘라낸다. 그는 착한 구조조정이 아니라 gate execution speed를 기준으로 사람을 분류한다.",
+            "incident_beats": [
+              "핵심 execution staff retention table",
+              "non-gate liabilities disposal"
+            ]
+          },
+          {
+            "block": 8,
+            "title": "불법 청구 프레임",
+            "function": "defeat block. 법무팀 보수파와 외국계 펀드는 phone-bill service fee pilot을 불법 끼워팔기로 공격한다. 강재현은 전부 이기지 못하지만 pilot scope, opt-in notice, complaint handling memo를 남겨 리스크를 줄인다.",
+            "incident_beats": [
+              "불법 청구 프레임 attack",
+              "pilot scope와 complaint memo receipt"
+            ]
+          },
+          {
+            "block": 9,
+            "title": "번호로 로그인한다",
+            "function": "강재현은 PC통신 업체의 느슨한 계정을 휴대폰 번호 기반 로그인으로 바꿀 수 있음을 증명한다. 태림미디어는 처음으로 telecom scrap이 media gate가 된다는 계산을 받아들인다.",
+            "incident_beats": [
+              "PC communication account pain proof",
+              "phone-number login proposal"
+            ]
+          },
+          {
+            "block": 10,
+            "title": "첫 인수 검토권",
+            "function": "태림모바일서비스는 공식 JV가 되고 PC통신 업체 인수 검토권을 받는다. 다음 사업축의 전장은 통신망 위에 콘텐츠와 portal account를 얹는 싸움으로 열린다.",
+            "incident_beats": [
+              "JV formalization",
+              "PC communication acquisition gate"
+            ]
+          }
+        ]
+      },
+      {
+        "arc_id": "ARC-02",
+        "title": "PC통신을 번호 로그인으로 바꾸다",
+        "block_range": "11-20",
+        "time_window": "1998년 봄~가을",
+        "internal_stage": "번호와 청구서를 묶어 첫 게이트를 만든다",
+        "capital_target": "PC통신 이용자 -> 휴대폰 번호 로그인 -> 벨소리/캐릭터 정보이용료 -> 콘텐츠 사업자 정산 수수료",
+        "front_sectors": [
+          "PC통신",
+          "모바일 포털",
+          "번호 로그인",
+          "콘텐츠 정산"
+        ],
+        "support_sectors": [
+          "태림미디어",
+          "태림카드",
+          "통신사"
+        ],
+        "main_opponents": [
+          "PC통신 기존 운영진",
+          "통신사 포털 담당자",
+          "콘텐츠 사업자 연합"
+        ],
+        "new_npcs": [
+          "임도현 태림미디어 사업팀장",
+          "고민석 PC통신 운영본부장",
+          "윤세라 벨소리 제작사 대표"
+        ],
+        "emotion_curve": "번호 로그인 proof -> 기존 PC통신 반발 -> 첫 콘텐츠 정산 -> 통신사 포털 견제 -> 모바일 첫 화면 ticket",
+        "quiet_blocks": [
+          17
+        ],
+        "defeat_blocks": [
+          14
+        ],
+        "entry_function": "PC통신 업체는 오래된 접속망처럼 보이지만, 강재현은 그 안의 이용자, 커뮤니티, 결제 습관을 휴대폰 번호로 옮길 수 있다고 본다.",
+        "exit_function": "콘텐츠 정산 수수료가 생기고, 모바일 첫 화면과 게임/캐릭터 전장으로 넘어간다.",
+        "block_slots": []
+      },
+      {
+        "arc_id": "ARC-03",
+        "title": "벨소리와 게임이 청구서를 통과한다",
+        "block_range": "21-30",
+        "time_window": "1998년 겨울~1999년 여름",
+        "internal_stage": "콘텐츠와 포털을 청구망에 붙여 반복 수수료를 만든다",
+        "capital_target": "벨소리/캐릭터/ARS -> 모바일 게임 -> 콘텐츠 provider settlement -> 태림 billing marketplace",
+        "front_sectors": [
+          "벨소리",
+          "캐릭터",
+          "ARS",
+          "모바일 게임",
+          "콘텐츠 정산"
+        ],
+        "support_sectors": [
+          "태림카드",
+          "태림미디어",
+          "통신사 청구망"
+        ],
+        "main_opponents": [
+          "통신사 부가서비스 담당자",
+          "콘텐츠 제공자 연합",
+          "민원 리스크를 내세우는 법무 라인"
+        ],
+        "new_npcs": [
+          "한기준 모바일게임 개발자",
+          "정라희 캐릭터 IP 담당자"
+        ],
+        "emotion_curve": "작은 수수료 조롱 -> 콘텐츠 provider 몰림 -> 민원 위기 -> 정산 표준화 -> marketplace fee",
+        "quiet_blocks": [
+          27
+        ],
+        "defeat_blocks": [
+          25
+        ],
+        "entry_function": "강재현은 콘텐츠를 직접 다 만들지 않는다. 결제와 정산을 쥔 사람이 수수료를 받는다.",
+        "exit_function": "콘텐츠 정산 표준이 생기며 쇼핑과 카드 finance 전장으로 확장된다.",
+        "block_slots": []
+      },
+      {
+        "arc_id": "ARC-04",
+        "title": "휴대폰 결제가 신용이 된다",
+        "block_range": "31-40",
+        "time_window": "1999년 하반기~2000년",
+        "internal_stage": "콘텐츠와 포털을 청구망에 붙여 반복 수수료를 만든다",
+        "capital_target": "월 청구 이력 -> 선불 충전 -> 소액결제 risk score -> 태림카드 finance gate",
+        "front_sectors": [
+          "소액결제",
+          "선불 충전",
+          "카드 finance",
+          "risk scoring"
+        ],
+        "support_sectors": [
+          "태림카드",
+          "통신사 billing",
+          "법무/민원"
+        ],
+        "main_opponents": [
+          "카드사 보수파",
+          "금융감독 pressure",
+          "민원 확대를 노리는 경쟁사"
+        ],
+        "new_npcs": [
+          "김서진 태림카드 risk manager",
+          "오준택 경쟁 카드사 임원"
+        ],
+        "emotion_curve": "청구 이력 발견 -> 금융권 조롱 -> 민원/규제 defeat -> risk score proof -> finance gate",
+        "quiet_blocks": [
+          37
+        ],
+        "defeat_blocks": [
+          34
+        ],
+        "entry_function": "강재현은 통신요금 납부 이력을 결제 신용의 원재료로 본다.",
+        "exit_function": "태림카드는 단순 청구 대행에서 소액결제/선불 충전 gate가 된다.",
+        "block_slots": []
+      },
+      {
+        "arc_id": "ARC-05",
+        "title": "점포망이 모바일 쇼핑이 된다",
+        "block_range": "41-50",
+        "time_window": "2000년~2001년",
+        "internal_stage": "결제 데이터와 유통을 금융/쇼핑/광고로 확장한다",
+        "capital_target": "태림유통 점포 -> 전화주문/문자쿠폰 -> 모바일 쇼핑 -> 물류/결제 데이터",
+        "front_sectors": [
+          "모바일 쇼핑",
+          "오프라인 점포",
+          "문자 쿠폰",
+          "물류"
+        ],
+        "support_sectors": [
+          "태림유통",
+          "태림카드",
+          "통신사 메시징"
+        ],
+        "main_opponents": [
+          "점포 본부 보수파",
+          "카탈로그 쇼핑 경쟁사",
+          "물류 지연 리스크"
+        ],
+        "new_npcs": [
+          "류하나 태림유통 지역본부장",
+          "신동규 물류센터장"
+        ],
+        "emotion_curve": "점포망 조롱 -> 문자쿠폰 proof -> 물류 지연 defeat -> 결제/배송 receipt -> shopping gate",
+        "quiet_blocks": [
+          47
+        ],
+        "defeat_blocks": [
+          45
+        ],
+        "entry_function": "태림유통은 낡은 점포망이 아니라 전화번호와 결제 데이터를 가진 acquisition channel이다.",
+        "exit_function": "모바일 쇼핑이 기업 메시징과 광고 전장으로 연결된다.",
+        "block_slots": []
+      },
+      {
+        "arc_id": "ARC-06",
+        "title": "문자는 광고판이 된다",
+        "block_range": "51-60",
+        "time_window": "2001년",
+        "internal_stage": "결제 데이터와 유통을 금융/쇼핑/광고로 확장한다",
+        "capital_target": "기업 문자 발송 -> 쿠폰/광고 성과 데이터 -> data center -> enterprise messaging fee",
+        "front_sectors": [
+          "기업 메시징",
+          "모바일 광고",
+          "쿠폰",
+          "데이터센터"
+        ],
+        "support_sectors": [
+          "태림유통",
+          "태림미디어",
+          "태림카드"
+        ],
+        "main_opponents": [
+          "통신사 광고 담당자",
+          "스팸 민원 라인",
+          "데이터센터 투자 반대파"
+        ],
+        "new_npcs": [
+          "문태경 기업영업팀장",
+          "서주원 데이터센터 운영자"
+        ],
+        "emotion_curve": "문자 스팸 의심 -> coupon proof -> 민원 defeat -> opt-in data rule -> enterprise fee",
+        "quiet_blocks": [
+          57
+        ],
+        "defeat_blocks": [
+          55
+        ],
+        "entry_function": "강재현은 문자를 광고가 아니라 결제와 유통이 연결된 measurable action으로 설계한다.",
+        "exit_function": "기업 메시징과 데이터센터가 월드컵 모바일 계정 전장으로 넘어가는 기반이 된다.",
+        "block_slots": []
+      },
+      {
+        "arc_id": "ARC-07",
+        "title": "국민 모바일 계정",
+        "block_range": "61-70",
+        "time_window": "2002년",
+        "internal_stage": "국민 모바일 계정과 월 청구서로 모든 섹터의 통행료를 받는다",
+        "capital_target": "World Cup traffic -> phone-number account -> billing/commerce/content/ad gate -> all-sector toll",
+        "front_sectors": [
+          "국민 모바일 계정",
+          "월드컵 traffic",
+          "생활계정",
+          "all-sector billing gate"
+        ],
+        "support_sectors": [
+          "통신사",
+          "태림미디어",
+          "태림유통",
+          "태림카드",
+          "기업 메시징"
+        ],
+        "main_opponents": [
+          "통신사 portal 연합",
+          "본가 지배구조 보수파",
+          "규제/민원 압박",
+          "해외 platform watcher"
+        ],
+        "new_npcs": [
+          "조민후 통신사 portal 전략실장",
+          "황세영 본가 지배구조 담당 임원"
+        ],
+        "emotion_curve": "traffic opportunity -> portal 연합 견제 -> regulatory defeat -> account proof -> all-sector gate declaration",
+        "quiet_blocks": [
+          67
+        ],
+        "defeat_blocks": [
+          65
+        ],
+        "entry_function": "월드컵 traffic은 단기 이벤트가 아니라 국민 phone-number account를 심을 마지막 대중적 입장권이다.",
+        "exit_function": "강재현은 통신, 결제, 콘텐츠, 쇼핑, 광고가 모두 태림모바일서비스 청구서와 계정을 거치게 만든다.",
+        "block_slots": []
+      }
+    ],
+    "npc_timeline": [
+      {
+        "name": "강재현",
+        "role": "주인공",
+        "summary": "빙의한 platform-payment strategist. 선악보다 이득, 효율, 통제권, 다음 gate를 우선한다.",
+        "first_block": 1,
+        "final_status": "태림모바일서비스를 국민 모바일 계정과 all-sector billing gate로 만든 operator",
+        "key_turning_points": [
+          {
+            "block": 2,
+            "event": "구조조정위원회 동석권과 72시간 매각 보류권 획득"
+          },
+          {
+            "block": 6,
+            "event": "태림모바일서비스 JV와 PCS 의결권 대리 확보"
+          },
+          {
+            "block": 20,
+            "event": "PC통신 이용자를 번호 로그인과 콘텐츠 정산으로 전환"
+          },
+          {
+            "block": 40,
+            "event": "월 청구 이력을 finance gate로 전환"
+          },
+          {
+            "block": 60,
+            "event": "기업 메시징과 광고 데이터 gate 확보"
+          },
+          {
+            "block": 70,
+            "event": "국민 모바일 계정과 월 청구서 gate 완성"
+          }
+        ]
+      },
+      {
+        "name": "장문기",
+        "role": "태림그룹 구조조정위원장",
+        "summary": "빠른 매각과 책임 회피를 원하는 gatekeeper. 회수율 proof가 보이면 제한 권한을 준다.",
+        "first_block": 1,
+        "final_status": "태림모바일서비스를 그룹 생존 옵션으로 인정하는 현실주의자",
+        "key_turning_points": [
+          {
+            "block": 2,
+            "event": "매각표를 멈추고 72시간 보류권 부여"
+          },
+          {
+            "block": 10,
+            "event": "JV 공식화 승인"
+          }
+        ]
+      },
+      {
+        "name": "송인호",
+        "role": "통신사 조달팀 과장",
+        "summary": "통신사 쪽 외부 평가자. 태림의 부실보다 가입자 확보 비용과 uptime을 본다.",
+        "first_block": 3,
+        "final_status": "태림모바일서비스의 carrier procurement 접점",
+        "key_turning_points": [
+          {
+            "block": 3,
+            "event": "기지국 유지보수 오더 제공"
+          },
+          {
+            "block": 30,
+            "event": "콘텐츠 정산 표준 협상 참여"
+          }
+        ]
+      },
+      {
+        "name": "최유진",
+        "role": "태림카드 청구대행 담당자",
+        "summary": "청구 계약과 settlement table을 쥔 실무자. 감화가 아니라 계산으로 강재현 편에 선다.",
+        "first_block": 5,
+        "final_status": "billing pilot과 소액결제 risk score의 운영 책임자",
+        "key_turning_points": [
+          {
+            "block": 5,
+            "event": "billing pilot code와 fee table 초안 제공"
+          },
+          {
+            "block": 40,
+            "event": "청구 이력 기반 finance gate 설계"
+          }
+        ]
+      },
+      {
+        "name": "백도균",
+        "role": "외국계 펀드 담당자",
+        "summary": "PCS option을 분리매입해 bundle을 깨려는 opening opponent.",
+        "first_block": 4,
+        "final_status": "후반에도 태림 gate valuation을 뒤늦게 인정하는 가격 경쟁자",
+        "key_turning_points": [
+          {
+            "block": 4,
+            "event": "PCS option 분리매입 방해"
+          },
+          {
+            "block": 59,
+            "event": "enterprise messaging valuation 압박"
+          }
+        ]
+      },
+      {
+        "name": "박선오",
+        "role": "태림 법무팀 변호사",
+        "summary": "리스크를 막지만 법적 receipt를 만들어 주는 인물. 강재현의 속도를 현실 계약으로 제한한다.",
+        "first_block": 5,
+        "final_status": "opt-in, complaint, settlement rule의 legal guard",
+        "key_turning_points": [
+          {
+            "block": 5,
+            "event": "billing pilot legal memo 작성"
+          },
+          {
+            "block": 65,
+            "event": "국민 모바일 계정 regulatory defense"
+          }
+        ]
+      }
+    ],
+    "foreshadow_map": [
+      {
+        "id": "FS-01",
+        "name": "번호와 청구서로 들어가는 문",
+        "seed_block": 2,
+        "hint_blocks": [
+          5,
+          20,
+          40
+        ],
+        "payoff_block": 70,
+        "payoff_meaning": "초반 telecom scrap bundle의 문장 그대로 국민 모바일 계정과 all-sector billing gate가 된다."
+      },
+      {
+        "id": "FS-02",
+        "name": "청구 실험 코드",
+        "seed_block": 5,
+        "hint_blocks": [
+          22,
+          34,
+          52
+        ],
+        "payoff_block": 64,
+        "payoff_meaning": "작은 pilot code가 콘텐츠, finance, commerce, advertising을 통과시키는 legal/billing standard로 커진다."
+      },
+      {
+        "id": "FS-03",
+        "name": "외국계 펀드의 분리매입",
+        "seed_block": 4,
+        "hint_blocks": [
+          18,
+          43,
+          59
+        ],
+        "payoff_block": 68,
+        "payoff_meaning": "자산을 따로 떼어 사려는 적이 후반에도 gate 전체 valuation을 오판한다."
+      },
+      {
+        "id": "FS-04",
+        "name": "불법 청구 프레임",
+        "seed_block": 8,
+        "hint_blocks": [
+          25,
+          34,
+          55
+        ],
+        "payoff_block": 65,
+        "payoff_meaning": "초반 complaint memo와 legal receipt가 국민 계정 gate의 규제 방어 근거가 된다."
+      },
+      {
+        "id": "FS-05",
+        "name": "PC통신 인수 검토권",
+        "seed_block": 6,
+        "hint_blocks": [
+          11,
+          20,
+          61
+        ],
+        "payoff_block": 70,
+        "payoff_meaning": "초반 next-gate token이 최종 생활계정의 account substrate로 회수된다."
+      }
+    ],
+    "opponent_transition_plan": [
+      {
+        "faction": "태림그룹 구조조정 fast-sale 라인",
+        "phase": "국면 1: telecom scraps를 따로 팔기",
+        "block_range": "1-10",
+        "entry_block": 1,
+        "main_actors": [
+          "장문기",
+          "노태섭",
+          "본가 기획조정실 임원"
+        ],
+        "goal": "IMF 책임을 줄이고 부실 telecom assets를 빠르게 처분한다",
+        "methods": [
+          "분리 매각",
+          "데이터룸 제한",
+          "방계 손자 배제",
+          "성과 가로채기"
+        ],
+        "weakness": "강재현이 자산을 묶어 회수율과 next-gate value를 proof로 제시하면 빠른 매각 명분이 약해진다.",
+        "transition_block": 10
+      },
+      {
+        "faction": "통신사 portal and procurement 라인",
+        "phase": "국면 2: 하청으로 누르기",
+        "block_range": "11-30",
+        "entry_block": 11,
+        "main_actors": [
+          "송인호",
+          "통신사 포털 담당자",
+          "부가서비스 담당자"
+        ],
+        "goal": "태림을 유지보수/콘텐츠 하청으로만 남기고 첫 화면과 청구 주도권을 통신사가 쥔다",
+        "methods": [
+          "조달 단가 압박",
+          "포털 슬롯 제한",
+          "부가서비스 정산 지연"
+        ],
+        "weakness": "강재현이 번호 로그인과 billing pilot으로 user/account/settlement proof를 쌓으면 통신사도 태림 gate를 써야 한다.",
+        "transition_block": 30
+      },
+      {
+        "faction": "법무/규제/민원 리스크 라인",
+        "phase": "국면 3: 청구망을 위험물로 만들기",
+        "block_range": "5-40",
+        "entry_block": 5,
+        "main_actors": [
+          "박선오",
+          "카드사 보수파",
+          "consumer complaint pressure"
+        ],
+        "goal": "phone-bill bundled service fee와 소액결제를 민원/규제 위험으로 묶는다",
+        "methods": [
+          "법무 제동",
+          "opt-in 요구",
+          "민원 확대",
+          "금융 risk frame"
+        ],
+        "weakness": "small pilot, complaint handling, fee table, opt-in notice가 쌓이면 청구망은 위험이 아니라 standard가 된다.",
+        "transition_block": 40
+      },
+      {
+        "faction": "유통/쇼핑 보수파",
+        "phase": "국면 4: 점포망을 낡은 비용으로 보기",
+        "block_range": "41-50",
+        "entry_block": 41,
+        "main_actors": [
+          "태림유통 본부장",
+          "카탈로그 쇼핑 경쟁사",
+          "물류센터 보수파"
+        ],
+        "goal": "모바일 쇼핑을 장난으로 보고 기존 점포 회전율만 방어한다",
+        "methods": [
+          "점포 예산 차단",
+          "물류 지연",
+          "전화주문 폄하"
+        ],
+        "weakness": "문자쿠폰, 결제 데이터, 배송 receipt가 붙으면 점포망은 acquisition channel로 재가격된다.",
+        "transition_block": 50
+      },
+      {
+        "faction": "기업 메시징/광고 견제 라인",
+        "phase": "국면 5: 문자를 스팸으로만 몰기",
+        "block_range": "51-60",
+        "entry_block": 51,
+        "main_actors": [
+          "통신사 광고 담당자",
+          "데이터센터 투자 반대파",
+          "스팸 민원 라인"
+        ],
+        "goal": "기업 메시징과 쿠폰 광고를 민원 위험으로 만들어 gate expansion을 막는다",
+        "methods": [
+          "스팸 프레임",
+          "데이터센터 투자 차단",
+          "광고 슬롯 견제"
+        ],
+        "weakness": "opt-in data rule과 구매 전환 proof가 있으면 문자는 광고가 아니라 measurable commerce action이 된다.",
+        "transition_block": 60
+      },
+      {
+        "faction": "국민 계정 gate 견제 라인",
+        "phase": "국면 6: all-sector gate를 독점 프레임으로 공격",
+        "block_range": "61-70",
+        "entry_block": 61,
+        "main_actors": [
+          "통신사 portal 연합",
+          "본가 지배구조 보수파",
+          "규제/민원 압박",
+          "해외 platform watcher"
+        ],
+        "goal": "태림모바일서비스가 번호, 청구, 콘텐츠, 쇼핑, 광고를 모두 쥐는 것을 막는다",
+        "methods": [
+          "portal 연합",
+          "독점 프레임",
+          "민원/규제 압박",
+          "본가 지배구조 공격"
+        ],
+        "weakness": "각 sector가 이미 태림 billing/account gate를 통과하고 있고, opt-in/legal/settlement receipts가 남아 있으면 쉽게 끊어낼 수 없다.",
+        "transition_block": 70
+      }
+    ],
+    "capital_curve": [
+      {
+        "block": 2,
+        "total_assets": "authority: sale freeze + data-room access",
+        "event": "첫 자본은 현금이 아니라 매각 보류권과 committee seat"
+      },
+      {
+        "block": 6,
+        "total_assets": "태림모바일서비스 JV proposal + PCS voting proxy + first settlement fee",
+        "event": "telecom gate seed locked"
+      },
+      {
+        "block": 20,
+        "total_assets": "PC통신 account + content settlement fee",
+        "event": "phone-number login and content billing begin"
+      },
+      {
+        "block": 40,
+        "total_assets": "billing history + micro-payment finance gate",
+        "event": "monthly bill becomes credit and finance data"
+      },
+      {
+        "block": 50,
+        "total_assets": "retail/mobile shopping channel",
+        "event": "태림유통 becomes acquisition and commerce channel"
+      },
+      {
+        "block": 60,
+        "total_assets": "enterprise messaging + ad data + data center",
+        "event": "corporate customers pay through the gate"
+      },
+      {
+        "block": 70,
+        "total_assets": "all-sector phone-number and monthly-bill gate",
+        "event": "생활계정 and national mobile account control"
+      }
+    ],
+    "expansion_order_locked": [
+      "PCS/maintenance/handset/billing",
+      "PC communication and phone-number login",
+      "content settlement",
+      "micro-payment finance",
+      "mobile shopping and retail",
+      "enterprise messaging and advertising",
+      "national mobile account"
+    ],
+    "quality_locks": {
+      "first_arc_direct_line": "전선은 선로가 아닙니다. 번호와 청구서로 들어가는 문입니다.",
+      "protagonist_appeal": "착해서가 아니라 계산이 빠르고, 한 계열사를 살리는 대신 gate가 되는 조각만 묶어 반복 수수료로 바꾸는 자기중심적 operator",
+      "reward_order": "동석권, 매각 보류권, 조달팀 직통선, 유지보수 오더, 단말 판매 테스트권, 청구 실험 코드, 의결권 대리, 정산 수수료, 다음 sector gate 순서",
+      "legality_rule": "청구, 소액결제, 민원, opt-in, fee table, legal memo 없이는 billing gate를 장악했다고 쓰지 않는다",
+      "ability_rule": "빙의 전 지식은 구조 방향에만 쓰고 proof는 현재 문서/현장/계약/외부 담당자로 만든다",
+      "self_interest_rule": "강재현의 선택은 profit, efficiency, legal protection, speed, leverage, control, defense, retaliation, survival, next-gate position 중 하나로 읽혀야 한다",
+      "opposition_rule": "반대자는 바보가 아니라 빠른 매각, 조달 단가, 법적 리스크, 민원, 지배구조, 독점 압박이라는 이해관계를 가진다",
+      "block_reward_rule": "각 TR block은 최소 두 사건 비트와 same-block receipt를 포함한다"
+    },
+    "do_not_fake": [
+      "통신사를 generic platform으로 뭉개지 말 것",
+      "billing pilot을 법무/민원/정산표 없이 마법처럼 통과시키지 말 것",
+      "PCS 의결권과 voting proxy를 지분 판타지 한 줄로 처리하지 말 것",
+      "기지국 유지보수와 SLA를 추상 기술력으로 때우지 말 것",
+      "단말 유통을 창고 재고 숫자만으로 처리하지 말고 지역 점포, 구매오더, carrier slot을 붙일 것",
+      "본가 succession drama가 telecom gate engine을 잡아먹지 않게 할 것",
+      "주인공을 착한 그룹 구원자로 만들지 말 것",
+      "초기 사이다 기준을 뒤늦은 보상으로 미루지 말 것"
+    ],
+    "stage0_handoff": {
+      "phase0_version": "1.0",
+      "generated_from": "manual canon-to-stage0-to-phase0 pass after canon gate and Stage0 gate PASS",
+      "stage0_preprocess_dir": "treatments/preprocess/telecom_gate_monopoly_1997/",
+      "ready_for_work_guard_v2": true,
+      "ready_for_tr_seed": false,
+      "remaining_research_before_tr": [
+        "1997 fictionalized PCS consortium mechanics",
+        "base-station maintenance SLA scene vocabulary",
+        "phone-bill service fee pilot legal language",
+        "handset regional distribution test mechanics",
+        "PC communication account migration scene details",
+        "consumer complaint and opt-in language"
+      ]
+    },
+    "contamination_guard": [
+      "donor proper noun, donor organization, donor scene order를 가져오지 말 것",
+      "discarded-rights bundle law만 telecom native 권리 구조로 번역할 것",
+      "가문 인정, 본가 정치, succession drama가 보상 엔진을 먹지 못하게 할 것",
+      "미래지식 한 줄 수익이 아니라 현재 proof, 정산표, 접근권, 승인권, 데이터 열람권으로 보상을 닫을 것",
+      "통신 게이트, 번호 로그인, 요금/정보이용료, 유통, 정산, 데이터, 기업 메시징 권리가 작품 고유 canon으로 남아야 한다"
+    ]
+  }
+}

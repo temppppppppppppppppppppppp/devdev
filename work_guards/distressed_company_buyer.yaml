@@ -1,0 +1,103 @@
+work_identity:
+  work_id: distressed_company_buyer
+  work_type: distressed_company_business_fantasy
+  family: blockguide
+  one_line_truth: "회귀한 구조조정 실사관 한도윤이 부도 회사에서 아직 살아 있는 권리만 깨끗하게 사서 회의석, 접근권, 현금흐름, 다음 매물 입장권으로 올라가는 현대판타지 경영물"
+  protagonist_weapon:
+    - "부도 회사를 회사가 아니라 인증, 보험금, 노선권, 임대차, 설비 리스, 현장 기억의 권리 묶음으로 쪼개 읽는 실사 감각"
+    - "회귀 기억으로 목표물을 좁히되 현재 문서, 현장 로그, 약관, 외부 증인으로만 proof를 만드는 절제"
+    - "통째 인수 책임을 피하고 살아 있는 권리와 죽은 부담을 분리해 SPV/공개입찰/채권단 승인으로 clean receipt를 남기는 딜 설계"
+    - "선의보다 이득, 효율, 법적 방어, 속도, leverage, next gate를 우선하는 자기중심적 판단"
+  business_axes:
+    - "냉장 물류와 콜드체인 인증"
+    - "보험금 claim과 납품 클레임"
+    - "부도 식품공장 HACCP/OEM 승인"
+    - "급식/반품 물류/의료기기 유통 반복계약"
+    - "distressed portfolio 리파이낸싱과 독립 운용사"
+  control_axes:
+    - "채권단 회의석"
+    - "data-room 접근권"
+    - "보험사 예비 인정"
+    - "독점 실사권"
+    - "우선협상권"
+    - "SPV 권리 묶음"
+    - "다음 data-room 초대권"
+  mandatory_lexicon:
+    - "콜드체인 인증"
+    - "온도 로그"
+    - "리콜 보험금"
+    - "납품 클레임"
+    - "항만 냉장창고 우선사용권"
+    - "채권단 회의"
+    - "data-room"
+    - "독점 실사권"
+    - "우선협상권"
+    - "SPV"
+    - "공개입찰"
+    - "advisory exit"
+    - "rights bundle"
+    - "same-block receipt"
+  forbidden_flattenings:
+    - "착한 실사관이 모두를 구해서 감동시키는 charity rescue"
+    - "자문 이해상충을 무시하고 내부정보로 몰래 사는 불법 shortcut"
+    - "회귀 기억 장광설이 현재 문서 proof를 대체하는 전개"
+    - "돈 액수만 커지고 회의석, 접근권, 우선협상권 변화가 없는 asset-first 보상"
+    - "TR block 하나가 사건 하나만 처리하고 보상을 다음 block으로 미루는 느린 페이싱"
+    - "보험, 물류, 채권단 절차를 vague consulting 말투로 뭉개는 전개"
+    - "파트너, 은행, 보험사, PEF를 바보 악역으로 만드는 전개"
+    - "주식 예언, 코인 예언, 복권, 미래 뉴스 암기형 돈벌이로 엔진이 바뀌는 전개"
+  tracking_slots:
+    - "평가 상승: 트럭 사진 실사관 -> 회의실 안 proof 담당자 -> 우선협상권을 딴 인수자 -> 채권단이 먼저 부르는 운용자"
+    - "권한 ladder: 회의석 -> data-room -> 보험 예비 인정 -> 독점 실사권 -> 우선협상권 -> 다음 data-room 초대"
+    - "asset ladder: 삼진콜드 -> 부도 식품공장 -> 급식업체 -> 반품 물류 -> 의료기기 유통 -> PEF 포트폴리오 -> 독립 운용사"
+    - "receipt chain: 문서 proof -> 외부 인정 -> clean legal receipt -> 권리 취득 -> cashflow -> next gate"
+  mandatory_scene_engines:
+    - "남들은 청산가치만 보는 현장에서 도윤이 현재 문서와 로그로 살아 있는 권리 proof를 만든다"
+    - "상대의 합리적 반대가 들어오고, 도윤이 같은 block 안에서 접근권/권한/법적 영수증으로 환전한다"
+    - "도윤이 사람이나 회사를 감정적으로 살리지 않고, 보존할 때도 value preservation과 execution speed를 이유로 남긴다"
+  protagonist_evaluation:
+    admiration_axes:
+      - "남들보다 먼저 살아 있는 권리를 읽음"
+      - "비굴하게 인정 구걸하지 않고 영수증으로 자리와 권한을 얻음"
+      - "착해서가 아니라 효율적으로 사람과 운영을 남김"
+      - "불법 shortcut 없이 clean receipt로 다음 gate를 연다"
+    forbidden_praise_patterns:
+      - "불쌍해서 직원들을 살렸다"
+      - "착해서 회사가 감동했다"
+      - "미래를 알아서 그냥 맞혔다"
+      - "돈 많은 사람이 다 해결했다"
+      - "상대가 멍청해서 당했다"
+    observer_tiers:
+      - "채권은행 구조조정팀장"
+      - "보험사 손해사정 담당자"
+      - "대형마트 buyer"
+      - "현장 창고장/운송반장"
+      - "PEF 파트너"
+    evaluation_thresholds:
+      - "TR 2~6 안에 회의석, data-room, 보험 예비 인정, 독점 실사권, 우선협상권, next gate가 모두 보여야 한다"
+      - "첫 대표 proof 직후 관찰자의 호칭, 자리, 연락선, 문서 접근 중 하나가 바뀐다"
+      - "큰 압박 뒤에는 같은 block 안에서 권한, 보호, cashflow, legal receipt, next gate 중 하나가 남는다"
+      - "Block 6은 pain-only exit가 될 수 없고 다음 부도 매물 입장권을 열어야 한다"
+  role_fit_constraints:
+    - name: "도윤 charity rescue 금지"
+      role: "한도윤"
+      disallowed_actions:
+        - "손해를 알면서 감정적으로 회사를 통째로 떠안기"
+        - "칭찬이나 미담을 얻기 위해 이익과 법적 방어를 포기하기"
+        - "현장 증거 없이 미래 기억만 설명하기"
+      exceptions:
+        - "장기 이익, 권리 보존, 인증 유지, route memory, 법적 방어, next gate를 위해 계산된 단기 손실을 감수하는 행동"
+    - name: "상대 바보화 금지"
+      role: "은행 / 보험사 / 파트너 / PEF"
+      disallowed_actions:
+        - "기본 계약서도 못 읽는 무능 캐릭터화"
+        - "이유 없는 악의와 감정적 방해"
+        - "도윤 말 한마디에 바로 굴복하기"
+      exceptions:
+        - "회수율, 지급 최소화, 책임 회피, 가격 재산정, 감사 리스크 때문에 합리적으로 반대하기"
+custom_rules:
+  - "1 TR block은 downstream 2~6화 묶음이며, 각 block은 최소 두 개의 구분되는 사건 비트를 포함한다"
+  - "도윤의 선택은 profit, efficiency, legal protection, speed, leverage, defense, retaliation, survival, next-gate position 중 하나로 읽혀야 한다"
+  - "보상은 회의석, 접근권, 보험 인정, 독점권, 우선협상권, cashflow, 다음 data-room 초대 중 하나로 같은 block 안에 떨어져야 한다"
+  - "권리 취득은 advisory exit, 공개입찰, 채권단 승인, 법원 일정, SPV 분리 중 하나 이상의 clean receipt를 남겨야 한다"
+  - "다음 전장은 이전 전장의 receipt로만 열린다"

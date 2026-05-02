@@ -1,0 +1,136 @@
+{
+  "block_id": "Block 20",
+  "title": "급식업체의 빈 식판",
+  "content": {
+    "context": "1주차 제조+운송 receipt가 찍힌 다음 날, 정라희는 도윤에게 급한 전화를 건다. 미도급식의 하청 급식업체 해문푸드서비스가 성우전자 구내식당 반찬 라인을 비웠다는 것이다. 기존 납품사가 식자재 대금을 밀리고 잠적했고, 점심 배식까지 남은 시간은 6시간. 도윤은 이걸 납품 사고로 보지 않는다. 태경푸드 생산권과 삼진콜드 route가 급식 계약 bundle로 넘어갈 수 있는 첫 gate로 본다.",
+    "event_villain": "해문푸드서비스 대표는 당장 물량만 달라고 한다. 하지만 결제는 다음 달, 책임은 태경푸드가 지고, 계약서에는 이름도 올리지 않겠다는 조건이다. 성우전자 총무팀은 빈 식판이 한 번 더 나면 해문푸드서비스와의 급식 계약을 해지하겠다고 통보하고, 경쟁 납품사는 태경푸드가 부도 공장이라 emergency vendor 등록이 불가능하다고 찌른다. 정라희도 도윤에게 묻는다. '이번 건은 그냥 도와주고 credit 쌓는 게 낫지 않아요?'",
+    "solution": "도윤은 credit을 거부한다. 그는 6시간짜리 긴급 납품을 세 조건으로 쪼갠다. 첫째, 성우전자 총무팀 명의의 emergency substitute PO를 발급한다. 둘째, 해문푸드서비스는 위생점검 대응 기록, 식자재 공동구매 단가표, 3개 사업장 계약서, 미수 채권 aging을 data-room에 올린다. 셋째, 이번 납품 대금은 선입금 50%, 잔금은 입고 온도 SLA pass 후 즉시 지급한다. 도윤은 태경푸드 명의가 아니라 SPV-태경 제조권과 삼진콜드 운송권 묶음으로 vendor 예외 등록을 밀어 넣는다.",
+    "reward": "점심 배식 18분 전, 태경푸드 냉장 반찬이 성우전자 구내식당에 들어간다. 전량 대체는 못 한다. 빈 tray 두 칸은 샐러드와 김치로 메워지고, 메인 반찬 420인분만 도윤 쪽 물량으로 채워진다. 그러나 성우전자 총무팀은 emergency substitute PO와 온도 SLA pass 확인서를 발급하고, 해문푸드서비스는 data-room 접근권과 급식 계약 bundle 우선협상권을 내준다. 도윤은 급식업체를 살린 게 아니다. 그는 빈 식판을 이용해 다음 부도 회사의 살아 있는 계약권을 열었다."
+  },
+  "incident_beats": [
+    "성우전자 구내식당 빈 식판 위기, 기존 납품사 잠적, 해문푸드서비스의 무기명·후불·책임전가 요구",
+    "emergency substitute PO, 선입금 50%, 온도 SLA pass, data-room 접근권, 급식 계약 bundle 우선협상권 receipt 확보"
+  ],
+  "stakes": "도윤이 그냥 물량을 넣으면 태경푸드는 부도 공장 리스크만 떠안고 다음 계약권은 해문푸드서비스가 가져간다. 반대로 6시간 안에 emergency vendor 예외 등록과 납품을 동시에 못 끝내면 성우전자 계약은 해지되고, 해당 아크으로 넘어갈 급식 계약 bundle gate도 닫힌다.",
+  "power_shift": {
+    "protagonist": "제조+운송 cashflow를 증명한 operator에서 급식 계약 bundle data-room을 여는 distressed contract hunter로 이동한다.",
+    "antagonist": "해문푸드서비스와 경쟁 납품사는 도윤을 임시 하청 공급자로 묶으려 하지만, 빈 식판 타임리밋 때문에 도윤의 PO/data-room/우선협상권 조건을 거절하지 못한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "정라희",
+      "before": "도윤의 제조+운송 receipt를 인정하지만 emergency order는 credit 확보용으로 보는 OEM buyer",
+      "after": "도윤이 무료 신뢰가 아니라 PO와 data-room 접근권을 요구하는 것을 보고, 그의 계산 방식이 도움보다 권리 확보에 가깝다는 것을 확실히 안다"
+    },
+    {
+      "target": "해문푸드서비스 대표",
+      "before": "급한 물량만 받고 책임과 결제는 뒤로 미루려는 폐업 위기 급식업체 대표",
+      "after": "빈 식판을 막기 위해 위생점검 기록, 계약서, 미수 채권 aging, 우선협상권을 도윤에게 넘긴다"
+    },
+    {
+      "target": "성우전자 총무팀",
+      "before": "한 번 더 배식 사고가 나면 급식 계약을 해지하려는 발주처",
+      "after": "도윤의 420인분 긴급 대체 납품을 인정하고 emergency substitute PO와 온도 SLA pass 확인서를 발급한다"
+    },
+    {
+      "target": "삼진콜드 배차 담당",
+      "before": "태경푸드 조건부 납품 route만 수행한 운송 파트너",
+      "after": "6시간 emergency route를 수행하며 급식 계약 bundle에도 필요한 냉장 운송권으로 자리 잡는다"
+    }
+  ],
+  "foreshadow": [
+    "해문푸드서비스 data-room의 위생점검 대응 기록과 식자재 공동구매 단가표는 해당 아크의 핵심 실사 재료가 된다.",
+    "성우전자 emergency substitute PO는 급식 계약 해지 방어와 은행 신용도 설득의 첫 외부 발주처 proof가 된다.",
+    "급식 계약 bundle 우선협상권은 도윤이 회사 전체가 아니라 살아 있는 계약권만 사는 방식을 다음 전장에서도 반복하게 만든다.",
+    "태경푸드 생산권과 삼진콜드 route의 결합은 해당 아크 exit receipt로 고정된다."
+  ],
+  "callback": [
+    "후속 국면의 제조 invoice와 운송 invoice를 emergency vendor 예외 등록 근거로 사용한다.",
+    "후속 국면의 온도 SLA와 SPV escrow 구조를 성우전자 납품 확인서 조건으로 재사용한다.",
+    "후속 국면의 삼진콜드 route control이 6시간 긴급 대체 납품의 물류 기반이 된다.",
+    "후속 국면-15에서 확보한 HACCP/품질 기록이 부도 공장 vendor 등록 반대 논리를 막는 proof로 돌아온다."
+  ],
+  "emotional_beat": {
+    "type": "arc_exit_contract_gate_cider",
+    "intensity": 9
+  },
+  "tension_level": 9,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "성우전자 구내식당 / 해문푸드서비스 사무실 / 태경푸드 상차장",
+    "type": "emergency cafeteria supply and distressed contract gate"
+  },
+  "time_span": {
+    "duration": "6시간",
+    "in_story_time": "1주차 제조 cashflow receipt 다음 날"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "1주차 288팩 유상 납품 통과 / 제조 invoice 승인 / 삼진콜드 운송 invoice 승인 / 온도 SLA pass log / SPV escrow 일부 release / 2주차 생산 slot 유지",
+    "capital_after": "성우전자 emergency substitute PO / 420인분 긴급 대체 납품 / 선입금 50% / 온도 SLA pass 확인서 / 해문푸드서비스 data-room 접근권 / 급식 계약 bundle 우선협상권",
+    "capital_delta": "0억",
+    "profit_loss": "무료 지원 거부, 긴급 대체 납품 선입금과 다음 급식 계약 bundle 실사권 확보",
+    "method": "빈 식판 타임리밋을 이용해 물량 공급을 PO, 선입금, 온도 SLA, data-room 접근권, 우선협상권으로 교환한다.",
+    "investment_type": "distressed cafeteria contract gate acquisition",
+    "deal_type": "emergency substitute supply / data-room access / right of first negotiation",
+    "leverage_used": [
+      "제조 invoice 승인",
+      "삼진콜드 운송 invoice 승인",
+      "온도 SLA pass log",
+      "HACCP/품질 기록",
+      "SPV-태경 제조권",
+      "삼진콜드 emergency route",
+      "빈 식판 타임리밋",
+      "성우전자 계약 해지 통보"
+    ],
+    "opponent": {
+      "name": "해문푸드서비스 대표 / 경쟁 납품사 / 성우전자 총무팀",
+      "type": "distressed operator opportunism, competitor vendor-blocking, and client termination pressure",
+      "weakness_exploited": "상대는 도윤을 임시 공급자로만 쓰고 싶지만, 점심 배식 전 빈 식판을 막을 수 있는 제조+운송 proof를 가진 쪽이 도윤뿐이다"
+    },
+    "historical_event": null,
+    "time_pressure": "점심 배식까지 6시간 안에 emergency vendor 예외 등록, 생산, 상차, 온도 SLA 확인, PO 발급을 끝내야 한다.",
+    "knowledge_used": "회귀 전 해문푸드서비스가 빈 식판 사고 뒤 계약을 잃었지만 위생점검 대응 기록과 공동구매권은 다른 인수자가 가져갔다는 기억",
+    "risk_level": "고위험",
+    "business_sector": "급식 운영 / 식품 제조 / 냉장 물류 / 식자재 공동구매 / 계약권 실사",
+    "section_rotation": "멈춘 식품공장의 납품 승인 -> 급식 계약은 느리게 끊기지 않는다",
+    "success_pattern": "긴급 공급을 무료 호의가 아니라 다음 부도 회사의 계약권 gate로 환전",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "arc_exit_contract_gate_receipt",
+      "receipt_line": "성우전자 emergency substitute PO, 420인분 긴급 대체 납품, 선입금 50%, 온도 SLA pass 확인서, 해문푸드서비스 data-room 접근권, 급식 계약 bundle 우선협상권 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 해문푸드서비스가 빈 식판 사고로 급식 계약을 잃었지만, 위생점검 대응 기록과 공동구매권만은 높은 가격에 팔렸다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생에는 빈 식판 사고 뒤 해문푸드서비스 계약이 바로 해지되고, 계약권과 공동구매 data가 경쟁 인수자에게 넘어갔다.",
+      "changed_event": "이번에는 도윤이 배식 사고를 완전히 막지는 못하지만 emergency PO와 data-room 접근권을 먼저 받아 계약권 실사 gate를 연다.",
+      "ripple_effect": "식품공장 생산권과 냉장 물류권은 급식 계약 bundle로 이어지고, 도윤의 권리 매입 방식은 제조에서 운영 계약으로 확장된다."
+    },
+    "death_flag": {
+      "avoided": "무료 긴급 납품만 하고 급식 계약권 data를 해문푸드서비스와 경쟁 납품사에게 빼앗기는 미래",
+      "method": "물량 공급 전 PO, 선입금, data-room 접근권, 우선협상권을 먼저 문서로 고정한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 성우전자 구내식당의 빈 tray 시간과 해문푸드서비스의 data-room 항목을 미리 아는 듯 바로 요구한다.",
+      "suspicion_from": "정라희와 해문푸드서비스 대표"
+    },
+    "future_prep": {
+      "action": "해문푸드서비스 data-room에서 위생점검 대응 기록, 식자재 공동구매권, 미수 채권 aging을 실사한다.",
+      "target_event": "해당 아크 급식 계약 bundle 실사"
+    }
+  },
+  "block_no": 20,
+  "foreshadow_targets": [
+    21,
+    22
+  ]
+}

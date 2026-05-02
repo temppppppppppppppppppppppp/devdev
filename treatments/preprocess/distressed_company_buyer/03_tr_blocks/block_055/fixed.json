@@ -1,0 +1,142 @@
+{
+  "block_id": "Block 55",
+  "title": "LP는 실패 비용을 묻는다",
+  "content": {
+    "context": "cashflow leakage waiver가 닫히자 백승환은 포트폴리오를 LP 앞에 올린다. 그는 성공 case만 보여 주려 한다. 도윤은 반대로 실패 case 탭을 먼저 연다. 부도난 회사의 권리는 성공하면 싸게 산 자산이고, 실패하면 누가 비용을 떠안는지부터 보는 폭탄이다. LP가 묻는 질문은 valuation이 아니다. 실패하면 누가 돈을 내느냐다.",
+    "event_villain": "외부 LP 견제자는 백승환에게 도윤 포트폴리오가 너무 operator-dependent라고 지적한다. 장비 리콜, 급식 납품 중단, seller SLA 위반, 냉장 운송 claim, 대표들의 현금 은닉이 동시에 터지면 8억 원 bridge도 proof room도 의미 없다는 것이다. 백승환은 이 질문을 이용해 도윤에게 control을 넘기고 PEF junior partner 조건을 다시 받으라고 압박한다. 포트폴리오 회사 대표들은 실패비용 reserve가 열리면 자기 운영비가 더 줄어들까 봐 반발한다.",
+    "solution": "도윤은 성공 cashflow slide를 접고 실패비용 table을 보여 준다. 세원메디링크 리콜 pre-claim packet, 급식 lockbox 대체 납품비, 리턴브릿지 패널티 hold, 삼진콜드 운송 claim, 회사별 operating allowance를 한 장의 downside waterfall로 묶는다. 그는 LP에게 투자 확약을 요구하지 않는다. 대신 5영업일 proof room 초대권, failure-cost reserve 1억 2,000만 원 schedule, LP observer seat 1회, limited assurance 중간 확인 공유 동의만 요구한다. 백승환의 14억 원 통매각은 대안 비교표의 downside exit로만 둔다.",
+    "reward": "LP는 투자 확약을 주지 않는다. 그러나 5영업일 proof room 초대권과 LP observer seat 1회를 받아들이고, failure-cost reserve 1억 2,000만 원 schedule과 downside waterfall memo를 diligence package에 넣는 데 동의한다. 은행은 failure-cost reserve가 cashflow leakage waiver와 충돌하지 않는다는 확인을 받고 90일 bridge 조건을 유지한다. 백승환은 도윤의 실패비용 방어선을 무시한 채 junior partner 조건만 밀 수 없게 된다. 도윤은 돈을 받은 게 아니다. 실패했을 때도 누가 무엇을 먼저 내는지 정해, LP가 떠날 시간을 proof room 시간으로 바꿨다."
+  },
+  "incident_beats": [
+    "외부 LP가 성공 cashflow가 아니라 장비 리콜, 급식 중단, SLA 위반, 운송 claim, 현금 은닉이 동시에 터질 때의 실패비용을 묻는다",
+    "도윤이 리콜 pre-claim packet, lockbox, 패널티 hold, 운송 claim, operating allowance를 downside waterfall과 failure-cost reserve schedule로 묶는다",
+    "LP proof room 5영업일 초대권, failure-cost reserve 1억 2,000만 원 schedule, LP observer seat 1회, limited assurance 중간 확인 공유 동의 receipt가 확보된다"
+  ],
+  "stakes": "LP가 실패비용을 보지 못하면 백승환의 통매각과 junior partner 조건만 남는다. 반대로 도윤이 실패비용을 과장하면 은행 bridge가 더 위험해진다. 도윤은 성공 valuation이 아니라 실패비용 지급순서를 증명해 control을 지켜야 한다.",
+  "power_shift": {
+    "protagonist": "portfolio cashflow를 잠근 control operator에서 실패비용까지 가격표로 만드는 downside-risk architect로 이동한다.",
+    "antagonist": "백승환과 LP 견제자는 operator dependency와 failure cost를 약점으로 삼지만, 도윤의 reserve schedule과 observer right 때문에 즉시 통매각 프레임으로 몰지 못한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "외부 LP 견제자",
+      "before": "성공 cashflow보다 실패비용과 operator dependency를 먼저 의심하는 LP",
+      "after": "5영업일 proof room, observer seat 1회, failure-cost reserve schedule을 조건부 검토 대상으로 받아들인다"
+    },
+    {
+      "target": "백승환",
+      "before": "LP의 실패비용 질문을 이용해 도윤에게 junior partner 조건을 다시 들이미는 PEF 파트너",
+      "after": "도윤의 downside waterfall과 대안 비교표 때문에 통매각을 유일한 실패 방어책으로 말하지 못한다",
+      "continuity_anchor_before": "cashflow leakage waiver와 공동 서명권이 나오자 약점 메모를 즉시 확정하지 못한다"
+    },
+    {
+      "target": "서민재",
+      "before": "90일 bridge 조건이 governance 부담으로 커질까 보는 은행 담당자",
+      "after": "failure-cost reserve가 cashflow leakage waiver와 충돌하지 않는다는 확인을 받고 bridge 조건을 유지한다"
+    },
+    {
+      "target": "포트폴리오 회사 대표들",
+      "before": "reserve가 운영비를 더 줄일까 반발하는 대표들",
+      "after": "14일 operating allowance가 유지되는 대신 실패비용 waterfall 밖 청구는 막힌다는 사실을 받아들인다",
+      "continuity_anchor_before": "90일 term sheet가 나오자 즉시 PEF 편으로 돌아서지 않는다"
+    }
+  ],
+  "foreshadow": [
+    "failure-cost reserve 1억 2,000만 원 schedule은 후속 국면 리파이낸싱 역전에서 은행과 LP가 동시에 보는 downside control proof가 된다.",
+    "LP observer seat 1회는 해당 아크 후반에서 백승환의 junior partner 조건을 되받아치는 governance proof로 회수된다.",
+    "PEF 통매각 대안 비교표는 후속 국면 이후 백승환이 control premium을 요구할 때 도윤의 협상 anchor로 남는다.",
+    "downside waterfall memo는 독립 운용사 출범 전 portfolio risk policy의 원형이 된다."
+  ],
+  "callback": [
+    "후속 국면의 cashflow leakage waiver와 14일 operating allowance를 failure-cost reserve와 충돌하지 않게 연결한다.",
+    "후속 국면의 8억 원 90일 bridge term sheet를 LP proof room의 bank-readable downside 조건으로 사용한다.",
+    "후속 국면의 limited assurance review 중간 확인을 LP에게 공유할 diligence trigger로 회수한다.",
+    "후속 국면의 pre-claim packet과 후속 국면의 settlement hold 구조를 실패비용 waterfall의 항목으로 확장한다."
+  ],
+  "emotional_beat": {
+    "type": "failure_cost_cider",
+    "intensity": 8
+  },
+  "tension_level": 9,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "외부 LP 화상회의 / 은행 proof room / 도윤 SPV downside waterfall dashboard",
+    "type": "LP failure-cost proof room and downside waterfall negotiation"
+  },
+  "time_span": {
+    "duration": "이틀",
+    "in_story_time": "후속 국면의 cashflow leakage waiver와 공동 서명권이 닫힌 직후"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "cashflow leakage waiver / 14일 operating allowance schedule / SPV-bank 공동 서명권 / 회사별 지출 cap / waterfall outside payment 금지 확인서 / bridge term sheet 조건 위반 통보 보류 / 백승환 control weakness 메모 보류 / portfolio governance control proof",
+    "capital_after": "LP proof room 5영업일 초대권 / failure-cost reserve 1억 2,000만 원 schedule / downside waterfall memo / LP observer seat 1회 / limited assurance 중간 확인 공유 동의 / portfolio governance control proof packet / PEF 통매각 대안 비교표 / 90일 bridge 조건 유지",
+    "capital_delta": "LP 투자 확약 실패 / failure-cost reserve 1억 2,000만 원 schedule 확보 / LP proof room 5영업일 개방 / observer seat 1회 확보 / 90일 bridge 조건 유지",
+    "profit_loss": "새 투자금은 아직 들어오지 않지만, 실패비용 지급순서와 LP 검토 시간을 확보해 통매각 압박을 늦춘다.",
+    "method": "성공 valuation을 설명하는 대신 실패비용 항목을 cash receipt, reserve schedule, downside waterfall, observer right로 묶어 LP와 은행이 읽을 수 있게 만든다.",
+    "investment_type": "distressed portfolio downside-risk proof room",
+    "deal_type": "LP proof room / failure-cost reserve / downside waterfall / observer right",
+    "leverage_used": [
+      "cashflow leakage waiver",
+      "14일 operating allowance schedule",
+      "SPV-bank 공동 서명권",
+      "8억 원 90일 bridge term sheet",
+      "limited assurance review",
+      "세원메디링크 pre-claim packet",
+      "급식 lockbox",
+      "리턴브릿지 penalty hold ticket",
+      "삼진콜드 운송 claim table",
+      "PEF 14억 원 valuation floor"
+    ],
+    "opponent": {
+      "name": "외부 LP 견제자 / 백승환 / 포트폴리오 회사 대표들",
+      "type": "failure-cost diligence pressure, PEF control pressure, and internal operating-cost resistance",
+      "weakness_exploited": "LP는 성공 valuation보다 실패비용 지급순서를 원하고, 백승환은 그 순서를 비워 둘 때만 통매각을 유일한 답처럼 말할 수 있다"
+    },
+    "historical_event": null,
+    "time_pressure": "LP가 proof room 초대권을 닫기 전, 그리고 은행이 reserve와 bridge 조건 충돌을 문제 삼기 전에 failure-cost waterfall을 제시해야 한다.",
+    "knowledge_used": "회귀 전 LP가 성공 cashflow보다 실패비용 reserve 부재를 이유로 빠져나가고, PEF가 그 빈틈을 통매각 명분으로 삼았다는 기억",
+    "risk_level": "극고위험",
+    "business_sector": "LP diligence / downside reserve / portfolio governance / bridge refinancing / distressed M&A",
+    "section_rotation": "PEF가 사려는 건 회사가 아니다",
+    "success_pattern": "투자 확약 없이도 실패비용 proof room과 reserve schedule을 확보해 통매각 압박을 늦김",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "failure_cost_proof_room_receipt",
+      "receipt_line": "LP proof room 5영업일 초대권, failure-cost reserve 1억 2,000만 원 schedule, downside waterfall memo, LP observer seat 1회, limited assurance 중간 확인 공유 동의, 90일 bridge 조건 유지 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 LP가 실패비용 reserve 부재를 이유로 검토를 중단했고 PEF가 그 공백을 통매각 명분으로 삼았다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 operator는 성공 cashflow만 설명하다가 LP가 빠지고 PEF junior partner 조건을 받아들였다.",
+      "changed_event": "이번에는 도윤이 먼저 failure-cost reserve와 downside waterfall을 열어 LP의 의심을 proof room 시간으로 바꾼다.",
+      "ripple_effect": "LP 투자 확약은 없지만 observer right와 reserve schedule이 생기고, 은행 bridge와 PEF 대안 비교표가 동시에 살아남는다."
+    },
+    "death_flag": {
+      "avoided": "LP가 검토를 닫고 PEF 통매각만 남아 control을 잃는 미래",
+      "method": "failure-cost reserve schedule, downside waterfall, LP proof room, observer seat, bridge 조건 유지로 방어한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 LP가 질문하기 전에 이미 실패비용 reserve tab을 dashboard 첫 화면에 띄워 둔다.",
+      "suspicion_from": "외부 LP 견제자와 백승환"
+    },
+    "future_prep": {
+      "action": "LP observer right와 failure-cost reserve schedule을 다음 협상에서 PEF control premium을 역으로 묻는 증거로 둔다.",
+      "target_event": "후속 국면"
+    }
+  },
+  "block_no": 55,
+  "foreshadow_targets": [
+    56,
+    60,
+    61
+  ]
+}

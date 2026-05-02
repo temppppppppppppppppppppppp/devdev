@@ -1,0 +1,618 @@
+{
+  "_schema": "tr.v1",
+  "_work_id": "haewon_digital_rights_1997",
+  "_block_range": "011-015",
+  "_total_blocks": 5,
+  "_planned_total_blocks": 70,
+  "_preceding_tr_ref": "treatments/haewon_digital_rights_1997_tr_block_006_010_draft.json",
+  "_phase0_ref": "treatments/phase0/haewon_digital_rights_1997_phase0_design.json",
+  "_work_guard_ref": "work_guards/haewon_digital_rights_1997.yaml",
+  "_production_status": {
+    "run_class": "sequential_production",
+    "last_sequential_block_pass": 15,
+    "next_unit_type": "b잠금",
+    "next_block_id": 16,
+    "stop_reason": "draft created; next unit should complete 접속권 구간 with 선행 권리 증빙.",
+    "pacing_contract": "1 TR b잠금 is an episode 묶음 of roughly 2~6 episodes; each b잠금 must contain at least two distinct incident beats와 a same-b잠금 leverage 증빙."
+  },
+  "blocks": [
+    {
+      "block_id": "Block 11",
+      "block_no": 11,
+      "title": "접속권은 선이 아닙니다",
+      "content": {
+        "context": "포털/ISP 제휴 의향서를 검토한 도윤은 케이블망 지도와 PCS 대리점 위치표를 겹친다. 의향서의 핵심은 브랜드 제휴가 아니라, 어느 건물과 상권에 먼저 접속선을 넣을 수 있느냐다.",
+        "event_villain": "채권단 보수파는 ISP 의향서를 법적 구속력 없는 종이라고 본다. 강민석은 설치비만 태우는 미래 장난이라고 공격한다. 통신 대기업 제휴팀도 해원 같은 워크아웃 그룹에 우선 설치권을 줄 이유가 없다고 선을 긋는다.",
+        "solution": "도윤은 의향서를 매입하자고 하지 않는다. 그는 케이블 지역권 안의 아파트 단지, PC방 밀집 구역, PCS 대리점 위치를 겹쳐 30일 파일럿 접속권 구역을 제시한다. 살 권리보다 먼저 깔아 볼 권리를 요구한다.",
+        "reward": "서인하는 30일 파일럿 실사권을 승인한다. 통신 대기업 제휴팀은 공식 제휴는 거절하지만, 특정 구역 설치 가능성 검토 미팅은 열어 준다. 도윤은 접속권 전장의 첫 지도와 미팅권을 얻는다."
+      },
+      "stakes": "접속권을 바로 사려 들면 도윤은 비용 폭주 투기꾼이 된다. 파일럿 실사권을 얻어야 케이블과 PCS가 실제 판매망으로 연결된다.",
+      "power_shift": {
+        "protagonist": "포털/ISP 검토권 보유자에서 30일 파일럿 접속권 실사권을 가진 데스크 소유권자",
+        "antagonist": "보수파와 통신 대기업이 정식 제휴를 막았지만 파일럿 미팅은 열어 준 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "서인하",
+          "before": "오프닝 증빙을 인정하고 포털/ISP 검토권을 준다.",
+          "after": "비용 폭주를 막는 조건으로 30일 실사권을 승인한다."
+        },
+        {
+          "target": "통신 대기업 제휴팀",
+          "before": "해원을 워크아웃 리스크로 보고 거절한다.",
+          "after": "도윤의 구역 지도를 보고 설치 가능성 미팅만 열어 둔다."
+        }
+      ],
+      "foreshadow": [
+        "30일 파일럿 구역은 첫 통신 관문 수익 증빙으로 이어진다.",
+        "정식 제휴가 아니라 파일럿 실사권부터 요구하는 방식은 이후 포털 광고권 협상에도 반복된다."
+      ],
+      "callback": [
+        "선행 권리전에서 얻은 포털/ISP 검토권이 접속권 파일럿 실사권으로 환전된다.",
+        "케이블 지역권과 PCS 대리점망이 하나의 지도 위에 다시 올라온다.",
+        "실사권/미팅권에 필요한 선행 증빙이 현재 협상 근거로 다시 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "접속권 전장 개방",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "디지털 권리 데스크와 통신 대기업 제휴팀 회의실",
+        "type": "사무실/회의실",
+        "macro_battlefield": "접속권 파일럿 실사"
+      },
+      "time_span": {
+        "duration": "사흘",
+        "in_story_time": "1998년 봄"
+      },
+      "genre_ext": {
+        "type": "비즈니스_성장",
+        "capital_before": "38",
+        "capital_after": "44",
+        "capital_delta": "6",
+        "profit_loss": "6 증가",
+        "method": "케이블 지역권, PCS 대리점망, 포털/ISP 의향서를 겹쳐 30일 파일럿 접속권 구역을 만든다.",
+        "investment_type": "접속권 파일럿",
+        "deal_type": "실사권/미팅권",
+        "leverage_used": [
+          "포털/ISP 제휴 의향서",
+          "케이블망 지도",
+          "PCS 대리점 위치표",
+          "PC방 밀집 구역"
+        ],
+        "opponent": {
+          "name": "비용 폭주 프레임",
+          "type": "채권단/통신 제휴팀 거절",
+          "weakness_exploited": "정식 제휴나 매입이 아니라 30일 파일럿이면 비용과 리스크가 제한되는 점"
+        },
+        "historical_event": "초고속 인터넷 설치 경쟁 초기",
+        "time_pressure": "통신 대기업이 다른 지역 케이블 사업자와 먼저 파일럿을 묶기 전에 구역을 잡아야 한다.",
+        "knowledge_used": "접속권은 망 소유보다 먼저 상권별 설치 우선권에서 생긴다는 미래 감각",
+        "risk_level": "고위험",
+        "business_sector": "포털/ISP/케이블 접속권",
+        "section_rotation": "실사권/미팅권 단계",
+        "success_pattern": "사지 않고 깔아 볼 권리부터 얻는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "30일 파일럿 실사권",
+          "receipt_line": "서인하는 30일 파일럿 실사권을 승인하고 통신 대기업 제휴팀은 설치 가능성 미팅을 열어 준다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "접속권 전장이 공식 파일럿으로 열린다.",
+          "representative_reevaluation": "통신 제휴팀이 도윤의 구역 지도를 회의 안건으로 본다.",
+          "next_battlefield_ticket": "파일럿 구역의 설치비와 가입자 확보 검증이 열린다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "30일 파일럿 접속권 실사권 확보",
+          "secondary_incident": "비용 폭주/정식 제휴 거절 프레임을 파일럿 조건으로 방어",
+          "bundle_expandability": "지도 겹치기, 채권단 반대, 통신사 거절, 파일럿 조건 협상으로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "서인하",
+          "recognition_reason": "서인하 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "서인하 쪽은 성과 항목(30일 파일럿 실사권)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "구역 지도와 파일럿 비용 제한표"
+      },
+      "foreshadow_targets": [
+        12,
+        20
+      ],
+      "callback_sources": [
+        2,
+        3,
+        10
+      ]
+    },
+    {
+      "block_id": "Block 12",
+      "block_no": 12,
+      "title": "간판의 가격",
+      "content": {
+        "context": "파일럿 구역의 핵심은 PC방과 PCS 대리점 간판이다. 도윤은 단순 가입자 모집이 아니라, 대리점이 설치 상담과 단말 판매, 콘텐츠 쿠폰을 동시에 처리하는 접점이라는 점을 본다.",
+        "event_villain": "통신 대기업 제휴팀은 해원 대리점망을 자기들의 단순 판매 하청으로 묶으려 한다. 수수료는 낮고 고객 데이터는 통신사가 가져간다. 겉보기에는 제휴지만, 접점의 주도권을 빼앗기는 구조다.",
+        "solution": "도윤은 대리점 간판 사용권, 가입 상담 수수료, 설치 예약권, PC방 추천 쿠폰을 분리해 협상한다. 그는 통신사 물량을 받되, 고객 접점과 설치 예약표는 해원 데스크가 보유하는 조건을 건다. 설치 예약표 통제 구조는 이 자리에서 문서 증빙으로 고정되고 다음 협상권의 근거가 된다.",
+        "reward": "파일럿 구역 내 17개 대리점이 해원 데스크의 설치 예약표를 쓰게 된다. 통신사는 불쾌하지만 초기 가입자를 얻기 위해 조건부로 받아들인다. 도윤은 대리점망을 하청이 아니라 접속권 판매망으로 바꾼다. 통신 대기업 제휴팀 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+      },
+      "stakes": "통신사 하청으로 들어가면 PCS 대리점망은 남의 고객을 모아 주는 조직이 된다. 예약표와 접점 데이터를 잡아야 해원 데스크의 권리가 된다.",
+      "power_shift": {
+        "protagonist": "파일럿 실사권자에서 설치 예약표와 고객 접점을 쥔 판매망 소유권자",
+        "antagonist": "통신 대기업 제휴팀이 물량은 주지만 접점 주도권을 완전히 가져가지 못한 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "통신 대기업 제휴팀",
+          "before": "파일럿 설치 가능성만 열어 둔다.",
+          "after": "도윤을 하청이 아니라 조건을 거는 접점 사업자로 본다."
+        },
+        {
+          "target": "PCS 대리점주들",
+          "before": "해원 계열사의 부실 재고를 떠안는 말단 판매망으로 느낀다.",
+          "after": "설치 예약과 콘텐츠 쿠폰으로 새 수수료를 얻을 수 있다고 본다."
+        }
+      ],
+      "foreshadow": [
+        "설치 예약표는 후반 가입자 데이터와 광고 타깃팅 권리로 확장된다.",
+        "PC방 추천 쿠폰은 콘텐츠 권리와 접속권을 묶는 첫 소비자-facing 장치가 된다."
+      ],
+      "callback": [
+        "PCS 대리점망 우선권이 실제 판매 접점으로 회수된다.",
+        "콘텐츠 권리가 가입 쿠폰으로 다시 쓰인다.",
+        "설치 예약표 통제에 필요한 선행 증빙이 현재 협상 근거로 다시 회수된다.",
+        "케이블은 땅이 아닙니다에서 확보한 매각 보류 근거가 설치 예약표 통제 협상에서 별도 증빙으로 회수된다.",
+        "증인은 호의로 움직이지 않는다에서 확보한 실사 동행권 근거가 설치 예약표 통제 협상에서 별도 증빙으로 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "접점 장악",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "파일럿 구역 PCS 대리점 연합 회의",
+        "type": "현장/회의실",
+        "macro_battlefield": "대리점망 접점권"
+      },
+      "time_span": {
+        "duration": "일주일",
+        "in_story_time": "1998년 봄"
+      },
+      "genre_ext": {
+        "type": "비즈니스_성장",
+        "capital_before": "44",
+        "capital_after": "52",
+        "capital_delta": "8",
+        "profit_loss": "8 증가",
+        "method": "PCS 대리점망을 통신사 하청이 아니라 설치 예약표와 고객 접점이 남는 판매망으로 재구성한다.",
+        "investment_type": "대리점 접점권",
+        "deal_type": "설치 예약표 통제",
+        "leverage_used": [
+          "PCS 대리점망 우선권",
+          "설치 상담 수수료",
+          "PC방 콘텐츠 쿠폰",
+          "파일럿 가입자 필요성"
+        ],
+        "opponent": {
+          "name": "통신 대기업 하청 프레임",
+          "type": "제휴 조건 압박",
+          "weakness_exploited": "초기 가입자가 급한 통신사가 접점 조건을 전부 거절하기 어려운 점"
+        },
+        "historical_event": "PCS 가입자 확보 경쟁",
+        "time_pressure": "파일럿 기간 안에 예약표를 채우지 못하면 통신사가 조건을 회수한다.",
+        "knowledge_used": "고객 접점 데이터가 후반 플랫폼 권리의 씨앗이라는 미래 감각",
+        "risk_level": "중고위험",
+        "business_sector": "PCS 대리점망/가입자 접점",
+        "section_rotation": "접점권 확보",
+        "success_pattern": "간판과 예약표를 남의 하청이 아니라 자기 권리로 만든다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "설치 예약표 통제",
+          "receipt_line": "파일럿 구역 17개 대리점이 해원 데스크의 설치 예약표를 쓰게 된다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "대리점망이 접속권 판매망으로 재분류된다.",
+          "representative_reevaluation": "대리점주들이 도윤을 수수료를 만드는 사람으로 본다.",
+          "next_battlefield_ticket": "예약표를 실제 설치 물량과 설비 금융으로 바꾸는 단계가 열린다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "대리점 설치 예약표와 접점 통제 확보",
+          "secondary_incident": "통신사 하청 조건을 분리 협상으로 방어",
+          "bundle_expandability": "통신사 조건 제시, 대리점 반발, 쿠폰/예약표 설계, 조건부 수락으로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "통신 대기업 제휴팀",
+          "recognition_reason": "통신 대기업 제휴팀 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "통신 대기업 제휴팀 쪽은 성과 항목(설치 예약표 통제)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다.",
+          "selected_reward_sentence": "통신 대기업 제휴팀 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "예약표, 대리점 계약 부속합의, 쿠폰 정산표"
+      },
+      "foreshadow_targets": [
+        13,
+        45
+      ],
+      "callback_sources": [
+        3,
+        4,
+        11,
+        2,
+        7
+      ]
+    },
+    {
+      "block_id": "Block 13",
+      "block_no": 13,
+      "title": "공사비를 남이 내게 만드는 법",
+      "content": {
+        "context": "설치 예약표는 채워졌지만 문제는 공사비다. 초고속망을 깔려면 건물주 동의, 설비업체 선급금, 통신사 장비 일정, 해원케이블 현장 인력이 모두 맞아야 한다.",
+        "event_villain": "지역 케이블 경쟁자가 구청과 건물주를 돌며 해원은 워크아웃 기업이라 공사를 못 끝낼 거라고 흔든다. 채권단 보수파도 설치비 선지출을 막으려 한다.",
+        "solution": "도윤은 해원이 공사비를 떠안지 않는 구조를 짠다. 통신사는 장비를, 설비업체는 예약표를 담보로 선시공을, 건물주는 첫 3개월 관리비 할인 대신 공동구 배선권을 제공하게 만든다. 공동구 배선권과 선시공 약정 구조는 이 자리에서 문서 증빙으로 고정되고 다음 협상권의 근거가 된다.",
+        "reward": "파일럿 3개 단지의 공동구 배선권과 선시공 약정이 잡힌다. 해원 데스크는 큰 현금 지출 없이 설치권을 확보하고, 경쟁자의 워크아웃 프레임을 공사비 분담 구조로 눌러 버린다."
+      },
+      "stakes": "설치비를 해원이 떠안으면 채권단이 데스크를 닫을 명분을 얻는다. 돈을 적게 쓰고 배선권을 얻어야 접속권이 자산이 된다.",
+      "power_shift": {
+        "protagonist": "설치 예약표 소유권자에서 공동구 배선권과 선시공 약정을 묶은 설비 협상자",
+        "antagonist": "지역 경쟁자가 워크아웃 프레임을 퍼뜨렸지만 공사비 분담 구조 앞에서 명분을 잃음"
+      },
+      "relationship_delta": [
+        {
+          "target": "건물주 대표",
+          "before": "해원 공사를 워크아웃 리스크로 본다.",
+          "after": "관리비 할인과 예약 수요를 보고 공동구 배선권을 내준다."
+        },
+        {
+          "target": "채권단 보수파",
+          "before": "설치비 선지출을 막으려 한다.",
+          "after": "해원 현금 지출이 제한된 구조라 반대 명분이 약해진다."
+        }
+      ],
+      "foreshadow": [
+        "공동구 배선권은 후반 케이블망과 ISP 제휴의 실물 병목이 된다.",
+        "설비업체 선시공 약정은 이후 물류 터미널 결제망 공사에도 재사용된다."
+      ],
+      "callback": [
+        "현장 실사 동행권이 실제 공동구 배선권 협상에 쓰인다.",
+        "설치 예약표가 선시공 담보로 회수된다.",
+        "공동구 배선권과 선시공 약정에 필요한 선행 증빙이 현재 협상 근거로 다시 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "비용 전가",
+        "intensity": 9
+      },
+      "tension_level": 9,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "파일럿 아파트 관리사무소와 설비업체 회의실",
+        "type": "현장/회의실",
+        "macro_battlefield": "초고속망 설치비와 배선권"
+      },
+      "time_span": {
+        "duration": "열흘",
+        "in_story_time": "1998년 봄"
+      },
+      "genre_ext": {
+        "type": "비즈니스_성장",
+        "capital_before": "52",
+        "capital_after": "61",
+        "capital_delta": "9",
+        "profit_loss": "9 증가",
+        "method": "예약표를 담보로 통신사, 설비업체, 건물주에게 비용을 분담시켜 해원 현금 지출 없이 공동구 배선권을 확보한다.",
+        "investment_type": "설비 금융/배선권",
+        "deal_type": "공동구 배선권과 선시공 약정",
+        "leverage_used": [
+          "설치 예약표",
+          "통신사 장비 일정",
+          "설비업체 선시공 조건",
+          "관리비 할인 제안",
+          "현장 실사 자료"
+        ],
+        "opponent": {
+          "name": "지역 케이블 경쟁자",
+          "type": "지역 사업자/소문전",
+          "weakness_exploited": "워크아웃 리스크는 현금 지출 구조가 클 때만 치명적이라는 점"
+        },
+        "historical_event": "초고속망 공동구/아파트 단지 설치 경쟁",
+        "time_pressure": "파일럿 예약자가 이탈하기 전에 첫 단지 배선권을 잡아야 한다.",
+        "knowledge_used": "초기 접속권은 가입자보다 먼저 배선권과 설치 일정에서 결정된다는 미래 감각",
+        "risk_level": "고위험",
+        "business_sector": "초고속망/설비 금융",
+        "section_rotation": "설치권 확보",
+        "success_pattern": "공사비를 떠안지 않고 배선권을 얻는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "공동구 배선권/선시공 약정",
+          "receipt_line": "파일럿 3개 단지의 공동구 배선권과 선시공 약정이 잡힌다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "접속권이 문서가 아니라 실물 배선권으로 바뀐다.",
+          "representative_reevaluation": "건물주와 보수파가 도윤의 비용 전가 구조를 인정한다.",
+          "next_battlefield_ticket": "첫 설치 일정과 가입자 전환 증빙이 열린다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "공동구 배선권과 선시공 약정 확보",
+          "secondary_incident": "지역 경쟁자의 워크아웃 프레임과 채권단 설치비 반대 방어",
+          "bundle_expandability": "경쟁자 소문전, 건물주 협상, 설비업체 조건, 공사비 분담 구조로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "건물주 대표",
+          "recognition_reason": "건물주 대표 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "건물주 대표 쪽은 성과 항목(공동구 배선권/선시공 약정)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "예약표, 배선권 약정, 선시공 합의서"
+      },
+      "foreshadow_targets": [
+        14,
+        20
+      ],
+      "callback_sources": [
+        7,
+        12
+      ]
+    },
+    {
+      "block_id": "Block 14",
+      "block_no": 14,
+      "title": "첫 가입자는 돈보다 빠르다",
+      "content": {
+        "context": "공동구 배선권은 잡혔지만 파일럿 설치 첫 주에 예약자가 흔들린다. 통신 대기업은 자기 브랜드로 가입자를 흡수하려 하고, 지역 경쟁자는 무료 설치를 미끼로 PC방 사장들을 흔든다.",
+        "event_villain": "첫 가입자가 빠지면 설치권은 종이 권리로 남는다. 통신사는 브랜드를, 경쟁자는 공짜를 내세운다. 해원은 워크아웃 딱지가 있어 신뢰가 약하다.",
+        "solution": "도윤은 가격 할인 경쟁을 하지 않는다. 그는 PC방 사장들에게 게임 유통권 쿠폰, 심야 장애 대응권, PCS 대리점 단말 할인권을 묶은 '접속권 패키지'를 제안한다. 회선 하나가 아니라 매출을 잃지 않는 시간을 판다.",
+        "reward": "파일럿 구역 첫 PC방 23곳이 해원 데스크 예약표에 남는다. 통신사는 가입자를 얻기 위해 해원 접속권 패키지를 인정하고, 지역 경쟁자의 무료 설치 미끼는 장애 대응권 앞에서 힘이 빠진다."
+      },
+      "stakes": "예약자가 이탈하면 배선권이 비용만 남긴다. 가입자를 가격이 아니라 운영 안정성으로 묶어야 데스크가 접속권 판매자처럼 보인다.",
+      "power_shift": {
+        "protagonist": "배선권 협상자에서 첫 가입자 묶음을 실제로 보유한 접속권 판매자",
+        "antagonist": "통신사와 지역 경쟁자가 가입자 흡수에 실패하고 해원 패키지를 인정해야 하는 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "PC방 사장들",
+          "before": "해원 파일럿을 워크아웃 기업의 모험으로 본다.",
+          "after": "장애 대응권과 게임 쿠폰 때문에 해원 예약표에 남는다."
+        },
+        {
+          "target": "통신 대기업 제휴팀",
+          "before": "도윤을 하청이 아니라 조건을 거는 접점 사업자로 본다.",
+          "after": "초기 가입자 확보를 위해 해원 패키지를 인정한다."
+        }
+      ],
+      "foreshadow": [
+        "PC방 23곳은 후반 게임/콘텐츠 유통 증빙의 첫 표본이 된다.",
+        "장애 대응권은 ISP SLA 협상권으로 확장된다."
+      ],
+      "callback": [
+        "게임 유통권과 대리점 예약표가 가입자 이탈 방어에 쓰인다.",
+        "배선권이 실제 가입자로 바뀐다.",
+        "접속권 패키지에 필요한 선행 증빙이 현재 협상 근거로 다시 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "가입자 잠금",
+        "intensity": 9
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "파일럿 구역 PC방 거리와 대리점",
+        "type": "현장",
+        "macro_battlefield": "첫 가입자 전환"
+      },
+      "time_span": {
+        "duration": "일주일",
+        "in_story_time": "1998년 초여름"
+      },
+      "genre_ext": {
+        "type": "비즈니스_성장",
+        "capital_before": "61",
+        "capital_after": "73",
+        "capital_delta": "12",
+        "profit_loss": "12 증가",
+        "method": "가격 할인 대신 게임 쿠폰, 장애 대응권, 단말 할인권을 묶어 PC방 가입자를 해원 예약표에 남긴다.",
+        "investment_type": "가입자 전환",
+        "deal_type": "접속권 패키지",
+        "leverage_used": [
+          "게임 유통권 쿠폰",
+          "PCS 단말 할인권",
+          "심야 장애 대응권",
+          "대리점 설치 예약표"
+        ],
+        "opponent": {
+          "name": "무료 설치 미끼",
+          "type": "지역 경쟁자/통신 브랜드 압박",
+          "weakness_exploited": "PC방은 무료 설치보다 장애 시간과 게임 매출 손실을 더 두려워하는 점"
+        },
+        "historical_event": "PC방 확산과 초고속망 수요 증가",
+        "time_pressure": "첫 설치 전 예약자가 빠지면 파일럿 단지의 선시공 약정이 흔들린다.",
+        "knowledge_used": "접속권의 초기 고객은 가격보다 다운타임과 콘텐츠 이용권에 민감하다는 미래 감각",
+        "risk_level": "중고위험",
+        "business_sector": "PC방/초고속망/콘텐츠 쿠폰",
+        "section_rotation": "가입자 증빙",
+        "success_pattern": "회선 가격이 아니라 접속 시간이 돈이라는 논리로 가입자를 잠근다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "첫 가입자 묶음",
+          "receipt_line": "파일럿 구역 첫 PC방 23곳이 해원 데스크 예약표에 남고 통신사는 해원 접속권 패키지를 인정한다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "해원 데스크가 첫 가입자 묶음을 실제로 보유한다.",
+          "representative_reevaluation": "PC방 사장들이 해원을 비용이 아니라 매출 방어 수단으로 본다.",
+          "next_battlefield_ticket": "첫 설치와 장애 대응 증빙이 열린다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "PC방 23곳 첫 가입자 묶음 확보",
+          "secondary_incident": "통신사 브랜드 흡수와 지역 경쟁자 무료 설치 미끼 방어",
+          "bundle_expandability": "예약자 이탈 위기, PC방 협상, 패키지 설계, 통신사 인정으로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "PC방 사장들",
+          "recognition_reason": "PC방 사장들 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "PC방 사장들 쪽은 성과 항목(첫 가입자 묶음)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "예약표, 쿠폰 정산표, 장애 대응 약정"
+      },
+      "foreshadow_targets": [
+        15,
+        23
+      ],
+      "callback_sources": [
+        4,
+        12,
+        13
+      ]
+    },
+    {
+      "block_id": "Block 15",
+      "block_no": 15,
+      "title": "장애 한 시간의 가격",
+      "content": {
+        "context": "첫 설치 당일 밤, 파일럿 구역 한 PC방에서 회선 장애가 터진다. 지역 경쟁자는 바로 소문을 퍼뜨리고, 통신 대기업 제휴팀은 책임을 해원 현장 탓으로 돌리려 한다.",
+        "event_villain": "장애는 기술 문제가 아니라 책임 순서 문제다. 통신사는 장비 탓을 피하고, 설비업체는 선시공 조건을 문제 삼고, PC방 사장은 당장 매출이 날아간다고 소리친다. 첫 가입자 증빙이 한 시간 만에 무너질 수 있다.",
+        "solution": "도윤은 미래 기술 설명을 하지 않는다. 장애 로그, 공동구 배선도, 설치 예약표, PC방 매출표를 한 줄로 놓고 책임 순서를 정리한다. 그리고 장애 시간 보상 쿠폰을 게임 유통권에서 즉시 발행하게 한다.",
+        "reward": "PC방 사장은 이탈하지 않는다. 통신사는 파일럿 SLA 초안을 받아들이고, 해원 데스크는 장애 대응권을 유료 옵션으로 올릴 근거를 얻는다. 도윤은 접속권이 회선이 아니라 책임 순서라는 것을 증명한다. PC방 사장들 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+      },
+      "stakes": "첫 장애 대응에 실패하면 파일럿 가입자와 통신사 신뢰가 동시에 사라진다. 책임 순서를 정리해야 접속권이 상품이 된다.",
+      "power_shift": {
+        "protagonist": "첫 가입자 묶음 보유자에서 장애 대응권을 유료 옵션으로 만들 수 있는 운영자",
+        "antagonist": "통신사와 설비업체가 책임 회피를 하려다 SLA 초안에 묶인 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "PC방 사장들",
+          "before": "장애 대응권과 게임 쿠폰 때문에 해원 예약표에 남는다.",
+          "after": "장애 보상과 대응 속도를 보고 이탈하지 않는 초기 고객"
+        },
+        {
+          "target": "통신 대기업 제휴팀",
+          "before": "해원 패키지를 가입자 확보 수단으로 인정한다.",
+          "after": "파일럿 SLA 초안을 받아들이며 책임 순서에 들어온다."
+        }
+      ],
+      "foreshadow": [
+        "파일럿 SLA는 통신 관문 수익 계약으로 확장된다.",
+        "장애 보상 쿠폰은 콘텐츠 권리와 접속권이 결합되는 반복 상품이 된다."
+      ],
+      "callback": [
+        "장애 대응권이 실제 장애 장면에서 증빙으로 회수된다.",
+        "게임 유통권이 보상 쿠폰으로 즉시 쓰인다.",
+        "유료 옵션 근거에 필요한 선행 증빙이 현재 협상 근거로 다시 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "위기 즉시 상품화",
+        "intensity": 9
+      },
+      "tension_level": 9,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "파일럿 PC방과 해원 데스크 야간 상황실",
+        "type": "현장/상황실",
+        "macro_battlefield": "첫 장애 대응과 SLA"
+      },
+      "time_span": {
+        "duration": "하룻밤",
+        "in_story_time": "1998년 초여름"
+      },
+      "genre_ext": {
+        "type": "비즈니스_성장",
+        "capital_before": "73",
+        "capital_after": "85",
+        "capital_delta": "12",
+        "profit_loss": "12 증가",
+        "method": "장애 로그, 배선도, 예약표, 매출표를 대조해 책임 순서를 정리하고 보상 쿠폰으로 이탈을 막아 SLA 초안을 얻는다.",
+        "investment_type": "장애 대응권/SLA",
+        "deal_type": "유료 옵션 근거",
+        "leverage_used": [
+          "장애 로그",
+          "공동구 배선도",
+          "PC방 매출표",
+          "게임 유통권 보상 쿠폰",
+          "통신사 파일럿 책임"
+        ],
+        "opponent": {
+          "name": "장애 책임 회피",
+          "type": "통신사/설비업체/경쟁자 압박",
+          "weakness_exploited": "첫 파일럿이 실패하면 통신사도 가입자 증빙을 잃는 점"
+        },
+        "historical_event": "초기 초고속망 품질과 PC방 매출 민감도",
+        "time_pressure": "PC방 영업이 끝나기 전에 보상과 복구 순서를 제시해야 한다.",
+        "knowledge_used": "인터넷 상품의 진짜 값은 회선 속도보다 장애 책임 순서와 SLA에서 나온다는 미래 감각",
+        "risk_level": "고위험",
+        "business_sector": "초고속망/SLA/PC방",
+        "section_rotation": "유료 옵션 근거 단계",
+        "success_pattern": "장애를 사과가 아니라 유료 책임권으로 바꾼다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "파일럿 SLA 초안",
+          "receipt_line": "통신사는 파일럿 SLA 초안을 받아들이고 해원 데스크는 장애 대응권을 유료 옵션으로 올릴 근거를 얻는다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "해원 데스크가 첫 장애를 상품 구조로 흡수한다.",
+          "representative_reevaluation": "PC방 사장들이 해원을 책임 순서를 아는 접속권 판매자로 본다.",
+          "next_battlefield_ticket": "SLA와 가입자 증빙을 묶어 통신 관문 수익 계약으로 넘어간다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "첫 회선 장애를 처리하고 파일럿 SLA 초안 획득",
+          "secondary_incident": "통신사/설비업체 책임 회피와 경쟁자 소문전을 보상 쿠폰으로 방어",
+          "bundle_expandability": "장애 발생, 책임 회피, PC방 이탈 위기, 보상 쿠폰, SLA 초안으로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "PC방 사장들",
+          "recognition_reason": "PC방 사장들 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "PC방 사장들 쪽은 성과 항목(파일럿 SLA 초안)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다.",
+          "selected_reward_sentence": "PC방 사장들 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "장애 로그, 배선도, 매출표, 보상 쿠폰 정산"
+      },
+      "foreshadow_targets": [
+        16,
+        20,
+        31
+      ],
+      "callback_sources": [
+        4,
+        13,
+        14
+      ]
+    }
+  ]
+}

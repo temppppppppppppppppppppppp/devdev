@@ -1,0 +1,80 @@
+{
+  "events": [
+    "해고 통보와 계정 만료 72시간 안에 ERP 반품 정산 로그에서 미집행 권리 묶음을 발견한다.",
+    "B동/C동 창고 SKU, 폐기 보류 공문, PB 브랜드 라이선스가 반품권과 리퍼브권으로 재해석된다.",
+    "외주계약 원본, 법무 동석권, 상표권 갱신 접수 확인서가 현금 합의보다 강한 첫 권리 receipt가 된다.",
+    "AS 대행 파일럿, 품질 기준표, 실패품 폐기 결정권, D-RN 라벨이 반복 처리 물량과 SPV 계약으로 이어진다.",
+    "달러 RMA mismatch와 supplier debit note가 달러 계좌, 해외 정산 검증권, supplier portal observer 계정으로 확장된다.",
+    "출입로 4.2미터, 감정평가, 하역 proof가 현금 합의 대신 장기 물류 슬롯으로 닫힌다.",
+    "포장 규격/품질/보험/고객 대응 proof가 납품권 방어, 유지보수 MSA, 생산 슬롯 receipt로 이어진다.",
+    "권리 묶음 가격표, escrow, 데이터 표준, 해외 channel, retention contract, 권리 운영 헌장이 70-block receipt index를 완성한다."
+  ],
+  "npc_candidates": [
+    "윤서린: 내부 감사 witness. ERP 로그 보존, 감사 보존함, SPV 리스크 검토로 도윤의 계산을 공식 절차화한다.",
+    "박만철: 반품창고 field operator. SKU 이동표, 현장 하역 proof, D-RN 반복 처리 라인을 들고 오는 현장 축이다.",
+    "최문식: 정산팀장 opening opponent. 해고와 책임 전가를 밀어붙이다가 도윤의 계약 검토권을 승인할 수밖에 없다.",
+    "한규리: 법무 validator. 법무 동석권, 외주계약 원본 열람, 부속합의 리스크를 절차로 고정한다.",
+    "김원재: 외환 gatekeeper. 달러 계좌와 해외 정산 검증 전용 계좌의 절차 벽을 만든다.",
+    "노태경: 품질 expert. 포장 규격, 부적합 원장, 검수 protocol을 생산 슬롯 proof로 바꾼다.",
+    "배수민: B2B operator. 고객 대응 SLA와 유지보수 MSA를 반복 매출/납품권 방어로 연결한다.",
+    "민카이/SableWorks/한빛캐피탈/리커버넷: 해외 channel, 금융권 담보, 경쟁 플랫폼 압박을 담당하는 후반 확장 축."
+  ],
+  "crisis_candidates": [
+    "해고 예정자 신분과 계정 만료로 첫 파일 접근권이 닫힐 위기.",
+    "거래처와 외주업체가 현금 합의 또는 법무 통지서로 권리 묶음을 묻으려는 위기.",
+    "AI 초안 오독이나 자동화 shortcut이 권리 운영자 엔진을 오염시킬 위기.",
+    "품질 클레임, 보험 한도, 고객 SLA 실패가 납품권과 생산 슬롯을 막는 위기.",
+    "한강디벨롭/다온 물류본부가 출입로 병목권을 현금 합의나 대체로로 약화하는 위기.",
+    "경쟁 플랫폼이 공급사 라인을 차단하고 데이터 표준을 복제하려는 위기.",
+    "투자자와 해외 파트너가 지분, 선불금, helper poaching으로 운영권을 포획하려는 위기."
+  ],
+  "terms": [
+    "ERP 정산 로그",
+    "미수채권 aging report",
+    "반품권",
+    "위약금 조항",
+    "재납품 우선권",
+    "폐기 보류 공문",
+    "SKU 이동표",
+    "PB 브랜드 라이선스",
+    "상표권 갱신 접수 확인서",
+    "AS 대행 파일럿 약정서",
+    "D-RN 라벨",
+    "supplier debit note",
+    "RMA mismatch",
+    "settlement advice",
+    "출입로 병목 가치 산정서",
+    "제한형 품질 보증보험",
+    "유지보수 MSA",
+    "생산 슬롯",
+    "회수권 waterfall",
+    "증빙 hash 원장",
+    "권리 운영 표준 계약",
+    "권리 운영 헌장"
+  ],
+  "scene_details": [
+    "오프닝은 해고 굴욕을 오래 늘이지 않고 계정 만료, ERP 로그 발견, 창고 확인, 현금 합의 거절, 접근권 receipt까지 압축한다.",
+    "각 성공 장면은 입금보다 서명, 공문, 계정 권한, 검토석, 출입권, 데이터 feed 같은 reader-visible receipt로 체감돼야 한다.",
+    "상대의 반격은 도윤을 막는 동시에 새 공식 권한을 열어 주는 역전 구조로 써야 한다.",
+    "현장 장면에는 창고 SKU, 라벨, 포장 규격, 하역 동선, 품질 원장, 고객 SLA처럼 손에 잡히는 proof가 있어야 한다.",
+    "조력자 장면은 도윤을 좋아하게 되는 장면이 아니라 각자의 계산으로 evidence carrier/operator/validator가 되는 장면이어야 한다.",
+    "후반부는 상장/대박이 아니라 장기 생산권, 표준 계약, retention contract, 권리 운영 헌장으로 운영권이 굳어지는 장면이어야 한다."
+  ],
+  "notes": "Retroactive Stage 0 material bundle built from the already-audited Phase0/TR/BI/work_guard packet. It does not add external reference cards, donor material, root TR/BI promotion, registry admission, immediate-use, or B071+ content.",
+  "opening_bundle_contract": {
+    "bundle_window": "TR 2~6",
+    "macro_battlefield": "해고 예정 정산 담당자가 반품창고/계약서/상표권 공백을 권리 묶음으로 읽어 첫 접근권과 계약 검토권을 확보하는 opening battlefield",
+    "macro_battlefield_map": [
+      "TR 2: 창고 SKU와 감사 공문으로 폐기 예정 반품권을 공식 보존 대상으로 만든다.",
+      "TR 3: 현금 합의를 거절하고 계약 검토 담당 등록과 반품권 인정서를 얻는다.",
+      "TR 4: 외주업체 법무 역공을 법무 동석권, 외주계약 원본 열람권, C동 상표권 gate로 되받는다.",
+      "TR 5: 상표권 갱신료 미납과 폐기 브랜드를 60일 조건부 우선사용권으로 바꾼다.",
+      "TR 6: 정산팀 빈자리를 차지해 C동 가격표 작성 권한과 채권 옵션 gate를 연다."
+    ],
+    "bundle_goal": "독자가 Block 2~6 안에서 도윤의 첫 장기 보상이 현금이 아니라 접근권, 계약 검토권, 상표권/리퍼브 전환권이라는 것을 체감하게 한다.",
+    "first_signboard_block": 2,
+    "representative_reevaluation_block": 3,
+    "next_battlefield_ticket_block": 6,
+    "timing_reconciliation_note": "Block 1은 hook/계정 만료/첫 receipt를 빠르게 열고, TR 2~6이 opening macro battlefield의 reader-earning window로 작동한다. 이 스냅샷은 block=episode로 읽지 않고 2~6화 분량 planning bundle로 해석한다."
+  }
+}

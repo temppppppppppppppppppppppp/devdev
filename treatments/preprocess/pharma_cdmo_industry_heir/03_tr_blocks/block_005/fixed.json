@@ -94,6 +94,60 @@
       "receipt_type": "next_gate_ticket",
       "receipt_line": "강태오는 병원 평가 접수 확인 팩스와 온도기록 보완서를 이용해 글로벌 샘플 문서 검토 및 설비 예비 방문 ticket을 확보한다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "병원 평가 결과를 포기하고도 접수 기록과 문서 일관성으로 글로벌 예비 방문을 여는 교환 승리",
+      "recognition_signal": "박도현의 시선 변화: 병원 평가 결과는 지키되 평가 접수 확인 팩스를 넘기며 태오바이오를 계산 가능한 긴급 공급 후보로 유지한다",
+      "reward_signal": "강태오는 병원 평가 접수 확인 팩스와 온도기록 보완서를 이용해 글로벌 샘플 문서 검토 및 설비 예비 방문 ticket을 확보한다.",
+      "growth_signal": "강태오는 병원 이름값을 훔치지 않고, 평가 접수와 책임자 서명만으로 글로벌 담당자를 움직인다.",
+      "expectation_signal": "2주 뒤 글로벌 샘플 문서 검토와 설비 예비 방문 일정이 열린다",
+      "reader_feel": "독자는 「샘플 네 박스」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 병원 평가 접수 확인 팩스와 온도기록 보완서를 이용해 글로벌 샘플 문서 검토 및 설비 예비 방문 ticket을 확보한다. 성장 장면: 강태오는 병원 이름값을 훔치지 않고, 평가 접수와 책임자 서명만으로 글로벌 담당자를 움직인다. 다음 기대감: 2주 뒤 글로벌 샘플 문서 검토와 설비 예비 방문 일정이 열린다",
+      "mature_success_signal": "강태오는 샘플 네 박스의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "병원 평가 결과를 포기하고도 접수 기록과 문서 일관성으로 글로벌 예비 방문을 여는 교환 승리",
+        "recognition": "박도현의 시선 변화: 병원 평가 결과는 지키되 평가 접수 확인 팩스를 넘기며 태오바이오를 계산 가능한 긴급 공급 후보로 유지한다",
+        "reward": "강태오는 병원 평가 접수 확인 팩스와 온도기록 보완서를 이용해 글로벌 샘플 문서 검토 및 설비 예비 방문 ticket을 확보한다.",
+        "growth": "강태오는 병원 이름값을 훔치지 않고, 평가 접수와 책임자 서명만으로 글로벌 담당자를 움직인다.",
+        "expectation": "2주 뒤 글로벌 샘플 문서 검토와 설비 예비 방문 일정이 열린다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 박도현의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 2주 뒤 글로벌 샘플 문서 검토와 설비 예비 방문 일정이 열린다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "대학병원 약제위원회 긴급 평가가 잡힌 아침, 강태오는 병원에 보낸 샘플 네 박스의 온도기록 사본을 다시 묶는다. 박도현은 정식 납품 전에 병원 내부 검수 결과를 외부로 공유할 수 없다고 선을 긋지만, 태오는 병원 이름이 아니라 '대학병원 긴급 평가 접수 기록'만 필요하다.",
+      "proof_action": "태오는 병원 평가 결과를 요구하지 않는다. 대신 박도현에게 구매실 직통선으로 '평가 접수와 검수 보류 없음'만 확인하는 팩스 문구를 요청한다. 젖은 온도 라벨은 숨기지 않고 수기 원장, 냉장밴 운행기록, 약제부 도착 시각 서명으로 보완한다.",
+      "proof_axis": "전생에서 글로벌 CDMO 담당자가 완성된 명성보다 추적 가능한 결함 관리와 병원 검수 흔적을 먼저 본다는 기억",
+      "recognition_or_resistance_signal": "박도현 -> 병원 평가 결과는 지키되 평가 접수 확인 팩스를 넘기며 태오바이오를 계산 가능한 긴급 공급 후보로 유지한다",
+      "receipt_asset": "강태오는 병원 평가 접수 확인 팩스와 온도기록 보완서를 이용해 글로벌 샘플 문서 검토 및 설비 예비 방문 ticket을 확보한다.",
+      "reward_asset_classes": [
+        "cdmo_slot"
+      ],
+      "next_regulated_gate": "2주 뒤 글로벌 샘플 문서 검토와 설비 예비 방문 일정이 열린다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 박도현의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 2주 뒤 글로벌 샘플 문서 검토와 설비 예비 방문 일정이 열린다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {

@@ -1,0 +1,142 @@
+{
+  "block_id": "Block 53",
+  "title": "은행은 PEF 가격표를 싫어한다",
+  "content": {
+    "context": "limited assurance review가 시작되자 서민재가 다시 도윤을 부른다. 은행은 PEF의 14억 원 가격표를 좋아하지 않는다. 통매각은 회수율을 빠르게 만들지만, 그 뒤 모든 upside는 백승환에게 간다. 반대로 도윤 SPV가 control을 유지하면 은행은 리스크를 더 본다. 서민재는 묻는다. 통매각보다 은행이 믿을 cashflow가 있느냐고.",
+    "event_villain": "채권단 가격 재산정 라인은 14억 원 PEF valuation floor를 기준으로 회수액을 다시 계산하자고 압박한다. 은행 신용심사팀은 도윤 포트폴리오가 아직 법인 소유권이 아니라 권리 묶음이라 담보성이 애매하다고 본다. 백승환은 은행에 통매각이 가장 깔끔한 exit라고 흘린다. 세원메디링크와 리턴브릿지 대표들은 은행이 리파이낸싱을 거절하면 PEF 현금이 유일한 길이라고 떠든다. 도윤이 valuation만 주장하면 은행은 담보가 아니라 희망가로 본다.",
+    "solution": "도윤은 14억 원 가격표를 담보로 내지 않는다. 그는 cashflow만 다시 묶는다. 삼진콜드 운송 invoice, 급식 lockbox, 리턴브릿지 seller pilot deposit, 세원메디링크 소모품 escrow, 보험 pre-claim fee, 제조사 선입금 waterfall을 월별 입금 경로로 정렬한다. 각 항목 옆에는 non-assumption schedule과 account signatory 유지 조건을 붙인다. 그는 은행에 전체 포트폴리오 담보가 아니라 cashflow waterfall 기반 90일 bridge refinancing term sheet를 요구한다. PEF valuation floor는 담보가 아니라 downside sale option으로만 둔다.",
+    "reward": "은행은 장기 리파이낸싱을 승인하지 않는다. 그러나 90일 bridge refinancing 예비 term sheet를 발급한다. 한도는 8억 원, 선행 조건은 public receipt ledger limited assurance 중간 확인, cashflow waterfall 계좌, 도윤 SPV account signatory 유지, PEF 통매각 LOI를 downside sale option으로만 보관하는 것이다. 서민재는 채권단 가격 재산정 라인에 리파이낸싱 검토 중이라는 회의록 메모를 남긴다. 도윤은 PEF 돈을 이긴 게 아니다. 은행이 읽을 수 있는 90일 현금흐름 방어선을 만들어 통매각만이 유일한 길이 아니게 만들었다."
+  },
+  "incident_beats": [
+    "채권단 재산정 라인과 백승환이 14억 원 통매각을 안정 exit로 밀고, 은행은 권리 묶음의 담보성을 의심한다",
+    "도윤이 valuation 주장이 아니라 삼진콜드, 급식, 리턴브릿지, 세원메디링크 cashflow를 월별 waterfall로 재정렬한다",
+    "8억 원 90일 bridge refinancing 예비 term sheet, cashflow waterfall 계좌 조건, account signatory 유지, 리파이낸싱 검토 회의록 메모 receipt가 확보된다"
+  ],
+  "stakes": "은행이 통매각 외 길을 보지 못하면 도윤은 PEF junior partner로 밀린다. 반대로 장기 리파이낸싱을 무리하게 요구하면 은행은 권리 묶음 담보성을 이유로 닫는다. 필요한 것은 90일 동안 PEF 압박을 버틸 cashflow bridge다.",
+  "power_shift": {
+    "protagonist": "legal receipt index를 만든 legality-index operator에서 PEF 가격표를 은행 cashflow term sheet로 방어하는 refinancing-bridge operator로 이동한다.",
+    "antagonist": "채권단 재산정 라인과 백승환은 통매각 안정성을 밀지만, 도윤의 cashflow waterfall과 downside sale option 구조 때문에 은행이 90일 검토 여지를 연다."
+  },
+  "relationship_delta": [
+    {
+      "target": "서민재",
+      "before": "PEF 가격표와 은행 리스크 사이에서 도윤에게 현금흐름 담보를 요구하는 채권은행 팀장",
+      "after": "90일 bridge refinancing 예비 term sheet와 리파이낸싱 검토 회의록 메모를 남긴다",
+      "continuity_anchor_before": "도윤의 제한 한도 제안을 신용심사팀에 올려 급여 지급 안정용 한도를 받아낸다"
+    },
+    {
+      "target": "채권단 가격 재산정 라인",
+      "before": "14억 원 PEF valuation floor를 기준으로 빠른 회수액을 다시 계산하려는 라인",
+      "after": "은행 리파이낸싱 검토 메모 때문에 통매각 단일 exit로 밀어붙이지 못한다"
+    },
+    {
+      "target": "백승환",
+      "before": "통매각이 가장 깔끔한 exit라고 은행에 흘리는 PEF 파트너",
+      "after": "은행이 PEF 가격표를 downside option으로만 보자 통매각 압박 속도가 늦어진다",
+      "continuity_anchor_before": "통매각 LOI는 유지하지만 redacted proof room과 후순위 bridge 참여권으로 검토 범위를 좁힌다"
+    },
+    {
+      "target": "포트폴리오 회사 대표들",
+      "before": "은행이 리파이낸싱을 거절하면 PEF 현금이 유일하다고 흔들리는 대표들",
+      "after": "90일 term sheet가 나오자 즉시 PEF 편으로 돌아서지 않는다",
+      "continuity_anchor_before": "공개 receipt ledger에 자기 회사의 책임 경계가 표시되자 즉시 이탈하지 않는다"
+    }
+  ],
+  "foreshadow": [
+    "90일 bridge refinancing 예비 term sheet는 후속 국면의 리파이낸싱 역전으로 확장된다.",
+    "cashflow waterfall 계좌 조건은 후속 국면에서 포트폴리오 보수파가 현금을 숨길 때 control gate가 된다.",
+    "limited assurance 중간 확인 조건은 후속 국면의 LP proof room에 붙어 외부 신뢰 proof가 된다.",
+    "PEF valuation floor를 downside sale option으로만 둔 구조는 백승환의 후순위 참여권을 약점으로 만든다."
+  ],
+  "callback": [
+    "후속 국면의 limited assurance review engagement letter를 은행 term sheet 선행 조건으로 쓴다.",
+    "후속 국면의 14억 원 valuation floor를 담보가 아니라 downside sale option으로 낮춘다.",
+    "후속 국면의 lockbox 기반 소액 운전자금 구조를 포트폴리오 전체 cashflow waterfall로 확장한다.",
+    "후속 국면의 rights-only portfolio memo를 은행이 읽을 cashflow 항목으로 재정렬한다."
+  ],
+  "emotional_beat": {
+    "type": "refinancing_bridge_cider",
+    "intensity": 8
+  },
+  "tension_level": 9,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "채권은행 리파이낸싱 회의실 / 도윤 SPV cashflow waterfall 화면 / PEF 통매각 LOI 검토 thread",
+    "type": "bridge refinancing term-sheet negotiation"
+  },
+  "time_span": {
+    "duration": "이틀",
+    "in_story_time": "후속 국면의 limited assurance review 착수 직후"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "공개 receipt ledger / hash-linked receipt index / 10영업일 limited assurance review engagement letter / PEF legal discount 문구 보류 / 리파이낸싱 논의 보류 10일 유예 / portfolio company 책임 경계표 / advisory exit·내부정보 비사용 proof 재정렬 / redacted proof room access log",
+    "capital_after": "8억 원 90일 bridge refinancing 예비 term sheet / cashflow waterfall 계좌 조건 / 도윤 SPV account signatory 유지 조건 / PEF 14억 원 valuation floor의 downside sale option 처리 / limited assurance 중간 확인 선행 조건 / 채권단 리파이낸싱 검토 회의록 메모 / 통매각 단일 exit 보류 / 월별 portfolio cashflow schedule",
+    "capital_delta": "장기 리파이낸싱 승인 실패 / 8억 원 90일 bridge term sheet 확보 / 통매각 단일 exit 보류 / account signatory 유지",
+    "profit_loss": "장기 자금 조달은 실패. 대신 PEF 통매각 압박을 90일 늦출 bridge refinancing gate 확보",
+    "method": "PEF valuation을 담보로 쓰지 않고, 포트폴리오의 독립 cashflow receipt와 non-assumption schedule을 월별 waterfall로 묶어 90일 bridge term sheet를 만든다.",
+    "investment_type": "distressed portfolio bridge refinancing",
+    "deal_type": "90-day bridge term sheet / cashflow waterfall / downside sale option",
+    "leverage_used": [
+      "limited assurance review engagement letter",
+      "public receipt ledger",
+      "삼진콜드 운송 invoice",
+      "급식 lockbox",
+      "리턴브릿지 seller pilot deposit",
+      "세원메디링크 소모품 escrow",
+      "보험 pre-claim fee",
+      "제조사 선입금 waterfall",
+      "PEF 14억 원 valuation floor"
+    ],
+    "opponent": {
+      "name": "채권단 가격 재산정 라인 / 백승환 / 은행 신용심사팀 / 포트폴리오 회사 대표들",
+      "type": "creditor repricing pressure, PEF sale-option pressure, bank collateral-skeptic gate, and portfolio-company liquidity anxiety",
+      "weakness_exploited": "은행은 권리 묶음 담보를 싫어하지만, 외부 receipt가 붙은 월별 cashflow waterfall과 PEF downside option은 90일 bridge로 계산할 수 있다"
+    },
+    "historical_event": null,
+    "time_pressure": "채권단이 PEF 통매각을 단일 exit로 확정하기 전 은행이 읽을 90일 cashflow bridge를 열어야 한다.",
+    "knowledge_used": "회귀 전 PEF 가격표를 담보처럼 들이민 operator는 은행에 거절당했고, 살아남은 구조는 cashflow waterfall 기반 90일 bridge였다는 기억",
+    "risk_level": "극고위험",
+    "business_sector": "리파이낸싱 / 채권은행 / PEF 통매각 / portfolio cashflow / bridge term sheet",
+    "section_rotation": "PEF가 사려는 건 회사가 아니다",
+    "success_pattern": "장기 리파이낸싱 실패를 90일 bridge와 통매각 보류로 전환",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "bridge_refinancing_term_sheet_receipt",
+      "receipt_line": "8억 원 90일 bridge refinancing 예비 term sheet, cashflow waterfall 계좌 조건, 도윤 SPV account signatory 유지, PEF valuation floor의 downside sale option 처리, limited assurance 중간 확인 선행 조건, 리파이낸싱 검토 회의록 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 PEF valuation을 담보처럼 내민 operator는 은행에 거절당했고, cashflow waterfall 기반 90일 bridge만 살아남았다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 operator는 PEF 가격표로 은행을 설득하려다 권리 묶음 담보성이 부족하다는 이유로 거절당했다.",
+      "changed_event": "이번에는 도윤이 PEF 가격표를 downside option으로 낮추고 월별 cashflow waterfall을 제시해 90일 bridge를 연다.",
+      "ripple_effect": "포트폴리오 대표들은 즉시 PEF 편으로 돌아서지 않고, 도윤은 LP proof room을 열 시간을 번다."
+    },
+    "death_flag": {
+      "avoided": "은행 리파이낸싱 실패와 PEF 통매각 단일 exit 확정으로 control을 잃는 미래",
+      "method": "cashflow waterfall, limited assurance 중간 확인, 90일 bridge term sheet, downside sale option으로 방어한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 PEF 14억 원 가격표를 담보 칸이 아니라 downside sale option 칸에 먼저 넣는다.",
+      "suspicion_from": "서민재와 백승환"
+    },
+    "future_prep": {
+      "action": "cashflow waterfall 계좌 조건을 이용해 포트폴리오 회사 보수파가 숨기는 현금흐름을 드러낸다.",
+      "target_event": "후속 국면 보수파는 현금을 숨긴다"
+    }
+  },
+  "block_no": 53,
+  "foreshadow_targets": [
+    54,
+    55,
+    60
+  ]
+}

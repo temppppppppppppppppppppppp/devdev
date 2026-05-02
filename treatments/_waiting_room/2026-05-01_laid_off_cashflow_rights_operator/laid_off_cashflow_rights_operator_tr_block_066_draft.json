@@ -1,0 +1,156 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "66",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 066 draft only. Waiting-room production continuation; not root canonical, not BI, not immediate-use.",
+  "blocks": [
+    {
+      "block_id": "Block 66",
+      "block_no": 66,
+      "title": "지분보다 운영권",
+      "episode_span_intent": "2~6화 분량. 투자자의 지분 요구, board observer와 veto 조항 압박, 도윤의 운영권 lock과 권리 처분 제한 조항 확보를 압축한다.",
+      "content": {
+        "context": "그레이브릿지는 valuation memo를 보고 빠르게 숫자를 낸다. 투자금 80억, 지분 18퍼센트, board observer, 주요 권리 처분 veto. 겉으로는 매력적이다. 도윤권리운영은 한 번에 커질 수 있다. 그러나 veto 조항은 권리 운영자의 손목을 잡는다. 도윤은 돈보다 먼저 어떤 행동이 느려지는지 본다. 권리 처분, escrow release, 현지 partner 교체, 생산 슬롯 확대, 데이터 feed 협상. 이 다섯 개가 느려지면 도윤의 사업은 멈춘다.",
+        "event_villain": "첫 번째 사건은 지분 요구다. 그레이브릿지는 도윤권리운영이 더 큰 시장으로 가려면 기관 자금과 governance가 필요하다며 지분 18퍼센트를 요구한다. 도윤은 금액을 부정하지 않는다. 대신 veto 범위를 문제 삼는다. 투자자는 리스크 관리를 말하지만, 도윤에게는 권리 처분 속도를 늦추는 장치다.",
+        "second_incident": "두 번째 사건은 board observer 조건이다. 투자자는 원본 data room 일부를 상시 열람하겠다고 한다. 다온 보안팀과 SableWorks는 이 조건에 불편해한다. 도윤은 투자자와 파트너들을 같은 표에 올린다. 상시 원본 열람은 불가, hash index와 분기별 검증 packet은 가능, 권리 처분 veto는 일정 금액 이상 신규 부채에만 제한, 운영권과 partner 교체권은 도윤에게 남는다.",
+        "solution": "도윤은 투자금을 전부 거절하지 않는다. 지분 대신 전환권 없는 revenue-share note, board observer 없는 분기 검증권, 운영권 lock 조항, 권리 처분 제한 범위 축소, partner 교체권 유지, 데이터 원본 상시 열람 금지. 그레이브릿지는 지분을 낮추는 대신 수익 배분을 검토한다. 도윤은 돈보다 손의 속도를 지킨다.",
+        "reward": "블록 끝에서 도윤은 80억 투자를 받지 않는다. 대신 revenue-share note 조건표, 운영권 lock 조항, partner 교체권 유지 문구, 권리 처분 veto 범위 축소안, 분기별 hash 검증 packet 제공 조건, 원본 상시 열람 금지 조항을 얻는다. 도윤은 말한다. 돈은 느린 손을 보상하지 못합니다."
+      },
+      "stakes": "지분과 veto를 받으면 도윤권리운영은 커지지만 권리 처분 속도와 partner 교체권을 잃는다. 운영권 lock을 얻어야 다음 helper retention과 장기 생산권 선택에서 흔들리지 않는다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "그레이브릿지가 80억 투자와 지분 18퍼센트, 주요 권리 처분 veto를 요구하자, 도윤이 권리 운영 속도 저하를 문제 삼음",
+        "incident_2": "투자자가 board observer와 원본 상시 열람을 요구하자, 도윤이 hash packet과 분기 검증권으로 좁히고 운영권/partner 교체권을 지킴",
+        "next_actionable_gate": "helper poaching 공격, operator 인센티브 재설계, 장기 생산권 선택, 표준 계약 채택",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 큰 투자금보다 자기 손의 속도를 고른다. 운영권과 partner 교체권을 잃으면 권리 운영자는 투자자 승인 대기자가 된다.",
+        "morality_position": "governance 리스크 관리처럼 보이지만 핵심은 도윤권리운영의 결정 속도와 원본 통제권을 지키는 것이다.",
+        "efficiency_choice": "투자 거절로 끝내지 않고 revenue-share note와 분기 hash packet으로 돈의 길은 남겨 둔다."
+      },
+      "power_shift": {
+        "protagonist": "investor data room과 valuation gate를 가진 투자 실사 통제자 -> 운영권 lock과 원본 열람 제한을 확보한 governance 방어자",
+        "antagonist": "그레이브릿지/다온 보안팀/SableWorks: 지분/veto 요구자 / 원본 열람 우려자 / partner 권한 검토자 -> 운영권 lock과 제한 검증 구조를 기준으로 협상해야 하는 상대",
+        "system": "investor data room과 valuation memo -> revenue-share note 조건표 + 운영권 lock 조항 + partner 교체권 유지 문구 + 권리 처분 veto 범위 축소안 + 분기별 hash 검증 packet 제공 조건 + 원본 상시 열람 금지 조항"
+      },
+      "relationship_delta": [
+        {
+          "target": "그레이브릿지",
+          "before": "권리 포트폴리오 원본 전체를 요구하다 data room 제한 열람 구조를 받아야 하는 투자자",
+          "after": "지분과 veto를 요구했지만 revenue-share note와 분기 검증권을 검토하는 투자자"
+        },
+        {
+          "target": "다온 보안팀",
+          "before": "익명화 판단 feed와 hash 검증권을 제한적으로 승인하는 보안 gatekeeper",
+          "after": "투자자 원본 상시 열람 금지를 요구하는 보안 carrier"
+        },
+        {
+          "target": "SableWorks",
+          "before": "조건부 channel review와 자동 확대 검토 clause를 여는 공급사",
+          "after": "투자자 veto가 해외 partner 교체권을 늦추지 않는지 확인하는 공급사"
+        }
+      ],
+      "foreshadow": [
+        "helper poaching",
+        "인센티브 재설계",
+        "장기 생산권 선택",
+        "표준 계약 채택"
+      ],
+      "callback": [
+        "investor data room이 분기별 hash packet 조건으로 회수됨",
+        "원본 제한 열람 protocol이 상시 열람 금지 조항으로 회수됨",
+        "partner liability table이 partner 교체권 유지 문구로 회수됨"
+      ],
+      "emotional_beat": {
+        "type": "control_over_capital",
+        "intensity": 8
+      },
+      "tension_level": 9,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "그레이브릿지 투자 조건 회의 / 다온 보안 검토 / SableWorks partner 권한 확인",
+        "type": "투자 조건 / governance / 원본 통제"
+      },
+      "time_span": {
+        "duration": "5일",
+        "in_story_time": "2027년 4월 첫째 주"
+      },
+      "genre_ext": {
+        "capital_before": "investor data room v0 + hash 검증 index + 제한 열람 protocol + 권리별 valuation memo + 민카이 liability weight table + 투자 조건 논의 gate",
+        "capital_after": "revenue-share note 조건표 + 운영권 lock 조항 + partner 교체권 유지 문구 + 권리 처분 veto 범위 축소안 + 분기별 hash 검증 packet 제공 조건 + 원본 상시 열람 금지 조항",
+        "capital_delta": "투자 data room과 valuation gate를 운영권 lock, partner 교체권, 제한 검증 구조, revenue-share note 조건표로 전환",
+        "profit_loss": "80억 지분 투자 미수령. 운영권과 원본 통제권 방어",
+        "method": "지분/veto 대신 revenue-share note와 분기 검증권으로 돈의 길은 남기고 운영권을 잠금",
+        "deal_type": "operating-control lock / revenue-share note / veto carveout",
+        "leverage_used": [
+          "valuation memo",
+          "hash index",
+          "다온 보안 조건",
+          "SableWorks partner clause",
+          "운영 속도 proof"
+        ],
+        "opponent": {
+          "name": "그레이브릿지/다온 보안팀/SableWorks",
+          "type": "지분/veto 요구자 / 원본 열람 우려자 / partner 권한 검토자",
+          "weakness_exploited": "투자자도 원본 상시 열람과 광범위 veto가 파트너 계약을 흔들면 투자 대상 가치가 떨어진다는 점"
+        },
+        "time_pressure": "투자 조건 발표 전 veto 범위와 운영권 lock을 확정해야 함",
+        "risk_level": "고위험",
+        "business_sector": "투자 governance / 운영권 / 원본 통제",
+        "section_rotation": "ARC-07 governance defense turn",
+        "success_pattern": "큰 투자금을 미루고 운영권 lock과 제한 검증 구조를 얻는 통제형 승리",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "operating_control_lock",
+          "receipt_line": "돈은 느린 손을 보상하지 못합니다.",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "운영권 lock",
+          "partner 교체권 유지",
+          "veto 범위 축소",
+          "원본 상시 열람 금지",
+          "revenue-share note 조건"
+        ],
+        "document_evidence": [
+          "revenue-share note 조건표",
+          "운영권 lock 조항",
+          "partner 교체권 문구",
+          "veto 범위 축소안",
+          "분기 hash packet 조건"
+        ],
+        "field_validation": [
+          "80억 지분 투자 미수령",
+          "운영권 lock 확보",
+          "원본 상시 열람 금지"
+        ],
+        "witness_carrier": [
+          "그레이브릿지 조건표",
+          "다온 보안팀 의견",
+          "SableWorks partner 권한 확인",
+          "한빛캐피탈 자문"
+        ],
+        "receipt": [
+          "revenue-share note 조건표",
+          "운영권 lock 조항",
+          "partner 교체권 유지 문구",
+          "권리 처분 veto 범위 축소안",
+          "분기별 hash 검증 packet 제공 조건",
+          "원본 상시 열람 금지 조항"
+        ],
+        "next_gate": "helper poaching 공격, operator 인센티브 재설계, 장기 생산권 선택, 표준 계약 채택"
+      },
+      "foreshadow_targets": [
+        67,
+        68,
+        69
+      ]
+    }
+  ]
+}

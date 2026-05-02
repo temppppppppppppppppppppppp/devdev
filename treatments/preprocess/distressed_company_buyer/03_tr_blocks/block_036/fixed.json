@@ -1,0 +1,142 @@
+{
+  "block_id": "Block 36",
+  "title": "통째로 사지 않습니다",
+  "content": {
+    "context": "1차 반품권 회수표가 나오자 리턴브릿지 대표는 처음으로 회사를 팔 수 있겠다고 생각한다. 창고 임대인도 30일 option이 살아 있으니 통매각 가격을 다시 올릴 수 있다고 본다. 그 틈에 퀵리턴이 들어온다. 제안서는 단순하다. 밀린 임대료, 일부 플랫폼 패널티, 대표 개인 보증을 한꺼번에 처리해 주는 대신 리턴브릿지 법인, seller data, 검수표, 창고 option을 통째로 넘기라는 것이다. 대표는 흔들리고, 도윤은 제안서 첫 장에서 이미 패배를 본다. 전부 사면 전부 진다.",
+    "event_villain": "퀵리턴은 창고 임대인에게 두 달치 임대료 선납 의향서를 보내고, 리턴브릿지 대표에게 개인 보증 해소 조건을 붙인 통매각 LOI를 제시한다. 플랫폼 정산팀은 인수 주체가 바뀌면 기존 재계산 ticket과 패널티 hold를 재검토하겠다고 통보한다. 대표는 도윤에게 같은 조건을 맞춰 달라고 요구하고, 창고 임대인은 더 높은 전액 대납 제안이 들어왔으니 30일 option rider를 해지할 수 있다고 압박한다. 도윤이 여기서 가격 경쟁을 하면 과거 채무, 대표 보증, 미확인 패널티, 보험 공백을 모두 떠안는다.",
+    "solution": "도윤은 통매각 경쟁에서 물러난다. 대신 이미 생긴 회수표와 검수표가 누구 손에 있어야 돈이 되는지로 협상판을 바꾼다. 그는 리턴브릿지 법인 인수 의사를 철회하고, seller data license 6개월, 사유코드 검수표 사용권 6개월, top seller 12곳 우선검수 결과물의 1차 사용권, 30일 우선매수권, 과거 채무와 플랫폼 패널티 비인수 side letter만 요구한다. 대표 개인 보증은 건드리지 않고, 플랫폼 정산팀에는 인수 주체 변경이 아니라 process-control license라서 기존 재계산 ticket과 hold가 유지되어야 한다는 확인 메일을 받는다. 창고 임대인에게는 option 해지가 아니라 도윤 SPV의 bay-control license가 남아야 퀵리턴도 회수표를 쓸 수 있다고 역으로 압박한다.",
+    "reward": "도윤은 리턴브릿지 통매각 경쟁에서 진다. 퀵리턴의 LOI는 대표와 창고 임대인을 끌고 가고, 도윤은 회사 전체 가격표를 포기한다. 그러나 같은 날 저녁, seller data license 6개월, 사유코드 검수표 사용권 6개월, top seller 12곳 우선검수 결과물 1차 사용권, 30일 우선매수권, 과거 채무·대표 보증·플랫폼 패널티 비인수 side letter가 도윤 SPV 앞으로 서명된다. 플랫폼 정산팀은 process-control license 구조에서는 기존 hold ticket과 재계산 ticket을 유지하겠다고 답한다. 도윤은 회사를 빼앗겼다. 대신 회사가 죽어도 남는 데이터와 검수 프로세스 사용권, 그리고 다시 살 수 있는 우선매수권을 챙겼다."
+  },
+  "incident_beats": [
+    "퀵리턴이 밀린 임대료와 대표 개인 보증을 묶은 리턴브릿지 통매각 LOI로 도윤의 pilot과 warehouse option을 밀어낸다",
+    "도윤이 가격 경쟁을 포기하고 seller data license, 검수표 사용권, 우선매수권, 과거 채무 비인수 side letter로 협상 대상을 줄인다",
+    "통매각 경쟁은 패배하지만 6개월 data/procedure license, top seller 결과물 사용권, 30일 우선매수권, 기존 hold/recalculation ticket 유지 확인을 확보한다"
+  ],
+  "stakes": "통매각 가격을 맞추면 도윤은 리턴브릿지의 과거 채무, 대표 보증, 플랫폼 패널티, 보험 공백을 모두 산다. 반대로 아무것도 남기지 못하고 물러나면 후속 국면부터 쌓은 seller data와 검수표가 퀵리턴의 값싼 인수 재료가 된다. 패배를 인정하되, 회사가 죽어도 남는 권리를 잘라내야 한다.",
+  "power_shift": {
+    "protagonist": "반품권 회수표를 만든 return-recovery architect에서 통매각 패배를 받아들이고 rights-only license를 남기는 defensive deal-structurer로 이동한다.",
+    "antagonist": "퀵리턴과 리턴브릿지 대표는 통매각과 개인 보증 해소로 판을 뒤집지만, 도윤의 license와 비인수 side letter 때문에 seller data와 검수표의 사용권을 완전히 빼앗지는 못한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "리턴브릿지 대표",
+      "before": "회사를 팔 수 있다는 기대에 도윤에게 퀵리턴과 같은 통매각 조건을 요구하는 대표",
+      "after": "도윤이 통매각을 포기하자 배신감을 느끼지만, 과거 채무와 대표 보증을 도윤에게 떠넘길 수 없다는 사실을 받아들인다",
+      "continuity_anchor_before": "과거 채무는 남았지만 검수 bay와 보험 escrow가 살아나자 전체 창고보다 통제 가능한 공간이 먼저라는 것을 받아들인다"
+    },
+    {
+      "target": "퀵리턴",
+      "before": "밀린 임대료와 대표 보증 해소를 미끼로 리턴브릿지 전체를 가져가려는 경쟁 반품대행사",
+      "after": "통매각 LOI로 우위를 잡지만, seller data와 검수표 license가 도윤에게 남아 즉시 독점하지 못한다",
+      "continuity_anchor_before": "top seller 12곳 우선검수 slot과 회수표가 나오자 고가 seller 즉시 이탈 명분을 잃는다"
+    },
+    {
+      "target": "플랫폼 정산팀",
+      "before": "인수 주체 변경 시 hold ticket과 재계산 ticket을 다시 검토하겠다고 압박하는 gatekeeper",
+      "after": "법인 인수가 아니라 process-control license라는 구조를 확인하고 기존 hold와 재계산 ticket 유지 메일을 보낸다"
+    },
+    {
+      "target": "창고 임대인",
+      "before": "퀵리턴의 전액 대납 제안을 근거로 30일 option rider 해지를 압박하는 임대인",
+      "after": "도윤의 bay-control license가 있어야 회수표를 계속 쓸 수 있다는 점 때문에 option 해지를 즉시 밀어붙이지 못한다"
+    }
+  ],
+  "foreshadow": [
+    "seller data license와 검수표 사용권은 후속 국면에서 7개 seller만 남기는 pilot PO 선별권으로 회수된다.",
+    "과거 채무·대표 보증·플랫폼 패널티 비인수 side letter는 후속 국면의 valuation memo에서 리스크 차단 항목으로 쓰인다.",
+    "통매각 패배는 후속 국면의 다음 regulated distribution data-room gate에서 도윤이 회사보다 권리를 산다는 패턴을 다시 강화한다.",
+    "퀵리턴의 LOI는 해당 아크 후반부에서 seller 독점권 압박으로 계속 남는다."
+  ],
+  "callback": [
+    "후속 국면의 1차 반품권 회수표와 top seller 12곳 우선검수 결과물이 license 협상 대상이 된다.",
+    "후속 국면의 과거 임대료 비인수 확인서가 통매각 가격 경쟁에서 물러날 법적 근거가 된다.",
+    "후속 국면의 hold ticket과 재계산 ticket은 process-control license 유지 확인의 핵심으로 회수된다.",
+    "후속 국면의 warehouse option seed는 이번 블록에서 통매각 압박에도 남기는 제한 option으로 다시 쓰인다."
+  ],
+  "emotional_beat": {
+    "type": "strategic_defeat_rights_only",
+    "intensity": 7
+  },
+  "tension_level": 9,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "리턴브릿지 대표실 / 창고 임대인 사무실 / 플랫폼 정산팀 메일 thread",
+    "type": "full-acquisition defeat and rights-only license carveout"
+  },
+  "time_span": {
+    "duration": "사흘",
+    "in_story_time": "후속 국면의 1차 반품권 회수표 작성 후 퀵리턴 LOI 제출일부터 license 서명일까지"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "1차 반품권 회수표 / 재판매 가능 A급 118박스 / 부품 회수 64박스 / 보험 claim 후보 37건 / seller 귀책 chargeback 후보 52건 / 폐기 확정 29박스 / 고가 seller 12곳 우선검수 slot / rush inspection deposit 추가 180만 원 / 폐기비 180만 원 cap / 파손 사유별 회수 가능액 table",
+    "capital_after": "리턴브릿지 통매각 경쟁 패배 / seller data license 6개월 / 사유코드 검수표 사용권 6개월 / top seller 12곳 우선검수 결과물 1차 사용권 / 30일 우선매수권 / 과거 채무·대표 보증·플랫폼 패널티 비인수 side letter / 기존 hold ticket·재계산 ticket 유지 확인 메일 / bay-control license 유지",
+    "capital_delta": "회사 전체 인수권 상실 / 6개월 data-procedure license 확보 / 과거 채무와 플랫폼 패널티 비인수 방어",
+    "profit_loss": "통매각 경쟁 패배, full control 상실. 대신 seller data와 검수표 사용권 및 우선매수권 확보",
+    "method": "더 높은 가격으로 리턴브릿지를 통째로 사지 않고, 회사가 넘어가도 남을 seller data license, 검수표 사용권, 우선매수권, 비인수 side letter를 분리한다.",
+    "investment_type": "distressed reverse-logistics rights-only license carveout",
+    "deal_type": "data license carveout / process-use right / debt non-assumption side letter",
+    "leverage_used": [
+      "1차 반품권 회수표",
+      "seller data license 가치",
+      "사유코드 검수표",
+      "top seller 12곳 우선검수 결과물",
+      "패널티 hold ticket",
+      "정산 재계산 ticket",
+      "과거 임대료 비인수 확인서",
+      "퀵리턴 통매각 LOI",
+      "창고 30일 option rider"
+    ],
+    "opponent": {
+      "name": "퀵리턴 / 리턴브릿지 대표 / 창고 임대인 / 플랫폼 정산팀",
+      "type": "full-acquisition bidder, distressed founder guarantee pressure, warehouse option gate, and platform ticket-review gate",
+      "weakness_exploited": "퀵리턴은 법인을 가져가도 도윤이 만든 검수표와 seller data 구조 없이는 패널티 hold와 회수표를 즉시 현금화하기 어렵다"
+    },
+    "historical_event": null,
+    "time_pressure": "퀵리턴 LOI 수락 전 license와 비인수 side letter를 남기지 못하면 seller data와 검수표가 통매각 자산으로 빨려 들어간다.",
+    "knowledge_used": "회귀 전 리턴브릿지를 통째로 산 인수자는 대표 보증과 플랫폼 패널티까지 떠안았고, 실제 가치는 seller data와 검수표 license에 있었다는 기억",
+    "risk_level": "극고위험",
+    "business_sector": "반품 물류 / 통매각 LOI / seller data license / 검수 프로세스 IP / 채무 비인수",
+    "section_rotation": "반품 창고의 데이터",
+    "success_pattern": "통매각 패배를 인정하고 회사가 죽어도 남는 권리만 분리",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "rights_only_license_carveout_receipt",
+      "receipt_line": "seller data license 6개월, 사유코드 검수표 사용권 6개월, top seller 12곳 우선검수 결과물 1차 사용권, 30일 우선매수권, 과거 채무·대표 보증·플랫폼 패널티 비인수 side letter, 기존 hold ticket 유지 확인 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 리턴브릿지 통매각 인수자는 대표 보증과 플랫폼 패널티를 떠안아 실패했고, 실제 가치는 seller data와 검수표 사용권이었다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 인수자는 퀵리턴과 가격 경쟁을 벌이다 리턴브릿지 전체를 비싸게 샀고, 숨은 채무와 패널티 때문에 cashflow가 무너졌다.",
+      "changed_event": "이번에는 도윤이 통매각 경쟁을 포기하고 license, 우선매수권, 비인수 side letter만 남긴다.",
+      "ripple_effect": "도윤은 company owner가 되지 못하지만, 이후 seller 선별과 투자자 valuation에 필요한 데이터 권리를 잃지 않는다."
+    },
+    "death_flag": {
+      "avoided": "full acquisition으로 과거 채무, 대표 보증, 플랫폼 패널티, 보험 공백을 모두 떠안는 미래",
+      "method": "통매각 경쟁 패배를 받아들이고 data license, process-use right, ROFR, non-assumption side letter만 분리한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 퀵리턴 LOI 금액을 보기도 전에 대표 개인 보증과 플랫폼 패널티 승계 조항부터 찾는다.",
+      "suspicion_from": "리턴브릿지 대표와 퀵리턴 M&A 담당자"
+    },
+    "future_prep": {
+      "action": "seller data license와 검수표 사용권을 활용해 보험 claim 후보와 seller chargeback ticket을 도윤 SPV 기준으로 정리한다.",
+      "target_event": "후속 국면 보험 claim은 박스 안에 있다"
+    }
+  },
+  "block_no": 36,
+  "foreshadow_targets": [
+    37,
+    38,
+    39,
+    40
+  ]
+}

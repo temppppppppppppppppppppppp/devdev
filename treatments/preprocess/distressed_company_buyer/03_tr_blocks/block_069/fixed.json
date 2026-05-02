@@ -1,0 +1,140 @@
+{
+  "block_id": "Block 69",
+  "title": "내부정보라는 칼은 마지막에 돌아온다",
+  "content": {
+    "context": "full data-room vote 전날, 백승환 법무팀은 마지막 칼을 꺼낸다. 너무 빠른 질문, 너무 정확한 계좌 분리, 너무 정돈된 LP side letter. 결국 내부정보 거래 아니냐는 말이다. 도윤은 놀라지 않는다. 이 칼은 언젠가 반드시 돌아온다.",
+    "event_villain": "PEF 법무팀은 도윤의 12개 질문이 redacted teaser만으로 나올 수 없다고 주장한다. 은행 보수파는 법무 리스크가 남으면 full data-room vote를 연기해야 한다고 말한다. 기자는 다시 연락해 내부정보 의혹을 기사화할 수 있다고 떠본다. LP들은 no-solicitation 확인이 있어도 법무 문제가 생기면 side letter를 철회하겠다고 한다. 도윤이 감정적으로 반박하면 그 순간 방어선이 무너진다.",
+    "solution": "도윤은 설명하지 않는다. 그는 final legality packet을 연다. redacted teaser 접근 로그, 12개 질문 작성 시각, 외부 확인 접수번호, no-publicity covenant, no-public-offering memo, role-boundary opinion, conflict clean letter, 자료 반출 없음 확인서, LP no-solicitation confirmation을 시간순으로 묶는다. 질문의 근거는 미래 기억이 아니라 공개자료와 preview에서 열린 폴더명이라는 것을 access log certification으로 남긴다. 기자에게는 무응답 원칙을 유지하고, 은행 compliance no-objection을 먼저 받는다.",
+    "reward": "PEF 법무팀은 의혹을 철회하지 않는다. 그러나 은행 compliance는 full data-room vote 연기 사유 없음 no-objection을 낸다. 법무법인은 role-boundary final opinion과 no-public-offering final memo를 발급하고, 회계법인은 conflict clean addendum과 data-room access log certification을 붙인다. LP side letter는 유지되고, 기자 기사도 나가지 않는다. 도윤은 결백을 웅변한 게 아니다. 의혹이 투표를 멈추지 못하게, 칼날을 시간표와 접수번호 위에 내려놓았다."
+  },
+  "incident_beats": [
+    "PEF 법무팀이 12개 질문, 계좌 분리, LP side letter를 내부정보 거래와 공개모집 프레임으로 다시 공격한다",
+    "도윤이 access log, 질문 작성 시각, 외부 접수번호, no-publicity, no-public-offering, role-boundary, conflict clean, no-solicitation을 final legality packet으로 묶는다",
+    "bank compliance no-objection, role-boundary final opinion, no-public-offering final memo, conflict clean addendum, data-room access log certification receipt가 확보된다"
+  ],
+  "stakes": "법무 의혹이 full data-room vote를 하루만 늦춰도 PEF club deal이 다시 살아난다. 반대로 도윤이 설명으로 방어하면 회귀 감각과 내부정보 프레임을 키운다. 그는 의혹을 없애는 게 아니라 투표를 멈추지 못하게 해야 한다.",
+  "power_shift": {
+    "protagonist": "LP 손실순서를 만든 loss-order architect에서 내부정보 프레임을 시간표와 접수번호로 무력화하는 legality-proof operator로 이동한다.",
+    "antagonist": "PEF 법무팀은 마지막으로 내부정보 의혹을 던지지만, final legality packet과 bank no-objection 때문에 full data-room vote를 멈추지 못한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "백승환 법무팀",
+      "before": "질문의 정확성과 LP side letter를 내부정보와 공개모집 프레임으로 묶으려는 법무 gate",
+      "after": "의혹은 유지하지만 full data-room vote 연기 사유로 확정하지 못한다",
+      "continuity_anchor_before": "no-public-offering memo와 role-boundary opinion 때문에 즉시 거래 중단 사유로 확정하지 못한다"
+    },
+    {
+      "target": "은행 compliance",
+      "before": "법무 리스크가 있으면 투표 연기가 필요하다고 보는 내부 gate",
+      "after": "final legality packet을 보고 vote 연기 사유 없음 no-objection을 낸다"
+    },
+    {
+      "target": "외부 LP 견제자들",
+      "before": "법무 문제가 생기면 side letter를 철회하겠다고 보는 LP들",
+      "after": "no-solicitation 확인과 final memo를 받고 side letter를 유지한다",
+      "continuity_anchor_before": "reverse-inquiry side letter와 loss-order acceptance memo를 보낸다"
+    },
+    {
+      "target": "경제지 기자",
+      "before": "내부정보 의혹 기사를 다시 떠보는 기자",
+      "after": "무응답 원칙과 no-publicity covenant 때문에 기사화할 새 팩트를 얻지 못한다",
+      "continuity_anchor_before": "회사명과 수익률 없는 일반론 comment만 받는다"
+    }
+  ],
+  "foreshadow": [
+    "bank compliance no-objection은 full data-room vote가 실제로 열리는 마지막 잠금해제 key가 된다.",
+    "access log certification은 독립 운용사 출범 후 첫 공식 track record의 legality anchor가 된다.",
+    "no-public-offering final memo는 BI 이전 최종 소재 정합성에서도 중요한 법적 경계로 남는다.",
+    "PEF가 끝까지 철회하지 않은 의혹은 도윤이 과장 대신 영수증으로만 올라왔다는 역설적 proof가 된다."
+  ],
+  "callback": [
+    "public receipt ledger와 hash-linked receipt index를 final legality packet의 전신으로 회수한다.",
+    "no-publicity covenant와 no-public-offering memo를 공개 기사와 LP 모집 프레임 방어에 묶는다.",
+    "LP no-solicitation confirmation과 side letter를 final vote의 실행력 proof로 유지한다.",
+    "data-room preview access log와 12-question filing number를 내부정보 의혹의 시간표 반박으로 쓴다."
+  ],
+  "emotional_beat": {
+    "type": "legality_proof_cider",
+    "intensity": 9
+  },
+  "tension_level": 10,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "은행 compliance room / 법무법인 final opinion desk / PEF 법무팀 메일 thread / data-room access log viewer",
+    "type": "final legality packet and no-objection gate"
+  },
+  "time_span": {
+    "duration": "하루",
+    "in_story_time": "full data-room vote 전날"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "LP reverse-inquiry side letter 3건 / loss-order waterfall acceptance memo / management fee cap side letter / no-solicitation confirmation / reserve top-up 8,000만 원 standby 검토 조건 / bank mandate co-review consent / PEF anchor 필요론 보류",
+    "capital_after": "final legality packet / data-room access log certification / conflict clean addendum / no-public-offering final memo / role-boundary legal opinion final / bank compliance no-objection / LP side letter 유지 확인 / full data-room vote clearance",
+    "capital_delta": "내부정보 의혹 완전 철회 실패 / vote 연기 사유 없음 no-objection 확보 / final legality packet 확보 / LP side letter 유지",
+    "profit_loss": "PEF 의혹은 남지만, full data-room vote를 멈추지 못하게 만드는 법무·회계·은행 no-objection을 확보한다.",
+    "method": "설명 대신 access log, 접수번호, role-boundary, no-publicity, no-public-offering, conflict clean, no-solicitation을 시간순 final packet으로 묶는다.",
+    "investment_type": "distressed operator final legality proof",
+    "deal_type": "bank compliance no-objection / final legal opinion / data-room access certification",
+    "leverage_used": [
+      "public receipt ledger",
+      "hash-linked receipt index",
+      "12-question diligence filing number",
+      "data-room preview access log",
+      "no-publicity covenant",
+      "no-public-offering memo",
+      "role-boundary opinion",
+      "conflict clean letter",
+      "LP no-solicitation confirmation"
+    ],
+    "opponent": {
+      "name": "백승환 법무팀 / 은행 compliance / 외부 LP 견제자 / 경제지 기자",
+      "type": "PEF legal attack, bank compliance gate, LP legal-risk gate, and publicity-risk pressure",
+      "weakness_exploited": "상대는 의혹을 던질 수 있지만, 시간표와 접수번호가 정렬된 final packet이 있으면 투표 연기 사유로 만들기 어렵다"
+    },
+    "historical_event": null,
+    "time_pressure": "full data-room vote 전날 안에 bank compliance no-objection과 final legal memo를 받아야 한다.",
+    "knowledge_used": "회귀 전 마지막 내부정보 의혹을 감정적으로 해명하다 vote가 연기되고 PEF club deal이 부활했다는 기억",
+    "risk_level": "극고위험",
+    "business_sector": "compliance / data-room access log / no-public-offering / LP no-solicitation / PEF legal attack",
+    "section_rotation": "부도 회사 사냥꾼의 이름",
+    "success_pattern": "내부정보 의혹을 final legality packet과 bank no-objection으로 투표 중단 불가 상태로 전환",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "final_legality_no_objection_receipt",
+      "receipt_line": "final legality packet, data-room access log certification, conflict clean addendum, no-public-offering final memo, role-boundary legal opinion final, bank compliance no-objection, LP side letter 유지 확인 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 마지막 내부정보 의혹에 감정적으로 대응한 operator가 vote 연기를 맞고 PEF club deal에 밀렸다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 operator는 마지막 의혹을 말로 해명하다 full data-room vote를 잃었다.",
+      "changed_event": "이번에는 도윤이 final legality packet과 bank no-objection으로 투표 연기 사유를 없앤다.",
+      "ripple_effect": "의혹은 남지만 full data-room vote는 열리고, LP side letter와 bank mandate도 유지된다."
+    },
+    "death_flag": {
+      "avoided": "법무 의혹으로 vote가 연기되고 PEF club deal이 부활하는 미래",
+      "method": "final legality packet, access log certification, no-public-offering final memo, bank no-objection으로 방어한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 의혹 메일을 읽고 반박문이 아니라 access log export 버튼부터 누른다.",
+      "suspicion_from": "백승환 법무팀과 은행 compliance"
+    },
+    "future_prep": {
+      "action": "final legality packet과 vote clearance를 정식 data-room 초대 및 독립 운용사 출범의 마지막 근거로 넘긴다.",
+      "target_event": "정식 data-room 초대"
+    }
+  },
+  "block_no": 69,
+  "foreshadow_targets": [
+    70
+  ]
+}

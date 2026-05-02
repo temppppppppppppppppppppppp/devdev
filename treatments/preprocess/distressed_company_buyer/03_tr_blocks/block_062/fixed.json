@@ -1,0 +1,145 @@
+{
+  "block_id": "Block 62",
+  "title": "첫 실패를 먼저 공개한다",
+  "content": {
+    "context": "named-operator file이 열린 지 사흘 만에 기다리던 일이 터진다. 세원메디링크 제한 유지보수 장비 하나에서 리콜 의심 fault가 잡히고, 해문푸드서비스 현장에는 대체 납품 지연이 생긴다. 시장은 실패를 기다리고 있었다. 도윤은 숨기지 않는다. 첫 실패를 먼저 공개해야 다음 이름이 살아남는다.",
+    "event_villain": "은행 보수파는 fault와 납품 지연을 covenant breach로 볼 수 있다고 말한다. 백승환은 역시 도윤 포트폴리오는 개인 감각에 의존한다고 LP에게 흘린다. 포트폴리오 대표들은 공개하면 병원과 구매위원회가 겁먹을 거라며 incident report를 늦추자고 한다. 도윤이 숨기면 현장 panic은 줄지만 named-operator file은 바로 오염된다.",
+    "solution": "도윤은 failure-cost reserve를 처음으로 쓴다. 세원메디링크 fault는 pre-claim packet과 제조사 제한 출고 proof에 연결하고, 해문푸드서비스 지연은 lockbox 대체 납품비와 operator pool penalty trigger에 연결한다. 그는 은행에 covenant breach가 아니라 reserve draw event로 보고하고, LP에게는 one-on-one diligence room 안에서 incident report를 먼저 연다. 대표들에게는 deferred earn-out unit 일부를 clawback으로 걸어 실행 책임을 남긴다.",
+    "reward": "은행은 covenant breach 통보를 하지 않는다. 대신 failure-cost reserve 3,200만 원 draw authorization과 no-default confirmation을 발급한다. 보험사는 세원메디링크 pre-claim notice를 접수하고, 해문푸드서비스 대체 납품비는 lockbox에서 제한 지급된다. LP observer는 incident report 선공개 memo를 남기고, operator pool에는 penalty trigger가 적용된다. 도윤은 실패를 없앤 게 아니다. 실패가 났을 때 돈과 책임이 어디서 나가는지 보여 줘서, 이름이 깨지기 전에 통제했다."
+  },
+  "incident_beats": [
+    "세원메디링크 장비 fault와 해문푸드서비스 대체 납품 지연이 동시에 터지고, 은행 보수파와 PEF가 covenant breach와 operator-risk 프레임을 건다",
+    "도윤이 failure-cost reserve, pre-claim packet, lockbox 대체 납품비, operator pool penalty trigger를 연결해 incident report를 먼저 공개한다",
+    "3,200만 원 reserve draw authorization, bank no-default confirmation, 보험 pre-claim notice 접수, LP incident memo, operator pool penalty trigger receipt가 확보된다"
+  ],
+  "stakes": "첫 실패를 숨기면 포트폴리오는 잠시 조용하지만 named-operator file은 깨진다. 실패를 공개해도 reserve와 책임순서가 없으면 은행과 LP가 빠진다. 도윤은 실패를 없애는 게 아니라 실패 처리권을 증명해야 한다.",
+  "power_shift": {
+    "protagonist": "named-operator candidate에서 첫 실패를 reserve와 no-default proof로 처리하는 failure-response operator로 이동한다.",
+    "antagonist": "은행 보수파와 백승환은 첫 실패를 operator-risk 증거로 삼지만, 도윤의 reserve draw와 no-default confirmation 때문에 즉시 배제하지 못한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "은행 내부 보수파",
+      "before": "fault와 납품 지연을 covenant breach로 보려는 심사 라인",
+      "after": "reserve draw event와 no-default confirmation으로 처리한다",
+      "continuity_anchor_before": "named distressed-operator pre-registration과 track-record pack 접수번호를 발급한다"
+    },
+    {
+      "target": "외부 LP 견제자",
+      "before": "첫 실패가 숨겨지는지 보려는 observer",
+      "after": "incident report 선공개 memo를 남기고 observer seat를 유지한다",
+      "continuity_anchor_before": "fundraising이 아닌 reverse inquiry log protocol을 유지한다"
+    },
+    {
+      "target": "세원메디링크 대표",
+      "before": "fault 공개가 병원 관계를 깨뜨릴까 두려워하는 대표",
+      "after": "pre-claim notice와 제조사 proof 때문에 공개 보고를 받아들인다",
+      "continuity_anchor_before": "반복 주문 scorecard를 받지만 non-assumption 위반 시 unit 소멸을 받아들인다"
+    },
+    {
+      "target": "해문푸드서비스 대표",
+      "before": "대체 납품 지연을 현장 사정으로 묻으려는 대표",
+      "after": "lockbox 제한 지급과 operator pool penalty trigger를 받아들인다",
+      "continuity_anchor_before": "lockbox uptime scorecard와 deferred earn-out unit을 받는 대신 outside payment 금지를 재확인한다"
+    }
+  ],
+  "foreshadow": [
+    "no-default confirmation은 채권단 회의록에서 도윤 이름의 리스크 관리 proof로 재사용된다.",
+    "첫 failure-cost reserve draw는 독립 운용자 조건표의 스트레스 테스트 항목이 된다.",
+    "operator pool penalty trigger는 현장 대표들이 upside뿐 아니라 책임도 진다는 증거가 된다.",
+    "incident report 선공개는 시장 소문보다 회의록을 먼저 남기는 방식으로 이어진다."
+  ],
+  "callback": [
+    "failure-cost reserve schedule을 처음으로 실제 draw authorization으로 바꾼다.",
+    "pre-claim packet과 lockbox 구조를 실패 처리 현금흐름으로 회수한다.",
+    "operator pool clawback을 대표 책임의 실물 조항으로 작동시킨다.",
+    "monthly covenant reporting calendar를 incident report의 공식 시간표로 사용한다."
+  ],
+  "emotional_beat": {
+    "type": "failure_disclosure_cider",
+    "intensity": 9
+  },
+  "tension_level": 9,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "세원메디링크 병원 장비실 / 해문푸드서비스 현장 관제방 / 은행 no-default 보고 콜",
+    "type": "first failure disclosure and reserve draw event"
+  },
+  "time_span": {
+    "duration": "하루",
+    "in_story_time": "named-operator pre-registration 직후 첫 covenant report 전"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "named distressed-operator pre-registration / 5개 portfolio track-record pack 접수번호 / 채권단 pre-screen eligibility / monthly covenant reporting calendar / PEF adverse-note rebuttal window / LP reverse inquiry log protocol / conditional mandate exception file 분리",
+    "capital_after": "failure-cost reserve 3,200만 원 draw authorization / bank no-default confirmation / 세원메디링크 pre-claim notice 접수 / 해문푸드서비스 lockbox 대체 납품비 제한 지급 / LP incident report 선공개 memo / operator pool penalty trigger 적용 / monthly covenant report 정상 접수",
+    "capital_delta": "첫 실패 발생 / covenant breach 방어 / 3,200만 원 reserve draw 승인 / no-default confirmation 확보 / LP observer 유지",
+    "profit_loss": "실패와 비용은 실제로 발생하지만, reserve와 책임순서가 작동해 은행 default와 LP 이탈을 막는다.",
+    "method": "실패를 숨기지 않고 reserve draw event, pre-claim notice, lockbox 지급, operator penalty로 분해해 은행과 LP에 먼저 보고한다.",
+    "investment_type": "distressed portfolio failure-response proof",
+    "deal_type": "reserve draw authorization / no-default confirmation / incident disclosure",
+    "leverage_used": [
+      "failure-cost reserve schedule",
+      "monthly covenant reporting calendar",
+      "세원메디링크 pre-claim packet",
+      "제조사 제한 출고 proof",
+      "해문푸드서비스 lockbox",
+      "operator pool clawback",
+      "LP one-on-one diligence room",
+      "named-operator pre-registration"
+    ],
+    "opponent": {
+      "name": "은행 내부 보수파 / 백승환 / 포트폴리오 회사 대표들",
+      "type": "covenant-breach gate, PEF operator-risk framing, and internal disclosure resistance",
+      "weakness_exploited": "상대는 실패 자체를 공격하지만, 실패 처리 순서가 문서와 계좌로 작동하면 default가 아니라 통제 proof가 된다"
+    },
+    "historical_event": null,
+    "time_pressure": "시장 소문과 PEF adverse note가 먼저 돌기 전 은행과 LP에게 incident report와 reserve draw를 먼저 열어야 한다.",
+    "knowledge_used": "회귀 전 첫 실패를 숨긴 operator가 covenant breach와 LP 이탈을 동시에 맞았다는 기억",
+    "risk_level": "극고위험",
+    "business_sector": "failure reserve / covenant reporting / incident disclosure / operator accountability",
+    "section_rotation": "부도 회사 사냥꾼의 이름",
+    "success_pattern": "첫 실패를 숨기지 않고 reserve draw와 no-default confirmation으로 통제 proof화",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "first_failure_no_default_receipt",
+      "receipt_line": "failure-cost reserve 3,200만 원 draw authorization, bank no-default confirmation, 세원메디링크 pre-claim notice 접수, 해문푸드서비스 lockbox 대체 납품비 제한 지급, LP incident report 선공개 memo, operator pool penalty trigger receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 첫 실패를 숨긴 팀이 covenant breach와 LP 이탈을 동시에 맞았다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 operator는 fault와 납품 지연을 늦게 보고하다 default notice를 받았다.",
+      "changed_event": "이번에는 도윤이 reserve draw와 incident report를 먼저 열고 no-default confirmation을 받는다.",
+      "ripple_effect": "첫 실패는 비용으로 남지만, named-operator file은 오히려 스트레스 테스트 proof를 갖게 된다."
+    },
+    "death_flag": {
+      "avoided": "첫 실패가 은행 default와 LP observer 철회로 번지는 미래",
+      "method": "reserve draw authorization, pre-claim notice, lockbox 지급, no-default confirmation, incident memo로 방어한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 fault 원인보다 은행 no-default 보고 양식부터 열어 둔다.",
+      "suspicion_from": "세원메디링크 대표와 은행 보수파"
+    },
+    "future_prep": {
+      "action": "첫 실패 no-default proof를 채권단 회의록 평판과 다음 data-room preview의 근거로 사용한다.",
+      "target_event": "조건부 프리뷰 초대"
+    }
+  },
+  "block_no": 62,
+  "foreshadow_targets": [
+    63,
+    65,
+    69
+  ],
+  "callback_sources": [
+    60
+  ]
+}

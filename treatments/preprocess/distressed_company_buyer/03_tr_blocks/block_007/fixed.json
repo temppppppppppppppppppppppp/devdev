@@ -1,0 +1,141 @@
+{
+  "block_id": "Block 7",
+  "title": "사람이 아니라 기억",
+  "content": {
+    "context": "첫 임시 운송 오더가 성공하자 삼진콜드 차고의 표정이 바뀐다. 밀린 임금을 걱정하던 기사들은 이제 자기들이 없어지면 도윤의 SPV도 멈춘다는 걸 안다. 오명철은 직원들을 살릴 수 있냐고 묻지 않는다. 대신 누가 어느 새벽 route의 우회로를 기억하고, 누가 어느 대형마트 검수 담당자에게 전화해야 반품이 안 나는지 목록을 꺼낸다. 도윤은 그 목록을 사람 명단으로 보지 않는다. 인증 유지와 claim 방어에 필요한 실행 메모리 자산으로 본다.",
+    "event_villain": "백승환은 핵심 기사 셋에게 일시금과 전직 보장을 제안한다. 고철업자는 비핵심 기사들을 부추겨 '도윤이 우리를 싸게 부려먹는다'는 말을 퍼뜨린다. 윤태식은 도윤이 전 직원 고용 승계를 약속한 것처럼 메일을 흘려 SPV의 비용 구조를 무너뜨리려 한다. 강은서는 2차 임시 오더를 주기 전, 인증 유지 인력과 온도 로그 담당자가 확정됐는지 확인서를 요구한다.",
+    "solution": "도윤은 전원 고용을 말하지 않는다. 그는 route memory 비용표를 만든다. 기사별 새벽 route 기억, 검수 담당자 대응력, 온도 이탈 대응 시간, 사고 구간 우회 경험, 대체 인력 교육 기간을 점수화한다. 결과는 차갑다. 핵심 기사 넷과 오명철만 retention 대상이고, 나머지는 단기 하역 외주로 바꿔도 인증 유지에는 영향이 작다. 도윤은 retention bonus를 선의가 아니라 성과 조건으로 건다. 온도 이탈 0건, 지정 route 이탈 0건, 검수 반려 0건이면 2차 오더 선입금에서 지급한다. 동시에 고용 승계가 아니라 10일 execution contractor 계약임을 회의록과 계약서에 박아 윤태식의 비용 폭탄 프레임을 끊는다.",
+    "reward": "오명철은 도윤이 구원자가 아니라 계산 가능한 인수자라는 걸 인정한다. 핵심 기사 넷은 retention 계약서에 서명하고, 강은서는 인증 유지 인력 확인서를 받은 뒤 2차 임시 오더 검토를 유지한다. 도윤의 SPV는 전원 고용 비용을 피하면서 route memory와 certification continuity를 보존한다. 돈은 더 벌기 전이지만, 첫 cashflow가 새는 구멍을 막았고 다음 블록에서 들어올 역입찰 공격의 방어선도 생겼다."
+  },
+  "incident_beats": [
+    "백승환의 핵심 기사 빼가기와 윤태식의 전원 고용 승계 프레임",
+    "route memory 비용표와 10일 execution contractor 계약으로 핵심 인력만 묶고 certification continuity receipt 확보"
+  ],
+  "stakes": "핵심 기사들이 빠지면 route memory가 사라져 2차 임시 오더와 콜드체인 인증 유지가 흔들린다. 반대로 전원 고용 승계로 가면 SPV는 첫 딜부터 고정비와 체불 임금 리스크에 잡힌다. 도윤은 기억만 사고 비용 폭탄은 버려야 한다.",
+  "power_shift": {
+    "protagonist": "첫 cashflow를 만든 오퍼레이터에서 인력과 기억을 분리해 비용 구조를 통제하는 인수자로 이동한다.",
+    "antagonist": "백승환은 핵심 기사 빼가기로 SPV를 흔들려 하지만, 성과 조건부 retention 계약 때문에 가격을 더 올려야 하는 위치로 밀린다."
+  },
+  "relationship_delta": [
+    {
+      "target": "오명철",
+      "before": "도윤의 방식에 맞춰 첫 운송을 실행한 현장 책임자",
+      "after": "도윤이 사람을 구하는 척하지 않고 기억의 가격을 인정하자, 현장 정보를 더 정확히 제공한다"
+    },
+    {
+      "target": "핵심 기사 넷",
+      "before": "첫 cashflow 뒤 자기 몸값을 올릴 수 있다고 본다",
+      "after": "성과 조건부 retention bonus와 10일 contractor 계약을 보고 남는 쪽이 가장 이득이라고 판단한다"
+    },
+    {
+      "target": "강은서",
+      "before": "첫 운송 성공 뒤 2차 임시 오더 검토를 열어 둔다",
+      "after": "인증 유지 인력 확인서와 route memory 비용표를 보고 execution risk가 관리된다고 본다"
+    },
+    {
+      "target": "윤태식",
+      "before": "도윤에게 전원 고용 승계 비용을 씌우려 한다",
+      "after": "계약서와 회의록에 10일 execution contractor 구조가 박히면서 프레임이 약해진다",
+      "continuity_anchor_before": "원본 수신자, 전송 시각, 회의록 공개 때문에 도윤의 자료를 자기 이름으로 발표하지 못한다"
+    }
+  ],
+  "foreshadow": [
+    "성과 조건부 retention 계약은 후속 국면의 내부정보 거래 프레임에서 도윤의 방어 자료로 회수된다.",
+    "핵심 기사 빼가기 실패는 백승환이 후속 국면에서 역입찰로 전환하는 계기가 된다.",
+    "강은서의 2차 임시 오더 검토 유지 장면은 후속 국면의 외부 receipt bundle로 이어진다.",
+    "비핵심 인력을 버린 결정은 이후 도윤이 착한 구원자가 아니라 효율형 인수자라는 평판을 강화한다."
+  ],
+  "callback": [
+    "후속 국면에서 선택한 오명철과 핵심 기사 둘의 실행 자산성을 비용표로 확장한다.",
+    "후속 국면의 buyer letter 조건 중 route 유지와 인증 승계 항목을 certification continuity receipt로 회수한다.",
+    "후속 국면의 권리 분리 SPV 논리를 사람 고용이 아니라 기억 사용권 계약으로 적용한다."
+  ],
+  "emotional_beat": {
+    "type": "cold_efficiency_cider",
+    "intensity": 7
+  },
+  "tension_level": 7,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "삼진콜드 차고 / 기사 대기실 / 대형마트 buyer 화상회의",
+    "type": "route-memory valuation and retention control",
+    "macro_battlefield": "route-memory valuation and retention control"
+  },
+  "time_span": {
+    "duration": "하루",
+    "in_story_time": "첫 임시 운송 오더 다음 날"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "SPV escrow 첫 선입금 / 항만 우선사용권 cure 확인서 / 첫 임시 운송 오더 / 다음 부도 식품공장 data-room 초대장",
+    "capital_after": "route memory 비용표 / 핵심 기사 10일 execution contractor 계약 / certification continuity 확인서 / 2차 임시 오더 검토 유지",
+    "capital_delta": "0억",
+    "profit_loss": "전원 고용 승계 비용 회피 및 route memory 손실 방지",
+    "method": "기사별 route memory와 인증 유지 기여도를 점수화해 핵심 인력만 성과 조건부 contractor로 묶고, 나머지 고정비와 체불 임금 리스크는 SPV 밖에 둔다.",
+    "investment_type": "execution-cost control",
+    "deal_type": "route-memory retention / certification continuity receipt",
+    "leverage_used": [
+      "첫 임시 운송 성공 로그",
+      "대형마트 2차 오더 검토",
+      "route memory 비용표",
+      "온도 이탈 대응 시간",
+      "검수 담당자 대응력",
+      "10일 execution contractor 계약",
+      "성과 조건부 retention bonus"
+    ],
+    "opponent": {
+      "name": "백승환 / 윤태식 / 고철업자",
+      "type": "talent poaching, cost-framing, and labor agitation pressure",
+      "weakness_exploited": "상대는 사람을 전원 고용하거나 빼앗는 방식만 보지만, 도윤은 기억의 가치와 고정비 리스크를 분리한다"
+    },
+    "historical_event": null,
+    "time_pressure": "강은서가 2차 임시 오더를 확정하기 전까지 인증 유지 인력과 route memory 보존 구조를 증명해야 한다.",
+    "knowledge_used": "회귀 전 삼진콜드 권리 묶음의 재가격 과정에서 핵심 route memory가 인증 유지 조건으로 쓰였다는 기억",
+    "risk_level": "중위험",
+    "business_sector": "냉장 물류 / 인력 유지 / 인증 유지 / SPV 비용 통제",
+    "section_rotation": "삼진콜드의 살아 있는 권리",
+    "success_pattern": "사람을 구하지 않고 기억 사용권과 실행 비용만 산다",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "route_memory_retention_receipt",
+      "receipt_line": "핵심 기사 10일 execution contractor 계약과 certification continuity 확인서가 확보되고, 2차 임시 오더 검토가 유지된다.",
+      "pain_only_exit": false
+    },
+    "opening_progression": {
+      "public_signboard_event": "핵심 기사 10일 execution contractor 계약과 certification continuity 확인서가 확보되고, 2차 임시 오더 검토가 유지된다.",
+      "representative_reevaluation": "도윤이 사람을 구하는 척하지 않고 기억의 가격을 인정하자, 현장 정보를 더 정확히 제공한다",
+      "next_battlefield_ticket": "오명철은 도윤이 구원자가 아니라 계산 가능한 인수자라는 걸 인정한다. 핵심 기사 넷은 retention 계약서에 서명하고, 강은서는 인증 유지 인력 확인서를 받은 뒤 2차 임시 오더 검토를 유지한다. 도윤의 SPV는 전원 고용 비용을 피하면서 route memory와 certification continuity를 보존한다. 돈은 더 벌기 전이지만, 첫 cashflow가 새는 구멍을 막았고 다음 블록에서 들어올 역입찰 공격의 방어선도 생겼다."
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 삼진콜드의 route memory와 핵심 기사 유지가 인증 승계와 권리 묶음 재가격에 쓰였다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 핵심 기사 일부는 청산 직후 흩어졌고, 다른 인수자가 더 비싼 비용으로 route memory를 재구축했다.",
+      "changed_event": "이번에는 도윤이 첫 cashflow 직후 핵심 기억만 계약으로 묶고 전원 고용 리스크는 피한다.",
+      "ripple_effect": "SPV의 비용 구조가 가벼워지고, 다음 역입찰 공격에도 인증 유지와 execution proof를 방어할 자료가 생긴다."
+    },
+    "death_flag": {
+      "avoided": "첫 cashflow 뒤 고정비 폭탄이나 핵심 인력 이탈로 SPV가 무너지는 미래",
+      "method": "route memory 비용표와 10일 contractor 계약으로 기억은 보존하고 고용 리스크는 차단한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 기사별 우회 route와 검수 담당자 성향을 처음 듣는 것보다 빠르게 비용 항목으로 분류한다.",
+      "suspicion_from": "오명철과 강은서"
+    },
+    "future_prep": {
+      "action": "retention 계약, certification continuity 확인서, 첫 cashflow receipt를 내부정보 거래 방어 자료로 정리할 준비",
+      "target_event": "후속 국면 고철업자의 역입찰"
+    }
+  },
+  "block_no": 7,
+  "foreshadow_targets": [
+    8,
+    9
+  ]
+}

@@ -35,19 +35,19 @@
     },
     {
       "target": "한재국",
-      "before": "태림제약 물량 단가표가 기록 책임 비교표 앞에서 밀리며 ARC-02의 주도권을 잃는다",
+      "before": "태림제약 물량 단가표가 기록 책임 비교표 앞에서 밀리며 주도권을 잃는다",
       "after": "태오바이오가 병원 엑셀 오류까지 잡기 시작하자 단가 방해보다 데이터 차단이 필요하다는 쪽으로 움직인다"
     }
   ],
   "foreshadow": [
-    "약국 POS 빈칸은 Block 022에서 처방/판매 수요 예측권의 입구가 된다.",
-    "납품/폐기/정산 번호 매칭권은 Block 026 첫 데이터 계약의 구조적 원형이 된다.",
-    "전산실의 감시 조건은 Block 024 전산실의 반격으로 커진다."
+    "약국 POS 빈칸은 처방/판매 수요 예측권의 입구가 된다.",
+    "납품/폐기/정산 번호 매칭권은 첫 데이터 계약의 구조적 원형이 된다.",
+    "전산실의 감시 조건은 전산실의 반격으로 커진다."
   ],
   "callback": [
-    "Block 020의 병원 구매실 엑셀 조건부 접근권이 실제 납품/폐기/정산 매칭으로 사용된다.",
-    "Block 018의 폐기율 정산과 기록료 현금화가 데이터 정제료 모델로 확장된다.",
-    "Block 017의 세 병원 공통 양식이 병원 내부 엑셀 대조의 기준값이 된다."
+    "병원 구매실 엑셀 조건부 접근권이 실제 납품/폐기/정산 매칭으로 사용된다.",
+    "폐기율 정산과 기록료 현금화가 데이터 정제료 모델로 확장된다.",
+    "세 병원 공통 양식이 병원 내부 엑셀 대조의 기준값이 된다."
   ],
   "emotional_beat": {
     "type": "new_battlefield_entry",
@@ -92,13 +92,67 @@
     "opening_progression": {
       "public_signboard_event": "구매실 납품/폐기/정산 엑셀에서 번호 불일치가 발견되고 익명 키 매칭표 사용이 승인된다",
       "representative_reevaluation": "박도현, 전산실, 사립병원 구매이사가 태오바이오를 물류 표준업체가 아니라 병원 돈이 새는 지점을 잡는 데이터 정제업체로 보기 시작한다",
-      "next_battlefield_ticket": "약국 POS 빈칸이 병원 납품표와 연결되며 Block 022 약국 POS의 빈칸 전장을 연다"
+      "next_battlefield_ticket": "약국 POS 빈칸이 병원 납품표와 연결되며 약국 POS의 빈칸 전장을 연다"
     },
     "block_cider": {
       "has_cider": true,
       "receipt_type": "data_access_receipt",
       "receipt_line": "강태오는 구매실 엑셀 원본 일부 접근권, 납품/폐기/정산 번호 매칭권, 2개월 데이터 정제료, 약국 POS 접근 명분을 확보한다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "콜드체인 기록을 병원 내부 엑셀 매칭권과 데이터 정제료로 넘기는 ARC 전환 승리",
+      "recognition_signal": "박도현의 시선 변화: 구매실 안에서 납품/폐기/정산 번호 매칭표를 돌리는 조건부 공동 검토 권한을 내준다",
+      "reward_signal": "강태오는 구매실 엑셀 원본 일부 접근권, 납품/폐기/정산 번호 매칭권, 2개월 데이터 정제료, 약국 POS 접근 명분을 확보한다.",
+      "growth_signal": "강태오는 콜드체인 기록권을 병원 구매실 엑셀의 번호 매칭권과 데이터 정제료로 확장한다.",
+      "expectation_signal": "약국 POS 빈칸이 병원 납품표와 연결되며 약국 POS의 빈칸 전장을 연다",
+      "reader_feel": "독자는 「구매실의 엑셀」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 구매실 엑셀 원본 일부 접근권, 납품/폐기/정산 번호 매칭권, 2개월 데이터 정제료, 약국 POS 접근 명분을 확보한다. 성장 장면: 강태오는 콜드체인 기록권을 병원 구매실 엑셀의 번호 매칭권과 데이터 정제료로 확장한다. 다음 기대감: 약국 POS 빈칸이 병원 납품표와 연결되며 약국 POS의 빈칸 전장을 연다",
+      "mature_success_signal": "강태오는 구매실의 엑셀의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "콜드체인 기록을 병원 내부 엑셀 매칭권과 데이터 정제료로 넘기는 ARC 전환 승리",
+        "recognition": "박도현의 시선 변화: 구매실 안에서 납품/폐기/정산 번호 매칭표를 돌리는 조건부 공동 검토 권한을 내준다",
+        "reward": "강태오는 구매실 엑셀 원본 일부 접근권, 납품/폐기/정산 번호 매칭권, 2개월 데이터 정제료, 약국 POS 접근 명분을 확보한다.",
+        "growth": "강태오는 콜드체인 기록권을 병원 구매실 엑셀의 번호 매칭권과 데이터 정제료로 확장한다.",
+        "expectation": "약국 POS 빈칸이 병원 납품표와 연결되며 약국 POS의 빈칸 전장을 연다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 박도현의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 약국 POS 빈칸이 병원 납품표와 연결되며 약국 POS의 빈칸 전장을 연다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "기록료 1년 장기계약이 체결된 다음 주, 박도현은 약속대로 병원 구매실 엑셀 일부를 보여 준다. 파일명은 단순하다. 납품, 폐기, 정산. 그러나 강태오는 첫 줄부터 이상함을 본다. 같은 백신 물량이 납품표에는 들어가 있는데 폐기표에는 빠져 있고, 정산표에는 반품으로 처리돼 있다. 그는 콜드체인을 끝냈다고 생각하지 않는다.",
+      "proof_action": "태오는 환자 정보나 처방 데이터를 요구하지 않는다. 대신 납품번호, 폐기번호, 정산번호만 익명 키로 묶는 임시 매칭표를 제안한다. 전산실에는 원본 데이터 반출이 아니라 구매실 안에서만 대조하고, 오류 목록만 병원 명의로 남기겠다고 한다.",
+      "proof_axis": "전생에서 병원 데이터의 첫 문은 처방 데이터가 아니라 구매실 엑셀의 납품/폐기/정산 번호 불일치였다는 기억",
+      "recognition_or_resistance_signal": "박도현 -> 구매실 안에서 납품/폐기/정산 번호 매칭표를 돌리는 조건부 공동 검토 권한을 내준다",
+      "receipt_asset": "강태오는 구매실 엑셀 원본 일부 접근권, 납품/폐기/정산 번호 매칭권, 2개월 데이터 정제료, 약국 POS 접근 명분을 확보한다.",
+      "reward_asset_classes": [
+        "rights_control_asset"
+      ],
+      "next_regulated_gate": "약국 POS 빈칸이 병원 납품표와 연결되며 약국 POS의 빈칸 전장을 연다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 박도현의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 약국 POS 빈칸이 병원 납품표와 연결되며 약국 POS의 빈칸 전장을 연다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {

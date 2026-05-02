@@ -1,0 +1,189 @@
+{
+  "block_id": "Block 40",
+  "title": "소재가 산업을 고른다",
+  "content": {
+    "context": "3개 API 품목 원료 우선권과 소재/완제 공동 배정회의가 만들어지자, 태오바이오는 더 이상 약만 만드는 회사로 설명되지 않는다. 원료, 중간체, 필터, 반도체 소재 샘플, 대기업 설비 창구가 하나의 운영지도에 올라오자 은행과 대기업은 처음으로 태오바이오의 가치를 완제약 매출이 아니라 산업 소재 공급권으로 계산하기 시작한다.",
+    "event_villain": "일본 원료상은 잔여 lot 장기계약을 조건으로 dual-source 조항 철회를 요구하고, 국내 화학 대기업은 합작 LOI를 지분 협상으로 되돌리려 한다. 은행 투자심사부는 '권리 목록은 많지만 현금흐름이 보이지 않는다'며 1800억 가치평가를 보류하려 한다.",
+    "solution": "태오는 권리 목록을 자랑하지 않고 산업별 병목 지도로 재배열한다. 첫 사건 beat는 은행 심사회의에서 원료 우선권, capacity window, 소재 샘플 평가권, 필터/배지 예약권을 API, 정밀화학, 반도체 소재 3개 수익선으로 나누고 각 권리의 선급 주문, 평가 일정, 설비일수를 현금흐름표에 연결하는 장면이다. 둘째 beat는 일본 원료상과 국내 화학 대기업이 각자 조건을 걸자, 태오가 dual-source 유지, 소재 공급권 공동감사, 원료 우선권 위반 시 window 정지 조항을 하나의 API/소재 공급권 프레임계약에 묶어 서명하게 하는 장면이다.",
+    "reward": "태오는 1800억 기업가치 평가서, API/소재 3년 공급권 프레임계약, dual-source 유지 조항, 소재 공급권 공동감사권, 원료 우선권 위반 시 거래정지 조항, 은행 운전자금 120억 한도를 얻는다. 태오바이오는 약을 만드는 회사에서 산업이 먼저 줄 서는 소재 관문으로 격상된다."
+  },
+  "stakes": "권리들이 하나의 공급권 프레임으로 묶이지 못하면 쌓은 원료와 소재 권리는 각자 좋은 계약 조각으로 흩어지고 대기업 지분 협상에 다시 잡아먹힌다.",
+  "power_shift": {
+    "protagonist": "개별 병목을 해결하던 운영자에서 API와 정밀소재 공급권을 산업 단위로 가격 매기는 회사의 설계자로 격상된다.",
+    "antagonist": "일본 원료상과 국내 화학 대기업은 각자 조건으로 권리를 회수하지 못하고, 태오가 설계한 공급권 프레임 안에서 경쟁해야 한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "은행 투자심사부",
+      "before": "권리 목록을 불확실한 미래 옵션으로 보는 평가자",
+      "after": "선급 주문, capacity window, 소재 평가권을 현금흐름으로 보고 1800억 가치평가와 운전자금 한도를 승인하는 파트너"
+    },
+    {
+      "target": "일본 원료상",
+      "before": "잔여 lot 장기계약으로 dual-source 조항을 되돌리려는 공급자",
+      "after": "dual-source 유지 조항 안에서 가격과 품질자료를 제시해야 하는 경쟁 공급자",
+      "anchor_before": "태오가 대체 공정 검토권을 들고 협상장에 들어오자 견제해야 하는 상대"
+    },
+    {
+      "target": "국내 화학 대기업",
+      "before": "합작 LOI를 지분 협상으로 되돌리려는 상대",
+      "after": "API/소재 공급권 프레임계약의 공동감사와 window 정지 조항을 받아들이는 산업 파트너",
+      "anchor_before": "우선공급 LOI와 capacity window 정지권 때문에 배정 규칙을 지켜야 하는 파트너"
+    }
+  ],
+  "foreshadow": [
+    "은행 운전자금 120억 한도는 다음 ARC의 글로벌 CDMO 수주와 GMP 증설 협상의 초기 연료가 된다.",
+    "API/소재 3년 공급권 프레임계약은 이후 빅파마 단가 압박에 맞설 병목 소재 카드가 된다.",
+    "소재 공급권 공동감사권은 태오바이오가 약, 소재, 물류, 금융을 하나의 운영지도에 묶는 후반부 구조로 이어진다."
+  ],
+  "callback": [
+    "3개 API 품목 원료 우선공급권이 가치평가서의 핵심 자산으로 쓰인다.",
+    "공급권 우선 LOI와 capacity window가 API/소재 프레임계약의 생산능력 근거가 된다.",
+    "반도체 소재 샘플 평가권과 필터/배지 예약권이 정밀소재 수익선의 증거로 묶인다.",
+    "원료 한 드럼 병목이 결국 원료소재 우선권이 완제약 생산권보다 강하다는 결산으로 회수된다."
+  ],
+  "emotional_beat": {
+    "protagonist_feeling": "태오는 한때 창고 한 칸과 원료 한 드럼을 지키느라 뛰던 자신이 이제 산업의 줄을 세우는 표 앞에 서 있다는 사실을 조용히 받아들인다.",
+    "reader_catharsis": "상대들이 각자 권리를 되가져가려는 순간, 주인공이 모든 병목을 하나의 공급권 프레임으로 묶어 1800억 평가와 120억 한도를 끌어내는 사이다."
+  },
+  "tension_level": 10,
+  "pov_character": "강태오",
+  "location": {
+    "place": "은행 투자심사 회의실과 API/소재 공급권 프레임계약 서명장",
+    "type": "materials_supply_right_valuation_room",
+    "macro_battlefield": "API/소재 공급권 결산과 산업 소재 관문화"
+  },
+  "time_span": {
+    "duration": "10일",
+    "in_story_time": "2001년 6월 말"
+  },
+  "genre_ext": {
+    "capital_before": "8억 2천만 + 원료 한 드럼 우선 배정권 + 90일 지역 물류창고 전용 슬롯 + lot별 품질성적서 사본권 + 첫 출고 지시권 + 재고담보 사전검토권 + 부평 2공장 생산 슬롯 보호 메모 + 비침해 생산계획 검토권 + 파일럿 배치 1회 잔여 슬롯 + 공정변경 QA 문서 사본권 + 법무 사전검토 메모 접근권 + A급 중간체 6개월 우선공급권 + 톤당 가격밴드 계약 + 불순물 프로파일 선제 제출권 + 2회 분할입고권 + 원료재고 담보 term sheet + 대체 합성 라인 1회 검증권 + dual-source 원료 조항 + 품질성적서 비교 프로토콜 + 기술이전 폴더 열람권 + 부평 2공장 명의 파일럿 검증 보고서 작성권 + 12개월 필터/배지 예약 배정권 + 2차 공급사 적격성 평가권 + 필터 lot 성능검증 프로토콜 재사용권 + 검증자료 사본권 + 멸균 라인 2일 생산 슬롯 보호 확약 + 소형 화학공장 야간 파일럿 3회 사용권 + batch record 작성권 + 편차기록 사본권 + 기술이전 체크리스트 초안권 + QA 동행검토권 + 반도체 소재 샘플 2회 평가권 + clean-pack SOP 초안권 + particle/metal ion 데이터 사본권 + 특수가스 필터 사전시험 슬롯 + 클린룸 포장재 lot 추적권 + 5년 API/소재 우선공급 LOI + 대기업 파일럿 설비 월 3일 capacity window + 기술이전 폴더 공동감사권 + clean-pack SOP 사용범위 제한권 + 2억 원 선급 구매보증금 + 3개 API 품목 원료 우선공급권 + 완제약 생산권 선순위 원료 배정 규정 + 월간 소재/완제 공동 배정회의 의장권 + capacity window 정지권 + 6억 원 선급 주문서",
+    "capital_after": "1800억 + API/소재 공급권 + API/소재 3년 공급권 프레임계약 + dual-source 유지 조항 + 소재 공급권 공동감사권 + 원료 우선권 위반 시 거래정지 조항 + 은행 운전자금 120억 한도",
+    "capital_delta": "+1791억 8천만 평가 상승, +API/소재 공급권 프레임, +운전자금 120억 한도, +dual-source 유지, +공동감사권, +거래정지 조항",
+    "profit_loss": "개별 권리와 선급 주문을 산업별 현금흐름으로 묶어 기업가치 평가 1800억과 운전자금 120억 한도를 확보한다.",
+    "method": "원료 우선권, capacity window, 소재 샘플 평가권, 필터 예약권을 API/정밀화학/반도체 소재 수익선별로 재배열해 공급권 프레임계약과 가치평가서로 만든다.",
+    "investment_type": "기업가치 재평가 + 운전자금 한도 승인",
+    "deal_type": "API/소재 3년 공급권 프레임계약",
+    "leverage_used": "원료 우선권, 공급권 우선 LOI, 반도체 소재 평가권, 필터/배지 예약권, 원료 한 드럼 병목",
+    "opponent": {
+      "name": "일본 원료상 + 국내 화학 대기업 + 은행 투자심사부",
+      "type": "API/정밀화학/반도체 소재 공급권 복합 압박 세력",
+      "weakness_exploited": "API/정밀화학/반도체 소재 공급권의 병목을 문서·권리·책임선으로 잠그는 강태오의 방식을 과소평가한다."
+    },
+    "time_pressure": "합작 LOI 지분 재협상 시한과 은행 평가 보류 시한 전 10일",
+    "knowledge_used": "기업가치 평가서, 공급권 프레임계약, dual-source 유지 조항, 공동감사권, 운전자금 한도",
+    "risk_level": "최상",
+    "business_sector": "API/정밀화학/반도체 소재 공급권",
+    "section_rotation": "원료의약품과 정밀화학 결산",
+    "success_pattern": "흩어진 권리들을 산업별 현금흐름과 통제 조항으로 묶어 회사의 정체성과 평가 기준을 바꾼다.",
+    "opening_progression": {
+      "public_signboard_event": "은행 투자심사부가 권리 목록만으로는 1800억 가치평가를 보류하겠다고 통보한다.",
+      "representative_reevaluation": "은행, 일본 원료상, 국내 화학 대기업은 태오바이오를 완제약 회사가 아니라 API와 소재 공급권을 쥔 산업 관문으로 다시 평가한다.",
+      "next_battlefield_ticket": "운전자금 120억 한도와 API/소재 공급권 프레임이 다음 ARC의 글로벌 CDMO 수주와 GMP 증설 전장으로 이어진다."
+    },
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "materials_supply_right_valuation_receipt",
+      "receipt_line": "태오는 흩어진 권리 목록을 API/소재 공급권 프레임계약으로 묶어 1800억 가치평가서와 운전자금 120억 한도를 받아낸다.",
+      "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "흩어진 권리들을 산업별 현금흐름과 통제 조항으로 묶어 회사의 정체성과 평가 기준을 바꾼다.",
+      "recognition_signal": "은행 투자심사부의 시선 변화: 선급 주문, capacity window, 소재 평가권을 현금흐름으로 보고 1800억 가치평가와 운전자금 한도를 승인하는 파트너",
+      "reward_signal": "태오는 흩어진 권리 목록을 API/소재 공급권 프레임계약으로 묶어 1800억 가치평가서와 운전자금 120억 한도를 받아낸다.",
+      "growth_signal": "개별 병목을 해결하던 운영자에서 API와 정밀소재 공급권을 산업 단위로 가격 매기는 회사의 설계자로 격상된다.",
+      "expectation_signal": "운전자금 120억 한도와 API/소재 공급권 프레임이 다음 ARC의 글로벌 CDMO 수주와 GMP 증설 전장으로 이어진다.",
+      "reader_feel": "독자는 「소재가 산업을 고른다」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 태오는 흩어진 권리 목록을 API/소재 공급권 프레임계약으로 묶어 1800억 가치평가서와 운전자금 120억 한도를 받아낸다. 성장 장면: 개별 병목을 해결하던 운영자에서 API와 정밀소재 공급권을 산업 단위로 가격 매기는 회사의 설계자로 격상된다. 다음 기대감: 운전자금 120억 한도와 API/소재 공급권 프레임이 다음 ARC의 글로벌 CDMO 수주와 GMP 증설 전장으로 이어진다.",
+      "mature_success_signal": "강태오는 소재가 산업을 고른다의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "흩어진 권리들을 산업별 현금흐름과 통제 조항으로 묶어 회사의 정체성과 평가 기준을 바꾼다.",
+        "recognition": "은행 투자심사부의 시선 변화: 선급 주문, capacity window, 소재 평가권을 현금흐름으로 보고 1800억 가치평가와 운전자금 한도를 승인하는 파트너",
+        "reward": "태오는 흩어진 권리 목록을 API/소재 공급권 프레임계약으로 묶어 1800억 가치평가서와 운전자금 120억 한도를 받아낸다.",
+        "growth": "개별 병목을 해결하던 운영자에서 API와 정밀소재 공급권을 산업 단위로 가격 매기는 회사의 설계자로 격상된다.",
+        "expectation": "운전자금 120억 한도와 API/소재 공급권 프레임이 다음 ARC의 글로벌 CDMO 수주와 GMP 증설 전장으로 이어진다.",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 은행 투자심사부의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 운전자금 120억 한도와 API/소재 공급권 프레임이 다음 ARC의 글로벌 CDMO 수주와 GMP 증설 전장으로 이어진다."
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "3개 API 품목 원료 우선권과 소재/완제 공동 배정회의가 만들어지자, 태오바이오는 더 이상 약만 만드는 회사로 설명되지 않는다.",
+      "proof_action": "태오는 권리 목록을 자랑하지 않고 산업별 병목 지도로 재배열한다. 첫 사건 beat는 은행 심사회의에서 원료 우선권, capacity window, 소재 샘플 평가권, 필터/배지 예약권을 API, 정밀화학, 반도체 소재 3개 수익선으로 나누고 각 권리의 선급 주문, 평가 일정, 설비일수를 현금흐름표에 연결하는 장면이다.",
+      "proof_axis": "기업가치 평가서, 공급권 프레임계약, dual-source 유지 조항, 공동감사권, 운전자금 한도",
+      "recognition_or_resistance_signal": "은행 투자심사부 -> 선급 주문, capacity window, 소재 평가권을 현금흐름으로 보고 1800억 가치평가와 운전자금 한도를 승인하는 파트너",
+      "receipt_asset": "태오는 흩어진 권리 목록을 API/소재 공급권 프레임계약으로 묶어 1800억 가치평가서와 운전자금 120억 한도를 받아낸다.",
+      "reward_asset_classes": [
+        "raw_materials",
+        "contract_right"
+      ],
+      "next_regulated_gate": "운전자금 120억 한도와 API/소재 공급권 프레임이 다음 ARC의 글로벌 CDMO 수주와 GMP 증설 전장으로 이어진다.",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 은행 투자심사부의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 운전자금 120억 한도와 API/소재 공급권 프레임이 다음 ARC의 글로벌 CDMO 수주와 GMP 증설 전장으로 이어진다.",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "business_memory",
+    "timeline_knowledge": "태오는 전생에서 원료와 소재 공급권이 완제약 매출보다 더 높은 산업 지배력을 만들었던 시기를 기억한다.",
+    "butterfly_effect": "태오바이오의 평가 기준이 완제약 생산량에서 API/소재 공급권으로 바뀌며 다음 글로벌 CDMO 수주전에 필요한 자금과 지위를 먼저 얻는다.",
+    "death_flag": false,
+    "regression_hint": "태오가 은행 심사표의 매출 칸보다 공급권 칸을 먼저 채우는 장면으로만 암시한다.",
+    "future_prep": "운전자금 한도, 공급권 프레임, 공동감사권은 다음 ARC의 글로벌 수주와 GMP 증설 협상에서 핵심 무기가 된다."
+  },
+  "block_no": 40,
+  "foreshadow_targets": [
+    {
+      "target_block": 41,
+      "target_event": "글로벌 CDMO 수주 전장"
+    },
+    {
+      "target_block": 62,
+      "target_event": "빅파마의 단가표"
+    }
+  ],
+  "callback_sources": [
+    {
+      "source_block": 39,
+      "source_event": "원료 우선권"
+    },
+    {
+      "source_block": 38,
+      "source_event": "대기업의 합작 제안"
+    },
+    {
+      "source_block": 37,
+      "source_event": "반도체 클린룸의 냄새"
+    },
+    {
+      "source_block": 35,
+      "source_event": "필터가 없으면 약도 없다"
+    },
+    {
+      "source_block": 31,
+      "source_event": "원료 한 드럼"
+    }
+  ]
+}

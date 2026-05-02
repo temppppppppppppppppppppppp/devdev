@@ -1,0 +1,174 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "26",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 026 draft only. Converts Aster volume-default proof into expanded overseas contract-file access and official notice authority instead of cashing out the FX/discount gap.",
+  "blocks": [
+    {
+      "block_id": "Block 26",
+      "block_no": 26,
+      "title": "환차익보다 파일 접근권",
+      "episode_span_intent": "2~6화 분량. Aster 최소 물량 미달 proof 제출, 달러 계좌 보류 해제 심사 재개, 18,740달러 차액을 환차익/할인분으로 닫으려는 내부 시도, 도윤의 현금 보상 거절, SableWorks 기존 계약 원본 확대 열람권과 Aster 공식 통지권 확보를 압축한다.",
+      "content": {
+        "context": "Aster 최소 물량 미달 proof가 올라가자 분위기가 바뀐다. 김원재는 달러 계좌 보류 사유를 정보 접근 리스크에서 권리 범위 검증으로 재분류한다. 해외소싱팀은 안도한다. 이제 18,740달러 차액을 환차익, credit note 지연분, 다음 선적분 할인으로 나누어 회계 처리하면 된다고 말한다. PB사업부는 도윤에게 성과수수료 일부를 따로 잡아주자는 말까지 꺼낸다. 겉으로는 보상이다. 도윤에게는 덫이다. 돈을 받는 순간 파일 접근권은 닫힌다.",
+        "event_villain": "첫 번째 사건은 현금 정리 제안이다. 재무팀은 차액 18,740달러를 내부 손익 조정으로 닫고, 도윤권리운영에는 D-RN 라인 원가 절감 기여분 명목으로 일회성 성공 보상만 주겠다고 한다. 해외소싱팀은 SableWorks 기존 공급 계약 원본 추가 열람은 불필요하다고 선을 긋는다. Aster의 최소 물량 미달은 이미 확인됐으니 더 볼 이유가 없다는 논리다. 도윤은 그 말을 듣고 계산을 끝낸다. 일회성 보상은 계좌에 들어오지만, 다음 오류와 다음 계약은 다시 남의 파일이 된다.",
+        "second_incident": "두 번째 사건은 공식 통지권 차단이다. Aster 물량 미달 통지를 보내야 SableWorks가 price protection 범위를 줄일 수 있는데, 해외소싱팀은 통지 발신권을 내부 명의로만 처리하겠다고 한다. 도윤권리운영은 참조에서도 빠진다. SableWorks도 기존 계약 원본 확대 열람은 contract holder인 다온리테일 요청이 있어야 가능하다고 답한다. 도윤은 현금보다 더 중요한 병목을 본다. 통지를 누가 보내고, 원본을 누가 보고, 다음 번엔 누가 먼저 mismatch를 확인하느냐. 그 세 칸이 곧 권리다.",
+        "solution": "도윤은 성과수수료 제안을 보류시킨다. 대신 세 가지를 요구한다. 첫째, SableWorks 기존 공급 계약 원본 확대 열람권. 원본 전체가 아니라 volume clause annex, price protection annex, channel definition, PO schedule까지만 read-only로 연다. 둘째, Aster 물량 미달 공식 통지권. 도윤권리운영 단독 발신은 아니어도, 통지 초안 작성자와 증거 첨부 승인자로 이름을 남긴다. 셋째, 달러 계좌 보류 해제 조건부 메모. 계좌 개설은 아직 아니지만, 해외 계약 파일 정식 접근과 통지 실행이 끝나면 보류를 해제한다는 은행 조건을 받는다.",
+        "reward": "블록 끝에서 도윤은 18,740달러를 받지 않는다. 대신 SableWorks 기존 계약 원본 확대 열람권, Aster 물량 미달 공식 통지 초안 작성권, 해외 계약 파일 정식 접근권 초안, 달러 계좌 보류 해제 조건부 메모, 다음 선적분 할인권 귀속 재협상석을 얻는다. 재무팀장이 묻는다. '눈앞의 돈을 왜 미룹니까?' 도윤은 환차익 분류표를 접고 파일 접근 승인란에 서명한다. '돈은 한 번 들어오고 끝납니다. 파일은 다음 돈이 어디 있는지 알려줍니다.'"
+      },
+      "stakes": "18,740달러 차액을 환차익과 할인분으로 닫으면 도윤권리운영은 일회성 보상만 받고 해외 계약 파일 접근권을 잃는다. 반대로 현금을 미루고 원본 확대 열람권과 공식 통지권을 얻으면 다음 선적분 할인권과 달러 계좌 보류 해제까지 이어진다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "재무팀과 해외소싱팀이 18,740달러 차액을 환차익/할인분 회계 처리와 일회성 성과 보상으로 닫으려 하며 기존 계약 원본 추가 열람을 차단함",
+        "incident_2": "Aster 물량 미달 통지를 내부 명의로만 보내려 해 도윤권리운영이 공식 통지와 다음 파일 접근에서 빠질 위기에 놓임",
+        "next_actionable_gate": "달러 계좌 보류 해제 심사, SableWorks 원본 annex 확대 열람, Aster 물량 미달 공식 통지 발송, 다음 선적분 할인권 귀속 재협상",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 회사가 손실을 정리하도록 돕기 위해 현금을 미루는 게 아니다. 일회성 환차익 보상보다 해외 계약 파일 정식 접근권이 다음 권리와 반복 마진을 더 크게 만들기 때문에 돈을 뒤로 뺀다.",
+        "morality_position": "회사 손실 회피를 완성하는 척하지만 핵심은 도윤권리운영을 다음 해외 정산 오류와 공급 계약 협상에 반드시 끼는 검증 주체로 만드는 것이다.",
+        "efficiency_choice": "전체 원본 열람이나 즉시 달러 계좌 개설을 밀어붙이지 않고, annex 범위와 통지 초안 작성권, 보류 해제 조건부 메모로 요구를 쪼갠다."
+      },
+      "power_shift": {
+        "protagonist": "AI 초안 한계를 고정하고 Aster 물량 조항 약점을 잡은 수동 검증 주체 -> 환차익 현금 정리를 거절하고 해외 계약 파일 정식 접근권과 공식 통지권을 가진 권리 운영자",
+        "antagonist": "재무팀/해외소싱팀: 차액을 회계 처리와 일회성 보상으로 닫으려는 내부 gatekeeper -> 원본 annex 열람과 Aster 통지 초안 작성권을 도윤에게 내줘야 하는 carrier",
+        "system": "Aster 최소 물량 미달 proof -> 환차익 정리 압박, 원본 annex 확대 열람, 공식 통지권, 달러 계좌 보류 해제 조건"
+      },
+      "relationship_delta": [
+        {
+          "target": "김원재",
+          "before": "정보 유출 리스크가 아니라 권리 범위 검증으로 보류 사유를 재분류하는 외환 gatekeeper",
+          "after": "해외 계약 파일 정식 접근과 Aster 통지 실행 후 달러 계좌 보류 해제를 검토하겠다는 조건부 메모를 남기는 gatekeeper"
+        },
+        {
+          "target": "해외소싱팀",
+          "before": "Aster 대응과 SableWorks 파일 접근을 내부 명의로만 붙잡고 있음",
+          "after": "Aster 물량 미달 공식 통지 초안과 증거 첨부 승인에 도윤권리운영을 넣어야 하는 부서"
+        },
+        {
+          "target": "재무팀",
+          "before": "18,740달러 차액을 환차익/할인분 회계 처리와 일회성 성과 보상으로 닫으려 함",
+          "after": "현금 보상보다 파일 접근권을 요구하는 도윤 때문에 차액 정산을 다음 선적분 할인권 귀속 재협상과 묶게 됨"
+        },
+        {
+          "target": "SableWorks",
+          "before": "기존 공급 계약 원본 제한 열람본만 제공한 해외 공급사",
+          "after": "volume clause annex, price protection annex, channel definition, PO schedule 확대 열람을 조건부로 여는 상대"
+        },
+        {
+          "target": "Aster Trading",
+          "before": "최소 물량 미달과 정규 retail channel 범위 제한을 공격받을 약점이 생긴 기존 수입사",
+          "after": "공식 물량 미달 통지를 받기 직전의 방어 대상"
+        }
+      ],
+      "foreshadow": [
+        "달러 계좌 보류 해제 심사",
+        "SableWorks 원본 annex 확대 열람",
+        "Aster 물량 미달 공식 통지 발송",
+        "다음 선적분 할인권 귀속 재협상",
+        "도윤권리운영의 해외 계약 파일 정식 접근권"
+      ],
+      "callback": [
+        "Block 25의 Aster 최소 물량 미달 proof가 공식 통지권 요구의 근거로 회수됨",
+        "Block 25의 달러 계좌 보류 해제용 검증표가 김원재 조건부 메모로 확장됨",
+        "Block 24의 SableWorks 기존 공급 계약 원본 제한 열람 gate가 annex 확대 열람권으로 확장됨",
+        "Block 23의 다음 선적분 할인권 SPV/D-RN 귀속 확인서 초안이 재협상석으로 되살아남",
+        "Block 3 이후 반복된 현금보다 권한 원칙이 18,740달러 차액 앞에서 재확인됨"
+      ],
+      "emotional_beat": {
+        "type": "cash_settlement_refusal_to_file_access_receipt",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "다온리테일 재무팀 회의실 / 해외소싱팀 화상회의실 / 은행 기업외환 상담실 / SableWorks read-only 계약 데이터룸",
+        "type": "재무 / 해외소싱 / 은행 / 데이터룸"
+      },
+      "time_span": {
+        "duration": "2일",
+        "in_story_time": "2026년 7월 첫째 주 후반"
+      },
+      "genre_ext": {
+        "capital_before": "Mira 오류 로그 + AI 초안 사용 금지 프로토콜 + 현장 송장/packing list/선적 서류 수동 대조표 + Aster 최소 물량 미달 proof + 달러 계좌 보류 해제용 검증표 + SableWorks 기존 공급 계약 원본 추가 열람 요청권",
+        "capital_after": "SableWorks 기존 계약 원본 annex 확대 열람권 + Aster 물량 미달 공식 통지 초안 작성권 + 해외 계약 파일 정식 접근권 초안 + 달러 계좌 보류 해제 조건부 메모 + 다음 선적분 할인권 귀속 재협상석",
+        "capital_delta": "Aster 물량 미달 proof와 달러 계좌 보류 해제 검증표를 현금 정산이 아니라 해외 계약 파일 접근권과 공식 통지권으로 전환",
+        "profit_loss": "18,740달러 차액의 즉시 정산은 미룬다. 대신 다음 선적분 할인권 귀속과 달러 계좌 보류 해제, 이후 해외 계약 파일 접근이 반복 수익을 만들 수 있다.",
+        "method": "현금 보상 보류, Aster 최소 물량 미달 proof 제출, 원본 annex 범위 제한 열람 요구, 공식 통지 초안 작성권 확보, 은행 보류 해제 조건부 메모 획득",
+        "deal_type": "파일 접근권 / 공식 통지권 / 달러 계좌 보류 해제 gate receipt",
+        "leverage_used": [
+          "Aster 최소 물량 미달 proof",
+          "달러 계좌 보류 해제용 검증표",
+          "SableWorks 기존 공급 계약 원본 추가 열람 요청권",
+          "현장 송장/packing list/선적 서류 수동 대조표",
+          "AI 초안 사용 금지 프로토콜",
+          "다음 선적분 할인권 귀속 확인서 초안"
+        ],
+        "opponent": {
+          "name": "재무팀/해외소싱팀",
+          "type": "현금 정리와 파일 차단 내부 gatekeeper",
+          "weakness_exploited": "Aster 물량 미달을 공식 통지하지 않으면 SableWorks price protection 범위를 줄일 수 없고, 은행 보류 해제도 어렵다는 점"
+        },
+        "time_pressure": "다음 선적분 할인권이 다온 내부 매입가로 확정되기 전 Aster 통지와 원본 annex 열람, 달러 계좌 보류 해제 조건을 묶어야 한다.",
+        "risk_level": "고위험",
+        "business_sector": "해외 계약 파일 / 환차익 정산 / 공식 통지권 / 은행 외환 / supplier price protection",
+        "section_rotation": "눈앞의 환차익 정리를 거절하고 다음 돈줄을 여는 파일 접근권을 산다",
+        "success_pattern": "현금은 미뤄지지만 SableWorks 기존 계약 annex 확대 열람권, Aster 공식 통지 초안 작성권, 해외 계약 파일 정식 접근권 초안, 달러 계좌 보류 해제 조건부 메모가 남는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "cash_refusal_to_file_access_receipt",
+          "receipt_line": "'돈은 한 번 들어오고 끝납니다. 파일은 다음 돈이 어디 있는지 알려줍니다.'",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "SableWorks 기존 계약 원본 annex 확대 열람권",
+          "Aster 물량 미달 공식 통지 초안 작성권",
+          "해외 계약 파일 정식 접근권 초안",
+          "달러 계좌 보류 해제 조건부 메모",
+          "다음 선적분 할인권 귀속 재협상석"
+        ],
+        "document_evidence": [
+          "Aster 최소 물량 미달 proof",
+          "달러 계좌 보류 해제용 검증표",
+          "18,740달러 차액 3분류표",
+          "현장 송장/packing list/선적 서류 수동 대조표",
+          "SableWorks 기존 계약 원본 추가 열람 요청권",
+          "다음 선적분 할인권 귀속 확인서 초안"
+        ],
+        "field_validation": [
+          "차액을 회계 처리로 닫으면 도윤권리운영의 다음 파일 접근권이 사라짐",
+          "Aster 물량 미달 공식 통지가 없으면 price protection 범위를 줄이기 어려움",
+          "SableWorks 원본 전체가 아니라 annex 범위 제한 열람은 협상 가능",
+          "달러 계좌 개설은 아직 아니지만 보류 해제 조건부 메모는 가능",
+          "도윤권리운영을 통지 초안 작성자와 증거 첨부 승인자로 남길 수 있음"
+        ],
+        "witness_carrier": [
+          "재무팀의 일회성 성과 보상 제안",
+          "해외소싱팀의 내부 명의 통지 주장",
+          "김원재의 보류 해제 조건부 메모",
+          "SableWorks의 annex 확대 열람 조건",
+          "한규리의 공식 통지 초안 작성자 문구 검토"
+        ],
+        "receipt": [
+          "SableWorks 기존 계약 원본 annex 확대 열람권",
+          "Aster 물량 미달 공식 통지 초안 작성권",
+          "해외 계약 파일 정식 접근권 초안",
+          "달러 계좌 보류 해제 조건부 메모",
+          "다음 선적분 할인권 귀속 재협상석"
+        ],
+        "next_gate": "달러 계좌 보류 해제 심사, SableWorks 원본 annex 확대 열람, Aster 물량 미달 공식 통지 발송, 다음 선적분 할인권 귀속 재협상"
+      },
+      "foreshadow_targets": [
+        27,
+        28,
+        29,
+        30
+      ]
+    }
+  ]
+}

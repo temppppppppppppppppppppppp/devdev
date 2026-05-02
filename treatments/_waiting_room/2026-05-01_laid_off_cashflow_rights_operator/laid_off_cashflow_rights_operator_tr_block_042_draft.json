@@ -1,0 +1,156 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "42",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 042 draft only. Waiting-room production continuation; not root canonical, not BI, not immediate-use.",
+  "blocks": [
+    {
+      "block_id": "Block 42",
+      "block_no": 42,
+      "title": "밀려난 품질관리자",
+      "episode_span_intent": "2~6화 분량. 노태경 접촉, 과거 보고서 원본 확인, 구매본부의 보고서 무력화, 도윤의 품질 expert retainer와 부적합 원장 접근권 확보를 압축한다.",
+      "content": {
+        "context": "노태경은 퇴사한 사람이 아니다. 제조사 안에 남아 있지만, 구매본부의 숫자표에서 밀려난 품질관리자다. 그의 보고서는 여섯 달 전 포장 규격 변경 때 올라갔고, 결론은 간단했다. 팔레트 적재 높이를 낮추지 않으면 압착 자국은 반복된다. 보고서는 생산 일정 지연 우려로 보류되었고, 이제 같은 자국이 C-1 물량에서 다시 나온다. 도윤은 노태경에게 도움을 청하지 않는다. 보고서가 살아 있으면 보고서의 값부터 정한다.",
+        "event_villain": "첫 번째 사건은 보고서 원본 회수다. 구매본부는 노태경 보고서가 내부 참고자료라 외부 SPV에 줄 수 없다고 막는다. 노태경도 처음에는 말을 아낀다. 자신의 보고서를 다시 꺼내면 생산본부와 구매본부 양쪽에서 찍힐 수 있다. 도윤은 선의를 말하지 않는다. 보고서가 C-1 운영 미숙 판정을 유예하고, 20대 샘플 폐기를 막고, 향후 유지보수 비용표의 근거가 되면 노태경에게 품질 검증 retainer와 성과수수료를 붙이겠다고 제안한다.",
+        "second_incident": "두 번째 사건은 구매본부의 무력화다. 구매본부는 보고서가 오래되었고 라인 조건이 바뀌었다며 현재 클레임과 무관하다고 주장한다. 도윤은 현장 사진과 생산일 로트, 포장재 공급사 코드, 압착 위치 좌표를 맞춘다. 노태경은 그제야 보고서 부록을 꺼낸다. 부록에는 포장재 공급사 변경 전후의 압착 위치 비교표가 있다. 도윤은 이 부록을 원본 전체가 아니라 부적합 원장 제한 열람권으로 전환한다.",
+        "solution": "도윤은 노태경을 영웅으로 세우지 않는다. 계약자로 세운다. 노태경 품질 검증 retainer, 부적합 원장 제한 열람권, 포장재 공급사 코드 대조표, 20대 샘플 재검수 일정, C-1 운영 미숙 판정 유예 연장. 노태경에게도 안전장치를 준다. 보고서 원본 공개가 아니라 부록 항목명과 수치만 외부 검증 packet에 들어간다. 도윤은 사람을 얻은 게 아니라 품질 판단선을 산다.",
+        "reward": "블록 끝에서 도윤은 노태경 품질 검증 retainer 초안, 부적합 원장 제한 열람권, 포장재 공급사 코드 대조표, 20대 샘플 재검수 일정, C-1 운영 미숙 판정 유예 연장 메모를 얻는다. 노태경이 묻는다. 제 편을 들어주겠다는 겁니까. 도윤은 대답한다. 편이 아니라 기준을 삽니다."
+      },
+      "stakes": "노태경 보고서가 오래된 내부 자료로 묻히면 포장 압착 클레임은 도윤권리운영 운영 미숙으로 닫힌다. 부적합 원장과 retainer를 확보해야 품질 proof가 유지보수 계약으로 이어진다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "노태경 보고서 원본 제공이 막히자, 도윤이 품질 검증 retainer와 성과수수료를 제안해 보고서 부록의 활용 근거를 만듦",
+        "incident_2": "구매본부가 보고서 무관성을 주장하자, 도윤과 노태경이 생산일 로트/포장재 공급사 코드/압착 위치 좌표를 맞춰 부적합 원장 접근권으로 전환함",
+        "next_actionable_gate": "20대 샘플 재검수, 유지보수 비용표, 제조사 구매본부의 납품권 회수 통지, 경쟁 납품사 등장",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 노태경을 억울한 내부자라서 구하는 게 아니다. 보고서와 부적합 원장이 장기 슬롯과 납품권 방어의 가격을 올리기 때문에 retainer를 붙인다.",
+        "morality_position": "품질 기준을 바로잡는 명분은 사용하지만 핵심은 expert와 원장을 계약 가능한 권리로 확보하는 것이다.",
+        "efficiency_choice": "보고서 원본 공개 싸움 대신 부록 항목명과 제한 열람권으로 빠르게 검증 packet을 만든다."
+      },
+      "power_shift": {
+        "protagonist": "품질 클레임을 생산 라인 파일 접근권으로 바꾸는 품질 gate 운영자 -> 노태경 expert와 부적합 원장 접근권을 쥔 품질 proof 운영자",
+        "antagonist": "제조사 구매본부: 보고서 무력화자 / 내부 자료 차단자 -> 부적합 원장 제한 열람과 재검수 일정을 내줘야 하는 gatekeeper",
+        "system": "포장 규격 원본 제한 열람권과 노태경 보고서 번호 -> 노태경 품질 검증 retainer 초안 + 부적합 원장 제한 열람권 + 포장재 공급사 코드 대조표 + 20대 샘플 재검수 일정 + C-1 운영 미숙 판정 유예 연장 메모"
+      },
+      "relationship_delta": [
+        {
+          "target": "노태경",
+          "before": "과거 보고서 번호로 호출되는 다음 expert",
+          "after": "품질 검증 retainer를 받고 부적합 원장과 포장재 코드 대조표를 여는 expert"
+        },
+        {
+          "target": "제조사 구매본부",
+          "before": "포장 규격 원본과 출고 검사표 누락을 설명해야 하는 품질 gatekeeper",
+          "after": "보고서 무력화를 시도했지만 제한 열람과 재검수 일정을 내주는 gatekeeper"
+        },
+        {
+          "target": "한규리",
+          "before": "제한 열람 요청서와 샘플 보류 문구를 살리는 법무 validator",
+          "after": "retainer와 부록 항목명 공개 범위를 좁히는 계약 validator"
+        },
+        {
+          "target": "박만철",
+          "before": "압착 자국 위치와 과거 반품 사진을 겹쳐 보는 현장 witness",
+          "after": "재검수 샘플과 C-1 보관 상태를 증명하는 현장 witness"
+        }
+      ],
+      "foreshadow": [
+        "20대 샘플 재검수",
+        "유지보수 비용표",
+        "경쟁 납품사의 자격 공격",
+        "보험/보증 구조"
+      ],
+      "callback": [
+        "노태경 보고서 번호가 retainer 초안으로 회수됨",
+        "20대 샘플 보류권이 재검수 일정으로 회수됨",
+        "포장 규격 원본 gate가 부적합 원장 제한 열람으로 회수됨"
+      ],
+      "emotional_beat": {
+        "type": "expert_contracted_not_rescued",
+        "intensity": 7
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "제조사 품질관리실 / 도윤권리운영 임시 사무공간 / C-1 재검수 구역",
+        "type": "품질 expert / SPV 계약 / 샘플 검증"
+      },
+      "time_span": {
+        "duration": "3일",
+        "in_story_time": "2026년 9월 넷째 주"
+      },
+      "genre_ext": {
+        "capital_before": "포장 규격 원본 제한 열람권 + 출고 검사표 누락 사유 확인 요청서 + 노태경 과거 보고서 번호 + 20대 추가 샘플 보류권 + C-1 운영 미숙 판정 유예 메모",
+        "capital_after": "노태경 품질 검증 retainer 초안 + 부적합 원장 제한 열람권 + 포장재 공급사 코드 대조표 + 20대 샘플 재검수 일정 + C-1 운영 미숙 판정 유예 연장 메모",
+        "capital_delta": "노태경 보고서 gate를 expert retainer, 부적합 원장, 재검수 일정으로 전환",
+        "profit_loss": "retainer 비용 부담 발생. 품질 원장과 expert 판단권 확보",
+        "method": "선의 동맹이 아니라 retainer와 제한 열람권으로 품질 expert를 계약화",
+        "deal_type": "quality expert retainer / nonconformance ledger access",
+        "leverage_used": [
+          "노태경 보고서 번호",
+          "포장재 공급사 코드",
+          "압착 위치 좌표",
+          "20대 샘플 보류권"
+        ],
+        "opponent": {
+          "name": "제조사 구매본부",
+          "type": "보고서 무력화자 / 내부 자료 차단자",
+          "weakness_exploited": "보고서를 완전히 묻으려면 같은 압착 위치와 공급사 코드 반복을 설명해야 한다는 점"
+        },
+        "time_pressure": "샘플 재검수 전 구매본부가 운영 미숙 판정을 확정하려 함",
+        "risk_level": "고위험",
+        "business_sector": "품질 expert / 부적합 원장 / 재검수",
+        "section_rotation": "ARC-05 expert install turn",
+        "success_pattern": "사람을 구하는 장면이 아니라 판단 기준과 원장 접근권을 사는 계약형 승리",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "quality_expert_and_ledger_access",
+          "receipt_line": "편이 아니라 기준을 삽니다.",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "품질 검증 retainer",
+          "부적합 원장 제한 열람권",
+          "샘플 재검수 일정"
+        ],
+        "document_evidence": [
+          "retainer 초안",
+          "부적합 원장 열람 승인 메모",
+          "포장재 공급사 코드 대조표",
+          "재검수 일정표"
+        ],
+        "field_validation": [
+          "압착 위치 좌표가 기존 보고서와 일치",
+          "포장재 코드가 같은 라인에서 반복",
+          "20대 샘플 재검수 일정 확보"
+        ],
+        "witness_carrier": [
+          "노태경의 보고서 부록",
+          "한규리의 retainer 문구",
+          "박만철의 샘플 보관 확인",
+          "구매본부의 무력화 메일"
+        ],
+        "receipt": [
+          "노태경 품질 검증 retainer 초안",
+          "부적합 원장 제한 열람권",
+          "포장재 공급사 코드 대조표",
+          "20대 샘플 재검수 일정",
+          "C-1 운영 미숙 판정 유예 연장 메모"
+        ],
+        "next_gate": "20대 샘플 재검수, 유지보수 비용표, 제조사 구매본부의 납품권 회수 통지, 경쟁 납품사 등장"
+      },
+      "foreshadow_targets": [
+        43,
+        44,
+        45
+      ]
+    }
+  ]
+}

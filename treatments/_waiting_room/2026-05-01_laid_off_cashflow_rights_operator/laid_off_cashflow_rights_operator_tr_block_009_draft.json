@@ -1,0 +1,165 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "9",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 009 draft only. Continues Block 001-008 without generating a 10-block batch.",
+  "blocks": [
+    {
+      "block_id": "Block 9",
+      "block_no": 9,
+      "title": "첫 SPV의 이름",
+      "episode_span_intent": "2~6화 분량. 개인 계좌/개인사업자/SPV 리스크 비교, 도윤권리운영 임시 등록, 서우패키징 옵션금 48시간 처리, 첫 법적 그릇 receipt를 압축한다.",
+      "content": {
+        "context": "도윤은 외주계약 재검토권과 penalty 산정권을 얻었지만, 아직 돈을 받을 그릇이 없다. 리퍼브 성과수수료 7%도 '협의 문구'일 뿐이고, 서우패키징 옵션금 380만 원도 48시간 안에 처리해야 한다. 개인 계좌로 받으면 감사 로그가 터진다. 회사 비용으로 처리하면 권리가 회사로 흡수된다. 법인을 세우면 깔끔하지만 너무 늦다. 윤서린은 새벽에 표 하나를 보낸다. 개인 계좌: 감사 리스크 9.2. 개인사업자: 리스크 5.8, 처리 속도 당일. SPV 법인: 리스크 2.1, 처리 속도 7~14일. 도윤은 제일 안전한 답을 고르지 않는다. 제일 빠르게 권리를 놓치지 않는 답을 고른다.",
+        "event_villain": "첫 번째 사건은 법적 그릇 선택이다. 한규리는 개인사업자로 리퍼브 운영 수수료를 받으면 이해상충이 남는다고 경고한다. 윤서린은 개인사업자라도 감사 로그에 목적, 권한, 정산 계좌가 고정되면 개인 계좌보다는 낫다고 본다. 최문식은 그 틈을 찌른다. '그럼 개인사업자로 처리해. 법인은 나중에 하고, 책임도 네가 가져가.' 도윤은 받아친다. '좋습니다. 대신 상호, 업태, 정산 계좌, 향후 법인 승계 문구까지 오늘 확인서에 붙입니다.' 그는 홈택스 임시 등록 화면에 상호를 입력한다. 도윤권리운영. 업태는 경영컨설팅이 아니라 리퍼브 운영, 정산권 검토, 채권 중개. 모호하게 넓히면 빨라 보이지만, 나중에 권리를 잃는다.",
+        "second_incident": "두 번째 사건은 서우패키징 옵션금 48시간이다. 서혜린은 더 미루기 어렵다고 말한다. '계약금이 없으면 이건 그냥 말뿐이에요.' 도윤은 사과하지 않는다. 돈이 없다는 말도 하지 않는다. 대신 세 장을 보낸다. 도윤권리운영 임시 등록 접수번호, 샘플 판매/클레임 로그, 그린로지스 penalty 산정 초안. C동 이송 포장재 교체로 산정 가능한 penalty는 620만 원. 그는 제안한다. 현금 380만 원 선지급 대신, penalty 회수분 첫 380만 원을 서우패키징 옵션금으로 우선 배분하고, 그 대가로 다온 잔금 1,900만 원 상계 협상권을 도윤권리운영 앞으로 묶는다. 서혜린은 묻는다. '그린로지스한테 진짜 받아낼 수 있어요?' 도윤은 답한다. '못 받으면 제 옵션도 죽습니다. 그래서 제가 더 빨리 움직입니다.'",
+        "solution": "서혜린은 조건을 하나 붙인다. 14일 안에 penalty 산정 공문 또는 다온 상계 협상 초안이 나오지 않으면 옵션은 자동 해지. 도윤은 오히려 기간을 줄인 조건을 받아들인다. 긴 옵션은 편하지만, 상표권자가 흔들릴 시간을 준다. 짧은 옵션은 위험하지만, 다온과 그린로지스를 압박하는 숫자가 된다. 한규리는 계약서를 고친다. 개인사업자 도윤권리운영은 임시 수령 주체, 향후 SPV 법인 설립 시 권리와 의무를 승계할 수 있다. 윤서린은 감사 로그에 개인사업자 접수번호, option assignment, penalty 산정표를 묶는다. 최문식은 불편한 얼굴로 결재한다. 책임은 도윤에게 남고, 권리도 도윤에게 남는 구조다.",
+        "reward": "블록 끝에서 도윤은 첫 법적 그릇을 얻는다. 도윤권리운영 개인사업자 임시 접수번호, 향후 SPV 상호 예약 메모, 서우패키징 채권 옵션 변경계약, penalty 회수분 우선배분 조항. 통장에는 여전히 큰돈이 없다. 하지만 48시간 안에 죽을 옵션은 14일짜리 칼이 됐다. 도윤은 마지막으로 달러 RMA 폴더를 연다. USD settlement date mismatch 파일 옆에 새 파일이 하나 더 보인다. supplier debit note. 도윤은 파일명을 보고 바로 메모한다. '반품권 arc 종료 전에 달러 파일을 열어야 한다.' 돈을 벌기 전에 그릇을 만들었다. 이제 그릇에 넣을 다음 돈줄이 보인다."
+      },
+      "stakes": "법적 그릇 없이 개인 계좌로 수수료나 옵션금을 처리하면 도윤은 감사 리스크에 묶인다. 회사 비용으로 처리하면 라온홈 옵션과 리퍼브 수수료가 회사 권리로 흡수된다. 서우패키징 옵션금 48시간을 놓치면 C동 상표권 gate와 잔금 상계 카드가 동시에 닫힌다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "개인 계좌, 개인사업자, SPV 법인의 리스크/속도 비교 후 도윤권리운영 개인사업자 임시 등록과 향후 SPV 승계 문구 확보",
+        "incident_2": "서우패키징 옵션금 48시간 압박을 penalty 회수분 우선배분과 채권 옵션 변경계약으로 처리",
+        "next_actionable_gate": "그린로지스 penalty 산정 공문, 다온 상계 협상 초안, 달러 RMA mismatch 파일, supplier debit note",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 법적 그릇을 회사 규정에 맞추려고 만드는 게 아니다. 수수료, 옵션, penalty 회수분이 회사나 개인 계좌에 흡수되지 않게 자기 권리 수령 주체를 만든다.",
+        "morality_position": "서우패키징을 구제하려고 옵션금 조건을 바꾸는 게 아니다. 현금이 없으니 penalty 회수분을 담보로 걸어 자기 상계 협상권을 살린다.",
+        "efficiency_choice": "가장 안전한 법인 설립만 기다리지 않고, 당장 처리 가능한 개인사업자와 향후 SPV 승계 문구를 동시에 잡는다."
+      },
+      "power_shift": {
+        "protagonist": "외주계약 재검토권 담당자 -> 도윤권리운영이라는 첫 권리 수령 주체를 가진 운영자",
+        "antagonist": "최문식: 개인사업자 책임을 도윤에게 떠넘기려는 상사 -> 도윤의 권리 승계 문구까지 결재선에 남겨 준 상사",
+        "system": "책임 확인서와 penalty 산정권 -> 개인사업자 접수번호, SPV 승계 문구, 채권 옵션 변경계약, penalty 우선배분 조항"
+      },
+      "relationship_delta": [
+        {
+          "target": "윤서린",
+          "before": "샘플 판매 클레임과 포장 사진을 penalty 증거로 묶은 witness",
+          "after": "개인 계좌/개인사업자/SPV 리스크를 숫자로 비교하고, 도윤권리운영 접수번호를 감사 로그에 묶는 risk partner 후보"
+        },
+        {
+          "target": "한규리",
+          "before": "책임 확인서와 권한 부여 문구를 한 문서에 묶은 계약 carrier",
+          "after": "개인사업자 임시 수령과 향후 SPV 승계 문구를 계약서에 박는 validator"
+        },
+        {
+          "target": "서혜린",
+          "before": "서우패키징 채권 옵션 계약금을 요구하는 상표권자",
+          "after": "penalty 회수분 우선배분을 조건으로 다온 잔금 상계 협상권을 도윤권리운영에 묶어 주는 권리자"
+        },
+        {
+          "target": "최문식",
+          "before": "도윤 개인 책임을 강조해 권리를 약화하려 함",
+          "after": "도윤권리운영과 향후 SPV 승계 문구를 결재선에서 인정한 상사"
+        }
+      ],
+      "foreshadow": [
+        "도윤권리운영 개인사업자 임시 접수번호",
+        "향후 SPV 법인 승계 문구",
+        "그린로지스 penalty 회수분 첫 380만 원 우선배분",
+        "supplier debit note 파일",
+        "달러 RMA mismatch 파일"
+      ],
+      "callback": [
+        "Block 8의 서우패키징 옵션금 48시간 처리 압박",
+        "Block 8의 그린로지스 penalty 산정권",
+        "Block 7의 리퍼브 성과수수료 7% 협의 문구",
+        "Block 1의 달러 정산 오류 파일"
+      ],
+      "emotional_beat": {
+        "type": "legal_vehicle_receipt_cider",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "다온리테일 회의실 / 홈택스 임시 등록 화면 / 서우패키징 전자계약 화면 / ERP 달러 RMA 폴더",
+        "type": "회사 / 전자등록 / 원격 계약 / ERP"
+      },
+      "time_span": {
+        "duration": "1일",
+        "in_story_time": "2026년 5월 넷째 주 초"
+      },
+      "genre_ext": {
+        "capital_before": "외주계약 재검토권 + 그린로지스 penalty 산정권 + 리퍼브 성과수수료 7% 협의 문구 확정 + 샘플 판매/클레임 로그",
+        "capital_after": "도윤권리운영 개인사업자 임시 접수번호 + 향후 SPV 승계 문구 + 서우패키징 채권 옵션 변경계약 + penalty 우선배분 조항",
+        "capital_delta": "현금 부족은 유지되지만, 수수료와 옵션금을 받을 첫 법적 그릇과 우선배분 구조 확보",
+        "profit_loss": "그린로지스 penalty 예상 620만 원 중 첫 380만 원을 서우패키징 옵션금으로 우선 배분해 옵션 소멸을 방지",
+        "method": "리스크 비교표, 개인사업자 임시 등록, 향후 SPV 승계 문구, penalty 회수분 우선배분, 채권 옵션 변경계약",
+        "deal_type": "법적 그릇 receipt / 채권 옵션 변경 / penalty 우선배분",
+        "leverage_used": [
+          "개인 계좌 감사 리스크",
+          "개인사업자 당일 처리 속도",
+          "SPV 법인의 낮은 리스크와 느린 처리 속도",
+          "그린로지스 penalty 예상액 620만 원",
+          "서우패키징 옵션금 48시간 압박"
+        ],
+        "opponent": {
+          "name": "최문식",
+          "type": "내부 상사 / 책임 귀속 gatekeeper",
+          "weakness_exploited": "도윤에게 책임을 넘기려면 도윤의 수령 주체와 승계 문구도 인정해야 한다는 계약 논리"
+        },
+        "time_pressure": "서우패키징 옵션금 처리 시한 48시간, C동 폐기 보류 기간 잔여일 감소, 달러 RMA 파일 접근 기간 제한.",
+        "risk_level": "고위험",
+        "business_sector": "개인사업자/SPV / 채권 옵션 / penalty 우선배분 / 달러 RMA",
+        "section_rotation": "책임과 수수료 문구를 첫 법적 그릇으로 환전하고, 옵션금 압박을 penalty 우선배분 계약으로 넘긴다",
+        "success_pattern": "도윤권리운영 임시 접수번호와 향후 SPV 승계 문구가 계약서와 감사 로그에 동시에 남는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "legal_vehicle_and_option_assignment_receipt",
+          "receipt_line": "'도윤권리운영은 임시 수령 주체이며, 향후 설립될 SPV 법인에 권리와 의무를 승계할 수 있다.'",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "도윤권리운영 개인사업자 임시 접수번호",
+          "향후 SPV 법인 승계 문구",
+          "서우패키징 채권 옵션 변경계약",
+          "그린로지스 penalty 회수분 우선배분 조항",
+          "supplier debit note 파일 gate"
+        ],
+        "document_evidence": [
+          "윤서린의 리스크 비교표",
+          "개인사업자 임시 등록 접수 화면",
+          "향후 SPV 승계 문구",
+          "서우패키징 채권 옵션 변경계약",
+          "그린로지스 penalty 산정 초안",
+          "ERP supplier debit note 파일명"
+        ],
+        "field_validation": [
+          "개인 계좌 감사 리스크 9.2",
+          "개인사업자 리스크 5.8, 처리 속도 당일",
+          "SPV 법인 리스크 2.1, 처리 속도 7~14일",
+          "그린로지스 penalty 예상 620만 원",
+          "우선배분 380만 원"
+        ],
+        "witness_carrier": [
+          "윤서린의 리스크 수치",
+          "한규리의 SPV 승계 문구",
+          "서혜린의 변경계약 전자서명",
+          "최문식의 확인서 결재"
+        ],
+        "receipt": [
+          "도윤권리운영 개인사업자 임시 접수번호",
+          "향후 SPV 승계 문구",
+          "서우패키징 채권 옵션 변경계약",
+          "penalty 우선배분 조항"
+        ],
+        "next_gate": "그린로지스 penalty 산정 공문, 다온 상계 협상 초안, 달러 RMA mismatch 파일, supplier debit note"
+      },
+      "foreshadow_targets": [
+        10,
+        11,
+        20,
+        21
+      ]
+    }
+  ]
+}

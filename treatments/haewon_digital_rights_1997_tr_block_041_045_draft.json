@@ -1,0 +1,632 @@
+{
+  "_schema": "tr.v1",
+  "_work_id": "haewon_digital_rights_1997",
+  "_block_range": "041-045",
+  "_total_blocks": 5,
+  "_planned_total_blocks": 70,
+  "_preceding_tr_ref": "treatments/haewon_digital_rights_1997_tr_block_036_040_draft.json",
+  "_phase0_ref": "treatments/phase0/haewon_digital_rights_1997_phase0_design.json",
+  "_work_guard_ref": "work_guards/haewon_digital_rights_1997.yaml",
+  "_production_status": {
+    "run_class": "sequential_production",
+    "last_sequential_block_pass": 45,
+    "next_unit_type": "b잠금",
+    "next_block_id": 46,
+    "stop_reason": "draft created; next unit should continue access-rights arc와 close traffic/ad-rights arc.",
+    "pacing_contract": "1 TR b잠금 is an episode 묶음 of roughly 2~6 episodes; each b잠금 must contain at least two distinct incident beats와 a same-b잠금 leverage 증빙."
+  },
+  "blocks": [
+    {
+      "block_id": "Block 41",
+      "block_no": 41,
+      "title": "화면은 입구입니다",
+      "content": {
+        "context": "2002년. 12개월 정산 레일 계약으로 해원 데스크는 결제, 출고, 반품, 콘텐츠, 지역 카탈로그 주문 기록을 갖고 있다. 도윤은 이제 화면을 본다. 포털 첫 화면과 ISP 시작 페이지는 광고판이 아니라 사람이 들어오는 문이다.",
+        "event_villain": "포털 창업자 라인은 해원에게 단순 배너 광고 상품만 팔려 한다. 대기업 인터넷 사업팀은 ISP 시작 페이지 제휴를 자기 계열 광고로 묶으려 한다. 둘 다 해원을 주문 처리 하청으로 낮추려 한다.",
+        "solution": "도윤은 배너를 사지 않는다. 지역 카탈로그 정상 처리율, PC방 트래픽, 콘텐츠 쿠폰 사용 시간대, T+1 정산 증빙을 묶어 `지역 상점 바로가기 슬롯` 파일럿을 제안한다. 클릭이 주문으로 이어질 때만 돈을 내겠다는 조건이다.",
+        "reward": "포털은 4주 지역 상점 바로가기 슬롯 파일럿을 열고, ISP 제휴팀은 PC방 시작 페이지 일부에 해원 추천 태그를 붙인다. 해원 데스크는 첫 트래픽 진입 슬롯과 추천 태그 발급권을 얻는다."
+      },
+      "stakes": "배너만 사면 해원은 광고비를 태우는 고객이 된다. 추천 태그와 진입 슬롯을 얻어야 트래픽이 정산 레일로 들어온다.",
+      "power_shift": {
+        "protagonist": "이커머스 정산 레일 운영자에서 포털/ISP 트래픽 진입를 가진 운영자",
+        "antagonist": "포털과 대기업 인터넷 사업팀이 배너 고객으로 낮추려 했지만 추천 태그 파일럿을 열어 준 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "포털 창업자 라인",
+          "before": "해원을 지역 카탈로그 광고주로 본다.",
+          "after": "주문 처리 증빙이 있는 트래픽 파일럿 파트너로 본다."
+        },
+        {
+          "target": "대기업 인터넷 사업팀",
+          "before": "ISP 시작 페이지를 자기 계열 광고로 묶으려 한다.",
+          "after": "PC방 시작 페이지 일부에 해원 추천 태그를 허용한다."
+        }
+      ],
+      "foreshadow": [
+        "추천 태그는 첫 트래픽/광고 정산표의 핵심 식별자가 된다.",
+        "지역 상점 바로가기 슬롯은 포털 광고권 계약의 씨앗가 된다."
+      ],
+      "callback": [
+        "지역 카탈로그 정상 처리 증빙와 정산 레일 계약이 포털 파일럿 조건으로 회수된다.",
+        "지역 광고 인벤토리가 화면 입구 상품으로 재사용된다.",
+        "이건 매각 목록이 아니라 지도입니다에서 확보한 디지털 권리 정리 데스크 지휘권 근거가 4주 지역 상점 바로가기 슬롯/추천 태그 협상에서 별도 증빙으로 회수된다.",
+        "싼 권리는 싸게 보이지 않는다에서 확보한 별도 보관함 확인권 근거가 4주 지역 상점 바로가기 슬롯/추천 태그 협상에서 별도 증빙으로 회수된다.",
+        "통신사는 가입자를 원합니다에서 확보한 6개월 조건부 배분안 근거가 4주 지역 상점 바로가기 슬롯/추천 태그 협상에서 별도 증빙으로 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "트래픽 관문 진입",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "포털 스타트업 사무실과 ISP 제휴팀 회의실",
+        "type": "사무실/회의실",
+        "macro_battlefield": "포털/ISP 트래픽 진입"
+      },
+      "time_span": {
+        "duration": "일주일",
+        "in_story_time": "2002년 봄"
+      },
+      "genre_ext": {
+        "type": "비즈니스_성장",
+        "capital_before": "980",
+        "capital_after": "1060",
+        "capital_delta": "80",
+        "profit_loss": "80 증가",
+        "method": "배너를 사지 않고 지역 상점 바로가기 슬롯과 추천 태그를 얻어 트래픽을 정산 레일로 끌어온다.",
+        "investment_type": "포털/ISP 트래픽 진입",
+        "deal_type": "4주 지역 상점 바로가기 슬롯/추천 태그",
+        "leverage_used": [
+          "지역 카탈로그 정상 처리율",
+          "PC방 트래픽",
+          "콘텐츠 쿠폰 사용 시간대",
+          "T+1 정산 증빙",
+          "12개월 정산 레일 계약"
+        ],
+        "opponent": {
+          "name": "배너 고객 프레임",
+          "type": "포털/ISP 제휴 압박",
+          "weakness_exploited": "해원은 단순 광고주가 아니라 클릭 이후 주문, 결제, 출고, 반품까지 처리할 수 있는 점"
+        },
+        "historical_event": "초기 포털 첫 화면과 ISP 시작 페이지 제휴 경쟁",
+        "time_pressure": "포털과 ISP가 대기업 계열 광고로 시작 페이지를 잠그기 전에 진입 슬롯을 받아야 한다.",
+        "knowledge_used": "포털 화면의 힘은 노출이 아니라 추적 가능한 입구와 추천 태그에서 생긴다는 미래 감각",
+        "risk_level": "고위험",
+        "business_sector": "포털/ISP/온라인 광고",
+        "section_rotation": "4주 지역 상점 바로가기 슬롯/추천 태그 단계",
+        "success_pattern": "화면을 광고판이 아니라 주문 레일의 입구로 산다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "트래픽 진입 슬롯/추천 태그",
+          "receipt_line": "포털은 4주 지역 상점 바로가기 슬롯 파일럿을 열고 ISP 제휴팀은 PC방 시작 페이지 일부에 해원 추천 태그를 붙인다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "해원 데스크가 포털/ISP 트래픽 입구를 확보한다.",
+          "representative_reevaluation": "포털 창업자 라인이 해원을 주문 처리 증빙이 있는 트래픽 파트너로 본다.",
+          "next_battlefield_ticket": "추천 태그와 클릭 행동 데이터 소유권 협상이 열린다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "포털 바로가기 슬롯과 ISP 추천 태그 확보",
+          "secondary_incident": "포털/ISP의 배너 고객·하청 프레임 방어",
+          "bundle_expandability": "포털 제안, ISP 시작 페이지 협상, 대기업 광고 압박, 태그 파일럿 승인으로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "포털 창업자 라인",
+          "recognition_reason": "포털 창업자 라인 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "포털 창업자 라인 쪽은 성과 항목(트래픽 진입 슬롯/추천 태그)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "정상 처리율, T+1 정산 증빙, 추천 태그 파일럿 조건"
+      },
+      "foreshadow_targets": [
+        42,
+        45,
+        50
+      ],
+      "callback_sources": [
+        28,
+        39,
+        40,
+        6,
+        8,
+        17
+      ]
+    },
+    {
+      "block_id": "Block 42",
+      "block_no": 42,
+      "title": "방문자는 이름을 남깁니다",
+      "content": {
+        "context": "추천 태그가 붙자 PC방과 지역 카탈로그로 들어오는 방문자가 늘어난다. 문제는 누가 그 행동 데이터를 갖느냐다. 포털은 클릭 로그가 자기 재산이라고 보고, ISP는 접속 로그를 자기 망 데이터라고 본다.",
+        "event_villain": "포털 창업자 라인은 해원에게 주문 결과만 넘겨 주겠다고 한다. ISP 제휴팀도 접속 원본 로그는 줄 수 없다고 버틴다. 해원 데스크가 로그를 못 가지면 트래픽은 남의 화면에서 사라진다.",
+        "solution": "도윤은 원본 로그를 달라고 하지 않는다. 추천 태그, 주문 전환, T+1 정산, 청구 코드를 묶은 `전환 로그 사본`과 `중복 클릭 필터 기준`을 요구한다. 포털은 화면을 갖고, 해원은 전환의 장부를 갖는 구조다.",
+        "reward": "포털과 ISP는 4주 한정 전환 로그 사본과 중복 클릭 필터 기준을 해원 데스크에 제공한다. 해원 데스크는 트래픽-주문전환 전환표 운영권을 얻는다."
+      },
+      "stakes": "행동 데이터를 못 가지면 광고권은 포털의 것이 된다. 전환 로그 사본이라도 확보해야 광고주에게 주문으로 이어진 트래픽을 팔 수 있다.",
+      "power_shift": {
+        "protagonist": "트래픽 진입 슬롯 보유자에서 트래픽-주문전환 전환표 운영자",
+        "antagonist": "포털과 ISP가 원본 로그를 지켰지만 전환 로그 사본과 필터 기준을 해원에게 내준 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "포털 창업자 라인",
+          "before": "해원을 트래픽 파일럿 파트너로 본다.",
+          "after": "전환 로그 사본을 주되 원본 화면 권리는 지키려는 파트너로 대한다."
+        },
+        {
+          "target": "ISP 제휴팀",
+          "before": "PC방 시작 페이지 일부에 추천 태그를 허용한다.",
+          "after": "접속 원본 대신 중복 클릭 필터 기준을 제공한다."
+        }
+      ],
+      "foreshadow": [
+        "전환 로그 사본은 트래픽/광고 정산표의 핵심 증빙이 된다.",
+        "중복 클릭 필터 기준은 트래픽 부정거래 방어로 이어진다."
+      ],
+      "callback": [
+        "일일 결제 피드와 청구 코드가 전환 로그의 신뢰 근거로 쓰인다.",
+        "추천 태그가 주문 전환표로 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "트래픽 데이터 청구",
+        "intensity": 9
+      },
+      "tension_level": 9,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "포털 로그 분석 회의실과 해원 데스크 정산실",
+        "type": "회의실/사무실",
+        "macro_battlefield": "전환 로그 소유권"
+      },
+      "time_span": {
+        "duration": "나흘",
+        "in_story_time": "2002년 봄"
+      },
+      "genre_ext": {
+        "type": "비즈니스_성장",
+        "capital_before": "1060",
+        "capital_after": "1150",
+        "capital_delta": "90",
+        "profit_loss": "90 증가",
+        "method": "원본 로그 대신 추천 태그, 주문 전환, 정산, 청구 코드가 연결된 전환 로그 사본과 중복 클릭 필터 기준을 확보한다.",
+        "investment_type": "트래픽 전환 데이터",
+        "deal_type": "전환 로그 사본/필터 기준",
+        "leverage_used": [
+          "추천 태그",
+          "T+1 정산",
+          "청구 코드",
+          "주문 전환 기록",
+          "중복 클릭 필터"
+        ],
+        "opponent": {
+          "name": "원본 로그 독점 프레임",
+          "type": "포털/ISP 데이터 소유권 압박",
+          "weakness_exploited": "원본 로그가 아니라 주문으로 이어진 전환 사본만 요구하면 포털과 ISP가 체면을 잃지 않는 점"
+        },
+        "historical_event": "초기 웹 로그와 광고 전환 측정권 형성",
+        "time_pressure": "4주 파일럿 중반 전에 전환 로그 기준을 잠그지 못하면 광고주는 조회수만 보게 된다.",
+        "knowledge_used": "광고권은 화면 노출보다 전환과 결제 연결 데이터를 가진 쪽으로 간다는 미래 감각",
+        "risk_level": "고위험",
+        "business_sector": "포털 로그/광고 전환 데이터",
+        "section_rotation": "전환 로그 사본/필터 기준 단계",
+        "success_pattern": "원본을 뺏지 않고 전환의 장부를 가져온다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "전환 로그 사본/트래픽-주문전환 표",
+          "receipt_line": "포털과 ISP는 4주 한정 전환 로그 사본과 중복 클릭 필터 기준을 제공하고 해원 데스크는 트래픽-주문전환 전환표 운영권을 얻는다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "해원 데스크가 트래픽을 주문 전환표로 바꾼다.",
+          "representative_reevaluation": "포털이 해원 데스크를 광고주에게 숫자를 보여줄 수 있는 파트너로 본다.",
+          "next_battlefield_ticket": "성과형 광고 파일럿 협상이 열린다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "전환 로그 사본과 트래픽-주문전환 표 운영권 확보",
+          "secondary_incident": "포털/ISP의 원본 로그 독점과 데이터 소유권 방어",
+          "bundle_expandability": "로그 소유권 충돌, 전환표 설계, 필터 기준 협상, 표 운영권 확보로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "포털 창업자 라인",
+          "recognition_reason": "포털 창업자 라인 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "포털 창업자 라인 쪽은 성과 항목(전환 로그 사본/트래픽-주문전환 표)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "추천 태그, 전환 로그 사본, 정산 표"
+      },
+      "foreshadow_targets": [
+        43,
+        45,
+        48
+      ],
+      "callback_sources": [
+        32,
+        34,
+        41
+      ]
+    },
+    {
+      "block_id": "Block 43",
+      "block_no": 43,
+      "title": "광고주는 조회수가 아니라 주문을 삽니다",
+      "content": {
+        "context": "전환 로그가 생기자 지역 광고주들이 다시 모인다. 포털은 조회수 기반 배너 단가를 밀고, 광고대행사는 노출 리포트만으로도 충분하다고 말한다. 도윤은 조회수가 아니라 주문을 판다.",
+        "event_villain": "광고대행사는 성과형 광고가 광고주에게 유리하고 매체에는 위험하다며 반대한다. 포털도 조회수 단가를 깎을 수 없다며 해원 주문 연동을 별도 옵션으로 낮추려 한다.",
+        "solution": "도윤은 포털 배너 가격을 건드리지 않는다. 대신 해원 추천 태그를 통과해 지역 카탈로그 주문, PC방 쿠폰, BGM 월정액, 광고 쿠폰 결제로 이어진 건만 별도 성과 수수료로 묶는다. 주문 연동 성과 수수료 정산권 구조는 이 자리에서 문서 증빙으로 고정되고 다음 협상권의 근거가 된다.",
+        "reward": "지역 광고주 7곳이 6주 성과형 광고 파일럿에 서명한다. 포털은 조회수 배너를 유지하되 해원 데스크에 주문 연동 성과 수수료 정산권을 준다."
+      },
+      "stakes": "조회수 광고만 하면 포털이 돈을 가져간다. 주문 연동 성과 수수료를 얻어야 해원 데스크가 광고권을 정산 레일에 묶는다.",
+      "power_shift": {
+        "protagonist": "전환 로그 운영자에서 주문 연동 성과형 광고 정산권을 가진 광고 정산 운영자",
+        "antagonist": "포털과 광고대행사가 조회수 단가를 지켰지만 주문 연동 수수료는 해원에 내준 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "지역 광고주",
+          "before": "4주 파일럿 비용을 낸다.",
+          "after": "주문으로 이어진 광고에 성과 수수료를 내는 성과형 광고주"
+        },
+        {
+          "target": "포털 창업자 라인",
+          "before": "전환 로그 사본을 제한적으로 제공한다.",
+          "after": "조회수 배너와 별도로 해원 주문 연동 정산을 허용한다."
+        }
+      ],
+      "foreshadow": [
+        "주문 연동 성과 수수료는 트래픽/광고 정산표의 핵심 매출이 된다.",
+        "성과형 광고는 포털 광고권 계약의 협상 무기가 된다."
+      ],
+      "callback": [
+        "지역 광고 파일럿과 지역 카탈로그 주문 증빙이 성과형 광고로 회수된다.",
+        "전환 로그 사본이 성과 수수료 기준이 된다."
+      ],
+      "emotional_beat": {
+        "type": "조회수의 주문화",
+        "intensity": 9
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "포털 광고 회의실과 지역 광고주 설명회",
+        "type": "회의실",
+        "macro_battlefield": "성과형 광고 파일럿"
+      },
+      "time_span": {
+        "duration": "일주일",
+        "in_story_time": "2002년 봄"
+      },
+      "genre_ext": {
+        "type": "비즈니스_성장",
+        "capital_before": "1150",
+        "capital_after": "1260",
+        "capital_delta": "110",
+        "profit_loss": "110 증가",
+        "method": "조회수 배너는 포털에 남기고 주문으로 이어진 추천 유입 트래픽만 성과 수수료로 분리해 해원 데스크 정산권으로 만든다.",
+        "investment_type": "성과형 광고",
+        "deal_type": "주문 연동 성과 수수료 정산권",
+        "leverage_used": [
+          "전환 로그 사본",
+          "지역 카탈로그 주문",
+          "PC방 쿠폰",
+          "광고 쿠폰 결제",
+          "T+1 정산"
+        ],
+        "opponent": {
+          "name": "조회수 배너 프레임",
+          "type": "포털/광고대행사 단가 방어",
+          "weakness_exploited": "조회수 단가를 건드리지 않고 주문 연동 수수료를 별도로 만들면 포털도 손해를 바로 느끼지 않는 점"
+        },
+        "historical_event": "초기 온라인 광고와 성과 측정 전환",
+        "time_pressure": "4주 파일럿 종료 전에 광고주에게 주문 증빙을 팔아야 트래픽 슬롯이 연장된다.",
+        "knowledge_used": "광고권은 조회수보다 주문, 결제, 재방문을 연결할 때 가격이 오른다는 미래 감각",
+        "risk_level": "중고위험",
+        "business_sector": "온라인 광고/성과형 정산",
+        "section_rotation": "주문 연동 성과 수수료 정산권 단계",
+        "success_pattern": "조회수를 부정하지 않고 주문으로 이어진 부분만 새 권리로 분리한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "성과형 광고 정산권",
+          "receipt_line": "지역 광고주 7곳이 6주 성과형 광고 파일럿에 서명하고 포털은 해원 데스크에 주문 연동 성과 수수료 정산권을 준다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "트래픽이 광고 주문 정산권으로 환전된다.",
+          "representative_reevaluation": "광고주가 해원 데스크를 주문을 증명하는 광고 파트너로 본다.",
+          "next_battlefield_ticket": "커뮤니티 트래픽과 후기/검증 전장이 열린다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "성과형 광고 파일럿과 성과 수수료 정산권 확보",
+          "secondary_incident": "포털/광고대행사의 조회수 배너 단가 방어와 매체 리스크 반대 방어",
+          "bundle_expandability": "광고주 설명회, 포털 단가 방어, 성과 수수료 설계, 파일럿 서명으로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "지역 광고주",
+          "recognition_reason": "지역 광고주 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "지역 광고주 쪽은 성과 항목(성과형 광고 정산권)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "전환 로그, 주문 정산, 광고 파일럿 계약서"
+      },
+      "foreshadow_targets": [
+        44,
+        45,
+        50
+      ],
+      "callback_sources": [
+        28,
+        39,
+        42
+      ]
+    },
+    {
+      "block_id": "Block 44",
+      "block_no": 44,
+      "title": "게시판은 공짜가 아닙니다",
+      "content": {
+        "context": "성과형 광고가 시작되자 PC방 손님과 지역 상점 고객들이 포털 게시판에 후기와 질문을 남긴다. 커뮤니티 트래픽이 생긴다. 도윤은 글을 무료 콘텐츠가 아니라 검증과 재방문의 장부로 본다.",
+        "event_villain": "포털 운영팀은 게시판 트래픽은 포털 자산이라고 주장한다. 광고대행사는 후기 조작과 악성 글이 생기면 성과형 광고가 망한다고 경고한다. 규제 담당자는 지역 상점 광고와 후기의 경계가 흐리다고 본다.",
+        "solution": "도윤은 게시판 소유권을 요구하지 않는다. 그는 해원 주문/결제/반품 청구 코드가 붙은 구매자 인증 후기, 상점 답변권, 악성 글 보류 목록, 광고 표기 기준을 묶은 `검증 게시판 운영권`을 제안한다. 검증 게시판 파일럿 구조는 이 자리에서 문서 증빙으로 고정되고 다음 협상권의 근거가 된다.",
+        "reward": "포털은 지역 상점 섹션에 해원 검증 게시판 파일럿을 연다. 해원 데스크는 구매자 인증 후기 운영권, 상점 답변권, 악성 글 보류 목록 관리권을 얻는다. 포털 운영팀 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+      },
+      "stakes": "커뮤니티를 포털에만 넘기면 트래픽은 포털 자산이 된다. 검증과 청구 코드를 붙여야 해원 데스크가 광고와 주문 사이의 신뢰를 운영한다.",
+      "power_shift": {
+        "protagonist": "성과형 광고 정산권 보유자에서 구매자 인증 커뮤니티 운영권을 가진 트래픽 운영자",
+        "antagonist": "포털 운영팀이 게시판 소유권을 지켰지만 검증 운영권과 보류 목록는 해원에게 내준 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "포털 운영팀",
+          "before": "게시판 트래픽을 포털 자산으로 본다.",
+          "after": "해원 검증 게시판 파일럿을 지역 상점 섹션 안에 연다."
+        },
+        {
+          "target": "규제 담당자",
+          "before": "후기와 광고의 경계를 우려한다.",
+          "after": "광고 표기 기준과 구매자 인증 조건을 확인한다."
+        }
+      ],
+      "foreshadow": [
+        "구매자 인증 후기 운영권은 트래픽 부정거래 방어의 핵심 장치가 된다.",
+        "광고 표기 기준은 포털 광고권 계약의 규제 안전장치가 된다."
+      ],
+      "callback": [
+        "청구 코드와 정산 레일이 구매자 인증 후기의 근거로 쓰인다.",
+        "성과형 광고가 후기 조작 리스크를 불러온다."
+      ],
+      "emotional_beat": {
+        "type": "커뮤니티 검증권",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "포털 운영팀 회의실과 지역 상점 게시판",
+        "type": "회의실/온라인 운영실",
+        "macro_battlefield": "검증 게시판 운영권"
+      },
+      "time_span": {
+        "duration": "일주일",
+        "in_story_time": "2002년 초여름"
+      },
+      "genre_ext": {
+        "type": "비즈니스_성장",
+        "capital_before": "1260",
+        "capital_after": "1375",
+        "capital_delta": "115",
+        "profit_loss": "115 증가",
+        "method": "주문/결제/반품 청구 코드가 붙은 구매자 인증 후기와 상점 답변권을 만들어 커뮤니티 트래픽을 검증 장부로 바꾼다.",
+        "investment_type": "커뮤니티 검증권",
+        "deal_type": "검증 게시판 파일럿",
+        "leverage_used": [
+          "청구 코드",
+          "구매자 인증",
+          "성과형 광고 계약",
+          "상점 답변권",
+          "악성 글 보류 목록"
+        ],
+        "opponent": {
+          "name": "게시판 소유권/후기 조작 프레임",
+          "type": "포털 운영팀/광고대행사/규제 담당자",
+          "weakness_exploited": "게시판 자체가 아니라 구매자 인증과 광고 표기 기준 운영권만 요구하면 포털과 규제 모두 시험해 볼 수 있는 점"
+        },
+        "historical_event": "초기 포털 커뮤니티와 온라인 후기/광고 표기 갈등",
+        "time_pressure": "성과형 광고가 커지기 전에 후기 조작과 악성 글 처리 기준을 잠가야 한다.",
+        "knowledge_used": "커뮤니티 권력은 글 소유보다 인증, 표기, moderation 기준에서 생긴다는 미래 감각",
+        "risk_level": "중고위험",
+        "business_sector": "포털 커뮤니티/후기 검증",
+        "section_rotation": "검증 게시판 파일럿 단계",
+        "success_pattern": "게시판을 공짜 글판이 아니라 검증된 구매자 장부로 만든다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "검증 게시판 운영권/보류 목록",
+          "receipt_line": "포털은 지역 상점 섹션에 해원 검증 게시판 파일럿을 열고 해원 데스크는 구매자 인증 후기 운영권, 상점 답변권, 악성 글 보류 목록 관리권을 얻는다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "해원 데스크가 트래픽뿐 아니라 구매자 검증 커뮤니티도 운영한다.",
+          "representative_reevaluation": "포털 운영팀과 규제 담당자가 해원 데스크의 인증/표기 기준을 시험 대상으로 인정한다.",
+          "next_battlefield_ticket": "첫 트래픽/광고/커뮤니티 정산표를 제출할 준비가 된다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "검증 게시판 파일럿과 구매자 인증 후기 운영권 확보",
+          "secondary_incident": "포털 게시판 소유권, 후기 조작, 규제 표기 우려 방어",
+          "bundle_expandability": "후기 트래픽 발생, 포털 운영팀 충돌, 규제 우려, 인증 기준 협상으로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "포털 운영팀",
+          "recognition_reason": "포털 운영팀 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "포털 운영팀 쪽은 성과 항목(검증 게시판 운영권/보류 목록)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다.",
+          "selected_reward_sentence": "포털 운영팀 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "청구 코드, 구매자 인증, 광고 표기 기준"
+      },
+      "foreshadow_targets": [
+        45,
+        48,
+        50
+      ],
+      "callback_sources": [
+        34,
+        40,
+        43
+      ]
+    },
+    {
+      "block_id": "Block 45",
+      "block_no": 45,
+      "title": "첫 트래픽 정산",
+      "content": {
+        "context": "4주 파일럿이 끝난다. 포털 바로가기 슬롯, ISP 추천 태그, 전환 로그 사본, 성과형 광고, 검증 게시판, 지역 카탈로그 주문이 한 표에 올라온다. 화면의 값이 처음으로 돈과 행동 기록이 된다.",
+        "event_villain": "포털은 트래픽과 커뮤니티 성과를 자기 성장 지표로만 가져가려 한다. 광고대행사는 성과 수수료 기준을 낮추자고 하고, 대기업 인터넷 사업팀은 ISP 시작 페이지 태그를 회수하려 한다.",
+        "solution": "도윤은 노출 수를 두고 싸우지 않는다. 추천 태그, 전환 로그, 주문 정산, 검증 후기, 광고 표기 기준, 청구 코드를 묶어 `트래픽-광고 정산 표`을 제출한다. 포털은 화면을 갖고, 해원은 주문과 검증으로 이어진 트래픽 정산권을 갖는다.",
+        "reward": "포털과 ISP는 6개월 트래픽-광고 정산 파일럿에 서명한다. 해원 데스크는 추천 태그 연장권, 전환 로그 사본 운영권, 성과형 광고 정산권, 검증 게시판 운영권을 유지한다. 포털 창업자 라인 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+      },
+      "stakes": "첫 트래픽을 정산표로 묶지 못하면 포털은 성장 지표만 가져가고 해원은 광고비를 낸 고객이 된다. 주문과 검증으로 이어진 트래픽 권리를 계약에 남겨야 한다.",
+      "power_shift": {
+        "protagonist": "검증 게시판 운영자에서 6개월 트래픽-광고 정산 파일럿 소유권자",
+        "antagonist": "포털, 광고대행사, ISP가 트래픽 성과를 흡수하려 했지만 해원 정산권이 계약에 남은 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "포털 창업자 라인",
+          "before": "조회수 배너와 별도로 해원 주문 연동 정산을 허용한다.",
+          "after": "6개월 트래픽-광고 정산 파일럿에 서명한다."
+        },
+        {
+          "target": "지역 광고주",
+          "before": "주문으로 이어진 광고에 성과 수수료를 내는 성과형 광고주",
+          "after": "검증 후기와 주문 전환을 함께 보는 반복 광고주"
+        },
+        {
+          "target": "ISP 제휴팀",
+          "before": "접속 원본 대신 중복 클릭 필터 기준을 제공한다.",
+          "after": "추천 태그 연장을 허용한다."
+        }
+      ],
+      "foreshadow": [
+        "6개월 트래픽-광고 정산 파일럿은 포털 광고권 계약의 발판이다.",
+        "전환 로그와 검증 게시판 운영권은 트래픽 부정거래, 규제, 대기업 인터넷 사업팀 공격을 막는 방패가 된다.",
+        "해원 데스크가 화면이 아니라 입구와 검증을 운영한다는 논리는 독립 권리 지주회사 분리 압력으로 이어진다."
+      ],
+      "callback": [
+        "추천 태그, 전환 로그, 성과형 광고, 검증 게시판이 모두 첫 트래픽-광고 정산 표로 회수된다.",
+        "간판의 가격에서 확보한 설치 예약표 통제 근거가 6개월 트래픽-광고 정산 파일럿 협상에서 별도 증빙으로 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "트래픽 정산 간판",
+        "intensity": 10
+      },
+      "tension_level": 9,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "포털-ISP-해원 공동 정산 회의실",
+        "type": "회의실",
+        "macro_battlefield": "트래픽-광고 정산 첫 정산"
+      },
+      "time_span": {
+        "duration": "파일럿 종료 주간",
+        "in_story_time": "2002년 초여름"
+      },
+      "genre_ext": {
+        "type": "비즈니스_성장",
+        "capital_before": "1375",
+        "capital_after": "1520",
+        "capital_delta": "145",
+        "profit_loss": "145 증가",
+        "method": "추천 태그, 전환 로그, 주문 정산, 검증 후기, 광고 표기 기준, 청구 코드를 트래픽-광고 정산 표로 묶어 6개월 파일럿 계약을 얻는다.",
+        "investment_type": "트래픽-광고 정산",
+        "deal_type": "6개월 트래픽-광고 정산 파일럿",
+        "leverage_used": [
+          "추천 태그",
+          "전환 로그 사본",
+          "성과형 광고 정산권",
+          "검증 게시판 운영권",
+          "지역 카탈로그 주문 정산",
+          "청구 코드"
+        ],
+        "opponent": {
+          "name": "트래픽 성과 흡수 시도",
+          "type": "포털/광고대행사/ISP",
+          "weakness_exploited": "주문과 검증으로 이어진 트래픽은 포털 성장 지표만으로 설명되지 않는 점"
+        },
+        "historical_event": "초기 포털 트래픽과 성과형 광고 정산 형성",
+        "time_pressure": "4주 파일럿 종료 전에 트래픽 정산권을 계약에 남기지 못하면 포털과 ISP가 성과를 흡수한다.",
+        "knowledge_used": "포털 권력은 화면 소유보다 트래픽을 결제와 검증으로 환전하는 정산권에서 커진다는 미래 감각",
+        "risk_level": "고위험",
+        "business_sector": "포털/ISP/온라인 광고/커뮤니티",
+        "section_rotation": "6개월 트래픽-광고 정산 파일럿 단계",
+        "success_pattern": "조회수 싸움을 피하고 주문과 검증으로 이어진 트래픽만 해원 권리로 남긴다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "6개월 트래픽-광고 정산 파일럿",
+          "receipt_line": "포털과 ISP는 6개월 트래픽-광고 정산 파일럿에 서명하고 해원 데스크는 추천 태그 연장권, 전환 로그 사본 운영권, 성과형 광고 정산권, 검증 게시판 운영권을 유지한다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "해원 데스크가 트래픽과 광고를 정산 표로 환전한다.",
+          "representative_reevaluation": "포털과 ISP가 해원 데스크를 트래픽-광고 정산 파트너로 인정한다.",
+          "next_battlefield_ticket": "트래픽 부정거래, 대기업 인터넷 사업팀 압박, 장기 포털 광고권 계약 전장이 열린다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "6개월 트래픽-광고 정산 파일럿 계약 확보",
+          "secondary_incident": "포털/광고대행사/ISP의 트래픽 성과 흡수 시도 방어",
+          "bundle_expandability": "파일럿 정산 집계, 성과 흡수 압박, 정산 표 제출, 6개월 파일럿 계약으로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "포털 창업자 라인",
+          "recognition_reason": "포털 창업자 라인 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "포털 창업자 라인 쪽은 성과 항목(6개월 트래픽-광고 정산 파일럿)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다.",
+          "selected_reward_sentence": "포털 창업자 라인 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "트래픽-광고 정산 표, 추천 태그, 검증 후기, 주문 정산"
+      },
+      "foreshadow_targets": [
+        46,
+        50,
+        60
+      ],
+      "callback_sources": [
+        41,
+        42,
+        43,
+        44,
+        12
+      ]
+    }
+  ]
+}

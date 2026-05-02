@@ -1,0 +1,186 @@
+{
+  "block_id": "Block 63",
+  "title": "재벌 연합의 역제안",
+  "content": {
+    "context": "빅파마 단가표를 꺾어낸 직후, 국내 재벌 연합이 태오에게 공동투자 제안서를 보낸다. 제안서에는 1조 2000억 공동투자, 해외 영업망 제공, 물류·소재 계열사 연계가 화려하게 적혀 있다. 하지만 핵심 조항을 보면 생산권, 원료 변경 audit권, 데이터 봉인권은 모두 공동위원회 표결로 넘기게 되어 있다.",
+    "event_villain": "재벌 연합은 돈과 계열망을 앞세워 태오의 국가 표준 조건표를 자신들의 지분 구조 안에 넣으려 한다. 관료 라인은 국내 대기업 참여가 있으면 표준 채택이 쉬워진다고 설득하고, 빅파마는 재벌 연합을 우회 파트너로 삼아 태오의 단가 하한선을 흔들려 한다. 돈은 많지만 생산권을 지키는 조항은 없다.",
+    "solution": "태오는 제안 금액을 칭찬한 뒤 계약서의 빈칸을 공개한다. 첫 사건 beat는 원료 변경 공동 audit권과 장기 CDMO 물량 LOI를 근거로, 생산권 없는 공동투자는 단가 하한선과 납기 책임을 무너뜨린다고 회의록에 남기는 장면이다. 둘째 beat는 생산권 담보 원장 비공개 열람권을 활용해, 재벌 연합에게 지분 투자 대신 표준 준수 담보금과 생산권 우선전환권을 요구하는 장면이다. 태오는 돈을 받지 않는 게 아니라 돈이 생산권 아래에 서도록 재배열한다.",
+    "reward": "태오는 생산권 없는 자본 배제 조항, 표준 준수 담보금 3000억 예치권, 생산권 우선전환권, 공동투자 표결권 제한, 계열 물류·소재 조달 실사권, 표준 위반 시 정부 조달 추천 보류권을 얻는다. 재벌 연합의 돈은 태오 조건표를 사는 돈이 아니라 조건표 아래에 묶이는 담보가 된다."
+  },
+  "stakes": "재벌 연합의 돈을 생산권 없이 받으면 태오의 표준은 지분 공동위원회 표결에 묶이고, 빅파마와 재벌이 단가와 납기 책임을 우회로 흔드는 길이 열린다.",
+  "power_shift": {
+    "protagonist": "글로벌 단가표를 꺾은 협상자에서 국내 재벌 자본까지 생산권 아래에 세우는 표준권자로 확장된다.",
+    "antagonist": "재벌 연합은 돈으로 지분을 사면 생산권도 따라온다는 계산을 접고, 담보금과 실사권을 내놓아야 한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "재벌 연합 실무단",
+      "before": "1조 2000억 공동투자와 계열망으로 태오 조건표를 지분 구조에 넣으려는 자본 세력",
+      "after": "표준 준수 담보금과 생산권 우선전환권을 받아들여야 협상장에 남는 후발 파트너",
+      "anchor_before": "정식 안건 상정권 앞에서 돈만으로 의제를 낮추기 어려워진 후발 제안자"
+    },
+    {
+      "target": "산업표준위원회 관료 라인",
+      "before": "대기업 참여를 표준 채택의 지름길로 보는 조정자",
+      "after": "돈보다 생산권과 audit권 보존이 국가 표준의 조건임을 회의록에 남기는 심사자",
+      "anchor_before": "단가보다 병목 소재와 납기 책임이 표준 항목임을 인정하는 심사자"
+    },
+    {
+      "target": "글로벌 빅파마 구매팀",
+      "before": "재벌 연합을 우회 파트너로 삼아 단가 하한선을 흔들려는 구매자",
+      "after": "공동투자 표결권 제한 때문에 태오의 단가 하한선과 납기 책임을 우회하기 어려워진 고객",
+      "anchor_before": "병목 소재 우선배정, 공동 audit, 납기 보장료 조항을 받아들여야 하는 장기 고객"
+    }
+  ],
+  "foreshadow": [
+    "계열 물류·소재 조달 실사권은 병원 데이터와 제조 데이터를 국내 표준 안에 봉인할 때 재벌 계열망의 외부 반출 통로를 막는다.",
+    "표준 위반 시 정부 조달 추천 보류권은 공급망 정지 사고 뒤 책임선을 재배치하는 압박 수단이 된다.",
+    "생산권 우선전환권은 후반 재벌 연합의 더 큰 역제안을 막는 방파제가 된다."
+  ],
+  "callback": [
+    "원료 변경 공동 audit권과 단가 하한선이 생산권 없는 공동투자를 거절하는 핵심 근거가 된다.",
+    "생산권 담보 원장 비공개 열람권이 재벌 연합의 실질 통제 욕심을 확인하는 수단이 된다.",
+    "바이오 금융 조건표는 공동투자 금액보다 생산권과 조달 책임을 먼저 묻는 기준표로 쓰인다."
+  ],
+  "emotional_beat": {
+    "protagonist_feeling": "태오는 큰돈을 거절하는 사람이 되고 싶지 않다. 다만 돈이 표준보다 위에 올라가는 순간, 자신이 만든 모든 권리가 표결장 안에서 팔린다는 걸 안다.",
+    "reader_catharsis": "재벌 연합이 1조 2000억을 내밀며 주도권을 사려 할 때, 주인공이 생산권 없는 자본 배제 조항과 3000억 담보금을 받아내는 사이다."
+  },
+  "tension_level": 9,
+  "pov_character": "강태오",
+  "location": {
+    "place": "재벌 연합 공동투자 협상장과 표준위원회 비공개 실무회의",
+    "type": "chaebol_counteroffer_control_room",
+    "macro_battlefield": "재벌 자본과 생산권 표준"
+  },
+  "time_span": {
+    "duration": "12일",
+    "in_story_time": "2011년 4월"
+  },
+  "genre_ext": {
+    "capital_before": "4조 2000억 + 바이오 금융 조건표 + 국가 산업표준위원회 정식 안건 상정권 + 정부 조달 예비표준 검토권 + 실증분과 의제 우선권 + 병목 소재 우선배정권 + 글로벌 빅파마 단가 하한선 + 원료 변경 공동 audit권 + 납기 보장료 4.5% 조항 + 품질 감사 비용 반반 부담 조항 + 장기 CDMO 물량 LOI + 생산권 담보 원장 + 은행 공동대출 framework",
+    "capital_after": "5조 2000억 + 바이오 금융 조건표 + 국가 산업표준위원회 정식 안건 상정권 + 병목 소재 우선배정권 + 글로벌 빅파마 단가 하한선 + 원료 변경 공동 audit권 + 장기 CDMO 물량 LOI + 생산권 없는 자본 배제 조항 + 표준 준수 담보금 3000억 예치권 + 생산권 우선전환권 + 공동투자 표결권 제한 + 계열 물류·소재 조달 실사권 + 표준 위반 시 정부 조달 추천 보류권",
+    "capital_delta": "+1조 평가 상승, +생산권 없는 자본 배제 조항, +3000억 담보금 예치권, +생산권 우선전환권, +표결권 제한, +계열 조달 실사권, +정부 조달 추천 보류권",
+    "profit_loss": "1조 2000억 공동투자 원안을 받지 않아 단기 자금 확대는 늦추지만, 3000억 담보금과 생산권 우선전환권으로 표준 통제권을 지킨다.",
+    "method": "공동투자 제안서의 지분 표결 구조를 해체하고, 돈을 표준 준수 담보금과 생산권 우선전환권 아래에 둔다.",
+    "investment_type": "재벌 공동투자 역제안 방어",
+    "deal_type": "생산권 없는 자본 배제 및 표준 준수 담보 계약",
+    "leverage_used": "원료 변경 공동 audit권, 장기 CDMO 물량 LOI, 생산권 담보 원장 열람권, 정부 조달 예비표준 검토권",
+    "opponent": {
+      "name": "재벌 연합 실무단",
+      "type": "공동투자 역제안 세력",
+      "weakness_exploited": "돈과 계열망을 넣으면 생산권도 지분 표결 안으로 들어온다고 착각한다."
+    },
+    "time_pressure": "재벌 연합 공동투자 의향서 공개 전 12일",
+    "knowledge_used": "공동투자 표결권, 생산권 우선전환권, 표준 준수 담보금, 계열 조달 실사, 정부 조달 추천 보류",
+    "risk_level": "최상",
+    "business_sector": "재벌 공동투자 / 국가 산업 표준 / CDMO 공급망",
+    "section_rotation": "국가 산업 표준 전개",
+    "success_pattern": "큰돈을 거절하는 대신 돈을 생산권 아래의 담보로 재배열한다.",
+    "opening_progression": {
+      "public_signboard_event": "재벌 연합이 1조 2000억 공동투자와 계열망 연계를 제안한다.",
+      "representative_reevaluation": "재벌과 관료 라인은 태오를 돈을 원하는 사업자가 아니라 돈의 통제 순서를 정하는 표준권자로 다시 본다.",
+      "next_battlefield_ticket": "계열 조달 실사권과 정부 조달 추천 보류권이 데이터 주권 전장으로 이어진다."
+    },
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "production_right_capital_filter_receipt",
+      "receipt_line": "태오는 재벌 공동투자 원안을 생산권 없는 자본 배제 조항, 3000억 담보금, 생산권 우선전환권으로 뒤집는다.",
+      "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "큰돈을 거절하는 대신 돈을 생산권 아래의 담보로 재배열한다.",
+      "recognition_signal": "재벌 연합 실무단의 시선 변화: 표준 준수 담보금과 생산권 우선전환권을 받아들여야 협상장에 남는 후발 파트너",
+      "reward_signal": "태오는 재벌 공동투자 원안을 생산권 없는 자본 배제 조항, 3000억 담보금, 생산권 우선전환권으로 뒤집는다.",
+      "growth_signal": "글로벌 단가표를 꺾은 협상자에서 국내 재벌 자본까지 생산권 아래에 세우는 표준권자로 확장된다.",
+      "expectation_signal": "계열 조달 실사권과 정부 조달 추천 보류권이 데이터 주권 전장으로 이어진다.",
+      "reader_feel": "독자는 「재벌 연합의 역제안」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 태오는 재벌 공동투자 원안을 생산권 없는 자본 배제 조항, 3000억 담보금, 생산권 우선전환권으로 뒤집는다. 성장 장면: 글로벌 단가표를 꺾은 협상자에서 국내 재벌 자본까지 생산권 아래에 세우는 표준권자로 확장된다. 다음 기대감: 계열 조달 실사권과 정부 조달 추천 보류권이 데이터 주권 전장으로 이어진다.",
+      "mature_success_signal": "강태오는 재벌 연합의 역제안의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "큰돈을 거절하는 대신 돈을 생산권 아래의 담보로 재배열한다.",
+        "recognition": "재벌 연합 실무단의 시선 변화: 표준 준수 담보금과 생산권 우선전환권을 받아들여야 협상장에 남는 후발 파트너",
+        "reward": "태오는 재벌 공동투자 원안을 생산권 없는 자본 배제 조항, 3000억 담보금, 생산권 우선전환권으로 뒤집는다.",
+        "growth": "글로벌 단가표를 꺾은 협상자에서 국내 재벌 자본까지 생산권 아래에 세우는 표준권자로 확장된다.",
+        "expectation": "계열 조달 실사권과 정부 조달 추천 보류권이 데이터 주권 전장으로 이어진다.",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 재벌 연합 실무단의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 계열 조달 실사권과 정부 조달 추천 보류권이 데이터 주권 전장으로 이어진다."
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "빅파마 단가표를 꺾어낸 직후, 국내 재벌 연합이 태오에게 공동투자 제안서를 보낸다. 제안서에는 1조 2000억 공동투자, 해외 영업망 제공, 물류·소재 계열사 연계가 화려하게 적혀 있다. 하지만 핵심 조항을 보면 생산권, 원료 변경 audit권, 데이터 봉인권은 모두 공동위원회 표결로 넘기게 되어 있다.",
+      "proof_action": "태오는 제안 금액을 칭찬한 뒤 계약서의 빈칸을 공개한다. 첫 사건 beat는 원료 변경 공동 audit권과 장기 CDMO 물량 LOI를 근거로, 생산권 없는 공동투자는 단가 하한선과 납기 책임을 무너뜨린다고 회의록에 남기는 장면이다.",
+      "proof_axis": "공동투자 표결권, 생산권 우선전환권, 표준 준수 담보금, 계열 조달 실사, 정부 조달 추천 보류",
+      "recognition_or_resistance_signal": "재벌 연합 실무단 -> 표준 준수 담보금과 생산권 우선전환권을 받아들여야 협상장에 남는 후발 파트너",
+      "receipt_asset": "태오는 재벌 공동투자 원안을 생산권 없는 자본 배제 조항, 3000억 담보금, 생산권 우선전환권으로 뒤집는다.",
+      "reward_asset_classes": [
+        "cdmo_slot",
+        "contract_right",
+        "data_audit_right"
+      ],
+      "next_regulated_gate": "계열 조달 실사권과 정부 조달 추천 보류권이 데이터 주권 전장으로 이어진다.",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 재벌 연합 실무단의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 계열 조달 실사권과 정부 조달 추천 보류권이 데이터 주권 전장으로 이어진다.",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "business_memory",
+    "timeline_knowledge": "태오는 전생에서 대기업 공동투자가 표준과 생산권을 지분 표결로 희석시키고 결국 원청 단가표에 종속시켰던 흐름을 기억한다.",
+    "butterfly_effect": "재벌 자본이 태오의 조건표를 사들이지 못하고 생산권 표준 아래의 담보로 묶인다.",
+    "death_flag": false,
+    "regression_hint": "태오가 투자금 총액보다 표결권 조항과 생산권 양도 문구에 먼저 밑줄을 긋는 행동으로만 암시한다.",
+    "future_prep": "생산권 없는 자본 배제 조항과 조달 실사권은 데이터 주권과 공급망 정지 사고의 책임선을 가르는 기준이 된다."
+  },
+  "block_no": 63,
+  "foreshadow_targets": [
+    {
+      "target_block": 64,
+      "target_event": "데이터 주권"
+    },
+    {
+      "target_block": 65,
+      "target_event": "공급망 정지 하루"
+    },
+    {
+      "target_block": 69,
+      "target_event": "민간 표준의 역습"
+    }
+  ],
+  "callback_sources": [
+    {
+      "source_block": 62,
+      "source_event": "빅파마의 단가표"
+    },
+    {
+      "source_block": 61,
+      "source_event": "표준위원회 초대장"
+    },
+    {
+      "source_block": 60,
+      "source_event": "바이오 은행"
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "block_id": "Block 68",
+  "title": "LP는 이름 대신 손실순서를 본다",
+  "content": {
+    "context": "계좌가 열리자 LP 세 곳이 같은 질문을 보낸다. 도윤의 이름은 흥미롭지만, 이름만으로 돈을 넣지는 않는다. 손실이 났을 때 누가 먼저 맞고, 누가 마지막에 남는지 보여 달라는 것이다. 독립 운용자의 간판은 손실순서표 위에 세워진다.",
+    "event_villain": "LP들은 full data-room 초대가 확정되기 전에는 투자 확약을 줄 수 없다고 선을 긋는다. 백승환은 그래서 PEF anchor가 필요하다고 다시 끼어든다. 은행 보수파도 LP 돈이 없으면 purpose-limited account만으로 실행력이 부족하다고 본다. 도윤이 LP 관심을 과장하면 공개모집 프레임이 열리고, 조용히 있으면 full data-room 투표에서 자금력 의심을 받는다.",
+    "solution": "도윤은 투자 확약을 요구하지 않는다. 그는 손실순서만 요구한다. senior cashflow sweep, failure-cost reserve, preview expense escrow, servicing fee cap, operator pool clawback, PEF 후순위 참여권, LP reverse inquiry를 한 장의 loss-order waterfall로 묶는다. LP에게는 anchor commitment가 아니라 reverse-inquiry side letter와 no-solicitation confirmation만 받는다. 은행에는 이 side letter가 fundraising이 아니라 full data-room 이후 조건 검토라는 문구를 붙인다.",
+    "reward": "LP 세 곳은 투자 확약을 주지 않는다. 그러나 reverse-inquiry side letter 3건, loss-order waterfall acceptance memo, management fee cap side letter, no-solicitation confirmation을 보낸다. 한 곳은 full data-room 초대가 나올 경우 reserve top-up 8,000만 원 standby 검토를 조건부로 열고, 은행은 이를 mandate co-review 자료로 받는다. 백승환의 PEF anchor 필요론은 약해진다. 도윤은 돈을 모은 게 아니다. 돈이 들어올 수 있는 손실순서부터 받았다."
+  },
+  "incident_beats": [
+    "LP 세 곳이 투자 확약을 거부하면서도 손실순서, fee cap, no-solicitation 경계를 요구하고, PEF는 anchor 필요론을 다시 꺼낸다",
+    "도윤이 senior sweep, reserve, expense escrow, servicing fee cap, operator pool clawback, PEF 후순위, LP reverse inquiry를 loss-order waterfall로 묶는다",
+    "reverse-inquiry side letter 3건, loss-order waterfall acceptance memo, management fee cap side letter, no-solicitation confirmation, reserve top-up standby 검토 receipt가 확보된다"
+  ],
+  "stakes": "LP 관심을 과장하면 공개모집 리스크가 열리고, 아무 증거가 없으면 full data-room 투표에서 실행력이 부족하다고 밀린다. 도윤은 투자금이 아니라 투자금이 올 수 있는 손실순서와 side letter를 받아야 한다.",
+  "power_shift": {
+    "protagonist": "purpose-limited 계좌를 연 trust-account operator에서 LP 손실순서를 조건화하는 loss-order architect로 이동한다.",
+    "antagonist": "백승환은 PEF anchor 필요론을 밀지만, LP side letter와 loss-order memo 때문에 PEF 돈이 유일한 실행력이라는 주장이 약해진다."
+  },
+  "relationship_delta": [
+    {
+      "target": "외부 LP 견제자들",
+      "before": "full data-room 전 투자 확약은 줄 수 없지만 손실순서를 보려는 LP들",
+      "after": "reverse-inquiry side letter와 loss-order acceptance memo를 보낸다"
+    },
+    {
+      "target": "백승환",
+      "before": "PEF anchor가 없으면 실행력이 부족하다고 주장하는 PEF 파트너",
+      "after": "LP side letter와 standby 검토 때문에 anchor 독점 논리가 약해진다",
+      "continuity_anchor_before": "PEF escrow conflict memo 때문에 선순위 비용 계좌를 가져가지 못한다"
+    },
+    {
+      "target": "은행 내부 보수파",
+      "before": "purpose-limited account만으로는 다음 매물 실행력이 부족하다고 보는 라인",
+      "after": "LP side letter를 full data-room 이후 조건 검토 자료로 받는다",
+      "continuity_anchor_before": "목적 제한 operator trust account와 dual signatory pack을 승인한다"
+    },
+    {
+      "target": "컴플라이언스 officer",
+      "before": "LP 접촉이 공개모집처럼 보이지 않게 감시하는 외부 담당자",
+      "after": "no-solicitation confirmation과 side letter 문구를 검토한다",
+      "continuity_anchor_before": "preview expense escrow와 account map을 감시하는 engagement letter를 발급한다"
+    }
+  ],
+  "foreshadow": [
+    "loss-order waterfall은 정식 초대장 투표에서 PEF anchor 없이도 실행력이 있다는 증거가 된다.",
+    "reserve top-up standby 검토는 최종 출범 시 첫 외부 자금 조건으로 남는다.",
+    "no-solicitation confirmation은 마지막 법무 공격에서 공개모집 프레임을 막는다.",
+    "management fee cap side letter는 독립 운용사 출범 후 수수료 신뢰의 기준이 된다."
+  ],
+  "callback": [
+    "senior cashflow sweep, failure-cost reserve, servicing fee escrow, operator pool clawback을 손실순서표로 재정렬한다.",
+    "LP reverse inquiry log protocol을 side letter와 no-solicitation confirmation으로 구체화한다.",
+    "purpose-limited operator trust account와 preview expense escrow를 full data-room 이후 실행비 proof로 넣는다.",
+    "PEF 후순위 참여권 선순위 전환 금지를 loss-order waterfall에 박는다."
+  ],
+  "emotional_beat": {
+    "type": "lp_loss_order_cider",
+    "intensity": 8
+  },
+  "tension_level": 9,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "LP one-on-one diligence room / 은행 mandate co-review desk / compliance officer side-letter review",
+    "type": "LP reverse-inquiry loss-order side-letter negotiation"
+  },
+  "time_span": {
+    "duration": "이틀",
+    "in_story_time": "purpose-limited operator trust account가 열린 직후"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "purpose-limited operator trust account 개설 승인 / preview expense escrow 4,500만 원 한도 / dual signatory pack / compliance officer engagement letter / bank account map / PEF escrow conflict memo / full data-room vote 조건 충족 memo",
+    "capital_after": "LP reverse-inquiry side letter 3건 / loss-order waterfall acceptance memo / management fee cap side letter / no-solicitation confirmation / reserve top-up 8,000만 원 standby 검토 조건 / bank mandate co-review consent / PEF anchor 필요론 보류",
+    "capital_delta": "LP 투자 확약 실패 / reverse-inquiry side letter 3건 확보 / loss-order acceptance 확보 / reserve top-up standby 검토 확보 / PEF anchor 압박 방어",
+    "profit_loss": "현금 유입은 아직 없지만, full data-room 이후 자금 검토와 손실순서 acceptance가 생겨 PEF anchor 독점 압박이 약해진다.",
+    "method": "투자 확약을 요구하지 않고, 손실순서 waterfall과 no-solicitation 확인, fee cap, standby 검토로 LP 관심을 합법적 실행력 proof로 바꾼다.",
+    "investment_type": "LP reverse-inquiry loss-order side letter",
+    "deal_type": "loss-order waterfall / no-solicitation confirmation / reserve top-up standby review",
+    "leverage_used": [
+      "purpose-limited operator trust account",
+      "preview expense escrow",
+      "senior cashflow sweep",
+      "failure-cost reserve",
+      "servicing fee cap",
+      "operator pool clawback",
+      "PEF subordination restriction",
+      "LP reverse inquiry log"
+    ],
+    "opponent": {
+      "name": "외부 LP 견제자들 / 백승환 / 은행 내부 보수파",
+      "type": "LP commitment caution, PEF anchor pressure, and bank execution-capacity skepticism",
+      "weakness_exploited": "LP는 투자 확약은 거절하지만 손실순서와 수수료 상한이 명확하면 조건부 검토 흔적은 남길 수 있다"
+    },
+    "historical_event": null,
+    "time_pressure": "full data-room vote 전에 PEF anchor 없이도 실행력을 설명할 LP side letter와 loss-order memo를 받아야 한다.",
+    "knowledge_used": "회귀 전 LP 관심을 투자 확약처럼 과장한 operator가 공개모집 프레임에 걸렸고, side letter만 남긴 쪽이 심사에서 살아남았다는 기억",
+    "risk_level": "극고위험",
+    "business_sector": "LP reverse inquiry / loss-order waterfall / no-solicitation / reserve standby / mandate co-review",
+    "section_rotation": "부도 회사 사냥꾼의 이름",
+    "success_pattern": "LP 투자 확약 없이 손실순서 acceptance와 side letter로 실행력 proof 확보",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "lp_loss_order_side_letter_receipt",
+      "receipt_line": "LP reverse-inquiry side letter 3건, loss-order waterfall acceptance memo, management fee cap side letter, no-solicitation confirmation, reserve top-up 8,000만 원 standby 검토 조건, bank mandate co-review consent receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 LP 관심을 투자 확약처럼 과장하다 공개모집 프레임에 걸렸고, side letter와 no-solicitation만 남긴 쪽이 심사를 통과했다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 operator는 LP 관심을 홍보하다 은행과 법무팀이 물러났다.",
+      "changed_event": "이번에는 도윤이 reverse-inquiry side letter와 no-solicitation confirmation만 받는다.",
+      "ripple_effect": "LP 돈은 아직 없지만, full data-room 투표에서 PEF anchor 없이도 손실순서와 실행력을 설명할 수 있게 된다."
+    },
+    "death_flag": {
+      "avoided": "LP 관심 과장으로 공개모집 프레임이 열리고 full data-room vote가 닫히는 미래",
+      "method": "reverse-inquiry side letter, no-solicitation confirmation, loss-order memo, fee cap으로 방어한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 LP 금액보다 no-solicitation 문구와 손실순서표를 먼저 확인한다.",
+      "suspicion_from": "백승환과 컴플라이언스 officer"
+    },
+    "future_prep": {
+      "action": "LP side letter와 no-solicitation confirmation을 마지막 legality proof와 full data-room vote의 실행력 증거로 넘긴다.",
+      "target_event": "정식 data-room 초대"
+    }
+  },
+  "block_no": 68,
+  "foreshadow_targets": [
+    69,
+    70
+  ]
+}

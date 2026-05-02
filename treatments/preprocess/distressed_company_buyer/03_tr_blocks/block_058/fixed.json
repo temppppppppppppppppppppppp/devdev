@@ -1,0 +1,143 @@
+{
+  "block_id": "Block 58",
+  "title": "대표들은 월급보다 옵션을 원한다",
+  "content": {
+    "context": "servicing fee escrow가 생기자 포트폴리오 대표들의 불만이 다른 방향으로 튄다. 이제 도윤이 운용보수까지 가져간다면 자기들은 월급쟁이 관리자가 되는 것 아니냐는 말이 돈다. 백승환은 그 틈을 놓치지 않는다. PEF 산하로 들어오면 대표들에게 더 큰 earn-out을 줄 수 있다고 흔든다.",
+    "event_villain": "해문푸드서비스, 리턴브릿지, 세원메디링크 대표들은 14일 operating allowance만으로는 버틸 수 없고 upside가 없으면 현장 execution을 책임질 이유가 없다고 주장한다. 백승환은 각 대표에게 별도 retention bonus를 흘리며 도윤의 governance table을 흔든다. LP observer는 대표들이 이탈하면 operator risk가 더 커진다고 본다. 도윤이 대표들을 억누르면 현장이 죽고, 무제한 보상을 주면 waterfall이 깨진다.",
+    "solution": "도윤은 월급을 올리지 않는다. 대신 권리별 성과가 입금될 때만 열리는 portfolio operator pool을 만든다. 급식 lockbox uptime, seller SLA 이행, 의료기기 소모품 반복 주문, 냉장 운송 claim 회수율을 각각 scorecard에 넣고, 기준을 넘긴 대표에게만 deferred earn-out unit을 준다. 단, bad-leaver clawback과 outside payment 금지, non-assumption schedule 위반 시 unit 소멸 조항을 붙인다. LP에게는 이것이 현장 인센티브이지 equity control 이전이 아니라는 side memo를 낸다.",
+    "reward": "대표들은 더 큰 현금 보너스를 즉시 받지 못한다. 그러나 portfolio operator pool과 deferred earn-out unit 조건에 서명한다. bad-leaver clawback, outside payment 금지 재확인, scorecard trigger, LP side memo가 함께 붙는다. 백승환이 뿌린 retention bonus 제안은 별도 지급이 아니라 waterfall 위반 risk로 기록된다. 도윤은 대표들을 달랜 게 아니다. 월급 불만을 권리별 성과표로 바꿔, 현장을 움직이게 하면서도 control을 넘기지 않았다."
+  },
+  "incident_beats": [
+    "포트폴리오 대표들이 servicing fee escrow를 보고 자기 upside가 없다며 execution 이탈 가능성을 흘리고, 백승환이 별도 retention bonus로 흔든다",
+    "도윤이 급식 uptime, seller SLA, 의료기기 반복 주문, 냉장 운송 claim 회수율을 scorecard로 묶어 deferred earn-out unit을 제시한다",
+    "portfolio operator pool, deferred earn-out unit, bad-leaver clawback, outside payment 금지 재확인, LP side memo receipt가 확보된다"
+  ],
+  "stakes": "대표들이 이탈하면 portfolio cashflow는 현장에서 죽는다. 그러나 대표들에게 통제 없는 upside를 주면 PEF와 내부 현금 누수가 다시 열린다. 도윤은 사람을 붙잡되 권리별 receipt를 통과한 성과에만 보상을 걸어야 한다.",
+  "power_shift": {
+    "protagonist": "servicing mandate를 확보한 operator에서 현장 대표들의 upside를 control 안에 묶는 incentive-architect로 이동한다.",
+    "antagonist": "백승환은 별도 retention bonus로 현장 이탈을 유도하지만, 도윤의 earn-out unit과 clawback 구조 때문에 보너스가 waterfall 위반 risk로 기록된다."
+  },
+  "relationship_delta": [
+    {
+      "target": "해문푸드서비스 대표",
+      "before": "급식 현장 uptime을 책임지면서도 upside가 없다고 불만을 품은 대표",
+      "after": "lockbox uptime scorecard와 deferred earn-out unit을 받는 대신 outside payment 금지를 재확인한다",
+      "continuity_anchor_before": "14일 operating allowance와 지출 cap을 받는 대신 outside payment 금지 확인서에 서명한다"
+    },
+    {
+      "target": "리턴브릿지 대표",
+      "before": "seller SLA 이행 부담만 커졌다고 보는 대표",
+      "after": "SLA 달성 trigger가 earn-out unit에 연결되자 현장 execution을 유지한다",
+      "continuity_anchor_before": "seller SLA와 패널티 hold ticket이 깨지는 걸 보고 SPV-bank 공동 서명권을 받아들인다"
+    },
+    {
+      "target": "세원메디링크 대표",
+      "before": "소모품 반복 주문이 자기 회사 노력인데 도윤 fee만 늘어난다고 불만인 대표",
+      "after": "반복 주문 scorecard를 받지만 non-assumption 위반 시 unit 소멸을 받아들인다",
+      "continuity_anchor_before": "병원 회의록과 제조사 70/30 waterfall 때문에 지출 cap 안에서만 움직인다"
+    },
+    {
+      "target": "외부 LP 견제자",
+      "before": "대표 이탈이 operator risk를 키운다고 보는 LP",
+      "after": "operator pool이 equity control 이전이 아니라 현장 인센티브라는 side memo를 proof room에 넣는다",
+      "continuity_anchor_before": "기관 브랜드 대신 은행 서명 mandate와 servicing fee escrow를 proof room 항목으로 인정한다"
+    }
+  ],
+  "foreshadow": [
+    "portfolio operator pool은 독립 운용자 조건표에서 key-person risk 완화 항목으로 들어간다.",
+    "bad-leaver clawback은 PEF가 현장 대표를 빼가려 할 때 방어 조항으로 돌아온다.",
+    "scorecard trigger는 리파이낸싱 심사에서 cashflow가 사람 기분이 아니라 계약으로 움직인다는 증거가 된다.",
+    "대표들의 deferred earn-out은 이후 독립 운용사 조직 설계의 첫 보상 테이블이 된다."
+  ],
+  "callback": [
+    "14일 operating allowance를 단순 운영비에서 scorecard 기반 현장 인센티브로 확장한다.",
+    "servicing fee escrow를 대표 upside와 충돌시키지 않도록 waterfall 안에서 분리한다.",
+    "cashflow leakage waiver의 outside payment 금지를 bad-leaver clawback으로 강화한다.",
+    "LP proof room의 operator dependency 질문을 key-person risk 완화 memo로 답한다."
+  ],
+  "emotional_beat": {
+    "type": "incentive_control_cider",
+    "intensity": 8
+  },
+  "tension_level": 8,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "도윤 SPV 현장대표 회의 / LP proof room side memo / waterfall scorecard dashboard",
+    "type": "portfolio operator incentive and clawback negotiation"
+  },
+  "time_span": {
+    "duration": "사흘",
+    "in_story_time": "interim servicing fee escrow가 열린 직후"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "interim portfolio servicing agreement 90일 / 월 cashflow 2.4% servicing fee escrow / advisory conflict clean letter / 자료 반출 없음 확인서 / bank-signed servicing mandate / limited assurance 역할 분리 확인 / LP proof room operator-risk 항목 보류",
+    "capital_after": "portfolio operator pool / deferred earn-out unit 조건표 / bad-leaver clawback / outside payment 금지 재확인 / cashflow scorecard trigger / LP key-person risk 완화 side memo / 백승환 retention bonus 제안 waterfall 위반 risk 기록",
+    "capital_delta": "대표 이탈 방어 / 현장 upside를 control 안에 편입 / bad-leaver clawback 확보 / LP operator-risk 항목 완화",
+    "profit_loss": "즉시 현금 보너스는 지급하지 않지만, 성과 기반 deferred unit을 열어 현장 execution을 유지한다.",
+    "method": "대표들의 월급 인상 요구를 권리별 cashflow scorecard와 deferred earn-out unit으로 바꾸고, bad-leaver clawback과 outside payment 금지로 control을 보존한다.",
+    "investment_type": "portfolio operator incentive alignment",
+    "deal_type": "deferred earn-out unit / operator pool / bad-leaver clawback",
+    "leverage_used": [
+      "servicing fee escrow",
+      "14일 operating allowance schedule",
+      "cashflow leakage waiver",
+      "급식 lockbox uptime",
+      "seller SLA",
+      "의료기기 반복 주문 trigger",
+      "냉장 운송 claim table",
+      "LP observer memo",
+      "PEF retention bonus pressure"
+    ],
+    "opponent": {
+      "name": "포트폴리오 회사 대표들 / 백승환 / 외부 LP 견제자",
+      "type": "field-operator upside pressure, PEF poaching pressure, and LP key-person risk gate",
+      "weakness_exploited": "대표들은 upside가 필요하지만, 그 upside가 cashflow receipt와 clawback에 묶이면 control을 가져가지 못한다"
+    },
+    "historical_event": null,
+    "time_pressure": "백승환이 별도 retention bonus를 확정하기 전 portfolio operator pool과 bad-leaver clawback을 서명시켜야 한다.",
+    "knowledge_used": "회귀 전 현장 대표들을 월급으로만 묶은 포트폴리오는 execution이 무너졌고, 별도 보너스를 받은 대표들은 PEF 편으로 넘어갔다는 기억",
+    "risk_level": "고위험",
+    "business_sector": "portfolio operations / retention incentive / earn-out / key-person risk / cashflow governance",
+    "section_rotation": "PEF가 사려는 건 회사가 아니다",
+    "success_pattern": "현장 대표들의 upside 요구를 scorecard 기반 deferred earn-out과 clawback으로 통제",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "operator_incentive_alignment_receipt",
+      "receipt_line": "portfolio operator pool, deferred earn-out unit 조건표, bad-leaver clawback, outside payment 금지 재확인, cashflow scorecard trigger, LP key-person risk 완화 side memo receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 포트폴리오 대표들이 upside 부재로 PEF retention bonus를 받고 현장 execution을 흔들었다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 operator는 대표들을 월급과 통제로만 묶었고, PEF가 별도 보너스로 현장을 가져갔다.",
+      "changed_event": "이번에는 도윤이 cashflow scorecard와 deferred earn-out unit, clawback을 동시에 서명시킨다.",
+      "ripple_effect": "현장 대표들은 control을 가져가지 못하지만 upside를 얻고, LP는 key-person risk를 계약 구조로 읽을 수 있게 된다."
+    },
+    "death_flag": {
+      "avoided": "현장 대표 이탈로 portfolio cashflow가 끊기고 PEF 통매각만 남는 미래",
+      "method": "operator pool, deferred earn-out unit, bad-leaver clawback, outside payment 금지로 방어한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 대표들의 불만이 터지기 전 회사별 scorecard trigger를 이미 빈칸 없이 준비해 둔다.",
+      "suspicion_from": "포트폴리오 회사 대표들과 백승환"
+    },
+    "future_prep": {
+      "action": "operator pool과 scorecard trigger를 리파이낸싱 심사의 key-person risk 완화 proof로 넣는다.",
+      "target_event": "리파이낸싱 역전"
+    }
+  },
+  "block_no": 58,
+  "foreshadow_targets": [
+    59,
+    60,
+    62
+  ]
+}

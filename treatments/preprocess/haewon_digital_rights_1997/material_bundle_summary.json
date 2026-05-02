@@ -1,0 +1,117 @@
+{
+  "events": [
+    "TR 2~3 안에 도윤은 정리 대상 계열사 매각 회의에서 문서고 열람권을 따내고, 같은 block 안에서 케이블 지역권 누락 조항을 찾아 첫 매각 보류를 만든다.",
+    "TR 3~4 안에 도윤은 PCS 대리점망 우선권을 채권단 앞에서 숫자로 증명하고, 동시에 장남 라인의 헐값 매각을 막아 임시 감사 seat를 확보한다.",
+    "TR 4~5 안에 도윤은 게임 유통권과 음원 마스터권을 묶어 현금흐름을 만들고, 별도 사건으로 현장 본부장을 자기 편 증인으로 돌린다.",
+    "TR 5~6 안에 도윤은 VAN/PG 단말 계약과 물류 터미널 병목을 연결해 디지털 유통 관문 논리를 세우고, 다음 전장인 portal/ISP 권리 desk 입장권을 얻는다.",
+    "각 block은 주 사건과 별도 사건이 함께 움직인다. 권리 증명만으로 끝내지 않고 반격, side acquisition, 관계 재배치, 다음 gate를 같은 묶음 안에서 처리한다."
+  ],
+  "npc_candidates": [
+    "강도윤: 자기 회수율과 통제권을 최우선으로 두는 빙의자. 가족을 살리는 척할 수는 있어도 실제로는 권리를 자기 구조로 빼낸다.",
+    "서인하: 채권단 실사역. 도윤의 첫 공식 관찰자이며 proof가 맞으면 냉정하게 편을 바꾼다.",
+    "강민석: 장남. 빠른 매각과 체면 방어를 위해 도윤의 권리 회수를 방해한다.",
+    "오세관: 케이블 현장 본부장. 장부에 없는 병목과 지역권 가치를 아는 실무 증인이다.",
+    "윤세라: 게임 유통 창업자. 도윤이 콘텐츠 권리 관문으로 넘어가는 다리다.",
+    "류한규: 외부 브로커. 도윤이 싼값에 모으는 권리를 먼저 의심하고 가격을 올리는 초반 반격자다."
+  ],
+  "crisis_candidates": [
+    "도윤이 문서고를 열기 전에 케이블 권리 묶음이 장남 라인 손으로 팔려나간다.",
+    "채권단은 도윤의 계산을 미래 지식이 아니라 사기성 낙관으로 판단해 seat를 막는다.",
+    "현장 본부장은 도윤을 재벌가 애송이로 보고 핵심 병목 정보를 숨긴다.",
+    "외부 브로커가 PCS 우선권을 먼저 눈치채고 장남과 결탁해 입찰가를 왜곡한다.",
+    "게임/음원권은 당장 돈이 안 된다는 이유로 내부에서 폐기 압박을 받는다.",
+    "도윤이 너무 많은 권리를 한꺼번에 먹으려 하면 채권단이 개인 편취로 의심한다."
+  ],
+  "terms": [
+    "IMF",
+    "워크아웃",
+    "채권단",
+    "정리 대상 계열사",
+    "문서고 열람권",
+    "매각 보류권",
+    "케이블 SO",
+    "지역 송출권",
+    "PCS 대리점망",
+    "우선권",
+    "콜옵션",
+    "게임 유통권",
+    "음원 마스터권",
+    "VAN",
+    "PG",
+    "물류 터미널",
+    "SPC",
+    "우선협상권",
+    "감사 태스크포스"
+  ],
+  "scene_details": [
+    "첫 회의 장면은 도윤이 가족을 설득하는 장면이 아니라, 버려진 권리 목록 하나를 잡아 회의장 공기를 바꾸는 장면이어야 한다.",
+    "문서고 장면은 추억이나 조사 몽타주가 아니라, 계약서 한 줄이 매각가와 채권단 태도를 바꾸는 proof scene이어야 한다.",
+    "현장 실사 장면은 케이블 설비, 대리점망, 단말 재고, 지역 독점권 같은 물성을 보여주며 도윤의 실무 감각을 증명한다.",
+    "초반 관계 보상은 호감이 아니라 결재선 변화, 회의석 배치, 보고서 수신자 추가, 매각 보류 도장으로 보여준다.",
+    "도윤이 누군가를 구해도 그 결과는 증인, 방패, 권리 가격 인하, 다음 gate 중 하나로 환전되어야 한다."
+  ],
+  "notes": "Stage0 material bundle for a new blockguide business-power work. The commercial hook is 1997 IMF + doomed chaebol + discarded digital rights + self-interested operator. Use R&D donor cadence as generalized law only: hidden value, public proof, risky seat, private receipt, next gate.",
+  "opening_bundle_contract": {
+    "bundle_window": "TR 2~6",
+    "macro_battlefield": "해원그룹 정리 대상 권리 매각 회의와 디지털 유통권 첫 회수전",
+    "macro_battlefield_map": [
+      "정리 대상 목록에서 케이블 지역권을 찾아 매각 보류권을 만든다.",
+      "PCS 대리점망 우선권을 숫자로 증명해 채권단 관찰자를 tone shift시킨다.",
+      "게임 유통권과 음원 마스터권을 side acquisition으로 묶어 현금흐름 단서를 만든다.",
+      "VAN/PG 단말 계약과 물류 터미널을 연결해 다음 portal/ISP 권리 desk 티켓을 확보한다."
+    ],
+    "bundle_goal": "TR 2~6 안에 도윤이 버려진 권리를 찾아 증명하고, 감사 seat와 매각 보류권을 얻고, 디지털 유통 관문 독식의 첫 입장권을 획득했음을 독자가 체감하게 만든다.",
+    "first_signboard_block": 3,
+    "representative_reevaluation_block": 2,
+    "next_battlefield_ticket_block": 6,
+    "timing_reconciliation_note": "Opening은 느리게 세계관을 설명하지 않는다. B02부터 권리 회수와 별도 사건을 병렬로 움직이고, B06 이전에 공식 seat와 다음 권리 desk가 모두 visible해야 한다."
+  },
+  "first_block_cider_ledger": [
+    {
+      "block_no": 2,
+      "episode_window": "2~3화",
+      "primary_event": "문서고 열람권 획득과 케이블 지역권 누락 조항 발견",
+      "secondary_event": "장남 라인의 헐값 매각 일정이 앞당겨져 즉석 반격",
+      "same_block_receipt": "매각 보류 도장과 채권단 실사역의 첫 재평가",
+      "has_cider": true
+    },
+    {
+      "block_no": 3,
+      "episode_window": "4~5화",
+      "primary_event": "PCS 대리점망 우선권 가치 증명",
+      "secondary_event": "외부 브로커가 장남과 붙어 가격을 흔드는 방해",
+      "same_block_receipt": "임시 감사 seat와 문서고 상시 접근권",
+      "has_cider": true
+    },
+    {
+      "block_no": 4,
+      "episode_window": "6~7화",
+      "primary_event": "게임 유통권과 음원 마스터권 side acquisition",
+      "secondary_event": "현장 본부장을 증인으로 돌려 내부 반대자를 무력화",
+      "same_block_receipt": "별도 SPC 설립 승인 초안과 첫 현금흐름 표",
+      "has_cider": true
+    },
+    {
+      "block_no": 5,
+      "episode_window": "8~9화",
+      "primary_event": "VAN/PG 단말 계약 가치 연결",
+      "secondary_event": "채권단 보수파가 개인 편취 의혹을 제기",
+      "same_block_receipt": "감사 보고서 공식 배포권과 도윤 명의 우선협상권",
+      "has_cider": true
+    },
+    {
+      "block_no": 6,
+      "episode_window": "10~11화",
+      "primary_event": "케이블, PCS, 결제, 물류를 하나의 디지털 유통 관문으로 묶는 첫 signboard",
+      "secondary_event": "portal/ISP 권리 desk의 다음 매각 정보가 새로 열린다",
+      "same_block_receipt": "디지털 권리 정리 desk 지휘권과 다음 전장 티켓",
+      "has_cider": true
+    }
+  ],
+  "block_density_law": {
+    "unit": "1 TR block = 2~6 serialized episodes",
+    "minimum_events": 2,
+    "required_receipt": "each block must leave proof, receipt, access, equity, protection, or next-gate ticket",
+    "anti_slow_rule": "worldbuilding without receipt fails the block"
+  }
+}

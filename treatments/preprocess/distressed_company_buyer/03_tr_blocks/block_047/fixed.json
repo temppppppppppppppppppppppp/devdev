@@ -1,0 +1,142 @@
+{
+  "block_id": "Block 47",
+  "title": "리콜 보험은 고장 전 기록을 본다",
+  "content": {
+    "context": "3대 장비 현장 점검이 시작되자 세원메디링크 대표는 리콜 보험 claim을 바로 넣자고 한다. 문지훈은 차갑게 말한다. 고장 난 뒤 사진만으로는 늦다. 의료기기 리콜 보험은 고장 전 기록, 유지보수 log, 소모품 교체 주기, 병원 입회 서명을 본다. 도윤은 보험금을 받으러 온 게 아니다. 병원이 두려워하는 사고 책임을, 보험사가 읽을 수 있는 사전 기록으로 바꾸러 왔다.",
+    "event_villain": "기존 의료기기 유통사 대표는 세원메디링크의 유지보수 log는 부도 회사 기록이라 신뢰할 수 없다고 병원에 알린다. 병원 법무팀은 장비에 문제가 생긴 뒤 보험사가 지급을 거절하면 환자 안전 책임은 병원이 떠안는다고 압박한다. 문지훈은 리콜 notice 겹침 8건 중 실제 claim 후보는 사전 점검 기록이 맞는 일부뿐이라고 선을 긋는다. 도윤이 claim 금액을 과장하면 병원 PO와 보험 모두 닫힌다.",
+    "solution": "도윤은 보험금 청구액을 줄인다. 리콜 notice 8건 중 장비 점검 log, 소모품 교체 cap, 제조번호 대조, 병원 입회 서명이 맞는 5건만 pre-claim packet으로 만든다. 나머지 3건은 claim이 아니라 monitoring queue로 둔다. 문지훈에게는 고장 발생 전 기준표와 service matrix를 붙여 리콜 보험 방어 가능성을 확인받고, 병원 법무팀에는 보험 지급 보장이 아니라 사고 발생 시 책임 순서와 자료 제출 의무를 약속한다. 도윤 SPV의 fee는 보험금이 아니라 claim-prep success fee 10%로 낮춘다.",
+    "reward": "문지훈은 리콜 notice 5건에 대한 pre-claim packet 접수번호와 지급 가능성 예비 의견서를 보낸다. 병원 법무팀은 3대 장비 제한 PO를 유지하고, 사고 발생 시 제출할 고장 전 기록 checklist를 회의록에 붙인다. claim-prep success fee 10% 조항이 도윤 SPV에 붙고, monitoring queue 3건은 폐기 대신 추가 점검 대상으로 남는다. 도윤은 보험금을 받은 게 아니다. 고장 전 기록을 보험과 병원이 동시에 읽는 방어막으로 바꿔, 유지보수 PO가 끊기지 않게 만들었다."
+  },
+  "incident_beats": [
+    "기존 유통사 대표와 병원 법무팀이 부도 회사 유지보수 log의 신뢰성과 사고 책임을 문제 삼고, 문지훈은 8건 전액 claim을 거부한다",
+    "도윤이 리콜 notice 8건 중 5건만 pre-claim packet으로 만들고 3건은 monitoring queue에 남기며 claim-prep success fee를 10%로 낮춘다",
+    "pre-claim packet 접수번호, 지급 가능성 예비 의견서, 고장 전 기록 checklist, 제한 PO 유지, monitoring queue 3건 receipt가 떨어진다"
+  ],
+  "stakes": "보험 claim을 과장하면 문지훈과 병원이 동시에 돌아선다. 반대로 보험 방어막이 없으면 제한 유지보수 PO는 사고 리스크 때문에 다음 주에 끊긴다. 도윤은 보험금을 지금 받는 것보다, 병원이 PO를 유지할 이유를 먼저 만들어야 한다.",
+  "power_shift": {
+    "protagonist": "책임 범위를 만든 service-liability structurer에서 보험과 병원이 동시에 읽는 사전기록 방어막을 만드는 claim-prep operator로 이동한다.",
+    "antagonist": "기존 유통사 대표와 병원 법무팀은 기록 신뢰성과 사고 책임으로 PO를 흔들지만, 도윤의 pre-claim packet과 checklist 때문에 제한 PO를 즉시 끊지 못한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "문지훈",
+      "before": "리콜 notice 8건 중 일부만 claim 가능하다고 선을 긋는 보험 gatekeeper",
+      "after": "5건 pre-claim packet 접수번호와 지급 가능성 예비 의견서를 발급한다",
+      "continuity_anchor_before": "유지보수 책임보험 rider 예비 확인을 보내 claim proof의 방어선을 열어 준다"
+    },
+    {
+      "target": "병원 법무팀",
+      "before": "보험 지급 거절 시 환자 안전 책임이 병원으로 온다고 우려하는 법무 gate",
+      "after": "고장 전 기록 checklist와 책임 순서표를 보고 3대 장비 제한 PO를 유지한다",
+      "continuity_anchor_before": "사고 책임 waterfall과 병원 직원 입회 점검표를 받고 현장 입회 보류를 푼다"
+    },
+    {
+      "target": "기존 의료기기 유통사 대표",
+      "before": "부도 회사 유지보수 log는 믿을 수 없다고 병원에 알리는 기존 사업자",
+      "after": "병원 입회 서명과 보험 pre-claim packet 때문에 기록 신뢰성 공격 일부가 막힌다",
+      "continuity_anchor_before": "내부 모듈 개봉 금지 조건 아래 warranty 비훼손 범위 확인 메일을 보낸다"
+    },
+    {
+      "target": "세원메디링크 대표",
+      "before": "리콜 보험금을 크게 청구해 급한 현금을 만들고 싶어 하는 대표",
+      "after": "도윤이 claim을 5건으로 줄이자 불만을 보이지만 제한 PO 유지가 더 중요하다는 것을 인정한다",
+      "continuity_anchor_before": "정식 공급업체 승인은 거절됐지만 제한 PO와 escrow가 열리자 불만을 눌러 둔다"
+    }
+  ],
+  "foreshadow": [
+    "고장 전 기록 checklist는 후속 국면에서 반복 소모품 주문 trigger table의 객관 근거가 된다.",
+    "claim-prep success fee 10%는 후속 국면의 regulated rights portfolio 수익 항목으로 들어간다.",
+    "monitoring queue 3건은 기존 유통사 대표가 다시 warranty 책임을 흔들 때 남은 리스크로 작동한다.",
+    "문지훈의 예비 의견서는 FS-02 payoff로서 의료기기 유지보수 계약 리스크 방어에 회수된다."
+  ],
+  "callback": [
+    "후속 국면의 리콜 notice 겹침 8건을 5건 pre-claim packet과 3건 monitoring queue로 정리한다.",
+    "후속 국면의 service matrix와 책임보험 rider를 고장 전 기록 checklist의 근거로 사용한다.",
+    "후속 국면의 보험 claim gatekeeper 문지훈을 의료기기 claim 구조에서 재등장시킨다.",
+    "후속 국면의 claim split 원칙을 의료기기 리콜 보험에 적용한다."
+  ],
+  "emotional_beat": {
+    "type": "insurance_preclaim_defense_cider",
+    "intensity": 8
+  },
+  "tension_level": 8,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "병원 장비 점검실 / 보험사 pre-claim 화상회의 / 병원 법무팀 회의록 화면",
+    "type": "recall-insurance preclaim and maintenance-risk defense"
+  },
+  "time_span": {
+    "duration": "이틀",
+    "in_story_time": "후속 국면의 14일 service matrix 서명 직후 첫 현장 점검 기간"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "3대 장비 작업범위 service matrix / 외관 점검·필터 교체·센서 패치 교체 허용 / 내부 모듈 개봉 금지 조항 / warranty 비훼손 확인 메일 / 유지보수 책임보험 rider 예비 확인 / engineer 책임보험 escrow 300만 원 / 병원 법무팀 현장 입회 보류 해제 / 14일 service matrix 서명",
+    "capital_after": "리콜 notice 5건 pre-claim packet 접수번호 / 지급 가능성 예비 의견서 / 고장 전 기록 checklist / 3대 장비 제한 PO 유지 확인 / monitoring queue 3건 / claim-prep success fee 10% 조항 / 병원 입회 서명 log / 사고 발생 시 자료 제출 의무표",
+    "capital_delta": "8건 전액 claim 실패 / 5건 pre-claim packet 확보 / 제한 PO 유지 / claim-prep fee 10% 조항 확보",
+    "profit_loss": "보험금 즉시 수령 실패, claim 후보 축소. 대신 pre-claim 접수와 병원 PO 유지 방어막 확보",
+    "method": "리콜 보험금을 과장하지 않고, 고장 전 기록, service matrix, 병원 입회 서명, 제조번호 대조가 맞는 5건만 pre-claim packet으로 만든다.",
+    "investment_type": "distressed medical-device recall-insurance defense",
+    "deal_type": "pre-claim packet / maintenance-risk checklist / claim-prep fee",
+    "leverage_used": [
+      "리콜 notice 겹침 8건",
+      "service matrix",
+      "warranty 비훼손 확인 메일",
+      "유지보수 책임보험 rider 예비 확인",
+      "병원 입회 점검표",
+      "제조번호 대조표",
+      "문지훈 보험 gate",
+      "3대 장비 제한 PO"
+    ],
+    "opponent": {
+      "name": "문지훈 / 병원 법무팀 / 기존 의료기기 유통사 대표 / 세원메디링크 대표",
+      "type": "insurance proof gate, hospital liability gate, incumbent record-credibility attack, and distressed founder cash hunger",
+      "weakness_exploited": "보험사와 병원은 큰 claim보다 고장 전 기록과 책임 순서가 맞는 제한 packet을 더 안전하게 읽는다"
+    },
+    "historical_event": null,
+    "time_pressure": "첫 현장 점검 중 문제가 생기기 전 보험과 병원이 읽을 고장 전 기록 checklist를 남겨야 제한 PO가 유지된다.",
+    "knowledge_used": "회귀 전 세원메디링크는 리콜 claim 금액을 과장하다 보험사와 병원 법무팀 모두에게 신뢰를 잃었다는 기억",
+    "risk_level": "고위험",
+    "business_sector": "의료기기 리콜 보험 / 유지보수 기록 / 병원 법무 / claim-prep / 제한 PO",
+    "section_rotation": "허가가 남은 의료기기 유통사",
+    "success_pattern": "즉시 보험금 실패를 pre-claim 방어막과 PO 유지로 전환",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "recall_preclaim_defense_receipt",
+      "receipt_line": "리콜 notice 5건 pre-claim packet 접수번호, 지급 가능성 예비 의견서, 고장 전 기록 checklist, 3대 장비 제한 PO 유지 확인, monitoring queue 3건, claim-prep success fee 10% receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 세원메디링크는 리콜 claim을 과장하다 보험사와 병원 법무팀 신뢰를 잃었고, 실제 방어는 5건 pre-claim packet에서 시작됐다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 운영진은 8건 전액 claim을 밀었다가 보험사 반려와 병원 PO 보류를 동시에 맞았다.",
+      "changed_event": "이번에는 도윤이 5건만 pre-claim packet으로 만들고 나머지 3건은 monitoring queue로 남긴다.",
+      "ripple_effect": "병원은 보험금을 아직 보지 못했지만 제한 PO를 유지하고, 소모품 반복 주문 trigger를 쌓을 시간이 생긴다."
+    },
+    "death_flag": {
+      "avoided": "과장 claim으로 보험사와 병원 법무팀 신뢰를 동시에 잃는 미래",
+      "method": "고장 전 기록 checklist와 pre-claim packet 5건, monitoring queue 3건으로 claim 범위를 줄인다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 보험금 액수보다 고장 전 기록 checklist 순서를 먼저 만든다.",
+      "suspicion_from": "문지훈과 세원메디링크 대표"
+    },
+    "future_prep": {
+      "action": "고장 전 기록 checklist와 제한 PO 유지 확인을 반복 소모품 trigger table에 붙인다.",
+      "target_event": "후속 국면 소모품은 고장 전에 팔린다"
+    }
+  },
+  "block_no": 47,
+  "foreshadow_targets": [
+    48,
+    49,
+    50
+  ]
+}

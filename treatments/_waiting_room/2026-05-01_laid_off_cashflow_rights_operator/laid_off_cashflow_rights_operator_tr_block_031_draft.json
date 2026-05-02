@@ -1,0 +1,176 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "31",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 031 draft only. Opens ARC-04 by turning a logistics drawing into an access-road rights file, not a logistics-slot reward yet.",
+  "blocks": [
+    {
+      "block_id": "Block 31",
+      "block_no": 31,
+      "title": "출입로 4.2미터",
+      "episode_span_intent": "2~6화 분량. 물류센터 출입로 파일 확인, 다온 물류본부의 운영 도면 축소, 현장 병목 실측, 사유지 통행권 원문 gate, 감정평가사 최은호 의뢰 초안을 압축한다.",
+      "content": {
+        "context": "SableWorks의 90일 조건부 우선 검토권을 받은 뒤, 도윤은 물류센터 출입로 파일을 연다. 파일명은 별것 아니다. 'B-3 Gate inbound route map.' 다온 물류본부는 운영 참고 도면이라고 말한다. 그러나 도면 한쪽에 적힌 숫자가 도윤 눈에 걸린다. 주 출입로 폭 4.2미터. 11톤 윙바디 차량의 회전반경, 반입 대기열, D-RN 리퍼브 물량의 검수 동선을 겹치면 4.2미터는 도로가 아니라 병목이다. 총판 조건표는 물건이 들어와야 비싸진다.",
+        "event_villain": "첫 번째 사건은 물류본부의 축소다. 다온 물류본부는 B-3 게이트 도면을 단순 운영 자료로 처리하고, 도윤에게 임시 하역 시간표만 제안한다. 새벽 2시부터 4시 사이에 D-RN 물량을 넣으면 된다는 것이다. 도윤은 시간표를 보상으로 받지 않는다. 시간표는 회사 운영 개선이고, 권리는 남지 않는다. 그는 도면의 부속 파일을 요구한다. 도로 폭 실측표, 출입로 경계선, 사유지 통행 동의서, 주차 대기열 CCTV 로그. 물류본부장은 그건 물류가 아니라 법무/자산 파일이라고 선을 긋는다.",
+        "second_incident": "두 번째 사건은 현장 실측이다. 도윤은 박만철에게 트럭 기사 두 명의 대기 시간을 받아내고, B-3 게이트 앞에서 실제 회전 동선을 본다. 도면상 4.2미터지만, 전신주 보호대와 임시 팔레트 적치선 때문에 실제 유효 폭은 3.6미터까지 줄어든다. 11톤 윙바디는 한 번에 꺾지 못하고, 대기열이 생기면 뒤쪽 공용도로까지 막힌다. 더 이상한 건 출입로 끝의 얇은 필지다. 등기상 다온 부지가 아니라 오래된 사유지이고, 통행권은 '관행적 사용'으로만 적혀 있다.",
+        "solution": "도윤은 물류 개선안을 쓰지 않는다. 그는 병목을 권리로 분리한다. 첫째, B-3 게이트 출입로 4.2미터 권리 파일 열람권. 둘째, 현장 실측 동행권과 사진 로그 보존. 셋째, 사유지 통행권 원문 제한 열람 gate. 넷째, 감정평가사 최은호에게 출입로 병목 가치 검토를 의뢰할 초안. 물류본부는 왜 감정평가사가 필요하냐고 묻는다. 도윤은 SableWorks 조건표를 보여준다. 90일 안에 물량을 증명하려면, 도로가 그냥 도로인지 돈줄인지 가격을 붙여야 한다.",
+        "reward": "블록 끝에서 도윤은 물류 슬롯을 받지 않는다. 대신 물류센터 출입로 4.2미터 권리 파일 열람권, B-3 진입로 현장 실측 동행권, 대형 트럭 회전반경/대기열 병목 사진 로그, 사유지 통행권 원문 제한 열람 gate, 감정평가사 최은호 의뢰 초안을 받는다. 물류본부장이 묻는다. '도로 폭 4.2미터가 그렇게 돈이 됩니까?' 도윤은 대기 중인 11톤 트럭을 본다. '길이 좁으면 물건이 멈춥니다. 멈추는 곳에 가격이 생깁니다.'"
+      },
+      "stakes": "출입로를 단순 운영 도면으로 넘기면 도윤은 임시 하역 시간표만 얻고 물류 개선 하청으로 밀린다. 반대로 4.2미터 출입로를 권리 파일과 현장 실측으로 분리하면, 총판 조건을 실제 물량 처리 proof로 비싸게 만들 첫 병목권을 잡을 수 있다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "다온 물류본부가 출입로 파일을 단순 운영 도면과 임시 하역 시간표로 축소하자, 도윤이 도로 폭 실측표/경계선/사유지 통행 동의서/CCTV 로그를 요구함",
+        "incident_2": "현장 실측에서 4.2미터 도로의 실제 유효 폭이 3.6미터까지 줄고 11톤 윙바디 회전반경과 대기열 병목, 사유지 통행권 문제가 드러남",
+        "next_actionable_gate": "감정평가사 최은호의 출입로 권리 가치 검증, 한강디벨롭의 대체 출입로 주장, 다온 물류본부 임시 하역 시간표, Aster cure volume 타이머와 물류 proof 연결",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 다온 물류를 편하게 만들려고 출입로를 보는 게 아니다. 90일 조건부 우선 검토권을 실제 물량 처리 proof로 바꾸려면 병목의 가격이 필요하고, 그 가격은 도윤권리운영의 다음 협상권이 된다.",
+        "morality_position": "트럭 기사 대기 시간을 줄이는 것도 회사 손실을 줄이는 것도 명분일 뿐이다. 핵심은 출입로 권리 파일과 감정평가 gate를 자기 SPV의 다음 권리 재료로 남기는 것이다.",
+        "efficiency_choice": "물류 슬롯이나 운영 개선안을 요구하지 않고, 권리 파일 열람권/현장 실측/통행권 원문/감정평가 의뢰 초안으로 요구를 쪼개 첫 관문을 통과시킨다."
+      },
+      "power_shift": {
+        "protagonist": "90일 조건부 우선 검토권과 물류 병목 파일 gate를 가진 해외 채널 조건 운영자 -> 출입로 권리 파일과 현장 실측 gate를 가진 물류 병목권 사냥꾼",
+        "antagonist": "다온 물류본부: 출입로를 운영 도면과 임시 시간표로 축소하려는 gatekeeper -> 권리 파일과 실측 동행을 내줘야 하는 자료 carrier",
+        "system": "물류센터 출입로 4.2미터 파일 gate -> 권리 파일 열람권, 실측 사진 로그, 사유지 통행권 원문 gate, 감정평가 의뢰 초안"
+      },
+      "relationship_delta": [
+        {
+          "target": "다온 물류본부",
+          "before": "물류센터 출입로 4.2미터 권리 파일을 통해 다음 병목 gate로 올라오는 부서",
+          "after": "출입로를 운영 도면으로 축소하려다 권리 파일 열람권과 현장 실측 동행권을 내주는 물류 carrier"
+        },
+        {
+          "target": "박만철",
+          "before": "리퍼브 운영 라인 현장 책임자",
+          "after": "트럭 기사 대기 시간과 현장 동선을 연결해 출입로 병목을 증명하는 현장 witness"
+        },
+        {
+          "target": "한규리",
+          "before": "90일 조건부 우선 검토권과 자동 review clause를 문서화하는 법무 validator",
+          "after": "사유지 통행권 원문 제한 열람과 감정평가 의뢰 초안을 법무적으로 걸어주는 validator"
+        },
+        {
+          "target": "SableWorks",
+          "before": "도윤권리운영에게 90일 조건부 우선 검토권과 D-RN linked Korea priority channel 조건표를 인정하는 해외 공급사",
+          "after": "도윤이 물류 병목 proof를 만들면 90일 조건 검토의 물량 검증 근거로 받아야 하는 배경 압박"
+        },
+        {
+          "target": "최은호",
+          "before": "아직 등장하지 않은 감정평가사",
+          "after": "출입로 권리의 시장가를 검증할 다음 gate로 호출되는 expert"
+        }
+      ],
+      "foreshadow": [
+        "감정평가사 최은호의 출입로 가치 검증",
+        "한강디벨롭의 대체 출입로 가능 주장",
+        "사유지 통행권 원문과 관행적 사용 문구",
+        "Aster cure volume 90일 타이머와 실제 물류 처리 proof의 충돌",
+        "합의금 대신 물류 슬롯을 요구하는 후반부 arc close"
+      ],
+      "callback": [
+        "Block 30의 물류센터 출입로 4.2미터 권리 파일 gate가 실제 파일 열람권으로 회수됨",
+        "Block 30의 90일 조건부 우선 검토권이 물류 proof 필요성으로 회수됨",
+        "Block 20의 D-RN 리퍼브 우선 판매권이 실제 반입 동선 병목으로 재해석됨",
+        "Block 17의 SKU/물량 통제 감각이 트럭 대기열과 하역 동선으로 확장됨",
+        "Block 7의 박만철 현장 operator가 물류 병목 witness로 재활용됨"
+      ],
+      "emotional_beat": {
+        "type": "small_road_as_bottleneck_right",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "다온 물류본부 회의실 / B-3 게이트 출입로 / 다온 물류센터 공유 폴더 / 도윤권리운영 임시 사무공간",
+        "type": "물류본부 / 현장 실측 / 권리 파일 / SPV"
+      },
+      "time_span": {
+        "duration": "3일",
+        "in_story_time": "2026년 8월 첫째 주"
+      },
+      "genre_ext": {
+        "capital_before": "D-RN linked Korea priority channel 조건표 + 90일 조건부 우선 검토권 + Aster cure volume 실패 시 Korea channel 재배정 자동 review clause + SableWorks portal role 90일 유지 확인 + 물류센터 출입로 4.2미터 권리 파일 gate",
+        "capital_after": "물류센터 출입로 4.2미터 권리 파일 열람권 + B-3 진입로 현장 실측 동행권 + 대형 트럭 회전반경/대기열 병목 사진 로그 + 사유지 통행권 원문 제한 열람 gate + 감정평가사 최은호 의뢰 초안",
+        "capital_delta": "물류센터 출입로 파일 gate를 현장 실측과 통행권 원문, 감정평가 gate로 전환",
+        "profit_loss": "현금 수익은 없다. 물류 슬롯도 아직 없다. 대신 도윤은 출입로 병목의 권리 파일과 가치평가 gate를 확보해 다음 협상에서 물류 슬롯을 살 근거를 만든다.",
+        "method": "B-3 gate route map 검토, 11톤 윙바디 회전반경 대조, 대기열 CCTV/사진 로그 확보, 사유지 통행권 원문 gate 요구, 감정평가사 의뢰 초안 작성",
+        "deal_type": "access-road rights file / field measurement gate / appraisal gate",
+        "leverage_used": [
+          "D-RN linked Korea priority channel 조건표",
+          "90일 조건부 우선 검토권",
+          "물류센터 출입로 4.2미터 권리 파일 gate",
+          "SableWorks portal role 90일 유지 확인",
+          "Aster cure volume 타이머",
+          "D-RN 리퍼브 물량 처리 필요성"
+        ],
+        "opponent": {
+          "name": "다온 물류본부",
+          "type": "운영 도면 축소자 / 물류 gatekeeper",
+          "weakness_exploited": "임시 하역 시간표는 줄 수 있어도, 90일 조건부 우선 검토권의 물량 proof를 위해 필요한 출입로 병목 자료를 완전히 숨기기는 어렵다는 점"
+        },
+        "time_pressure": "Aster cure volume 90일 안에 D-RN 물량 처리 능력을 증명하려면 출입로 병목의 가격과 권리 구조를 빨리 고정해야 한다.",
+        "risk_level": "고위험",
+        "business_sector": "물류센터 / 출입로 / 사유지 통행권 / 트럭 회전반경 / 감정평가",
+        "section_rotation": "해외 정산 proof를 물류 병목권 proof로 전환하며 ARC-04를 연다",
+        "success_pattern": "출입로 권리 파일 열람권, 현장 실측 동행권, 회전반경/대기열 사진 로그, 사유지 통행권 원문 gate, 최은호 감정평가 의뢰 초안이 남는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "access_road_rights_file_and_appraisal_gate",
+          "receipt_line": "'길이 좁으면 물건이 멈춥니다. 멈추는 곳에 가격이 생깁니다.'",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "물류센터 출입로 4.2미터 권리 파일 열람권",
+          "B-3 진입로 현장 실측 동행권",
+          "대형 트럭 회전반경/대기열 병목 사진 로그",
+          "사유지 통행권 원문 제한 열람 gate",
+          "감정평가사 최은호 의뢰 초안"
+        ],
+        "document_evidence": [
+          "B-3 Gate inbound route map",
+          "출입로 폭 4.2미터 도면",
+          "11톤 윙바디 회전반경 표",
+          "대기열 CCTV 캡처 요청 기록",
+          "사유지 통행 동의서 목록",
+          "현장 실측 사진 로그",
+          "최은호 감정평가 의뢰 초안"
+        ],
+        "field_validation": [
+          "도면상 폭은 4.2미터임",
+          "전신주 보호대와 임시 팔레트 적치선 때문에 실제 유효 폭은 3.6미터까지 줄어듦",
+          "11톤 윙바디가 한 번에 회전하지 못함",
+          "대기열 발생 시 공용도로까지 막힘",
+          "출입로 끝 얇은 필지는 다온 소유가 아니라 관행적 사용 사유지임",
+          "물류 슬롯은 아직 확보하지 않음"
+        ],
+        "witness_carrier": [
+          "다온 물류본부의 운영 도면 축소 발언",
+          "박만철의 트럭 기사 대기 시간 확보",
+          "한규리의 사유지 통행권 원문 제한 열람 검토",
+          "현장 실측 동행 기록",
+          "감정평가사 최은호 의뢰 초안"
+        ],
+        "receipt": [
+          "물류센터 출입로 4.2미터 권리 파일 열람권",
+          "B-3 진입로 현장 실측 동행권",
+          "대형 트럭 회전반경/대기열 병목 사진 로그",
+          "사유지 통행권 원문 제한 열람 gate",
+          "감정평가사 최은호 의뢰 초안"
+        ],
+        "next_gate": "감정평가사 최은호의 출입로 권리 가치 검증, 한강디벨롭의 대체 출입로 주장, 다온 물류본부 임시 하역 시간표, Aster cure volume 타이머와 물류 proof 연결"
+      },
+      "foreshadow_targets": [
+        32,
+        33,
+        35,
+        40
+      ]
+    }
+  ]
+}
