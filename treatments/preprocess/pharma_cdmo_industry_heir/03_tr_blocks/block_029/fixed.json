@@ -15,7 +15,7 @@
   "relationship_delta": [
     {
       "target": "사립병원 구매이사",
-      "before": "우선배정 약국 리스트를 받아 품절 방지 실행 병원을 자처하며 Block 029 성과 검증을 재촉한다",
+      "before": "우선배정 약국 리스트를 받아 품절 방지 실행 병원을 자처하며 성과 검증을 재촉한다",
       "after": "72시간 선배정표로 품절 민원을 피하고 우선공급 슬롯 실행권을 태오바이오에 사실상 맡긴다"
     },
     {
@@ -40,14 +40,14 @@
     }
   ],
   "foreshadow": [
-    "처방 전 품절 방지 성과표는 Block 030 표준 청구서의 데이터 검증료 청구 근거가 된다.",
-    "72시간 선배정표는 Block 031 지역 물류창고 전장에서 물류 배정권으로 확장된다.",
+    "처방 전 품절 방지 성과표는 표준 청구서의 데이터 검증료 청구 근거가 된다.",
+    "72시간 선배정표는 지역 물류창고 전장에서 물류 배정권으로 확장된다.",
     "상권 코드 익명 성과 사용권은 이후 약국 연합을 전국 단위로 늘리는 표준 보호 조항이 된다."
   ],
   "callback": [
-    "Block 028의 상권별 품절 회복 속도와 우선배정 약국 리스트가 72시간 선배정표로 회수된다.",
-    "Block 027의 실제 손실 단가 산식이 기존 납품사의 창고 선점을 반박하는 비교표로 쓰인다.",
-    "Block 026의 3개월 데이터 검증 계약 성과 압박이 실제 품절 방지 사례로 회수된다."
+    "상권별 품절 회복 속도와 우선배정 약국 리스트가 72시간 선배정표로 회수된다.",
+    "실제 손실 단가 산식이 기존 납품사의 창고 선점을 반박하는 비교표로 쓰인다.",
+    "3개월 데이터 검증 계약 성과 압박이 실제 품절 방지 사례로 회수된다."
   ],
   "emotional_beat": {
     "type": "predictive_execution",
@@ -92,13 +92,67 @@
     "opening_progression": {
       "public_signboard_event": "예방접종 안내문 배포 후에도 우선배정 약국 품절 시간이 절반으로 줄고 병원 민원이 발생하지 않는다",
       "representative_reevaluation": "병원과 보험심사 라인은 태오바이오 데이터를 사후 리포트가 아니라 처방 전 실행 신호로 다시 본다",
-      "next_battlefield_ticket": "처방 전 품절 방지 성과표가 Block 030 표준 청구서의 데이터 검증료 청구 근거가 된다"
+      "next_battlefield_ticket": "처방 전 품절 방지 성과표가 표준 청구서의 데이터 검증료 청구 근거가 된다"
     },
     "block_cider": {
       "has_cider": true,
       "receipt_type": "predictive_execution_receipt",
       "receipt_line": "강태오는 처방 데이터가 나오기 전에 72시간 선배정표를 실행해 품절 시간을 절반으로 줄이고 성과표와 예산안 유지권을 얻는다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "처방 데이터가 나오기 전 상권 품절 신호로 물량을 움직여 데이터 상품의 실제 성과를 증명하는 실행 승리",
+      "recognition_signal": "사립병원 구매이사의 시선 변화: 72시간 선배정표로 품절 민원을 피하고 우선공급 슬롯 실행권을 태오바이오에 사실상 맡긴다",
+      "reward_signal": "강태오는 처방 데이터가 나오기 전에 72시간 선배정표를 실행해 품절 시간을 절반으로 줄이고 성과표와 예산안 유지권을 얻는다.",
+      "growth_signal": "강태오는 처방 데이터가 나오기 전 상권 품절 신호로 물량을 움직여 데이터 검증 계약의 첫 성과를 만든다.",
+      "expectation_signal": "처방 전 품절 방지 성과표가 표준 청구서의 데이터 검증료 청구 근거가 된다",
+      "reader_feel": "독자는 「데이터는 처방보다 빠르다」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 처방 데이터가 나오기 전에 72시간 선배정표를 실행해 품절 시간을 절반으로 줄이고 성과표와 예산안 유지권을 얻는다. 성장 장면: 강태오는 처방 데이터가 나오기 전 상권 품절 신호로 물량을 움직여 데이터 검증 계약의 첫 성과를 만든다. 다음 기대감: 처방 전 품절 방지 성과표가 표준 청구서의 데이터 검증료 청구 근거가 된다",
+      "mature_success_signal": "강태오는 데이터는 처방보다 빠르다의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "처방 데이터가 나오기 전 상권 품절 신호로 물량을 움직여 데이터 상품의 실제 성과를 증명하는 실행 승리",
+        "recognition": "사립병원 구매이사의 시선 변화: 72시간 선배정표로 품절 민원을 피하고 우선공급 슬롯 실행권을 태오바이오에 사실상 맡긴다",
+        "reward": "강태오는 처방 데이터가 나오기 전에 72시간 선배정표를 실행해 품절 시간을 절반으로 줄이고 성과표와 예산안 유지권을 얻는다.",
+        "growth": "강태오는 처방 데이터가 나오기 전 상권 품절 신호로 물량을 움직여 데이터 검증 계약의 첫 성과를 만든다.",
+        "expectation": "처방 전 품절 방지 성과표가 표준 청구서의 데이터 검증료 청구 근거가 된다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 사립병원 구매이사의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 처방 전 품절 방지 성과표가 표준 청구서의 데이터 검증료 청구 근거가 된다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "약국 연합 포맷 시험 첫 주, 상권별 품절 회복 속도 표에 이상한 신호가 찍힌다. 처방량은 아직 늘지 않았는데 특정 상권 약국 세 곳의 대체 판매 여부가 동시에 올라간다. 보조품목이 빠지기 시작했다는 뜻이다. 사립병원은 다음 주 독감 예방접종 안내문을 뿌릴 예정이고, 중소병원 두 곳은 예산안 결재를 앞두고 있다.",
+      "proof_action": "태오는 처방 데이터를 기다리지 않는다. 상권별 품절 회복 속도, 대체 판매 여부, 우선배정 약국 리스트를 묶어 72시간 선배정표를 만든다. 사립병원에는 예방접종 안내문 배포 전 3일 동안만 우선공급 슬롯 두 개를 실행하라고 한다. 약국 연합에는 약국명을 공개하지 않고 상권 코드와 회복 시간만 성과표에 올리겠다고 약속한다.",
+      "proof_axis": "전생에서 처방 데이터가 집계될 때는 이미 약국 품절이 끝난 뒤였고, 대체 판매와 회복 시간이 더 빠른 신호였다는 기억",
+      "recognition_or_resistance_signal": "사립병원 구매이사 -> 72시간 선배정표로 품절 민원을 피하고 우선공급 슬롯 실행권을 태오바이오에 사실상 맡긴다",
+      "receipt_asset": "강태오는 처방 데이터가 나오기 전에 72시간 선배정표를 실행해 품절 시간을 절반으로 줄이고 성과표와 예산안 유지권을 얻는다.",
+      "reward_asset_classes": [
+        "rights_control_asset"
+      ],
+      "next_regulated_gate": "처방 전 품절 방지 성과표가 표준 청구서의 데이터 검증료 청구 근거가 된다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 사립병원 구매이사의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 처방 전 품절 방지 성과표가 표준 청구서의 데이터 검증료 청구 근거가 된다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {

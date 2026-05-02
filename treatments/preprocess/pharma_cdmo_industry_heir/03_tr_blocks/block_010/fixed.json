@@ -37,12 +37,12 @@
   "foreshadow": [
     "태림제약 원료망 종료는 원료 한 드럼 병목과 API 독립 아크의 장기 씨앗이 된다.",
     "통합 기록 체계는 콜드체인 온도기록 표준으로 확장된다.",
-    "리처드 케인의 예비 방문은 ARC-02 이후 글로벌 CDMO 장기계약의 반복 gate가 된다."
+    "리처드 케인의 예비 방문은 이후 글로벌 CDMO 장기계약의 반복 gate가 된다."
   ],
   "callback": [
-    "Block 005의 글로벌 설비 예비 방문 ticket이 공장 재매입 거절의 핵심 근거가 된다.",
-    "Block 007의 원료 공급계약 해지 근거가 태림제약 의존 종료 선언으로 회수된다.",
-    "Block 009의 재실사 우선 검토 메모가 병원 우선협상권과 글로벌 예비 방문 유지에 쓰인다."
+    "글로벌 설비 예비 방문 ticket이 공장 재매입 거절의 핵심 근거가 된다.",
+    "원료 공급계약 해지 근거가 태림제약 의존 종료 선언으로 회수된다.",
+    "재실사 우선 검토 메모가 병원 우선협상권과 글로벌 예비 방문 유지에 쓰인다."
   ],
   "emotional_beat": {
     "type": "defiant_control",
@@ -94,6 +94,61 @@
       "receipt_type": "signboard_and_control_receipt",
       "receipt_line": "강태오는 20억 재매입 제안을 포기하고 재실사 일정 요청권, 병원 우선협상권 유지, 글로벌 설비 예비 방문 확정, 원료망 종료 통지를 확보한다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "큰 현금 제안을 포기하고 공장을 CDMO 관문으로 고정하는 전략적 통제 승리",
+      "recognition_signal": "한재국의 시선 변화: 20억 재매입안까지 거절당하고 부평 2공장이 태림제약 밖의 CDMO 관문으로 고정되는 것을 본다",
+      "reward_signal": "강태오는 20억 재매입 제안을 포기하고 재실사 일정 요청권, 병원 우선협상권 유지, 글로벌 설비 예비 방문 확정, 원료망 종료 통지를 확보한다.",
+      "growth_signal": "강태오는 공장을 매각 가능한 부도 자산에서 병원, 식약처, 글로벌 제약사를 연결하는 CDMO 관문으로 고정한다.",
+      "expectation_signal": "태림제약 원료망 종료와 대체 원료 후보표가 다음 대단원의 콜드체인/원료 독립 전장을 연다",
+      "reader_feel": "독자는 「공장은 팔리지 않는다」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 20억 재매입 제안을 포기하고 재실사 일정 요청권, 병원 우선협상권 유지, 글로벌 설비 예비 방문 확정, 원료망 종료 통지를 확보한다. 성장 장면: 강태오는 공장을 매각 가능한 부도 자산에서 병원, 식약처, 글로벌 제약사를 연결하는 CDMO 관문으로 고정한다. 다음 기대감: 태림제약 원료망 종료와 대체 원료 후보표가 다음 대단원의 콜드체인/원료 독립 전장을 연다",
+      "mature_success_signal": "강태오는 공장은 팔리지 않는다의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "큰 현금 제안을 포기하고 공장을 CDMO 관문으로 고정하는 전략적 통제 승리",
+        "recognition": "한재국의 시선 변화: 20억 재매입안까지 거절당하고 부평 2공장이 태림제약 밖의 CDMO 관문으로 고정되는 것을 본다",
+        "reward": "강태오는 20억 재매입 제안을 포기하고 재실사 일정 요청권, 병원 우선협상권 유지, 글로벌 설비 예비 방문 확정, 원료망 종료 통지를 확보한다.",
+        "growth": "강태오는 공장을 매각 가능한 부도 자산에서 병원, 식약처, 글로벌 제약사를 연결하는 CDMO 관문으로 고정한다.",
+        "expectation": "태림제약 원료망 종료와 대체 원료 후보표가 다음 대단원의 콜드체인/원료 독립 전장을 연다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 한재국의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 태림제약 원료망 종료와 대체 원료 후보표가 다음 대단원의 콜드체인/원료 독립 전장을 연다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "리처드 케인의 설비 예비 방문 날짜가 확정되자 한재국은 마지막 재매입안을 들고 온다. 현금 20억, 임금체불 전액 정리, 병원 납품계약 인수, 법무 공방 종결. 숫자만 보면 태오바이오가 당장 살아나는 제안이다.",
+      "proof_action": "태오는 재매입안을 거절한다. 대신 공장을 팔지 않는 이유를 감정으로 설명하지 않는다. 식약처 메모를 근거로 재실사 우선 검토 일정을 요청하고, 병원에는 우선협상권 유지를 위해 납품/온도/지연 통합 기록을 계속 제공하겠다고 확인서를 보낸다.",
+      "proof_axis": "전생에서 부평 2공장이 단순 설비가 아니라 병원, 제도, 글로벌 CDMO 수요가 만나는 지점이었다는 기억",
+      "recognition_or_resistance_signal": "한재국 -> 20억 재매입안까지 거절당하고 부평 2공장이 태림제약 밖의 CDMO 관문으로 고정되는 것을 본다",
+      "receipt_asset": "강태오는 20억 재매입 제안을 포기하고 재실사 일정 요청권, 병원 우선협상권 유지, 글로벌 설비 예비 방문 확정, 원료망 종료 통지를 확보한다.",
+      "reward_asset_classes": [
+        "quality_responsibility",
+        "cdmo_slot"
+      ],
+      "next_regulated_gate": "태림제약 원료망 종료와 대체 원료 후보표가 다음 대단원의 콜드체인/원료 독립 전장을 연다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 한재국의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 태림제약 원료망 종료와 대체 원료 후보표가 다음 대단원의 콜드체인/원료 독립 전장을 연다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {

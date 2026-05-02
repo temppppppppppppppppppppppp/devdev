@@ -1,0 +1,178 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "10",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 010 draft only. Closes ARC-01 and opens the next rights lane without generating a 10-block batch.",
+  "blocks": [
+    {
+      "block_id": "Block 10",
+      "block_no": 10,
+      "title": "다음 파일은 달러다",
+      "episode_span_intent": "2~6화 분량. 그린로지스 penalty 산정, 서우패키징 상계 협상 초안, ARC-01 receipt 결산, 달러 RMA mismatch와 supplier debit note gate를 압축한다.",
+      "content": {
+        "context": "도윤권리운영이라는 이름은 생겼지만, 이름만으로 돈이 들어오지는 않는다. 서우패키징 옵션 변경계약은 14일짜리 칼이고, 그 칼을 살리려면 그린로지스 penalty 산정 공문 또는 다온 상계 협상 초안이 필요하다. 최문식은 ARC가 끝났다고 착각한다. '이제 C동은 팔면 되고, 네 개인사업자 건은 알아서 해.' 도윤은 파일을 닫지 않는다. 반품권, 상표권, 리퍼브 가격표, penalty, 개인사업자. 이 다섯 개 receipt를 하나의 정산 문장으로 묶지 않으면 다음 결재선에서 모두 흩어진다.",
+        "event_villain": "첫 번째 사건은 그린로지스 penalty 산정 공문이다. 도윤은 C동 이송 기록, 포장 클레임 4건, 제품 하자 0건, 샘플 판매 로그를 붙여 620만 원 penalty 산정서를 보낸다. 그린로지스는 바로 반격한다. '샘플 판매 자체가 다온 내부 결정이었으니 포장 클레임은 귀사 책임입니다.' 최문식은 이 문장을 기다렸다는 듯 도윤에게 떠넘기려 한다. 도윤은 공문 제목을 바꾼다. penalty 청구가 아니라 '다온-그린로지스-서우패키징 3자 상계 협상 초안'. 그린로지스가 380만 원을 서우패키징 옵션금 우선배분으로 인정하면, 도윤은 나머지 240만 원을 C동 리퍼브 물류비 감액으로 돌린다. 최문식에게는 회사 손실 감소, 서혜린에게는 옵션금 보전, 도윤에게는 상계 협상권이 남는다.",
+        "second_incident": "두 번째 사건은 달러 RMA 파일 개봉이다. 윤서린이 감사 로그를 묶다가 묻는다. 'supplier debit note는 왜 열어 둔 거예요?' 도윤은 파일을 연다. USD settlement date mismatch. supplier debit note. overseas RMA credit. 세 파일의 날짜가 서로 하루씩 어긋나 있다. 다온은 해외 공급사에서 받을 AS 부품 credit을 달러 기준일 오류 때문에 원화 손실로 처리했고, C급 부품 회수 140개도 이 RMA credit과 연결된다. 이건 환차익 대박이 아니다. 더 좋다. 리퍼브 AS 대행권을 요구할 근거다. 도윤은 바로 다음 메모를 쓴다. 'C급 부품 회수분은 폐기가 아니라 AS 대행권 가격표로 전환.'",
+        "solution": "한규리는 3자 상계 초안에 조건을 붙인다. 그린로지스가 380만 원 우선배분을 인정하면, 다온은 서우패키징 잔금 1,900만 원 중 일부를 라온홈 리퍼브 로열티와 상계 협상할 수 있다. 도윤권리운영은 상계 협상 실무와 penalty 회수 추적을 맡는다. 도윤은 수수료를 당장 요구하지 않는다. 문구를 요구한다. '상계 및 penalty 회수 실무에 따른 성과수수료 별도 산정.' 최문식은 마지못해 결재한다. 윤서린은 달러 RMA 파일을 별도 감사 보존 번호로 묶고, 박만철에게 C급 부품 140개의 회수 상태표를 요구한다. ARC-01의 창고 재고가 ARC-02의 AS 대행권으로 넘어가는 순간이다.",
+        "reward": "블록 끝에서 ARC-01 receipt가 한 장으로 묶인다. 반품권 회수, 라온홈 60일 우선사용권, C동 리퍼브 가격표 v1, 외주계약 재검토권, 그린로지스 620만 원 penalty 산정서, 3자 상계 협상 초안, 도윤권리운영 임시 수령 주체. 도윤은 성과 보너스 현금 3천만 원을 아직 받지 못했다. 대신 더 좋은 문구가 생긴다. 성과수수료 별도 산정, RMA/AS 파일 제한 열람, C급 부품 회수 상태표 작성권. 마지막 장면에서 도윤은 달러 파일을 닫고 C급 부품 사진을 본다. 폐기 라인 아래에 쌓인 부품이 더 이상 쓰레기로 보이지 않는다. 다음 가격표는 물건 값이 아니라 AS 대행권 값이다."
+      },
+      "stakes": "penalty 산정과 상계 초안을 만들지 못하면 서우패키징 옵션 변경계약은 14일 안에 해지되고, 도윤권리운영은 빈 이름으로 남는다. 달러 RMA 파일을 열지 못하면 C급 부품 140개는 그냥 폐기 부품으로 끝나고 다음 AS 대행권 gate가 닫힌다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "그린로지스 620만 원 penalty 산정 공문을 3자 상계 협상 초안으로 전환해 서우패키징 옵션금 우선배분과 다온 손실 감소를 동시에 묶음",
+        "incident_2": "달러 RMA mismatch와 supplier debit note를 열어 C급 부품 140개를 AS 대행권 가격표 gate로 전환",
+        "next_actionable_gate": "C급 부품 회수 상태표, AS 대행권 가격표, RMA/AS 파일 제한 열람, 제조사 품질관리자 gate",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 ARC-01 성과를 회사 손실 감소로 마무리하려는 게 아니다. 모든 receipt를 도윤권리운영의 상계 실무, penalty 추적, 성과수수료 문구로 묶어 자기 수령 주체의 첫 일감으로 만든다.",
+        "morality_position": "서우패키징 옵션금 우선배분도 구제가 아니다. 옵션이 살아야 라온홈 우선사용권과 상계 협상권이 도윤권리운영에 남기 때문에 배분 구조를 만든다.",
+        "efficiency_choice": "그린로지스와 정면 소송으로 시간을 쓰지 않고, 620만 원 penalty를 380만 원 우선배분과 240만 원 물류비 감액으로 쪼개 빠르게 결재 가능한 초안으로 바꾼다."
+      },
+      "power_shift": {
+        "protagonist": "도윤권리운영 임시 수령 주체 -> 반품권 arc를 상계/penalty/RMA 실무로 묶은 권리 운영자",
+        "antagonist": "최문식: C동 성과를 정리하고 도윤 개인사업자를 방치하려는 상사 -> 상계 및 penalty 회수 실무 수수료 문구를 결재한 상사",
+        "system": "반품권/리퍼브/상표권 receipt -> 3자 상계 초안, penalty 산정서, RMA/AS 파일 제한 열람, AS 대행권 gate"
+      },
+      "relationship_delta": [
+        {
+          "target": "최문식",
+          "before": "도윤권리운영을 도윤 개인 책임으로 밀어 두려 함",
+          "after": "상계 및 penalty 회수 실무 수수료 문구를 결재해 도윤권리운영의 첫 일감을 인정함"
+        },
+        {
+          "target": "윤서린",
+          "before": "개인사업자/SPV 리스크를 숫자로 비교한 risk partner 후보",
+          "after": "달러 RMA 파일을 별도 감사 보존 번호로 묶어 다음 AS 대행권 gate를 열어 주는 witness"
+        },
+        {
+          "target": "한규리",
+          "before": "개인사업자 임시 수령과 향후 SPV 승계 문구를 계약서에 박은 validator",
+          "after": "3자 상계 협상 초안과 성과수수료 별도 산정 문구를 만드는 계약 carrier"
+        },
+        {
+          "target": "박만철",
+          "before": "A급 포장 사진과 샘플 출고 로그를 남기는 현장 evidence carrier",
+          "after": "C급 부품 140개의 회수 상태표를 작성해 AS 대행권 가격표의 현장 operator로 넘어감"
+        },
+        {
+          "target": "서혜린",
+          "before": "penalty 회수분 우선배분을 조건으로 채권 옵션 변경계약을 맺은 권리자",
+          "after": "3자 상계 협상 초안에 들어가 라온홈 우선사용권을 유지하는 상표권자"
+        }
+      ],
+      "foreshadow": [
+        "C급 부품 회수 상태표",
+        "AS 대행권 가격표",
+        "RMA/AS 파일 제한 열람",
+        "overseas RMA credit",
+        "supplier debit note"
+      ],
+      "callback": [
+        "Block 9의 도윤권리운영 임시 접수번호",
+        "Block 9의 penalty 우선배분 조항",
+        "Block 8의 샘플 판매/클레임 로그",
+        "Block 7의 C급 부품 회수 140개",
+        "Block 1의 달러 정산 오류 파일"
+      ],
+      "emotional_beat": {
+        "type": "arc_close_next_gate_cider",
+        "intensity": 9
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "다온리테일 정산팀 회의실 / 법무팀 전자결재 / ERP 달러 RMA 폴더 / C동 부품 회수 구역",
+        "type": "회사 / 전자결재 / ERP / 창고"
+      },
+      "time_span": {
+        "duration": "1일",
+        "in_story_time": "2026년 5월 넷째 주 중반"
+      },
+      "genre_ext": {
+        "capital_before": "도윤권리운영 개인사업자 임시 접수번호 + 향후 SPV 승계 문구 + 서우패키징 채권 옵션 변경계약 + penalty 우선배분 조항",
+        "capital_after": "3자 상계 협상 초안 + 그린로지스 620만 원 penalty 산정서 + 성과수수료 별도 산정 문구 + RMA/AS 파일 제한 열람 + C급 부품 회수 상태표 gate",
+        "capital_delta": "현금 대신 penalty/상계 실무 일감과 다음 AS 대행권 파일 접근권 확보",
+        "profit_loss": "620만 원 penalty를 380만 원 서우패키징 옵션금 우선배분, 240만 원 C동 물류비 감액으로 쪼개 결재 가능한 손실 감소 구조로 전환",
+        "method": "penalty 산정서, 3자 상계 초안, 성과수수료 별도 산정 문구, RMA/AS 파일 감사 보존, C급 부품 회수 상태표",
+        "deal_type": "arc close / penalty-offset settlement / RMA-AS gate",
+        "leverage_used": [
+          "샘플 판매/클레임 로그",
+          "제품 하자 0건",
+          "그린로지스 C동 이송 기록",
+          "서우패키징 옵션 변경계약",
+          "도윤권리운영 임시 수령 주체",
+          "supplier debit note와 RMA 날짜 불일치"
+        ],
+        "opponent": {
+          "name": "그린로지스 / 최문식",
+          "type": "외주업체 / 내부 결재 gatekeeper",
+          "weakness_exploited": "그린로지스는 소송보다 빠른 상계가 싸고, 최문식은 회사 손실 감소 문구를 거절하기 어렵다"
+        },
+        "time_pressure": "서우패키징 옵션 변경계약의 14일 조건, C동 폐기 보류 기간, 달러 RMA 제한 열람 기간이 동시에 줄어든다.",
+        "risk_level": "고위험",
+        "business_sector": "penalty 산정 / 3자 상계 / RMA-AS / 리퍼브 부품 회수",
+        "section_rotation": "반품권 arc의 receipt를 상계/penalty 실무로 묶고, 달러 RMA 파일을 AS 대행권 gate로 전환한다",
+        "success_pattern": "3자 상계 협상 초안과 성과수수료 별도 산정 문구가 결재선에 남고, RMA/AS 파일 제한 열람이 열린다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "arc_close_penalty_offset_rma_access_receipt",
+          "receipt_line": "'상계 및 penalty 회수 실무에 따른 성과수수료는 별도 산정한다.'",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "3자 상계 협상 초안",
+          "그린로지스 620만 원 penalty 산정서",
+          "성과수수료 별도 산정 문구",
+          "RMA/AS 파일 제한 열람권",
+          "C급 부품 회수 상태표 작성권",
+          "AS 대행권 가격표 gate"
+        ],
+        "document_evidence": [
+          "그린로지스 penalty 산정 공문",
+          "샘플 판매/클레임 로그",
+          "다온-그린로지스-서우패키징 3자 상계 협상 초안",
+          "성과수수료 별도 산정 문구",
+          "USD settlement date mismatch 파일",
+          "supplier debit note",
+          "overseas RMA credit"
+        ],
+        "field_validation": [
+          "샘플 50개 중 31개 판매",
+          "포장 클레임 4건",
+          "제품 하자 0건",
+          "C급 부품 회수 140개",
+          "그린로지스 penalty 620만 원",
+          "우선배분 380만 원",
+          "물류비 감액 240만 원"
+        ],
+        "witness_carrier": [
+          "최문식의 상계 초안 결재",
+          "한규리의 3자 상계 문구",
+          "윤서린의 RMA/AS 감사 보존 번호",
+          "박만철의 C급 부품 회수 상태표",
+          "서혜린의 상계 협상 초안 동의"
+        ],
+        "receipt": [
+          "3자 상계 협상 초안",
+          "그린로지스 620만 원 penalty 산정서",
+          "성과수수료 별도 산정 문구",
+          "RMA/AS 파일 제한 열람",
+          "C급 부품 회수 상태표 gate"
+        ],
+        "next_gate": "C급 부품 회수 상태표, AS 대행권 가격표, RMA/AS 파일 제한 열람, 제조사 품질관리자 gate"
+      },
+      "foreshadow_targets": [
+        11,
+        12,
+        20,
+        21
+      ]
+    }
+  ]
+}

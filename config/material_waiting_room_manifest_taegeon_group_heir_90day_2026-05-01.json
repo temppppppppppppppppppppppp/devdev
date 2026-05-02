@@ -3,7 +3,7 @@
   "date": "2026-05-01",
   "work_id": "taegeon_group_heir_90day",
   "title": "회귀한 외동 후계자는 그룹을 지킨다",
-  "status": "waiting_room_candidate_yellow_repair_required",
+  "status": "waiting_room_candidate_root_promotion_ready",
   "root_shelf_policy": "do_not_modify_root_bible_keep_file_without_separate_promotion_wave",
   "paths": {
     "bi": "bible/_waiting_room/2026-05-01_taegeon_group_heir_90day/0_bi_taegeon_group_heir_90day.json",
@@ -15,24 +15,42 @@
     "opening_production_packet": "docs/2026-05-01/taegeon_group_heir_90day_ep001_010_production_packet.md",
     "tr_index": "material_ssot/50_tr/work-index/taegeon_group_heir_90day.md",
     "bi_index": "material_ssot/60_bi/work-index/taegeon_group_heir_90day.md",
-    "adversarial_audit": "docs/2026-05-01/taegeon_group_heir_90day_bi_tr_adversarial_3pass.md"
+    "adversarial_audit": "docs/2026-05-01/taegeon_group_heir_90day_bi_tr_adversarial_3pass.md",
+    "root_promotion_blocker_repair_audit": "bible/_waiting_room/2026-05-01_taegeon_group_heir_90day/taegeon_group_heir_90day_root_promotion_blocker_repair_audit.md"
   },
-  "verdict": "YELLOW_REPAIR_REQUIRED_BEFORE_ROOT_PROMOTION",
+  "verdict": "PASS_ROOT_PROMOTION_READY_WAITING_ROOM_ONLY",
   "checks": {
     "tr_blocks": 70,
     "bi_plot_roadmap": 70,
     "title_receipt_parity": true,
-    "utf8_hygiene": true
+    "utf8_hygiene": true,
+    "tr_canonical_contract": true,
+    "bi_canonical_contract": true,
+    "pair_canonical_contract": true,
+    "capital_continuity_exact": true,
+    "relationship_carryover_exact": true,
+    "financehud_final_capital_mirror": true
   },
   "adversarial_audit": {
     "date": "2026-05-01",
-    "verdict": "YELLOW_REPAIR_REQUIRED_BEFORE_ROOT_PROMOTION",
-    "root_promotion_blocked": true,
-    "prose_generation_blocked": true,
+    "verdict": "SUPERSEDED_BY_REPAIR_AUDIT_PASS",
+    "root_promotion_blocked": false,
+    "root_promotion_executed": false,
+    "immediate_use_promotion": false,
+    "prose_generation_performed": false,
     "p1_blockers": [
       "TR canonical content aliases",
       "exact capital continuity",
       "TR natural meta leak"
-    ]
+    ],
+    "p1_blockers_closed_by": "bible/_waiting_room/2026-05-01_taegeon_group_heir_90day/taegeon_group_heir_90day_root_promotion_blocker_repair_audit.md"
+  },
+  "root_promotion_readiness": {
+    "date": "2026-05-02",
+    "status": "ready_waiting_room_only",
+    "root_promotion_ready": true,
+    "root_promotion_executed": false,
+    "immediate_use_promotion": false,
+    "repair_audit": "bible/_waiting_room/2026-05-01_taegeon_group_heir_90day/taegeon_group_heir_90day_root_promotion_blocker_repair_audit.md"
   }
 }

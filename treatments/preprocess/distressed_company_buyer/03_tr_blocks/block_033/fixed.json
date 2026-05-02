@@ -1,0 +1,143 @@
+{
+  "block_id": "Block 33",
+  "title": "정산팀은 숫자만 본다",
+  "content": {
+    "context": "48시간 패널티 유예가 붙었지만 리턴브릿지 계좌는 아직 숨을 쉬지 못한다. 플랫폼 정산 대시보드에는 다음 정산일 차감 예정액 3,480만 원이 빨간 숫자로 떠 있다. 대표는 정산팀에 사정문을 보내자고 하고, 현장 검수반장은 이제 박스는 열리기 시작했으니 조금만 기다리면 된다고 말한다. 도윤은 안다. 정산팀은 사정도, 노력도, 창고의 밤샘도 보지 않는다. 숫자가 바뀌지 않으면 돈은 빠져나간다.",
+    "event_villain": "커머스 플랫폼 정산팀은 48시간 유예는 표본 검수용일 뿐 기존 누적 패널티 차감은 예정대로 진행한다고 통보한다. 퀵리턴은 고가 seller들에게 리턴브릿지는 패널티 때문에 다음 주 대금 지급이 막힌다고 알리고, 창고 임대인은 정산 차감이 확정되면 warehouse option을 회수하겠다고 한다. 리턴브릿지 대표는 검수 완료 시간을 앞당겨 입력하자고 낮게 말한다. 도윤은 그 제안이 들리는 순간 숫자를 닫는다. 조작된 timestamp는 패널티보다 비싸다.",
+    "solution": "도윤은 패널티 취소를 요구하지 않는다. 그는 정산팀이 읽을 세 숫자만 남긴다. 첫째, pilot 검수표 적용 후 67박스 반려 없는 검수 완료분과 완료 timestamp. 둘째, 200박스 표본 중 사유코드 보정률 74%와 사진 증빙 반려 예상 감소율. 셋째, seller별 error rate. 반복 error seller 6곳의 귀책 지연은 리턴브릿지 검수 지연에서 분리하고, 고가 회수 seller 8곳의 우선검수 완료분은 차감 대상에서 hold해 달라고 묶는다. 그는 data-room 제한 export token으로 원본 로그를 뽑고, 정산팀 API timestamp와 검수대 scan sheet를 대조해 보정표에 hash를 붙인다. 그리고 조건을 건다. 패널티 절감액의 18%는 도윤 SPV의 process-control success fee로 잡는다.",
+    "reward": "정산팀은 패널티를 취소하지 않는다. 하지만 3,480만 원 중 1,260만 원을 7일 hold하고, 740만 원의 일일 정산 release를 막지 않겠다는 ticket을 발급한다. seller별 error rate table은 정산 재계산 queue에 올라가고, 반복 error seller 6곳에는 보완 요청이 자동 발송된다. 리턴브릿지 대표는 돈을 받은 게 아니라 시간을 산 것에 불과하다고 불만을 보이지만, 도윤은 이미 계산을 끝낸다. hold된 패널티 1,260만 원의 18% success fee와 정산 재계산 ticket. 정산팀이 본 건 박스가 아니라 숫자였고, 도윤은 그 숫자에서 자기 몫을 먼저 떼어 냈다."
+  },
+  "incident_beats": [
+    "플랫폼 정산팀이 48시간 유예와 별개로 누적 패널티 3,480만 원을 다음 정산일에 차감하겠다고 통보하고, 퀵리턴과 창고 임대인이 cashflow 압박을 키운다",
+    "리턴브릿지 대표가 검수 완료 timestamp를 앞당겨 입력하자고 제안하지만, 도윤이 조작 리스크를 차단하고 원본 로그/hash 기반 보정표로 방향을 바꾼다",
+    "도윤이 67박스 완료 timestamp, 사유코드 보정률 74%, seller별 error rate를 제출해 1,260만 원 패널티 7일 hold, 740만 원 일일 정산 release, 재계산 ticket, 18% success fee receipt를 확보한다"
+  ],
+  "stakes": "누적 패널티가 그대로 차감되면 리턴브릿지 cashflow는 다음 주부터 마이너스가 되고 warehouse option도 흔들린다. 반대로 검수 완료 시간을 조작하면 플랫폼 정산팀 API 로그와 현장 scan sheet가 충돌해 data-room 전체가 오염된다. 도윤은 패널티 취소라는 큰 승리를 노리지 않고, hold와 release로 시간을 사면서 자기 success fee를 먼저 고정해야 한다.",
+  "power_shift": {
+    "protagonist": "pilot 검수표를 만든 process-control operator에서 패널티 숫자를 hold와 release로 쪼개 현금흐름을 통제하는 settlement-structurer로 이동한다.",
+    "antagonist": "플랫폼 정산팀과 퀵리턴은 누적 패널티와 대금 지급 불안을 이용해 리턴브릿지를 밀어붙이지만, 도윤의 원본 로그 보정표와 seller별 귀책 분리 때문에 일괄 차감 명분이 일부 흔들린다."
+  },
+  "relationship_delta": [
+    {
+      "target": "리턴브릿지 대표",
+      "before": "정산팀에 사정문을 보내거나 검수 완료 시간을 앞당겨 입력하자고 흔들리는 대표",
+      "after": "도윤이 timestamp 조작을 막고 success fee를 먼저 잡자 불만을 보이지만, 패널티 hold 없이는 회사를 못 버틴다는 현실을 인정한다",
+      "continuity_anchor_before": "인력 증원보다 사유코드와 사진 순서가 먼저라는 도윤의 계산을 받아들이고 pilot 검수표 운영권을 넘긴다"
+    },
+    {
+      "target": "커머스 플랫폼 정산팀",
+      "before": "48시간 유예와 별개로 기존 누적 패널티 3,480만 원을 예정대로 차감하려는 gatekeeper",
+      "after": "hash가 붙은 완료 timestamp, 보정률, seller별 error rate를 받고 1,260만 원 hold와 재계산 ticket을 발급한다"
+    },
+    {
+      "target": "퀵리턴",
+      "before": "패널티 차감으로 리턴브릿지 지급이 막힌다는 메시지를 고가 seller에게 돌리는 경쟁 반품대행사",
+      "after": "일일 정산 release와 재계산 ticket이 나오자 즉시 cashflow 붕괴 프레임을 완성하지 못한다",
+      "continuity_anchor_before": "67박스 반려 없는 검수 완료 receipt가 나오면서 즉시 이탈 명분 일부를 잃는다"
+    },
+    {
+      "target": "창고 임대인",
+      "before": "정산 차감이 확정되면 warehouse option을 회수하겠다고 압박하는 임대인",
+      "after": "7일 hold ticket과 일일 정산 release를 보고 option 회수를 다음 협상으로 미룬다"
+    }
+  ],
+  "foreshadow": [
+    "7일 패널티 hold와 740만 원 일일 정산 release는 후속 국면의 warehouse option 협상에서 보험 갱신 escrow와 검수 bay 확보 근거가 된다.",
+    "seller별 error rate table은 후속 국면에서 error rate가 낮고 회수율이 높은 7개 seller만 남기는 기준으로 회수된다.",
+    "반복 error seller 6곳 보완 요청은 후속 국면의 seller 귀책, 보험 claim, 부품 회수 분류의 재료가 된다.",
+    "18% success fee 구조는 도윤이 해당 아크에서 단순 실사관이 아니라 process-control 권리자로 가격을 올리는 첫 현금 receipt다."
+  ],
+  "callback": [
+    "후속 국면의 48시간 패널티 유예와 67박스 반려 없는 검수 완료 log를 정산팀 재계산의 표본 proof로 사용한다.",
+    "후속 국면의 8개 사유코드와 사진 3장 규칙을 사유코드 보정률 74%와 사진 증빙 반려 감소율로 숫자화한다.",
+    "후속 국면의 data-room 제한 export token을 원본 로그와 hash 첨부 보정표 생성에 사용한다.",
+    "후속 국면의 플랫폼 패널티 노출 ledger를 3,480만 원 차감 예정액과 1,260만 원 hold 대상으로 구체화한다."
+  ],
+  "emotional_beat": {
+    "type": "penalty_hold_cashflow_cider",
+    "intensity": 9
+  },
+  "tension_level": 9,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "리턴브릿지 data-room / 플랫폼 정산팀 화상회의 / 창고 임대인 문자 협상창",
+    "type": "platform settlement recalculation and cashflow hold negotiation"
+  },
+  "time_span": {
+    "duration": "하루",
+    "in_story_time": "후속 국면 48시간 패널티 유예가 시작된 당일 저녁부터 다음 날 오전"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "8개 반품 사유코드 표준안 / 사진 3장 증빙 규칙 / seller 3등급 선분류표 / 48시간 패널티 유예 / pilot 검수표 접수번호 / 박스 열기 전 scan sheet / 67박스 반려 없는 검수 완료 log / top 20 seller 우선검수 queue",
+    "capital_after": "누적 패널티 3,480만 원 exposure table / 1,260만 원 패널티 7일 hold ticket / 740만 원 일일 정산 release / seller별 error rate table / 사유코드 보정률 74% / 정산 재계산 ticket / 반복 error seller 6곳 보완 요청 / process-control success fee 18% 조항",
+    "capital_delta": "패널티 hold 1,260만 원 / 일일 정산 release 740만 원 / success fee claim 18%",
+    "profit_loss": "패널티 전액 취소 실패, 일부 hold와 정산 release 및 success fee 조항 확보",
+    "method": "감정 호소나 timestamp 조작을 거부하고, 검수 완료분, 사유코드 보정률, seller별 error rate를 원본 로그/hash로 묶어 플랫폼 정산팀이 재계산할 수밖에 없는 숫자로 만든다.",
+    "investment_type": "distressed reverse-logistics settlement control",
+    "deal_type": "partial penalty hold / daily settlement release / recalculation ticket / success fee clause",
+    "leverage_used": [
+      "48시간 패널티 유예",
+      "67박스 반려 없는 검수 완료 log",
+      "pilot 검수표 접수번호",
+      "8개 사유코드 표준안",
+      "사진 3장 증빙 규칙",
+      "seller별 반품량 top 20 table",
+      "플랫폼 패널티 노출 ledger",
+      "data-room 제한 export token",
+      "검수대 scan sheet",
+      "정산 API timestamp"
+    ],
+    "opponent": {
+      "name": "커머스 플랫폼 정산팀 / 퀵리턴 / 리턴브릿지 대표 / 창고 임대인",
+      "type": "platform settlement gate, competitor cashflow attack, distressed operator falsification temptation, and warehouse option pressure",
+      "weakness_exploited": "정산팀은 감정 호소를 무시하지만, 원본 timestamp와 seller별 error rate로 귀책이 분리된 금액은 일괄 차감하기 어렵다"
+    },
+    "historical_event": null,
+    "time_pressure": "다음 정산일 차감 전 패널티 일부 hold와 일일 정산 release ticket을 받아야 warehouse option과 top seller 이탈을 막을 수 있다.",
+    "knowledge_used": "회귀 전 리턴브릿지는 패널티 전액 취소가 아니라 seller별 error rate 분리와 부분 hold ticket으로 cashflow 붕괴를 늦췄다는 기억",
+    "risk_level": "고위험",
+    "business_sector": "반품 물류 / 플랫폼 정산 / cashflow control / seller error analytics / 창고 option",
+    "section_rotation": "반품 창고의 데이터",
+    "success_pattern": "전액 취소 대신 hold, release, 재계산 ticket, success fee로 숫자를 현금흐름 권리로 환전",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "settlement_recalculation_hold_receipt",
+      "receipt_line": "1,260만 원 패널티 7일 hold ticket, 740만 원 일일 정산 release, seller별 error rate table, 사유코드 보정률 74%, 정산 재계산 ticket, process-control success fee 18% receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 리턴브릿지의 패널티는 전액 취소되지 않았지만 seller별 error rate 분리와 부분 hold ticket이 warehouse option을 살릴 시간을 만들었다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 운영진은 검수 완료 시간을 앞당겨 입력했다가 정산 API timestamp와 충돌해 재계산 ticket을 잃고 패널티를 전액 차감당했다.",
+      "changed_event": "이번에는 도윤이 조작을 차단하고 원본 로그/hash 기반 보정표로 일부 hold와 일일 정산 release를 얻는다.",
+      "ripple_effect": "리턴브릿지는 패널티 전액을 피하지 못했지만 cashflow 붕괴를 7일 늦추고, 도윤은 process-control success fee와 warehouse option 협상력을 얻는다."
+    },
+    "death_flag": {
+      "avoided": "timestamp 조작으로 data-room 신뢰가 무너지고 패널티 전액 차감과 seller 이탈이 동시에 터지는 미래",
+      "method": "정산 API timestamp, 검수대 scan sheet, 원본 로그 hash, seller별 error rate로 조작 없이 재계산 ticket을 만든다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 대표가 timestamp 조작을 말하기 전부터 정산 API 원본 timestamp와 scan sheet hash를 요구한다.",
+      "suspicion_from": "리턴브릿지 대표와 플랫폼 정산팀 실무자"
+    },
+    "future_prep": {
+      "action": "7일 hold ticket, 일일 정산 release, success fee 조항을 창고 임대인에게 제시해 검수 bay와 30일 warehouse option을 협상한다.",
+      "target_event": "후속 국면 창고 임대인은 박스를 싫어한다"
+    }
+  },
+  "block_no": 33,
+  "foreshadow_targets": [
+    34,
+    35,
+    38,
+    39
+  ]
+}

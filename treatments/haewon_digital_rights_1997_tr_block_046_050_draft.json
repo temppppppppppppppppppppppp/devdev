@@ -1,0 +1,655 @@
+{
+  "_schema": "tr.v1",
+  "_work_id": "haewon_digital_rights_1997",
+  "_block_range": "046-050",
+  "_total_blocks": 5,
+  "_planned_total_blocks": 70,
+  "_preceding_tr_ref": "treatments/haewon_digital_rights_1997_tr_block_041_045_draft.json",
+  "_phase0_ref": "treatments/phase0/haewon_digital_rights_1997_phase0_design.json",
+  "_work_guard_ref": "work_guards/haewon_digital_rights_1997.yaml",
+  "_production_status": {
+    "run_class": "sequential_production",
+    "last_sequential_block_pass": 50,
+    "next_unit_type": "b잠금",
+    "next_block_id": 51,
+    "stop_reason": "draft created; next unit should enter access-rights arc by converting the digital rights desk into an independent rights 홀딩 회사 structure.",
+    "pacing_contract": "1 TR b잠금 is an episode 묶음 of roughly 2~6 episodes; each b잠금 must contain at least two distinct incident beats와 a same-b잠금 leverage 증빙."
+  },
+  "blocks": [
+    {
+      "block_id": "Block 46",
+      "block_no": 46,
+      "title": "가짜 클릭은 돈이 아닙니다",
+      "content": {
+        "context": "6개월 트래픽-광고 정산 파일럿이 커지자 광고주 주문표에 이상치가 생긴다. 클릭은 늘었는데 주문과 청구 코드가 붙지 않는다. 도윤은 트래픽을 자산으로 보되, 검증되지 않은 트래픽은 부채로 본다.",
+        "event_villain": "광고대행사는 클릭 수 상승을 성공으로 포장하려 한다. 경쟁 포털의 영업팀은 가짜 클릭과 조작 후기를 흘려 해원 정산표의 신뢰를 무너뜨리려 한다. 일부 광고주는 환불을 요구한다.",
+        "solution": "도윤은 클릭 수를 변명하지 않는다. 그는 추천 태그, 전환 로그, 결제 정산, 청구 코드, 구매자 인증 후기를 대조해 `트래픽 부정거래 필터`를 만든다. 주문 없는 반복 클릭은 보류하고, 인증 후기 없는 성과는 정산 대상에서 뺀다.",
+        "reward": "광고주 7곳은 환불 대신 부정거래 필터 적용 정산표에 재서명한다. 해원 데스크는 트래픽 부정거래 필터 운영권, 의심 트래픽 보류 목록, 조작 후기 삭제 요청권을 확보한다."
+      },
+      "stakes": "가짜 트래픽을 걸러내지 못하면 해원 데스크는 광고비와 환불 책임을 동시에 진다. 검증 기준을 먼저 잡아야 트래픽 정산권이 장기 계약 자산이 된다.",
+      "power_shift": {
+        "protagonist": "트래픽-광고 정산 파일럿 소유권자에서 부정거래 필터 운영권을 가진 정산 표준 소유권자",
+        "antagonist": "클릭 수로 성과를 포장하려던 광고대행사와 경쟁 포털 영업팀이 검증 기준에 묶인 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "지역 광고주",
+          "before": "검증 후기와 주문 전환을 함께 보는 반복 광고주",
+          "after": "부정거래 필터 적용 정산표에 재서명한다."
+        },
+        {
+          "target": "광고대행사",
+          "before": "클릭 수 상승을 성과로 밀어붙인다.",
+          "after": "주문과 청구 코드 없는 트래픽은 정산 제외라는 기준을 받아들인다."
+        },
+        {
+          "target": "포털 창업자 라인",
+          "before": "6개월 트래픽-광고 정산 파일럿에 서명한다.",
+          "after": "부정거래 필터를 포털 광고 상품의 신뢰 장치로 인정한다."
+        }
+      ],
+      "foreshadow": [
+        "부정거래 필터 운영권은 규제 감사에서 해원의 방어 논리가 된다.",
+        "의심 트래픽 보류 목록는 장기 광고권 협상에서 광고주 보호 조항으로 쓰인다.",
+        "검증된 트래픽만 돈으로 세는 원칙은 독립 홀딩스 구간 독립 권리 지주회사 가치평가의 핵심이다."
+      ],
+      "callback": [
+        "전환 로그, 검증 게시판, 트래픽-광고 정산 표이 부정거래 필터의 근거로 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "가짜 숫자 처형",
+        "intensity": 9
+      },
+      "tension_level": 9,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "해원 디지털 권리 데스크 임시 상황실",
+        "type": "상황실",
+        "macro_battlefield": "트래픽 부정거래 방어"
+      },
+      "time_span": {
+        "duration": "가짜 클릭 의혹 72시간",
+        "in_story_time": "2002년 여름"
+      },
+      "genre_ext": {
+        "type": "비즈니스_방어",
+        "capital_before": "1520",
+        "capital_after": "1630",
+        "capital_delta": "110",
+        "profit_loss": "110 증가",
+        "method": "추천 태그, 전환 로그, 결제 정산, 청구 코드, 구매자 인증 후기를 대조해 트래픽 부정거래 필터를 만들고 정산 기준을 선점한다.",
+        "investment_type": "트래픽 부정거래 방어",
+        "deal_type": "부정거래 필터 적용 정산 재서명",
+        "leverage_used": [
+          "추천 태그",
+          "전환 로그 사본",
+          "청구 코드",
+          "구매자 인증 후기",
+          "트래픽-광고 정산 표"
+        ],
+        "opponent": {
+          "name": "가짜 클릭과 조작 후기",
+          "type": "광고대행사/경쟁 포털 영업팀",
+          "weakness_exploited": "클릭 수만 높고 주문, 청구 코드, 인증 후기와 연결되지 않는 점"
+        },
+        "historical_event": "초기 온라인 광고 트래픽 부정거래와 성과 검증 문제",
+        "time_pressure": "광고주 환불 요구가 확산되기 전 정산 기준을 확정해야 한다.",
+        "knowledge_used": "초기 광고 시장은 조회수보다 부정거래 방어와 기여도 측정 기준을 선점한 쪽이 장기 신뢰를 갖는다는 미래 감각",
+        "risk_level": "고위험",
+        "business_sector": "온라인 광고/포털/커뮤니티",
+        "section_rotation": "부정거래 필터 적용 정산 재서명 단계",
+        "success_pattern": "부풀린 트래픽을 수익으로 잡지 않고 검증 가능한 트래픽만 정산 자산으로 남긴다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "트래픽 부정거래 필터 운영권",
+          "receipt_line": "광고주 7곳이 부정거래 필터 적용 정산표에 재서명하고 해원 데스크는 트래픽 부정거래 필터 운영권, 의심 트래픽 보류 목록, 조작 후기 삭제 요청권을 확보한다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "해원 데스크가 가짜 트래픽을 돈에서 제외한다.",
+          "representative_reevaluation": "광고주와 포털이 해원 데스크를 광고 신뢰 기준 운영자로 본다.",
+          "next_battlefield_ticket": "대기업 인터넷 사업팀이 해원 기준을 통째로 흡수하려는 전장이 열린다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "트래픽 부정거래 필터 운영권과 정산 재서명 확보",
+          "secondary_incident": "가짜 클릭, 조작 후기, 환불 요구, 광고대행사 성과 포장 방어",
+          "bundle_expandability": "가짜 클릭 탐지, 광고주 환불 회의, 대행사 압박, 부정거래 필터 공개, 재서명으로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "지역 광고주",
+          "recognition_reason": "지역 광고주 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "지역 광고주 쪽은 성과 항목(트래픽 부정거래 필터 운영권)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "전환 로그, 청구 코드, 구매자 인증 후기, 부정거래 필터 정산표"
+      },
+      "foreshadow_targets": [
+        48,
+        49,
+        60
+      ],
+      "callback_sources": [
+        42,
+        44,
+        45
+      ]
+    },
+    {
+      "block_id": "Block 47",
+      "block_no": 47,
+      "title": "시작 페이지를 넘기면 끝입니다",
+      "content": {
+        "context": "부정거래 필터가 통하자 대기업 인터넷 사업팀이 움직인다. 그들은 해원 데스크의 추천 태그, 포털 광고 정산표, ISP 시작 페이지 제휴를 한 번에 사들이려 한다. 해원그룹 내부도 현금 매각을 반긴다.",
+        "event_villain": "대기업 인터넷 사업팀은 높은 선불금을 제시하며 시작 페이지와 추천 태그를 통합 운영하겠다고 압박한다. 강민석 라인은 그룹 유동성을 이유로 매각을 밀고, 포털은 대기업 편에 붙으면 더 큰 트래픽을 얻는다고 흔들린다.",
+        "solution": "도윤은 시작 페이지를 팔지 않는다. 그는 대기업에게 광고 영업 재판매권만 주고, 추천 태그 원장, 부정거래 필터, 전환 로그, 검증 게시판 운영권은 해원 데스크에 남긴다. 현금 매각 대신 `공동 판매 정산 레일`을 제안한다.",
+        "reward": "대기업 인터넷 사업팀은 12개월 공동 판매 광고 영업권에 서명한다. 해원 데스크는 ISP 시작 페이지 추천 태그 원장권과 포털-대기업-해원 3자 정산 레일 운영권을 지킨다."
+      },
+      "stakes": "시작 페이지와 추천 태그를 팔면 해원 데스크는 돈을 한 번 받고 관문을 잃는다. 영업망만 빌려주고 원장과 정산권을 지켜야 플랫폼 권력이 유지된다.",
+      "power_shift": {
+        "protagonist": "부정거래 필터 운영자에서 대기업 영업망을 하청처럼 쓰는 정산 레일 소유권자",
+        "antagonist": "시작 페이지를 통째로 사려던 대기업 인터넷 사업팀이 광고 영업권만 가진 판매 채널로 낮아진 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "대기업 인터넷 사업팀",
+          "before": "해원 추천 태그와 시작 페이지를 통합 매입하려 한다.",
+          "after": "12개월 공동 판매 광고 영업권만 확보한다."
+        },
+        {
+          "target": "강민석 라인",
+          "before": "현금 매각을 그룹 유동성 해결책으로 밀어붙인다.",
+          "after": "매각 대신 반복 정산 구조가 이사회 자료에 올라가는 것을 본다."
+        },
+        {
+          "target": "포털 창업자 라인",
+          "before": "부정거래 필터를 포털 광고 상품의 신뢰 장치로 인정한다.",
+          "after": "해원 정산 레일에 남아야 광고주와 검증 트래픽을 잃지 않는다고 판단한다."
+        }
+      ],
+      "foreshadow": [
+        "3자 정산 레일은 장기 포털 광고권 계약의 골격이 된다.",
+        "강민석 라인의 현금 매각 압박은 독립 분리 압력으로 되돌아온다.",
+        "공동 판매 영업권은 포털 광고 구간에서 해원 밖 외부 파트너를 붙이는 첫 precedent가 된다."
+      ],
+      "callback": [
+        "ISP 추천 태그와 부정거래 필터가 시작 페이지 매각 방어 논리로 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "매각 압박 역전",
+        "intensity": 9
+      },
+      "tension_level": 9,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "해원그룹 이사회 전 사전 협상실",
+        "type": "협상실",
+        "macro_battlefield": "시작 페이지/추천 태그 흡수 압박"
+      },
+      "time_span": {
+        "duration": "대기업 제안서 도착 후 1주",
+        "in_story_time": "2002년 늦여름"
+      },
+      "genre_ext": {
+        "type": "비즈니스_negotiation",
+        "capital_before": "1630",
+        "capital_after": "1745",
+        "capital_delta": "115",
+        "profit_loss": "115 증가",
+        "method": "시작 페이지와 추천 태그는 팔지 않고 대기업에게 광고 영업 재판매권만 부여해 3자 정산 레일을 만든다.",
+        "investment_type": "플랫폼 관문 방어",
+        "deal_type": "12개월 공동 판매 광고 영업권",
+        "leverage_used": [
+          "ISP 시작 페이지 추천 태그",
+          "부정거래 필터",
+          "전환 로그 원장",
+          "검증 게시판 운영권",
+          "포털 광고주 목록"
+        ],
+        "opponent": {
+          "name": "대기업 인터넷 사업팀",
+          "type": "대기업 플랫폼 흡수자",
+          "weakness_exploited": "대기업은 광고 영업망은 있지만 검증 트래픽과 주문 기여도 측정 원장을 갖고 있지 않은 점"
+        },
+        "historical_event": "2000년대 초 대기업 인터넷 사업 진입과 포털 제휴 경쟁",
+        "time_pressure": "이사회가 선불금 매각안을 승인하기 전 반복 정산 구조를 제시해야 한다.",
+        "knowledge_used": "초기 플랫폼 권력은 매각대금보다 진입 태그와 기여도 측정 원장를 쥔 쪽에 축적된다는 미래 감각",
+        "risk_level": "고위험",
+        "business_sector": "ISP/포털/대기업 인터넷/온라인 광고",
+        "section_rotation": "12개월 공동 판매 광고 영업권 단계",
+        "success_pattern": "관문을 팔지 않고 영업망만 빌려 반복 정산으로 환전한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "3자 공동 판매 정산 레일",
+          "receipt_line": "대기업 인터넷 사업팀이 12개월 공동 판매 광고 영업권에 서명하고 해원 데스크는 ISP 시작 페이지 추천 태그 원장권과 포털-대기업-해원 3자 정산 레일 운영권을 지킨다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "해원 데스크가 대기업의 매입 제안을 판매 채널 계약으로 뒤집는다.",
+          "representative_reevaluation": "이사회가 도윤의 데스크를 팔 물건이 아니라 반복 현금흐름 관문으로 본다.",
+          "next_battlefield_ticket": "규제 담당자가 광고 표기, 개인정보, 후기 조작 기준을 들고 들어온다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "대기업 시작 페이지/추천 태그 흡수 압박을 공동 판매 정산 레일로 역전",
+          "secondary_incident": "강민석 라인의 현금 매각 압박과 포털의 대기업 편승 유혹 방어",
+          "bundle_expandability": "대기업 제안서, 내부 매각 회의, 포털 흔들기, 공동 판매 구조 제시, 3자 서명으로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "대기업 인터넷 사업팀",
+          "recognition_reason": "대기업 인터넷 사업팀 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "대기업 인터넷 사업팀 쪽은 성과 항목(3자 공동 판매 정산 레일)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "공동 판매 계약서, 추천 태그 원장, 3자 정산 레일 도표"
+      },
+      "foreshadow_targets": [
+        49,
+        50,
+        51
+      ],
+      "callback_sources": [
+        41,
+        45,
+        46
+      ]
+    },
+    {
+      "block_id": "Block 48",
+      "block_no": 48,
+      "title": "광고라고 쓰면 무기가 됩니다",
+      "content": {
+        "context": "트래픽, 광고, 후기, 결제가 한 레일에 묶이자 규제 담당자가 현장 점검을 통보한다. 광고 표기, 개인정보 동의, 구매자 인증 후기, 조작 후기 삭제 기준이 모두 문제 된다.",
+        "event_villain": "규제 담당자는 해원 데스크가 광고와 후기를 섞어 소비자를 속인다고 의심한다. 경쟁 포털은 익명 게시판에 해원 광고 조작 의혹을 퍼뜨린다. 강민석 라인은 규제 리스크를 이유로 데스크 축소를 요구한다.",
+        "solution": "도윤은 숨기지 않는다. 그는 모든 성과형 광고에 광고 표기를 붙이고, 전환 로그는 개인이 아니라 주문 단위 해시로 보관하며, 구매자 인증 후기와 일반 게시글을 분리한다. 악성 글 보류 목록 절차와 광고주 이의제기 창구도 문서화한다.",
+        "reward": "규제 담당자는 조건부 무혐의와 개선 권고 종결을 준다. 해원 데스크는 광고 표기 표준안, 주문 단위 전환 로그 보관권, 구매자 인증 후기 분리 운영권을 계약 부속서에 넣는다."
+      },
+      "stakes": "규제에서 막히면 트래픽-광고 정산 전체가 불법 장부처럼 보인다. 표기와 동의, 후기 분리를 먼저 표준화해야 장기 광고권이 안전자산이 된다.",
+      "power_shift": {
+        "protagonist": "3자 정산 레일 소유권자에서 규제 방어 표준을 가진 광고 준법 운영자",
+        "antagonist": "규제 리스크로 데스크를 축소하려던 내부와 경쟁 포털이 해원 표준안에 역으로 묶인 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "규제 담당자",
+          "before": "광고 표기 기준과 구매자 인증 조건을 확인한다.",
+          "after": "광고 표기, 주문 단위 해시, 구매자 인증 분리 조건을 확인하고 개선 권고로 종결한다."
+        },
+        {
+          "target": "강민석 라인",
+          "before": "매각 대신 반복 정산 구조가 이사회 자료에 올라가는 것을 본다.",
+          "after": "규제 종결 문서 때문에 축소 명분을 잃는다."
+        },
+        {
+          "target": "포털 창업자 라인",
+          "before": "해원 정산 레일에 남아야 광고주와 검증 트래픽을 잃지 않는다고 판단한다.",
+          "after": "해원 표준안을 포털 광고 상품 부속서로 붙이는 편이 낫다고 판단한다."
+        }
+      ],
+      "foreshadow": [
+        "광고 표기 표준안은 장기 광고권 계약의 리스크 할인 조건이 된다.",
+        "규제 종결 문서는 독립 분리 논의에서 해원 데스크의 안전자산 증거가 된다.",
+        "주문 단위 해시 보관권은 포털 광고 구간 모바일 콘텐츠와 결제 확장 때 개인정보 방어 장치가 된다."
+      ],
+      "callback": [
+        "광고 표기 기준, 부정거래 필터, 3자 정산 레일이 규제 방어 자료로 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "규제 표준 선점",
+        "intensity": 9
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "정보통신 관련 규제 현장 점검 회의실",
+        "type": "감사 회의실",
+        "macro_battlefield": "광고 표기/개인정보/후기 검증"
+      },
+      "time_span": {
+        "duration": "현장 점검 10일",
+        "in_story_time": "2002년 가을"
+      },
+      "genre_ext": {
+        "type": "regulatory_방어",
+        "capital_before": "1745",
+        "capital_after": "1850",
+        "capital_delta": "105",
+        "profit_loss": "105 증가",
+        "method": "광고 표기, 주문 단위 해시 전환 로그, 구매자 인증 후기 분리, 악성 글 보류 목록 절차를 문서화해 규제 리스크를 계약 부속서 자산으로 바꾼다.",
+        "investment_type": "광고 준법 해자",
+        "deal_type": "조건부 무혐의와 광고 표준 부속서",
+        "leverage_used": [
+          "광고 표기 기준",
+          "주문 단위 해시",
+          "구매자 인증 후기 분리",
+          "악성 글 보류 목록",
+          "부정거래 필터 정산표"
+        ],
+        "opponent": {
+          "name": "규제 리스크와 조작 의혹",
+          "type": "규제 담당자/경쟁 포털/내부 축소파",
+          "weakness_exploited": "해원 데스크가 이미 주문, 후기, 광고, 부정거래 필터를 분리 기록하고 있다는 점"
+        },
+        "historical_event": "초기 온라인 광고와 개인정보/표시 규제 형성",
+        "time_pressure": "장기 광고권 계약 전 규제 리스크가 해소되지 않으면 포털과 광고주가 조건을 낮춘다.",
+        "knowledge_used": "플랫폼 광고는 성장보다 규제 표준과 감사 가능한 로그를 먼저 가진 쪽이 오래 간다는 미래 감각",
+        "risk_level": "중고위험",
+        "business_sector": "온라인 광고/규제/개인정보/커뮤니티",
+        "section_rotation": "조건부 무혐의와 광고 표준 부속서 단계",
+        "success_pattern": "숨기지 않고 표기와 분리 기준을 먼저 내밀어 규제를 진입장벽으로 바꾼다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "광고 표준 부속서와 규제 종결 문서",
+          "receipt_line": "규제 담당자가 조건부 무혐의와 개선 권고 종결을 주고 해원 데스크는 광고 표기 표준안, 주문 단위 전환 로그 보관권, 구매자 인증 후기 분리 운영권을 계약 부속서에 넣는다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "해원 데스크가 규제 리스크를 표준 계약 부속서로 환전한다.",
+          "representative_reevaluation": "포털과 광고주가 해원 데스크를 위험한 편법이 아니라 감사 가능한 광고 인프라로 본다.",
+          "next_battlefield_ticket": "장기 포털 광고권 계약에서 리스크 할인과 독점 조건을 요구할 명분이 생긴다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "규제 감사 통과와 광고 표준 부속서 확보",
+          "secondary_incident": "경쟁 포털 조작 의혹, 내부 축소 압박, 개인정보/후기 분리 문제 방어",
+          "bundle_expandability": "현장 점검 통보, 익명 의혹 확산, 표준안 작성, 규제 질의, 개선 권고 종결로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "규제 담당자",
+          "recognition_reason": "규제 담당자 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "규제 담당자 쪽은 성과 항목(광고 표준 부속서와 규제 종결 문서)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "광고 표준 부속서, 주문 단위 해시 로그, 규제 종결 문서"
+      },
+      "foreshadow_targets": [
+        49,
+        50,
+        54
+      ],
+      "callback_sources": [
+        44,
+        46,
+        47
+      ]
+    },
+    {
+      "block_id": "Block 49",
+      "block_no": 49,
+      "title": "독점은 화면이 아니라 정산표에 씁니다",
+      "content": {
+        "context": "규제 리스크가 정리되자 포털과 광고주가 장기 계약을 원한다. 하지만 포털은 화면 독점만 내주고 정산표와 로그는 자기 자산으로 돌리려 한다. 대기업 인터넷 사업팀은 더 큰 선불 보장을 제시한다.",
+        "event_villain": "포털 창업자 라인은 2년 배너 우선권을 주겠다며 전환 로그와 부정거래 필터 사본 반납을 요구한다. 대기업 인터넷 사업팀은 고정 보장금을 앞세워 광고주를 빼가려 한다. 광고주들은 최소 성과 보장 조항을 원한다.",
+        "solution": "도윤은 배너 우선권에 매달리지 않는다. 그는 화면 슬롯 대신 지역 상점, 게임, 음원, PC방, 결제 트래픽을 묶은 `성과형 광고 권리 패키지`를 제시한다. 포털은 화면을 팔고, 해원은 전환 로그, 부정거래 필터, 성과 수수료 정산, 광고주 보호 조항을 운영한다.",
+        "reward": "포털은 24개월 성과형 광고 권리 패키지에 서명한다. 해원 데스크는 전환 로그 사본 운영권, 부정거래 필터 기준권, 성과 수수료 정산권, 광고주 보호/최소성과 조정권을 장기 계약으로 묶는다."
+      },
+      "stakes": "배너 우선권만 받으면 해원 데스크는 포털의 광고 고객이 된다. 정산표와 부정거래 필터를 계약 핵심에 넣어야 포털의 화면을 해원 권리망의 판매 면적으로 바꾼다.",
+      "power_shift": {
+        "protagonist": "광고 준법 운영자에서 24개월 성과형 광고 권리 패키지 소유권자",
+        "antagonist": "화면 우선권으로 해원을 묶으려던 포털과 고정 보장금으로 광고주를 빼가려던 대기업이 정산표 조건에 밀린 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "포털 창업자 라인",
+          "before": "해원 표준안을 포털 광고 상품 부속서로 붙이는 편이 낫다고 판단한다.",
+          "after": "24개월 성과형 광고 권리 패키지에 서명한다."
+        },
+        {
+          "target": "대기업 인터넷 사업팀",
+          "before": "12개월 공동 판매 광고 영업권만 확보한다.",
+          "after": "해원 부정거래 필터와 성과 수수료 정산표 없이는 광고주 보호를 설명하지 못한다."
+        },
+        {
+          "target": "광고주 연합",
+          "before": "최소 성과 보장을 요구하며 흔들린다.",
+          "after": "광고주 보호/최소성과 조정권이 붙은 장기 패키지를 받아들인다."
+        }
+      ],
+      "foreshadow": [
+        "24개월 성과형 광고 권리 패키지는 포털 광고 구간 마감의 핵심 계약이 된다.",
+        "게임, 음원, PC방, 결제 트래픽 통합은 포털 광고 구간 모바일 콘텐츠/결제 확장의 시작점이 된다.",
+        "광고주 보호 조항은 독립 권리 지주회사 가치평가에서 반복 매출 항목으로 잡힌다."
+      ],
+      "callback": [
+        "결제/물류 정산와 부정거래/준법 표준이 장기 광고권 협상 카드로 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "장기 광고권 서명",
+        "intensity": 10
+      },
+      "tension_level": 9,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "포털 본사 장기 제휴 협상장",
+        "type": "협상장",
+        "macro_battlefield": "포털 성과형 광고 권리 패키지"
+      },
+      "time_span": {
+        "duration": "장기 계약 협상 3주",
+        "in_story_time": "2002년 겨울"
+      },
+      "genre_ext": {
+        "type": "비즈니스_contract",
+        "capital_before": "1850",
+        "capital_after": "1980",
+        "capital_delta": "130",
+        "profit_loss": "130 증가",
+        "method": "배너 우선권 대신 지역 상점, 게임, 음원, PC방, 결제 트래픽을 묶은 성과형 광고 권리 패키지를 만들고 정산권과 부정거래 필터를 장기 계약에 넣는다.",
+        "investment_type": "long-term ad 권리",
+        "deal_type": "24개월 성과형 광고 권리 패키지",
+        "leverage_used": [
+          "지역 상점 트래픽",
+          "게임/음원/PC방 트래픽",
+          "전환 로그 사본",
+          "부정거래 필터",
+          "광고 표준 부속서",
+          "성과 수수료 정산권"
+        ],
+        "opponent": {
+          "name": "포털 장기 계약 역제안",
+          "type": "포털 창업자 라인/대기업 인터넷 사업팀",
+          "weakness_exploited": "화면 슬롯과 선불 보장금만으로는 광고주 보호, 부정거래 방어, 실제 주문 전환을 증명하지 못하는 점"
+        },
+        "historical_event": "포털 광고 상품과 성과형 광고 패키지의 초기 장기 계약화",
+        "time_pressure": "연말 광고 예산 편성 전에 장기 패키지를 닫지 못하면 광고주와 포털 조건이 흩어진다.",
+        "knowledge_used": "광고 독점은 화면 점유가 아니라 기여도 측정, 부정거래 방어, advertiser protection을 가진 정산표에서 생긴다는 미래 감각",
+        "risk_level": "고위험",
+        "business_sector": "포털/온라인 광고/콘텐츠/결제",
+        "section_rotation": "24개월 성과형 광고 권리 패키지 단계",
+        "success_pattern": "화면 슬롯을 포기하고 전환 로그, 부정거래 필터, 성과 수수료 정산권을 장기 계약의 핵으로 만든다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "24개월 성과형 광고 권리 패키지",
+          "receipt_line": "포털이 24개월 성과형 광고 권리 패키지에 서명하고 해원 데스크는 전환 로그 사본 운영권, 부정거래 필터 기준권, 성과 수수료 정산권, 광고주 보호/최소성과 조정권을 장기 계약으로 묶는다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "해원 데스크가 포털 화면을 자기 권리망의 판매 면적으로 바꾼다.",
+          "representative_reevaluation": "광고주와 포털이 해원 데스크를 장기 광고권 운영자로 인정한다.",
+          "next_battlefield_ticket": "계약 가치가 커지며 해원그룹 내부에서 독립 분리 논의가 터진다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "24개월 성과형 광고 권리 패키지 장기 계약 확보",
+          "secondary_incident": "포털의 로그 반납 요구, 대기업 보장금 경쟁, 광고주 최소 성과 요구 방어",
+          "bundle_expandability": "포털 역제안, 대기업 보장금 압박, 광고주 조건 회의, 성과형 패키지 설계, 장기 서명으로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "포털 창업자 라인",
+          "recognition_reason": "포털 창업자 라인 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "포털 창업자 라인 쪽은 성과 항목(24개월 성과형 광고 권리 패키지)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "장기 광고권 계약서, 부정거래 필터 기준표, 광고주 보호 조항"
+      },
+      "foreshadow_targets": [
+        50,
+        51,
+        55
+      ],
+      "callback_sources": [
+        31,
+        40,
+        46,
+        48
+      ]
+    },
+    {
+      "block_id": "Block 50",
+      "block_no": 50,
+      "title": "이제 그룹보다 큽니다",
+      "content": {
+        "context": "24개월 장기 광고권 계약이 이사회에 보고된다. 해원 데스크의 권리망은 케이블, PCS, 게임, 음원, PC방, 결제, 물류, 포털, 광고, 커뮤니티를 한 장부로 묶었다. 그룹 안에서는 이 데스크를 팔거나 계열사 밑에 넣자는 말이 나온다.",
+        "event_villain": "강민석 라인은 장기 광고권과 트래픽 정산를 전자부품 계열사 아래로 편입하려 한다. 채권단 보수파는 현금화 가능한 권리부터 매각하자고 요구한다. 대기업 인터넷 사업팀은 분리 전에 추가 지분 투자를 제안한다.",
+        "solution": "도윤은 승계 싸움에 감정을 쓰지 않는다. 그는 24개월 광고권, 공동 판매 레일, 부정거래 필터, 규제 종결 문서, 결제/물류 정산, 콘텐츠 유통권을 가치평가 표로 묶는다. 그리고 그룹 부채 방어용으로 `해원 디지털 권리 홀딩스` 분리안을 제출한다.",
+        "reward": "이사회는 디지털 권리 데스크의 독립 법인화 검토를 의결한다. 도윤은 분리 실무 TF장, 권리 이전 목록 작성권, 외부 투자자 접촉권, 장기 계약 원장 보존권을 얻는다. 해원그룹 이사회 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+      },
+      "stakes": "그룹 계열사 아래로 들어가면 권리망은 다시 부품처럼 쪼개진다. 독립 법인화 검토권을 얻어야 가문보다 큰 권리 지주회사로 갈 수 있다.",
+      "power_shift": {
+        "protagonist": "장기 광고권 운영자에서 독립 디지털 권리 홀딩스 분리 실무 소유권자",
+        "antagonist": "데스크를 계열사로 흡수하거나 매각하려던 강민석 라인과 채권단이 독립 법인화 검토 의결에 묶인 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "해원그룹 이사회",
+          "before": "디지털 권리 데스크를 계열사 부속 자산으로 본다.",
+          "after": "독립 법인화 검토와 분리 실무 TF를 의결한다."
+        },
+        {
+          "target": "강민석 라인",
+          "before": "규제 종결 문서 때문에 축소 명분을 잃는다.",
+          "after": "도윤의 가치평가 표 때문에 공개 반대가 어려워진다."
+        },
+        {
+          "target": "채권단 보수파",
+          "before": "정상 처리율을 보고 결제/물류 레일 증빙으로 인정할 수밖에 없다.",
+          "after": "반복 현금흐름과 장기 계약 원장을 담보 가치로 검토한다."
+        },
+        {
+          "target": "서인하",
+          "before": "도윤의 접속권 계약을 워크아웃 회수율 개선 사례로 보고한다.",
+          "after": "분리 실무 TF에서 권리 이전 목록의 핵심 실무자로 올라선다."
+        }
+      ],
+      "foreshadow": [
+        "해원 디지털 권리 홀딩스 분리안은 독립 홀딩스 구간의 주 전장가 된다.",
+        "외부 투자자 접촉권은 모바일 콘텐츠, 결제, 광고 확장 자본의 문을 연다.",
+        "권리 이전 목록 작성권은 누가 무엇을 소유하는지 다시 쓰는 승계 전쟁으로 이어진다."
+      ],
+      "callback": [
+        "문서고 접근권, PCS/케이블 제휴, 콘텐츠/PC방, 결제/물류, 포털/광고/커뮤니티 권리가 가치평가 표로 회수된다.",
+        "첫 트래픽 정산에서 확보한 6개월 트래픽-광고 정산 파일럿 근거가 독립 법인화 검토 의결과 분리 실무 TF장 권한 협상에서 별도 증빙으로 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "포털 광고 구간 마감과 지주회사 진입권",
+        "intensity": 10
+      },
+      "tension_level": 10,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "해원그룹 이사회",
+        "type": "이사회",
+        "macro_battlefield": "디지털 권리 데스크 독립 법인화"
+      },
+      "time_span": {
+        "duration": "연말 이사회",
+        "in_story_time": "2002년 말"
+      },
+      "genre_ext": {
+        "type": "비즈니스_권력_이동",
+        "capital_before": "1980",
+        "capital_after": "2180",
+        "capital_delta": "200",
+        "profit_loss": "200 증가",
+        "method": "24개월 광고권, 공동 판매 레일, 부정거래 필터, 규제 종결 문서, 결제/물류 정산, 콘텐츠 유통권을 가치평가 표로 묶어 독립 법인화 검토 의결을 얻는다.",
+        "investment_type": "권리 지주회사 설립",
+        "deal_type": "독립 법인화 검토 의결과 분리 실무 TF장 권한",
+        "leverage_used": [
+          "24개월 성과형 광고 권리 패키지",
+          "3자 공동 판매 정산 레일",
+          "부정거래 필터 운영권",
+          "규제 종결 문서",
+          "결제/물류 정산",
+          "콘텐츠 유통권",
+          "권리 이전 목록"
+        ],
+        "opponent": {
+          "name": "계열사 흡수와 현금 매각 압박",
+          "type": "강민석 라인/채권단 보수파/대기업 인터넷 사업팀",
+          "weakness_exploited": "쪼개 팔면 단기 현금은 생기지만 장기 계약 원장과 반복 현금흐름 담보 가치가 사라지는 점"
+        },
+        "historical_event": "2000년대 초 디지털 권리와 온라인 광고 자산의 독립 사업화 압력",
+        "time_pressure": "연말 이사회에서 계열사 편입안이 통과되기 전 독립 법인화 검토안을 올려야 한다.",
+        "knowledge_used": "분산 권리는 계열사 밑에 두면 할인되고, 독립 법인과 반복 계약 원장으로 묶으면 투자자와 담보가 붙는다는 미래 감각",
+        "risk_level": "최고위험",
+        "business_sector": "권리 지주회사/포털/광고/결제/콘텐츠/물류",
+        "section_rotation": "독립 법인화 검토 의결과 분리 실무 TF장 권한 단계",
+        "success_pattern": "승계 감정 대신 권리 원장과 반복 현금흐름 가치평가으로 독립 법인화 권한을 얻는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "독립 디지털 권리 홀딩스 분리 검토권",
+          "receipt_line": "이사회가 디지털 권리 데스크의 독립 법인화 검토를 의결하고 도윤은 분리 실무 TF장, 권리 이전 목록 작성권, 외부 투자자 접촉권, 장기 계약 원장 보존권을 얻는다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "해원 데스크가 그룹 부속 부서에서 독립 권리 지주회사 후보로 올라선다.",
+          "representative_reevaluation": "이사회와 채권단이 도윤의 권리망을 팔 물건이 아니라 담보와 투자 가치가 있는 플랫폼으로 본다.",
+          "next_battlefield_ticket": "독립 홀딩스 구간: 해원 디지털 권리 홀딩스를 실제로 분리하고 외부 투자자와 모바일/결제/광고 확장권을 붙이는 전장이 열린다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "디지털 권리 데스크 독립 법인화 검토 의결과 분리 TF장 권한 확보",
+          "secondary_incident": "강민석 라인의 계열사 흡수, 채권단 매각 압박, 대기업 지분 투자 제안 방어",
+          "bundle_expandability": "장기 광고권 보고, 계열사 편입안, 가치평가 표 작성, 채권단 설득, 독립 법인화 검토 의결로 4~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "해원그룹 이사회",
+          "recognition_reason": "해원그룹 이사회 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "해원그룹 이사회 쪽은 성과 항목(독립 디지털 권리 홀딩스 분리 검토권)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다.",
+          "selected_reward_sentence": "해원그룹 이사회 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "가치평가 표, 장기 계약 원장, 이사회 의결서, 권리 이전 목록"
+      },
+      "foreshadow_targets": [
+        51,
+        55,
+        60
+      ],
+      "callback_sources": [
+        1,
+        10,
+        20,
+        30,
+        40,
+        49,
+        45
+      ]
+    }
+  ]
+}

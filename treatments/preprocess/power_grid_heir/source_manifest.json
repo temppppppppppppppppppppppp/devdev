@@ -22,6 +22,25 @@
     "repo blockguide harness: docs/blockguide/treatment-production-harness-v2.md",
     "repo BI harness: docs/blockguide/bi-production-harness-v1.md"
   ],
+  "donor_review": {
+    "decision": "adopted",
+    "scope": "Generalized immediate-deployment donor-structure law only; no donor proper nouns, scene order, or asset skin is imported.",
+    "adopted_law": [
+      "current-document proof before future-memory payoff",
+      "pressure -> proof -> right/control/cash/status receipt -> next power-grid gate",
+      "same-block receipt for every TR block",
+      "family, succession, or heir recognition is pressure/evaluation only, never the reward engine",
+      "one TR block remains a dense downstream episode bundle narrowed by block-specific pacing hints"
+    ],
+    "contamination_guard": [
+      "no donor proper nouns, donor organization names, or donor scene order",
+      "no generic chaebol succession reward replacing power-grid, AI infrastructure, PPA, SLA, transformer, HVDC, site permit, project-finance, board, budget, or TF rights",
+      "no future prophecy or status UI replacing present contracts, side letters, schedules, engineer reports, site permits, outage logs, or board minutes",
+      "no charity rescue, family praise, or succession recognition as a block reward",
+      "power-grid and AI infrastructure rights remain the work canon"
+    ],
+    "visibility_note": "Donor adoption means translated material-side operating law only; power_grid_heir canon remains native."
+  },
   "core_materials": [
     "선우그룹 structure: 선우일렉(변압기/HVDC/전력기기), 선우오션(조선/해상변전/MRO), 선우에너지(SMR/발전/수소), 선우디지털(데이터센터/클라우드/AI 인프라), 선우건설(전력 corridor/냉각수/site permit), 선우캐피탈(project finance)",
     "future memory engine: 도윤은 미래 AI 인프라 붕괴 순서를 알지만, 현재 판에서는 계약서, 납기표, 전력 SLA, site permit, outage log, transformer slot, board minutes로만 proof를 만든다",

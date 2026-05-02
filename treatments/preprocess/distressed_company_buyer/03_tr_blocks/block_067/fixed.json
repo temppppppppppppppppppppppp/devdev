@@ -1,0 +1,139 @@
+{
+  "block_id": "Block 67",
+  "title": "계좌가 간판보다 먼저 열린다",
+  "content": {
+    "context": "7개 폴더가 열리자 돈이 먼저 문제로 튄다. buyer RFI, 리스사 consent, 보험 claim hold는 모두 계좌가 필요하다. 도윤은 아직 간판을 달지 않았다. 하지만 회수율을 높이는 돈은 간판보다 먼저 흐를 준비를 해야 한다.",
+    "event_villain": "은행 내부 보수파는 정식 운용사 등록 전에는 새 매물 관련 돈을 도윤 SPV 계좌로 받을 수 없다고 말한다. 백승환은 이 틈을 파고들어 PEF escrow가 더 안전하다고 주장한다. 채권단 실무자는 full data-room vote 전에 계좌 분리와 signatory를 확인해야 한다고 한다. 도윤이 기존 포트폴리오 계좌를 쓰면 이해상충이고, 새 계좌를 과장하면 무인가 운용 리스크가 열린다.",
+    "solution": "도윤은 운용사 간판을 먼저 걸지 않는다. 그는 목적 제한 operator trust account를 요구한다. 계좌 용도는 preview 비용, 외부 확인비, buyer RFI 대응 보증금, 리스사 확인 수수료, claim hold 유지비로 한정한다. 은행에는 기존 portfolio cashflow와 새 preview 비용을 분리한 account map을 내고, 컴플라이언스 officer engagement letter와 dual-signatory pack을 붙인다. PEF escrow는 후순위 참여자 이해상충으로 표시한다.",
+    "reward": "은행은 정식 운용사 계좌를 열어 주지 않는다. 그러나 목적 제한 operator trust account 개설을 승인하고, preview expense escrow 4,500만 원 한도와 dual signatory pack을 발급한다. 컴플라이언스 officer engagement letter, bank account map, PEF escrow conflict memo, full data-room vote 조건 충족 memo가 함께 붙는다. 도윤은 간판을 단 게 아니다. 간판이 붙기 전에 돈이 섞이지 않을 계좌부터 열었다."
+  },
+  "incident_beats": [
+    "은행 보수파와 PEF가 새 매물 preview 비용 계좌를 문제 삼으며 PEF escrow 또는 full data-room 보류를 압박한다",
+    "도윤이 기존 포트폴리오 계좌와 새 preview 비용을 분리한 purpose-limited operator trust account와 dual-signatory pack을 제시한다",
+    "operator trust account 개설 승인, preview expense escrow 4,500만 원 한도, compliance officer engagement letter, bank account map, PEF escrow conflict memo receipt가 확보된다"
+  ],
+  "stakes": "새 매물 비용이 기존 포트폴리오 계좌와 섞이면 conflict가 생기고, PEF escrow를 쓰면 다음 매물 control이 넘어간다. 계좌 없이 full data-room 투표를 밀면 실행력이 없다고 보인다. 도윤은 간판보다 먼저 분리 계좌를 만들어야 한다.",
+  "power_shift": {
+    "protagonist": "질문으로 preview를 확장한 rights-pricing questioner에서 목적 제한 계좌와 signatory를 여는 trust-account operator로 이동한다.",
+    "antagonist": "은행 보수파와 백승환은 계좌 문제로 preview를 멈추려 하지만, 목적 제한 trust account가 생기면서 PEF escrow 논리를 잃는다."
+  },
+  "relationship_delta": [
+    {
+      "target": "은행 내부 보수파",
+      "before": "정식 운용사 등록 전 계좌 개설을 막으려는 보수 라인",
+      "after": "목적 제한 operator trust account와 dual signatory pack을 승인한다",
+      "continuity_anchor_before": "회수율 항목이 붙은 7-folder preview expansion을 승인한다"
+    },
+    {
+      "target": "백승환",
+      "before": "PEF escrow가 더 안전하다고 주장하는 PEF 파트너",
+      "after": "PEF escrow conflict memo 때문에 선순위 비용 계좌를 가져가지 못한다",
+      "continuity_anchor_before": "질문이 RFI와 claim hold로 접수되자 adverse note를 즉시 확정하지 못한다"
+    },
+    {
+      "target": "채권단 실무자",
+      "before": "full data-room vote 전에 비용 계좌와 signatory를 확인해야 한다고 보는 실무자",
+      "after": "account map과 preview expense escrow를 vote 조건 충족 자료로 받는다"
+    },
+    {
+      "target": "컴플라이언스 officer",
+      "before": "도윤 SPV의 role-boundary를 외부에서 검토하던 전문가",
+      "after": "preview expense escrow와 account map을 감시하는 engagement letter를 발급한다"
+    }
+  ],
+  "foreshadow": [
+    "operator trust account는 정식 독립 운용사 출범 시 첫 운영 계좌로 전환될 수 있다.",
+    "preview expense escrow는 full data-room 초대 직후 외부 확인비를 지불하는 실행 proof가 된다.",
+    "PEF escrow conflict memo는 백승환의 마지막 법무 공격을 막는 자료로 남는다.",
+    "dual signatory pack은 채권단이 먼저 초대장을 보낼 때 필요한 통제권 proof가 된다."
+  ],
+  "callback": [
+    "buyer RFI, 리스사 consent, claim hold를 실제 비용 계좌 필요성으로 연결한다.",
+    "no-public-offering memo와 role-boundary opinion을 목적 제한 계좌의 법적 경계로 회수한다.",
+    "PEF 후순위 참여권 선순위 전환 금지를 PEF escrow conflict memo에 반영한다.",
+    "기존 senior cashflow sweep과 새 preview expense escrow를 섞지 않는 account map을 만든다."
+  ],
+  "emotional_beat": {
+    "type": "trust_account_cider",
+    "intensity": 8
+  },
+  "tension_level": 8,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "은행 계좌개설 심사실 / 컴플라이언스 officer 화상회의 / PEF escrow 제안서 검토방",
+    "type": "purpose-limited operator trust account and preview expense escrow gate"
+  },
+  "time_span": {
+    "duration": "이틀",
+    "in_story_time": "7-folder preview expansion이 승인된 직후"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "rights-candidate verification memo / 7-folder data-room preview expansion / buyer emergency supply RFI / 리스사 standby consent / 보험 claim-preservation hold / 채권단 full data-room vote agenda / PEF adverse-note 보류",
+    "capital_after": "purpose-limited operator trust account 개설 승인 / preview expense escrow 4,500만 원 한도 / dual signatory pack / compliance officer engagement letter / bank account map / PEF escrow conflict memo / full data-room vote 조건 충족 memo",
+    "capital_delta": "정식 운용사 계좌 개설 실패 / 목적 제한 trust account 확보 / 4,500만 원 preview expense escrow 한도 확보 / PEF escrow 방어",
+    "profit_loss": "완전한 운용사 계좌는 아니지만, 기존 포트폴리오 자금과 새 preview 비용을 분리해 full data-room 투표 조건을 충족한다.",
+    "method": "간판을 먼저 달지 않고 preview 비용만 쓰는 purpose-limited account와 dual signatory, compliance officer 감시로 계좌 리스크를 낮춘다.",
+    "investment_type": "purpose-limited operator trust account",
+    "deal_type": "preview expense escrow / dual signatory / account-map compliance",
+    "leverage_used": [
+      "7-folder preview expansion",
+      "buyer emergency supply RFI",
+      "리스사 standby consent",
+      "보험 claim-preservation hold",
+      "role-boundary opinion",
+      "no-public-offering memo",
+      "PEF subordination restriction",
+      "full data-room vote agenda"
+    ],
+    "opponent": {
+      "name": "은행 내부 보수파 / 백승환 / 채권단 실무자",
+      "type": "bank account gate, PEF escrow capture pressure, and creditor vote-condition gate",
+      "weakness_exploited": "상대는 정식 운용사 계좌를 막을 수 있지만, 목적 제한 preview 비용 계좌와 dual signatory는 회수율을 높이는 절차 비용으로 인정하기 쉽다"
+    },
+    "historical_event": null,
+    "time_pressure": "full data-room vote 전에 preview 비용 계좌와 signatory pack을 제출해야 한다.",
+    "knowledge_used": "회귀 전 새 매물 preview 비용을 기존 포트폴리오 계좌에서 쓰다가 conflict가 생겨 초대장이 취소됐다는 기억",
+    "risk_level": "고위험",
+    "business_sector": "operator trust account / preview expense escrow / data-room vote condition / compliance",
+    "section_rotation": "부도 회사 사냥꾼의 이름",
+    "success_pattern": "정식 간판보다 먼저 목적 제한 계좌와 preview expense escrow를 열어 full data-room vote 조건을 충족",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "operator_trust_account_receipt",
+      "receipt_line": "purpose-limited operator trust account 개설 승인, preview expense escrow 4,500만 원 한도, dual signatory pack, compliance officer engagement letter, bank account map, PEF escrow conflict memo receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 preview 비용과 기존 포트폴리오 계좌를 섞은 operator가 conflict 지적을 받고 data-room 투표에서 빠졌다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 operator는 계좌 분리를 늦추다 PEF escrow에 끌려갔다.",
+      "changed_event": "이번에는 도윤이 purpose-limited trust account와 dual signatory를 먼저 연다.",
+      "ripple_effect": "preview 비용과 기존 cashflow가 분리되고, full data-room vote 조건 중 계좌 리스크가 제거된다."
+    },
+    "death_flag": {
+      "avoided": "계좌 conflict와 PEF escrow 흡수로 다음 매물 control을 잃는 미래",
+      "method": "purpose-limited account, expense escrow, dual signatory, compliance officer, account map으로 방어한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 매물 내용보다 계좌 용도 제한 문구부터 확인한다.",
+      "suspicion_from": "은행 내부 보수파와 백승환"
+    },
+    "future_prep": {
+      "action": "operator trust account와 expense escrow를 full data-room 초대 후 실행력 proof로 제출한다.",
+      "target_event": "정식 data-room 초대"
+    }
+  },
+  "block_no": 67,
+  "foreshadow_targets": [
+    68,
+    70
+  ]
+}

@@ -1,0 +1,153 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "61",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 061 draft only. Waiting-room production continuation; not root canonical, not BI, not immediate-use.",
+  "blocks": [
+    {
+      "block_id": "Block 61",
+      "block_no": 61,
+      "title": "해외 SPV 문의",
+      "episode_span_intent": "2~6화 분량. SableWorks의 동남아 유통 SPV 문의, 현지 파트너 정보 부족, 도윤의 해외 SPV due-diligence checklist와 달러 정산/물류/데이터 proof gate 확보를 압축한다.",
+      "content": {
+        "context": "SableWorks의 메일은 정중하지만 계산은 차갑다. 동남아 리퍼브 물량에 도윤권리운영 표준과 D-RN 물류/품질 구조를 적용할 수 있느냐는 문의다. 다온 판단 feed와 국내 생산권 receipt가 해외에서 첫 가격을 갖는 순간이다. 그러나 해외 SPV는 멋진 단어가 아니다. 현지 파트너, 달러 정산, 물류 슬롯, 보증 책임, 통관 지연이 한꺼번에 붙는다. 도윤은 해외 진출을 축하하지 않는다. 먼저 현지 파일부터 요구한다.",
+        "event_villain": "첫 번째 사건은 정보 부족이다. SableWorks는 베트남 현지 파트너 후보의 이름과 예상 물량만 보내고, 보증 책임 잔액과 통관 지연 기록은 비워 둔다. 다온 해외소싱팀은 자신들이 창구를 맡겠다고 끼어든다. 도윤은 양쪽을 모두 거절하지 않는다. 대신 해외 SPV due-diligence checklist를 보낸다. 현지 창고 통관 시간, 반품 aging, 달러 결제일, 보증 책임 잔액, 현지 고객 대응 SLA, 보험 가능 여부.",
+        "second_incident": "두 번째 사건은 다온 feed의 쓰임이다. 다온은 자사 판단 feed를 해외 협상 reference로 쓰는 범위를 제한하려 한다. 도윤은 개인 정보가 아니라 권리 구조의 성능을 보여 주는 것이라고 선을 긋는다. 국내 30일 파일럿 결과, 클레임 처리 시간, 폐기권 회수율, hash 검증률을 익명화해 reference packet으로 만든다. 해외 문의는 막연한 시장이 아니라 기존 권리 proof의 다음 사용처가 된다.",
+        "solution": "도윤은 해외 SPV를 바로 만들지 않는다. due-diligence checklist, 익명화 reference packet, SableWorks 현지 파트너 자료 보완 요청, 다온 해외 reference 사용 확인서, 달러 정산/물류 슬롯/보증 책임 통합 검토 gate를 확보한다. 해외 진출의 첫 보상은 현지 법인이 아니라, 무엇을 봐야 하는지 정하는 권리다.",
+        "reward": "블록 끝에서 도윤은 해외 SPV를 설립하지 않는다. 대신 동남아 유통 SPV due-diligence checklist, 익명화 국내 reference packet, SableWorks 현지 파트너 자료 보완 요청서, 다온 해외 reference 사용 확인서, 달러 정산/물류 슬롯/보증 책임 통합 검토 gate를 얻는다. 도윤은 말한다. 나라가 바뀌어도 먼저 봐야 할 줄은 같습니다."
+      },
+      "stakes": "해외 문의를 시장 확대 호재로만 받으면 도윤은 현지 파트너와 다온 창구에 끌려간다. due-diligence checklist와 reference packet을 먼저 잡아야 해외 총판권 재협상으로 넘어갈 수 있다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "SableWorks가 현지 파트너 이름과 예상 물량만 보내자, 도윤이 해외 SPV due-diligence checklist로 빈 자료를 요구함",
+        "incident_2": "다온이 국내 판단 feed 해외 reference 사용 범위를 제한하려 하자, 도윤이 익명화 성능 packet과 사용 확인서를 확보함",
+        "next_actionable_gate": "달러 정산권과 물류 슬롯을 결합한 해외 총판권 재협상, 현지 파트너 선불금 요구, 해외 보증 상품 gate",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 해외 진출이라는 말에 들뜨지 않는다. 현지 파트너를 보기 전에 어떤 파일과 책임선을 봐야 하는지 정해 자기 판단권을 먼저 확보한다.",
+        "morality_position": "국내 표준을 해외에도 적용한다는 명분은 쓰지만 핵심은 다온 reference와 SableWorks 자료를 도윤권리운영의 다음 협상권으로 바꾸는 것이다.",
+        "efficiency_choice": "법인 설립을 먼저 하지 않고 checklist와 reference packet으로 해외 gate를 연다."
+      },
+      "power_shift": {
+        "protagonist": "다온 판단 feed와 해외 reference 권한을 가진 데이터 권리 운영자 -> 해외 SPV due-diligence checklist와 reference packet을 가진 해외 gate 운영자",
+        "antagonist": "SableWorks/다온 해외소싱팀: 불완전 현지 정보 제공자 / 창구 흡수자 -> 도윤의 checklist와 reference packet 조건을 받아야 하는 해외 상대",
+        "system": "다온 판단 feed와 해외 reference 사용권 -> 동남아 유통 SPV due-diligence checklist + 익명화 국내 reference packet + SableWorks 현지 파트너 자료 보완 요청서 + 다온 해외 reference 사용 확인서 + 달러 정산/물류 슬롯/보증 책임 통합 검토 gate"
+      },
+      "relationship_delta": [
+        {
+          "target": "SableWorks",
+          "before": "동남아 유통 SPV 설립 문의를 넣으며 해외 gate를 여는 공급사",
+          "after": "현지 파트너 자료 보완 요청을 받아야 하는 해외 공급사"
+        },
+        {
+          "target": "다온 해외소싱팀",
+          "before": "과거 supplier portal에서 도윤을 흡수하려던 내부 창구",
+          "after": "해외 reference 사용 범위를 제한하려다 확인서를 내주는 내부 창구"
+        },
+        {
+          "target": "다온 정산본부",
+          "before": "30일 파일럿 계약과 판단 feed 6항목을 인정하는 대기업 고객",
+          "after": "익명화 국내 reference packet의 자료 출처가 되는 대기업 고객"
+        }
+      ],
+      "foreshadow": [
+        "해외 총판권 재협상",
+        "현지 파트너 선불금 요구",
+        "해외 보증 상품",
+        "투자자 실사"
+      ],
+      "callback": [
+        "해외 유통 SPV reference 사용권이 실제 문의로 회수됨",
+        "달러 정산권과 물류 슬롯이 due-diligence 항목으로 회수됨",
+        "다온 판단 feed가 익명화 reference packet으로 회수됨"
+      ],
+      "emotional_beat": {
+        "type": "overseas_gate_opens",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "SableWorks 해외 파트너 화상회의 / 다온 reference 검토실 / 도윤권리운영 해외 체크리스트 원장",
+        "type": "해외 SPV 문의 / reference 권한 / due diligence"
+      },
+      "time_span": {
+        "duration": "1주",
+        "in_story_time": "2027년 2월 셋째 주"
+      },
+      "genre_ext": {
+        "capital_before": "다온 정산 인프라 30일 파일럿 계약서 + 익명화 판단 feed 6항목 접근권 + field-level 검증권 + 증빙 hash 검증권 + 도윤권리운영 표준명 표기 확정 + 리커버넷 비교 금지 45일 + 해외 유통 SPV reference 사용권",
+        "capital_after": "동남아 유통 SPV due-diligence checklist + 익명화 국내 reference packet + SableWorks 현지 파트너 자료 보완 요청서 + 다온 해외 reference 사용 확인서 + 달러 정산/물류 슬롯/보증 책임 통합 검토 gate",
+        "capital_delta": "다온 판단 feed와 해외 reference 권한을 해외 SPV checklist, reference packet, 현지 자료 보완 요청으로 전환",
+        "profit_loss": "해외 SPV 설립 비용은 아직 없음. 자료 보완 gate 확보",
+        "method": "해외 진출을 법인 설립보다 due-diligence checklist와 익명화 reference packet으로 먼저 통제",
+        "deal_type": "overseas SPV due diligence / reference packet / integrated review gate",
+        "leverage_used": [
+          "다온 판단 feed",
+          "해외 reference 사용권",
+          "D-RN 물류 슬롯",
+          "달러 정산권",
+          "유지보수 MSA"
+        ],
+        "opponent": {
+          "name": "SableWorks/다온 해외소싱팀",
+          "type": "불완전 현지 정보 제공자 / 창구 흡수자",
+          "weakness_exploited": "SableWorks도 현지 파트너 정보를 보강하지 않으면 도윤 표준을 해외에 적용할 수 없다는 점"
+        },
+        "time_pressure": "SableWorks priority review 전에 현지 파트너 자료와 reference 사용 범위를 확정해야 함",
+        "risk_level": "고위험",
+        "business_sector": "해외 SPV / 총판권 / reference data",
+        "section_rotation": "ARC-07 overseas gate turn",
+        "success_pattern": "해외 법인 설립 없이 checklist와 reference packet을 받아 다음 총판권 협상으로 가는 준비 승리",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "overseas_due_diligence_and_reference_packet",
+          "receipt_line": "나라가 바뀌어도 먼저 봐야 할 줄은 같습니다.",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "해외 SPV checklist",
+          "익명화 reference packet",
+          "현지 자료 보완 요청권",
+          "통합 검토 gate"
+        ],
+        "document_evidence": [
+          "due-diligence checklist",
+          "reference packet",
+          "자료 보완 요청서",
+          "reference 사용 확인서",
+          "통합 검토 gate"
+        ],
+        "field_validation": [
+          "현지 파트너 자료 부족",
+          "국내 reference 사용 확인",
+          "달러/물류/보증 통합 검토"
+        ],
+        "witness_carrier": [
+          "SableWorks 문의 메일",
+          "다온 reference 확인서",
+          "해외소싱팀 제한 의견"
+        ],
+        "receipt": [
+          "동남아 유통 SPV due-diligence checklist",
+          "익명화 국내 reference packet",
+          "SableWorks 현지 파트너 자료 보완 요청서",
+          "다온 해외 reference 사용 확인서",
+          "달러 정산/물류 슬롯/보증 책임 통합 검토 gate"
+        ],
+        "next_gate": "달러 정산권과 물류 슬롯을 결합한 해외 총판권 재협상, 현지 파트너 선불금 요구, 해외 보증 상품 gate"
+      },
+      "foreshadow_targets": [
+        62,
+        63,
+        64
+      ]
+    }
+  ]
+}

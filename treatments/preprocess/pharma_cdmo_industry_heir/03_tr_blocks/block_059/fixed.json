@@ -1,0 +1,182 @@
+{
+  "block_id": "Block 59",
+  "title": "생산권이 담보다",
+  "content": {
+    "context": "보험료가 낮아지고 실패 파이프라인의 회수 패키지가 만들어지자, 자금이 마른 바이오 벤처들이 태오바이오에 운전자금을 요청한다. 은행은 특허 감정가와 대표 연대보증을 요구하고, 벤처들은 현금을 달라고 한다. 태오는 현금만 빌려주면 실패한 구조가 반복된다는 걸 안다.",
+    "event_villain": "상업은행은 생산권을 담보로 인정할 수 없다고 하고, 벤처 대표는 CMO slot을 묶으면 회사를 빼앗기는 것 아니냐고 반발한다. 보험사는 대출 사고가 나면 보험금이 누구에게 먼저 가는지 불명확하다고 버틴다. 돈은 필요한데 돈을 지킬 권리 순서가 없다.",
+    "solution": "태오는 대출 심사의 첫 줄을 현금 담보가 아니라 생산권 담보로 바꾼다. 첫 사건 beat는 보험료 산식 공동검증권과 조기경보 dashboard를 담보비율 산정표에 넣어, 보험료가 낮고 생산 log가 안정적인 회사만 낮은 금리를 받게 만드는 장면이다. 둘째 beat는 CMO slot 2개 전환권과 실패 파이프라인 회수 패키지를 표준계약의 담보 waterfall로 넣는 장면이다. 대출금은 일부 현금, 일부 slot credit, 일부 QC service credit으로 나가고, 사고가 나면 보험금, 데이터 사용료, 생산권 회수 순서로 상계된다.",
+    "reward": "태오는 생산권 담보 대출 표준계약, CMO slot 담보권, 보험금 및 데이터 수수료 상계권, 생산권 회수 waterfall, 담보비율 산정표, 900억 대출 commitment 운영권을 얻는다. 바이오 벤처들은 은행보다 먼저 태오의 생산권 담보 조건표를 확인하게 된다."
+  },
+  "stakes": "생산권이 담보로 인정되지 않으면 바이오 기업들은 다시 특허 감정가와 연대보증에 묶이고, 태오가 만든 데이터 보험료와 실패 파이프라인 회수권도 금융 상품으로 확장되지 못한다.",
+  "power_shift": {
+    "protagonist": "보험료와 실패 자산을 가격화하는 사람에서 바이오 대출의 담보 순서와 집행 방식을 정하는 금융 운영자로 올라선다.",
+    "antagonist": "상업은행, 벤처 대표, 보험사는 돈의 담보를 현금과 특허로만 보던 기준을 생산권과 slot, 데이터 수수료까지 확장해야 한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "상업은행 여신팀",
+      "before": "생산권 담보를 인정하지 않는 기존 대출 gatekeeper",
+      "after": "태오의 생산권 담보 표준계약을 보고 공동대출 여부를 검토해야 하는 후발 주자"
+    },
+    {
+      "target": "바이오 벤처 차주",
+      "before": "현금 대출만 요구하며 CMO slot 담보를 경계하는 차주",
+      "after": "낮은 금리와 slot credit을 받기 위해 생산권 담보와 dashboard covenant를 수용하는 고객"
+    },
+    {
+      "target": "보험사",
+      "before": "대출 사고 시 보험금 우선순위를 모호하게 두려는 보험자",
+      "after": "보험금, 데이터 수수료, 생산권 회수 waterfall에 서명해야 하는 지급 파트너",
+      "anchor_before": "보험료 band가 valuation 본문 변수로 들어가자 생산 데이터 피드를 더 중시하는 평가 파트너"
+    }
+  ],
+  "foreshadow": [
+    "생산권 담보 대출 표준계약은 바이오 은행 조건표의 중심 상품이 된다.",
+    "상업은행의 후발 검토는 은행보다 태오 조건표가 먼저 묻히는 장면으로 이어진다.",
+    "생산권 회수 waterfall은 표준위원회 초대장에서 산업 표준 논쟁의 근거가 된다."
+  ],
+  "callback": [
+    "보험료 산식 공동검증권과 조기경보 dashboard가 담보비율 산정표에 들어간다.",
+    "CMO slot 2개 전환권과 실패 파이프라인 회수 패키지가 담보 waterfall의 실물 사례가 된다.",
+    "생산가능성 scorecard가 대출 심사표의 첫 번째 항목으로 승격된다."
+  ],
+  "emotional_beat": {
+    "protagonist_feeling": "태오는 돈을 빌려주는 것보다 돈이 빠져나갈 구멍을 막는 순서가 더 중요하다고 느낀다. 그래서 차가운 계약서 안에 생산을 살릴 길을 숨기지 않고 박아 넣는다.",
+    "reader_catharsis": "은행이 생산권은 담보가 아니라고 비웃는 순간, 주인공이 보험금, 데이터 수수료, CMO slot, 생산권 회수 순서를 계약서에 박아 대출 기준을 뒤집는 사이다."
+  },
+  "tension_level": 9,
+  "pov_character": "강태오",
+  "location": {
+    "place": "태오바이오 여신심사 워룸과 상업은행 공동대출 회의실",
+    "type": "production_right_secured_lending_room",
+    "macro_battlefield": "생산권 담보 대출과 바이오 공급망 금융"
+  },
+  "time_span": {
+    "duration": "8일",
+    "in_story_time": "2008년 4월 초"
+  },
+  "genre_ext": {
+    "capital_before": "2조 500억 + 소비재 안전표준 + 생산가능성 기준 밸류에이션 모델 작성권 + 실패 파이프라인 특허/CMC 데이터 우선매수권 + cell bank/원료 재고 관리권 + 파일럿 설비 리스 승계권 + CMO slot 2개 전환권 + 채무 45% haircut + 임상 실패 데이터 사용권 + 병원 익명 코호트 질의권 + 실제처방 baseline 데이터 사용승인 + 임상 보험료 18% 인하권 + 보험료 산식 공동검증권 + adverse event 조기경보 dashboard 운영권 + 데이터 사용료 정산항목",
+    "capital_after": "2조 4000억 + 소비재 안전표준 + 생산가능성 기준 밸류에이션 모델 작성권 + 실패 파이프라인 특허/CMC 데이터 우선매수권 + 임상 보험료 18% 인하권 + 보험료 산식 공동검증권 + adverse event 조기경보 dashboard 운영권 + 데이터 사용료 정산항목 + 생산권 담보 대출 표준계약 + CMO slot 담보권 + 보험금/데이터 수수료 상계권 + 생산권 회수 waterfall + 담보비율 산정표 + 900억 대출 commitment 운영권",
+    "capital_delta": "+3500억 평가 상승, +생산권 담보 대출 표준계약, +CMO slot 담보권, +보험금/데이터 수수료 상계권, +생산권 회수 waterfall, +담보비율 산정표, +900억 대출 commitment 운영권",
+    "profit_loss": "현금 대출 리스크를 slot credit과 QC service credit로 낮추고, 사고 시 보험금과 데이터 수수료를 우선 상계해 회수율을 높인다.",
+    "method": "생산가능성 scorecard, 보험료 산식, 조기경보 dashboard, CMO slot, 회수 패키지를 담보비율 산정표와 waterfall 계약으로 묶는다.",
+    "investment_type": "생산권 담보 공급망 대출",
+    "deal_type": "CMO slot 담보권 및 생산권 회수 waterfall 대출계약",
+    "leverage_used": "보험료 산식 공동검증권, CMO slot 전환권, 생산가능성 scorecard",
+    "opponent": {
+      "name": "상업은행 + 바이오 벤처 차주 + 보험사",
+      "type": "바이오 공급망 금융 / 생산권 담보 대출 복합 압박 세력",
+      "weakness_exploited": "바이오 공급망 금융 / 생산권 담보 대출의 병목을 문서·권리·책임선으로 잠그는 강태오의 방식을 과소평가한다."
+    },
+    "time_pressure": "차주 월말 급여와 임상 물량 발주 전 8일",
+    "knowledge_used": "생산권 담보, CMO slot, 담보비율, 보험금 상계, 데이터 수수료, QC service credit, waterfall",
+    "risk_level": "최상",
+    "business_sector": "바이오 공급망 금융 / 생산권 담보 대출",
+    "section_rotation": "임상 리스크와 공급망 금융 후반",
+    "success_pattern": "현금과 특허 대신 생산권, 보험금, 데이터 수수료, slot credit을 담보 순서로 만든다.",
+    "opening_progression": {
+      "public_signboard_event": "운전자금이 마른 바이오 벤처들이 은행 대출 거절 뒤 태오바이오에 자금 요청서를 보낸다.",
+      "representative_reevaluation": "은행과 벤처들은 태오를 돈 많은 투자자가 아니라 생산권 자체를 담보로 가격화하는 금융 운영자로 다시 본다.",
+      "next_battlefield_ticket": "생산권 담보 대출 표준계약과 900억 commitment가 바이오 은행 조건표로 확장된다."
+    },
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "production_right_secured_lending_receipt",
+      "receipt_line": "태오는 CMO slot, 보험금, 데이터 수수료, 생산권 회수 waterfall을 묶어 생산권 담보 대출 표준계약과 900억 commitment 운영권을 확보한다.",
+      "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "현금과 특허 대신 생산권, 보험금, 데이터 수수료, slot credit을 담보 순서로 만든다.",
+      "recognition_signal": "상업은행 여신팀의 시선 변화: 태오의 생산권 담보 표준계약을 보고 공동대출 여부를 검토해야 하는 후발 주자",
+      "reward_signal": "태오는 CMO slot, 보험금, 데이터 수수료, 생산권 회수 waterfall을 묶어 생산권 담보 대출 표준계약과 900억 commitment 운영권을 확보한다.",
+      "growth_signal": "보험료와 실패 자산을 가격화하는 사람에서 바이오 대출의 담보 순서와 집행 방식을 정하는 금융 운영자로 올라선다.",
+      "expectation_signal": "생산권 담보 대출 표준계약과 900억 commitment가 바이오 은행 조건표로 확장된다.",
+      "reader_feel": "독자는 「생산권이 담보다」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 태오는 CMO slot, 보험금, 데이터 수수료, 생산권 회수 waterfall을 묶어 생산권 담보 대출 표준계약과 900억 commitment 운영권을 확보한다. 성장 장면: 보험료와 실패 자산을 가격화하는 사람에서 바이오 대출의 담보 순서와 집행 방식을 정하는 금융 운영자로 올라선다. 다음 기대감: 생산권 담보 대출 표준계약과 900억 commitment가 바이오 은행 조건표로 확장된다.",
+      "mature_success_signal": "강태오는 생산권이 담보다의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "현금과 특허 대신 생산권, 보험금, 데이터 수수료, slot credit을 담보 순서로 만든다.",
+        "recognition": "상업은행 여신팀의 시선 변화: 태오의 생산권 담보 표준계약을 보고 공동대출 여부를 검토해야 하는 후발 주자",
+        "reward": "태오는 CMO slot, 보험금, 데이터 수수료, 생산권 회수 waterfall을 묶어 생산권 담보 대출 표준계약과 900억 commitment 운영권을 확보한다.",
+        "growth": "보험료와 실패 자산을 가격화하는 사람에서 바이오 대출의 담보 순서와 집행 방식을 정하는 금융 운영자로 올라선다.",
+        "expectation": "생산권 담보 대출 표준계약과 900억 commitment가 바이오 은행 조건표로 확장된다.",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 상업은행 여신팀의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 생산권 담보 대출 표준계약과 900억 commitment가 바이오 은행 조건표로 확장된다."
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "보험료가 낮아지고 실패 파이프라인의 회수 패키지가 만들어지자, 자금이 마른 바이오 벤처들이 태오바이오에 운전자금을 요청한다. 은행은 특허 감정가와 대표 연대보증을 요구하고, 벤처들은 현금을 달라고 한다. 태오는 현금만 빌려주면 실패한 구조가 반복된다는 걸 안다.",
+      "proof_action": "태오는 대출 심사의 첫 줄을 현금 담보가 아니라 생산권 담보로 바꾼다. 첫 사건 beat는 보험료 산식 공동검증권과 조기경보 dashboard를 담보비율 산정표에 넣어, 보험료가 낮고 생산 log가 안정적인 회사만 낮은 금리를 받게 만드는 장면이다.",
+      "proof_axis": "생산권 담보, CMO slot, 담보비율, 보험금 상계, 데이터 수수료, QC service credit, waterfall",
+      "recognition_or_resistance_signal": "상업은행 여신팀 -> 태오의 생산권 담보 표준계약을 보고 공동대출 여부를 검토해야 하는 후발 주자",
+      "receipt_asset": "태오는 CMO slot, 보험금, 데이터 수수료, 생산권 회수 waterfall을 묶어 생산권 담보 대출 표준계약과 900억 commitment 운영권을 확보한다.",
+      "reward_asset_classes": [
+        "cdmo_slot"
+      ],
+      "next_regulated_gate": "생산권 담보 대출 표준계약과 900억 commitment가 바이오 은행 조건표로 확장된다.",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 상업은행 여신팀의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 생산권 담보 대출 표준계약과 900억 commitment가 바이오 은행 조건표로 확장된다.",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "business_memory",
+    "timeline_knowledge": "태오는 전생에서 바이오 대출이 특허 담보와 대표 보증에만 묶여 생산 중단 순간 회수율이 무너졌던 흐름을 기억한다.",
+    "butterfly_effect": "생산권 담보 대출이 등장하며 바이오 기업들은 은행 여신보다 생산 slot과 보험료 산식을 먼저 관리하게 된다.",
+    "death_flag": false,
+    "regression_hint": "태오가 차주의 현금잔고보다 CMO slot 배정표와 보험금 지급 순서를 먼저 보는 행동으로만 암시한다.",
+    "future_prep": "생산권 담보 표준계약은 바이오 은행 조건표와 산업 표준위원회 논쟁의 원본이 된다."
+  },
+  "block_no": 59,
+  "foreshadow_targets": [
+    {
+      "target_block": 60,
+      "target_event": "바이오 은행"
+    },
+    {
+      "target_block": 61,
+      "target_event": "표준위원회 초대장"
+    },
+    {
+      "target_block": 62,
+      "target_event": "빅파마의 단가표"
+    }
+  ],
+  "callback_sources": [
+    {
+      "source_block": 58,
+      "source_event": "데이터 보험료"
+    },
+    {
+      "source_block": 57,
+      "source_event": "실패한 파이프라인"
+    },
+    {
+      "source_block": 56,
+      "source_event": "IB의 밸류에이션"
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "block_id": "Block 38",
+  "title": "대기업의 합작 제안",
+  "content": {
+    "context": "반도체 소재 샘플 평가권까지 얻자 국내 화학 대기업은 태오를 더 이상 작은 제약공장 투자자로 보지 않는다. 그들은 합작회사 제안서를 들고 와 지분, 설비, 영업망을 약속하지만, 부속 계약서에는 API와 반도체 소재의 우선공급권, 기술이전 폴더 접근권, clean-pack SOP 사용권이 대기업 쪽으로 넘어가게 되어 있다.",
+    "event_villain": "태오의 현금은 2천 7백만까지 줄어 있고, 은행은 대기업 이름이 붙으면 신용한도가 열린다고 압박한다. 대기업 사업개발팀은 51% 지분을 가져가는 대신 즉시 20억을 넣겠다고 제안하며, 이사회에는 '이 기회를 놓치면 샘플 평가권도 무의미하다'는 말이 돈다.",
+    "solution": "태오는 합작을 거절하지 않는다. 대신 합작의 중심을 지분에서 공급권으로 바꾼다. 첫 사건 beat는 대기업 제안서의 51% 지분 조항 옆에 샘플 평가권과 기술이전 체크리스트를 붙여, 돈을 받는 순간 문서 주도권을 잃는 구조를 이사회 앞에서 드러내는 장면이다. 둘째 beat는 태오가 20억 투자를 선급 구매보증금과 설비사용 보증금으로 쪼개고, 지분은 옵션으로 미루며 5년 API/소재 우선공급권, capacity window, 감사권을 먼저 계약서 첫 장에 올리는 장면이다.",
+    "reward": "태오는 5년 API/소재 우선공급 LOI, 대기업 파일럿 설비 월 3일 capacity window, 기술이전 폴더 공동감사권, clean-pack SOP 사용범위 제한권, 2억 원 선급 구매보증금을 얻는다. 대기업은 합작 테이블에 들어오지만 지분으로 태오바이오의 공급권을 삼키지는 못한다."
+  },
+  "stakes": "현금이 바닥나는 순간 지분 중심 합작을 받아들이면 쌓은 원료, 품질문서, 반도체 소재 평가권이 모두 대기업의 부속권리로 흡수된다.",
+  "power_shift": {
+    "protagonist": "자금 압박을 받는 사업자에서 지분보다 공급권을 먼저 계약서에 올리는 협상 설계자로 올라선다.",
+    "antagonist": "국내 화학 대기업은 돈으로 지분과 문서권을 동시에 가져가려던 계획을 접고, 공급권 조건을 먼저 받아들여야 한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "국내 화학 대기업 사업개발팀",
+      "before": "합작 자금으로 지분과 기술문서를 장악하려는 상대",
+      "after": "태오가 설계한 공급권 우선 LOI 안으로 들어온 제한 파트너",
+      "anchor_before": "설비 사용료는 받되 결과 보고서 권리는 넘겨받지 못한 제한 파트너"
+    },
+    {
+      "target": "태오바이오 이사회",
+      "before": "현금 부족 때문에 51% 지분 제안을 진지하게 흔들리는 내부 압박",
+      "after": "선급 구매보증금과 우선공급권 구조를 보고 태오의 협상안을 지지하는 감시자"
+    },
+    {
+      "target": "거래은행 심사역",
+      "before": "대기업 지분 참여가 있어야 신용한도가 열린다고 보는 금융기관",
+      "after": "선급 구매보증금과 5년 공급 LOI를 담보성 현금흐름으로 검토하는 파트너",
+      "anchor_before": "창고 슬롯과 출고권이 붙은 원료재고를 별도 담보로 검토하는 금융 파트너"
+    }
+  ],
+  "foreshadow": [
+    "5년 API/소재 우선공급 LOI는 원료 우선권에서 완제약 생산권보다 선순위인 원료 배정 규정으로 바뀐다.",
+    "대기업 파일럿 설비 capacity window는 소재 공급권 결산에서 기업가치 평가의 생산능력 근거가 된다.",
+    "clean-pack SOP 사용범위 제한권은 반도체 소재 공급권이 대기업 내부 표준으로 흡수되지 않게 막는 방패가 된다."
+  ],
+  "callback": [
+    "반도체 소재 샘플 평가권이 합작 협상에서 공급권 우선의 압박 카드가 된다.",
+    "기술이전 체크리스트 초안권이 대기업 제안서의 문서권 이전 조항을 드러내는 근거가 된다.",
+    "원료재고 담보 term sheet 경험은 선급 구매보증금을 담보성 현금흐름으로 설명하는 방식에 재사용된다."
+  ],
+  "emotional_beat": {
+    "protagonist_feeling": "태오는 현금이 부족한 손을 감추지 않는다. 대신 그 부족함을 지분을 팔 이유가 아니라 공급권을 먼저 팔아야 할 이유로 바꾼다.",
+    "reader_catharsis": "대기업이 돈으로 모든 권리를 삼키려 할 때, 주인공이 합작서 첫 장을 지분표에서 공급권표로 바꾸는 사이다."
+  },
+  "tension_level": 9,
+  "pov_character": "강태오",
+  "location": {
+    "place": "태오바이오 이사회실과 국내 화학 대기업 사업개발 회의실",
+    "type": "joint_venture_supply_right_negotiation",
+    "macro_battlefield": "지분 중심 합작을 공급권 중심 합작으로 재작성"
+  },
+  "time_span": {
+    "duration": "5일",
+    "in_story_time": "2001년 6월 초"
+  },
+  "genre_ext": {
+    "capital_before": "2천 7백만 + 원료 한 드럼 우선 배정권 + 90일 지역 물류창고 전용 슬롯 + lot별 품질성적서 사본권 + 첫 출고 지시권 + 재고담보 사전검토권 + 부평 2공장 생산 슬롯 보호 메모 + 비침해 생산계획 검토권 + 파일럿 배치 1회 잔여 슬롯 + 공정변경 QA 문서 사본권 + 법무 사전검토 메모 접근권 + A급 중간체 6개월 우선공급권 + 톤당 가격밴드 계약 + 불순물 프로파일 선제 제출권 + 2회 분할입고권 + 원료재고 담보 term sheet + 대체 합성 라인 1회 검증권 + dual-source 원료 조항 + 품질성적서 비교 프로토콜 + 기술이전 폴더 열람권 + 부평 2공장 명의 파일럿 검증 보고서 작성권 + 12개월 필터/배지 예약 배정권 + 2차 공급사 적격성 평가권 + 필터 lot 성능검증 프로토콜 재사용권 + 검증자료 사본권 + 멸균 라인 2일 생산 슬롯 보호 확약 + 소형 화학공장 야간 파일럿 3회 사용권 + batch record 작성권 + 편차기록 사본권 + 기술이전 체크리스트 초안권 + QA 동행검토권 + 반도체 소재 샘플 2회 평가권 + clean-pack SOP 초안권 + particle/metal ion 데이터 사본권 + 특수가스 필터 사전시험 슬롯 + 클린룸 포장재 lot 추적권",
+    "capital_after": "2억 2천만 + 원료 한 드럼 우선 배정권 + 90일 지역 물류창고 전용 슬롯 + lot별 품질성적서 사본권 + 첫 출고 지시권 + 재고담보 사전검토권 + 부평 2공장 생산 슬롯 보호 메모 + 비침해 생산계획 검토권 + 파일럿 배치 1회 잔여 슬롯 + 공정변경 QA 문서 사본권 + 법무 사전검토 메모 접근권 + A급 중간체 6개월 우선공급권 + 톤당 가격밴드 계약 + 불순물 프로파일 선제 제출권 + 2회 분할입고권 + 원료재고 담보 term sheet + 대체 합성 라인 1회 검증권 + dual-source 원료 조항 + 품질성적서 비교 프로토콜 + 기술이전 폴더 열람권 + 부평 2공장 명의 파일럿 검증 보고서 작성권 + 12개월 필터/배지 예약 배정권 + 2차 공급사 적격성 평가권 + 필터 lot 성능검증 프로토콜 재사용권 + 검증자료 사본권 + 멸균 라인 2일 생산 슬롯 보호 확약 + 소형 화학공장 야간 파일럿 3회 사용권 + batch record 작성권 + 편차기록 사본권 + 기술이전 체크리스트 초안권 + QA 동행검토권 + 반도체 소재 샘플 2회 평가권 + clean-pack SOP 초안권 + particle/metal ion 데이터 사본권 + 특수가스 필터 사전시험 슬롯 + 클린룸 포장재 lot 추적권 + 5년 API/소재 우선공급 LOI + 대기업 파일럿 설비 월 3일 capacity window + 기술이전 폴더 공동감사권 + clean-pack SOP 사용범위 제한권 + 2억 원 선급 구매보증금",
+    "capital_delta": "+1억 9천 3백만 현금성 보증금, +5년 API/소재 우선공급 LOI, +대기업 설비 capacity window, +공동감사권, +SOP 사용범위 제한권",
+    "profit_loss": "지분 51%를 넘기지 않고 선급 구매보증금 2억 원을 확보해 현금 압박을 풀며 공급권을 보존한다.",
+    "method": "대기업 합작서를 지분표가 아니라 선급 구매보증금, capacity window, 우선공급권, 감사권 중심으로 재작성한다.",
+    "investment_type": "선급 구매보증금 수취 + 설비사용권 협상",
+    "deal_type": "공급권 우선 합작 LOI",
+    "leverage_used": "반도체 소재 평가권, 기술이전 체크리스트, 원료재고 담보 term sheet",
+    "opponent": {
+      "name": "국내 화학 대기업",
+      "type": "API/정밀소재 공급권 합작 복합 압박 세력",
+      "weakness_exploited": "API/정밀소재 공급권 합작의 병목을 문서·권리·책임선으로 잠그는 강태오의 방식을 과소평가한다."
+    },
+    "time_pressure": "현금 소진과 은행 신용한도 심사 전 5일",
+    "knowledge_used": "합작회사 지분조항, 선급 구매보증금, capacity window, 기술이전 감사권, 우선공급 LOI",
+    "risk_level": "상",
+    "business_sector": "API/정밀소재 공급권 합작",
+    "section_rotation": "원료의약품과 정밀화학 후반",
+    "success_pattern": "현금 압박을 지분 매각으로 풀지 않고 공급권 선판매와 설비 창구 확보로 전환한다.",
+    "opening_progression": {
+      "public_signboard_event": "국내 화학 대기업이 20억 투자와 51% 지분을 묶은 합작 제안서를 제출한다.",
+      "representative_reevaluation": "이사회와 은행은 태오를 돈 앞에서 버티는 사람보다 돈의 형식을 공급권으로 바꾸는 협상가로 다시 본다.",
+      "next_battlefield_ticket": "5년 API/소재 우선공급 LOI가 원료 우선권과 완제약 생산권의 선후순위 전장으로 이어진다."
+    },
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "supply_right_first_joint_venture_loi_receipt",
+      "receipt_line": "태오는 51% 지분 제안서를 5년 API/소재 우선공급 LOI와 2억 원 선급 구매보증금으로 다시 쓰게 만든다.",
+      "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "현금 압박을 지분 매각으로 풀지 않고 공급권 선판매와 설비 창구 확보로 전환한다.",
+      "recognition_signal": "국내 화학 대기업 사업개발팀의 시선 변화: 태오가 설계한 공급권 우선 LOI 안으로 들어온 제한 파트너",
+      "reward_signal": "태오는 51% 지분 제안서를 5년 API/소재 우선공급 LOI와 2억 원 선급 구매보증금으로 다시 쓰게 만든다.",
+      "growth_signal": "자금 압박을 받는 사업자에서 지분보다 공급권을 먼저 계약서에 올리는 협상 설계자로 올라선다.",
+      "expectation_signal": "5년 API/소재 우선공급 LOI가 원료 우선권과 완제약 생산권의 선후순위 전장으로 이어진다.",
+      "reader_feel": "독자는 「대기업의 합작 제안」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 태오는 51% 지분 제안서를 5년 API/소재 우선공급 LOI와 2억 원 선급 구매보증금으로 다시 쓰게 만든다. 성장 장면: 자금 압박을 받는 사업자에서 지분보다 공급권을 먼저 계약서에 올리는 협상 설계자로 올라선다. 다음 기대감: 5년 API/소재 우선공급 LOI가 원료 우선권과 완제약 생산권의 선후순위 전장으로 이어진다.",
+      "mature_success_signal": "강태오는 대기업의 합작 제안의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "현금 압박을 지분 매각으로 풀지 않고 공급권 선판매와 설비 창구 확보로 전환한다.",
+        "recognition": "국내 화학 대기업 사업개발팀의 시선 변화: 태오가 설계한 공급권 우선 LOI 안으로 들어온 제한 파트너",
+        "reward": "태오는 51% 지분 제안서를 5년 API/소재 우선공급 LOI와 2억 원 선급 구매보증금으로 다시 쓰게 만든다.",
+        "growth": "자금 압박을 받는 사업자에서 지분보다 공급권을 먼저 계약서에 올리는 협상 설계자로 올라선다.",
+        "expectation": "5년 API/소재 우선공급 LOI가 원료 우선권과 완제약 생산권의 선후순위 전장으로 이어진다.",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 국내 화학 대기업 사업개발팀의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 5년 API/소재 우선공급 LOI가 원료 우선권과 완제약 생산권의 선후순위 전장으로 이어진다."
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "반도체 소재 샘플 평가권까지 얻자 국내 화학 대기업은 태오를 더 이상 작은 제약공장 투자자로 보지 않는다. 그들은 합작회사 제안서를 들고 와 지분, 설비, 영업망을 약속하지만, 부속 계약서에는 API와 반도체 소재의 우선공급권, 기술이전 폴더 접근권, clean-pack SOP 사용권이 대기업 쪽으로 넘어가게 되어 있다.",
+      "proof_action": "태오는 합작을 거절하지 않는다. 대신 합작의 중심을 지분에서 공급권으로 바꾼다. 첫 사건 beat는 대기업 제안서의 51% 지분 조항 옆에 샘플 평가권과 기술이전 체크리스트를 붙여, 돈을 받는 순간 문서 주도권을 잃는 구조를 이사회 앞에서 드러내는 장면이다.",
+      "proof_axis": "합작회사 지분조항, 선급 구매보증금, capacity window, 기술이전 감사권, 우선공급 LOI",
+      "recognition_or_resistance_signal": "국내 화학 대기업 사업개발팀 -> 태오가 설계한 공급권 우선 LOI 안으로 들어온 제한 파트너",
+      "receipt_asset": "태오는 51% 지분 제안서를 5년 API/소재 우선공급 LOI와 2억 원 선급 구매보증금으로 다시 쓰게 만든다.",
+      "reward_asset_classes": [
+        "batch_record",
+        "quality_responsibility",
+        "raw_materials",
+        "contract_right"
+      ],
+      "next_regulated_gate": "5년 API/소재 우선공급 LOI가 원료 우선권과 완제약 생산권의 선후순위 전장으로 이어진다.",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 국내 화학 대기업 사업개발팀의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 5년 API/소재 우선공급 LOI가 원료 우선권과 완제약 생산권의 선후순위 전장으로 이어진다.",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "business_memory",
+    "timeline_knowledge": "태오는 전생에서 작은 기술회사가 대기업 합작금에 문서권과 공급권을 함께 넘겨 성장 상한이 막힌 사례를 기억한다.",
+    "butterfly_effect": "합작을 거절하지 않고 조건을 공급권 중심으로 바꾸면서 현금은 확보하되 태오바이오의 원료/소재 권리 축은 보존된다.",
+    "death_flag": false,
+    "regression_hint": "태오가 51%라는 숫자를 보자마자 부속 계약서부터 넘기는 행동으로만 암시한다.",
+    "future_prep": "우선공급 LOI와 capacity window가 원료 우선권 및 결산 가치평가의 핵심 근거가 된다."
+  },
+  "block_no": 38,
+  "foreshadow_targets": [
+    {
+      "target_block": 39,
+      "target_event": "원료 우선권"
+    },
+    {
+      "target_block": 40,
+      "target_event": "소재가 산업을 고른다"
+    }
+  ],
+  "callback_sources": [
+    {
+      "source_block": 37,
+      "source_event": "반도체 클린룸의 냄새"
+    },
+    {
+      "source_block": 36,
+      "source_event": "화학공장 밤샘 시험"
+    },
+    {
+      "source_block": 33,
+      "source_event": "중간체의 계절"
+    }
+  ]
+}

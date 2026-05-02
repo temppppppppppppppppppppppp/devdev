@@ -1,0 +1,152 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "52",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 052 draft only. Waiting-room production continuation; not root canonical, not BI, not immediate-use.",
+  "blocks": [
+    {
+      "block_id": "Block 52",
+      "block_no": 52,
+      "title": "권리 묶음 가격표",
+      "episode_span_intent": "2~6화 분량. 제조사별 권리 scoring, 가격표 표준화, 상대의 무료 견적 요구, 도윤의 검토착수금/성공수수료/우선권 조항 확보를 압축한다.",
+      "content": {
+        "context": "문의 파일이 쌓이자 제조사들은 다음 질문을 한다. 그래서 얼마에 처리됩니까. 도윤은 그 질문이 위험하다는 걸 안다. 가격을 먼저 말하면 무료 견적서가 된다. 그는 가격표를 만들되 숫자만 적지 않는다. 폐기권, 유휴 라인, 미수채권, 보증 책임, 고객 이탈 위험, 처리 성공분 수수료를 묶은 권리 bundle 표다.",
+        "event_villain": "첫 번째 사건은 무료 견적 요구다. 한빛생활은 파일을 보냈으니 대략적인 회수 가능액만 알려 달라고 한다. 도윤은 거절한다. 회수 가능액은 도윤권리운영의 판단 자산이다. 대신 검토착수금, 자료 완결도 등급, 성공수수료, 60일 우선협상권을 포함한 가격표 초안을 보낸다.",
+        "second_incident": "두 번째 사건은 내부 반발이다. 세오전자는 성공수수료가 높다고 반발하고, 영진팩토리는 우선협상권이 과하다고 한다. 도윤은 가격을 깎지 않는다. 자료 완결도가 높으면 착수금을 낮추고, 권리 독점 기간이 길면 성공수수료를 낮춘다. 상대가 무엇을 아끼려는지에 따라 다른 권리를 더 내놓게 만든다.",
+        "solution": "도윤은 하나의 단가표가 아니라 교환식 가격표를 만든다. 착수금, 성공수수료, 우선협상 기간, 자료 접근권, 현장 검수권, 고객 원장 열람권. 제조사가 현금을 아끼면 접근권을 더 내고, 접근권을 아끼면 수수료를 더 낸다. 권리 묶음 가격표 v1이 생긴다.",
+        "reward": "블록 끝에서 도윤은 첫 계약을 아직 따내지 않는다. 대신 권리 묶음 가격표 v1, 검토착수금 조항, 성공수수료 band, 60일 우선협상권 표준문구, 자료 완결도 등급표, 현장 검수권 옵션표를 얻는다. 도윤은 말한다. 가격은 숫자가 아니라 상대가 포기한 권리의 이름입니다."
+      },
+      "stakes": "가격표 없이 개별 견적을 해 주면 도윤의 판단력이 무료로 빠져나간다. 표준 가격표를 세워야 금융권 담보 제안과 회수권 우선순위 협상이 가능하다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "한빛생활이 무료 회수 가능액 견적을 요구하자, 도윤이 검토착수금과 우선협상권이 붙은 가격표 초안으로 되돌림",
+        "incident_2": "제조사들이 수수료와 우선권에 반발하자, 도윤이 현금/접근권/기간을 교환하는 가격표 구조로 바꿈",
+        "next_actionable_gate": "금융권 채권 포트폴리오 담보 제안, 착수금 계좌, 회수권 우선순위, 플랫폼 정산 인프라 gate",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 회수 가능액을 무료로 알려 주지 않는다. 자기 판단을 가격표와 우선협상권으로 묶어야 권리 운영 사업이 된다.",
+        "morality_position": "제조사 손실을 줄이는 표처럼 보이지만 핵심은 도윤권리운영의 검토 시간과 판단 권한을 유료화하는 것이다.",
+        "efficiency_choice": "개별 협상 대신 교환식 가격표로 현금, 접근권, 기간을 빠르게 환산한다."
+      },
+      "power_shift": {
+        "protagonist": "중소 제조사 권리 pipeline과 접수 요건표를 가진 권리 접수 운영자 -> 권리 묶음 가격표와 검토착수금 구조를 가진 표준화 운영자",
+        "antagonist": "한빛생활/세오전자/영진팩토리: 무료 견적 요구자 / 수수료 반발자 -> 착수금이나 접근권 중 하나를 내야 하는 제조사 거래 상대",
+        "system": "권리 문의 접수 원장과 제출 요건표 -> 권리 묶음 가격표 v1 + 검토착수금 조항 + 성공수수료 band + 60일 우선협상권 표준문구 + 자료 완결도 등급표 + 현장 검수권 옵션표"
+      },
+      "relationship_delta": [
+        {
+          "target": "한빛생활",
+          "before": "불완전 파일 제출자 중 하나",
+          "after": "무료 견적 요구가 검토착수금 조항으로 되돌아오는 제조사"
+        },
+        {
+          "target": "세오전자",
+          "before": "불완전 파일 제출자 중 하나",
+          "after": "성공수수료 반발로 현장 검수권 옵션을 더 내놓게 되는 제조사"
+        },
+        {
+          "target": "영진팩토리",
+          "before": "60일 우선 운영권 검토 대상으로 전환되는 제조사",
+          "after": "우선협상 기간과 수수료 band를 두고 협상하는 제조사"
+        }
+      ],
+      "foreshadow": [
+        "금융권 담보 제안",
+        "회수권 우선순위",
+        "착수금 계좌",
+        "데이터 표준 초안"
+      ],
+      "callback": [
+        "제출 요건표가 자료 완결도 등급표로 회수됨",
+        "무료 자문 금지 문구가 검토착수금 조항으로 회수됨",
+        "영진팩토리 우선 운영권 검토서가 표준 우선협상권 문구로 회수됨"
+      ],
+      "emotional_beat": {
+        "type": "pricing_standardization",
+        "intensity": 7
+      },
+      "tension_level": 7,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "도윤권리운영 가격표 회의 / 제조사 화상 협상 / 권리 접수 원장",
+        "type": "가격표 / 제조사 협상 / 권리 표준"
+      },
+      "time_span": {
+        "duration": "5일",
+        "in_story_time": "2026년 12월 둘째 주"
+      },
+      "genre_ext": {
+        "capital_before": "중소 제조사 권리 문의 3건 접수 원장 + 폐기권/유휴 라인 제출 요건표 + 영진팩토리 60일 우선 운영권 검토서 + 무료 자문 금지 문구 + 권리 pipeline scoring gate",
+        "capital_after": "권리 묶음 가격표 v1 + 검토착수금 조항 + 성공수수료 band + 60일 우선협상권 표준문구 + 자료 완결도 등급표 + 현장 검수권 옵션표",
+        "capital_delta": "권리 pipeline 원장을 가격표, 착수금, 성공수수료, 우선협상권 표준문구로 전환",
+        "profit_loss": "착수금 수익 gate 개방. 아직 대규모 현금 수익은 없음",
+        "method": "무료 견적 요구를 착수금과 접근권 교환표로 바꿔 판단 자산을 유료화",
+        "deal_type": "rights bundle pricing / review retainer / standard option sheet",
+        "leverage_used": [
+          "권리 접수 원장",
+          "제출 요건표",
+          "제조사 문의 3건",
+          "생산권 receipt",
+          "유지보수 MSA 경험"
+        ],
+        "opponent": {
+          "name": "한빛생활/세오전자/영진팩토리",
+          "type": "무료 견적 요구자 / 수수료 반발자",
+          "weakness_exploited": "제조사가 현금을 아끼려 할수록 접근권과 우선협상권을 더 내줘야 한다는 점"
+        },
+        "time_pressure": "문의가 늘며 무료 견적이 반복되기 전 표준 가격표를 고정해야 함",
+        "risk_level": "고위험",
+        "business_sector": "권리 가격표 / 착수금 / 표준계약",
+        "section_rotation": "ARC-06 standardization turn",
+        "success_pattern": "계약 체결 전에도 가격표와 착수금 조항으로 도윤 판단력을 권리화하는 준비 승리",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "rights_pricing_table_and_retainer_clause",
+          "receipt_line": "가격은 숫자가 아니라 상대가 포기한 권리의 이름입니다.",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "권리 묶음 가격표",
+          "검토착수금 조항",
+          "우선협상권 표준문구"
+        ],
+        "document_evidence": [
+          "가격표 v1",
+          "성공수수료 band",
+          "자료 완결도 등급표",
+          "현장 검수권 옵션표"
+        ],
+        "field_validation": [
+          "착수금 조항 설정",
+          "60일 우선협상권 표준화",
+          "자료 완결도 등급화"
+        ],
+        "witness_carrier": [
+          "한빛생활 무료 견적 요구",
+          "세오전자 수수료 반발",
+          "영진팩토리 우선권 협상"
+        ],
+        "receipt": [
+          "권리 묶음 가격표 v1",
+          "검토착수금 조항",
+          "성공수수료 band",
+          "60일 우선협상권 표준문구",
+          "자료 완결도 등급표",
+          "현장 검수권 옵션표"
+        ],
+        "next_gate": "금융권 채권 포트폴리오 담보 제안, 착수금 계좌, 회수권 우선순위, 플랫폼 정산 인프라 gate"
+      },
+      "foreshadow_targets": [
+        53,
+        54,
+        55
+      ]
+    }
+  ]
+}

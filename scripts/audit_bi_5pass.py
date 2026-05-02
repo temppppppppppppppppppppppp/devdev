@@ -27,18 +27,25 @@ from modules.core.response_schemas import (  # noqa: E402 - entrypoint path boot
     validate_treatment_canonical_structure,
     validate_treatment_structure,
 )
-from modules.core.stage0_handoff import normalize_bible_to_canonical_view, normalize_treatment_to_canonical_view
-from modules.core.work_identity_surface import as_text, resolve_phase0_work_identity_surface, unique_preserve_order
+from modules.core.stage0_handoff import (  # noqa: E402 - entrypoint path bootstrap must precede imports
+    normalize_bible_to_canonical_view,
+    normalize_treatment_to_canonical_view,
+)
+from modules.core.work_identity_surface import (  # noqa: E402 - entrypoint path bootstrap must precede imports
+    as_text,
+    resolve_phase0_work_identity_surface,
+    unique_preserve_order,
+)
 
-GARBLED_RE = re.compile(r"\?{2,}|�|\ufffd")
+GARBLED_RE = re.compile(r"\?{2,}|\uFFFD")
 META_REF_RE = re.compile(
     r"(?<![A-Za-z])(?:"
-    r"B\d{1,3}(?:\s*[~→\-]\s*B?\d{1,3})*|"
+    r"B\d{1,3}(?:\s*[~→\-]\s*B?\d{1,3})*|"  # utf8-hygiene: allow-line rationale: regex optional quantifier, not mojibake
     r"Block\s+\d{1,3}|블록\s*\d{1,3}|"
-    r"ARC[-\s]?\d{1,3}|Arc\s+\d{1,3}|아크\s*\d{1,3}|"
+    r"ARC[-\s]?\d{1,3}|Arc\s+\d{1,3}|아크\s*\d{1,3}|"  # utf8-hygiene: allow-line rationale: regex optional quantifier, not mojibake
     r"Phase\s+\d{1,3}|페이즈\s*\d{1,3}|"
     r"Stage\s+\d{1,3}|스테이지\s*\d{1,3}"
-    r")(?:에서의|에서|와의|과의|와|과|보다|의|으로|로|은|는|이|가|를|을|에|도|만)?(?![A-Za-z])",
+    r")(?:에서의|에서|와의|과의|와|과|보다|의|으로|로|은|는|이|가|를|을|에|도|만)?(?![A-Za-z])",  # utf8-hygiene: allow-line rationale: regex optional quantifier, not mojibake
     re.IGNORECASE,
 )
 ALLOWED_META_KEYS = {
@@ -124,7 +131,10 @@ def parse_eok(raw: Any) -> int | None:
     if not isinstance(raw, str):
         return None
     text = raw.replace(" ", "")
-    match = re.fullmatch(r"(?:(\d+)조)?(?:(\d+)억)?", text)
+    match = re.fullmatch(
+        r"(?:(\d+)조)?(?:(\d+)억)?",  # utf8-hygiene: allow-line rationale: regex optional quantifier, not mojibake
+        text,
+    )
     if not match:
         return None
     jo = int(match.group(1) or 0)
@@ -212,13 +222,11 @@ def sample_fields(bi: dict[str, Any]) -> list[tuple[str, str]]:
         ("FinanceHUD.actual_truth.final_goal", actual["final_goal"]),
         ("WorldState.CurrentEra", world["CurrentEra"]),
         ("WorldState.CurrentLocation", world["CurrentLocation"]),
-        ("KeyNPCs[0].name", key_npcs[0]["name"]),
-        ("KeyNPCs[1].name", key_npcs[1]["name"]),
-        ("KeyNPCs[2].name", key_npcs[2]["name"]),
-        ("plot_roadmap[0].title", roadmap[0]["title"]),
-        ("plot_roadmap[34].title", roadmap[34]["title"]),
-        ("plot_roadmap[69].title", roadmap[69]["title"]),
     ]
+    samples.extend((f"KeyNPCs[{idx}].name", entry["name"]) for idx, entry in enumerate(key_npcs[:3]))
+    for idx in (0, 34, 69):
+        if idx < len(roadmap):
+            samples.append((f"plot_roadmap[{idx}].title", roadmap[idx]["title"]))
     return samples
 
 

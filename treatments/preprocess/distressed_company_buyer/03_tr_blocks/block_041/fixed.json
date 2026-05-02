@@ -1,0 +1,140 @@
+{
+  "block_id": "Block 41",
+  "title": "허가번호는 재고보다 비싸다",
+  "content": {
+    "context": "세원메디링크 data-room 72시간 초대권이 열리자 리턴브릿지 대표는 73건 의료기기 소모품 반품을 비싼 재고로 본다. 도윤은 재고 박스를 보지 않는다. data-room 첫 화면에는 허가번호, 제조번호, 유통기한, 병원 유지보수 콜 이력, 리콜 보험 특약, 소모품 반복 발주 코드가 따로 떠 있다. 겉으로는 부도 직전 유통사지만, 아직 죽지 않은 것은 창고 재고가 아니라 병원과 식약처 시스템이 읽는 번호다.",
+    "event_villain": "세원메디링크 대표는 도윤에게 의료기기 소모품 재고 73건을 할인 매입하라고 유도한다. 병원 구매팀은 허가 이전이 확인되지 않은 물량은 쓰지 않겠다고 하고, 규제 대응 브로커는 급하면 허가 명의를 우회해 줄 수 있다고 접근한다. 보험사 문지훈은 리콜 보험 특약이 살아 있어도 제조번호와 chain-of-custody가 맞지 않으면 claim은 바로 죽는다고 선을 긋는다. 도윤이 재고 가격에 끌려가면 허가, 보험, 유지보수 콜을 모두 잃는다.",
+    "solution": "도윤은 재고 매입 제안을 거절하고 data-room 열람 범위를 바꾼다. 그는 73건 물량 중 허가번호와 제조번호가 병원 납품 기록과 맞는 51건, 멸균 포장 훼손 가능성이 있는 14건, 제조사 리콜 notice와 겹치는 8건을 따로 표시한다. 문지훈에게는 리콜 보험 특약의 claim trigger를 확인하게 하고, 세원메디링크에는 재고 양도가 아니라 허가번호-제조번호 대조표, 유지보수 콜 이력, 병원별 소모품 발주 코드의 48시간 read-only export token을 요구한다. 대신 도윤 SPV는 sealed hold shelf와 온도·습도 log를 계속 유지한다.",
+    "reward": "세원메디링크는 재고 매각을 보류하지만, 허가번호-제조번호 대조표 51건, 리콜 notice 겹침 8건, 병원 유지보수 콜 이력 27건, 병원별 소모품 발주 코드 9개를 data-room read-only export token으로 열어 준다. 문지훈은 리콜 보험 특약 예비 검토 메일을 보내고, 플랫폼 정산팀은 73건 sealed hold right의 10일 보류를 유지한다. 도윤은 의료기기 재고를 산 게 아니다. 허가번호, 제조번호, 유지보수 콜, 리콜 보험 특약이라는 살아 있는 권리의 목차를 샀다."
+  },
+  "incident_beats": [
+    "세원메디링크 대표와 규제 대응 브로커가 재고 할인 매입과 허가 명의 우회를 유도하고, 문지훈은 제조번호와 chain-of-custody 불일치 시 claim이 죽는다고 경고한다",
+    "도윤이 73건을 허가번호 일치 51건, 멸균 훼손 가능 14건, 리콜 notice 겹침 8건으로 분리하고 재고가 아닌 권리 data export를 요구한다",
+    "허가번호-제조번호 대조표, 유지보수 콜 이력 27건, 병원별 소모품 발주 코드 9개, 리콜 보험 특약 예비 검토 메일, sealed hold 유지 receipt가 확보된다"
+  ],
+  "stakes": "재고를 싸게 사면 도윤은 규제 품목을 무허가 창고에서 만진 사람이 된다. 반대로 data-room gate를 놓치면 해당 아크에서 얻은 sealed hold와 bridge option 조건이 단순 보류로 끝난다. 지금 필요한 것은 소유권이 아니라 허가번호와 제조번호가 병원 시스템에서 살아 있다는 proof다.",
+  "power_shift": {
+    "protagonist": "regulated return hold를 확보한 scout에서 의료기기 유통사의 허가번호와 유지보수 콜을 가격표로 읽는 permission-data operator로 이동한다.",
+    "antagonist": "세원메디링크 대표와 규제 대응 브로커는 재고 매입과 shortcut으로 도윤을 책임에 묶으려 하지만, 도윤의 data export 요구 때문에 재고가 아니라 허가 proof가 협상 대상이 된다."
+  },
+  "relationship_delta": [
+    {
+      "target": "세원메디링크 대표",
+      "before": "부도 직전 재고를 할인 매입시키고 책임을 넘기려는 기존 유통사 대표",
+      "after": "재고 매각 대신 허가번호-제조번호 대조표와 유지보수 콜 이력 read-only export token을 열어 준다"
+    },
+    {
+      "target": "문지훈",
+      "before": "삼진콜드 보험 claim 이후 거리 두고 있던 손해사정 gatekeeper",
+      "after": "의료기기 리콜 보험 특약과 chain-of-custody가 맞는지 예비 검토 메일을 보낸다",
+      "continuity_anchor_before": "도크 전원 점검표와 운행기록계 시간차 때문에 종결 의견을 멈추고 예비 인정 메일을 보낸다"
+    },
+    {
+      "target": "규제 대응 브로커",
+      "before": "급하면 허가 명의를 우회해 줄 수 있다며 shortcut을 팔려는 브로커",
+      "after": "도윤이 우회 제안을 거절하고 공식 대조표를 요구하자 협상판 밖으로 밀린다"
+    },
+    {
+      "target": "병원 구매팀",
+      "before": "허가 이전이 확인되지 않은 물량은 쓸 수 없다고 선을 긋는 구매 gate",
+      "after": "병원별 소모품 발주 코드 9개가 data-room에 살아 있음을 확인하고 완전 거절을 보류한다"
+    }
+  ],
+  "foreshadow": [
+    "멸균 포장 훼손 가능 14건은 후속 국면에서 개봉 책임과 재멸균 불가 판정으로 분리된다.",
+    "유지보수 콜 이력 27건은 후속 국면에서 소모품 반복 발주와 응급 방문권으로 환전된다.",
+    "규제 대응 브로커의 shortcut 제안은 후속 국면에서 공식 경로와 충돌하는 defeat 압박으로 커진다.",
+    "문지훈의 리콜 보험 특약 예비 검토는 후속 국면에서 보험 claim proof가 유지보수 계약 리스크 방어로 회수되는 기반이 된다."
+  ],
+  "callback": [
+    "후속 국면의 세원메디링크 data-room 72시간 초대권과 sealed hold right를 실제 허가번호 대조로 사용한다.",
+    "후속 국면의 보험금은 아직 죽지 않았다는 원칙이 의료기기 리콜 보험 특약 예비 검토로 재등장한다.",
+    "후속 국면의 claim-chargeback split 구조를 의료기기 리콜 보험과 병원 구매 책임 분리에 적용한다.",
+    "후속 국면의 chain-of-custody와 CCTV 통제권이 제조번호 대조의 보존 근거가 된다."
+  ],
+  "emotional_beat": {
+    "type": "permission_data_cider",
+    "intensity": 8
+  },
+  "tension_level": 8,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "세원메디링크 data-room / sealed hold shelf / 보험사 예비 claim 메일 thread",
+    "type": "medical-device permission data-room and recall-insurance precheck"
+  },
+  "time_span": {
+    "duration": "하루",
+    "in_story_time": "후속 국면의 data-room 72시간 초대권 첫날"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "세원메디링크 의료기기 유통사 data-room 72시간 초대권 / 규제 품목 반품 73건 10일 sealed hold right / chain-of-custody sheet 접수번호 / 온도·습도 log 요구권 / CCTV 접근권 유지 / regulated return handling SOP 초안 / 일반 seller 패널티 계산 10일 제외 / bridge option 선행 조건 체크 / 해당 아크 regulated distribution gate",
+    "capital_after": "허가번호-제조번호 대조표 51건 / 멸균 포장 훼손 가능 14건 분리표 / 리콜 notice 겹침 8건 / 병원 유지보수 콜 이력 27건 / 병원별 소모품 발주 코드 9개 / data-room read-only export token / 리콜 보험 특약 예비 검토 메일 / sealed hold right 10일 유지",
+    "capital_delta": "재고 매입 회피 / 허가 proof 51건 확보 / 유지보수 콜 27건과 소모품 발주 코드 9개 확보 / 리콜 보험 예비 검토 개시",
+    "profit_loss": "의료기기 재고 즉시 매입은 포기하고, 허가번호와 유지보수 콜, 보험 특약 data export를 확보",
+    "method": "재고를 사지 않고 허가번호, 제조번호, 병원 발주 코드, 유지보수 콜, 리콜 보험 특약을 data-room proof로 먼저 분리한다.",
+    "investment_type": "distressed medical-device permission-data gate",
+    "deal_type": "permission-number proof / recall-insurance precheck / maintenance-call data export",
+    "leverage_used": [
+      "세원메디링크 data-room 72시간 초대권",
+      "73건 sealed hold right",
+      "chain-of-custody sheet",
+      "온도·습도 log",
+      "regulated return handling SOP 초안",
+      "문지훈 보험 claim gate",
+      "bridge option 선행 조건 체크",
+      "병원 구매팀 허가 이전 요구"
+    ],
+    "opponent": {
+      "name": "세원메디링크 대표 / 규제 대응 브로커 / 병원 구매팀 / 문지훈",
+      "type": "distressed distributor inventory dump, permit-shortcut seller, hospital permission gate, and insurance trigger gate",
+      "weakness_exploited": "재고는 위험하지만 허가번호, 제조번호, 유지보수 콜, 보험 특약은 허가권자와 병원이 먼저 확인할 수 있는 살아 있는 proof다"
+    },
+    "historical_event": null,
+    "time_pressure": "data-room 초대권 72시간 안에 허가 proof를 확보하지 못하면 73건 sealed hold는 단순 폐기 대기 물량으로 할인된다.",
+    "knowledge_used": "회귀 전 세원메디링크의 진짜 가치는 재고가 아니라 병원 발주 코드와 리콜 보험 특약, 유지보수 콜 이력에서 시작됐다는 기억",
+    "risk_level": "고위험",
+    "business_sector": "의료기기 유통 / 인허가 / 리콜 보험 / 병원 유지보수 / 소모품 발주",
+    "section_rotation": "허가가 남은 의료기기 유통사",
+    "success_pattern": "재고 매입 유혹을 거부하고 허가 data proof를 선점",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "permission_data_export_receipt",
+      "receipt_line": "허가번호-제조번호 대조표 51건, 리콜 notice 겹침 8건, 병원 유지보수 콜 이력 27건, 병원별 소모품 발주 코드 9개, data-room read-only export token, 리콜 보험 특약 예비 검토 메일 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 세원메디링크의 재고를 먼저 산 인수자는 허가 책임을 떠안았고, 실제 반복 돈은 유지보수 콜과 소모품 발주 코드에서 나왔다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 인수자는 재고를 싸게 샀지만 허가 이전과 리콜 claim 조건을 맞추지 못해 폐기비만 떠안았다.",
+      "changed_event": "이번에는 도윤이 재고 매입을 거부하고 허가번호, 제조번호, 유지보수 콜, 보험 특약 data를 먼저 확보한다.",
+      "ripple_effect": "의료기기 유통사 전장은 재고 청산이 아니라 허가 proof와 반복 소모품 주문을 둘러싼 권리전으로 열린다."
+    },
+    "death_flag": {
+      "avoided": "의료기기 재고를 무허가 상태로 매입해 보험 claim, 병원 발주, 허가 이전이 모두 막히는 미래",
+      "method": "허가번호-제조번호 대조표, sealed hold, chain-of-custody, 리콜 보험 특약 예비 검토를 먼저 확보한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 재고 수량보다 허가번호와 병원별 발주 코드부터 요구한다.",
+      "suspicion_from": "세원메디링크 대표와 문지훈"
+    },
+    "future_prep": {
+      "action": "멸균 포장 훼손 가능 14건을 열지 않고 분리해 병원 구매팀이 받아들일 수 있는 책임표로 만든다.",
+      "target_event": "후속 국면 멸균 포장은 뜯지 않는다"
+    }
+  },
+  "block_no": 41,
+  "foreshadow_targets": [
+    42,
+    43,
+    44,
+    47
+  ]
+}

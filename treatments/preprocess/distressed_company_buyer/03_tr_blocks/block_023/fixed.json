@@ -1,0 +1,139 @@
+{
+  "block_id": "Block 23",
+  "title": "학교 급식은 월요일에 끊긴다",
+  "content": {
+    "context": "공동구매 코드가 열린 금요일 저녁, 해문푸드서비스 data-room에 새 알림이 뜬다. 서림초등학교 월요일 반찬 납품이 비어 있다. 기존 납품사는 식자재 대금 문제로 빠졌고, 학교 행정실은 학부모 민원과 교육청 보고 사이에서 해문푸드서비스 계약 해지를 준비한다. 도윤은 월요일 식판을 감정으로 보지 않는다. 학교 급식은 한 번 끊기면 느리게 복구되지 않는다. 그 느림이 반복 PO의 가격이다.",
+    "event_villain": "서림초 행정실장은 해문푸드서비스를 더 믿을 수 없다며 즉시 계약 해지 공문 초안을 꺼낸다. 영양교사는 알레르기 표시와 검수 책임을 문제 삼고, 교육청 담당자는 emergency supply는 하루까지만 가능하다고 선을 긋는다. 명성급식은 3개월 독점 조건이면 월요일부터 전량 대체하겠다고 치고 들어온다. 해문푸드서비스 대표는 '일단 월요일만 막자'고 하지만, 도윤은 하루짜리 무상 땜질이면 자기 쪽 proof가 사라진다는 걸 안다.",
+    "solution": "도윤은 전량 대체를 거부한다. 그는 월요일 반찬 640식 중 고위험 알레르기 품목을 뺀 580식만 태경푸드 제조권으로 공급하겠다고 제안한다. 삼진콜드 route는 도착시간과 중심온도 사진을 붙이고, 동원푸드넷 18개 품목 단가표는 원가 산정표에 첨부한다. 대신 조건을 건다. 서림초 명의 4주 제한 대체공급 PO, 주간 검수표 양식, 알레르기 표시 확인란, 교육청 emergency extension 보고 접수번호, 첫 주 선입금. 그는 행정실장에게 말한다. '월요일 하루만 막으면 계약이 죽습니다. 4주 검수표를 남기면 책임이 나뉩니다.'",
+    "reward": "월요일 배식은 완벽하지 않다. 고위험 알레르기 반찬 60식은 학교가 보유한 대체 메뉴로 채우고, 도윤 쪽은 580식만 납품한다. 그러나 서림초는 4주 제한 대체공급 PO를 발급하고, 영양교사는 주간 검수표와 알레르기 표시 확인란을 승인한다. 교육청 담당자는 emergency extension 보고 접수번호를 남긴다. 도윤은 학교를 살린 게 아니다. 그는 하루짜리 사고를 4주짜리 반복 발주 proof로 바꿨다."
+  },
+  "incident_beats": [
+    "학부모 민원, 교육청 보고 압박, 해문푸드서비스 계약 해지 공문 초안, 명성급식의 3개월 독점 대체공급 제안이 동시에 들어온다",
+    "도윤이 전량 대체를 버리고 580식 제한 공급, 4주 제한 대체공급 PO, 주간 검수표, 알레르기 확인란, 교육청 접수번호, 첫 주 선입금 receipt를 확보한다"
+  ],
+  "stakes": "월요일 배식 공백을 하루짜리 호의로 막으면 해문푸드서비스 계약은 그대로 해지되고 도윤의 proof는 사라진다. 전량 대체를 무리하면 알레르기와 검수 책임을 떠안는다. 4주 제한 PO와 주간 검수표를 못 받으면 학교 급식은 반복매출이 아니라 사고 처리 비용으로 끝난다.",
+  "power_shift": {
+    "protagonist": "공동구매 주문권을 살린 dealmaker에서 학교 급식의 책임 순서를 PO와 검수표로 고정하는 recurring-revenue operator로 이동한다.",
+    "antagonist": "서림초와 교육청은 책임 회피를 위해 해지를 준비하고, 명성급식은 독점 대체를 노리지만, 도윤의 제한 공급안이 가장 작은 책임으로 월요일 공백을 막는 선택지가 된다."
+  },
+  "relationship_delta": [
+    {
+      "target": "서림초 행정실장",
+      "before": "학부모 민원과 교육청 보고를 피하려고 해문푸드서비스 계약 해지를 준비하는 학교 구매담당자",
+      "after": "4주 제한 대체공급 PO와 교육청 emergency extension 접수로 즉시 해지 대신 제한 운영을 선택한다"
+    },
+    {
+      "target": "서림초 영양교사",
+      "before": "알레르기 표시와 검수 책임 때문에 부도 공장 반찬을 거부하는 현장 책임자",
+      "after": "고위험 품목 제외, 알레르기 표시 확인란, 주간 검수표 조건을 보고 580식 제한 납품을 승인한다"
+    },
+    {
+      "target": "명성급식",
+      "before": "월요일 공백을 이용해 3개월 독점 대체공급권을 가져가려는 경쟁 급식업체",
+      "after": "도윤의 4주 제한 PO 구조 때문에 독점 조건을 즉시 관철하지 못한다",
+      "continuity_anchor_before": "신규 발주가 과거 채무와 분리되면서 부도 프레임만으로 계정 재가동을 막지 못한다"
+    },
+    {
+      "target": "해문푸드서비스 대표",
+      "before": "월요일 하루만 막고 계약 해지를 늦추려는 대표",
+      "after": "4주 제한 PO와 주간 검수표가 생기자 계약 bundle 가치가 단순 위기 대응에서 반복 발주 proof로 바뀌는 것을 본다",
+      "continuity_anchor_before": "과거채무 비인수 확인서와 신규 발주 분리 장부에 서명하며 도윤에게 주문권 통제를 넘긴다"
+    }
+  ],
+  "foreshadow": [
+    "주간 검수표와 알레르기 표시 확인란은 후속 국면의 병원식 기준에서 더 높은 벽으로 돌아온다.",
+    "4주 제한 대체공급 PO는 후속 국면의 미수금 aging과 factoring 예비 term sheet의 반복매출 근거가 된다.",
+    "교육청 emergency extension 접수번호는 후속 국면의 구매위원회 제한입찰 자격 심사에 쓰인다.",
+    "명성급식의 독점 대체공급 시도는 해당 아크 중반의 경쟁자 프레임 공격으로 커진다."
+  ],
+  "callback": [
+    "후속 국면의 2주 조건부 공동구매 코드와 18개 필수 품목 단가표 lock을 학교 급식 원가 산정표로 회수한다.",
+    "후속 국면의 재점검 접수번호와 48시간 시정조치 grace를 교육청 emergency extension 근거로 쓴다.",
+    "후속 국면의 성우전자 emergency substitute PO를 학교 행정실 설득용 선례로 사용한다.",
+    "후속 국면의 제조+운송 invoice receipt를 실제 납품 수행능력 proof로 제시한다."
+  ],
+  "emotional_beat": {
+    "type": "school_meal_po_cider",
+    "intensity": 9
+  },
+  "tension_level": 9,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "서림초등학교 행정실 / 영양교사실 / 태경푸드 상차장 / 교육청 급식 담당 창구",
+    "type": "school cafeteria emergency PO negotiation"
+  },
+  "time_span": {
+    "duration": "금요일 저녁부터 월요일 점심까지",
+    "in_story_time": "공동구매 계정 재가동 직후 첫 주말"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "2주 조건부 공동구매 코드 / 18개 필수 품목 단가표 lock / SPV escrow 신규 발주 waterfall / 과거채무 비인수 확인서 / 첫 식자재 발주서 / 월요일 배식 원가 proof",
+    "capital_after": "서림초 4주 제한 대체공급 PO / 월요일 580식 제한 납품 / 첫 주 선입금 / 주간 검수표 / 알레르기 표시 확인란 / 교육청 emergency extension 접수번호 / 학교 급식 반복 발주 proof",
+    "capital_delta": "0억",
+    "profit_loss": "전량 대체 포기, 고위험 60식 제외, 580식 유상 납품과 4주 제한 반복 PO 확보",
+    "method": "월요일 배식 공백을 하루짜리 지원으로 막지 않고, 위험 품목을 제외한 제한 공급과 주간 검수표 조건으로 반복 발주권을 만든다.",
+    "investment_type": "distressed school-meal substitute supply right",
+    "deal_type": "limited emergency school supply PO / weekly inspection ledger / recurring order proof",
+    "leverage_used": [
+      "2주 조건부 공동구매 코드",
+      "18개 필수 품목 단가표 lock",
+      "SPV escrow 선입금 구조",
+      "재점검 접수번호",
+      "성우전자 emergency substitute PO",
+      "태경푸드 제조권",
+      "삼진콜드 route",
+      "온도 SLA pass log"
+    ],
+    "opponent": {
+      "name": "서림초 행정실장 / 서림초 영양교사 / 교육청 담당자 / 명성급식",
+      "type": "school termination pressure, nutrition-liability gate, regulatory report gate, and competitor exclusive-supply bid",
+      "weakness_exploited": "상대는 책임을 피하고 싶지만, 월요일 공백을 막으면서도 알레르기와 검수 책임을 제한하는 4주 제한 PO가 가장 작은 리스크다"
+    },
+    "historical_event": null,
+    "time_pressure": "월요일 점심 전까지 제한 공급 범위, PO, 검수표, 교육청 보고 접수번호를 모두 받아야 한다.",
+    "knowledge_used": "회귀 전 학교 급식 사고는 하루 배식보다 이후 4주 검수표와 교육청 보고 접수번호가 계약권 가격을 만들었다는 기억",
+    "risk_level": "고위험",
+    "business_sector": "학교 급식 / 식품 제조 / 식자재 공동구매 / 교육청 보고 / 냉장 물류",
+    "section_rotation": "급식 계약은 느리게 끊기지 않는다",
+    "success_pattern": "월요일 위기를 제한 공급 PO와 반복 검수표로 환전",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "school_meal_recurring_po_receipt",
+      "receipt_line": "서림초 4주 제한 대체공급 PO, 월요일 580식 유상 납품, 첫 주 선입금, 주간 검수표, 알레르기 표시 확인란, 교육청 emergency extension 접수번호 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 서림초 급식 공백은 월요일 하루 문제가 아니라 4주 대체공급 검수표가 이후 학교 계약 bundle valuation을 만든 사건이었다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생에는 해문푸드서비스가 월요일 공백을 막지 못해 즉시 계약 해지 공문이 발송되고 명성급식이 3개월 독점 대체공급권을 가져갔다.",
+      "changed_event": "이번에는 도윤이 전량 대체 대신 580식 제한 공급과 4주 PO, 검수표, 교육청 접수번호를 먼저 고정한다.",
+      "ripple_effect": "학교 급식은 사고 처리에서 반복 발주 proof로 바뀌고, 해문푸드서비스 계약 bundle은 은행과 병원 급식 설득에 쓸 운영 기록을 얻는다."
+    },
+    "death_flag": {
+      "avoided": "월요일 배식 공백과 알레르기 책임을 동시에 떠안아 학교 급식 계약권이 즉시 죽는 미래",
+      "method": "고위험 품목을 제외하고 4주 제한 PO, 주간 검수표, 알레르기 확인란, 교육청 접수번호로 책임 범위를 좁힌다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 월요일 배식 공백보다 4주 검수표와 교육청 접수번호를 먼저 요구한다.",
+      "suspicion_from": "서림초 행정실장과 명성급식"
+    },
+    "future_prep": {
+      "action": "학교 급식 주간 검수표와 알레르기 확인란을 병원 영양실에 제시하되, 병원식 기준이 훨씬 높다는 벽을 확인한다.",
+      "target_event": "후속 국면 병원식은 반찬이 아니다"
+    }
+  },
+  "block_no": 23,
+  "foreshadow_targets": [
+    24,
+    25,
+    26
+  ]
+}

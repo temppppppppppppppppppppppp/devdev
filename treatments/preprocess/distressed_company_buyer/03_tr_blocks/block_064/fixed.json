@@ -1,0 +1,141 @@
+{
+  "block_id": "Block 64",
+  "title": "백승환은 초대장을 막는다",
+  "content": {
+    "context": "회의록에 이름이 남자 바로 다음 방해가 온다. 다음 부도 매물의 채권단 회의에 백승환이 sponsor-side observer로 들어가 있다. 그는 도윤 SPV가 들어오면 가격을 복잡하게 만들고, PEF가 빠르게 회수할 수 있는 통매각 기회가 사라진다고 말한다. 이름이 생기자, 누군가는 그 이름을 명단에서 지우려 한다.",
+    "event_villain": "백승환은 다음 부도 매물 teaser를 PEF club deal로 묶으려 한다. 은행 보수파 일부도 PEF가 들어오면 절차가 짧아진다고 본다. 채권단 실무자는 도윤에게 아직 정식 운용사가 아니니 full data-room 초대는 어렵다고 통보한다. LP reverse inquiry도 공개되면 안 되므로 도윤은 외부 관심을 크게 과시할 수 없다. 잘못 밀면 무인가 운용 프레임이 다시 열린다.",
+    "solution": "도윤은 full data-room을 요구하지 않는다. 대신 no-exclusive pre-screen clause를 요구한다. PEF club deal이 진행되더라도 bank conditional mandate, no-default proof, quiet reputation ledger, role-boundary opinion을 가진 named operator는 redacted teaser와 Q&A slot을 받을 권리가 있다는 조항이다. 그는 LP reverse inquiry를 투자 확약이 아니라 diligence credibility로만 제시하고, 백승환의 후순위 참여권이 선순위로 바뀔 수 없다는 조항을 conflict disclosure에 넣는다.",
+    "reward": "채권단은 full data-room 초대를 주지 않는다. 그러나 PEF club deal 단독 진행을 보류하고, no-exclusive pre-screen clause를 회의록에 넣는다. 도윤 SPV는 redacted teaser 1건, creditor Q&A slot 2시간, conflict disclosure filing number, PEF adverse note 대응권을 받는다. 은행 보수파는 절차상 도윤을 완전히 배제하지 못한다. 도윤은 아직 초대장을 받은 게 아니다. 하지만 백승환이 닫으려던 문에, 이름으로 걸어 둘 고리를 만들었다."
+  },
+  "incident_beats": [
+    "백승환이 다음 부도 매물 teaser를 PEF club deal로 묶고, 도윤 SPV를 정식 운용사 부재와 절차 단축 명분으로 배제하려 한다",
+    "도윤이 full data-room 대신 no-exclusive pre-screen clause, redacted teaser 권리, Q&A slot, conflict disclosure를 요구한다",
+    "no-exclusive pre-screen clause, redacted teaser 1건, creditor Q&A slot 2시간, conflict disclosure filing number, PEF adverse note 대응권 receipt가 확보된다"
+  ],
+  "stakes": "백승환이 다음 매물을 club deal로 잠그면 도윤의 named-operator 지위는 종이 기록으로만 남는다. 반대로 full data-room을 무리하게 요구하면 정식 운용사 부재가 약점이 된다. 도윤은 작은 접근권부터 절차에 박아야 한다.",
+  "power_shift": {
+    "protagonist": "회의록 평판을 얻은 reputation-ledger operator에서 PEF가 닫는 다음 매물 gate에 no-exclusive 절차권을 박는 access-rights operator로 이동한다.",
+    "antagonist": "백승환은 club deal로 초대장을 막으려 하지만, 도윤의 no-exclusive pre-screen clause 때문에 완전 배제에 실패한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "백승환",
+      "before": "다음 부도 매물을 PEF club deal로 묶어 도윤 SPV를 배제하려는 PEF 파트너",
+      "after": "no-exclusive pre-screen clause와 conflict disclosure 때문에 단독 진행을 확정하지 못한다",
+      "continuity_anchor_before": "기사가 아니라 회의록에 이름이 남자 공개 리스크 공격이 약해진다"
+    },
+    {
+      "target": "채권단 실무자",
+      "before": "정식 운용사 부재를 이유로 full data-room 초대를 거절하는 실무자",
+      "after": "redacted teaser와 2시간 Q&A slot을 절차상 제공한다"
+    },
+    {
+      "target": "은행 내부 보수파",
+      "before": "PEF club deal이 절차를 줄인다고 보는 라인",
+      "after": "named operator를 완전 배제하면 adverse-note 절차가 깨진다는 점을 인정한다",
+      "continuity_anchor_before": "no-publicity covenant와 minutes annex 구조를 받아들인다"
+    },
+    {
+      "target": "외부 LP 견제자",
+      "before": "reverse inquiry가 공개될까 경계하는 LP",
+      "after": "투자 확약이 아니라 diligence credibility로만 제한 표기되는 조건을 받아들인다",
+      "continuity_anchor_before": "자료배포 금지 재확인을 받고 one-on-one room을 유지한다"
+    }
+  ],
+  "foreshadow": [
+    "redacted teaser와 Q&A slot은 조건부 프리뷰 초대의 직접 전단계가 된다.",
+    "no-exclusive pre-screen clause는 최종 data-room 초대장에서 PEF 독점 방어 조항으로 회수된다.",
+    "conflict disclosure filing number는 백승환의 후순위 참여권을 감시하는 번호가 된다.",
+    "full data-room을 욕심내지 않은 선택은 다음 경계에서 작은 초대가 큰 권리로 커지는 발판이 된다."
+  ],
+  "callback": [
+    "quiet reputation ledger와 은행 두 곳 ledger-format 수령을 no-exclusive pre-screen clause 근거로 사용한다.",
+    "no-public-offering memo와 role-boundary opinion으로 LP reverse inquiry 과시를 제한한다.",
+    "PEF 후순위 참여권 선순위 전환 금지 조항을 conflict disclosure에 넣는다.",
+    "named-operator pre-registration을 redacted teaser 권리의 절차 근거로 회수한다."
+  ],
+  "emotional_beat": {
+    "type": "blocked_invite_counter_cider",
+    "intensity": 8
+  },
+  "tension_level": 9,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "다음 부도 매물 채권단 pre-screen 회의 / PEF club deal 준비방 / 은행 conflict disclosure filing desk",
+    "type": "no-exclusive pre-screen and redacted teaser access fight"
+  },
+  "time_span": {
+    "duration": "이틀",
+    "in_story_time": "채권단 회의록 named-operator ledger가 공유된 직후"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "채권단 회의록 named-operator ledger annex / 은행 2곳 track-record ledger format 수령 / no-publicity covenant / reverse inquiry 자료배포 금지 재확인 / 일반론 comment만 허용한 기사 대응 기록 / PEF 개인 스타 리스크 프레임 방어 memo",
+    "capital_after": "no-exclusive pre-screen clause / redacted teaser 1건 / creditor Q&A slot 2시간 / conflict disclosure filing number / PEF adverse note 대응권 / PEF club deal 단독 진행 보류 / LP reverse inquiry diligence-credibility 제한 표기",
+    "capital_delta": "full data-room 초대 실패 / PEF club deal 단독 진행 보류 / redacted teaser와 Q&A slot 확보 / conflict disclosure 번호 확보",
+    "profit_loss": "정식 초대장은 아직 없지만, 다음 매물 절차에서 완전 배제되지 않는 접근권과 대응권을 얻는다.",
+    "method": "full data-room을 무리하게 요구하지 않고, named-operator 지위와 legal boundary proof를 근거로 no-exclusive pre-screen clause와 redacted teaser 권리를 확보한다.",
+    "investment_type": "distressed dealflow pre-screen access right",
+    "deal_type": "no-exclusive pre-screen clause / redacted teaser access / conflict disclosure filing",
+    "leverage_used": [
+      "named-operator ledger annex",
+      "track-record ledger format",
+      "no-publicity covenant",
+      "role-boundary opinion",
+      "no-public-offering memo",
+      "PEF subordination restriction",
+      "LP reverse inquiry log",
+      "bank no-default confirmation"
+    ],
+    "opponent": {
+      "name": "백승환 / 채권단 실무자 / 은행 내부 보수파",
+      "type": "PEF club-deal lockout pressure, creditor process gate, and bank speed-over-competition preference",
+      "weakness_exploited": "full data-room은 거절할 수 있어도 named operator의 pre-screen 배제를 회의록에 남기면 절차 공정성 문제가 생긴다"
+    },
+    "historical_event": null,
+    "time_pressure": "PEF club deal term이 단독 경로로 확정되기 전 no-exclusive pre-screen clause와 redacted teaser 권리를 받아야 한다.",
+    "knowledge_used": "회귀 전 PEF가 club deal로 다음 data-room을 잠근 뒤 operator가 초대장도 못 보고 밀렸다는 기억",
+    "risk_level": "극고위험",
+    "business_sector": "distressed dealflow / PEF club deal / pre-screen access / conflict disclosure",
+    "section_rotation": "부도 회사 사냥꾼의 이름",
+    "success_pattern": "PEF의 초대장 차단을 no-exclusive pre-screen clause와 redacted teaser 접근권으로 뚫음",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "pre_screen_access_receipt",
+      "receipt_line": "no-exclusive pre-screen clause, redacted teaser 1건, creditor Q&A slot 2시간, conflict disclosure filing number, PEF adverse note 대응권, PEF club deal 단독 진행 보류 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 PEF club deal이 다음 data-room을 잠가 operator가 teaser도 보지 못하고 배제됐다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 operator는 정식 운용사 부재를 이유로 다음 매물에서 완전히 밀려났다.",
+      "changed_event": "이번에는 도윤이 full data-room 대신 no-exclusive pre-screen clause와 redacted teaser 권리를 먼저 확보한다.",
+      "ripple_effect": "백승환은 club deal을 단독으로 밀 수 없고, 도윤은 조건부 프리뷰 초대의 근거를 갖는다."
+    },
+    "death_flag": {
+      "avoided": "PEF club deal로 다음 매물 접근권이 닫히고 도윤 이름이 회의록 안에서만 멈추는 미래",
+      "method": "no-exclusive pre-screen clause, redacted teaser, Q&A slot, conflict disclosure filing으로 방어한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 full data-room을 요구하지 않고 teaser와 Q&A slot부터 요구한다.",
+      "suspicion_from": "백승환과 채권단 실무자"
+    },
+    "future_prep": {
+      "action": "redacted teaser와 Q&A slot을 조건부 프리뷰 초대와 다음 실사 질문권으로 확장한다.",
+      "target_event": "조건부 프리뷰 초대"
+    }
+  },
+  "block_no": 64,
+  "foreshadow_targets": [
+    65,
+    66,
+    70
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "block_id": "Block 24",
+  "title": "병원식은 반찬이 아니다",
+  "content": {
+    "context": "서림초 4주 제한 PO와 주간 검수표가 찍히자 해문푸드서비스 대표는 병원 급식도 바로 열 수 있다고 들뜬다. data-room에는 은성재활병원 조리 보조 계약이 남아 있다. 도윤은 그 계약을 보자마자 속도를 낮춘다. 학교 급식은 알레르기와 검수표가 핵심이지만, 병원식은 환자 처방, 저염 기준, 연하식, lot 추적, 영양성분표가 한 줄로 묶인다. 일반 반찬을 환자식으로 팔면 돈이 아니라 책임을 산다.",
+    "event_villain": "은성재활병원 영양실은 태경푸드 샘플 5종을 전부 반려한다. 간장 베이스 반찬은 나트륨 기준을 넘고, 볶음류는 연하식 환자에게 위험하며, 학교 급식용 알레르기 표시만으로는 병원 차트에 붙일 수 없다는 이유다. 명성급식은 병원 영양실에 해문푸드서비스가 위생점검 grace 상태라는 사실을 흘린다. 해문푸드서비스 대표는 병원 계약까지 잃으면 valuation이 무너진다며 전량 수정 납품을 요구하지만, 도윤은 5종을 다 살리는 순간 손실과 책임이 같이 폭발한다는 걸 안다.",
+    "solution": "도윤은 물량 욕심을 버린다. 그는 샘플 5종 중 4종을 즉시 포기하고, 닭채소 다짐 저염 연하식 1종만 남긴다. 동원푸드넷 단가표에서 원재료를 다시 잡고, 태경푸드에는 소량 batch 손실을 감수하게 한다. 박소연에게는 lot 추적 라벨과 알레르기 교차오염 확인란을 붙이게 하고, 삼진콜드에는 병원 도착 온도 사진을 환자식 검수표 양식에 맞추게 한다. 대신 도윤은 은성재활병원 영양실에 1주 시험식 approval, 영양성분 분석 의뢰서 접수, 병동 제한 검수표를 요구한다.",
+    "reward": "은성재활병원은 병원 급식 납품을 승인하지 않는다. 일반 반찬 4종은 공식 반려되고, 해문푸드서비스 대표는 매출이 너무 작다고 얼굴을 굳힌다. 그러나 영양실은 닭채소 다짐 저염 연하식 1종에 한해 1주 120식 시험식 approval을 낸다. approval에는 lot 추적 라벨, 알레르기 교차오염 확인란, 영양성분 분석 의뢰 접수번호, 병동 제한 검수표, 도착 온도 사진 조건이 붙는다. 도윤은 병원 계약을 딴 게 아니다. 병원식에서 무엇을 버려야 돈을 잃지 않는지에 대한 첫 기준표를 얻었다."
+  },
+  "incident_beats": [
+    "병원 영양실이 태경푸드 일반 반찬 샘플 5종을 저염식, 연하식, 알레르기, 병원 차트 기준 미달로 전부 반려하고 명성급식이 위생점검 grace 상태를 공격한다",
+    "도윤이 4종을 포기하고 저염 연하식 1종만 남겨 1주 120식 시험식 approval, lot 추적 라벨, 영양성분 분석 접수번호, 병동 제한 검수표 receipt를 확보한다"
+  ],
+  "stakes": "학교 급식 proof를 그대로 병원에 밀어 넣으면 환자식 책임과 알레르기 리스크를 떠안는다. 반대로 병원식 gate를 완전히 포기하면 해문푸드서비스 계약 bundle은 학교 급식 하나에만 기대게 되어 valuation이 약해진다. 손실을 감수할 SKU와 버릴 SKU를 같은 날 나누지 못하면 병원 계약은 돈보다 책임이 커진다.",
+  "power_shift": {
+    "protagonist": "학교 급식 반복 PO를 만든 operator에서 병원식 기준 앞에서 물량을 버리고 규격 SKU만 남기는 risk-pricer로 이동한다.",
+    "antagonist": "병원 영양실과 명성급식은 병원식 기준과 위생점검 grace를 이용해 진입을 막지만, 도윤이 물량을 줄이고 책임 범위를 좁히자 전면 거절 대신 1주 시험식 절차를 열 수밖에 없어진다."
+  },
+  "relationship_delta": [
+    {
+      "target": "은성재활병원 영양실장",
+      "before": "학교 급식 proof를 병원식 proof로 인정하지 않고 일반 반찬 샘플 5종을 모두 반려하는 gatekeeper",
+      "after": "저염 연하식 1종, lot 추적, 알레르기 확인, 병동 제한 검수표 조건으로 1주 시험식 approval을 발급한다"
+    },
+    {
+      "target": "해문푸드서비스 대표",
+      "before": "병원 계약까지 열어 valuation을 키우고 싶어 하는 대표",
+      "after": "도윤이 4종을 버리고 1종만 남기자 매출 축소를 불만스러워하지만 병원식 책임 범위를 처음으로 본다",
+      "continuity_anchor_before": "4주 제한 PO와 주간 검수표가 생기자 계약 bundle 가치가 단순 위기 대응에서 반복 발주 proof로 바뀌는 것을 본다"
+    },
+    {
+      "target": "박소연",
+      "before": "학교 급식용 알레르기 표시와 검수표를 처리한 품질 담당자",
+      "after": "병원식 lot 추적 라벨과 교차오염 확인란까지 품질 문서 범위를 확장한다",
+      "continuity_anchor_before": "제조 invoice 앞장에 QC 입회 서명을 붙이며 책임 범위를 문서로 방어한다"
+    },
+    {
+      "target": "명성급식",
+      "before": "위생점검 grace 상태를 병원 영양실에 흘려 해문푸드서비스의 병원 진입을 막으려는 경쟁 급식업체",
+      "after": "전면 납품은 막지만 1주 시험식 approval까지는 차단하지 못한다",
+      "continuity_anchor_before": "도윤의 4주 제한 PO 구조 때문에 독점 조건을 즉시 관철하지 못한다"
+    }
+  ],
+  "foreshadow": [
+    "1주 120식 시험식 approval은 후속 국면의 병원 검수대기 채권과 factoring 예비 term sheet의 근거가 된다.",
+    "일반 반찬 4종 반려 기록은 도윤이 실패를 숨기지 않고 책임 범위를 좁히는 legal cleanliness proof로 남는다.",
+    "영양성분 분석 접수번호와 병동 제한 검수표는 후속 국면 구매위원회 제한입찰 자격 심사에서 병원식 기준 대응 proof로 쓰인다.",
+    "작은 병원식 SKU의 손실 구조는 해당 아크 후반 운전자금 한도 산정에서 원가 pressure로 돌아온다."
+  ],
+  "callback": [
+    "후속 국면의 주간 검수표와 알레르기 표시 확인란을 병원식 기준으로 끌어올리되, 학교 proof만으로는 부족하다는 defeat를 만든다.",
+    "후속 국면의 18개 필수 품목 단가표를 저염 연하식 1종 원가 산정에 사용한다.",
+    "후속 국면의 위생점검 grace 상태가 명성급식의 공격 재료로 돌아온다.",
+    "후속 국면의 온도 SLA pass log가 병원 도착 온도 사진 조건으로 변형된다."
+  ],
+  "emotional_beat": {
+    "type": "narrow_defeat_trial_sku_cider",
+    "intensity": 8
+  },
+  "tension_level": 9,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "은성재활병원 영양실 / 태경푸드 시제품 라인 / 해문푸드서비스 data-room",
+    "type": "hospital nutrition rejection and trial SKU negotiation"
+  },
+  "time_span": {
+    "duration": "하루",
+    "in_story_time": "서림초 첫 주 납품 직후"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "서림초 4주 제한 대체공급 PO / 월요일 580식 제한 납품 / 첫 주 선입금 / 주간 검수표 / 알레르기 표시 확인란 / 교육청 emergency extension 접수번호 / 학교 급식 반복 발주 proof",
+    "capital_after": "일반 반찬 4종 공식 반려 / 닭채소 다짐 저염 연하식 1종 / 1주 120식 시험식 approval / lot 추적 라벨 / 알레르기 교차오염 확인란 / 영양성분 분석 접수번호 / 병동 제한 검수표 / 병원 도착 온도 사진 조건",
+    "capital_delta": "0억",
+    "profit_loss": "일반 반찬 4종 포기, 소량 batch 손실 감수, 병원식 1종 1주 시험식 권리 확보",
+    "method": "학교 급식 proof를 그대로 확대하지 않고 병원식 기준에서 위험 SKU를 버린 뒤 저염 연하식 1종만 시험식 approval로 남긴다.",
+    "investment_type": "distressed hospital-meal trial SKU right",
+    "deal_type": "defeat-to-trial approval / regulated nutrition SKU narrowing / liability-bounded supply",
+    "leverage_used": [
+      "서림초 4주 제한 대체공급 PO",
+      "주간 검수표",
+      "알레르기 표시 확인란",
+      "18개 필수 품목 단가표",
+      "태경푸드 제조권",
+      "삼진콜드 온도 SLA",
+      "lot 추적 라벨",
+      "영양성분 분석 의뢰서"
+    ],
+    "opponent": {
+      "name": "은성재활병원 영양실장 / 명성급식 / 해문푸드서비스 대표",
+      "type": "hospital nutrition gate, competitor hygiene-frame attack, and distressed operator overreach",
+      "weakness_exploited": "병원 영양실은 일반 반찬을 거절할 수 있지만, 위험 SKU를 버리고 저염 연하식 1종의 lot/영양/알레르기 검수 조건만 남기면 시험식 절차까지 닫을 명분은 약하다"
+    },
+    "historical_event": null,
+    "time_pressure": "서림초 proof가 신선할 때 병원식 gate를 열지 못하면 명성급식이 위생점검 grace 프레임으로 병원 계약을 선점한다.",
+    "knowledge_used": "회귀 전 병원 급식 계약은 전량 납품보다 저염 연하식 1종 시험식 approval이 먼저 valuation proof가 되었다는 기억",
+    "risk_level": "고위험",
+    "business_sector": "병원 급식 / 환자식 / 영양성분 분석 / 알레르기 관리 / 냉장 물류",
+    "section_rotation": "급식 계약은 느리게 끊기지 않는다",
+    "success_pattern": "큰 물량을 포기하고 규격 SKU 한 종의 시험식 권리로 손실과 책임을 제한",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "hospital_trial_sku_approval_receipt",
+      "receipt_line": "일반 반찬 4종은 공식 반려되지만, 닭채소 다짐 저염 연하식 1종에 대해 1주 120식 시험식 approval, lot 추적 라벨, 알레르기 교차오염 확인란, 영양성분 분석 접수번호, 병동 제한 검수표 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 해문푸드서비스의 병원 계약은 일반 반찬 확장이 아니라 저염 연하식 1종 시험식에서 살아났다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 인수자는 학교 급식 proof를 믿고 병원 반찬 5종을 밀어 넣었다가 전부 반려되고 환자식 책임 리스크만 키웠다.",
+      "changed_event": "이번에는 도윤이 4종 반려를 받아들이고 저염 연하식 1종만 남겨 병원식 gate를 작게 연다.",
+      "ripple_effect": "급식 계약 bundle은 학교 반복 PO에 병원식 시험 SKU를 더하지만, 동시에 손실과 규제 기준이라는 새로운 압박을 얻는다."
+    },
+    "death_flag": {
+      "avoided": "일반 반찬을 병원식으로 무리하게 확대해 알레르기, 저염식, 연하식 책임을 한꺼번에 떠안는 미래",
+      "method": "4종 공식 반려를 감수하고, 저염 연하식 1종의 lot/영양/알레르기 검수 조건만 계약화한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 병원 영양실이 5종을 반려하기 전부터 저염 연하식 1종 서류와 영양성분 분석 의뢰서를 준비해 둔다.",
+      "suspicion_from": "은성재활병원 영양실장과 해문푸드서비스 대표"
+    },
+    "future_prep": {
+      "action": "학교 4주 PO와 병원 1주 시험식 approval을 미수금 aging 분류와 factoring 예비 term sheet 근거로 묶는다.",
+      "target_event": "후속 국면 미수금 aging의 순서"
+    }
+  },
+  "block_no": 24,
+  "foreshadow_targets": [
+    25,
+    26,
+    29
+  ]
+}

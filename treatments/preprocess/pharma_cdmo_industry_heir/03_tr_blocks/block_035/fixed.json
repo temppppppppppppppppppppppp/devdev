@@ -1,0 +1,178 @@
+{
+  "block_id": "Block 35",
+  "title": "필터가 없으면 약도 없다",
+  "content": {
+    "context": "대체 합성 라인이 열리자 라인은 다시 움직이는 듯 보인다. 하지만 멸균 공정 회의에서 QA 책임자가 마지막 병목을 꺼낸다. 원료와 중간체가 있어도 공정 필터와 배지가 없으면 배치는 통과할 수 없고, 필터 lot가 바뀌면 성능 확인과 문서 검증을 다시 거쳐야 한다.",
+    "event_villain": "국내 화학 대기업은 필터 공급사를 통해 1년 물량을 선점하고, 공급사는 '대형 고객 우선 배정'을 이유로 부평 2공장 몫을 월말 뒤로 미룬다. 동시에 필터 업체 영업팀은 검증자료 원본은 본사 서버에서만 열람 가능하다며, 태오에게 단순 구매자 자리에 머물라고 선을 긋는다.",
+    "solution": "태오는 필터를 소모품이 아니라 공정 권리로 본다. 품질성적서 비교 프로토콜을 필터 lot 성능표로 바꾸고, 멸균 라인에서 사용 전 압력강하, 용출물, 배지 적합성 확인을 한 번에 묶는 검증표를 제시한다. 첫 사건 beat는 월말 배정 지연 통보를 받은 자리에서 태오가 '필터가 없으면 약도 없다'고 말하며 구매부서가 아니라 QA/생산/공급사를 한 회의실에 앉히는 장면이다. 둘째 beat는 국내 화학 대기업이 묶어둔 물량을 빼앗는 대신, 2차 공급사의 lot를 검증하고 기존 공급사에는 12개월 예약 배정권과 검증자료 사본권을 요구해 양쪽을 경쟁시키는 장면이다.",
+    "reward": "태오는 12개월 필터/배지 예약 배정권, 2차 공급사 적격성 평가권, 필터 lot 성능검증 프로토콜 재사용권, 검증자료 사본권, 멸균 라인 2일 생산 슬롯 보호 확약을 얻는다. 부평 2공장은 필터 부족으로 배치를 멈추지 않고, 태오는 제약 청정관리 경험을 이후 화학공장과 반도체 클린룸 소재 조건으로 넘길 첫 발판을 확보한다."
+  },
+  "stakes": "원료와 대체 합성 라인이 준비되어도 필터/배지 공급과 검증자료가 없으면 완제 배치는 출고되지 못한다.",
+  "power_shift": {
+    "protagonist": "원료 공급권을 넘어 공정 소모품의 검증권과 예약 배정권까지 잡는 운영 설계자가 된다.",
+    "antagonist": "국내 화학 대기업은 필터 물량 선점만으로 라인을 세우기 어려워지고, 기존 필터 공급사는 자료 사본권과 예약 배정권을 내줘야 한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "필터 공급사 영업팀",
+      "before": "대형 고객 우선 배정을 이유로 부평 2공장을 후순위로 미루는 공급자",
+      "after": "예약 배정권과 검증자료 사본권을 계약서에 넣어야 하는 관리 대상"
+    },
+    {
+      "target": "부평 2공장 멸균라인장",
+      "before": "필터 lot가 늦으면 라인을 멈추는 현장 책임자",
+      "after": "2일 생산 슬롯 보호 확약과 lot 검증표를 손에 쥔 동맹"
+    },
+    {
+      "target": "2차 필터/배지 공급사",
+      "before": "품질 검증 이력이 부족해 대형 제약사 문턱을 넘지 못한 후보",
+      "after": "부평 2공장의 적격성 평가권 안으로 들어온 경쟁 공급자"
+    }
+  ],
+  "foreshadow": [
+    "필터 lot 성능검증 프로토콜은 화학공장 밤샘 시험에서 작은 화학공장의 합성시험을 품질 문서로 바꾸는 도구가 된다.",
+    "멸균 라인 청정관리 기준은 반도체 클린룸 소재 납품 조건으로 확장된다.",
+    "12개월 필터/배지 예약 배정권은 후반 소재 공급권 결산에서 원료 우선권과 함께 묶인다."
+  ],
+  "callback": [
+    "품질성적서 비교 프로토콜이 필터 lot 성능검증 프로토콜로 확장된다.",
+    "2회 분할입고권 경험은 필터/배지 예약 배정권을 월별 slot으로 나누는 방식에 재사용된다.",
+    "부평 2공장 생산 슬롯 보호 메모가 이번에는 멸균 라인 2일 생산 슬롯 보호 확약으로 구체화된다."
+  ],
+  "emotional_beat": {
+    "protagonist_feeling": "태오는 약을 만드는 일이 원료 하나의 승부가 아니라 보이지 않는 소모품의 줄까지 잡는 일이라는 걸 몸으로 받아들인다.",
+    "reader_catharsis": "대기업이 물량을 선점해 라인을 세우려 할 때, 주인공이 2차 공급사 검증과 기존 공급사 예약권을 동시에 잡아 병목을 경쟁 구도로 바꾸는 사이다."
+  },
+  "tension_level": 8,
+  "pov_character": "강태오",
+  "location": {
+    "place": "부평 2공장 멸균라인 앞 회의실과 필터 공급사 기술자료실",
+    "type": "sterile_process_filter_supply_room",
+    "macro_battlefield": "공정 필터/배지 공급권과 검증자료 통제"
+  },
+  "time_span": {
+    "duration": "7일",
+    "in_story_time": "2001년 5월 초"
+  },
+  "genre_ext": {
+    "capital_before": "5천 9백만 + 원료 한 드럼 우선 배정권 + 90일 지역 물류창고 전용 슬롯 + lot별 품질성적서 사본권 + 첫 출고 지시권 + 재고담보 사전검토권 + 부평 2공장 생산 슬롯 보호 메모 + 비침해 생산계획 검토권 + 파일럿 배치 1회 잔여 슬롯 + 공정변경 QA 문서 사본권 + 법무 사전검토 메모 접근권 + A급 중간체 6개월 우선공급권 + 톤당 가격밴드 계약 + 불순물 프로파일 선제 제출권 + 2회 분할입고권 + 원료재고 담보 term sheet + 대체 합성 라인 1회 검증권 + dual-source 원료 조항 + 품질성적서 비교 프로토콜 + 기술이전 폴더 열람권 + 부평 2공장 명의 파일럿 검증 보고서 작성권",
+    "capital_after": "4천 8백만 + 원료 한 드럼 우선 배정권 + 90일 지역 물류창고 전용 슬롯 + lot별 품질성적서 사본권 + 첫 출고 지시권 + 재고담보 사전검토권 + 부평 2공장 생산 슬롯 보호 메모 + 비침해 생산계획 검토권 + 파일럿 배치 1회 잔여 슬롯 + 공정변경 QA 문서 사본권 + 법무 사전검토 메모 접근권 + A급 중간체 6개월 우선공급권 + 톤당 가격밴드 계약 + 불순물 프로파일 선제 제출권 + 2회 분할입고권 + 원료재고 담보 term sheet + 대체 합성 라인 1회 검증권 + dual-source 원료 조항 + 품질성적서 비교 프로토콜 + 기술이전 폴더 열람권 + 부평 2공장 명의 파일럿 검증 보고서 작성권 + 12개월 필터/배지 예약 배정권 + 2차 공급사 적격성 평가권 + 필터 lot 성능검증 프로토콜 재사용권 + 검증자료 사본권 + 멸균 라인 2일 생산 슬롯 보호 확약",
+    "capital_delta": "-1천 1백만 현금, +필터/배지 예약 배정권, +2차 공급사 적격성 평가권, +검증 프로토콜 재사용권, +멸균 라인 슬롯 보호",
+    "profit_loss": "검증비와 예약 보증금으로 현금은 줄지만, 필터 부족에 따른 배치 중단 리스크와 대기업 물량 선점 리스크를 동시에 낮춘다.",
+    "method": "필터 lot 성능검증표, 배지 적합성 확인, 예약 배정권, 2차 공급사 적격성 평가를 하나의 공정 권리 패키지로 묶는다.",
+    "investment_type": "필터/배지 예약 보증금 + 적격성 평가비",
+    "deal_type": "필터/배지 예약 배정 및 검증자료 사본권 계약",
+    "leverage_used": "품질성적서 비교 프로토콜, 분할입고권, 생산 슬롯 보호 메모",
+    "opponent": {
+      "name": "국내 화학 대기업 + 필터 공급사",
+      "type": "공정 필터/배지 및 멸균 생산 슬롯 복합 압박 세력",
+      "weakness_exploited": "공정 필터/배지 및 멸균 생산 슬롯의 병목을 문서·권리·책임선으로 잠그는 강태오의 방식을 과소평가한다."
+    },
+    "time_pressure": "멸균 라인 다음 배치 시작 전 7일",
+    "knowledge_used": "멸균 공정 필터, 배지 적합성, lot 성능검증, 검증자료 사본권, 생산 슬롯 보호",
+    "risk_level": "상",
+    "business_sector": "공정 필터/배지 및 멸균 생산 슬롯",
+    "section_rotation": "원료의약품과 정밀화학 중반 경계",
+    "success_pattern": "보이지 않는 소모품 병목을 예약권, 검증권, 2차 공급사 경쟁으로 전환한다.",
+    "opening_progression": {
+      "public_signboard_event": "국내 화학 대기업이 필터 물량을 선점하고 공급사가 부평 2공장 배정을 월말 뒤로 미룬다.",
+      "representative_reevaluation": "멸균라인장은 태오를 원료 투자자가 아니라 라인을 실제로 돌게 만드는 공정 권리 설계자로 다시 본다.",
+      "next_battlefield_ticket": "필터 lot 검증 프로토콜과 청정관리 기준이 화학공장 밤샘 시험 및 반도체 클린룸 소재 조건으로 이어진다."
+    },
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "filter_media_reserved_allocation_receipt",
+      "receipt_line": "태오는 후순위 배정 통보를 12개월 필터/배지 예약 배정권과 멸균 라인 2일 생산 슬롯 보호 확약으로 뒤집는다.",
+      "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "보이지 않는 소모품 병목을 예약권, 검증권, 2차 공급사 경쟁으로 전환한다.",
+      "recognition_signal": "필터 공급사 영업팀의 시선 변화: 예약 배정권과 검증자료 사본권을 계약서에 넣어야 하는 관리 대상",
+      "reward_signal": "태오는 후순위 배정 통보를 12개월 필터/배지 예약 배정권과 멸균 라인 2일 생산 슬롯 보호 확약으로 뒤집는다.",
+      "growth_signal": "원료 공급권을 넘어 공정 소모품의 검증권과 예약 배정권까지 잡는 운영 설계자가 된다.",
+      "expectation_signal": "필터 lot 검증 프로토콜과 청정관리 기준이 화학공장 밤샘 시험 및 반도체 클린룸 소재 조건으로 이어진다.",
+      "reader_feel": "독자는 「필터가 없으면 약도 없다」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 태오는 후순위 배정 통보를 12개월 필터/배지 예약 배정권과 멸균 라인 2일 생산 슬롯 보호 확약으로 뒤집는다. 성장 장면: 원료 공급권을 넘어 공정 소모품의 검증권과 예약 배정권까지 잡는 운영 설계자가 된다. 다음 기대감: 필터 lot 검증 프로토콜과 청정관리 기준이 화학공장 밤샘 시험 및 반도체 클린룸 소재 조건으로 이어진다.",
+      "mature_success_signal": "강태오는 필터가 없으면 약도 없다의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "보이지 않는 소모품 병목을 예약권, 검증권, 2차 공급사 경쟁으로 전환한다.",
+        "recognition": "필터 공급사 영업팀의 시선 변화: 예약 배정권과 검증자료 사본권을 계약서에 넣어야 하는 관리 대상",
+        "reward": "태오는 후순위 배정 통보를 12개월 필터/배지 예약 배정권과 멸균 라인 2일 생산 슬롯 보호 확약으로 뒤집는다.",
+        "growth": "원료 공급권을 넘어 공정 소모품의 검증권과 예약 배정권까지 잡는 운영 설계자가 된다.",
+        "expectation": "필터 lot 검증 프로토콜과 청정관리 기준이 화학공장 밤샘 시험 및 반도체 클린룸 소재 조건으로 이어진다.",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 필터 공급사 영업팀의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 필터 lot 검증 프로토콜과 청정관리 기준이 화학공장 밤샘 시험 및 반도체 클린룸 소재 조건으로 이어진다."
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "대체 합성 라인이 열리자 라인은 다시 움직이는 듯 보인다. 하지만 멸균 공정 회의에서 QA 책임자가 마지막 병목을 꺼낸다. 원료와 중간체가 있어도 공정 필터와 배지가 없으면 배치는 통과할 수 없고, 필터 lot가 바뀌면 성능 확인과 문서 검증을 다시 거쳐야 한다.",
+      "proof_action": "태오는 필터를 소모품이 아니라 공정 권리로 본다. 품질성적서 비교 프로토콜을 필터 lot 성능표로 바꾸고, 멸균 라인에서 사용 전 압력강하, 용출물, 배지 적합성 확인을 한 번에 묶는 검증표를 제시한다.",
+      "proof_axis": "멸균 공정 필터, 배지 적합성, lot 성능검증, 검증자료 사본권, 생산 슬롯 보호",
+      "recognition_or_resistance_signal": "필터 공급사 영업팀 -> 예약 배정권과 검증자료 사본권을 계약서에 넣어야 하는 관리 대상",
+      "receipt_asset": "태오는 후순위 배정 통보를 12개월 필터/배지 예약 배정권과 멸균 라인 2일 생산 슬롯 보호 확약으로 뒤집는다.",
+      "reward_asset_classes": [
+        "quality_responsibility",
+        "raw_materials"
+      ],
+      "next_regulated_gate": "필터 lot 검증 프로토콜과 청정관리 기준이 화학공장 밤샘 시험 및 반도체 클린룸 소재 조건으로 이어진다.",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 필터 공급사 영업팀의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 필터 lot 검증 프로토콜과 청정관리 기준이 화학공장 밤샘 시험 및 반도체 클린룸 소재 조건으로 이어진다.",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "business_memory",
+    "timeline_knowledge": "태오는 전생에서 원료보다 필터와 배지 같은 공정 소모품 부족이 배치를 더 자주 멈췄다는 걸 기억한다.",
+    "butterfly_effect": "공정 소모품을 단순 구매품이 아니라 검증자료와 생산 슬롯이 붙은 권리로 묶으면서 부평 2공장의 중단 리스크가 줄어든다.",
+    "death_flag": false,
+    "regression_hint": "태오가 멸균라인 앞에서 '약은 원료만으로 나오지 않는다'고 생각하는 정도로만 암시한다.",
+    "future_prep": "필터 lot 검증표와 청정관리 기준은 화학공장 품질문서와 반도체 클린룸 소재 조건으로 확장된다."
+  },
+  "block_no": 35,
+  "foreshadow_targets": [
+    {
+      "target_block": 36,
+      "target_event": "화학공장 밤샘 시험"
+    },
+    {
+      "target_block": 37,
+      "target_event": "반도체 클린룸의 냄새"
+    }
+  ],
+  "callback_sources": [
+    {
+      "source_block": 34,
+      "source_event": "일본 상사의 전화"
+    },
+    {
+      "source_block": 33,
+      "source_event": "중간체의 계절"
+    },
+    {
+      "source_block": 31,
+      "source_event": "원료 한 드럼"
+    }
+  ]
+}

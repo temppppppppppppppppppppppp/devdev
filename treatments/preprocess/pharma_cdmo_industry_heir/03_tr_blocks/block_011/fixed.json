@@ -40,9 +40,9 @@
     "한 상자 반품 손실은 물류를 외주로만 둘 수 없다는 판단으로 이어진다."
   ],
   "callback": [
-    "Block 004의 첫 온도기록 원장이 병원 정기 납품의 온도기록 양식으로 확장된다.",
-    "Block 009의 병원/식약처 통합 기록 체계가 냉장배송 기록으로 넓어진다.",
-    "Block 010의 태림제약 원료망 종료 이후 첫 독립 납품에서 물류 병목이 드러난다."
+    "첫 온도기록 원장이 병원 정기 납품의 온도기록 양식으로 확장된다.",
+    "병원/식약처 통합 기록 체계가 냉장배송 기록으로 넓어진다.",
+    "태림제약 원료망 종료 이후 첫 독립 납품에서 물류 병목이 드러난다."
   ],
   "emotional_beat": {
     "type": "operational_alarm",
@@ -94,6 +94,60 @@
       "receipt_type": "standard_and_control_receipt",
       "receipt_line": "강태오는 상자 한 개를 포기하고 냉장배송 표준 양식, 물류 책임선 접근권, 병원 우선협상권 유지, 글로벌 예비 방문 유지를 확보한다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "일부 물량 손실을 감수하고 배송 사고를 냉장배송 표준 양식과 물류 책임선 확보로 바꾸는 운영 승리",
+      "recognition_signal": "박도현의 시선 변화: 태오바이오가 손실을 감수하고 기록 공백 상자를 격리하자 우선협상권을 유지하며 온도기록 양식 도입을 허용한다",
+      "reward_signal": "강태오는 상자 한 개를 포기하고 냉장배송 표준 양식, 물류 책임선 접근권, 병원 우선협상권 유지, 글로벌 예비 방문 유지를 확보한다.",
+      "growth_signal": "강태오는 배송 사고를 숨기지 않고 한 상자를 포기해 병원 신뢰를 지키고, 대신 온도기록 표준을 자기 양식으로 바꾼다.",
+      "expectation_signal": "차량별 온도계 교체 로그와 배송 원인서가 공항 냉장창고와 냉장차 확보 전장으로 이어진다",
+      "reader_feel": "독자는 「두 시간 끊긴 온도계」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 상자 한 개를 포기하고 냉장배송 표준 양식, 물류 책임선 접근권, 병원 우선협상권 유지, 글로벌 예비 방문 유지를 확보한다. 성장 장면: 강태오는 배송 사고를 숨기지 않고 한 상자를 포기해 병원 신뢰를 지키고, 대신 온도기록 표준을 자기 양식으로 바꾼다. 다음 기대감: 차량별 온도계 교체 로그와 배송 원인서가 공항 냉장창고와 냉장차 확보 전장으로 이어진다",
+      "mature_success_signal": "강태오는 두 시간 끊긴 온도계의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "일부 물량 손실을 감수하고 배송 사고를 냉장배송 표준 양식과 물류 책임선 확보로 바꾸는 운영 승리",
+        "recognition": "박도현의 시선 변화: 태오바이오가 손실을 감수하고 기록 공백 상자를 격리하자 우선협상권을 유지하며 온도기록 양식 도입을 허용한다",
+        "reward": "강태오는 상자 한 개를 포기하고 냉장배송 표준 양식, 물류 책임선 접근권, 병원 우선협상권 유지, 글로벌 예비 방문 유지를 확보한다.",
+        "growth": "강태오는 배송 사고를 숨기지 않고 한 상자를 포기해 병원 신뢰를 지키고, 대신 온도기록 표준을 자기 양식으로 바꾼다.",
+        "expectation": "차량별 온도계 교체 로그와 배송 원인서가 공항 냉장창고와 냉장차 확보 전장으로 이어진다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 박도현의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 차량별 온도계 교체 로그와 배송 원인서가 공항 냉장창고와 냉장차 확보 전장으로 이어진다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "태림제약 원료망을 끊은 뒤 첫 병원 정기 납품일, 태오바이오는 냉장배송을 외부 물류업체에 맡긴다. 병원 약제부 검수대에 도착한 상자 네 개 중 하나의 온도기록이 두 시간 비어 있다. 약은 얼지도 녹지도 않았지만, 강태오는 그 공백을 그냥 넘기지 않는다. 전생에서 수많은 사고는 약 자체보다 '기록이 없는 시간'에서 터졌다.",
+      "proof_action": "태오는 상자를 무리하게 통과시키지 않는다. 기록 공백 상자는 격리하고, 같은 배치의 나머지 상자와 병원 재고를 대조해 당일 처방 공백만 막는다. 배송업체에는 운송료 감액이 아니라 기록 공백 원인서, 차량별 온도계 교체 로그, 기사 서명표를 요구한다.",
+      "proof_axis": "전생에서 냉장배송 사고는 온도 이탈보다 기록 공백에서 더 크게 번졌다는 기억",
+      "recognition_or_resistance_signal": "박도현 -> 태오바이오가 손실을 감수하고 기록 공백 상자를 격리하자 우선협상권을 유지하며 온도기록 양식 도입을 허용한다",
+      "receipt_asset": "강태오는 상자 한 개를 포기하고 냉장배송 표준 양식, 물류 책임선 접근권, 병원 우선협상권 유지, 글로벌 예비 방문 유지를 확보한다.",
+      "reward_asset_classes": [
+        "rights_control_asset"
+      ],
+      "next_regulated_gate": "차량별 온도계 교체 로그와 배송 원인서가 공항 냉장창고와 냉장차 확보 전장으로 이어진다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 박도현의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 차량별 온도계 교체 로그와 배송 원인서가 공항 냉장창고와 냉장차 확보 전장으로 이어진다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {

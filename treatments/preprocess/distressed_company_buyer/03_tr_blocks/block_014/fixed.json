@@ -1,0 +1,138 @@
+{
+  "block_id": "Block 14",
+  "title": "부도 회사 제품을 누가 사나",
+  "content": {
+    "context": "조건부 설비 사용권이 열리자 태경푸드는 검증 생산 3회를 준비한다. 그런데 생산을 해도 살 사람이 없으면 모든 proof는 비용으로 끝난다. OEM buyer인 미도급식 구매팀은 부도 회사 제품을 고객사 식단에 올릴 수 없다며 발주를 보류한다. 한도윤은 그 반응이 당연하다고 본다. buyer는 품질보다 평판 리스크를 먼저 산다. 그러니 지금 필요한 건 큰 발주가 아니라, 부도 낙인을 납품 공백 리스크보다 작게 만드는 조건부 테스트다.",
+    "event_villain": "미도급식 구매팀장 정라희는 태경푸드 이름이 기사에 한 번 더 나오면 학교 급식 클레임이 터진다며 샘플 발주도 거부한다. 공장 채권자 대표는 buyer가 없다면 설비 사용권도 의미 없다며 다시 설비 매각을 주장한다. 박소연은 검증 생산 실패 시 HACCP 책임이 자기에게 돌아온다고 물러서고, 최기철은 시운전만 하고 발주가 없으면 작업 순서 이전료를 올리겠다고 버틴다. 3회 검증 생산 조건이 출발 전에 흔들린다.",
+    "solution": "도윤은 정라희에게 애국심이나 상생을 말하지 않는다. 미도급식의 다음 달 냉장 반찬 납품 공백표를 꺼낸다. 기존 공급사 한 곳이 설비 보수로 5일 비고, 대체 단가는 18퍼센트 높으며, 삼진콜드 route를 쓰면 새벽 입고 시간을 기존보다 37분 줄일 수 있다. 도윤은 태경푸드 브랜드를 전면에 내세우지 않는 OEM blind test를 제안한다. 조건은 세 가지다. 태경푸드 HACCP 만료일과 임시 SOP 부속서 공개, 삼진콜드 온도 로그 실시간 공유, 검증 생산 3회 중 1회만 미도급식 QC가 입회. 대신 정라희는 정식 발주가 아니라 납품 공백 대비용 테스트 슬롯 1회를 열고, 실패 시 도윤의 SPV escrow에서 테스트 비용을 부담한다.",
+    "reward": "정라희는 정식 발주는 보류한다. 도윤은 전부 이기지 못한다. 대신 미도급식 QC 입회 테스트 슬롯, 납품 공백 비용표, 실패 시 escrow 부담 조건, 브랜드 비노출 blind test 승인 메일을 확보한다. 공장 채권자 대표는 즉시 설비 매각 주장을 멈추고, 권재호는 조건부 사용권의 다음 단계가 살아 있다고 인정한다. 도윤은 태경푸드 제품을 판 것이 아니다. buyer가 부도 낙인을 견딜 수 있는 최소 실험권을 산 것이다."
+  },
+  "incident_beats": [
+    "OEM buyer의 부도 낙인/평판 리스크 발주 보류와 공장 채권자의 설비 매각 재압박",
+    "삼진콜드 route proof와 납품 공백 비용표로 blind test 슬롯, QC 입회, 실패 시 escrow 부담 조건 receipt 확보"
+  ],
+  "stakes": "OEM buyer가 완전히 빠지면 HACCP, SOP, 설비 사용권은 제조 cashflow로 이어지지 못한다. 정식 발주를 무리하게 요구하면 부도 낙인과 평판 리스크가 커진다. 테스트 비용 보증 없이 buyer를 설득하려 하면 미도급식은 리스크를 떠안지 않는다.",
+  "power_shift": {
+    "protagonist": "설비 조건부 사용권을 확보한 실행 구조 설계자에서 buyer의 평판 리스크를 납품 공백 테스트 슬롯으로 낮추는 시장 진입 설계자로 이동한다.",
+    "antagonist": "OEM buyer는 정식 발주를 보류하지만, 납품 공백과 route proof 때문에 완전 거절 대신 QC 입회 테스트를 열어야 하는 위치로 밀린다."
+  },
+  "relationship_delta": [
+    {
+      "target": "정라희",
+      "before": "부도 회사 제품은 급식에 올릴 수 없다며 샘플 발주도 거부하는 OEM buyer",
+      "after": "납품 공백 비용표와 blind test 구조를 보고 정식 발주는 보류하되 QC 입회 테스트 슬롯을 연다"
+    },
+    {
+      "target": "박소연",
+      "before": "검증 생산 실패 시 HACCP 책임이 자기에게 돌아올까 봐 물러선다",
+      "after": "blind test 조건과 QC 입회 범위가 정해지자 품질 책임선을 다시 잡는다",
+      "continuity_anchor_before": "시운전 입회와 중심온도 로그 제출 조건이 생기자 품질 검증 책임 범위를 다시 잡을 수 있게 된다"
+    },
+    {
+      "target": "최기철",
+      "before": "발주 없는 시운전이면 작업 순서 이전료를 올리려 한다",
+      "after": "테스트 슬롯이 열리자 검증 생산 성공 보너스가 현실화되어 협조한다",
+      "continuity_anchor_before": "검증 생산 3회와 SOP 이전료 조건이 현실화되자 시운전 협조로 돌아선다"
+    },
+    {
+      "target": "공장 채권자 대표",
+      "before": "buyer가 없으니 설비 매각으로 돌아가자고 주장한다",
+      "after": "QC 입회 테스트 슬롯과 납품 공백 비용표 때문에 매각 주장을 일단 보류한다",
+      "continuity_anchor_before": "인증과 OEM 승인권이 설비보다 먼저 평가돼야 한다는 회의록 때문에 즉시 매각을 밀어붙이지 못한다"
+    }
+  ],
+  "foreshadow": [
+    "blind test 승인 메일은 후속 국면의 조건부 납품 승인으로 회수된다.",
+    "실패 시 escrow 부담 조건은 후속 국면 또는 후속 국면의 cashflow 압박과 리스크 관리 근거가 된다.",
+    "정라희의 평판 리스크는 해당 아크 후반의 OEM 승인권 가격 산정에 들어간다.",
+    "납품 공백 비용표는 급식업체 전장으로 넘어가는 해당 아크 exit proof가 된다."
+  ],
+  "callback": [
+    "후속 국면의 검증 생산 3회 조건을 buyer-facing blind test 조건으로 변환한다.",
+    "후속 국면의 임시 SOP 부속서와 클레임 방지표를 정라희의 QC 입회 기준으로 사용한다.",
+    "삼진콜드의 route control과 온도 로그를 납품 공백 리스크 감소 proof로 회수한다."
+  ],
+  "emotional_beat": {
+    "type": "market_defeat_to_test_slot",
+    "intensity": 8
+  },
+  "tension_level": 9,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "미도급식 구매팀 화상회의 / 태경푸드 품질관리실 / 생산라인 시운전 대기 구역",
+    "type": "OEM buyer hold and blind-test negotiation"
+  },
+  "time_span": {
+    "duration": "하루",
+    "in_story_time": "다음 날"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "72시간 조건부 설비 사용권 / SPV escrow 보증금 / 급속냉각기 시운전 입회 일정 / 검증 생산 3회 조건 / OEM 승인 검토 유지",
+    "capital_after": "정식 발주 보류 / 미도급식 QC 입회 blind test 슬롯 / 납품 공백 비용표 / 실패 시 SPV escrow 부담 조건 / 브랜드 비노출 테스트 승인 메일",
+    "capital_delta": "0억",
+    "profit_loss": "정식 발주 실패, 그러나 OEM 승인 검토와 제조 cashflow 옵션 유지",
+    "method": "부도 낙인을 정면 돌파하지 않고, 급식업체의 납품 공백 비용과 삼진콜드 route proof를 묶어 브랜드 비노출 QC 입회 테스트 슬롯을 확보한다.",
+    "investment_type": "distressed OEM market-entry defense",
+    "deal_type": "blind test slot / QC attendance / escrow-backed failure condition",
+    "leverage_used": [
+      "삼진콜드 route control",
+      "온도 로그 실시간 공유",
+      "임시 SOP 부속서",
+      "클레임 재발 방지표",
+      "검증 생산 3회 조건",
+      "미도급식 납품 공백 비용표",
+      "SPV escrow 보증금"
+    ],
+    "opponent": {
+      "name": "정라희 / 공장 채권자 대표 / 평판 리스크",
+      "type": "OEM buyer reputation risk, creditor asset-sale pressure, and market stigma",
+      "weakness_exploited": "buyer는 부도 낙인을 싫어하지만 납품 공백과 대체 단가 상승도 피해야 한다"
+    },
+    "historical_event": null,
+    "time_pressure": "검증 생산 3회 일정이 시작되기 전 buyer test slot을 열지 못하면 리스 사용권과 SOP proof가 cashflow로 이어지지 못한다.",
+    "knowledge_used": "회귀 전 태경푸드가 정식 발주 전 blind test와 납품 공백 대응 물량으로 OEM 재진입했다는 기억",
+    "risk_level": "고위험",
+    "business_sector": "식품 제조 / OEM 납품 / 급식 납품 / SPV escrow",
+    "section_rotation": "멈춘 식품공장의 납품 승인",
+    "success_pattern": "정식 발주 패배를 조건부 test slot receipt로 전환",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "controlled_defeat_blind_test_slot_receipt",
+      "receipt_line": "정식 발주는 보류되지만 미도급식 QC 입회 blind test 슬롯, 납품 공백 비용표, 실패 시 SPV escrow 부담 조건, 브랜드 비노출 테스트 승인 메일이 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 태경푸드가 정식 발주 전 blind test와 납품 공백 대응 물량으로 OEM 승인권을 회복했다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 태경푸드는 buyer 평판 리스크 때문에 정식 발주를 바로 받지 못했고, 다른 인수자가 test slot으로 다시 들어갔다.",
+      "changed_event": "이번에는 도윤이 삼진콜드 route proof와 escrow 조건으로 blind test 슬롯을 먼저 확보한다.",
+      "ripple_effect": "OEM 승인 회복의 첫 문이 정식 발주가 아니라 리스크 제한 test slot로 열린다."
+    },
+    "death_flag": {
+      "avoided": "정식 발주 거절로 HACCP/SOP/설비 사용권이 모두 비용으로 끝나는 미래",
+      "method": "부도 낙인을 낮추는 브랜드 비노출 테스트와 실패 시 escrow 부담 조건으로 buyer risk를 제한한다."
+    },
+    "regression_hint": {
+      "slip_up": "정라희가 납품 공백표를 꺼내기 전에 도윤이 대체 단가 18퍼센트 상승과 새벽 입고 37분 단축을 먼저 말한다.",
+      "suspicion_from": "정라희와 서민재"
+    },
+    "future_prep": {
+      "action": "blind test 슬롯, QC 입회 조건, escrow 부담 조건을 검증 생산 실행 계획으로 묶을 준비",
+      "target_event": "후속 국면 검증 생산"
+    }
+  },
+  "block_no": 14,
+  "foreshadow_targets": [
+    15,
+    16,
+    20
+  ]
+}

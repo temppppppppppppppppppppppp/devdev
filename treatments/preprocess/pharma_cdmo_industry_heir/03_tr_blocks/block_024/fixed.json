@@ -7,7 +7,7 @@
     "solution": "태오는 전산실 권한을 정면으로 요구하지 않는다. 대신 구매실 안에 '반출 없는 비용절감 검증 샌드박스'를 제안한다. 원자료는 전산실 서버 안에 두고, 태오바이오는 컬럼명과 오류 유형만 설계한다. 결과물은 환자/약국/거래처 식별값이 없는 비용절감 리포트로만 나온다. 박도현에게는 지난 석 달간 납품-폐기-정산 오류로 새어 나간 금액을 구매실 책임으로 먼저 계산하게 하고, 사립병원에는 정제료 지급을 미루면 보완자료에서 빠진다고 통보한다. 보험심사 라인에는 샌드박스 검증 절차 자체를 보완자료로 제출한다. 그는 데이터 접근을 줄이는 대신, 감사 가능한 절차를 만들어 접근권의 단가를 올린다.",
     "reward": "전산실장은 원본 반출 금지, 쿼리 로그 보존, 결과물 익명화 조건으로 4주 샌드박스 검증을 허용한다. 박도현은 구매실 비용절감 리포트를 병원 내부 결재자료로 올리고, 사립병원은 보완자료에서 빠지지 않으려고 정제료 지급을 유지한다. 보험심사 실무자는 문구 수정안 보완자료로 샌드박스 절차를 접수한다. 강태오는 데이터 원본을 더 많이 받은 것이 아니라 더 강한 권리를 얻는다. 감사 가능한 샌드박스 접근권, 비용절감 리포트 작성권, 쿼리 로그 조건부 사용권, 전산실 승인 절차라는 방패다."
   },
-  "stakes": "전산실 차단이 확정되면 구매실 엑셀, 약국 POS, 보험 문구 근거가 모두 끊기고 ARC-03은 멈춘다. 반대로 원본 접근을 고집하면 개인정보 리스크로 영구 차단된다. 즉시 이득은 감사 가능한 샌드박스 접근권과 비용절감 리포트 작성권이고, 비용은 원자료 접근 제한, 쿼리 로그 감시, 검증 실패 시 정제료 중단이다.",
+  "stakes": "전산실 차단이 확정되면 구매실 엑셀, 약국 POS, 보험 문구 근거가 모두 끊기고 멈춘다. 반대로 원본 접근을 고집하면 개인정보 리스크로 영구 차단된다. 즉시 이득은 감사 가능한 샌드박스 접근권과 비용절감 리포트 작성권이고, 비용은 원자료 접근 제한, 쿼리 로그 감시, 검증 실패 시 정제료 중단이다.",
   "power_shift": {
     "protagonist": "강태오는 원본 데이터 욕심을 버리고 전산실 통제 아래의 샌드박스를 받아들여 데이터 접근권을 제도화한다.",
     "antagonist": "전산실장은 차단권을 쥐고 있었지만 구매실 비용절감 proof와 보험 보완기한 때문에 완전 차단 대신 감시 가능한 접근을 허용한다."
@@ -40,14 +40,14 @@
     }
   ],
   "foreshadow": [
-    "샌드박스 절차는 Block 026 첫 데이터 계약의 표준 조항이 된다.",
-    "비용절감 리포트는 Block 025 심사 보류 통지에서 경쟁사 로비를 반박하는 자료가 된다.",
-    "쿼리 로그 조건은 Block 030 표준 청구서의 감사 가능한 데이터 처리 기준으로 확장된다."
+    "샌드박스 절차는 첫 데이터 계약의 표준 조항이 된다.",
+    "비용절감 리포트는 심사 보류 통지에서 경쟁사 로비를 반박하는 자료가 된다.",
+    "쿼리 로그 조건은 표준 청구서의 감사 가능한 데이터 처리 기준으로 확장된다."
   ],
   "callback": [
-    "Block 023의 심사 재검토 메모와 보완자료 기한이 전산실 차단을 우회할 압박으로 쓰인다.",
-    "Block 022의 약국 POS 집계표가 원본 반출 없는 샌드박스 검증 대상으로 바뀐다.",
-    "Block 021의 납품/폐기/정산 번호 매칭권이 비용절감 리포트의 핵심 계산식이 된다."
+    "심사 재검토 메모와 보완자료 기한이 전산실 차단을 우회할 압박으로 쓰인다.",
+    "약국 POS 집계표가 원본 반출 없는 샌드박스 검증 대상으로 바뀐다.",
+    "납품/폐기/정산 번호 매칭권이 비용절감 리포트의 핵심 계산식이 된다."
   ],
   "emotional_beat": {
     "type": "procedural_countermove",
@@ -92,13 +92,67 @@
     "opening_progression": {
       "public_signboard_event": "전산실의 외부 제공 중단 통보가 원본 반출 없는 4주 샌드박스 검증 승인으로 바뀐다",
       "representative_reevaluation": "전산실, 구매실, 보험심사 라인이 태오바이오를 위험한 외부 업체가 아니라 감시 가능한 비용절감 데이터 사업자로 재분류한다",
-      "next_battlefield_ticket": "비용절감 리포트와 샌드박스 로그가 Block 025 심사 보류 통지의 반박 자료로 이어진다"
+      "next_battlefield_ticket": "비용절감 리포트와 샌드박스 로그가 심사 보류 통지의 반박 자료로 이어진다"
     },
     "block_cider": {
       "has_cider": true,
       "receipt_type": "governed_access_receipt",
       "receipt_line": "강태오는 전산실 차단을 감사 가능한 샌드박스 접근권, 비용절감 리포트 작성권, 쿼리 로그 조건부 사용권으로 바꾼다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "전산실 차단을 샌드박스 접근권과 비용절감 리포트 권한으로 바꾸는 절차 장악 승리",
+      "recognition_signal": "대학병원 전산실의 시선 변화: 원본 반출 금지와 쿼리 로그 보존 조건으로 4주 샌드박스 검증을 허용한다",
+      "reward_signal": "강태오는 전산실 차단을 감사 가능한 샌드박스 접근권, 비용절감 리포트 작성권, 쿼리 로그 조건부 사용권으로 바꾼다.",
+      "growth_signal": "강태오는 원본 데이터 욕심을 버리고 전산실 통제 아래의 샌드박스를 받아들여 데이터 접근권을 제도화한다.",
+      "expectation_signal": "비용절감 리포트와 샌드박스 로그가 심사 보류 통지의 반박 자료로 이어진다",
+      "reader_feel": "독자는 「전산실의 반격」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 전산실 차단을 감사 가능한 샌드박스 접근권, 비용절감 리포트 작성권, 쿼리 로그 조건부 사용권으로 바꾼다. 성장 장면: 강태오는 원본 데이터 욕심을 버리고 전산실 통제 아래의 샌드박스를 받아들여 데이터 접근권을 제도화한다. 다음 기대감: 비용절감 리포트와 샌드박스 로그가 심사 보류 통지의 반박 자료로 이어진다",
+      "mature_success_signal": "강태오는 전산실의 반격의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "전산실 차단을 샌드박스 접근권과 비용절감 리포트 권한으로 바꾸는 절차 장악 승리",
+        "recognition": "대학병원 전산실의 시선 변화: 원본 반출 금지와 쿼리 로그 보존 조건으로 4주 샌드박스 검증을 허용한다",
+        "reward": "강태오는 전산실 차단을 감사 가능한 샌드박스 접근권, 비용절감 리포트 작성권, 쿼리 로그 조건부 사용권으로 바꾼다.",
+        "growth": "강태오는 원본 데이터 욕심을 버리고 전산실 통제 아래의 샌드박스를 받아들여 데이터 접근권을 제도화한다.",
+        "expectation": "비용절감 리포트와 샌드박스 로그가 심사 보류 통지의 반박 자료로 이어진다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 대학병원 전산실의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 비용절감 리포트와 샌드박스 로그가 심사 보류 통지의 반박 자료로 이어진다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "보험 코드 문구 수정안이 재검토 메모를 받자마자 대학병원 전산실이 움직인다. 전산실은 구매실 엑셀, 약국 POS 집계표, 보험 문구 근거자료를 모두 외부 업체 제공 중단 목록에 올린다. 명분은 정당하다. 개인정보 보호, 내부 통제, 외부 데이터 결합 금지. 강태오는 화내지 않는다.",
+      "proof_action": "태오는 전산실 권한을 정면으로 요구하지 않는다. 대신 구매실 안에 '반출 없는 비용절감 검증 샌드박스'를 제안한다. 원자료는 전산실 서버 안에 두고, 태오바이오는 컬럼명과 오류 유형만 설계한다. 결과물은 환자/약국/거래처 식별값이 없는 비용절감 리포트로만 나온다.",
+      "proof_axis": "전생에서 병원 전산실은 원본 접근보다 감사 로그와 내부 결재자료가 붙은 샌드박스에 더 약했다는 기억",
+      "recognition_or_resistance_signal": "대학병원 전산실 -> 원본 반출 금지와 쿼리 로그 보존 조건으로 4주 샌드박스 검증을 허용한다",
+      "receipt_asset": "강태오는 전산실 차단을 감사 가능한 샌드박스 접근권, 비용절감 리포트 작성권, 쿼리 로그 조건부 사용권으로 바꾼다.",
+      "reward_asset_classes": [
+        "rights_control_asset"
+      ],
+      "next_regulated_gate": "비용절감 리포트와 샌드박스 로그가 심사 보류 통지의 반박 자료로 이어진다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 대학병원 전산실의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 비용절감 리포트와 샌드박스 로그가 심사 보류 통지의 반박 자료로 이어진다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {

@@ -1,0 +1,166 @@
+{
+  "_schema": "tr.v1",
+  "_work_id": "haewon_digital_rights_1997",
+  "_block_range": "066",
+  "_total_blocks": 1,
+  "_planned_total_blocks": 70,
+  "_preceding_tr_ref": "treatments/haewon_digital_rights_1997_tr_block_061_065_draft.json",
+  "_phase0_ref": "treatments/phase0/haewon_digital_rights_1997_phase0_design.json",
+  "_phase0_extension_ref": "treatments/phase0/haewon_digital_rights_1997_phase0_extension_061_070.json",
+  "_work_guard_ref": "work_guards/haewon_digital_rights_1997.yaml",
+  "_production_status": {
+    "run_class": "sequential_production",
+    "last_sequential_block_pass": 66,
+    "next_unit_type": "b잠금",
+    "next_block_id": 67,
+    "stop_reason": "single-b잠금 draft created under the user's one-b잠금 production 규칙; next unit should create only.",
+    "pacing_contract": "1 TR b잠금 is an episode 묶음 of roughly 2~6 episodes; each b잠금 must contain at least two distinct incident beats, self-interested pro태그onist leverage,와 a same-b잠금 satisfaction 증빙."
+  },
+  "blocks": [
+    {
+      "block_id": "Block 66",
+      "block_no": 66,
+      "title": "열어 둔 문이 독점을 지킵니다",
+      "content": {
+        "context": "전 섹터 성과형 광고 경매이 뜨자 대기업 플랫폼 진입자가 홀딩스를 독점 사업자라고 공격한다. 광고주와 개발사는 홀딩스 원장에 들어오고 싶지만, 대기업은 폐쇄 기술과 높은 수수료 프레임을 씌워 규제 담당자를 움직인다.",
+        "event_villain": "대기업 플랫폼 진입자는 언론에 홀딩스가 모바일, 결제, 배송, 광고 데이터를 독점한다고 흘린다. 일부 개발사와 중소 광고주는 원장 접근 기준이 불투명하다고 불만을 낸다. 규제 담당자는 API를 열지 않으면 경매 하한가와 기여도 측정 규칙을 재검토하겠다고 통보한다.",
+        "solution": "도윤은 독점이 아니라고 변명하지 않는다. 그는 표준 API 사용권, 공개 수수료표, 샌드박스 인증, 원장 접근 등급표를 내놓는다. 누구나 신청할 수 있게 열어 두되, 실제 광고 기여도 측정, 에스크로, 배송 트리거, 부정거래 필터 원장 접근은 홀딩스 승인 없이는 불가능하게 설계한다.",
+        "reward": "규제 담당자는 독점 재검토를 보류하고 표준 API 사용권 시범 운영을 승인한다. 도윤은 원장 접근 승인권, 샌드박스 인증 수수료, 공개 수수료표 기준권, API 이용 중지권, 개발사/광고주 온보딩 대기열를 확보한다."
+      },
+      "stakes": "문을 닫고 버티면 규제가 경매 하한가를 찢는다. 문을 열되 원장 접근 승인과 인증 수수료를 홀딩스가 쥐어야 독점이 규제 리스크가 아니라 표준 시장으로 위장된다.",
+      "power_shift": {
+        "protagonist": "전 섹터 광고 시장 운영자에서 API 문을 열어 경쟁자를 줄 세우고 원장 접근을 승인하는 플랫폼 표준 소유권자",
+        "antagonist": "폐쇄 독점 프레임으로 홀딩스를 흔들던 대기업 플랫폼 진입자가 공개 API와 승인권 구조 때문에 공격 명분을 잃은 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "대기업 플랫폼 진입자",
+          "before": "홀딩스 에스크로 규칙 없이는 콘텐츠, 광고, 배송 데이터를 한 표로 묶지 못한다.",
+          "after": "공개 API와 수수료표 앞에서 독점 공격 명분을 잃고, 원장 접근을 신청해야 하는 쪽으로 밀린다."
+        },
+        {
+          "target": "규제 담당자",
+          "before": "보완 공시 조건부 진행 확인서를 준다.",
+          "after": "표준 API 사용권 시범 운영을 승인하고 독점 재검토를 보류한다."
+        },
+        {
+          "target": "개발사와 중소 광고주",
+          "before": "원장 접근 기준이 불투명하다며 불만을 낸다.",
+          "after": "샌드박스 인증과 온보딩 대기열에 줄을 선다."
+        },
+        {
+          "target": "광고대행사",
+          "before": "경매 하한가 안에서 성과 증명과 하한가 조정을 받아들인다.",
+          "after": "API가 오히려 기여도 측정 규칙을 표준으로 굳히는 걸 본다."
+        }
+      ],
+      "foreshadow": [
+        "공개 API와 원장 접근 승인권은 다음 가족 이사회 쿠데타에서 도윤의 창업자 통제 정관이 왜 필요한지 보여주는 실적 증거가 된다.",
+        "샌드박스 인증 수수료는 채권단 회수 압박 일정의 반복 수익 항목으로 쓰인다.",
+        "온보딩 대기열는 첫 전 섹터 통합 정산서의 외부 참여자 수치로 회수된다."
+      ],
+      "callback": [
+        "전 섹터 성과형 광고 경매, 에스크로 규칙, 배송 정산 레일, 모바일 바로가기, DMB 클립 권리가 표준 API 사용권의 연결 대상으로 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "개방으로 독점 강화",
+        "intensity": 10
+      },
+      "tension_level": 10,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "규제 담당자 공개 API 시범 운영 회의",
+        "type": "규제 회의실",
+        "macro_battlefield": "표준 API 사용권와 원장 접근 승인권"
+      },
+      "time_span": {
+        "duration": "독점 재검토 통보 후 9일",
+        "in_story_time": "2006년 여름"
+      },
+      "genre_ext": {
+        "type": "비즈니스_regulatory_strategy",
+        "capital_before": "5560",
+        "capital_after": "5820",
+        "capital_delta": "260",
+        "profit_loss": "260 증가",
+        "method": "표준 API 사용권, 공개 수수료표, 샌드박스 인증, 원장 접근 등급표를 공개해 규제 리스크를 낮추고 핵심 원장 접근은 홀딩스 승인권으로 묶는다.",
+        "investment_type": "open API 사용권 해자",
+        "deal_type": "표준 API 사용권 시범 운영 승인",
+        "leverage_used": [
+          "성과형 광고 경매 하한가",
+          "전 섹터 기여도 측정 규칙",
+          "에스크로 구매확정",
+          "배송 추적 트리거",
+          "부정거래 필터",
+          "공개 공시 패키지",
+          "원장 보존권"
+        ],
+        "opponent": {
+          "name": "폐쇄 독점 프레임",
+          "type": "대기업 플랫폼 진입자/규제 담당자/개발사 불만",
+          "weakness_exploited": "API를 열면 독점 공격은 약해지지만 실제 기여도 측정, 에스크로, 배송, 부정거래 원장 접근은 승인권으로 계속 통제할 수 있는 점"
+        },
+        "historical_event": "플랫폼 API 공개, 수수료표, 원장 접근 승인, 독점 규제 대응",
+        "time_pressure": "규제 담당자의 재검토 착수 전에 API 사용권와 수수료표를 제출해야 경매 하한가가 보류되지 않는다.",
+        "knowledge_used": "플랫폼 독점은 닫아서 지키는 것이 아니라 표준을 공개하고 핵심 원장 접근만 승인제로 묶을 때 더 오래 간다는 미래 감각",
+        "risk_level": "최고위험",
+        "business_sector": "플랫폼 API/디지털 광고/모바일 결제/배송 추적/규제",
+        "section_rotation": "표준 API 사용권 시범 운영 승인 단계",
+        "success_pattern": "공익적 개방처럼 보이게 만들고 실제 돈 되는 원장 접근과 인증 수수료는 홀딩스가 통제한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "표준 API 사용권와 원장 접근 승인권",
+          "receipt_line": "규제 담당자가 독점 재검토를 보류하고 표준 API 사용권 시범 운영을 승인하며 도윤은 원장 접근 승인권, 샌드박스 인증 수수료, 공개 수수료표 기준권, API 이용 중지권, 개발사/광고주 온보딩 대기열를 확보한다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "홀딩스가 문을 여는 척하면서 시장 참가자들을 자기 원장 승인 줄에 세운다.",
+          "representative_reevaluation": "규제 담당자, 개발사, 광고주가 도윤을 폐쇄 독점자가 아니라 표준 API를 관리하는 시장 운영자로 본다.",
+          "next_battlefield_ticket": "공개 API가 창업자 통제의 실적 증거가 되자 가족과 계열사가 이사회 쿠데타로 통제권을 흔드는 전장이 열린다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "표준 API 사용권 시범 운영 승인과 원장 접근 승인권 확보",
+          "secondary_incident": "대기업 플랫폼의 폐쇄 독점 프레임, 개발사/광고주 불만, 규제 재검토 통보 방어",
+          "bundle_expandability": "언론 공격, 개발사 불만 청문, API 사용권 설계, 수수료표 공개, 규제 승인, 온보딩 대기열 형성으로 4~6화 확장 가능"
+        },
+        "satisfaction_payoff": {
+          "humiliation_target": "대기업 플랫폼 진입자",
+          "payoff_line": "독점이라고 공격하던 상대가 공개 API 이후에는 오히려 홀딩스 원장 접근을 신청해야 하는 쪽으로 뒤집힌다.",
+          "reader_reward_type": "역공, 공개 망신, 표준 선점, 수익권 확보"
+        },
+        "self_interest_engine": {
+          "not_moral_reason": "공정한 생태계를 만들기 위해 API를 여는 것이 아니라, 규제 재검토를 멈추고 경쟁자와 개발사를 홀딩스 승인 절차 안으로 끌어들이기 위해 연다.",
+          "efficiency_gain": "독점 방어를 말싸움으로 하지 않고 공개 수수료표와 샌드박스 인증으로 처리해 규제 비용을 줄인다.",
+          "private_capture": "실제 돈이 되는 기여도 측정, 에스크로, 배송 트리거, 부정거래 필터 원장 접근은 승인권, 인증 수수료, 이용 중지권으로 홀딩스가 계속 통제한다."
+        },
+        "reader_affinity": {
+          "recognition_witness": "대기업 플랫폼 진입자",
+          "recognition_reason": "대기업 플랫폼 진입자 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "대기업 플랫폼 진입자 쪽은 성과 항목(표준 API 사용권와 원장 접근 승인권)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "표준 API 사용권, 공개 수수료표, 샌드박스 인증 기준표, 원장 접근 등급표"
+      },
+      "foreshadow_targets": [
+        67,
+        68,
+        69,
+        70
+      ],
+      "callback_sources": [
+        59,
+        61,
+        62,
+        63,
+        64,
+        65
+      ]
+    }
+  ]
+}

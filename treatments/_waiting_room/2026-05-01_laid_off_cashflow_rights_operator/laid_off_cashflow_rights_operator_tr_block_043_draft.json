@@ -1,0 +1,157 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "43",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 043 draft only. Waiting-room production continuation; not root canonical, not BI, not immediate-use.",
+  "blocks": [
+    {
+      "block_id": "Block 43",
+      "block_no": 43,
+      "title": "납품권 방어는 수리비에서 시작된다",
+      "episode_span_intent": "2~6화 분량. 20대 재검수, 유지보수 비용표, 구매본부의 납품권 회수 통지, 도윤의 유지보수 proof와 임시 납품권 방어 gate 확보를 압축한다.",
+      "content": {
+        "context": "재검수 결과는 깔끔한 승리가 아니다. 20대 중 7대는 포장 압착, 3대는 운송 중 충격, 2대는 실제 부품 불량이다. 구매본부는 이 혼합 결과를 반긴다. 원인이 섞였으니 도윤권리운영이 책임질 몫도 있다는 주장이다. 도윤은 오히려 이 표를 기다렸다. 원인이 섞이면 폐기와 환불로 닫을 수 없다. 원인별 수리비, 재포장비, 유지보수 비용을 나눠야 한다. 납품권 방어는 제품을 많이 넣는 싸움이 아니라 누가 반복 비용을 통제하느냐의 싸움으로 바뀐다.",
+        "event_villain": "첫 번째 사건은 납품권 회수 통지다. 제조사 구매본부는 도윤권리운영이 품질 리스크를 키웠다며 D-RN linked 물량의 향후 납품권 검토를 중단하겠다고 통보한다. 다온은 조용히 물류 슬롯 확정서를 뒤로 빼려 한다. 도윤은 납품권을 달라고 맞서지 않는다. 그는 재검수 원인별 비용표를 요구한다. 포장 압착은 재포장비, 운송 충격은 물류 보험, 부품 불량은 제조사 유지보수. 책임선이 나뉘면 도윤이 관리할 수 있는 비용선도 생긴다.",
+        "second_incident": "두 번째 사건은 유지보수 비용표 작성이다. 노태경은 부품 불량 2대가 같은 배치의 커넥터 접점 문제라고 짚고, 박만철은 운송 충격 3대가 북측 대체로 우회 중 발생한 가능성을 붙인다. 구매본부는 원인이 섞였다고 도윤에게 불리하다고 보지만, 도윤은 반대로 원인별 처리 단가를 나눈다. 재포장 1대 1만 8천 원, 커넥터 점검 4만 2천 원, 운송 충격 보험 청구 3만 원. 이 표가 유지보수 계약의 첫 가격표가 된다.",
+        "solution": "도윤은 납품권 회수 통지를 정면으로 찢지 않는다. 통지 효력을 30일 유예시키고, 그 사이 원인별 유지보수 비용표와 재발 방지 protocol을 제출하는 조건을 건다. 구매본부는 자격을 문제 삼지만, 노태경 retainer와 부적합 원장 접근권이 있어서 도윤은 원인별 조치 owner가 될 수 있다. 납품권은 아직 아니다. 하지만 납품권을 빼앗기기 전에 유지보수 proof를 쥔다.",
+        "reward": "블록 끝에서 도윤은 납품권을 얻지 않는다. 대신 납품권 회수 통지 30일 유예, 원인별 유지보수 비용표 v0, 재포장/커넥터/운송 충격 3분류 처리 단가, 재발 방지 protocol 제출권, 임시 납품권 방어 gate를 얻는다. 도윤은 비용표 첫 줄에 말한다. 납품권은 나중입니다. 반복 비용을 먼저 잡습니다."
+      },
+      "stakes": "납품권 회수 통지를 방치하면 장기 물류 슬롯과 생산 라인 gate가 함께 무너진다. 원인별 유지보수 비용표를 만들면 도윤은 납품자가 아니라 반복 비용 통제자로 남아 다음 보험/보증 구조를 열 수 있다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "구매본부가 D-RN linked 물량 납품권 검토 중단을 통보하자, 도윤이 납품권 요구 대신 재검수 원인별 비용표를 요구함",
+        "incident_2": "20대 재검수에서 포장/운송/부품 원인이 섞이자, 도윤과 노태경이 유지보수 비용표 v0와 재발 방지 protocol 제출권을 만듦",
+        "next_actionable_gate": "경쟁 납품사의 SPV 자격 공격, 보험사 손해사정 gate, 보증 구조 설계, 30일 유예 타이머",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 납품권을 바로 달라고 울지 않는다. 반복 비용을 먼저 쥐면 납품권 방어와 유지보수 계약이 같이 열린다는 계산으로 움직인다.",
+        "morality_position": "불량 책임을 나누는 명분을 쓰지만 핵심은 원인별 비용선을 도윤권리운영의 계약 권리로 만드는 것이다.",
+        "efficiency_choice": "회수 통지를 무효화하는 큰 싸움 대신 30일 유예와 비용표 제출권으로 다음 gate를 산다."
+      },
+      "power_shift": {
+        "protagonist": "노태경 expert와 부적합 원장 접근권을 쥔 품질 proof 운영자 -> 유지보수 비용표와 임시 납품권 방어 gate를 가진 반복 비용 운영자",
+        "antagonist": "제조사 구매본부: 납품권 회수 통지자 -> 30일 유예와 유지보수 비용표 제출권을 인정해야 하는 gatekeeper",
+        "system": "재검수 일정과 부적합 원장 -> 납품권 회수 통지 30일 유예 + 원인별 유지보수 비용표 v0 + 재포장/커넥터/운송 충격 3분류 처리 단가 + 재발 방지 protocol 제출권 + 임시 납품권 방어 gate"
+      },
+      "relationship_delta": [
+        {
+          "target": "제조사 구매본부",
+          "before": "보고서 무력화를 시도했지만 제한 열람과 재검수 일정을 내주는 gatekeeper",
+          "after": "납품권 회수 통지를 냈지만 30일 유예와 비용표 제출권을 열어 주는 gatekeeper"
+        },
+        {
+          "target": "노태경",
+          "before": "품질 검증 retainer를 받고 부적합 원장과 포장재 코드 대조표를 여는 expert",
+          "after": "재검수 원인을 유지보수 비용표로 나누는 품질 expert"
+        },
+        {
+          "target": "박만철",
+          "before": "재검수 샘플과 C-1 보관 상태를 증명하는 현장 witness",
+          "after": "운송 충격과 북측 대체로 우회 동선을 비용표에 붙이는 현장 operator"
+        },
+        {
+          "target": "다온 물류본부",
+          "before": "90일 D-RN 장기 슬롯과 요약 로그 권한을 외부 운영자 명의로 유지해야 하는 물류 gatekeeper",
+          "after": "납품권 회수 위험 때문에 물류 슬롯 확정서를 뒤로 빼려는 방어적 gatekeeper"
+        }
+      ],
+      "foreshadow": [
+        "경쟁 납품사의 SPV 자격 공격",
+        "보험사 손해사정팀",
+        "보증 구조",
+        "유지보수 계약 마진"
+      ],
+      "callback": [
+        "20대 샘플 재검수 일정이 원인별 비용표로 회수됨",
+        "노태경 retainer가 유지보수 비용표 작성 권한으로 회수됨",
+        "물류 슬롯 확정서가 납품권 회수 통지로 흔들림"
+      ],
+      "emotional_beat": {
+        "type": "maintenance_cost_reframe",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "제조사 재검수 라인 / 구매본부 회의실 / C-1 샘플 보관 구역",
+        "type": "재검수 / 구매본부 / 샘플 관리"
+      },
+      "time_span": {
+        "duration": "1주",
+        "in_story_time": "2026년 10월 첫째 주"
+      },
+      "genre_ext": {
+        "capital_before": "노태경 품질 검증 retainer 초안 + 부적합 원장 제한 열람권 + 포장재 공급사 코드 대조표 + 20대 샘플 재검수 일정 + C-1 운영 미숙 판정 유예 연장 메모",
+        "capital_after": "납품권 회수 통지 30일 유예 + 원인별 유지보수 비용표 v0 + 재포장/커넥터/운송 충격 3분류 처리 단가 + 재발 방지 protocol 제출권 + 임시 납품권 방어 gate",
+        "capital_delta": "재검수 결과와 부적합 원장을 30일 유예, 유지보수 비용표, 재발 방지 protocol 제출권으로 전환",
+        "profit_loss": "납품권 회수 위기 발생. 비용표와 유예권 확보",
+        "method": "혼합 불량을 책임 회피가 아니라 원인별 반복 비용 통제표로 바꿈",
+        "deal_type": "maintenance cost table / temporary supply-right defense",
+        "leverage_used": [
+          "20대 재검수 결과",
+          "노태경 retainer",
+          "부적합 원장",
+          "C-1 운송 로그",
+          "물류 슬롯 확정서"
+        ],
+        "opponent": {
+          "name": "제조사 구매본부",
+          "type": "납품권 회수 통지자",
+          "weakness_exploited": "원인이 섞인 클레임은 단일 책임 전가가 어렵고 원인별 처리 단가를 산정해야 한다는 점"
+        },
+        "time_pressure": "30일 안에 재발 방지 protocol과 비용표를 제출하지 못하면 납품권 검토가 중단됨",
+        "risk_level": "고위험",
+        "business_sector": "납품권 방어 / 유지보수 비용 / 품질 protocol",
+        "section_rotation": "ARC-05 supply-right defense turn",
+        "success_pattern": "납품권은 아직 얻지 않고 회수 통지를 유예시키며 반복 비용표를 얻는 방어형 승리",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "maintenance_cost_table_and_supply_defense_gate",
+          "receipt_line": "납품권은 나중입니다. 반복 비용을 먼저 잡습니다.",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "납품권 회수 통지 30일 유예",
+          "유지보수 비용표 v0",
+          "재발 방지 protocol 제출권"
+        ],
+        "document_evidence": [
+          "회수 통지서",
+          "20대 재검수 결과표",
+          "원인별 처리 단가표",
+          "재발 방지 protocol 양식"
+        ],
+        "field_validation": [
+          "불량 원인이 포장/운송/부품으로 분리됨",
+          "커넥터 접점 문제 2대 확인",
+          "북측 대체로 운송 충격 가능성"
+        ],
+        "witness_carrier": [
+          "노태경의 원인 분류",
+          "박만철의 운송 동선 확인",
+          "구매본부의 회수 통지",
+          "다온 물류본부의 슬롯 보류 시도"
+        ],
+        "receipt": [
+          "납품권 회수 통지 30일 유예",
+          "원인별 유지보수 비용표 v0",
+          "재포장/커넥터/운송 충격 3분류 처리 단가",
+          "재발 방지 protocol 제출권",
+          "임시 납품권 방어 gate"
+        ],
+        "next_gate": "경쟁 납품사의 SPV 자격 공격, 보험사 손해사정 gate, 보증 구조 설계, 30일 유예 타이머"
+      },
+      "foreshadow_targets": [
+        44,
+        45,
+        47
+      ]
+    }
+  ]
+}

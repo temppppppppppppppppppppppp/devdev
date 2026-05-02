@@ -1,0 +1,458 @@
+{
+  "_schema_version": "blockguide.phase0.v1",
+  "_work_id": "distressed_asset_heir",
+  "_family": "blockguide",
+  "_primary_profile": "business_growth_profile",
+  "_secondary_profile": "investment_market_profile",
+  "_pitch_authority": "material_ssot/20_pitch/canon/distressed_asset_heir.md",
+  "_preprocess_sources": [
+    "treatments/preprocess/distressed_asset_heir/source_manifest.json",
+    "treatments/preprocess/distressed_asset_heir/material_bundle_summary.json",
+    "treatments/preprocess/distressed_asset_heir/profile_lock.json",
+    "treatments/preprocess/distressed_asset_heir/phase0_ready_snapshot.json"
+  ],
+  "_work_guard_draft": "work_guards/distressed_asset_heir.yaml",
+  "project": {
+    "title_ko": "도련님은 부실자산을 산다",
+    "tagline": "망한 자산에서 살아 있는 권리만 먼저 산다",
+    "core_premise": "현금 많은 식품·물류 그룹의 외동 한도윤은 도련님으로 무시받지만, 실제로는 부실자산을 권리와 현금흐름으로 쪼개 읽는 전직 PEF 구조조정 애널리스트다. 그는 문서를 만지면 숨은 현금흐름과 회수 가능한 권리, 90일 생존 가능성을 본다. 첫 전장은 망한 국밥 프랜차이즈다. 그는 점포를 사지 않고 정산권, 물류권, 상표 사용권, 임대차 우선협상권만 싸게 사서 첫 cashflow proof를 만든다.",
+    "format": "현대 한국 business-power 현대판타지 부실자산 경영물",
+    "logline": "도윤은 가족이 버리려던 국밥 프랜차이즈 장부에서 죽은 점포가 아니라 살아 있는 정산권과 물류권을 본다. 그는 가게를 사지 않는다. 돈이 들어오는 순서만 산다.",
+    "start_year": 2026,
+    "end_year": 2026
+  },
+  "setting": {
+    "group_background": "한성푸드로지스는 식품 유통, 냉장 물류, 급식 납품, 프랜차이즈 원부자재 공급 라인을 가진 현금 많은 중견 그룹이다. 내부 임원들은 도윤을 외동 도련님으로 취급하지만, 그룹의 현금과 물류망은 부실자산 권리 매입을 실행할 수 있는 현실적 무기다.",
+    "execution_doctrine": "초능력은 문서에서 숨은 가능성을 보여줄 뿐이다. 돈은 계약, 권리, 현장 병목 해결, 이해관계자 협상, 반복 현금흐름으로만 현실화된다. 모든 보상은 현금흐름, 권리, 계약, 접근권, 우선권, 다음 딜 gate로 닫힌다.",
+    "starter_company": {
+      "name": "한성푸드로지스",
+      "state": "식품 유통, 냉장 물류, 급식 납품, 프랜차이즈 원부자재 공급 라인을 가진 현금 많은 중견 그룹. 도윤은 공식 경영권 없이 외동 도련님으로 취급된다.",
+      "assets": [
+        "식품 유통망",
+        "냉장 물류망",
+        "급식 납품 라인",
+        "프랜차이즈 원부자재 공급 라인",
+        "현금 동원력"
+      ],
+      "liabilities": [
+        "가족 임원 보수파",
+        "도윤의 공식 경영권 부재",
+        "배임성 투기 프레임",
+        "related-party pricing 의심"
+      ]
+    },
+    "starter_asset": {
+      "name": "박문호 국밥 12개 점포 프랜차이즈",
+      "state": "겉으로는 폐업 직전이다. 밀린 임대료, 흔들린 가맹점주, 낮은 적재율, 불만 많은 배달 리뷰, 누락 정산, 미수 물류비가 섞여 있다.",
+      "alive_rights": [
+        "카드/배달앱 정산권",
+        "원부자재 물류 공급권",
+        "상표 사용권",
+        "임대차 우선협상권",
+        "공동구매권",
+        "냉장 물류 루트",
+        "단체급식 소량 납품 가능성"
+      ],
+      "liabilities": [
+        "통째 인수 시 밀린 임대료와 인건비를 떠안는 위험",
+        "운영본부장의 누락 정산 은폐",
+        "가맹점주 불신",
+        "임대인의 계약 흔들기",
+        "가족 임원들의 배임성 투기 프레임"
+      ]
+    }
+  },
+  "protagonist": {
+    "name": "한도윤",
+    "age_at_start": 32,
+    "status": "한성푸드로지스 외동. 공식 경영권은 없고, 가족에게는 엑셀 배운 도련님으로 취급된다.",
+    "public_image": "돈 있는 집 외동, 현장을 모르는 도련님, 잠깐 사모펀드 흉내 낸 아들",
+    "true_strength": "부실자산을 점포나 회사가 아니라 권리 묶음, 책임 순서, 현금흐름 병목으로 쪼개 본다.",
+    "supernatural_edge": "실제 문서를 만지면 숨은 cashflow, 누락 정산, 회수 가능한 권리, 90일 생존 가능성이 숫자와 연결선처럼 보인다.",
+    "true_weakness": "사람을 권리와 병목으로 먼저 보며, 실행 권한 없이 정보를 너무 빨리 꺼내면 도련님 망상으로 소비된다.",
+    "initial_goal": "국밥 프랜차이즈를 통째로 떠안지 않고 살아 있는 권리 묶음만 싸게 사서 첫 공식 proof를 만든다.",
+    "mid_goal": "프랜차이즈, 콜드체인, 급식, 상권, PEF 포트폴리오를 연결해 부실자산 운용 권한을 얻는다.",
+    "final_goal": "가족 돈의 장식품이 아니라 독립 distressed-asset manager로 인정받고, 한성그룹의 버리는 자산을 돈으로 바꾸는 기준이 된다."
+  },
+  "phase0_design": {
+    "opening_bundle_contract": {
+      "bundle_window": "TR 2~6",
+      "macro_battlefield": "망한 국밥 프랜차이즈를 통째 인수하지 않고 살아 있는 권리 묶음만 분리 매입하는 opening distressed-asset battlefield",
+      "macro_battlefield_map": [
+        "B2 권리 묶음 분리 매입안과 통째 인수 함정 회피",
+        "B3 카드 정산 누락 회수와 운영본부장 역공",
+        "B4 냉장 물류 루트 재분류와 단체급식 납품 gate",
+        "B5 임대차 우선협상권 방어와 점포 옵션화",
+        "B6 첫 반복 납품 계약과 NPL 경쟁자 진입"
+      ],
+      "bundle_goal": "도윤을 장부 보는 도련님이 아니라 부실자산에서 살아 있는 권리와 현금흐름을 먼저 사는 오퍼레이터로 재평가시키고, 다음 콜드체인 NPL 전장 입장권을 얻는다",
+      "first_signboard_block": 2,
+      "representative_reevaluation_block": 3,
+      "next_battlefield_ticket_block": 6,
+      "timing_reconciliation_note": "ARC-01이 B1~B10까지 이어져도 reader-earning signboard, reevaluation, next-ticket은 TR 2~6 안에서 먼저 끝낸다. 각 TR block은 2~6화 묶음이므로 최소 두 사건 비트를 포함한다."
+    },
+    "internal_ladder_lock": [
+      "Stage 1 ARC-01~02: 나는 버리는 값을 먼저 산다 — 도윤은 가족이 버린 자산에서 자기 권한과 현금흐름을 만든다.",
+      "Stage 2 ARC-03~04: 나는 남들이 무서워하는 책임 순서를 산다 — 권리와 책임을 분리해 더 큰 부실자산을 통제한다.",
+      "Stage 3 ARC-05~06: 나는 남의 포트폴리오를 다시 가격 매긴다 — PEF와 가족 임원들이 도윤의 기준을 무시하지 못한다.",
+      "Stage 4 ARC-07: 나는 내가 산다 — 가족 돈의 아들이 아니라 독립 운용자로 자기 자리를 만든다."
+    ],
+    "arcs": [
+      {
+        "arc_id": "ARC-01",
+        "title": "국밥 프랜차이즈의 살아 있는 권리",
+        "block_range": "1-10",
+        "time_window": "2026년 봄",
+        "internal_stage": "나는 버리는 값을 먼저 산다",
+        "capital_target": "공식 권한 0 -> 권리 묶음 검토권 -> 정산권 회수 -> 물류권/임대차 옵션 -> 첫 반복 납품 계약",
+        "front_sectors": [
+          "프랜차이즈",
+          "식품 물류",
+          "카드 정산",
+          "임대차"
+        ],
+        "support_sectors": [
+          "한성푸드로지스 전략실",
+          "카드 정산 대행사",
+          "단체급식 구매 라인"
+        ],
+        "main_opponents": [
+          "조태건 운영본부장",
+          "임대인 라인",
+          "가족 임원 보수파"
+        ],
+        "new_npcs": [
+          "한도윤",
+          "한기석",
+          "윤세라",
+          "박문호",
+          "조태건",
+          "강민재",
+          "오정민",
+          "백승환"
+        ],
+        "emotion_curve": "무시 -> 장부 접촉 -> 권리 분리 제안 -> 정산 회수 -> 물류 재분류 -> 임대차 방어 -> 첫 계약 -> NPL gate",
+        "quiet_blocks": [
+          7
+        ],
+        "defeat_blocks": [
+          8
+        ],
+        "entry_function": "가족이 버리려는 프랜차이즈 disposal 회의에서 도윤은 점포가 아니라 정산과 물류 권리를 본다.",
+        "exit_function": "도윤은 국밥 프랜차이즈를 작은 반복 현금흐름 플랫폼으로 만들고, 콜드체인 NPL 전장으로 넘어간다.",
+        "block_slots": [
+          {
+            "block": 1,
+            "title": "버릴 거면 제가 보죠",
+            "function": "가족 식사와 disposal 안건이 겹친다. 도윤은 도련님 취급을 받지만 박문호 국밥 장부를 만지고 숨은 권리 연결선을 본다. 이 블록은 setup이며 rescue로 쓰지 않는다.",
+            "incident_beats": [
+              "가족/임원 앞 공개 무시",
+              "장부 접촉과 숨은 권리 시야 발생"
+            ]
+          },
+          {
+            "block": 2,
+            "title": "가게는 안 삽니다",
+            "function": "도윤은 통째 인수 함정을 거부하고 정산권, 물류권, 상표 사용권, 임대차 우선협상권만 분리 매입하겠다고 제안한다. 한기석은 제한 검토권을 준다.",
+            "incident_beats": [
+              "권리 묶음 분리 매입안 제시",
+              "통째 인수 liability trap 회피와 제한 검토권 receipt"
+            ]
+          },
+          {
+            "block": 3,
+            "title": "정산 계좌 하나",
+            "function": "윤세라와 원본 카드 정산표를 대조해 누락 계좌를 확인한다. 조태건의 liability dumping이 드러나고 도윤은 첫 회수 가능 현금흐름을 확보한다.",
+            "incident_beats": [
+              "카드 정산 mismatch 확인",
+              "운영본부장 역공과 cashflow recovery receipt"
+            ]
+          },
+          {
+            "block": 4,
+            "title": "적자 루트의 다른 이름",
+            "function": "강민재의 냉장차 단가표와 적재율을 확인해 적자 물류 루트가 단체급식 납품의 필수 조건임을 재분류한다. 도윤은 소량 시험 납품 gate를 연다.",
+            "incident_beats": [
+              "냉장 물류 루트 손실 구조 재분류",
+              "단체급식 구매 라인으로 가는 test gate 확보"
+            ]
+          },
+          {
+            "block": 5,
+            "title": "나가라는 말의 가격",
+            "function": "임대인이 폐업 소문을 빌미로 계약을 흔든다. 도윤은 체납 순서와 우선협상 조항으로 핵심 점포를 폐점 리스크가 아니라 옵션으로 바꾼다.",
+            "incident_beats": [
+              "임대인의 우선협상권 흔들기",
+              "extension option과 권리 방어 receipt"
+            ]
+          },
+          {
+            "block": 6,
+            "title": "작은 반복 계약",
+            "function": "첫 단체급식 담당자가 안정 공급 조건으로 작은 반복 계약을 준다. 백승환이 뒤늦게 권리 묶음을 재가격하지만 핵심 권리는 이미 도윤 손에 있다.",
+            "incident_beats": [
+              "소형 반복 납품 계약 체결",
+              "NPL 경쟁자 진입과 다음 전장 gate"
+            ]
+          },
+          {
+            "block": 7,
+            "title": "사람이 아니라 순서",
+            "function": "조용한 블록. 도윤은 가맹점주를 설득하기보다 정산일, 배송일, 임대료 납부 순서를 공개해 불신을 낮춘다. 이익을 숨기지 않는 대신 누구 돈이 언제 들어오는지 보이게 한다.",
+            "incident_beats": [
+              "가맹점주 불신 완화",
+              "정산/배송/임대료 순서표로 운영 신뢰 상승"
+            ]
+          },
+          {
+            "block": 8,
+            "title": "미수 물류비 역풍",
+            "function": "defeat 블록. 조태건이 숨겨 둔 미수 물류비를 터뜨려 도윤의 첫 계약을 흔든다. 도윤은 손실을 완전히 지우지 못하지만 책임 순서를 다시 나눌 workout 조건을 얻는다.",
+            "incident_beats": [
+              "미수 물류비 공개 역풍",
+              "완전 승리 대신 workout 조건 확보"
+            ]
+          },
+          {
+            "block": 9,
+            "title": "권리 목록",
+            "function": "윤세라가 도윤의 권리 목록을 전략실 공유 자료에 올린다. 칭찬은 없지만 도윤의 분류법이 그룹 내부 언어가 된다.",
+            "incident_beats": [
+              "전략실 자료 등재",
+              "도윤식 권리 분류법의 내부 receipt"
+            ]
+          },
+          {
+            "block": 10,
+            "title": "다음은 차가운 빚",
+            "function": "백승환이 콜드체인 NPL 자료를 들고 도윤을 시험한다. 도윤은 국밥 프랜차이즈의 작은 cashflow를 담보로 다음 부실자산 검토권을 얻는다.",
+            "incident_beats": [
+              "NPL 자료 제시",
+              "다음 부실자산 검토권 확보"
+            ]
+          }
+        ]
+      },
+      {
+        "arc_id": "ARC-02",
+        "title": "차가운 빚의 루트",
+        "block_range": "11-20",
+        "time_window": "2026년 초여름",
+        "internal_stage": "나는 버리는 값을 먼저 산다",
+        "capital_target": "프랜차이즈 현금흐름 -> 콜드체인 NPL 검토권 -> route control -> 급식 납품 확장",
+        "front_sectors": [
+          "콜드체인",
+          "NPL",
+          "단체급식"
+        ],
+        "support_sectors": [
+          "물류 자회사",
+          "채권자",
+          "학교/병원 급식 구매 라인"
+        ],
+        "main_opponents": [
+          "백승환",
+          "기존 채권자",
+          "물류 자회사 보수파"
+        ],
+        "new_npcs": [
+          "백승환",
+          "기존 채권자",
+          "강민재",
+          "한기석",
+          "윤세라"
+        ],
+        "emotion_curve": "검토권 확보 -> 창고 로그 접근 -> 채권자 회의 압박 -> 우회 운송 손실 -> 우선협상권 -> 임시배차 실험 -> 기사 동의 -> SLA 재시험 -> 가격상한 잠금 -> route control option",
+        "quiet_blocks": [],
+        "defeat_blocks": [
+          14,
+          18
+        ],
+        "entry_function": "국밥 프랜차이즈의 작은 반복 계약이 냉장 루트의 가치를 증명하며 NPL 전장을 연다.",
+        "exit_function": "도윤은 콜드체인 route control을 확보해 급식 납품 전장으로 확장한다.",
+        "block_slots": []
+      },
+      {
+        "arc_id": "ARC-03",
+        "title": "밥값은 늦게 들어오지 않는다",
+        "block_range": "21-30",
+        "time_window": "2026년 여름",
+        "internal_stage": "나는 남들이 무서워하는 책임 순서를 산다",
+        "capital_target": "route control -> 안정 공급 proof -> institutional meal contract bundle",
+        "front_sectors": [
+          "단체급식",
+          "품질관리",
+          "정산 안정성"
+        ],
+        "support_sectors": [
+          "학교",
+          "병원",
+          "기업 구내식당"
+        ],
+        "main_opponents": [
+          "기존 급식업체",
+          "품질 클레임 라인",
+          "한성 내부 리스크 관리팀"
+        ],
+        "new_npcs": [
+          "박지완",
+          "이서연",
+          "류재호",
+          "품질 클레임 라인",
+          "한성 내부 리스크 관리팀"
+        ],
+        "emotion_curve": "빠른 정산 파일럿 -> 검수표 추적권 -> 품질 소문 역풍 -> 보증금 대체 -> 표준계약 -> 예약식 파일럿 -> 선충전 승인 -> 점심 대란 손실 -> 포트폴리오 부속서 -> 신용공여와 상권 gate",
+        "quiet_blocks": [],
+        "defeat_blocks": [
+          23,
+          28
+        ],
+        "entry_function": "냉장 루트가 안정되자 도윤은 급식 납품 계약을 묶어 반복 cashflow를 키운다.",
+        "exit_function": "도윤의 부실자산 권리 매입이 작은 운이 아니라 반복 가능한 operating model로 읽힌다.",
+        "block_slots": []
+      }
+    ],
+    "npc_timeline": [
+      {
+        "name": "한도윤",
+        "role": "주인공",
+        "first_block": 1,
+        "final_status": "독립 distressed-asset manager 후보",
+        "key_turning_points": [
+          {
+            "block": 2,
+            "event": "권리 묶음 분리 매입안으로 제한 검토권 획득"
+          },
+          {
+            "block": 3,
+            "event": "카드 정산 누락 회수"
+          },
+          {
+            "block": 6,
+            "event": "첫 반복 납품 계약"
+          },
+          {
+            "block": 10,
+            "event": "콜드체인 NPL 검토권"
+          }
+        ]
+      },
+      {
+        "name": "윤세라",
+        "role": "전략실 검증 helper",
+        "first_block": 2,
+        "final_status": "도윤식 권리 분류법의 내부 검증자",
+        "key_turning_points": [
+          {
+            "block": 3,
+            "event": "정산표 mismatch 검증"
+          },
+          {
+            "block": 9,
+            "event": "권리 목록을 전략실 공유 자료에 등재"
+          }
+        ]
+      }
+    ],
+    "foreshadow_map": [
+      {
+        "id": "FS-01",
+        "name": "정산 계좌 하나",
+        "seed_block": 3,
+        "hint_blocks": [
+          7,
+          12,
+          21
+        ],
+        "payoff_block": 30,
+        "payoff_meaning": "작은 정산 회수가 후반 급식 계약 묶음의 신뢰 기준으로 확장된다."
+      },
+      {
+        "id": "FS-02",
+        "name": "적자 루트의 다른 이름",
+        "seed_block": 4,
+        "hint_blocks": [
+          6,
+          11,
+          16
+        ],
+        "payoff_block": 20,
+        "payoff_meaning": "적자 냉장 루트가 콜드체인 NPL의 핵심 control point로 회수된다."
+      },
+      {
+        "id": "FS-03",
+        "name": "가게는 안 삽니다",
+        "seed_block": 2,
+        "hint_blocks": [
+          5,
+          10,
+          18
+        ],
+        "payoff_block": 50,
+        "payoff_meaning": "통째 인수하지 않고 살아 있는 권리만 사는 원칙이 PEF 포트폴리오 전장까지 이어진다."
+      }
+    ],
+    "opponent_transition_plan": [
+      {
+        "faction": "프랜차이즈 운영본부 라인",
+        "phase": "국면 1: liability dumping",
+        "block_range": "1-10",
+        "entry_block": 2,
+        "main_actors": [
+          "조태건",
+          "운영본부 실무자"
+        ],
+        "goal": "망한 점포의 책임을 도윤에게 떠넘기고 권리 분리 매입을 막는다",
+        "methods": [
+          "미수 물류비 은폐",
+          "정산 계좌 누락",
+          "가맹점주 불신 조장"
+        ],
+        "weakness": "정산표와 계약서가 현재 문서로 확인되면 책임 순서가 뒤집힌다",
+        "transition_block": 10
+      },
+      {
+        "faction": "NPL 경쟁자 라인",
+        "phase": "국면 2: 재가격 압박",
+        "block_range": "11-20",
+        "entry_block": 10,
+        "main_actors": [
+          "백승환",
+          "채권자",
+          "외부 투자자"
+        ],
+        "goal": "도윤이 증명한 권리 묶음을 뒤늦게 재가격해 빼앗는다",
+        "methods": [
+          "입찰 가격 인상",
+          "채권자 압박",
+          "정보 비대칭 역이용"
+        ],
+        "weakness": "핵심 control right가 이미 도윤 손에 있으면 가격만으로 빼앗기 어렵다",
+        "transition_block": 20
+      }
+    ],
+    "quality_locks": {
+      "first_arc_direct_line": "가게는 안 삽니다. 돈이 들어오는 순서만 삽니다.",
+      "protagonist_appeal": "돈 많은 집 외동인데 허영이 아니라 계산이 빠르고, 선의가 아니라 효율로 사람과 돈을 살리는 오퍼레이터",
+      "reward_order": "권리/현금흐름/계약/접근권/다음 gate가 먼저, 가족 인정은 뒤",
+      "ability_rule": "문서를 만져야 보이고, 실행 권한과 운영 개선 없이는 숫자가 현실화되지 않는다",
+      "self_interest_rule": "도윤의 선택은 profit, efficiency, defense, retaliation, survival, position gain 중 하나로 읽혀야 한다",
+      "opposition_rule": "반대자는 바보가 아니라 자기 책임과 손실 회피 논리를 가진 이해관계자다",
+      "block_reward_rule": "각 block은 최소 두 사건 비트를 포함하고 같은 block 안에 receipt 또는 leverage-changing danger를 남긴다"
+    },
+    "stage0_handoff": {
+      "phase0_version": "1.0",
+      "generated_from": "manual canon-to-stage0-to-phase0 pass after canon gate PASS",
+      "stage0_preprocess_dir": "treatments/preprocess/distressed_asset_heir/",
+      "ready_for_work_guard_v2": true,
+      "ready_for_tr_seed": true,
+      "remaining_research_before_tr": [
+        "카드 정산과 PG 수수료 디테일",
+        "임대차 우선협상권과 권리금 조항",
+        "콜드체인 단가표와 적재율",
+        "NPL 가격 산정과 workout 문구",
+        "단체급식 납품 품질/위생 조건"
+      ]
+    }
+  }
+}

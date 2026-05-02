@@ -1,0 +1,156 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "65",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 065 draft only. Waiting-room production continuation; not root canonical, not BI, not immediate-use.",
+  "blocks": [
+    {
+      "block_id": "Block 65",
+      "block_no": 65,
+      "title": "실사 테이블 위의 권리들",
+      "episode_span_intent": "2~6화 분량. 투자자 실사 제안, 권리 포트폴리오 공개 범위, 민카이/SableWorks 자료 검증, 도윤의 investor data room과 valuation gate 확보를 압축한다.",
+      "content": {
+        "context": "해외 보증 packet까지 갖춰지자 투자자가 온다. 한빛캐피탈이 소개한 성장펀드 그레이브릿지는 도윤권리운영의 권리 포트폴리오를 실사하고 싶다고 한다. 투자자들은 숫자를 좋아한다. MSA, 생산 슬롯, 데이터 feed, 해외 channel review, escrow, 보증 rider. 모두 표에 올릴 수 있다. 도윤은 투자 제안을 반기지 않는다. 실사 테이블에 올라가는 순간, 권리는 값이 되지만 동시에 빼앗길 수 있는 항목이 된다.",
+        "event_villain": "첫 번째 사건은 과도한 자료 요구다. 그레이브릿지는 모든 계약 원본, 고객명, 제조사 feed, 다온 판단 feed, 해외 partner 자료를 달라고 한다. 도윤은 거절한다. 투자자가 보는 것은 권리의 성능이지 원본 전체가 아니다. 그는 data room을 세 단계로 나눈다. 공개 요약, 검증 가능한 hash, 제한 열람 원본. 투자자는 불편해하지만, 한빛캐피탈은 이 구조가 담보 심사와 맞다고 본다.",
+        "second_incident": "두 번째 사건은 민카이 자료 검증이다. 투자자는 현지 partner 리스크를 지적하고, 민카이는 자신들이 현지 실행을 쥐고 있으니 valuation에서 더 큰 몫을 받아야 한다고 주장한다. 도윤은 민카이 몫을 감정으로 다투지 않는다. escrow release 조건, liability 조항, 통관 slot receipt, 샘플 회수 protocol로 현지 partner의 권리와 책임을 같은 표에 올린다. 기여가 크면 책임도 크다.",
+        "solution": "도윤은 투자자에게 모든 것을 열지 않는다. investor data room v0, hash 검증 index, 제한 열람 protocol, 권리별 valuation memo, partner liability weight table, 투자 조건 논의 gate. 권리 포트폴리오는 팔 물건이 아니라 운영권을 잠그기 전 가격표가 된다.",
+        "reward": "블록 끝에서 도윤은 투자를 받지 않는다. 대신 investor data room v0, hash 검증 index, 제한 열람 protocol, 권리별 valuation memo, 민카이 liability weight table, 투자 조건 논의 gate를 얻는다. 도윤은 말한다. 실사는 문을 여는 일이 아닙니다. 어디까지 보여 줄지 가격을 매기는 일입니다."
+      },
+      "stakes": "투자 실사를 무제한으로 열면 다온 feed와 제조사 원본, 해외 partner 구조가 밖으로 샌다. data room과 제한 열람 protocol을 잡아야 다음 블록에서 지분 요구를 운영권 lock으로 막을 수 있다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "그레이브릿지가 계약 원본과 고객/제조사 feed 전체를 요구하자, 도윤이 data room을 요약/hash/제한 원본 3단계로 나눔",
+        "incident_2": "투자자가 민카이 리스크와 기여 몫을 지적하자, 도윤이 escrow/liability/통관 receipt를 묶어 partner liability weight table을 만듦",
+        "next_actionable_gate": "투자자의 지분 요구, 운영권 lock 조항, board observer 조건, helper retention 공격",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 투자금을 얻기 위해 원본을 다 열지 않는다. 보여 주는 범위 자체가 권리 가격이고, 그 범위를 통제해야 운영권이 남는다.",
+        "morality_position": "투명한 실사처럼 보이지만 핵심은 원본 접근권과 valuation 범위를 도윤권리운영이 정하는 것이다.",
+        "efficiency_choice": "자료 거절로 판을 닫지 않고 data room 단계와 hash index로 실사 가능한 범위만 연다."
+      },
+      "power_shift": {
+        "protagonist": "해외 품질 보증 packet과 rider gate를 가진 리스크 구조 운영자 -> investor data room과 valuation gate를 가진 투자 실사 통제자",
+        "antagonist": "그레이브릿지/민카이: 원본 과다 요구자 / 현지 기여 확대 주장자 -> 제한 열람과 liability weight table을 기준으로 협상해야 하는 상대",
+        "system": "해외 보증 packet과 channel review 구조 -> investor data room v0 + hash 검증 index + 제한 열람 protocol + 권리별 valuation memo + 민카이 liability weight table + 투자 조건 논의 gate"
+      },
+      "relationship_delta": [
+        {
+          "target": "그레이브릿지",
+          "before": "아직 전면 등장 전인 성장펀드",
+          "after": "권리 포트폴리오 원본 전체를 요구하다 data room 제한 열람 구조를 받아야 하는 투자자"
+        },
+        {
+          "target": "민카이",
+          "before": "현지 liability 조항을 부담해야 하는 공동 운영 파트너",
+          "after": "기여 몫을 주장하지만 liability weight table에 책임도 같이 올라가는 partner"
+        },
+        {
+          "target": "한빛캐피탈",
+          "before": "제한 한도와 회수권 우선순위표를 받아들인 금융사",
+          "after": "data room hash index가 담보 심사와 맞다고 확인하는 금융 witness"
+        }
+      ],
+      "foreshadow": [
+        "지분 요구와 운영권 lock",
+        "board observer 조건",
+        "helper poaching",
+        "장기 생산권 선택"
+      ],
+      "callback": [
+        "증빙 hash 원장이 investor data room index로 회수됨",
+        "민카이 liability 조항이 liability weight table로 회수됨",
+        "해외 보증 packet이 valuation memo로 회수됨"
+      ],
+      "emotional_beat": {
+        "type": "due_diligence_control",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "그레이브릿지 투자 실사실 / 도윤권리운영 data room / 해외 partner liability 표",
+        "type": "투자 실사 / data room / valuation"
+      },
+      "time_span": {
+        "duration": "1주",
+        "in_story_time": "2027년 3월 넷째 주"
+      },
+      "genre_ext": {
+        "capital_before": "해외 품질 보증 packet + 항목별 책임상한 rider 초안 + 민카이 현지 liability 조항 + 고객 설치 오류 제외 문구 + 샘플 회수/교환 protocol + 보험사 해외 rider 사전심사 gate",
+        "capital_after": "investor data room v0 + hash 검증 index + 제한 열람 protocol + 권리별 valuation memo + 민카이 liability weight table + 투자 조건 논의 gate",
+        "capital_delta": "해외 보증 packet과 channel review 구조를 투자 실사용 data room, hash index, valuation memo, liability weight table로 전환",
+        "profit_loss": "투자금 유입 없음. valuation gate와 data room 통제권 확보",
+        "method": "무제한 원본 공개를 거절하고 요약/hash/제한 원본 3단계 data room으로 실사 범위를 통제",
+        "deal_type": "investor data room / valuation memo / limited disclosure protocol",
+        "leverage_used": [
+          "해외 보증 packet",
+          "hash 원장",
+          "다온 판단 feed",
+          "민카이 liability 조항",
+          "한빛캐피탈 심사 경험"
+        ],
+        "opponent": {
+          "name": "그레이브릿지/민카이",
+          "type": "원본 과다 요구자 / 현지 기여 확대 주장자",
+          "weakness_exploited": "투자자도 원본 전체보다 검증 가능한 hash와 제한 열람 구조가 있어야 법적/상업적 리스크를 낮출 수 있다는 점"
+        },
+        "time_pressure": "투자 조건 논의 전 원본 공개 범위와 partner 책임 가중치를 잠가야 함",
+        "risk_level": "고위험",
+        "business_sector": "투자 실사 / data room / 권리 valuation",
+        "section_rotation": "ARC-07 due diligence turn",
+        "success_pattern": "투자를 받기 전 data room과 valuation gate를 확보해 원본 통제권을 지키는 준비 승리",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "investor_data_room_and_valuation_gate",
+          "receipt_line": "실사는 문을 여는 일이 아닙니다. 어디까지 보여 줄지 가격을 매기는 일입니다.",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "investor data room",
+          "hash index",
+          "제한 열람 protocol",
+          "valuation memo",
+          "투자 조건 논의 gate"
+        ],
+        "document_evidence": [
+          "data room v0",
+          "hash 검증 index",
+          "제한 열람 protocol",
+          "valuation memo",
+          "liability weight table"
+        ],
+        "field_validation": [
+          "원본 3단계 공개 구조",
+          "민카이 liability weight 설정",
+          "투자 조건 논의 gate"
+        ],
+        "witness_carrier": [
+          "그레이브릿지 자료 요구",
+          "한빛캐피탈 hash 확인",
+          "민카이 기여 주장",
+          "SableWorks review packet"
+        ],
+        "receipt": [
+          "investor data room v0",
+          "hash 검증 index",
+          "제한 열람 protocol",
+          "권리별 valuation memo",
+          "민카이 liability weight table",
+          "투자 조건 논의 gate"
+        ],
+        "next_gate": "투자자의 지분 요구, 운영권 lock 조항, board observer 조건, helper retention 공격"
+      },
+      "foreshadow_targets": [
+        66,
+        67,
+        68
+      ]
+    }
+  ]
+}

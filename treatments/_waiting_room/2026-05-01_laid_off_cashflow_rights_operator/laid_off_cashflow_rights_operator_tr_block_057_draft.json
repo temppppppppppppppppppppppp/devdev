@@ -1,0 +1,155 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "57",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 057 draft only. Waiting-room production continuation; not root canonical, not BI, not immediate-use.",
+  "blocks": [
+    {
+      "block_id": "Block 57",
+      "block_no": 57,
+      "title": "미수 위험표",
+      "episode_span_intent": "2~6화 분량. 공급사별 미수 위험표 확정, 세오전자 보류 대응, 리커버넷 비교표 반박, 도윤의 위험표 기반 이탈 방어 receipt 확보를 압축한다.",
+      "content": {
+        "context": "세오전자는 아직 돌아오지 않는다. 리커버넷은 낮은 수수료표를 다시 보내고, 한빛캐피탈은 이탈률 보고서를 매일 요구한다. 도윤은 영진팩토리 제출 재개 의향서를 먼저 처리하지 않는다. 표가 불완전한 상태에서 첫 성공을 과시하면 세오전자는 더 멀어진다. 그는 공급사별 미수 위험표를 완성한다. 미수 aging, 폐기권 소멸 시한, 보증 책임 잔액, 고객 이탈 가능성, 회수권 우선순위, 자료 완결도.",
+        "event_villain": "첫 번째 사건은 세오전자 보류 대응이다. 세오전자는 리커버넷이 자료 제출을 간소화해 준다고 주장한다. 도윤은 복잡한 양식을 변명하지 않는다. 세오전자 파일에서 폐기권 소멸 시한이 18일 남았고, 기존 보증 책임 잔액이 리커버넷 수수료 절감액보다 크다는 걸 표로 보여 준다. 간소화는 빠르지만 회수 순서를 보장하지 못한다.",
+        "second_incident": "두 번째 사건은 금융권 검증이다. 한빛캐피탈은 도윤의 미수 위험표가 주관적이면 한도 조건에 반영할 수 없다고 한다. 도윤은 증빙 파일 hash 원장, 제조사 제출 양식, 고객 응답시간, 품질 원인 코드까지 붙여 위험표를 audit 가능한 형태로 바꾼다. 배수민과 노태경의 항목이 같은 표에 들어간다. 위험표는 설득 자료가 아니라 금융/운영 공통 원장이 된다.",
+        "solution": "도윤은 세오전자에게 할인하지 않는다. 자료 완결도 등급이 올라가면 착수금을 낮춰 주되, 우선협상권 정지 조항은 유지한다. 한빛캐피탈에는 위험표의 hash 원장 연결을 제공한다. 영진팩토리에는 이 표를 기준으로 현장 검수 일정을 열어 준다. 공급사별 미수 위험표 v1이 pipeline의 중심이 된다.",
+        "reward": "블록 끝에서 도윤은 세오전자를 완전히 돌려세우지 못한다. 대신 공급사별 미수 위험표 v1, hash 연결 감사 trail, 세오전자 18일 소멸 시한 경고문, 영진팩토리 현장 검수 일정, 한빛캐피탈 한도 조건 유지 메모, 자료 완결도별 착수금 조정표를 얻는다. 도윤은 말한다. 쉬운 양식은 없습니다. 먼저 회수되는 양식만 있습니다."
+      },
+      "stakes": "미수 위험표가 불완전하면 이탈률 방어와 금융 한도 유지가 모두 무너진다. 위험표를 audit 가능한 원장으로 바꿔야 다음 데이터 표준 초안으로 올라갈 수 있다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "세오전자가 리커버넷 간소화 양식을 이유로 보류하자, 도윤이 폐기권 소멸 18일과 보증 책임 잔액을 보여 주며 회수 순서 위험을 제시함",
+        "incident_2": "한빛캐피탈이 위험표의 객관성을 요구하자, 도윤이 hash 원장과 제출 양식, 고객/품질 코드를 붙여 audit trail로 만듦",
+        "next_actionable_gate": "첫 산업 데이터 표준 초안, hash 원장 공개 범위, 다온의 인프라 임대 문의, 리커버넷 재반격",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 공급사를 편하게 해 주지 않는다. 회수 순서가 먼저 보이는 양식만 pipeline에 들이고, 그 양식의 통제권을 자기에게 남긴다.",
+        "morality_position": "공급사 손실을 줄이는 표처럼 보이지만 핵심은 도윤권리운영이 회수 위험을 산정하는 기준을 장악하는 것이다.",
+        "efficiency_choice": "개별 설득보다 위험표 v1과 hash trail로 금융권과 제조사를 동시에 설득한다."
+      },
+      "power_shift": {
+        "protagonist": "공급사별 미수 위험표와 이탈 방어 gate를 가진 supply-chain 방어자 -> audit 가능한 미수 위험표와 hash trail을 가진 데이터 표준 준비자",
+        "antagonist": "세오전자/리커버넷/한빛캐피탈: 제출 보류자 / 간소화 양식 경쟁자 / 객관성 요구자 -> 미수 위험표 v1과 hash trail을 기준으로 검토해야 하는 상대",
+        "system": "전환 손실 비교표와 이탈률 보고서 -> 공급사별 미수 위험표 v1 + hash 연결 감사 trail + 세오전자 18일 소멸 시한 경고문 + 영진팩토리 현장 검수 일정 + 한빛캐피탈 한도 조건 유지 메모 + 자료 완결도별 착수금 조정표"
+      },
+      "relationship_delta": [
+        {
+          "target": "세오전자",
+          "before": "성공수수료 반발로 현장 검수권 옵션을 더 내놓게 되는 제조사",
+          "after": "18일 소멸 시한 경고문을 받고 보류를 재검토하는 제조사"
+        },
+        {
+          "target": "리커버넷",
+          "before": "무료 진단과 낮은 수수료로 공급사 라인을 끊으려는 경쟁 플랫폼",
+          "after": "간소화 양식으로 재공격하지만 회수 순서 위험을 반박해야 하는 경쟁 플랫폼"
+        },
+        {
+          "target": "한빛캐피탈",
+          "before": "pipeline 이탈률을 한도 조건에 연결하며 도윤을 압박하는 금융사",
+          "after": "hash trail이 붙은 위험표를 보고 한도 조건을 유지하는 금융사"
+        }
+      ],
+      "foreshadow": [
+        "데이터 표준 초안",
+        "다온 인프라 문의",
+        "리커버넷 표준 반격",
+        "데이터 접근권 협상"
+      ],
+      "callback": [
+        "증빙 hash 원장이 위험표 audit trail로 회수됨",
+        "자료 완결도 등급표가 착수금 조정표로 회수됨",
+        "리커버넷 전환 손실표가 세오전자 보류 대응으로 회수됨"
+      ],
+      "emotional_beat": {
+        "type": "risk_table_solidifies",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "도윤권리운영 위험표 원장 / 세오전자 화상회의 / 한빛캐피탈 검증 회의",
+        "type": "위험표 / 제조사 보류 / 금융 검증"
+      },
+      "time_span": {
+        "duration": "4일",
+        "in_story_time": "2027년 1월 셋째 주"
+      },
+      "genre_ext": {
+        "capital_before": "공급사별 미수 위험표 + 리커버넷 전환 손실 비교표 + pipeline 이탈률 보고서 + 우선협상권 정지 조항 + 자료 접근권 강화 조건표 + 영진팩토리 제출 재개 의향서",
+        "capital_after": "공급사별 미수 위험표 v1 + hash 연결 감사 trail + 세오전자 18일 소멸 시한 경고문 + 영진팩토리 현장 검수 일정 + 한빛캐피탈 한도 조건 유지 메모 + 자료 완결도별 착수금 조정표",
+        "capital_delta": "이탈 방어표와 hash 원장을 audit 가능한 미수 위험표 v1, 한도 유지 메모, 현장 검수 일정으로 전환",
+        "profit_loss": "세오전자 완전 복귀는 미완. 한도 조건 유지와 영진팩토리 검수 일정 확보",
+        "method": "간소화 경쟁을 하지 않고 회수 순서와 hash trail로 위험표를 객관화",
+        "deal_type": "receivables risk table / audit trail / supplier retention proof",
+        "leverage_used": [
+          "공급사별 미수 위험표 초안",
+          "hash 원장",
+          "자료 완결도 등급표",
+          "폐기권 소멸 시한",
+          "한빛캐피탈 조건"
+        ],
+        "opponent": {
+          "name": "세오전자/리커버넷/한빛캐피탈",
+          "type": "제출 보류자 / 간소화 양식 경쟁자 / 객관성 요구자",
+          "weakness_exploited": "간단한 양식은 회수 순서를 보장하지 못하고, 금융권 검증에도 쓰기 어렵다는 점"
+        },
+        "time_pressure": "세오전자 폐기권 소멸 18일 전 보류를 풀어야 함",
+        "risk_level": "고위험",
+        "business_sector": "미수 위험 / 데이터 원장 / 공급사 retention",
+        "section_rotation": "ARC-06 risk table turn",
+        "success_pattern": "세오전자는 아직 보류지만 위험표와 금융 한도 유지 메모를 얻는 구조 승리",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "auditable_receivables_risk_table",
+          "receipt_line": "쉬운 양식은 없습니다. 먼저 회수되는 양식만 있습니다.",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "미수 위험표 v1",
+          "hash 감사 trail",
+          "한도 조건 유지 메모",
+          "현장 검수 일정"
+        ],
+        "document_evidence": [
+          "위험표 v1",
+          "hash trail",
+          "세오전자 경고문",
+          "영진팩토리 검수 일정",
+          "한도 유지 메모"
+        ],
+        "field_validation": [
+          "세오전자 소멸 18일",
+          "한도 조건 유지",
+          "영진팩토리 검수 일정 확정"
+        ],
+        "witness_carrier": [
+          "세오전자 보류 회신",
+          "리커버넷 간소화 양식",
+          "한빛캐피탈 검증 메모",
+          "배수민/노태경 항목"
+        ],
+        "receipt": [
+          "공급사별 미수 위험표 v1",
+          "hash 연결 감사 trail",
+          "세오전자 18일 소멸 시한 경고문",
+          "영진팩토리 현장 검수 일정",
+          "한빛캐피탈 한도 조건 유지 메모",
+          "자료 완결도별 착수금 조정표"
+        ],
+        "next_gate": "첫 산업 데이터 표준 초안, hash 원장 공개 범위, 다온의 인프라 임대 문의, 리커버넷 재반격"
+      },
+      "foreshadow_targets": [
+        58,
+        59,
+        60
+      ]
+    }
+  ]
+}

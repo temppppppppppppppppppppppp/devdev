@@ -1,0 +1,145 @@
+{
+  "block_id": "Block 10",
+  "title": "부도 식품공장",
+  "content": {
+    "context": "공개입찰 보증금 조건이 붙은 뒤, 삼진콜드 딜은 마지막 24시간으로 들어간다. 백승환은 높은 명목가를 유지하지만 buyer letter와 route retention proof를 제때 내지 못한다. 고철업자는 현금 처리 속도를 다시 외치지만, 이제 회의실의 기준은 고철값이 아니라 실행 proof다. 한도윤은 이 순간에도 들뜨지 않는다. closing은 감동 장면이 아니라 권리 이전, 대금 지급, 책임 차단을 동시에 끝내는 정산표다.",
+    "event_villain": "백승환은 보증금 납입 시간을 미루며 대형마트 buyer letter를 사후 제출하겠다고 버틴다. 윤태식은 내부정보 의혹이 완전히 끝난 게 아니라며 도윤의 closing을 하루 늦추자고 요구한다. 항만 관리사는 cure 확인서의 효력을 유지하려면 오늘 안에 권리 양수도 주체가 확정돼야 한다고 못 박고, 강은서는 2차 임시 운송 계약을 기다릴 수 있는 시간이 오후 5시까지라고 자른다.",
+    "solution": "도윤은 백승환의 가격을 깎아내리는 대신, 공개입찰 조건표 그대로 판정하자고 밀어붙인다. 24시간 proof 미제출, 보증금 납입 지연, buyer letter 부재를 체크리스트로 읽는다. 반대로 도윤의 SPV는 보험 청구권 유지 메일, 항만 cure 확인서, route memory contractor 계약, 온도 로그 무이탈 기록, 2차 임시 오더 draft를 순서대로 제출한다. 내부정보 의혹에는 read-only access log와 advisory exit 완료 시각을 붙이고, 권리 양수도 계약에는 체불 임금과 노후차량 부채를 SPV 밖에 둔다는 제외 조항을 넣는다. 도윤이 사는 것은 삼진콜드가 아니라 보험금 청구권, 새벽 route 운영권, 콜드체인 인증 유지 계약, 항만 우선사용권이다.",
+    "reward": "채권단은 삼진콜드 rights bundle 양수도 closing을 승인한다. 도윤의 SPV는 2차 임시 운송 계약을 확정하고, 보험 청구권 일부 선지급 일정을 받으며, 항만 우선사용권 명의를 이전한다. 백승환의 보증금 일부는 미이행 조건으로 채권단 회수액에 묶인다. closing 직후 서민재는 도윤에게 새 data-room 초대장을 건넨다. 이번에는 멈춘 식품공장이다. 기계보다 HACCP 인증, OEM 납품 승인, 품질 기록이 더 비싼 회사. 도윤은 삼진콜드 정산표를 접고 다음 폴더를 연다."
+  },
+  "incident_beats": [
+    "백승환의 proof 미제출/보증금 지연과 윤태식의 closing 지연 공격",
+    "삼진콜드 rights bundle closing, 2차 임시 운송 계약 확정, 다음 HACCP/OEM 식품공장 data-room entry receipt 확보"
+  ],
+  "stakes": "오늘 closing하지 못하면 항만 우선사용권 cure 효력이 흔들리고 buyer 2차 오더가 철회된다. 내부정보 의혹을 정리하지 못하면 권리 양수도 승인 자체가 보류된다. 반대로 전체 회사를 떠안으면 체불 임금과 노후차량 부채가 SPV를 갉아먹는다.",
+  "power_shift": {
+    "protagonist": "공개입찰 기준 설정자에서 첫 rights bundle closing을 끝내고 다음 distressed data-room으로 초대받는 반복형 deal operator로 이동한다.",
+    "antagonist": "백승환은 높은 명목가에도 실행 proof 미제출과 보증금 지연 때문에 우위를 잃고, 윤태식은 closing 지연을 막지 못한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "서민재",
+      "before": "도윤의 안을 공식 회의 안건으로 올린 은행 실무자",
+      "after": "첫 rights bundle closing을 보고 다음 부도 식품공장 data-room 초대장을 넘기는 거래 발굴자 역할로 이동한다"
+    },
+    {
+      "target": "백승환",
+      "before": "높은 명목가와 보증금 조건을 떠안은 경쟁자",
+      "after": "24시간 proof 미제출과 보증금 지연으로 일부 금액을 묶이고 도윤의 실행 proof에 밀린다",
+      "continuity_anchor_before": "높은 가격을 유지하려면 24시간 안에 보증금과 실행 proof를 내야 하는 압박을 받는다"
+    },
+    {
+      "target": "윤태식",
+      "before": "내부정보 의혹으로 도윤의 closing을 늦추려 한다",
+      "after": "read-only log, advisory exit 시각, 공개입찰 조건표 때문에 지연 명분을 잃는다",
+      "continuity_anchor_before": "advisory exit 확인서와 read-only access log 때문에 공격을 다음 절차로 미뤄야 한다"
+    },
+    {
+      "target": "강은서",
+      "before": "2차 임시 오더 검토 메일을 공식 receipt로 제공한 buyer",
+      "after": "rights bundle closing 직후 2차 임시 운송 계약을 확정해 도윤의 SPV에 반복 cashflow를 연다"
+    }
+  ],
+  "foreshadow": [
+    "삼진콜드 rights bundle closing은 이후 도윤의 반복 딜 레퍼런스가 된다.",
+    "윤태식이 내부정보 의혹을 완전히 접지 않은 상태는 다음 큰 법적 리스크 arc의 씨앗으로 남는다.",
+    "백승환의 보증금 일부 몰수는 PEF 쪽 반격과 더 큰 자본전의 동기가 된다.",
+    "부도 식품공장 data-room 초대장은 후속 국면의 HACCP 인증 proof로 바로 이어진다."
+  ],
+  "callback": [
+    "후속 국면의 항만 배정표, 후속 국면의 보험 예비 인정, 후속 국면의 buyer letter, 후속 국면의 contractor 계약을 최종 closing proof로 회수한다.",
+    "후속 국면의 공개입찰 조건표와 후속 국면의 보증금 조건을 백승환의 proof 미제출 판정으로 회수한다.",
+    "후속 국면의 첫 임시 운송 오더를 2차 임시 운송 계약 확정으로 확장한다."
+  ],
+  "emotional_beat": {
+    "type": "closing_and_next_gate_cider",
+    "intensity": 9
+  },
+  "tension_level": 8,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "채권은행 closing 회의실 / 삼진콜드 차고 / 다음 식품공장 data-room 초대 화면",
+    "type": "rights-bundle closing and next-gate entry",
+    "macro_battlefield": "rights-bundle closing and next-gate entry"
+  },
+  "time_span": {
+    "duration": "하루",
+    "in_story_time": "공개입찰 proof 제출 마감일"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "공식 회의 안건화 / 공개입찰 보증금 조건 / 실행 proof 24시간 제출 조건 / 미이행 보증금 몰수 조항",
+    "capital_after": "삼진콜드 rights bundle closing / 2차 임시 운송 계약 / 보험 청구권 일부 선지급 일정 / 항만 우선사용권 명의 이전 / 부도 식품공장 data-room 초대장",
+    "capital_delta": "2차 임시 운송 계약과 보험 일부 선지급 일정 확보",
+    "profit_loss": "삼진콜드 권리 묶음 첫 closing 및 다음 HACCP/OEM 딜 소싱",
+    "method": "공개입찰 조건표의 proof 제출 기준으로 경쟁자의 명목가를 걸러내고, 보험금 청구권, route 운영권, 인증 유지 계약, 항만 우선사용권만 SPV로 양수한다.",
+    "investment_type": "distressed rights acquisition closing",
+    "deal_type": "rights-bundle closing / recurring transport order / next data-room entry",
+    "leverage_used": [
+      "공개입찰 조건표",
+      "보증금 미이행 몰수 조항",
+      "보험 청구권 유지 메일",
+      "항만 우선사용권 cure 확인서",
+      "route memory contractor 계약",
+      "온도 로그 무이탈 기록",
+      "2차 임시 오더 draft",
+      "read-only access log",
+      "advisory exit 완료 시각"
+    ],
+    "opponent": {
+      "name": "백승환 / 윤태식 / 고철업자",
+      "type": "proof-missing high bidder, legal-delay frame, and fast-cash pressure",
+      "weakness_exploited": "높은 명목가는 proof 제출, 보증금 납입, buyer 실행 조건을 동시에 맞추지 못하면 closing 기준에서 탈락한다"
+    },
+    "historical_event": null,
+    "time_pressure": "오늘 closing하지 못하면 항만 우선사용권 cure 효력과 buyer 2차 오더가 동시에 흔들린다.",
+    "knowledge_used": "회귀 전 삼진콜드가 통째 회사가 아니라 권리 묶음 closing 뒤 재가격됐다는 기억",
+    "risk_level": "고위험",
+    "business_sector": "냉장 물류 / rights bundle / 공개입찰 closing / HACCP-OEM 식품공장 data-room",
+    "section_rotation": "삼진콜드의 살아 있는 권리",
+    "success_pattern": "권리 묶음 closing과 다음 data-room gate를 같은 블록에서 확보",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "rights_bundle_closing_and_next_data_room_receipt",
+      "receipt_line": "삼진콜드 rights bundle 양수도 closing, 2차 임시 운송 계약, 보험 일부 선지급 일정, 항만 우선사용권 명의 이전, 부도 식품공장 data-room 초대장이 같은 블록에서 확보된다.",
+      "pain_only_exit": false
+    },
+    "opening_progression": {
+      "public_signboard_event": "삼진콜드 rights bundle 양수도 closing, 2차 임시 운송 계약, 보험 일부 선지급 일정, 항만 우선사용권 명의 이전, 부도 식품공장 data-room 초대장이 같은 블록에서 확보된다.",
+      "representative_reevaluation": "첫 rights bundle closing을 보고 다음 부도 식품공장 data-room 초대장을 넘기는 거래 발굴자 역할로 이동한다",
+      "next_battlefield_ticket": "채권단은 삼진콜드 rights bundle 양수도 closing을 승인한다. 도윤의 SPV는 2차 임시 운송 계약을 확정하고, 보험 청구권 일부 선지급 일정을 받으며, 항만 우선사용권 명의를 이전한다. 백승환의 보증금 일부는 미이행 조건으로 채권단 회수액에 묶인다. closing 직후 서민재는 도윤에게 새 data-room 초대장을 건넨다. 이번에는 멈춘 식품공장이다. 기계보다 HACCP 인증, OEM 납품 승인, 품질 기록이 더 비싼 회사. 도윤은 삼진콜드 정산표를 접고 다음 폴더를 연다."
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 삼진콜드가 통째 청산 뒤 권리 묶음 closing으로 재가격됐고, 다음 식품공장 딜로 이어졌다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 도윤은 삼진콜드 권리 묶음 closing을 남의 기사로만 봤고, 다음 식품공장 딜에도 들어가지 못했다.",
+      "changed_event": "이번에는 도윤의 SPV가 직접 삼진콜드 rights bundle을 closing하고 다음 부도 식품공장 data-room 초대장을 받는다.",
+      "ripple_effect": "도윤의 사업 모델이 단발성 구조조정 실사가 아니라 연속적인 권리 매입 pipeline으로 변한다."
+    },
+    "death_flag": {
+      "avoided": "고철 매각 뒤 남이 권리 묶음을 재조립하고 다음 딜까지 가져가는 미래",
+      "method": "공개입찰 proof 기준과 SPV 권리 양수도 계약으로 첫 closing과 다음 gate를 직접 확보한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 다음 식품공장 data-room 초대장을 받자마자 HACCP 인증 만료일과 OEM 납품 승인권부터 확인한다.",
+      "suspicion_from": "서민재"
+    },
+    "future_prep": {
+      "action": "부도 식품공장 data-room에서 HACCP 인증 만료일, OEM 납품 승인권, 품질 기록을 proof로 잡을 준비",
+      "target_event": "후속 국면 HACCP은 아직 유효하다"
+    }
+  },
+  "block_no": 10,
+  "foreshadow_targets": [
+    11,
+    12,
+    13
+  ]
+}

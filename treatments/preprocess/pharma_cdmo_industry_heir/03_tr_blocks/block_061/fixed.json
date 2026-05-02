@@ -1,0 +1,182 @@
+{
+  "block_id": "Block 61",
+  "title": "표준위원회 초대장",
+  "content": {
+    "context": "바이오 기업들이 태오바이오 조건표를 먼저 찾자 정부 산업표준위원회가 태오를 초대한다. 초대장에는 발표 순서와 참석자 명단만 적혀 있고, 바이오 금융 조건표와 생산권 담보 원장은 참고자료로만 취급되어 있다. 태오는 축하받으러 가는 자리가 아니라 조건표를 국가 표준의 안건으로 올릴 자리라는 걸 안다.",
+    "event_villain": "관료 라인은 태오를 민간 성공 사례 발표자로 세워 체면만 챙기려 한다. 글로벌 빅파마 로비스트는 표준위원회가 단가와 납기를 건드리지 말아야 한다고 말하고, 재벌 연합은 공동투자 의향서를 앞세워 태오 조건표를 민간 자율 표준으로 낮추려 한다. 모두가 초대장을 주지만 표준의 의제권은 주지 않는다.",
+    "solution": "태오는 참석권을 권위로 착각하지 않는다. 첫 사건 beat는 바이오 금융 조건표와 생산권 담보 원장을 표준위원회 사전자료가 아니라 정식 안건으로 상정하라고 요구하는 장면이다. 둘째 beat는 관료 라인이 발표 순서를 미끼로 회유하자, 태오가 12개 바이오 term-sheet pipeline과 은행 공동대출 framework를 들고 정부 조달 예비표준 검토권을 맞교환하는 장면이다. 그는 말하는 자리가 아니라 표준 문구를 고치는 자리를 얻는다.",
+    "reward": "태오는 국가 산업표준위원회 정식 안건 상정권, 바이오 금융 조건표 제출권, 생산권 담보 원장 비공개 열람권, 정부 조달 예비표준 검토권, 실증분과 의제 우선권을 얻는다. 초대장은 박수받는 티켓이 아니라 국가 표준 문구에 손대는 권리로 바뀐다."
+  },
+  "stakes": "위원회 초대가 발표 행사로만 끝나면 바이오 금융 조건표는 민간 성공담으로 소비되고, 글로벌 빅파마와 재벌 연합이 표준 논의를 단가와 지분 논의로 되돌린다.",
+  "power_shift": {
+    "protagonist": "바이오 금융 조건표의 시장 표준권자에서 국가 산업표준위원회의 안건권을 확보한 제도권 설계자로 올라선다.",
+    "antagonist": "관료 라인과 글로벌 빅파마, 재벌 연합은 태오를 발표자로만 쓰려던 계획을 접고 조건표 문구를 상대해야 한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "산업표준위원회 관료 라인",
+      "before": "태오를 민간 성공 사례 발표자로 부르려는 의전 중심 gatekeeper",
+      "after": "바이오 금융 조건표를 정식 안건으로 올려야 하는 제도 파트너"
+    },
+    {
+      "target": "글로벌 빅파마 로비스트",
+      "before": "표준위원회가 단가와 납기를 건드리지 못하게 막는 외부 압박자",
+      "after": "생산권 담보 원장과 조달 예비표준 검토권을 공개적으로 견제해야 하는 협상 상대"
+    },
+    {
+      "target": "재벌 연합 실무단",
+      "before": "공동투자 의향서로 태오 조건표를 민간 자율 표준에 묶으려는 자본 세력",
+      "after": "정식 안건 상정권 앞에서 돈만으로 의제를 낮추기 어려워진 후발 제안자"
+    }
+  ],
+  "foreshadow": [
+    "정부 조달 예비표준 검토권은 글로벌 빅파마의 단가 압박을 국가 납기와 소재 병목 문제로 바꾸는 근거가 된다.",
+    "생산권 담보 원장 비공개 열람권은 재벌 연합이 돈으로 지분만 사려 할 때 방어 장치가 된다.",
+    "실증분과 의제 우선권은 공급망 정지 사고가 표준 proof로 전환될 때 핵심 통로가 된다."
+  ],
+  "callback": [
+    "바이오 금융 조건표와 생산권 담보 원장은 직전 시장 표준 영수증에서 제도권 안건으로 올라온다.",
+    "12개 바이오 term-sheet pipeline은 정부가 민간 사례를 국가 표준 자료로 인정하게 만드는 숫자 근거가 된다.",
+    "은행 공동대출 framework는 조건표가 민간 내부 규칙이 아니라 금융권 실행 자료임을 증명한다."
+  ],
+  "emotional_beat": {
+    "protagonist_feeling": "태오는 초대장을 받아도 웃지 않는다. 축하받는 사람은 박수 뒤에 밀려나지만, 안건을 가진 사람은 회의록에 남는다는 걸 안다.",
+    "reader_catharsis": "관료들이 주인공을 성공 사례 발표자로 세우려는 순간, 태오가 발표 순서 대신 정식 안건 상정권과 조달 예비표준 검토권을 받아내는 사이다."
+  },
+  "tension_level": 9,
+  "pov_character": "강태오",
+  "location": {
+    "place": "산업표준위원회 사전조율 회의실",
+    "type": "national_standard_agenda_room",
+    "macro_battlefield": "국가 산업 표준 의제권"
+  },
+  "time_span": {
+    "duration": "5일",
+    "in_story_time": "2011년 1월 초"
+  },
+  "genre_ext": {
+    "capital_before": "2조 8000억 + 바이오 금융 조건표 + 소비재 안전표준 + 생산가능성 기준 밸류에이션 모델 작성권 + 실패 파이프라인 회수 패키지 표준항목 + 병원 데이터 보험료 산식 공동검증권 + 생산권 담보 대출 표준계약 + CMO slot 담보권 + 보험금/데이터 수수료 상계권 + 생산권 회수 waterfall + 담보비율 산정표 + 12개 바이오 term-sheet pipeline + 조건표 심사위원회 의장권 + 구조화 수수료 0.7% + 생산권 담보 원장 + 은행 공동대출 framework",
+    "capital_after": "3조 3000억 + 바이오 금융 조건표 + 국가 산업표준위원회 정식 안건 상정권 + 바이오 금융 조건표 제출권 + 생산권 담보 원장 비공개 열람권 + 정부 조달 예비표준 검토권 + 실증분과 의제 우선권 + 12개 바이오 term-sheet pipeline + 조건표 심사위원회 의장권 + 구조화 수수료 0.7% + 생산권 담보 원장 + 은행 공동대출 framework",
+    "capital_delta": "+5000억 평가 상승, +정식 안건 상정권, +조건표 제출권, +담보 원장 비공개 열람권, +정부 조달 예비표준 검토권, +실증분과 의제 우선권",
+    "profit_loss": "발표 행사로 소비될 위험을 감수하는 대신, 국가 표준 문구와 조달 예비검토에 개입하는 권리를 확보한다.",
+    "method": "민간 성공 사례 초대장을 조건표 정식 안건, 담보 원장 열람, 조달 예비표준 검토권으로 재협상한다.",
+    "investment_type": "국가 산업표준 의제권 확보",
+    "deal_type": "표준위원회 안건 상정 및 조달 예비표준 검토 계약",
+    "leverage_used": "바이오 금융 조건표, 생산권 담보 원장, 12개 term-sheet pipeline, 은행 공동대출 framework",
+    "opponent": {
+      "name": "산업표준위원회 관료 라인",
+      "type": "국가 표준 gatekeeper + 글로벌/재벌 로비 압력",
+      "weakness_exploited": "태오를 민간 발표자로만 쓰고 조건표의 책임 조항은 희석할 수 있다고 믿는다."
+    },
+    "time_pressure": "표준위원회 본회의 자료 마감 전 5일",
+    "knowledge_used": "국가 산업표준, 조달 예비표준, 생산권 담보 원장, 바이오 금융 조건표, 실증분과",
+    "risk_level": "최상",
+    "business_sector": "국가 산업 표준 / 바이오 금융 / CDMO 공급망",
+    "section_rotation": "국가 산업 표준 진입",
+    "success_pattern": "의전 초대를 표준 안건권과 조달 검토권으로 바꾼다.",
+    "opening_progression": {
+      "public_signboard_event": "정부 산업표준위원회가 태오바이오를 민간 성공 사례로 초대한다.",
+      "representative_reevaluation": "관료와 로비스트들은 태오를 발표자가 아니라 표준 문구를 고치려는 안건권자로 다시 본다.",
+      "next_battlefield_ticket": "정부 조달 예비표준 검토권이 글로벌 빅파마의 단가표 압박 전장으로 이어진다."
+    },
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "national_standard_agenda_receipt",
+      "receipt_line": "태오는 표준위원회 참석권을 정식 안건 상정권, 조건표 제출권, 조달 예비표준 검토권으로 바꿔낸다.",
+      "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "의전 초대를 표준 안건권과 조달 검토권으로 바꾼다.",
+      "recognition_signal": "산업표준위원회 관료 라인의 시선 변화: 바이오 금융 조건표를 정식 안건으로 올려야 하는 제도 파트너",
+      "reward_signal": "태오는 표준위원회 참석권을 정식 안건 상정권, 조건표 제출권, 조달 예비표준 검토권으로 바꿔낸다.",
+      "growth_signal": "바이오 금융 조건표의 시장 표준권자에서 국가 산업표준위원회의 안건권을 확보한 제도권 설계자로 올라선다.",
+      "expectation_signal": "정부 조달 예비표준 검토권이 글로벌 빅파마의 단가표 압박 전장으로 이어진다.",
+      "reader_feel": "독자는 「표준위원회 초대장」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 태오는 표준위원회 참석권을 정식 안건 상정권, 조건표 제출권, 조달 예비표준 검토권으로 바꿔낸다. 성장 장면: 바이오 금융 조건표의 시장 표준권자에서 국가 산업표준위원회의 안건권을 확보한 제도권 설계자로 올라선다. 다음 기대감: 정부 조달 예비표준 검토권이 글로벌 빅파마의 단가표 압박 전장으로 이어진다.",
+      "mature_success_signal": "강태오는 표준위원회 초대장의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "의전 초대를 표준 안건권과 조달 검토권으로 바꾼다.",
+        "recognition": "산업표준위원회 관료 라인의 시선 변화: 바이오 금융 조건표를 정식 안건으로 올려야 하는 제도 파트너",
+        "reward": "태오는 표준위원회 참석권을 정식 안건 상정권, 조건표 제출권, 조달 예비표준 검토권으로 바꿔낸다.",
+        "growth": "바이오 금융 조건표의 시장 표준권자에서 국가 산업표준위원회의 안건권을 확보한 제도권 설계자로 올라선다.",
+        "expectation": "정부 조달 예비표준 검토권이 글로벌 빅파마의 단가표 압박 전장으로 이어진다.",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 산업표준위원회 관료 라인의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 정부 조달 예비표준 검토권이 글로벌 빅파마의 단가표 압박 전장으로 이어진다."
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "바이오 기업들이 태오바이오 조건표를 먼저 찾자 정부 산업표준위원회가 태오를 초대한다. 초대장에는 발표 순서와 참석자 명단만 적혀 있고, 바이오 금융 조건표와 생산권 담보 원장은 참고자료로만 취급되어 있다. 태오는 축하받으러 가는 자리가 아니라 조건표를 국가 표준의 안건으로 올릴 자리라는 걸 안다.",
+      "proof_action": "태오는 참석권을 권위로 착각하지 않는다. 첫 사건 beat는 바이오 금융 조건표와 생산권 담보 원장을 표준위원회 사전자료가 아니라 정식 안건으로 상정하라고 요구하는 장면이다.",
+      "proof_axis": "국가 산업표준, 조달 예비표준, 생산권 담보 원장, 바이오 금융 조건표, 실증분과",
+      "recognition_or_resistance_signal": "산업표준위원회 관료 라인 -> 바이오 금융 조건표를 정식 안건으로 올려야 하는 제도 파트너",
+      "receipt_asset": "태오는 표준위원회 참석권을 정식 안건 상정권, 조건표 제출권, 조달 예비표준 검토권으로 바꿔낸다.",
+      "reward_asset_classes": [
+        "supply_chain_finance",
+        "cdmo_slot"
+      ],
+      "next_regulated_gate": "정부 조달 예비표준 검토권이 글로벌 빅파마의 단가표 압박 전장으로 이어진다.",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 산업표준위원회 관료 라인의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 정부 조달 예비표준 검토권이 글로벌 빅파마의 단가표 압박 전장으로 이어진다.",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "business_memory",
+    "timeline_knowledge": "태오는 전생에서 민간 성공 사례 발표가 박수로 끝나고 실제 표준 문구는 글로벌 기업과 관료 라인이 가져갔던 흐름을 기억한다.",
+    "butterfly_effect": "태오의 조건표가 시장 표준에서 국가 산업표준위원회 정식 안건으로 승격된다.",
+    "death_flag": false,
+    "regression_hint": "태오가 초대장보다 회의록 안건 번호와 조달 예비표준 검토란을 먼저 확인하는 행동으로만 암시한다.",
+    "future_prep": "정식 안건 상정권과 조달 예비표준 검토권은 단가 압박, 공동투자 역제안, 데이터 주권 논쟁의 제도적 방패가 된다."
+  },
+  "block_no": 61,
+  "foreshadow_targets": [
+    {
+      "target_block": 62,
+      "target_event": "빅파마의 단가표"
+    },
+    {
+      "target_block": 63,
+      "target_event": "재벌 연합의 역제안"
+    },
+    {
+      "target_block": 65,
+      "target_event": "공급망 정지 하루"
+    }
+  ],
+  "callback_sources": [
+    {
+      "source_block": 60,
+      "source_event": "바이오 은행"
+    },
+    {
+      "source_block": 59,
+      "source_event": "생산권이 담보다"
+    },
+    {
+      "source_block": 58,
+      "source_event": "데이터 보험료"
+    }
+  ]
+}

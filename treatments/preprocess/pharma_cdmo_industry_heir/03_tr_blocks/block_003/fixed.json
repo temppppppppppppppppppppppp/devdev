@@ -86,13 +86,68 @@
     "opening_progression": {
       "public_signboard_event": "식약처 실사 기록에 새 인수자의 자진 격리와 개선계획 제출 문구가 남는다",
       "representative_reevaluation": "오민석과 윤세린이 강태오를 결함을 숨기는 인수자가 아니라 결함을 권한으로 바꾸는 운영자로 재평가한다",
-      "next_battlefield_ticket": "박도현의 병원 대체 샘플 요청이 다음 block의 긴급 납품 전장을 연다"
+      "next_battlefield_ticket": "박도현의 병원 대체 샘플 요청이 다음 긴급 납품 전장을 연다"
     },
     "block_cider": {
       "has_cider": true,
       "receipt_type": "public_proof_to_next_gate",
       "receipt_line": "강태오는 조건부 보류 판정이라는 공적 기록과 병원 대체 샘플 요청권을 같은 날 확보한다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "완전 승리가 아니라 손실을 감수한 조건부 판정으로 병원 납품 전장을 여는 피로스 승리",
+      "recognition_signal": "오민석의 시선 변화: 강태오가 결함을 숨기지 않고 개선계획으로 제출하자 관리대상이지만 대화 가능한 사업자로 재분류한다",
+      "reward_signal": "강태오는 조건부 보류 판정이라는 공적 기록과 병원 대체 샘플 요청권을 같은 날 확보한다.",
+      "growth_signal": "강태오는 완전 합격을 노리지 않고, 통제 가능한 결함 공개를 통해 실사 기록과 병원 납품 기회를 동시에 얻는다.",
+      "expectation_signal": "박도현의 병원 대체 샘플 요청이 다음 긴급 납품 전장을 연다",
+      "reader_feel": "독자는 「실사 전날의 배치」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 조건부 보류 판정이라는 공적 기록과 병원 대체 샘플 요청권을 같은 날 확보한다. 성장 장면: 강태오는 완전 합격을 노리지 않고, 통제 가능한 결함 공개를 통해 실사 기록과 병원 납품 기회를 동시에 얻는다. 다음 기대감: 박도현의 병원 대체 샘플 요청이 다음 긴급 납품 전장을 연다",
+      "mature_success_signal": "강태오는 실사 전날의 배치의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "완전 승리가 아니라 손실을 감수한 조건부 판정으로 병원 납품 전장을 여는 피로스 승리",
+        "recognition": "오민석의 시선 변화: 강태오가 결함을 숨기지 않고 개선계획으로 제출하자 관리대상이지만 대화 가능한 사업자로 재분류한다",
+        "reward": "강태오는 조건부 보류 판정이라는 공적 기록과 병원 대체 샘플 요청권을 같은 날 확보한다.",
+        "growth": "강태오는 완전 합격을 노리지 않고, 통제 가능한 결함 공개를 통해 실사 기록과 병원 납품 기회를 동시에 얻는다.",
+        "expectation": "박도현의 병원 대체 샘플 요청이 다음 긴급 납품 전장을 연다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 오민석의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 박도현의 병원 대체 샘플 요청이 다음 긴급 납품 전장을 연다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "식약처 오민석 감사관이 부평 2공장에 들어오는 날, 강태오는 멸균실이 아니라 격리창고 문부터 연다. 윤세린은 문제 배치 격리 목록과 개선계획 초안을 들고 있고, QA팀은 전날 밤 새로 만든 편차보고 묶음을 들고 대기한다. 보통 실사라면 숨겨야 할 자료지만, 태오는 숨길 자료와 제출할 자료를 반대로 나눈다.",
+      "proof_action": "태오는 제보를 부인하지 않는다. 오히려 오민석에게 문제 배치 격리 목록, 원료 재라벨링 승인 메모, 라인 정지 기록을 먼저 제출한다. 대신 조건을 붙인다. 기존 생산분은 폐기하고, 실사 범위를 '은폐 적발'이 아니라 '인수 후 개선계획 확인'으로 바꿔 달라는 것이다.",
+      "proof_axis": "전생에서 병원 구매실이 완전한 인증보다 공급 공백을 메울 공식 기록과 책임자를 더 빨리 본다는 기억",
+      "recognition_or_resistance_signal": "오민석 -> 강태오가 결함을 숨기지 않고 개선계획으로 제출하자 관리대상이지만 대화 가능한 사업자로 재분류한다",
+      "receipt_asset": "강태오는 조건부 보류 판정이라는 공적 기록과 병원 대체 샘플 요청권을 같은 날 확보한다.",
+      "reward_asset_classes": [
+        "quality_responsibility",
+        "cdmo_slot"
+      ],
+      "next_regulated_gate": "박도현의 병원 대체 샘플 요청이 다음 긴급 납품 전장을 연다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 오민석의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 박도현의 병원 대체 샘플 요청이 다음 긴급 납품 전장을 연다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {

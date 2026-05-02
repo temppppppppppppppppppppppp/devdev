@@ -1,8 +1,15 @@
 {
   "run_class": "sequential_production",
-  "last_sequential_block_pass": 30,
-  "next_unit_type": "block",
-  "next_block_id": "Block 031",
+  "last_sequential_block_pass": 70,
+  "next_unit_type": "material_pair_closeout_complete",
+  "next_block_id": null,
   "manual_audit_ready": true,
-  "notes": "Stage0 and Phase0 created in this wave. Block 001 through Block 030 fixed, manually audited, and 10-block audit gates PASS for 001-010, 011-020, and 021-030. Continue with Block 031; BI is blocked until 70-block TR and source TR gate PASS."
+  "notes": "Stage0 and Phase0 created in this wave. Block 001 through Block 070 fixed and manually audited; ten-block audit gates PASS for 001-010, 011-020, 021-030, 031-040, 041-050, 051-060, and 061-070. Source TR handoff gate PASS, BI 5-pass PASS, GREENPLUS benchmark PASS, immediate-deployment closeout PASS.",
+  "last_completed_block": 70,
+  "next_block": null,
+  "last_run_note": "Block 001 through Block 070 material-side TR generation complete. BI/TR pair is complete: source TR gate PASS, BI 5-pass PASS, promotion-target normalization PASS, GREENPLUS benchmark PASS, immediate-deployment closeout PASS.",
+  "source_tr_gate_status": "PASS",
+  "bi_status": "PASS",
+  "benchmark_alias": "GREENPLUS",
+  "material_deployment_status": "immediate_deployable_material"
 }

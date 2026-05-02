@@ -40,9 +40,9 @@
     "한재국 승인 메모가 글로벌 예비 방문 자료에 들어가며 공장을 다시 살 수 없는 이유가 된다."
   ],
   "callback": [
-    "Block 002의 원료 재라벨링 승인 메모가 한재국 책임을 겨누는 증거로 회수된다.",
-    "Block 003의 문제 배치 격리 목록이 인수 후 조치와 인수 전 책임을 분리하는 근거가 된다.",
-    "Block 006의 책임선 표가 현장 담당자의 증언과 배치번호 대조의 기준이 된다."
+    "원료 재라벨링 승인 메모가 한재국 책임을 겨누는 증거로 회수된다.",
+    "문제 배치 격리 목록이 인수 후 조치와 인수 전 책임을 분리하는 근거가 된다.",
+    "책임선 표가 현장 담당자의 증언과 배치번호 대조의 기준이 된다."
   ],
   "emotional_beat": {
     "type": "pyrrhic_victory",
@@ -94,6 +94,60 @@
       "receipt_type": "protection_and_counterclaim_receipt",
       "receipt_line": "강태오는 현금 3억 손실을 감수하고 원료 공급계약 해지 근거, 불량 배치 책임 방화벽, 병원 평가 유지권을 확보한다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "현금 적자를 감수하고 불량 배치 책임을 외부화해 공장과 글로벌 ticket을 지키는 피로스 승리",
+      "recognition_signal": "한재국의 시선 변화: 재매입과 법무 압박이 실패하고 자신의 재라벨링 승인 메모가 글로벌 예비 방문 자료에 들어갈까 두려워한다",
+      "reward_signal": "강태오는 현금 3억 손실을 감수하고 원료 공급계약 해지 근거, 불량 배치 책임 방화벽, 병원 평가 유지권을 확보한다.",
+      "growth_signal": "강태오는 단기 현금 손실을 받아들이고 불량 배치 책임선을 분리해 공장과 글로벌 예비 방문을 지킨다.",
+      "expectation_signal": "원료 공급계약 해지 근거가 공장을 태림제약 원료망 밖으로 빼내는 다음 전장을 연다",
+      "reader_feel": "독자는 「한재국의 불량 배치」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 현금 3억 손실을 감수하고 원료 공급계약 해지 근거, 불량 배치 책임 방화벽, 병원 평가 유지권을 확보한다. 성장 장면: 강태오는 단기 현금 손실을 받아들이고 불량 배치 책임선을 분리해 공장과 글로벌 예비 방문을 지킨다. 다음 기대감: 원료 공급계약 해지 근거가 공장을 태림제약 원료망 밖으로 빼내는 다음 전장을 연다",
+      "mature_success_signal": "강태오는 한재국의 불량 배치의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "현금 적자를 감수하고 불량 배치 책임을 외부화해 공장과 글로벌 ticket을 지키는 피로스 승리",
+        "recognition": "한재국의 시선 변화: 재매입과 법무 압박이 실패하고 자신의 재라벨링 승인 메모가 글로벌 예비 방문 자료에 들어갈까 두려워한다",
+        "reward": "강태오는 현금 3억 손실을 감수하고 원료 공급계약 해지 근거, 불량 배치 책임 방화벽, 병원 평가 유지권을 확보한다.",
+        "growth": "강태오는 단기 현금 손실을 받아들이고 불량 배치 책임선을 분리해 공장과 글로벌 예비 방문을 지킨다.",
+        "expectation": "원료 공급계약 해지 근거가 공장을 태림제약 원료망 밖으로 빼내는 다음 전장을 연다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 한재국의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 원료 공급계약 해지 근거가 공장을 태림제약 원료망 밖으로 빼내는 다음 전장을 연다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "글로벌 설비 예비 방문을 앞두고 강태오는 무균충전 라인 책임선 표와 문제 배치 격리 원장을 대조한다. 숫자가 맞지 않는다. 전생에서 공장을 무너뜨린 불량 배치 하나가 태림제약 본사 출하 기록에는 사라져 있고, 부평 2공장 폐기 목록에는 남아 있다. 윤세린은 그것이 한재국 승인으로 재라벨링된 배치라고 확인한다.",
+      "proof_action": "태오는 재매입을 거절하지만 싸게 거절하지 않는다. 품질문서 금고에서 확보한 재라벨링 승인 메모, 조문기 지시 기록, 16명 책임선 표를 묶어 '인수 전 발생 배치와 인수 후 격리 조치'를 분리한다. 병원에는 배치 책임 공방을 숨기지 않고, 해당 배치가 평가용 샘플과 무관하다는 배치번호 대조표를 보낸다.",
+      "proof_axis": "전생에서 이 배치가 병원 납품과 글로벌 검토를 동시에 무너뜨린 책임 전가 카드였다는 기억",
+      "recognition_or_resistance_signal": "한재국 -> 재매입과 법무 압박이 실패하고 자신의 재라벨링 승인 메모가 글로벌 예비 방문 자료에 들어갈까 두려워한다",
+      "receipt_asset": "강태오는 현금 3억 손실을 감수하고 원료 공급계약 해지 근거, 불량 배치 책임 방화벽, 병원 평가 유지권을 확보한다.",
+      "reward_asset_classes": [
+        "cdmo_slot"
+      ],
+      "next_regulated_gate": "원료 공급계약 해지 근거가 공장을 태림제약 원료망 밖으로 빼내는 다음 전장을 연다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 한재국의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 원료 공급계약 해지 근거가 공장을 태림제약 원료망 밖으로 빼내는 다음 전장을 연다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {

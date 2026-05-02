@@ -1,0 +1,89 @@
+{
+  "work_identity": {
+    "work_id": "laid_off_cashflow_rights_operator",
+    "title": "해고 직전, 돈줄이 보였다",
+    "primary_profile": "business_growth_profile",
+    "secondary_profile": "office_power_profile"
+  },
+  "canonical_sources": [
+    "treatments/phase0/laid_off_cashflow_rights_operator_phase0_design.json",
+    "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_source_tr_blocks_001_070_aggregate.json",
+    "bible/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/0_bi_laid_off_cashflow_rights_operator.json",
+    "work_guards/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator.work_guard.yaml",
+    "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_source_tr_handoff_gate.md",
+    "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_bi_5pass_audit.md",
+    "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_root_phase0_authority_materialization_3pass_audit.md",
+    "work_guards/laid_off_cashflow_rights_operator.yaml",
+    "treatments/laid_off_cashflow_rights_operator_tr_block_070_draft.json",
+    "bible/0_bi_laid_off_cashflow_rights_operator.json",
+    "treatments/audit_reports/laid_off_cashflow_rights_operator_greenplus_immediate_use_candidate_consistency_3pass_audit.md",
+    "treatments/audit_reports/laid_off_cashflow_rights_operator_downstream_episode_pacing_hint_attachment_audit.md",
+    "treatments/audit_reports/laid_off_cashflow_rights_operator_immediate_deployment_adversarial_closeout.md"
+  ],
+  "reference_only_sources": [
+    "material_ssot/40_phase0_design/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/phase0_design.json",
+    "bible/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/laid_off_cashflow_rights_operator_bi_seed.json",
+    "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/production_status.json"
+  ],
+  "core_materials": [
+    "해고 예정 정산 담당자가 ERP 로그, 계약서, 창고 SKU 흐름의 어긋남에서 폐기된 권리를 발견한다.",
+    "첫 보상은 현금이 아니라 계정 연장, 데이터 접근권, 계약 검토권, 창고 출입권 같은 다음 행동권이어야 한다.",
+    "반품권 -> 리퍼브권 -> AS 대행권 -> 달러 정산권 -> 물류 슬롯 -> 생산 슬롯 -> 데이터 표준 -> 해외 channel 권리로 확장한다.",
+    "각 block은 production pressure -> document/field/data proof -> authority/control/rights receipt -> next gate의 흐름을 유지한다.",
+    "조력자는 감정적 찬사가 아니라 witness, operator, validator, carrier 역할로 권리 receipt를 현실화한다.",
+    "AI나 자동화는 검색, 비교, 리스크 표시, 초안 정리 보조일 뿐 최종 판단과 보상 엔진이 아니다."
+  ],
+  "npc_pool": [
+    "강도윤: 해고 예정 정산 담당자에서 외부 권리 포트폴리오 운영자로 성장하는 주인공.",
+    "윤서린: 내부 감사 witness, 보존 처리와 리스크 검토를 통해 도윤의 계산을 공식 기록으로 만든다.",
+    "박만철: 반품창고 field operator, SKU 이동과 현장 하역 proof를 들고 오는 현장 축.",
+    "최문식: 정산팀장 opening opponent, 책임 회피와 기존 관행으로 도윤의 권한 요구를 막는다.",
+    "한규리: 법무 validator, 계약 원본 열람과 부속합의 리스크를 절차로 고정한다.",
+    "노태경: 품질관리 expert, 포장/품질 proof를 생산 슬롯과 납품권 방어로 연결한다.",
+    "배수민: B2B 고객 대응 operator, 유지보수 MSA와 고객 SLA receipt를 현실화한다."
+  ],
+  "crisis_pool": [
+    "해고와 계정 만료 72시간으로 첫 접근권이 닫히는 위기.",
+    "반품 폐기 처리와 미집행 위약금이 책임 전가로 묻히는 위기.",
+    "외주업체와 법무 통지서가 도윤의 파일 접근을 끊는 위기.",
+    "품질 클레임과 납품권 회수 통지가 생산 슬롯을 막는 위기.",
+    "경쟁 플랫폼과 수입사가 공급망, 표준 계약, 데이터 접근권을 차단하는 위기.",
+    "투자자와 해외 파트너가 운영권을 지분/선불금/관계 포획으로 바꾸려는 위기."
+  ],
+  "hard_constraints": [
+    "TR은 B001-B070까지만 유지한다; B071+ 생성 금지.",
+    "B001-B070 plot/content rewrite and B071+ generation remain forbidden; root canonical TR/BI promotion, registry admission, and immediate-use declaration are allowed only inside an explicit named immediate-use promotion closeout order.",
+    "기존 B001-B070 plot/content rewrite 금지.",
+    "현금 보상만으로 block을 닫지 않는다; 접근권, 계약권, 운영권, 회수권, 생산권, 데이터 feed 중 하나가 남아야 한다.",
+    "강도윤은 선의의 해결사가 아니라 이득, 효율, 다음 권한을 먼저 계산하는 권리 운영자다.",
+    "work_guard의 AI 자동 해결 금지, 조력자 감화 금지, 적대자 무능화 금지를 유지한다."
+  ],
+  "do_not_fake": [
+    "권리 회수 구조를 현금 대박이나 주식/코인 찍기로 대체하지 말 것.",
+    "AI가 자동으로 판단하거나 돈을 벌어오는 shortcut을 쓰지 말 것.",
+    "공장/거래처를 착한 해결사 서사나 factory charity로 구조하지 말 것.",
+    "정산, ERP, 계약, 창고, 품질, 물류, 생산 슬롯 디테일을 추상 권력전으로 뭉개지 말 것.",
+    "조력자를 감탄 리액션으로만 소비하지 말고 증거 carrier/operator/validator로 써야 한다.",
+    "재벌가 내부 승계물이나 선한 구원물로 reward engine을 바꾸지 말 것."
+  ],
+  "manual_audit_note": "1. 바로 쓸 수 있는 재료: root Phase0, B001-B070 aggregate TR, BI plot_roadmap, waiting-room work_guard, published library work_guard가 모두 같은 cashflow-rights/operator reward engine을 가리킨다.\n2. 비어 있는 재료: 외부 실물 원고 reference card는 이 retroactive Stage0 lock에서 새로 채택하지 않았다.\n3. 상상으로 때우면 안 되는 재료: 정산/ERP/계약/창고/품질/물류/생산 슬롯 receipt는 기존 TR/BI에 기록된 proof와 gate를 기준으로만 확장해야 한다.",
+  "donor_review": {
+    "decision": "adopted",
+    "source": "generalized immediate-deployment rights-operator donor law from current material-side GREENPLUS shelf, especially distressed_company_buyer / distressed_asset_heir style rights-bundle cadence; no donor proper nouns or scene order adopted",
+    "scope": "pressure first -> protagonist-only proof -> same-block rights/control receipt -> observer recalculation -> next operator gate",
+    "generalized_law_kept": [
+      "same-block receipt must be a right, access, contract, operation, data, production, standard, escrow, or finance control asset",
+      "reward is not praise, charity, or cash-only payoff; it must leave a reusable gate for the next block",
+      "helpers function as witness, carrier, operator, validator, or signer, not admiration-only reactions",
+      "opponents remain rational pressure sources whose attacks create documentable authority surfaces",
+      "downstream episode pacing must land proof, receipt, and next gate inside the advised range"
+    ],
+    "blocked_surfaces": [
+      "donor proper nouns and exact scene order",
+      "miracle money, stock/coin prophecy, fantasy UI, or AI auto-profit shortcut",
+      "factory charity, good-person rescue, or benevolent all-company salvation payoff",
+      "chaebol succession skin replacing the external rights-operator contract",
+      "producer-facing summary replacing receipt-driven webnovel pacing"
+    ]
+  }
+}

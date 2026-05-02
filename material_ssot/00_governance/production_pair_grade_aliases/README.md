@@ -1,6 +1,6 @@
 # Production Pair Grade Aliases
 
-Snapshot date: `2026-04-20`
+Snapshot date: `2026-05-02`
 
 이 폴더는 live `TR + BI` pair의 등급 alias snapshot이다.
 정본 파일명은 유지하고, 이 폴더에서만 `{등급}_...` 파일명으로 본다.
@@ -49,6 +49,12 @@ Current aliases:
 - `GREENPLUS_wuxia_heavenly_physician.md`
 - `GREENPLUS_pantech_cyworld_reborn.md`
 - `GREENPLUS_golden_canary_deepclone_probe_a_fullblock_v1.md`
+- `GREENPLUS_distressed_company_buyer.md`
+- `GREENPLUS_venture_bubble_king_2000.md`
+- `GREENPLUS_power_grid_heir.md`
+- `GREENPLUS_pharma_cdmo_industry_heir.md`
+- `GREENPLUS_healthy_heir_group_succession.md`
+- `GREENPLUS_laid_off_cashflow_rights_operator.md`
 - `GREEN_jangyeongshil_industrial_revolution.md`
 - `GREEN_manual_meridian_archivist.md`
 
