@@ -1,7 +1,7 @@
 {
   "_schema_version": "2.0",
   "_schema_description": "2000년, 벤처버블의 왕이 되었다 Bible - phase0/TR draft 동기화 산출물",
-  "_last_updated": "2026-05-02",
+  "_last_updated": "2026-05-03",
   "_genre": "현대 한국 no-fantasy 회귀 테크/플랫폼 권리 독식물",
   "_family": "blockguide",
   "_work_id": "venture_bubble_king_2000",
@@ -1095,9 +1095,32 @@
         ],
         "hard_limits": [
           "No S2/runtime/schema requiredness change",
-          "No B071+ generation",
+          "No future expansion generation without separate order",
           "No block may use family recognition or generic praise as the reward engine",
           "5+ episode expansion is prohibited without explicit structural justification; this attachment gives no such exception"
+        ]
+      },
+      "webnovel_fast_pacing_engine": {
+        "status": "active",
+        "source_alias": "webnovel_fast_pacing_contract",
+        "purpose": "Keep traffic or proof pressure, rights capture, cash or status receipt, and next platform gate visible in every serialized unit.",
+        "unit_rhythm": "traffic/proof -> rights capture -> cash/status receipt -> next platform gate",
+        "required_block_field": "genre_ext.webnovel_pacing_contract",
+        "same_unit_receipt_rule": "Each unit must close on a visible IDC, PG, domain escrow, PC room, mobile billing, search traffic, ad inventory, partner escrow, option pool, ledger veto, cash-out, or platform-gate receipt.",
+        "anti_delay_rule": "Period texture and dot-com mood may add flavor only while proof, rights capture, and receipt keep moving.",
+        "recognition_limit": "Recognition supports the contract receipt; it does not replace the tech-rights asset.",
+        "coverage": "70/70",
+        "compatibility_guard": "This is a material-side BI alias for downstream consumers and does not require a code or S2 change.",
+        "mandatory_rights_at_close": [
+          "IDC",
+          "PG",
+          "domain escrow",
+          "PC방",
+          "mobile billing",
+          "ad inventory",
+          "partner escrow",
+          "option pool",
+          "ledger veto"
         ]
       }
     },

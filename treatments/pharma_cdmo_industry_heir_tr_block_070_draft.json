@@ -85,9 +85,9 @@
         "section_rotation": "부도 공장과 첫 GMP",
         "success_pattern": "현금 유출을 감수하고 공장보다 품질문서와 책임선을 먼저 장악한 출발",
         "opening_progression": {
-          "public_signboard_event": "없음",
-          "representative_reevaluation": "없음",
-          "next_battlefield_ticket": "없음"
+          "public_signboard_event": "Bid terms attach quality document access and audit-response representative status while the early MFDS inspection notice opens the same day.",
+          "representative_reevaluation": "Yoon Serin and Oh Minseok see Taeo buying quality documents and responsibility lines before factory sentiment.",
+          "next_battlefield_ticket": "Quality document safe and three-year batch-record review lead directly into the early MFDS inspection."
         },
         "block_cider": {
           "has_cider": true,
@@ -177,6 +177,23 @@
             "reader_payoff_ladder": "preserve_existing_70_70_surface",
             "webnovel_pacing_contract": "preserve_existing_70_70_surface"
           }
+        },
+        "firefly_receipt_chain": {
+          "schema": "firefly_receipt_chain.v1",
+          "bundle_read": "one TR block = 2~6 downstream episodes; keep the same-block receipt inside the bundle",
+          "same_block_cider_receipt": "강태오는 공장 소유권보다 먼저 품질문서 열람권과 실사 대응 대표자 지위를 확보한다.",
+          "public_proof_to_private_receipt": {
+            "public_proof": "Bid terms explicitly attach quality document safe access, immediate three-year batch-record review, and audit-response representative status.",
+            "private_receipt": "Taeo locks document access, audit representative status, and temporary consent from twelve core staff on the same day."
+          },
+          "reward_class": [
+            "quality_document_access_right",
+            "audit_response_authority"
+          ],
+          "rights_delta": "The distressed factory option converts into document access and audit-response authority before ownership sentiment can flatten the scene.",
+          "observer_shift": "Yoon Serin and inspector Oh Minseok recalculate Taeo as an operator who buys documents and responsibility lines before walls or machines.",
+          "next_gate": "Open the quality document safe and three-year batch records, then enter the early MFDS inspection.",
+          "forbidden_flattening_guard": "No miracle drug genius, no patient-sympathy rescue, no good-factory revival. The payoff must be a documented right, gate, data access, audit memo, contract term, supply-chain finance term, or control asset."
         }
       },
       "regression_ext": {
@@ -390,6 +407,24 @@
             "reader_payoff_ladder": "preserve_existing_70_70_surface",
             "webnovel_pacing_contract": "preserve_existing_70_70_surface"
           }
+        },
+        "firefly_receipt_chain": {
+          "schema": "firefly_receipt_chain.v1",
+          "bundle_read": "one TR block = 2~6 downstream episodes; keep the same-block receipt inside the bundle",
+          "same_block_cider_receipt": "강태오는 배치기록 원본, 편차보고서, 품질책임자 대행권, 핵심 인력 조건부 잔류 서명을 한꺼번에 확보한다.",
+          "public_proof_to_private_receipt": {
+            "public_proof": "The suspect-batch quarantine list and corrective-action draft become inspection response material.",
+            "private_receipt": "Taeo locks original batch records, deviation reports, raw-material ledgers, acting quality authority, and conditional core-staff retention signatures."
+          },
+          "reward_class": [
+            "batch_record_originals",
+            "acting_quality_authority",
+            "core_staff_hold"
+          ],
+          "rights_delta": "Document access upgrades into original-record control and internal command authority.",
+          "observer_shift": "The QA staff sees an operator who turns defects into a controlled responsibility map instead of hiding them.",
+          "next_gate": "Use the quarantine list and corrective-action draft to seek a conditional inspection hold instead of a shutdown.",
+          "forbidden_flattening_guard": "No miracle drug genius, no patient-sympathy rescue, no good-factory revival. The payoff must be a documented right, gate, data access, audit memo, contract term, supply-chain finance term, or control asset."
         }
       },
       "regression_ext": {
@@ -606,6 +641,23 @@
             "reader_payoff_ladder": "preserve_existing_70_70_surface",
             "webnovel_pacing_contract": "preserve_existing_70_70_surface"
           }
+        },
+        "firefly_receipt_chain": {
+          "schema": "firefly_receipt_chain.v1",
+          "bundle_read": "one TR block = 2~6 downstream episodes; keep the same-block receipt inside the bundle",
+          "same_block_cider_receipt": "강태오는 조건부 보류 판정이라는 공적 기록과 병원 대체 샘플 요청권을 같은 날 확보한다.",
+          "public_proof_to_private_receipt": {
+            "public_proof": "The MFDS record states voluntary quarantine and corrective-action submission by the new acquirer.",
+            "private_receipt": "Taeo locks a conditional hold record and a hospital substitute-sample request on the same day."
+          },
+          "reward_class": [
+            "conditional_audit_record",
+            "hospital_sample_gate"
+          ],
+          "rights_delta": "Audit risk converts into public proof usable at the hospital purchasing gate.",
+          "observer_shift": "Oh Minseok classifies Taeo as a new operator submitting traceable corrective proof, and Park Dohyun keeps TaeoBio in the emergency supply candidate lane.",
+          "next_gate": "Move to urgent hospital sample delivery and the purchasing-office gate.",
+          "forbidden_flattening_guard": "No miracle drug genius, no patient-sympathy rescue, no good-factory revival. The payoff must be a documented right, gate, data access, audit memo, contract term, supply-chain finance term, or control asset."
         }
       },
       "regression_ext": {
@@ -823,6 +875,23 @@
             "reader_payoff_ladder": "preserve_existing_70_70_surface",
             "webnovel_pacing_contract": "preserve_existing_70_70_surface"
           }
+        },
+        "firefly_receipt_chain": {
+          "schema": "firefly_receipt_chain.v1",
+          "bundle_read": "one TR block = 2~6 downstream episodes; keep the same-block receipt inside the bundle",
+          "same_block_cider_receipt": "강태오는 병원 구매실 직통선, 약제위원회 긴급 평가 시간표, 첫 온도기록 원장을 확보한다.",
+          "public_proof_to_private_receipt": {
+            "public_proof": "Four sample boxes with conditional-hold proof and responsible-signature packet reach the hospital pharmacy receiving desk.",
+            "private_receipt": "Taeo locks the hospital purchasing-office direct fax line, the emergency pharmacy committee timetable, and the first temperature-record ledger."
+          },
+          "reward_class": [
+            "hospital_purchase_gate",
+            "cold_chain_record_origin"
+          ],
+          "rights_delta": "Sample shipment becomes a hospital purchasing gate plus the seed of cold-chain record control.",
+          "observer_shift": "Park Dohyun and the pharmacy team reclassify TaeoBio as a risky but traceable emergency supplier.",
+          "next_gate": "Convert the hospital receipt trace into a global sample-document review ticket.",
+          "forbidden_flattening_guard": "No miracle drug genius, no patient-sympathy rescue, no good-factory revival. The payoff must be a documented right, gate, data access, audit memo, contract term, supply-chain finance term, or control asset."
         }
       },
       "regression_ext": {
@@ -1040,6 +1109,23 @@
             "reader_payoff_ladder": "preserve_existing_70_70_surface",
             "webnovel_pacing_contract": "preserve_existing_70_70_surface"
           }
+        },
+        "firefly_receipt_chain": {
+          "schema": "firefly_receipt_chain.v1",
+          "bundle_read": "one TR block = 2~6 downstream episodes; keep the same-block receipt inside the bundle",
+          "same_block_cider_receipt": "강태오는 병원 평가 접수 확인 팩스와 온도기록 보완서를 이용해 글로벌 샘플 문서 검토 및 설비 예비 방문 ticket을 확보한다.",
+          "public_proof_to_private_receipt": {
+            "public_proof": "The hospital evaluation receipt fax and temperature-record supplement attach to the global sample document packet.",
+            "private_receipt": "Taeo locks a global sample-document review and preliminary facility-visit ticket."
+          },
+          "reward_class": [
+            "global_cdmo_audit_ticket",
+            "sample_document_review"
+          ],
+          "rights_delta": "Hospital delivery proof converts into the pre-stage ticket for a global CDMO audit lane.",
+          "observer_shift": "Richard Kane sees TaeoBio as a candidate CDMO that manages defects through traceable documents, not as a mere bankrupt factory.",
+          "next_gate": "Before the preliminary visit, bind people, line ownership, and responsible signatures into one accountability table.",
+          "forbidden_flattening_guard": "No miracle drug genius, no patient-sympathy rescue, no good-factory revival. The payoff must be a documented right, gate, data access, audit memo, contract term, supply-chain finance term, or control asset."
         }
       },
       "regression_ext": {
@@ -1166,7 +1252,7 @@
         "section_rotation": "부도 공장과 첫 GMP",
         "success_pattern": "전 직원 구제가 아니라 핵심 책임자만 묶어 공장 운영권을 강화한 내부 통제 승리",
         "opening_progression": {
-          "public_signboard_event": "없음",
+          "public_signboard_event": "Core-staff conditional retention contracts and the global previsit responsibility-line table are completed.",
           "representative_reevaluation": "핵심 생산 인력 16명이 강태오를 월급을 미루는 오너가 아니라 자기 이력을 글로벌 예비 방문에 걸 수 있게 하는 운영자로 본다",
           "next_battlefield_ticket": "책임선 표가 글로벌 예비 방문과 한재국 불량 배치 책임 추궁의 자료가 된다"
         },
@@ -1258,6 +1344,23 @@
             "reader_payoff_ladder": "preserve_existing_70_70_surface",
             "webnovel_pacing_contract": "preserve_existing_70_70_surface"
           }
+        },
+        "firefly_receipt_chain": {
+          "schema": "firefly_receipt_chain.v1",
+          "bundle_read": "one TR block = 2~6 downstream episodes; keep the same-block receipt inside the bundle",
+          "same_block_cider_receipt": "강태오는 핵심 인력 16명의 조건부 잔류 계약, 글로벌 예비 방문 책임선 표, 성과급 조건표를 확보한다.",
+          "public_proof_to_private_receipt": {
+            "public_proof": "Conditional retention and responsible-signature contracts for sixteen core staff connect directly to the preliminary-visit document set.",
+            "private_receipt": "Taeo locks the preliminary-visit responsibility-line table, performance condition sheet, and core-staff retention contracts."
+          },
+          "reward_class": [
+            "responsibility_line_table",
+            "staff_signature_control"
+          ],
+          "rights_delta": "Wage pressure becomes named staff accountability and signature control.",
+          "observer_shift": "Core staff recalculates Taeo as an operator who can put their names on a global visit record, not a sentimental factory rescuer.",
+          "next_gate": "Use the responsibility-line table to attack Han Jaeguk batch liability and separate from the old raw-material network.",
+          "forbidden_flattening_guard": "No miracle drug genius, no patient-sympathy rescue, no good-factory revival. The payoff must be a documented right, gate, data access, audit memo, contract term, supply-chain finance term, or control asset."
         }
       },
       "regression_ext": {
@@ -1476,6 +1579,23 @@
             "reader_payoff_ladder": "preserve_existing_70_70_surface",
             "webnovel_pacing_contract": "preserve_existing_70_70_surface"
           }
+        },
+        "firefly_receipt_chain": {
+          "schema": "firefly_receipt_chain.v1",
+          "bundle_read": "one TR block = 2~6 downstream episodes; keep the same-block receipt inside the bundle",
+          "same_block_cider_receipt": "강태오는 현금 3억 손실을 감수하고 원료 공급계약 해지 근거, 불량 배치 책임 방화벽, 병원 평가 유지권을 확보한다.",
+          "public_proof_to_private_receipt": {
+            "public_proof": "Relabeling approval memo and batch-number comparison separate pre-acquisition liability from post-acquisition quarantine.",
+            "private_receipt": "Taeo locks raw-material contract termination grounds, a bad-batch liability firewall, and hospital evaluation continuity."
+          },
+          "reward_class": [
+            "liability_firewall",
+            "raw_material_contract_exit"
+          ],
+          "rights_delta": "Cash loss converts into raw-material network exit rights and batch-liability firewall.",
+          "observer_shift": "Park Dohyun keeps the hospital evaluation alive after confirming that the disputed batch is separate from the sample lane.",
+          "next_gate": "Use contract termination grounds to move outside Taerim Pharma raw-material dependency.",
+          "forbidden_flattening_guard": "No miracle drug genius, no patient-sympathy rescue, no good-factory revival. The payoff must be a documented right, gate, data access, audit memo, contract term, supply-chain finance term, or control asset."
         }
       },
       "regression_ext": {
@@ -1693,6 +1813,24 @@
             "reader_payoff_ladder": "preserve_existing_70_70_surface",
             "webnovel_pacing_contract": "preserve_existing_70_70_surface"
           }
+        },
+        "firefly_receipt_chain": {
+          "schema": "firefly_receipt_chain.v1",
+          "bundle_read": "one TR block = 2~6 downstream episodes; keep the same-block receipt inside the bundle",
+          "same_block_cider_receipt": "강태오는 30퍼센트 선결제, 2개월 최소발주, 4개월 우선협상권, 병원 구매실 엑셀 접근권을 확보한다.",
+          "public_proof_to_private_receipt": {
+            "public_proof": "Two-month minimum order, thirty-percent prepayment, and four-month priority negotiation are written into the contract surface.",
+            "private_receipt": "Taeo locks prepayment cash, minimum order, priority negotiation, and hospital purchasing spreadsheet access."
+          },
+          "reward_class": [
+            "minimum_purchase_contract",
+            "prepayment",
+            "hospital_data_access"
+          ],
+          "rights_delta": "Hospital supply becomes production planning leverage and purchasing-data access, not just sales.",
+          "observer_shift": "Park Dohyun binds TaeoBio as a controllable supplier that submits weekly risk records rather than a cheap vendor.",
+          "next_gate": "Convert purchase spreadsheet access and weekly quality-temperature records into an MFDS reinspection-priority memo.",
+          "forbidden_flattening_guard": "No miracle drug genius, no patient-sympathy rescue, no good-factory revival. The payoff must be a documented right, gate, data access, audit memo, contract term, supply-chain finance term, or control asset."
         }
       },
       "regression_ext": {
@@ -1911,6 +2049,23 @@
             "reader_payoff_ladder": "preserve_existing_70_70_surface",
             "webnovel_pacing_contract": "preserve_existing_70_70_surface"
           }
+        },
+        "firefly_receipt_chain": {
+          "schema": "firefly_receipt_chain.v1",
+          "bundle_read": "one TR block = 2~6 downstream episodes; keep the same-block receipt inside the bundle",
+          "same_block_cider_receipt": "강태오는 병원 납품 기록을 식약처 재실사 우선 검토 메모와 글로벌 예비 방문 유지권으로 환전한다.",
+          "public_proof_to_private_receipt": {
+            "public_proof": "Hospital delivery volume, temperature records, delay reasons, and quarantine ledger are filed as corrective-action implementation material.",
+            "private_receipt": "Taeo locks an MFDS reinspection-priority memo and keeps the global preliminary visit alive."
+          },
+          "reward_class": [
+            "mfds_reinspection_priority_memo",
+            "global_previsit_kept"
+          ],
+          "rights_delta": "Hospital surveillance records upgrade into institutional corrective proof and global confidence maintenance.",
+          "observer_shift": "Oh Minseok records TaeoBio as a conditional-hold factory implementing corrective action through hospital-record evidence.",
+          "next_gate": "Use the reinspection memo and global previsit to reject Han Jaeguk reacquisition pressure.",
+          "forbidden_flattening_guard": "No miracle drug genius, no patient-sympathy rescue, no good-factory revival. The payoff must be a documented right, gate, data access, audit memo, contract term, supply-chain finance term, or control asset."
         }
       },
       "regression_ext": {
@@ -2130,6 +2285,24 @@
             "reader_payoff_ladder": "preserve_existing_70_70_surface",
             "webnovel_pacing_contract": "preserve_existing_70_70_surface"
           }
+        },
+        "firefly_receipt_chain": {
+          "schema": "firefly_receipt_chain.v1",
+          "bundle_read": "one TR block = 2~6 downstream episodes; keep the same-block receipt inside the bundle",
+          "same_block_cider_receipt": "강태오는 20억 재매입 제안을 포기하고 재실사 일정 요청권, 병원 우선협상권 유지, 글로벌 설비 예비 방문 확정, 원료망 종료 통지를 확보한다.",
+          "public_proof_to_private_receipt": {
+            "public_proof": "Reinspection schedule request, hospital priority-negotiation confirmation, global preliminary visit, and raw-material contract termination notice bind into one packet.",
+            "private_receipt": "Taeo refuses the twenty-billion reacquisition offer and locks factory control, reinspection schedule request, hospital priority negotiation, global preliminary visit, and raw-material exit notice."
+          },
+          "reward_class": [
+            "factory_control_gate",
+            "hospital_mfds_global_gate_bundle",
+            "raw_material_independence"
+          ],
+          "rights_delta": "The factory is fixed as a CDMO gate where hospital, MFDS, and global pharma verify each other.",
+          "observer_shift": "Han Jaeguk, Park Dohyun, Oh Minseok, and Richard Kane reclassify TaeoBio as a process gate that must be passed, not a factory to be bought back.",
+          "next_gate": "Move to alternate raw-material candidates and cold-chain/raw-material independence.",
+          "forbidden_flattening_guard": "No miracle drug genius, no patient-sympathy rescue, no good-factory revival. The payoff must be a documented right, gate, data access, audit memo, contract term, supply-chain finance term, or control asset."
         }
       },
       "regression_ext": {
@@ -15113,5 +15286,31 @@
     "treatments/audit_reports/pharma_cdmo_industry_heir_source_tr_handoff_gate.md",
     "treatments/audit_reports/pharma_cdmo_industry_heir_bi_5pass.md",
     "treatments/audit_reports/pharma_cdmo_industry_heir_webnovel_fast_pacing_contract_audit.md"
-  ]
+  ],
+  "_firefly_import_contract": {
+    "schema": "firefly_import_contract.v1",
+    "work_id": "pharma_cdmo_industry_heir",
+    "title": "회귀자는 버려진 제약공장을 샀다",
+    "total_tr_blocks": 70,
+    "total_episodes_projection": 350,
+    "episodes_per_arc": 5,
+    "arcs_per_volume": 5,
+    "projection_source": "material-side ready pack compatibility projection: 70 TR planning bundles x 5 downstream episodes per bundle",
+    "projection_block_count": 70,
+    "pacing_contract": "Fast pacing: every block is a 2~6 episode planning bundle with proof, receipt, observer shift, and next gate inside the bundle.",
+    "opening_receipt_chain": [
+      "B1 quality document access right + audit-response representative status",
+      "B2 original batch/deviation records + acting quality authority",
+      "B3 conditional audit record + hospital substitute-sample request",
+      "B4 hospital purchasing-office direct line + temperature-record ledger",
+      "B5 global sample-document review and preliminary facility-visit ticket"
+    ],
+    "hard_guards": [
+      "No miracle drug genius framing",
+      "No patient-sympathy or good-factory revival framing",
+      "Public proof must lock into a private receipt",
+      "Same-block cider receipt must remain visible",
+      "Reward stays as certification, document, procurement, contract, data, supply-chain finance, or control rights before cash"
+    ]
+  }
 }

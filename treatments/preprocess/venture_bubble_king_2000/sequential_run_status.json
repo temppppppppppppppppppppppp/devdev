@@ -1,9 +1,23 @@
 {
   "work_id": "venture_bubble_king_2000",
   "run_class": "sequential_production",
-  "last_sequential_block_pass": 65,
-  "next_unit_type": "block",
-  "next_block_id": "Block 066",
+  "last_sequential_block_pass": 70,
+  "next_unit_type": "downstream_packet_continue_by_separate_order",
+  "next_block_id": null,
+  "next_packet_id": "EP051-060",
   "manual_audit_ready": true,
-  "notes": "TR Blocks 061-065 were created after adding ARC-07 block slots to Phase0. Same-order 5-block cap reached; next production window resumes at Block 066, the planned ARC-07 defeat block."
+  "tr": "treatments/venture_bubble_king_2000_tr_block_070_draft.json",
+  "bi": "bible/0_bi_venture_bubble_king_2000.json",
+  "latest_boundary_audit": "treatments/audit_reports/venture_bubble_king_2000_sequential_status_boundary_reconciliation_audit.md",
+  "completed_episode_packets": [
+    "EP001-010",
+    "EP011-020",
+    "EP021-030",
+    "EP031-040",
+    "EP041-050"
+  ],
+  "latest_episode_packet": "treatments/episode_packets/venture_bubble_king_2000/ep041_050_production_packet.md",
+  "latest_episode_packet_audit": "treatments/audit_reports/venture_bubble_king_2000_ep041_050_production_packet_3pass_audit.md",
+  "updated_at": "2026-05-03T20:30:02+09:00",
+  "notes": "TR Blocks 001-070 remain complete and current live TR/BI authority surfaces read 70/70. Do not generate B071. The separate downstream packet orders produced EP001-010 from TR B1-B4, EP011-020 from TR B5-B8, EP021-030 from TR B9-B12, EP031-040 from TR B13-B16, and EP041-050 from TR B17-B20, each with adversarial 3-pass audit. The next permissible continuation unit is EP051-060 from TR B21 onward by separate continuation order."
 }
