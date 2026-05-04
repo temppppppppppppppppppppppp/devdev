@@ -20,6 +20,16 @@ Status: GREENPLUS / immediate deployment row PASS
 - webnovel payoff-pattern quality-up: `treatments/audit_reports/venture_bubble_king_2000_webnovel_payoff_pattern_greenplus_qualityup_3pass_audit.md`
 - consistency adversarial 3x audit: `treatments/audit_reports/venture_bubble_king_2000_consistency_adversarial_3x_audit.md`
 - fast pacing contract audit: `treatments/audit_reports/venture_bubble_king_2000_fast_pacing_contract_greenplus_audit.md`
+- downstream EP001-010 packet: `treatments/episode_packets/venture_bubble_king_2000/ep001_010_production_packet.md`
+- downstream EP001-010 packet audit: `treatments/audit_reports/venture_bubble_king_2000_ep001_010_production_packet_3pass_audit.md`
+- downstream EP011-020 packet: `treatments/episode_packets/venture_bubble_king_2000/ep011_020_production_packet.md`
+- downstream EP011-020 packet audit: `treatments/audit_reports/venture_bubble_king_2000_ep011_020_production_packet_3pass_audit.md`
+- downstream EP021-030 packet: `treatments/episode_packets/venture_bubble_king_2000/ep021_030_production_packet.md`
+- downstream EP021-030 packet audit: `treatments/audit_reports/venture_bubble_king_2000_ep021_030_production_packet_3pass_audit.md`
+- downstream EP031-040 packet: `treatments/episode_packets/venture_bubble_king_2000/ep031_040_production_packet.md`
+- downstream EP031-040 packet audit: `treatments/audit_reports/venture_bubble_king_2000_ep031_040_production_packet_3pass_audit.md`
+- downstream EP041-050 packet: `treatments/episode_packets/venture_bubble_king_2000/ep041_050_production_packet.md`
+- downstream EP041-050 packet audit: `treatments/audit_reports/venture_bubble_king_2000_ep041_050_production_packet_3pass_audit.md`
 
 Reading:
 
@@ -29,8 +39,9 @@ Reading:
 - BI plot roadmap carries the `70/70` `webnovel_payoff_pattern` and `block_end_mandate` layer for manuscript-facing success beats.
 - BI plot roadmap now mirrors TR `genre_ext.webnovel_pacing_contract` at `70/70`, and `BIAmplificationPower.webnovel_fast_pacing_contract` records the fast pacing handoff rule.
 - Latest consistency adversarial 3x audit confirms BI remains synchronized with TR and aligned with Phase0/work_guard authority.
+- Separate downstream packet orders have produced EP001-010 from TR B1-B4, EP011-020 from TR B5-B8, EP021-030 from TR B9-B12, EP031-040 from TR B13-B16, and EP041-050 from TR B17-B20 using TR/BI roadmap authority only; they do not regenerate or modify BI.
 - Do not regenerate BI unless the source Phase0/TR changes and a fresh BI audit is planned.
-- Do not create episode/manuscript packets from this manifest without a separate packet order.
+- Do not create additional episode/manuscript packets from this manifest without a separate packet order.
 
 ## Donor Decision Visibility
 

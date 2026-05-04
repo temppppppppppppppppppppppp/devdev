@@ -1,0 +1,104 @@
+{
+  "work_id": "golden_canary_deepclone_probe_a_fullblock_v1_append_61_70",
+  "source_tr": "treatments/golden_canary_deepclone_probe_a_fullblock_v1_append_61_70_tr_block_061_draft.json",
+  "measured_at": "2026-05-03",
+  "total_blocks": 10,
+  "block_ids": [
+    "Block 61",
+    "Block 62",
+    "Block 63",
+    "Block 64",
+    "Block 65",
+    "Block 66",
+    "Block 67",
+    "Block 68",
+    "Block 69",
+    "Block 70"
+  ],
+  "avg_bundle_chars": 935,
+  "min_bundle_chars": 861,
+  "max_bundle_chars": 1030,
+  "opponent_unique": 10,
+  "deal_top_repetition": [
+    {
+      "value": "access quarantine protocol",
+      "count": 1
+    },
+    {
+      "value": "family constitution rewrite",
+      "count": 1
+    },
+    {
+      "value": "governance codex custody",
+      "count": 1
+    },
+    {
+      "value": "hostile courtship refusal memo",
+      "count": 1
+    },
+    {
+      "value": "irreversible handoff deed",
+      "count": 1
+    }
+  ],
+  "method_top_repetition": [
+    {
+      "value": "가족 배당권과 보호권은 유지하되 운용 질문권, 혈연 거부권, 감사 로그 밖 자료 열람권을 폐지한다.",
+      "count": 1
+    },
+    {
+      "value": "구조금을 바로 지급하지 않고 감사 수락, clawback escrow, 중개 금지를 조건으로 bridge facility를 연다.",
+      "count": 1
+    },
+    {
+      "value": "국가급 접근을 비공식 미팅이 아니라 공개 RFP와 이해상충 신고 절차로 강제 전환한다.",
+      "count": 1
+    },
+    {
+      "value": "국제 절차 운영권, clawback 집행권, 배당 자동 집행권을 장기 위임하되 ownership core veto와 헌장 개정권은 남긴다.",
+      "count": 1
+    },
+    {
+      "value": "모든 접근 요청을 미팅이 아니라 격리 ledger로 전환하고, 가족과 국가급 접근 모두 같은 규칙에 묶는다.",
+      "count": 1
+    }
+  ],
+  "sector_top_repetition": [
+    {
+      "value": "family office governance",
+      "count": 2
+    },
+    {
+      "value": "AI infrastructure / family office rescue governance",
+      "count": 1
+    },
+    {
+      "value": "family constitution / inheritance governance",
+      "count": 1
+    },
+    {
+      "value": "family office delegation / trust governance",
+      "count": 1
+    },
+    {
+      "value": "family office governance law",
+      "count": 1
+    }
+  ],
+  "block_cider_true": 10,
+  "block_cider_missing_or_false": [],
+  "pain_only_true": 0,
+  "pain_only_blocks": [],
+  "density_pairs": 10,
+  "density_missing": [],
+  "meta_ref_in_title": [],
+  "natural_meta_refs": [],
+  "production_density_gate": "PASS",
+  "pattern_feedback_snapshot": [
+    "concrete post-victory governance pressure in every block",
+    "authority or rights receipt attached to every block reward",
+    "no pain-only exits detected",
+    "no natural prose block-number meta leakage detected",
+    "no boundary overrun beyond Block 70"
+  ]
+}

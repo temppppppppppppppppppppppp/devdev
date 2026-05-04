@@ -1,0 +1,1963 @@
+{
+  "_schema_version": "blockguide.append_bi.v1",
+  "_schema_description": "Append-only BI delta synchronized from source TR Blocks 061-070. Baseline BI remains canonical for the sealed original wave.",
+  "_last_updated": "2026-05-03",
+  "_work_id": "golden_canary_deepclone_probe_a_fullblock_v1_append_61_70",
+  "_family": "blockguide",
+  "_status": "final_append_bi_PASS_append_only_delta",
+  "_canonical_scope": "append-only BI delta; does not replace baseline BI",
+  "_source_phase0": "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
+  "_source_tr": "treatments/golden_canary_deepclone_probe_a_fullblock_v1_append_61_70_tr_block_061_draft.json",
+  "_baseline_bi": "bible/0_bi_golden_canary_deepclone_probe_a_fullblock_v1.json",
+  "_reserve_ref": "docs/2026-04-19/golden-canary-deepclone-probe-a-fullblock-rollout-reserve-61-70.md",
+  "_source_tr_handoff_gate": "docs/2026-05-03/golden_canary_deepclone_probe_a_append_061_070_source_tr_handoff_gate.md",
+  "_source_tr_handoff_metrics": "docs/2026-05-03/_golden_append_61_70_handoff_metrics.json",
+  "_boundary_audits": [
+    "docs/2026-05-01/golden_canary_deepclone_probe_a_append_061_bi_tr_3pass.md",
+    "docs/2026-05-03/golden_canary_deepclone_probe_a_append_061_065_boundary_3pass.md",
+    "docs/2026-05-03/golden_canary_deepclone_probe_a_append_066_070_boundary_3pass.md"
+  ],
+  "_final_bi_audit": "docs/2026-05-03/golden_canary_deepclone_probe_a_append_061_070_final_bi_5pass.md",
+  "_block_range": {
+    "start": 61,
+    "end": 70,
+    "total": 10
+  },
+  "MasterBible": {
+    "ProjectData": {
+      "MetaInfo": {
+        "title": "골든 루트: 애프터 컨트롤 웨이브",
+        "work_id": "golden_canary_deepclone_probe_a_fullblock_v1_append_61_70",
+        "baseline_work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
+        "scope": "append-only post-victory governance wave",
+        "baseline_bi": "bible/0_bi_golden_canary_deepclone_probe_a_fullblock_v1.json"
+      },
+      "CoreIdentity": {
+        "protagonist": "한시우",
+        "genre_archetype": "post-victory business-power governance append",
+        "grand_objective": "135조를 번 회귀자가 더 큰 수익보다 접근권, 거절권, 후계 검증권을 먼저 사서 평화가 다시 거래 대상이 되지 않게 만든다.",
+        "baseline_truth": "The sealed baseline wave stays closed; this delta only governs the after-victory control wave."
+      }
+    },
+    "FinanceHUD": {
+      "Protagonist": {
+        "actual_truth": {
+          "name": "한시우",
+          "priority": "착함/악함보다 이득, 효율, 통제권, 유출 방지",
+          "financial_status": {
+            "total_assets": "135조 + new orbit charter",
+            "mobilizable_capital": "135조 + new orbit charter",
+            "max_assets": "135조 + new orbit charter",
+            "status_note": "Final append state is synchronized to the source TR final capital_after field."
+          },
+          "company_state": "founder-without-throne governance orbit with ownership core retained",
+          "business_lines": [
+            "family office governance",
+            "successor screening",
+            "state-contact firewall",
+            "audit inheritance",
+            "new orbit charter"
+          ]
+        },
+        "portfolio_history": [
+          {
+            "block_no": 61,
+            "block_id": "Block 61",
+            "title": "금고 격리일",
+            "right_class": "authority_receipt",
+            "receipt": "post-golden quarantine protocol과 right-to-ignore authority를 확보한다.",
+            "capital_after": "135조 + 접근 격리권",
+            "next_gate": "successor screening 기준표",
+            "pain_only_exit": false
+          },
+          {
+            "block_no": 62,
+            "block_id": "Block 62",
+            "title": "후계 검증표",
+            "right_class": "authority_receipt",
+            "receipt": "successor screening veto sheet와 delegation kill-switch를 확보한다.",
+            "capital_after": "135조 + 후계 검증권 / delegation kill-switch",
+            "next_gate": "sovereign line formalization",
+            "pain_only_exit": false
+          },
+          {
+            "block_no": 63,
+            "block_id": "Block 63",
+            "title": "국가선의 가격표",
+            "right_class": "authority_receipt",
+            "receipt": "sovereign line formalization과 state-contact firewall을 확보한다.",
+            "capital_after": "135조 + state-contact firewall",
+            "next_gate": "hostile courtship refusal",
+            "pain_only_exit": false
+          },
+          {
+            "block_no": 64,
+            "block_id": "Block 64",
+            "title": "구애 거절서",
+            "right_class": "authority_receipt",
+            "receipt": "hostile courtship refusal memo와 no-dilution ownership rule을 확보한다.",
+            "capital_after": "135조 + no-dilution ownership rule",
+            "next_gate": "governance codex custody",
+            "pain_only_exit": false
+          },
+          {
+            "block_no": 65,
+            "block_id": "Block 65",
+            "title": "운용 헌장 보관권",
+            "right_class": "authority_receipt",
+            "receipt": "governance codex custody와 audit-only family exception wall을 확보한다.",
+            "capital_after": "135조 + governance codex custody",
+            "next_gate": "rescue on my terms",
+            "pain_only_exit": false
+          },
+          {
+            "block_no": 66,
+            "block_id": "Block 66",
+            "title": "조건부 구조선",
+            "right_class": "authority_receipt",
+            "receipt": "rescue-on-my-terms precedent와 clawback escrow를 확보한다.",
+            "capital_after": "135조 + rescue-on-my-terms precedent",
+            "next_gate": "family constitution rewrite",
+            "pain_only_exit": false
+          },
+          {
+            "block_no": 67,
+            "block_id": "Block 67",
+            "title": "가족 헌장 개정일",
+            "right_class": "authority_receipt",
+            "receipt": "family constitution rewrite와 bloodline veto removal을 확보한다.",
+            "capital_after": "135조 + family constitution rewrite authority",
+            "next_gate": "peace stress test",
+            "pain_only_exit": false
+          },
+          {
+            "block_no": 68,
+            "block_id": "Block 68",
+            "title": "평화 부하 시험",
+            "right_class": "authority_receipt",
+            "receipt": "peace stress test pass와 procedure-without-prophet receipt를 확보한다.",
+            "capital_after": "135조 + peace stress test pass / non-intervention proof",
+            "next_gate": "irreversible handoff",
+            "pain_only_exit": false
+          },
+          {
+            "block_no": 69,
+            "block_id": "Block 69",
+            "title": "되돌릴 수 없는 위임",
+            "right_class": "authority_receipt",
+            "receipt": "irreversible handoff deed와 ownership core retained 구조를 확보한다.",
+            "capital_after": "135조 + irreversible handoff / ownership core retained",
+            "next_gate": "new orbit closure",
+            "pain_only_exit": false
+          },
+          {
+            "block_no": 70,
+            "block_id": "Block 70",
+            "title": "새 궤도",
+            "right_class": "authority_receipt",
+            "receipt": "new orbit charter와 founder-without-throne status를 확보한다.",
+            "capital_after": "135조 + new orbit charter",
+            "next_gate": "append wave sealed",
+            "pain_only_exit": false
+          }
+        ]
+      }
+    },
+    "AppendControl": {
+      "core_promise": "135조를 번 회귀자가 더 큰 수익보다 접근권, 거절권, 후계 검증권을 먼저 사서 평화가 다시 거래 대상이 되지 않게 만든다.",
+      "protagonist_contract": {
+        "name": "한시우",
+        "priority": "착함/악함보다 이득, 효율, 통제권, 유출 방지",
+        "forbidden_softening": [
+          "가족이라서 예외를 주는 선역화",
+          "국가급 요청이라서 비공식 미팅을 허용하는 권위 숭배",
+          "돈이 충분하니 모두를 돕는 자선 엔딩",
+          "회귀 비밀을 고백해 감정 보상으로 닫는 방식"
+        ],
+        "reader_pleasure": "막대한 돈을 가진 사람이 더 큰 투자보다 '안 만나도 되는 권리'와 '내 규칙 밖에서는 아무도 못 들어오는 상태'를 사는 대리만족"
+      },
+      "pacing_contract": {
+        "block_unit": "one block equals 2-6 episodes",
+        "minimum_density": "each block must include one primary incident and at least one secondary incident",
+        "same_block_receipt": "every block must end with a concrete receipt in access, authority, protection, rule-change, signboard, or refusal right",
+        "no_slow_epilogue_rule": "post-victory peace must be tested through procedures, requests, and blocked access rather than warm reflection"
+      },
+      "promotion_rule": "Source TR handoff gate passed; final append BI may be used as a synchronized delta only."
+    },
+    "BIAmplificationPower": {
+      "webnovel_fast_pacing_engine": {
+        "engine_name": "proof_to_reevaluation_to_reward_token_to_next_gate",
+        "writer_facing_rule": "Each block proves authority under pressure, forces reevaluation, pays a concrete reward token, then points to the next gate.",
+        "payoff_surface": "growth, victory, success, recognition, and usable authority receipts remain visible inside every block.",
+        "blockwise_engine": [
+          {
+            "block_no": 61,
+            "block_id": "Block 61",
+            "title": "금고 격리일",
+            "proof": "135조 이후 외부 접근 요청 전면 격리",
+            "reevaluation": {
+              "protagonist": "135조 보유자에서 접근권과 거절권을 가격화하지 않는 금고 관리자",
+              "antagonist": "축하와 협력 명분으로 우회 접근하려던 외부 라인은 모두 ledger 밖에서는 아무것도 얻지 못하는 상태"
+            },
+            "reward_token": "post-golden quarantine protocol과 right-to-ignore authority를 확보한다.",
+            "next_gate": "successor screening 기준표",
+            "click_pressure_source": [
+              62,
+              63,
+              67
+            ]
+          },
+          {
+            "block_no": 62,
+            "block_id": "Block 62",
+            "title": "후계 검증표",
+            "proof": "후계 검증표와 위임 kill-switch 설계",
+            "reevaluation": {
+              "protagonist": "거절권 관리자에서 위임권의 회수 조건을 설계하는 심사권자",
+              "antagonist": "충성, 혈연, 효율을 명분으로 자리와 서명권을 얻으려던 후보들은 모두 검증표 아래로 내려간다."
+            },
+            "reward_token": "successor screening veto sheet와 delegation kill-switch를 확보한다.",
+            "next_gate": "sovereign line formalization",
+            "click_pressure_source": [
+              63,
+              67,
+              69
+            ]
+          },
+          {
+            "block_no": 63,
+            "block_id": "Block 63",
+            "title": "국가선의 가격표",
+            "proof": "국부펀드 비공식 라인을 공개 RFP로 전환",
+            "reevaluation": {
+              "protagonist": "내부 후계 검증권자에서 국가급 접근 절차를 가격표로 바꾸는 rule setter",
+              "antagonist": "국가 권위와 감독 명분은 사적 우회로를 잃고 공개 절차의 후보로 격하된다."
+            },
+            "reward_token": "sovereign line formalization과 state-contact firewall을 확보한다.",
+            "next_gate": "hostile courtship refusal",
+            "click_pressure_source": [
+              64,
+              67,
+              69
+            ]
+          },
+          {
+            "block_no": 64,
+            "block_id": "Block 64",
+            "title": "구애 거절서",
+            "proof": "우호적 흡수 제안 거절과 역제안서 발송",
+            "reevaluation": {
+              "protagonist": "국가급 접근 절차의 rule setter에서 우호적 흡수 제안을 역제안서로 되돌리는 ownership keeper",
+              "antagonist": "구애와 명예로 접근권을 얻으려던 자본/가문 라인은 정보권과 의사결정권을 모두 잃은 무급 자문 후보가 된다."
+            },
+            "reward_token": "hostile courtship refusal memo와 no-dilution ownership rule을 확보한다.",
+            "next_gate": "governance codex custody",
+            "click_pressure_source": [
+              65,
+              66,
+              67
+            ]
+          },
+          {
+            "block_no": 65,
+            "block_id": "Block 65",
+            "title": "운용 헌장 보관권",
+            "proof": "governance codex 작성과 금고 보관",
+            "reevaluation": {
+              "protagonist": "개별 거절의 설계자에서 모든 예외를 헌장 아래에 묶는 rule custodian",
+              "antagonist": "선의, 가족, 효율을 명분으로 남아 있던 예외 가능성은 감사 로그와 헌장 보관권 아래로 들어간다."
+            },
+            "reward_token": "governance codex custody와 audit-only family exception wall을 확보한다.",
+            "next_gate": "rescue on my terms",
+            "click_pressure_source": [
+              66,
+              67,
+              68
+            ]
+          },
+          {
+            "block_no": 66,
+            "block_id": "Block 66",
+            "title": "조건부 구조선",
+            "proof": "AI 인프라 SPC 구조 요청을 조건부 bridge facility로 전환",
+            "reevaluation": {
+              "protagonist": "헌장 보관자에서 구조 조건을 가격화하는 개입권자",
+              "antagonist": "위기와 공익 명분으로 예외 대출을 얻으려던 라인은 감사와 clawback 조건 아래에서만 살아남는다."
+            },
+            "reward_token": "rescue-on-my-terms precedent와 clawback escrow를 확보한다.",
+            "next_gate": "family constitution rewrite",
+            "click_pressure_source": [
+              67,
+              68,
+              69
+            ]
+          },
+          {
+            "block_no": 67,
+            "block_id": "Block 67",
+            "title": "가족 헌장 개정일",
+            "proof": "가족 헌장 개정과 혈연 거부권 폐지",
+            "reevaluation": {
+              "protagonist": "조건부 구조권자에서 가족 권력 규칙을 다시 쓰는 헌장 개정권자",
+              "antagonist": "혈연과 체면으로 감사 로그 밖 질문권을 얻으려던 가족 관성은 배당권과 보호권만 남긴 채 운용권에서 분리된다."
+            },
+            "reward_token": "family constitution rewrite와 bloodline veto removal을 확보한다.",
+            "next_gate": "peace stress test",
+            "click_pressure_source": [
+              68,
+              69,
+              70
+            ]
+          },
+          {
+            "block_no": 68,
+            "block_id": "Block 68",
+            "title": "평화 부하 시험",
+            "proof": "한시우 부재 72시간 peace stress test",
+            "reevaluation": {
+              "protagonist": "가족 헌장 개정권자에서 자기 부재 중에도 규칙을 작동시키는 구조 설계자",
+              "antagonist": "작은 편의를 예외로 통과시키려던 요청들은 한시우 부재 중에도 자동 반려된다."
+            },
+            "reward_token": "peace stress test pass와 procedure-without-prophet receipt를 확보한다.",
+            "next_gate": "irreversible handoff",
+            "click_pressure_source": [
+              69,
+              70
+            ]
+          },
+          {
+            "block_no": 69,
+            "block_id": "Block 69",
+            "title": "되돌릴 수 없는 위임",
+            "proof": "irreversible handoff deed 발효",
+            "reevaluation": {
+              "protagonist": "사람 없는 절차를 증명한 설계자에서 ownership core를 보존한 채 장기권을 위임하는 궤도 설계자",
+              "antagonist": "위임을 곧 신뢰와 왕좌로 바꾸려는 주변 해석은 헌장 밖 자동 정지 조항에 묶인다."
+            },
+            "reward_token": "irreversible handoff deed와 ownership core retained 구조를 확보한다.",
+            "next_gate": "new orbit closure",
+            "click_pressure_source": [
+              70
+            ]
+          },
+          {
+            "block_no": 70,
+            "block_id": "Block 70",
+            "title": "새 궤도",
+            "proof": "new orbit charter 발표와 founder-without-throne 지위 확정",
+            "reevaluation": {
+              "protagonist": "ownership core를 보존한 위임 설계자에서 왕좌 없이 궤도를 남기는 founder-without-throne",
+              "antagonist": "한시우를 다시 시장 신호, 가족 중심, 파트너 권위로 소비하려는 모든 시선은 헌장과 궤도 밖에서 멈춘다."
+            },
+            "reward_token": "new orbit charter와 founder-without-throne status를 확보한다.",
+            "next_gate": "append wave sealed",
+            "click_pressure_source": []
+          }
+        ]
+      }
+    }
+  },
+  "BIAppendBible": {
+    "title": "골든 루트: 애프터 컨트롤 웨이브",
+    "core_promise": "135조를 번 회귀자가 더 큰 수익보다 접근권, 거절권, 후계 검증권을 먼저 사서 평화가 다시 거래 대상이 되지 않게 만든다.",
+    "baseline_truth": "The sealed baseline wave stays closed; this append delta begins after the final victory and tests whether peace can survive governance pressure.",
+    "protagonist_contract": {
+      "name": "한시우",
+      "priority": "착함/악함보다 이득, 효율, 통제권, 유출 방지",
+      "forbidden_softening": [
+        "가족이라서 예외를 주는 선역화",
+        "국가급 요청이라서 비공식 미팅을 허용하는 권위 숭배",
+        "돈이 충분하니 모두를 돕는 자선 엔딩",
+        "회귀 비밀을 고백해 감정 보상으로 닫는 방식"
+      ],
+      "reader_pleasure": "막대한 돈을 가진 사람이 더 큰 투자보다 '안 만나도 되는 권리'와 '내 규칙 밖에서는 아무도 못 들어오는 상태'를 사는 대리만족"
+    },
+    "pacing_contract": {
+      "block_unit": "one block equals 2-6 episodes",
+      "minimum_density": "each block must include one primary incident and at least one secondary incident",
+      "same_block_receipt": "every block must end with a concrete receipt in access, authority, protection, rule-change, signboard, or refusal right",
+      "no_slow_epilogue_rule": "post-victory peace must be tested through procedures, requests, and blocked access rather than warm reflection"
+    },
+    "append_arc_map": [
+      {
+        "arc_id": "APP-01",
+        "block_range": "61-70",
+        "title": "승리 이후 접근권을 격리하고 후계 검증권을 설계한다",
+        "function": "late authority, post-victory governance, legacy conversion, next-generation control, peace durability",
+        "reward_ladder": [
+          {
+            "block_no": 61,
+            "block_id": "Block 61",
+            "title": "금고 격리일",
+            "receipt": "post-golden quarantine protocol과 right-to-ignore authority를 확보한다."
+          },
+          {
+            "block_no": 62,
+            "block_id": "Block 62",
+            "title": "후계 검증표",
+            "receipt": "successor screening veto sheet와 delegation kill-switch를 확보한다."
+          },
+          {
+            "block_no": 63,
+            "block_id": "Block 63",
+            "title": "국가선의 가격표",
+            "receipt": "sovereign line formalization과 state-contact firewall을 확보한다."
+          },
+          {
+            "block_no": 64,
+            "block_id": "Block 64",
+            "title": "구애 거절서",
+            "receipt": "hostile courtship refusal memo와 no-dilution ownership rule을 확보한다."
+          },
+          {
+            "block_no": 65,
+            "block_id": "Block 65",
+            "title": "운용 헌장 보관권",
+            "receipt": "governance codex custody와 audit-only family exception wall을 확보한다."
+          },
+          {
+            "block_no": 66,
+            "block_id": "Block 66",
+            "title": "조건부 구조선",
+            "receipt": "rescue-on-my-terms precedent와 clawback escrow를 확보한다."
+          },
+          {
+            "block_no": 67,
+            "block_id": "Block 67",
+            "title": "가족 헌장 개정일",
+            "receipt": "family constitution rewrite와 bloodline veto removal을 확보한다."
+          },
+          {
+            "block_no": 68,
+            "block_id": "Block 68",
+            "title": "평화 부하 시험",
+            "receipt": "peace stress test pass와 procedure-without-prophet receipt를 확보한다."
+          },
+          {
+            "block_no": 69,
+            "block_id": "Block 69",
+            "title": "되돌릴 수 없는 위임",
+            "receipt": "irreversible handoff deed와 ownership core retained 구조를 확보한다."
+          },
+          {
+            "block_no": 70,
+            "block_id": "Block 70",
+            "title": "새 궤도",
+            "receipt": "new orbit charter와 founder-without-throne status를 확보한다."
+          }
+        ]
+      }
+    ],
+    "reward_ladder": [
+      {
+        "block_no": 61,
+        "block_id": "Block 61",
+        "title": "금고 격리일",
+        "right_class": "authority_receipt",
+        "receipt": "post-golden quarantine protocol과 right-to-ignore authority를 확보한다.",
+        "capital_after": "135조 + 접근 격리권",
+        "next_gate": "successor screening 기준표",
+        "pain_only_exit": false
+      },
+      {
+        "block_no": 62,
+        "block_id": "Block 62",
+        "title": "후계 검증표",
+        "right_class": "authority_receipt",
+        "receipt": "successor screening veto sheet와 delegation kill-switch를 확보한다.",
+        "capital_after": "135조 + 후계 검증권 / delegation kill-switch",
+        "next_gate": "sovereign line formalization",
+        "pain_only_exit": false
+      },
+      {
+        "block_no": 63,
+        "block_id": "Block 63",
+        "title": "국가선의 가격표",
+        "right_class": "authority_receipt",
+        "receipt": "sovereign line formalization과 state-contact firewall을 확보한다.",
+        "capital_after": "135조 + state-contact firewall",
+        "next_gate": "hostile courtship refusal",
+        "pain_only_exit": false
+      },
+      {
+        "block_no": 64,
+        "block_id": "Block 64",
+        "title": "구애 거절서",
+        "right_class": "authority_receipt",
+        "receipt": "hostile courtship refusal memo와 no-dilution ownership rule을 확보한다.",
+        "capital_after": "135조 + no-dilution ownership rule",
+        "next_gate": "governance codex custody",
+        "pain_only_exit": false
+      },
+      {
+        "block_no": 65,
+        "block_id": "Block 65",
+        "title": "운용 헌장 보관권",
+        "right_class": "authority_receipt",
+        "receipt": "governance codex custody와 audit-only family exception wall을 확보한다.",
+        "capital_after": "135조 + governance codex custody",
+        "next_gate": "rescue on my terms",
+        "pain_only_exit": false
+      },
+      {
+        "block_no": 66,
+        "block_id": "Block 66",
+        "title": "조건부 구조선",
+        "right_class": "authority_receipt",
+        "receipt": "rescue-on-my-terms precedent와 clawback escrow를 확보한다.",
+        "capital_after": "135조 + rescue-on-my-terms precedent",
+        "next_gate": "family constitution rewrite",
+        "pain_only_exit": false
+      },
+      {
+        "block_no": 67,
+        "block_id": "Block 67",
+        "title": "가족 헌장 개정일",
+        "right_class": "authority_receipt",
+        "receipt": "family constitution rewrite와 bloodline veto removal을 확보한다.",
+        "capital_after": "135조 + family constitution rewrite authority",
+        "next_gate": "peace stress test",
+        "pain_only_exit": false
+      },
+      {
+        "block_no": 68,
+        "block_id": "Block 68",
+        "title": "평화 부하 시험",
+        "right_class": "authority_receipt",
+        "receipt": "peace stress test pass와 procedure-without-prophet receipt를 확보한다.",
+        "capital_after": "135조 + peace stress test pass / non-intervention proof",
+        "next_gate": "irreversible handoff",
+        "pain_only_exit": false
+      },
+      {
+        "block_no": 69,
+        "block_id": "Block 69",
+        "title": "되돌릴 수 없는 위임",
+        "right_class": "authority_receipt",
+        "receipt": "irreversible handoff deed와 ownership core retained 구조를 확보한다.",
+        "capital_after": "135조 + irreversible handoff / ownership core retained",
+        "next_gate": "new orbit closure",
+        "pain_only_exit": false
+      },
+      {
+        "block_no": 70,
+        "block_id": "Block 70",
+        "title": "새 궤도",
+        "right_class": "authority_receipt",
+        "receipt": "new orbit charter와 founder-without-throne status를 확보한다.",
+        "capital_after": "135조 + new orbit charter",
+        "next_gate": "append wave sealed",
+        "pain_only_exit": false
+      }
+    ],
+    "source_tr_handoff_metrics": {
+      "metrics_ref": "docs/2026-05-03/_golden_append_61_70_handoff_metrics.json",
+      "total_blocks": 10,
+      "block_range": {
+        "start": 61,
+        "end": 70
+      },
+      "avg_bundle_chars": 935,
+      "min_bundle_chars": 861,
+      "max_bundle_chars": 1030,
+      "opponent_unique": 10,
+      "block_cider_true": 10,
+      "pain_only_true": 0,
+      "density_pairs": 10,
+      "production_density_gate": "PASS",
+      "natural_meta_ref_count": 0,
+      "title_meta_ref_count": 0
+    },
+    "final_state": {
+      "last_title": "새 궤도",
+      "final_capital_after": "135조 + new orbit charter",
+      "final_receipt": "new orbit charter와 founder-without-throne status를 확보한다.",
+      "next_required_unit": "append BI audit and packaging; no source block beyond the existing boundary",
+      "last_block_no": 70,
+      "audit": "docs/2026-05-03/golden_canary_deepclone_probe_a_append_061_070_final_bi_5pass.md"
+    }
+  },
+  "Seeds": {
+    "foreshadow_map": [
+      {
+        "block_no": 61,
+        "block_id": "Block 61",
+        "title": "금고 격리일",
+        "natural_foreshadow": [
+          "quarantine ledger의 접근자 등급표는 다음 후계 검증표의 첫 기준표가 된다.",
+          "국부펀드 라인의 공개 RFP 조건은 다음 국가선 formalization의 합법 전장으로 이어진다.",
+          "가족 선지급 차단은 가족 헌장 개정의 선례가 된다."
+        ],
+        "foreshadow_targets": [
+          62,
+          63,
+          67
+        ],
+        "callback_sources": [
+          "직전 봉인부의 governance firewall authority가 실제 접근 차단 명령으로 작동한다.",
+          "마지막 peaceful witness ending은 감정 엔딩이 아니라 거래 대상이 되지 않는 평화라는 조건으로 회수된다."
+        ]
+      },
+      {
+        "block_no": 62,
+        "block_id": "Block 62",
+        "title": "후계 검증표",
+        "natural_foreshadow": [
+          "kill-switch 설계는 국가급 접근자가 들어올 때도 같은 방식으로 확장된다.",
+          "가족 후보가 관찰권 안에서 실수를 숨기려는 시도가 가족 헌장 개정의 근거가 된다.",
+          "마이클의 제안권은 훗날 일부 권한 위임의 첫 합법 경로가 된다."
+        ],
+        "foreshadow_targets": [
+          63,
+          67,
+          69
+        ],
+        "callback_sources": [
+          "quarantine ledger의 접근자 등급표가 후계 검증표의 입력값으로 회수된다.",
+          "가족 이름도 결재권이 되지 않는다는 선례가 관찰권 제한으로 반복된다."
+        ]
+      },
+      {
+        "block_no": 63,
+        "block_id": "Block 63",
+        "title": "국가선의 가격표",
+        "natural_foreshadow": [
+          "공개 RFP 조건을 싫어하는 자본 라인이 우호적 흡수 제안으로 우회한다.",
+          "state-contact firewall은 훗날 가족 헌장에도 같은 문장으로 들어간다.",
+          "마이클은 한시우의 원칙이 거래를 깨도 유지된다는 것을 보고 위임 가능한 범위를 다시 계산한다."
+        ],
+        "foreshadow_targets": [
+          64,
+          67,
+          69
+        ],
+        "callback_sources": [
+          "비공식 AI 미팅을 공개 절차로 내렸던 결정이 국가선 formalization으로 확장된다.",
+          "delegation kill-switch의 권한 분리 원칙이 국가급 접촉에도 적용된다."
+        ]
+      },
+      {
+        "block_no": 64,
+        "block_id": "Block 64",
+        "title": "구애 거절서",
+        "natural_foreshadow": [
+          "no-dilution ownership rule은 곧 governance codex의 첫 조항이 된다.",
+          "가족 후보의 중개권 실패는 가족 헌장 개정 때 구체 증거로 쓰인다.",
+          "무급 자문으로 내려간 외부 라인 중 하나가 훗날 rescue-on-my-terms 조건을 받아들인다."
+        ],
+        "foreshadow_targets": [
+          65,
+          66,
+          67
+        ],
+        "callback_sources": [
+          "state-contact firewall이 국가급 예외를 막았다면, 이번에는 no-dilution rule이 우호적 흡수를 막는다.",
+          "후계 검증표의 권한 분리 원칙이 외부 파트너십에도 적용된다."
+        ]
+      },
+      {
+        "block_no": 65,
+        "block_id": "Block 65",
+        "title": "운용 헌장 보관권",
+        "natural_foreshadow": [
+          "헌장 밖에서 도움을 청하는 요청이 들어오면, 한시우는 돈이 아니라 규칙을 조건으로 건다.",
+          "가족 예외가 감사 로그에 묶인 사실은 가족 헌장 개정의 법적 전제가 된다.",
+          "비개입 원칙은 평화 자체가 유지되는지 시험하는 장치가 된다."
+        ],
+        "foreshadow_targets": [
+          66,
+          67,
+          68
+        ],
+        "callback_sources": [
+          "no-dilution ownership rule이 governance codex의 첫 조항으로 회수된다.",
+          "state-contact firewall과 delegation kill-switch가 하나의 헌장 체계 안으로 들어간다.",
+          "마지막 평화를 지키려면 구조가 먼저여야 한다는 결론이 실제 금고 보관권으로 회수된다."
+        ]
+      },
+      {
+        "block_no": 66,
+        "block_id": "Block 66",
+        "title": "조건부 구조선",
+        "natural_foreshadow": [
+          "구조 조건을 수락한 SPC의 내부 자료가 가족 헌장 개정 때 혈연 중개 금지 증거가 된다.",
+          "clawback escrow는 일부 권한 위임 때도 회수 장치의 원형으로 쓰인다.",
+          "AI 인프라 라인이 멈추지 않은 사실은 평화 스트레스 테스트의 외부 기준이 된다."
+        ],
+        "foreshadow_targets": [
+          67,
+          68,
+          69
+        ],
+        "callback_sources": [
+          "무급 자문으로 내려간 외부 라인 중 하나가 규칙을 받아들이는 조건으로만 구조된다.",
+          "governance codex의 선의 예외 금지가 실제 구조 요청에서 작동한다.",
+          "가족 후보 중개권 봉쇄가 구조 사건에서도 반복된다."
+        ]
+      },
+      {
+        "block_no": 67,
+        "block_id": "Block 67",
+        "title": "가족 헌장 개정일",
+        "natural_foreshadow": [
+          "관찰권이 정지된 후보의 빈자리는 평화 스트레스 테스트 때 절차가 사람 없이 작동하는지 확인하는 변수로 쓰인다.",
+          "audit inheritance clause는 권한 위임을 되돌릴 수 없는 문서로 만들 때 핵심 조항이 된다.",
+          "한정호의 서명은 새 궤도 선언 때 가족이 더 이상 왕좌를 요구하지 않는 증거가 된다."
+        ],
+        "foreshadow_targets": [
+          68,
+          69,
+          70
+        ],
+        "callback_sources": [
+          "가족 예외가 감사 로그에 묶였던 선례가 혈연 거부권 폐지로 확장된다.",
+          "구조 사건에서 드러난 가족 후보의 중개 욕망이 가족 헌장 개정의 증거로 회수된다.",
+          "가족 선지급 청탁 차단이 가족 권력 분리의 첫 사례였음이 확인된다."
+        ]
+      },
+      {
+        "block_no": 68,
+        "block_id": "Block 68",
+        "title": "평화 부하 시험",
+        "natural_foreshadow": [
+          "절차가 한시우 없이 작동한다는 증명은 일부 권한 위임의 조건이 된다.",
+          "마이클의 독립 운영 보고서는 irreversible handoff의 첫 첨부 문서가 된다.",
+          "silent veto proof는 최종 새 궤도 선언에서 개인 의존을 끝내는 근거가 된다."
+        ],
+        "foreshadow_targets": [
+          69,
+          70
+        ],
+        "callback_sources": [
+          "비개입 원칙이 감정 문구가 아니라 72시간 부하 시험으로 회수된다.",
+          "state-contact firewall, 가족 헌장, clawback escrow가 같은 테스트 안에서 동시에 작동한다.",
+          "후계 검증표의 권한 분리 원칙이 사람 없는 절차로 증명된다."
+        ]
+      },
+      {
+        "block_no": 69,
+        "block_id": "Block 69",
+        "title": "되돌릴 수 없는 위임",
+        "natural_foreshadow": [
+          "ownership core를 남겨 둔 위임 구조는 최종 새 궤도 선언의 핵심 문장이 된다.",
+          "자동 정지 조항은 한시우가 왕좌를 만들지 않았다는 증거가 된다.",
+          "마이클의 co-custodian 지위는 평생 파트너 관계를 감정이 아니라 구조로 남긴다."
+        ],
+        "foreshadow_targets": [
+          70
+        ],
+        "callback_sources": [
+          "delegation kill-switch가 장기권 위임의 자동 정지 레일로 발전한다.",
+          "peace stress test의 절차 작동 보고서가 irreversible handoff의 근거가 된다.",
+          "가족 헌장의 운용 질문권 금지가 배당 자동 집행권과 함께 유지된다."
+        ]
+      },
+      {
+        "block_no": 70,
+        "block_id": "Block 70",
+        "title": "새 궤도",
+        "natural_foreshadow": [
+          "new orbit sealed",
+          "founder-without-throne status retained",
+          "closed-loop governance continues without public return"
+        ],
+        "foreshadow_targets": [],
+        "callback_sources": [
+          "처음 사업 선언에서 그룹 돈을 받지 않겠다고 했던 선택이, 마지막에는 가족 왕좌도 받지 않는 구조로 완성된다.",
+          "평화가 거래 대상이 되지 않게 하겠다는 접근 격리 원칙이 새 궤도 헌장으로 회수된다.",
+          "위임 kill-switch, state-contact firewall, family constitution, peace stress test, irreversible handoff가 모두 하나의 궤도 안으로 닫힌다."
+        ]
+      }
+    ]
+  },
+  "plot_roadmap": [
+    {
+      "block_id": "Block 61",
+      "title": "금고 격리일",
+      "content": {
+        "context": "2025년 1월 첫째 주. 직전 골든 루트 봉인에서 72시간도 지나지 않았는데, 한시우의 패밀리오피스에는 축하 인사보다 접근 요청이 먼저 쌓인다. 국부펀드, 사모펀드, 가문 친척, 정치권 인맥, 대형 은행 PB들이 모두 '평화를 함께 관리하자'는 말로 135조의 문을 두드린다. 한시우에게 이 창은 후일담이 아니라, 평화가 다시 거래 대상이 되기 전에 접근권 자체를 격리해야 하는 첫 post-victory governance window다.",
+        "event_villain": "표면 적대자는 축하 방문과 투자 제안이지만, 실제 적대 사건은 '한 번만 만나 달라'는 요청이 운용권의 우회로가 되는 것이다. 동시에 보조 사건으로, 한태준 쪽 친척이 가족 신탁 배당을 담보로 비상 자금 선지급을 요구하고, 한 해외 국부펀드 라인은 비공식 AI 공동펀드 미팅을 잡으려 한다. 가족 요청과 국가급 접근이 같은 날 들어오며, 한시우가 하나를 허용하면 다른 모든 문도 열리는 구조가 된다.",
+        "solution": "한시우는 돈을 더 벌 기회를 고르는 대신, 30일 접근 격리령을 먼저 내린다. 모든 요청은 미팅이 아니라 quarantine ledger에 등록하고, 가족 쪽 선지급은 신탁 규칙 밖이라 거절한다. 국부펀드 라인에는 비공식 미팅 대신 KYC, 이해상충 신고, 공개 RFP 조건을 요구한다. 그는 마이클에게 '내 시간과 침묵도 자산이다. 공짜로 만나 주면 그 순간 가격이 생긴다'고 못 박는다. 주 사건은 접근 격리령 발동, 보조 사건은 가족 선지급 차단과 국부펀드 비공식 라인 격하로 동시에 닫힌다.",
+        "reward": "한시우는 `post-golden quarantine protocol`, `solicitation ledger`, `right-to-ignore authority`를 확보한다. 숫자는 늘지 않지만, 더 큰 보상은 누구를 만나지 않을 권리와 접근을 가격표 밖으로 빼는 권한이다. 마이클은 모든 초청장을 ledger에 꽂아 넣으며 '이제 네가 산 건 돈이 아니라 거절권이네'라고 인정한다."
+      },
+      "stakes": "여기서 한 번이라도 사적인 만남을 허용하면, 마지막 방화벽은 평화의 장식이 되고 패밀리오피스는 다시 청탁 시장으로 바뀐다.",
+      "power_shift": {
+        "protagonist": "135조 보유자에서 접근권과 거절권을 가격화하지 않는 금고 관리자",
+        "antagonist": "축하와 협력 명분으로 우회 접근하려던 외부 라인은 모두 ledger 밖에서는 아무것도 얻지 못하는 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "마이클 천",
+          "before": "최종 exit를 함께 본 평생 파트너",
+          "after": "한시우의 거절권을 운용 규칙으로 실행하는 gatekeeper"
+        },
+        {
+          "target": "한태준 쪽 친척 라인",
+          "before": "가족 배당을 현금 선지급으로 바꾸려는 청탁선",
+          "after": "신탁 규칙 밖에서는 가족 이름도 결재권이 되지 않는다는 첫 사례"
+        },
+        {
+          "target": "해외 국부펀드 라인",
+          "before": "비공식 AI 공동펀드 미팅을 요구하는 국가급 접근자",
+          "after": "비공식 접촉권을 잃고 공개 RFP와 이해상충 신고선으로 내려앉은 후보"
+        }
+      ],
+      "foreshadow": [
+        "quarantine ledger의 접근자 등급표는 다음 후계 검증표의 첫 기준표가 된다.",
+        "국부펀드 라인의 공개 RFP 조건은 다음 국가선 formalization의 합법 전장으로 이어진다.",
+        "가족 선지급 차단은 가족 헌장 개정의 선례가 된다."
+      ],
+      "callback": [
+        "직전 봉인부의 governance firewall authority가 실제 접근 차단 명령으로 작동한다.",
+        "마지막 peaceful witness ending은 감정 엔딩이 아니라 거래 대상이 되지 않는 평화라는 조건으로 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "cold_satisfaction",
+        "intensity": 6
+      },
+      "tension_level": 5,
+      "pov_character": "한시우",
+      "location": {
+        "place": "패밀리오피스 임시 보안회의실",
+        "type": "실내",
+        "macro_battlefield": "post-golden access quarantine"
+      },
+      "time_span": {
+        "duration": "3일",
+        "in_story_time": "2025년 1월 첫째 주"
+      },
+      "genre_ext": {
+        "type": "investment_family_office_control",
+        "capital_before": "135조",
+        "capital_after": "135조 + 접근 격리권",
+        "capital_delta": "0",
+        "profit_loss": "0",
+        "method": "모든 접근 요청을 미팅이 아니라 격리 ledger로 전환하고, 가족과 국가급 접근 모두 같은 규칙에 묶는다.",
+        "investment_type": "governance / access control",
+        "deal_type": "access quarantine protocol",
+        "leverage_used": [
+          "sealed governance firewall",
+          "sealed family trust seal",
+          "마이클 천 execution gatekeeper line",
+          "135조 보유자의 협상 무응답권"
+        ],
+        "opponent": {
+          "name": "축하 방문으로 포장된 접근 청탁선",
+          "type": "접근권 우회자",
+          "weakness_exploited": "그들은 한시우가 평화를 지키려면 좋은 관계를 유지해야 한다고 착각한다."
+        },
+        "historical_event": {
+          "name": "post-2024 crypto and AI capital crowding",
+          "year": 2025,
+          "month": "1월",
+          "how_exploited": "시장 열기가 아니라 접근 과열을 먼저 식힌다."
+        },
+        "time_pressure": "새해 첫 공식 일정이 잡히기 전 72시간 안에 모든 접근 요청의 처리 규칙을 잠가야 한다.",
+        "knowledge_used": "돈을 번 뒤 무너지는 것은 투자 실패보다 접근권 유출이라는 전생의 가족 붕괴 감각",
+        "risk_level": "중간. 수익 기회는 버리지만 운용권 유출을 막는다.",
+        "business_sector": "family office governance",
+        "section_rotation": "post-victory governance",
+        "success_pattern": "새 수익이 아니라 거절권, 격리 ledger, 공개 절차를 같은 블록 안에서 획득한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_receipt",
+          "receipt_line": "post-golden quarantine protocol과 right-to-ignore authority를 확보한다.",
+          "pain_only_exit": false
+        },
+        "episode_bundle_density": {
+          "episode_window": "2-4 episodes",
+          "primary_incident": "135조 이후 외부 접근 요청 전면 격리",
+          "secondary_incident": "가족 선지급 청탁 차단과 국부펀드 비공식 AI 미팅 격하",
+          "reader_reward": "한시우가 더 큰 돈이 아니라 만나지 않을 권리를 산다.",
+          "next_block_ticket": "successor screening 기준표"
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "knowledge_used": "전생에서 가문이 자산보다 접근권과 지배구조 누수로 무너졌다는 기억",
+        "slip_up": "미래 사건 예언 없음"
+      },
+      "block_no": 61,
+      "foreshadow_targets": [
+        62,
+        63,
+        67
+      ]
+    },
+    {
+      "block_id": "Block 62",
+      "title": "후계 검증표",
+      "content": {
+        "context": "2025년 1월 둘째 주. 접근 요청을 quarantine ledger로 밀어 넣자 다음 문제는 더 까다로워진다. 한시우가 모든 문을 혼자 지키는 한, 평화는 그의 체력과 침묵에 의존한다. 패밀리오피스 실무진은 일부 권한 위임을 제안하고, 마이클 천은 자신에게도 독립 판단권이 필요하다고 말한다. 동시에 한태준 쪽 친척 라인은 젊은 가족 후보를 앞세워 신탁 운용 보조 자리를 요구한다. 한시우에게 이 창은 사람을 믿는 문제가 아니라, 권한을 줬다가 언제든 회수할 수 있는 구조를 먼저 만드는 검증 사건이다.",
+        "event_villain": "표면 적대는 후계자 부재다. 실제 적대는 선의와 충성 언어가 권한 위임을 공짜 선물로 바꾸려는 압박이다. 마이클은 효율을 이유로 재량권을 원하고, 가족 후보는 혈연을 이유로 자리와 서명권을 원한다. 둘 다 틀린 요구는 아니지만, 한 번 허용하면 135조 운용권은 능력 검증이 아니라 관계 보상으로 배분되기 시작한다.",
+        "solution": "한시우는 후보자를 뽑지 않고 먼저 검증표를 만든다. 모든 위임 권한은 세 겹으로 나뉜다. 관찰 권한, 제안 권한, 실행 권한. 누구도 세 권한을 동시에 갖지 못한다. 마이클에게는 긴급 차단 제안권을 주되 실행권은 별도 kill-switch에 묶고, 가족 후보에게는 실무 관찰권만 허용한다. 후보가 실적을 쌓아도 신탁 자산에는 직접 손대지 못한다. 한시우는 회의실 화이트보드에 첫 문장을 적는다. 사람을 믿지 말고 회수 조건을 믿어라.",
+        "reward": "한시우는 `successor screening veto sheet`, `delegation kill-switch`, `revocable mandate sandbox`를 확보한다. 마이클은 독립 판단권을 얻었지만 실행 버튼은 얻지 못했고, 가족 후보는 이름값으로 서명권을 얻지 못한다. 패밀리오피스는 처음으로 한시우가 없어도 작동하지만, 한시우를 건너뛰면 즉시 멈추는 구조를 갖는다."
+      },
+      "stakes": "후계 검증을 미루면 한시우의 침묵과 체력에 모든 통제권이 묶인다. 반대로 사람을 믿고 권한을 주면, 전생의 가문처럼 관계가 운용권을 먹는다.",
+      "power_shift": {
+        "protagonist": "거절권 관리자에서 위임권의 회수 조건을 설계하는 심사권자",
+        "antagonist": "충성, 혈연, 효율을 명분으로 자리와 서명권을 얻으려던 후보들은 모두 검증표 아래로 내려간다."
+      },
+      "relationship_delta": [
+        {
+          "target": "마이클 천",
+          "before": "한시우의 거절권을 운용 규칙으로 실행하는 gatekeeper",
+          "after": "긴급 차단 제안권을 얻지만 kill-switch 밖 실행권은 얻지 못한 검증 대상 겸 파트너"
+        },
+        {
+          "target": "한태준 쪽 가족 후보",
+          "before": "혈연과 젊음을 명분으로 실무 보조 자리를 요구하는 후보",
+          "after": "관찰권만 받고 서명권은 봉쇄된 첫 family sandbox 사례"
+        },
+        {
+          "target": "패밀리오피스 실무진",
+          "before": "한시우의 직접 지시를 기다리던 실행팀",
+          "after": "검증표와 kill-switch를 기준으로 후보자를 평가하는 screening desk"
+        }
+      ],
+      "foreshadow": [
+        "kill-switch 설계는 국가급 접근자가 들어올 때도 같은 방식으로 확장된다.",
+        "가족 후보가 관찰권 안에서 실수를 숨기려는 시도가 가족 헌장 개정의 근거가 된다.",
+        "마이클의 제안권은 훗날 일부 권한 위임의 첫 합법 경로가 된다."
+      ],
+      "callback": [
+        "quarantine ledger의 접근자 등급표가 후계 검증표의 입력값으로 회수된다.",
+        "가족 이름도 결재권이 되지 않는다는 선례가 관찰권 제한으로 반복된다."
+      ],
+      "emotional_beat": {
+        "type": "control_assertion",
+        "intensity": 7
+      },
+      "tension_level": 6,
+      "pov_character": "한시우",
+      "location": {
+        "place": "패밀리오피스 검증 회의실",
+        "type": "실내",
+        "macro_battlefield": "successor screening desk"
+      },
+      "time_span": {
+        "duration": "5일",
+        "in_story_time": "2025년 1월 둘째 주"
+      },
+      "genre_ext": {
+        "type": "investment_family_office_control",
+        "capital_before": "135조 + 접근 격리권",
+        "capital_after": "135조 + 후계 검증권 / delegation kill-switch",
+        "capital_delta": "0",
+        "profit_loss": "0",
+        "method": "후보를 뽑기 전에 관찰권, 제안권, 실행권을 분리하고 모든 위임 권한에 회수 조건을 붙인다.",
+        "investment_type": "governance / delegation control",
+        "deal_type": "successor screening protocol",
+        "leverage_used": [
+          "quarantine ledger",
+          "마이클 천 gatekeeper line",
+          "가족 후보의 혈연 프리미엄",
+          "135조 운용권 회수 조건"
+        ],
+        "opponent": {
+          "name": "혈연과 충성으로 위임권을 얻으려는 후보군",
+          "type": "위임권 후보 / 내부 압박원",
+          "weakness_exploited": "그들은 권한을 받는 순간이 보상이라고 생각하지만, 한시우는 권한보다 회수 조건을 먼저 가격화한다."
+        },
+        "historical_event": {
+          "name": "post-victory succession pressure",
+          "year": 2025,
+          "month": "1월",
+          "how_exploited": "후계 공백 압박을 위임권 분리와 kill-switch 설계로 환전한다."
+        },
+        "time_pressure": "접근 격리 30일이 끝나기 전에 내부 위임 구조를 잠가야 한다.",
+        "knowledge_used": "전생에서 관계 보상으로 넘어간 권한이 가문 붕괴의 첫 균열이었다는 기억",
+        "risk_level": "중상. 후계 구조가 없으면 병목, 잘못 주면 탈취 통로가 된다.",
+        "business_sector": "family office governance",
+        "section_rotation": "post-victory governance",
+        "success_pattern": "후보 선정이 아니라 후계 검증표와 delegation kill-switch를 먼저 확보한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_receipt",
+          "receipt_line": "successor screening veto sheet와 delegation kill-switch를 확보한다.",
+          "pain_only_exit": false
+        },
+        "episode_bundle_density": {
+          "episode_window": "2-4 episodes",
+          "primary_incident": "후계 검증표와 위임 kill-switch 설계",
+          "secondary_incident": "마이클 독립 판단권 요구 제한과 가족 후보 관찰권 sandbox 처리",
+          "reader_reward": "한시우가 사람을 믿어 주는 대신 권한 회수 장치를 먼저 사는 맛",
+          "next_block_ticket": "sovereign line formalization"
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "knowledge_used": "전생 가문의 권한 누수 기억",
+        "slip_up": "미래 사건 예언 없음"
+      },
+      "block_no": 62,
+      "foreshadow_targets": [
+        63,
+        67,
+        69
+      ],
+      "callback_sources": [
+        61
+      ]
+    },
+    {
+      "block_id": "Block 63",
+      "title": "국가선의 가격표",
+      "content": {
+        "context": "2025년 1월 말. 후계 검증표가 내부 권한을 묶자 외부의 더 큰 문이 열린다. 한 해외 국부펀드 라인이 정식 서한을 보내 AI 인프라 공동펀드와 장기 에너지 조달 라인을 제안한다. 규모는 크고, 명분은 그럴듯하다. 그러나 서한 말미에는 비공개 사전 협의, 국가 고위층 배석, 우선 조건 조율이라는 문장이 붙어 있다. 한시우에게 이 제안은 투자가 아니라, 국가급 접근권이 사적 우회로를 요구하는 시험지다.",
+        "event_villain": "국부펀드 라인은 돈이 아니라 권위를 들고 들어온다. 거절하면 국제 라인을 잃는 것처럼 보이고, 받아들이면 공개 절차를 건너뛴 선례가 된다. 동시에 국내 감독기관 쪽에서도 비공식 설명회를 요청한다. 해외 국부펀드와 국내 규제 라인이 같은 주에 비공개 대화를 요구하며, 한시우의 새 검증표가 국가급 이름 앞에서도 작동하는지 압박한다.",
+        "solution": "한시우는 제안서를 찢지 않는다. 대신 회신 양식을 바꾼다. 모든 국가급 라인은 공개 RFP, 이해상충 신고, 정치적 비개입 조항, 실무자 분리 원칙을 통과해야 한다. 국내 감독기관에는 사적 설명회 대신 녹취 가능한 공개 브리핑 자료만 보낸다. 마이클이 묻는다. 이 정도면 거래가 깨질 수도 있다. 한시우는 대답한다. 깨지는 거래면 원래 내 거래가 아니다.",
+        "reward": "한시우는 `sovereign line formalization`, `public RFP gate`, `state-contact firewall`을 확보한다. 국부펀드 라인은 비공식 접촉권을 잃지만, 공개 조건 아래 다시 들어올 수밖에 없는 후보가 된다. 국내 감독기관도 사적 설명회 대신 문서 답변 루트로 내려앉는다. 국가급 이름표가 더 이상 예외권이 아니라 접수 번호로 바뀐다."
+      },
+      "stakes": "국가급 라인을 예외로 두는 순간, 모든 큰돈은 비공식 접촉권을 가격처럼 요구한다. 반대로 무조건 거절하면 합법적 초대형 라인을 잃는다.",
+      "power_shift": {
+        "protagonist": "내부 후계 검증권자에서 국가급 접근 절차를 가격표로 바꾸는 rule setter",
+        "antagonist": "국가 권위와 감독 명분은 사적 우회로를 잃고 공개 절차의 후보로 격하된다."
+      },
+      "relationship_delta": [
+        {
+          "target": "해외 국부펀드 라인",
+          "before": "비공개 AI 공동펀드와 고위층 사전 협의를 요구하는 국가급 접근자",
+          "after": "공개 RFP와 이해상충 신고를 통과해야 하는 절차상 후보"
+        },
+        {
+          "target": "국내 감독기관 실무선",
+          "before": "비공식 설명회를 요구하는 규제 접촉선",
+          "after": "녹취 가능한 자료와 문서 답변만 받는 공식 창구"
+        },
+        {
+          "target": "마이클 천",
+          "before": "긴급 차단 제안권을 가진 검증 대상 겸 파트너",
+          "after": "국가급 거래도 절차 밖이면 밀어내는 한시우의 원칙을 확인한 국제 실무 파트너"
+        }
+      ],
+      "foreshadow": [
+        "공개 RFP 조건을 싫어하는 자본 라인이 우호적 흡수 제안으로 우회한다.",
+        "state-contact firewall은 훗날 가족 헌장에도 같은 문장으로 들어간다.",
+        "마이클은 한시우의 원칙이 거래를 깨도 유지된다는 것을 보고 위임 가능한 범위를 다시 계산한다."
+      ],
+      "callback": [
+        "비공식 AI 미팅을 공개 절차로 내렸던 결정이 국가선 formalization으로 확장된다.",
+        "delegation kill-switch의 권한 분리 원칙이 국가급 접촉에도 적용된다."
+      ],
+      "emotional_beat": {
+        "type": "confrontation",
+        "intensity": 7
+      },
+      "tension_level": 7,
+      "pov_character": "한시우",
+      "location": {
+        "place": "패밀리오피스 국제 법무 회의실",
+        "type": "실내",
+        "macro_battlefield": "sovereign line formalization"
+      },
+      "time_span": {
+        "duration": "2주",
+        "in_story_time": "2025년 1월 말"
+      },
+      "genre_ext": {
+        "type": "investment_family_office_control",
+        "capital_before": "135조 + 후계 검증권 / delegation kill-switch",
+        "capital_after": "135조 + state-contact firewall",
+        "capital_delta": "0",
+        "profit_loss": "잠재 거래 기회 지연",
+        "method": "국가급 접근을 비공식 미팅이 아니라 공개 RFP와 이해상충 신고 절차로 강제 전환한다.",
+        "investment_type": "sovereign access governance",
+        "deal_type": "public RFP gate conversion",
+        "leverage_used": [
+          "delegation kill-switch",
+          "국제 법무팀",
+          "공개 RFP 원칙",
+          "국가급 라인의 평판 리스크"
+        ],
+        "opponent": {
+          "name": "비공식 우선권을 요구하는 국가급 접근선",
+          "type": "sovereign gate pressure",
+          "weakness_exploited": "그들은 한시우가 국가 이름표를 잃기 싫어 예외를 만들 거라고 믿는다."
+        },
+        "historical_event": {
+          "name": "2025 AI infrastructure capital race",
+          "year": 2025,
+          "month": "1월",
+          "how_exploited": "AI 인프라 자금 경쟁의 과열을 공개 절차 요구로 되돌린다."
+        },
+        "time_pressure": "국부펀드 측 답신 기한 10영업일 안에 사적 접촉 여부를 결정해야 한다.",
+        "knowledge_used": "초대형 자본은 조건보다 접촉권을 먼저 요구한다는 후반 운용 경험",
+        "risk_level": "높음. 거래를 잃을 수 있지만 예외 선례를 막는다.",
+        "business_sector": "sovereign fund / AI infrastructure governance",
+        "section_rotation": "post-victory governance",
+        "success_pattern": "국가급 이름표를 예외권이 아니라 공개 접수 번호로 바꾼다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_receipt",
+          "receipt_line": "sovereign line formalization과 state-contact firewall을 확보한다.",
+          "pain_only_exit": false
+        },
+        "episode_bundle_density": {
+          "episode_window": "2-5 episodes",
+          "primary_incident": "국부펀드 비공식 라인을 공개 RFP로 전환",
+          "secondary_incident": "국내 감독기관 사적 설명회 요구를 공식 문서 창구로 격하",
+          "reader_reward": "국가급 이름도 한시우 규칙 안으로 내려앉는 맛",
+          "next_block_ticket": "hostile courtship refusal"
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "knowledge_used": "전생과 후반 운용에서 본 비공식 접촉권의 비용",
+        "slip_up": "미래 사건 예언 없음"
+      },
+      "block_no": 63,
+      "foreshadow_targets": [
+        64,
+        67,
+        69
+      ],
+      "callback_sources": [
+        61,
+        62
+      ]
+    },
+    {
+      "block_id": "Block 64",
+      "title": "구애 거절서",
+      "content": {
+        "context": "2025년 2월. 국가급 라인을 공개 절차로 내리자, 이번에는 더 부드러운 제안이 들어온다. 글로벌 사모펀드 컨소시엄과 국내 원로 가문 라인이 한시우에게 공동 재단, 명예 이사회, 혼맥성 파트너십, 사회공헌 펀드라는 포장지를 씌운다. 표면은 구애다. 그러나 조건표 안쪽에는 공동 의사결정권, 장기 락업, 우호 지분 교환, 가족 후보의 이사회 참관권이 끼어 있다.",
+        "event_villain": "적대자는 공격하지 않는다. 칭찬하고 초대하고 명예를 준다. 이 방식은 거절하면 오만해 보이고, 받아들이면 소유권이 조금씩 희석된다. 가족 후보는 이 제안을 이용해 자신이 외부와 내부를 연결할 수 있다고 주장하고, 일부 실무진은 공익 재단이면 이미지 리스크도 낮다고 설득한다. 한시우가 거절하면 평판 손실, 받아들이면 ownership core 손실이다.",
+        "solution": "한시우는 초청장에 답장을 보낸다. 공동 재단 불가, 우호 지분 교환 불가, 혼맥성 파트너십 불가, 이사회 참관권 불가. 대신 역제안서를 붙인다. 한시우 쪽 표준 조항은 단순하다. 의사결정권 없음, 정보 열람권 없음, 가족 후보 중개권 없음, 모든 명예직은 무급 자문으로만 가능. 상대가 원하는 것은 파트너십이 아니라 접속면이라는 점을 문서에 박아 넣는다.",
+        "reward": "한시우는 `hostile courtship refusal memo`, `no-dilution ownership rule`, `reverse term sheet`를 확보한다. 글로벌 컨소시엄은 우호적 초대라는 포장을 잃고, 가족 후보는 외부 라인을 데려왔다는 명분을 잃는다. 마이클은 역제안서를 읽고 웃는다. 초대장이 아니라 접근권 청구서였다는 걸 네가 먼저 가격표로 바꿨다."
+      },
+      "stakes": "대놓고 공격하는 적보다 친절한 파트너가 더 위험하다. 한 번의 명예직과 우호 지분 교환이 ownership core의 첫 균열이 될 수 있다.",
+      "power_shift": {
+        "protagonist": "국가급 접근 절차의 rule setter에서 우호적 흡수 제안을 역제안서로 되돌리는 ownership keeper",
+        "antagonist": "구애와 명예로 접근권을 얻으려던 자본/가문 라인은 정보권과 의사결정권을 모두 잃은 무급 자문 후보가 된다."
+      },
+      "relationship_delta": [
+        {
+          "target": "글로벌 사모펀드 컨소시엄",
+          "before": "공동 재단과 우호 지분 교환으로 접속면을 열려는 구애자",
+          "after": "정보권도 의사결정권도 없는 역제안서 수신자"
+        },
+        {
+          "target": "한태준 쪽 가족 후보",
+          "before": "외부 라인을 끌어와 자기 효용을 증명하려는 후보",
+          "after": "중개권이 금지되어 관찰권 안의 실수만 남긴 후보"
+        },
+        {
+          "target": "마이클 천",
+          "before": "국가급 거래도 절차 밖이면 밀어내는 국제 실무 파트너",
+          "after": "한시우의 ownership-first 거절 문법을 후속 계약 표준으로 정리하는 파트너"
+        }
+      ],
+      "foreshadow": [
+        "no-dilution ownership rule은 곧 governance codex의 첫 조항이 된다.",
+        "가족 후보의 중개권 실패는 가족 헌장 개정 때 구체 증거로 쓰인다.",
+        "무급 자문으로 내려간 외부 라인 중 하나가 훗날 rescue-on-my-terms 조건을 받아들인다."
+      ],
+      "callback": [
+        "state-contact firewall이 국가급 예외를 막았다면, 이번에는 no-dilution rule이 우호적 흡수를 막는다.",
+        "후계 검증표의 권한 분리 원칙이 외부 파트너십에도 적용된다."
+      ],
+      "emotional_beat": {
+        "type": "refusal_victory",
+        "intensity": 8
+      },
+      "tension_level": 7,
+      "pov_character": "한시우",
+      "location": {
+        "place": "패밀리오피스 계약검토실",
+        "type": "실내",
+        "macro_battlefield": "hostile courtship refusal"
+      },
+      "time_span": {
+        "duration": "10일",
+        "in_story_time": "2025년 2월 초"
+      },
+      "genre_ext": {
+        "type": "investment_family_office_control",
+        "capital_before": "135조 + state-contact firewall",
+        "capital_after": "135조 + no-dilution ownership rule",
+        "capital_delta": "0",
+        "profit_loss": "명예직/공동 재단 기회 포기",
+        "method": "우호적 제안을 역제안서로 되돌리고, 의사결정권/정보권/중개권을 모두 금지한다.",
+        "investment_type": "ownership defense / governance contract",
+        "deal_type": "hostile courtship refusal memo",
+        "leverage_used": [
+          "state-contact firewall",
+          "공개 RFP 원칙",
+          "역제안서",
+          "ownership core 비희석 원칙"
+        ],
+        "opponent": {
+          "name": "명예와 파트너십으로 흡수하려는 자본/가문 라인",
+          "type": "hostile courtship coalition",
+          "weakness_exploited": "그들은 거절을 평판 리스크로 만들 수 있다고 믿지만, 한시우는 조건표를 공개 가능한 조항으로 바꿔 포장을 벗긴다."
+        },
+        "historical_event": {
+          "name": "post-victory family-office courtship wave",
+          "year": 2025,
+          "month": "2월",
+          "how_exploited": "우호적 자본 제안을 ownership defense 표준 조항으로 환전한다."
+        },
+        "time_pressure": "공동 재단 발표 예정일 전에 답변하지 않으면 침묵이 동의처럼 소비된다.",
+        "knowledge_used": "전생 가문이 명예직과 우호 지분을 통해 소유권을 흐렸던 기억",
+        "risk_level": "높음. 평판 비용을 감수하고 소유권 희석을 막는다.",
+        "business_sector": "family office ownership defense",
+        "section_rotation": "post-victory governance",
+        "success_pattern": "초대장을 접근권 청구서로 재분류하고 reverse term sheet로 되돌린다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_receipt",
+          "receipt_line": "hostile courtship refusal memo와 no-dilution ownership rule을 확보한다.",
+          "pain_only_exit": false
+        },
+        "episode_bundle_density": {
+          "episode_window": "3-5 episodes",
+          "primary_incident": "우호적 흡수 제안 거절과 역제안서 발송",
+          "secondary_incident": "가족 후보 중개권 봉쇄와 외부 컨소시엄 정보권 박탈",
+          "reader_reward": "칭찬과 명예를 미끼로 한 접근을 한시우가 계약 조항으로 벗겨 내는 맛",
+          "next_block_ticket": "governance codex custody"
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "knowledge_used": "명예직과 우호 지분이 ownership core를 흐렸던 전생의 기억",
+        "slip_up": "미래 사건 예언 없음"
+      },
+      "block_no": 64,
+      "foreshadow_targets": [
+        65,
+        66,
+        67
+      ],
+      "callback_sources": [
+        62,
+        63
+      ]
+    },
+    {
+      "block_id": "Block 65",
+      "title": "운용 헌장 보관권",
+      "content": {
+        "context": "2025년 2월 말. 접근 격리, 후계 검증, 국가선 formalization, 구애 거절이 모두 쌓이자 패밀리오피스 내부 문서가 너무 많아진다. 실무진은 각 사건별 메모를 따로 보관하자고 제안한다. 하지만 한시우는 안다. 규칙이 사건별로 흩어지면, 다음 예외는 늘 새 사건이라는 이름으로 들어온다. 이제 필요한 것은 메모가 아니라 헌장이다.",
+        "event_villain": "표면 적대는 문서 피로다. 실무진은 빠른 처리를 원하고, 아버지 한정호는 가족 관련 사안만은 별도 예외 조항을 두자고 조심스럽게 말한다. 어머니는 한 번쯤은 좋은 명분의 요청을 받아도 되지 않느냐고 묻는다. 이들은 악인이 아니다. 그래서 더 위험하다. 선의가 헌장 밖 예외가 되면, 평화는 다시 사람의 기분과 관계에 종속된다.",
+        "solution": "한시우는 사건별 메모를 하나의 governance codex로 묶는다. 접근 요청은 ledger, 후계 위임은 kill-switch, 국가급 라인은 공개 절차, 우호적 제안은 no-dilution rule, 가족 요청은 신탁 헌장 하위 조항으로 편입한다. 그리고 마지막 장에 비개입 원칙을 넣는다. 누구도 한시우의 침묵을 동의로 해석할 수 없고, 누구도 가족이라는 이유로 감사 로그 밖 결정을 받을 수 없다.",
+        "reward": "한시우는 `governance codex custody`, `non-intervention charter`, `audit-only family exception wall`을 확보한다. 한정호는 가족 예외 조항 대신 감사 로그 조항에 서명하고, 어머니는 선의도 규칙 안에 있어야 오래 간다는 설명을 받아들인다. 패밀리오피스 금고에는 돈보다 먼저 헌장 원본이 들어간다."
+      },
+      "stakes": "규칙을 문서화하지 않으면 지난 네 번의 승리는 담당자 기억에 의존한다. 가족 예외를 한 줄이라도 열면 post-victory governance는 다시 청탁 처리표가 된다.",
+      "power_shift": {
+        "protagonist": "개별 거절의 설계자에서 모든 예외를 헌장 아래에 묶는 rule custodian",
+        "antagonist": "선의, 가족, 효율을 명분으로 남아 있던 예외 가능성은 감사 로그와 헌장 보관권 아래로 들어간다."
+      },
+      "relationship_delta": [
+        {
+          "target": "한정호",
+          "before": "막내의 seal된 구조를 인정한 아버지",
+          "after": "가족 예외 대신 감사 로그 조항에 서명하는 witness"
+        },
+        {
+          "target": "어머니",
+          "before": "평화의 witness",
+          "after": "선의도 규칙 안에 있어야 오래 간다는 조건을 받아들이는 family witness"
+        },
+        {
+          "target": "패밀리오피스 실무진",
+          "before": "사건별 메모와 빠른 처리를 선호하는 실행팀",
+          "after": "governance codex를 우선 조회하는 audit desk"
+        }
+      ],
+      "foreshadow": [
+        "헌장 밖에서 도움을 청하는 요청이 들어오면, 한시우는 돈이 아니라 규칙을 조건으로 건다.",
+        "가족 예외가 감사 로그에 묶인 사실은 가족 헌장 개정의 법적 전제가 된다.",
+        "비개입 원칙은 평화 자체가 유지되는지 시험하는 장치가 된다."
+      ],
+      "callback": [
+        "no-dilution ownership rule이 governance codex의 첫 조항으로 회수된다.",
+        "state-contact firewall과 delegation kill-switch가 하나의 헌장 체계 안으로 들어간다.",
+        "마지막 평화를 지키려면 구조가 먼저여야 한다는 결론이 실제 금고 보관권으로 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "institutional_victory",
+        "intensity": 7
+      },
+      "tension_level": 6,
+      "pov_character": "한시우",
+      "location": {
+        "place": "성북동 본가 금고실과 패밀리오피스 서명실",
+        "type": "실내",
+        "macro_battlefield": "governance codex custody"
+      },
+      "time_span": {
+        "duration": "1주",
+        "in_story_time": "2025년 2월 말"
+      },
+      "genre_ext": {
+        "type": "investment_family_office_control",
+        "capital_before": "135조 + no-dilution ownership rule",
+        "capital_after": "135조 + governance codex custody",
+        "capital_delta": "0",
+        "profit_loss": "0",
+        "method": "접근 격리, 위임 kill-switch, 공개 절차, ownership defense, 가족 감사 로그를 하나의 governance codex로 묶는다.",
+        "investment_type": "governance codification / family-office law",
+        "deal_type": "governance codex custody",
+        "leverage_used": [
+          "post-golden quarantine protocol",
+          "delegation kill-switch",
+          "state-contact firewall",
+          "no-dilution ownership rule",
+          "가족 신탁 헌장"
+        ],
+        "opponent": {
+          "name": "선의와 효율을 명분으로 남는 예외 가능성",
+          "type": "soft exception pressure",
+          "weakness_exploited": "그들은 좋은 의도는 규칙 밖에 둘 수 있다고 믿지만, 한시우는 선의일수록 감사 로그에 묶는다."
+        },
+        "historical_event": {
+          "name": "post-victory governance codification",
+          "year": 2025,
+          "month": "2월",
+          "how_exploited": "개별 사건 승리를 헌장 원본 보관권으로 환전한다."
+        },
+        "time_pressure": "사건별 메모가 실무 관행으로 굳기 전 하나의 헌장으로 묶어야 한다.",
+        "knowledge_used": "전생에서 선의의 예외가 가장 빨리 규칙을 무너뜨렸다는 기억",
+        "risk_level": "중간. 관계 감정 비용을 치르지만 장기 통제권이 강해진다.",
+        "business_sector": "family office governance law",
+        "section_rotation": "post-victory governance",
+        "success_pattern": "개별 거절들을 governance codex로 묶고 헌장 원본 보관권을 확보한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_receipt",
+          "receipt_line": "governance codex custody와 audit-only family exception wall을 확보한다.",
+          "pain_only_exit": false
+        },
+        "episode_bundle_density": {
+          "episode_window": "3-5 episodes",
+          "primary_incident": "governance codex 작성과 금고 보관",
+          "secondary_incident": "한정호 가족 예외 요구의 감사 로그 편입과 어머니 선의 예외 차단",
+          "reader_reward": "돈 많은 주인공이 돈보다 규칙 원본을 먼저 금고에 넣는 맛",
+          "next_block_ticket": "rescue on my terms"
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "knowledge_used": "전생에서 선의의 예외가 규칙 붕괴로 이어진 기억",
+        "slip_up": "미래 사건 예언 없음"
+      },
+      "block_no": 65,
+      "foreshadow_targets": [
+        66,
+        67,
+        68
+      ],
+      "callback_sources": [
+        60,
+        62,
+        63,
+        64
+      ]
+    },
+    {
+      "block_id": "Block 66",
+      "title": "조건부 구조선",
+      "content": {
+        "context": "2025년 3월 첫째 주. 헌장이 금고에 들어간 지 일주일 만에 첫 구조 요청이 온다. 예전에 공동 재단 구애를 넣었다가 무급 자문 후보로 내려앉은 글로벌 컨소시엄의 한국 데이터센터 SPC가 전력 선불 계약과 환헤지 손실을 동시에 맞아 결제 불능 위기에 빠진다. 그들이 무너지면 한시우의 자산에는 직접 손실이 없지만, 공개 RFP로 들어온 국가선과 국내 AI 인프라 실사 라인까지 같이 얼어붙는다. 도움 요청은 선의가 아니라, 헌장이 실제 위기에서 작동하는지 시험하는 첫 사건이다.",
+        "event_villain": "상대는 돈이 급하다고만 말하지 않는다. 사회적 파장, 일자리, 국가 AI 인프라라는 명분을 앞세워 빠른 브릿지론을 요구한다. 동시에 가족 후보는 이번 구조에 참여하면 평판을 회복할 수 있다며 자기 관찰권을 실행권으로 올려 달라고 한다. 구조하지 않으면 공개 절차가 얼고, 그냥 구조하면 헌장 밖 예외가 부활한다.",
+        "solution": "한시우는 현금을 바로 넣지 않는다. 먼저 조건표를 보낸다. 경영진 임시 서명권 정지, 전력 선불 계약 전수 감사, 환헤지 손실 공개, 가족 후보 중개 금지, 구조금 전액 clawback escrow 편입. 상대가 모두 수락하면 패밀리오피스는 직접 대출이 아니라 감사 연동 bridge facility만 연다. 구조는 자비가 아니라 규칙 수락의 대가가 된다.",
+        "reward": "한시우는 `rescue-on-my-terms precedent`, `clawback escrow`, `audit acceptance receipt`를 확보한다. SPC는 살아남지만 사적 협상권을 잃고, 가족 후보는 구조 명분으로 실행권을 얻지 못한다. 공개 RFP 라인은 멈추지 않고 이어지며, 한시우의 헌장은 좋은 명분 앞에서도 예외가 아니라 조건으로 작동한다."
+      },
+      "stakes": "첫 구조 요청을 헌장 밖에서 처리하면 모든 이후 요청은 위기와 선의를 포장지로 쓴다. 반대로 무조건 방치하면 공개 절차와 AI 인프라 라인이 함께 얼어붙는다.",
+      "power_shift": {
+        "protagonist": "헌장 보관자에서 구조 조건을 가격화하는 개입권자",
+        "antagonist": "위기와 공익 명분으로 예외 대출을 얻으려던 라인은 감사와 clawback 조건 아래에서만 살아남는다."
+      },
+      "relationship_delta": [
+        {
+          "target": "글로벌 컨소시엄 한국 SPC",
+          "before": "브릿지론을 명분과 속도로 요구하는 위기 라인",
+          "after": "감사 수락과 clawback escrow 없이는 구조받지 못하는 조건부 생존자"
+        },
+        {
+          "target": "한태준 쪽 가족 후보",
+          "before": "관찰권 안에서 구조 참여를 실행권 상승 기회로 보던 후보",
+          "after": "중개 금지 조항에 묶여 구조 명분으로도 실행권을 얻지 못한 후보"
+        },
+        {
+          "target": "패밀리오피스 audit desk",
+          "before": "헌장 원본을 조회하는 내부 실무 라인",
+          "after": "구조금 집행 전 전수 감사와 clawback 조건을 실행하는 구조 gatekeeper"
+        }
+      ],
+      "foreshadow": [
+        "구조 조건을 수락한 SPC의 내부 자료가 가족 헌장 개정 때 혈연 중개 금지 증거가 된다.",
+        "clawback escrow는 일부 권한 위임 때도 회수 장치의 원형으로 쓰인다.",
+        "AI 인프라 라인이 멈추지 않은 사실은 평화 스트레스 테스트의 외부 기준이 된다."
+      ],
+      "callback": [
+        "무급 자문으로 내려간 외부 라인 중 하나가 규칙을 받아들이는 조건으로만 구조된다.",
+        "governance codex의 선의 예외 금지가 실제 구조 요청에서 작동한다.",
+        "가족 후보 중개권 봉쇄가 구조 사건에서도 반복된다."
+      ],
+      "emotional_beat": {
+        "type": "conditional_rescue",
+        "intensity": 7
+      },
+      "tension_level": 7,
+      "pov_character": "한시우",
+      "location": {
+        "place": "패밀리오피스 구조 심사실",
+        "type": "실내",
+        "macro_battlefield": "rescue on my terms"
+      },
+      "time_span": {
+        "duration": "6일",
+        "in_story_time": "2025년 3월 첫째 주"
+      },
+      "genre_ext": {
+        "type": "investment_family_office_control",
+        "capital_before": "135조 + governance codex custody",
+        "capital_after": "135조 + rescue-on-my-terms precedent",
+        "capital_delta": "0",
+        "profit_loss": "직접 수익보다 조건부 구조권 확보",
+        "method": "구조금을 바로 지급하지 않고 감사 수락, clawback escrow, 중개 금지를 조건으로 bridge facility를 연다.",
+        "investment_type": "conditional rescue / governance enforcement",
+        "deal_type": "rescue-on-my-terms facility",
+        "leverage_used": [
+          "governance codex custody",
+          "audit-only family exception wall",
+          "no-dilution ownership rule",
+          "공개 RFP 라인의 중단 리스크"
+        ],
+        "opponent": {
+          "name": "위기와 공익 명분으로 예외 대출을 요구하는 SPC 라인",
+          "type": "conditional rescue claimant",
+          "weakness_exploited": "그들은 위기가 규칙을 이긴다고 믿지만, 한시우는 위기일수록 조건표를 먼저 내민다."
+        },
+        "historical_event": {
+          "name": "2025 AI data-center financing squeeze",
+          "year": 2025,
+          "month": "3월",
+          "how_exploited": "AI 인프라 결제 위기를 헌장 집행 선례로 환전한다."
+        },
+        "time_pressure": "전력 선불 계약 결제일까지 6일. 그 전에 구조 조건을 수락시키지 못하면 공개 RFP 라인도 얼어붙는다.",
+        "knowledge_used": "전생에서 좋은 명분의 구조금이 가장 빠른 통제권 누수로 변했던 기억",
+        "risk_level": "중상. 방치하면 절차가 얼고, 무조건 구조하면 헌장이 무너진다.",
+        "business_sector": "AI infrastructure / family office rescue governance",
+        "section_rotation": "post-victory governance",
+        "success_pattern": "구조를 자선이 아니라 감사 수락과 clawback 조건으로 환전한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_receipt",
+          "receipt_line": "rescue-on-my-terms precedent와 clawback escrow를 확보한다.",
+          "pain_only_exit": false
+        },
+        "episode_bundle_density": {
+          "episode_window": "3-5 episodes",
+          "primary_incident": "AI 인프라 SPC 구조 요청을 조건부 bridge facility로 전환",
+          "secondary_incident": "가족 후보의 구조 중개권 상승 시도 봉쇄와 audit desk 집행권 강화",
+          "reader_reward": "도와주되 상대가 한시우 규칙을 먼저 삼키게 만드는 맛",
+          "next_block_ticket": "family constitution rewrite"
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "knowledge_used": "전생에서 구조금과 선의가 통제권 누수로 바뀐 기억",
+        "slip_up": "미래 사건 예언 없음"
+      },
+      "block_no": 66,
+      "foreshadow_targets": [
+        67,
+        68,
+        69
+      ],
+      "callback_sources": [
+        64,
+        65
+      ]
+    },
+    {
+      "block_id": "Block 67",
+      "title": "가족 헌장 개정일",
+      "content": {
+        "context": "2025년 3월 중순. 조건부 구조선이 작동하자, 가족 내부의 오래된 관성이 마지막으로 드러난다. 가족 후보가 구조 사건 자료 일부를 친척 라인에 흘려 자기 역할을 부풀렸고, 한태준 쪽 원로들은 그 공을 근거로 가족 내 의사결정 회의권을 요구한다. 아버지 한정호는 이제 큰 사고는 없을 것이라며 가족 간 조율 창구 하나쯤은 둬도 되지 않겠느냐고 말한다. 한시우는 그 말에서 전생의 첫 균열을 듣는다.",
+        "event_villain": "이번 적대는 반역이 아니라 가족이라는 이름의 관성이다. 후보는 성과를 과장하고, 원로들은 체면을 요구하고, 아버지는 화해를 위해 작은 예외를 열고 싶어 한다. 모두 그럴듯하다. 하지만 가족 회의권이 생기는 순간, 감사 로그 밖에서 운용권에 질문하는 통로가 생긴다.",
+        "solution": "한시우는 가족 회의권을 만들지 않는다. 대신 가족 헌장을 개정한다. 가족은 배당권과 보호권을 갖지만, 운용 질문권과 의사결정권은 갖지 않는다. 친척 라인은 감사 로그 밖 자료 열람 금지, 후보는 자료 유출로 관찰권 90일 정지, 한정호는 가족 예외 조항 대신 혈연 거부권 폐지 조항에 서명한다. 화해는 유지하되, 가족 이름은 더 이상 절차 위에 올라가지 않는다.",
+        "reward": "한시우는 `family constitution rewrite`, `bloodline veto removal`, `audit inheritance clause`를 확보한다. 가족은 보호받지만 운용권을 묻지 못하고, 후보는 공을 부풀린 대가로 관찰권까지 잃는다. 한정호는 씁쓸하게 서명하지만, 이번에는 막내가 가족을 버린 것이 아니라 가족이 다시 무너지지 않게 규칙을 먼저 세운 것임을 인정한다."
+      },
+      "stakes": "가족 회의권을 허용하면 헌장은 가족 체면 앞에서 예외가 된다. 하지만 너무 차갑게 닫으면 평화 자체가 가족 단절로 읽힐 수 있다.",
+      "power_shift": {
+        "protagonist": "조건부 구조권자에서 가족 권력 규칙을 다시 쓰는 헌장 개정권자",
+        "antagonist": "혈연과 체면으로 감사 로그 밖 질문권을 얻으려던 가족 관성은 배당권과 보호권만 남긴 채 운용권에서 분리된다."
+      },
+      "relationship_delta": [
+        {
+          "target": "한정호",
+          "before": "가족 예외 대신 감사 로그 조항에 서명한 witness",
+          "after": "혈연 거부권 폐지 조항에 서명하며 가족 권력의 마지막 관성을 내려놓은 witness"
+        },
+        {
+          "target": "한태준 쪽 가족 후보",
+          "before": "관찰권 안에서 구조 참여를 실행권 상승 기회로 보던 후보",
+          "after": "자료 유출과 공 부풀리기 때문에 관찰권 90일 정지 처분을 받은 후보"
+        },
+        {
+          "target": "친척 원로 라인",
+          "before": "가족 내 회의권과 체면을 요구하는 압박선",
+          "after": "배당권과 보호권만 남고 운용 질문권을 잃은 가족 구성원"
+        }
+      ],
+      "foreshadow": [
+        "관찰권이 정지된 후보의 빈자리는 평화 스트레스 테스트 때 절차가 사람 없이 작동하는지 확인하는 변수로 쓰인다.",
+        "audit inheritance clause는 권한 위임을 되돌릴 수 없는 문서로 만들 때 핵심 조항이 된다.",
+        "한정호의 서명은 새 궤도 선언 때 가족이 더 이상 왕좌를 요구하지 않는 증거가 된다."
+      ],
+      "callback": [
+        "가족 예외가 감사 로그에 묶였던 선례가 혈연 거부권 폐지로 확장된다.",
+        "구조 사건에서 드러난 가족 후보의 중개 욕망이 가족 헌장 개정의 증거로 회수된다.",
+        "가족 선지급 청탁 차단이 가족 권력 분리의 첫 사례였음이 확인된다."
+      ],
+      "emotional_beat": {
+        "type": "constitutional_rewrite",
+        "intensity": 8
+      },
+      "tension_level": 7,
+      "pov_character": "한시우",
+      "location": {
+        "place": "성북동 본가 서명실",
+        "type": "실내",
+        "macro_battlefield": "family constitution rewrite"
+      },
+      "time_span": {
+        "duration": "4일",
+        "in_story_time": "2025년 3월 중순"
+      },
+      "genre_ext": {
+        "type": "investment_family_office_control",
+        "capital_before": "135조 + rescue-on-my-terms precedent",
+        "capital_after": "135조 + family constitution rewrite authority",
+        "capital_delta": "0",
+        "profit_loss": "가족 체면 비용 발생",
+        "method": "가족 배당권과 보호권은 유지하되 운용 질문권, 혈연 거부권, 감사 로그 밖 자료 열람권을 폐지한다.",
+        "investment_type": "family constitution / governance separation",
+        "deal_type": "family constitution rewrite",
+        "leverage_used": [
+          "rescue-on-my-terms precedent",
+          "audit-only family exception wall",
+          "자료 유출 증거",
+          "한정호 witness signature"
+        ],
+        "opponent": {
+          "name": "혈연과 체면으로 운용 질문권을 되찾으려는 가족 관성",
+          "type": "family governance pressure",
+          "weakness_exploited": "그들은 화해가 곧 권한 회복이라고 믿지만, 한시우는 화해와 운용권을 분리한다."
+        },
+        "historical_event": {
+          "name": "post-victory family charter revision",
+          "year": 2025,
+          "month": "3월",
+          "how_exploited": "가족 관성의 마지막 압박을 가족 헌장 개정권으로 환전한다."
+        },
+        "time_pressure": "구조 사건 자료 유출이 가족 내부 미담으로 굳기 전에 조항을 고쳐야 한다.",
+        "knowledge_used": "전생에서 가족 회의권이 운용권 침식의 첫 문이 된 기억",
+        "risk_level": "높음. 가족 감정 비용을 치르지만 운용권 분리를 영구화한다.",
+        "business_sector": "family constitution / inheritance governance",
+        "section_rotation": "legacy conversion",
+        "success_pattern": "가족 화해를 유지하면서도 운용 질문권과 혈연 거부권을 폐지한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_receipt",
+          "receipt_line": "family constitution rewrite와 bloodline veto removal을 확보한다.",
+          "pain_only_exit": false
+        },
+        "episode_bundle_density": {
+          "episode_window": "3-5 episodes",
+          "primary_incident": "가족 헌장 개정과 혈연 거부권 폐지",
+          "secondary_incident": "가족 후보 관찰권 정지와 한정호 witness 서명",
+          "reader_reward": "가족을 보호하되 가족이 운용권을 다시 먹지 못하게 봉인하는 맛",
+          "next_block_ticket": "peace stress test"
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "knowledge_used": "전생 가족 회의권이 운용권을 침식했던 기억",
+        "slip_up": "미래 사건 예언 없음"
+      },
+      "block_no": 67,
+      "foreshadow_targets": [
+        68,
+        69,
+        70
+      ],
+      "callback_sources": [
+        61,
+        65,
+        66
+      ]
+    },
+    {
+      "block_id": "Block 68",
+      "title": "평화 부하 시험",
+      "content": {
+        "context": "2025년 4월. 가족 헌장까지 고쳐지자 겉으로는 아무 일도 없다. 바로 그 무사함이 시험대다. 한시우는 72시간 동안 공식 결재와 사적 연락을 끊고, 패밀리오피스가 자기 없이도 헌장을 따르는지 본다. 이 기간에 세 가지 요청이 들어온다. 국부펀드 라인의 조건 수정 문의, 가족 후보의 관찰권 복구 탄원, 구조받은 SPC의 clawback 완화 요청. 큰 위기는 없지만, 평화가 정말 구조로 유지되는지 확인하기에는 충분한 압력이다.",
+        "event_villain": "적대자는 대형 사고가 아니라 작은 편의다. 모두 한 줄만 바꾸면 된다고 말한다. 조건 수정 한 줄, 관찰권 복구 한 줄, clawback 완화 한 줄. 한시우가 없을 때 이 작은 한 줄들이 통과되면, 지난 모든 헌장은 사람 앞에서만 작동한 장식이 된다.",
+        "solution": "한시우는 개입하지 않는다. 대신 사전에 심어 둔 silent veto matrix가 작동하게 둔다. 국부펀드 문의는 공개 RFP 조항으로 반송되고, 가족 후보 탄원은 정지 기간 만료 전 심사 불가로 자동 반려되고, SPC의 clawback 완화 요청은 감사 미완료 사유로 보류된다. 72시간 뒤, 한시우는 결과 로그만 확인한다. 누구도 그의 눈치를 보지 않았고, 아무도 예외를 통과시키지 못했다.",
+        "reward": "한시우는 `peace stress test pass`, `silent veto proof`, `procedure-without-prophet receipt`를 확보한다. 평화는 그의 카리스마가 아니라 절차로 유지된다는 것이 처음으로 증명된다. 마이클은 보고서 첫 줄에 적는다. 네가 없어도 네 규칙은 움직였다."
+      },
+      "stakes": "구조가 한시우가 볼 때만 작동한다면, 그는 135조를 지키는 감옥 안에 갇힌다. 사람 없이 돌아가는 규칙을 증명하지 못하면 평화는 여전히 개인 의존이다.",
+      "power_shift": {
+        "protagonist": "가족 헌장 개정권자에서 자기 부재 중에도 규칙을 작동시키는 구조 설계자",
+        "antagonist": "작은 편의를 예외로 통과시키려던 요청들은 한시우 부재 중에도 자동 반려된다."
+      },
+      "relationship_delta": [
+        {
+          "target": "마이클 천",
+          "before": "한시우의 ownership-first 거절 문법을 후속 계약 표준으로 정리하는 파트너",
+          "after": "한시우 부재 중 절차가 작동한 결과를 확인한 독립 운영 파트너"
+        },
+        {
+          "target": "패밀리오피스 audit desk",
+          "before": "구조금 집행 전 전수 감사와 clawback 조건을 실행하는 구조 gatekeeper",
+          "after": "창업자 부재 중에도 silent veto matrix를 적용한 절차 운영자"
+        },
+        {
+          "target": "가족 후보",
+          "before": "자료 유출 때문에 관찰권 90일 정지 처분을 받은 후보",
+          "after": "탄원도 자동 반려되어 혈연 예외가 작동하지 않는다는 것을 확인한 후보"
+        }
+      ],
+      "foreshadow": [
+        "절차가 한시우 없이 작동한다는 증명은 일부 권한 위임의 조건이 된다.",
+        "마이클의 독립 운영 보고서는 irreversible handoff의 첫 첨부 문서가 된다.",
+        "silent veto proof는 최종 새 궤도 선언에서 개인 의존을 끝내는 근거가 된다."
+      ],
+      "callback": [
+        "비개입 원칙이 감정 문구가 아니라 72시간 부하 시험으로 회수된다.",
+        "state-contact firewall, 가족 헌장, clawback escrow가 같은 테스트 안에서 동시에 작동한다.",
+        "후계 검증표의 권한 분리 원칙이 사람 없는 절차로 증명된다."
+      ],
+      "emotional_beat": {
+        "type": "quiet_trial",
+        "intensity": 5
+      },
+      "tension_level": 5,
+      "pov_character": "한시우",
+      "location": {
+        "place": "비공개 휴식지와 패밀리오피스 운영실",
+        "type": "복합",
+        "macro_battlefield": "peace stress test"
+      },
+      "time_span": {
+        "duration": "72시간",
+        "in_story_time": "2025년 4월 초"
+      },
+      "genre_ext": {
+        "type": "investment_family_office_control",
+        "capital_before": "135조 + family constitution rewrite authority",
+        "capital_after": "135조 + peace stress test pass / non-intervention proof",
+        "capital_delta": "0",
+        "profit_loss": "0",
+        "method": "한시우가 직접 개입하지 않는 72시간 동안 silent veto matrix로 국가선, 가족 탄원, 구조금 완화 요청을 자동 처리한다.",
+        "investment_type": "governance stress test / non-intervention proof",
+        "deal_type": "peace stress test",
+        "leverage_used": [
+          "family constitution rewrite authority",
+          "state-contact firewall",
+          "clawback escrow",
+          "silent veto matrix"
+        ],
+        "opponent": {
+          "name": "작은 편의로 헌장을 우회하려는 반복 요청",
+          "type": "low-intensity exception pressure",
+          "weakness_exploited": "그들은 대형 위기가 아니면 규칙이 느슨해질 거라고 믿지만, 자동 절차는 작은 요청부터 막는다."
+        },
+        "historical_event": {
+          "name": "post-victory governance idle-load test",
+          "year": 2025,
+          "month": "4월",
+          "how_exploited": "사건 없는 평화를 절차 작동 증거로 환전한다."
+        },
+        "time_pressure": "72시간 안에 한시우 없는 절차 처리 결과가 나와야 한다.",
+        "knowledge_used": "전생에서 사람이 직접 감시할 때만 유지되던 규칙은 결국 무너졌다는 기억",
+        "risk_level": "중간. 큰 위기는 없지만 개인 의존성이 드러나면 구조 전체가 실패한다.",
+        "business_sector": "family office governance operations",
+        "section_rotation": "peace durability",
+        "success_pattern": "한시우가 없는 동안에도 세 개 요청이 헌장대로 반려되어 절차가 사람보다 강함을 증명한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_receipt",
+          "receipt_line": "peace stress test pass와 procedure-without-prophet receipt를 확보한다.",
+          "pain_only_exit": false
+        },
+        "episode_bundle_density": {
+          "episode_window": "2-4 episodes",
+          "primary_incident": "한시우 부재 72시간 peace stress test",
+          "secondary_incident": "국가선 조건 수정, 가족 후보 탄원, clawback 완화 요청의 자동 반려",
+          "reader_reward": "주인공이 없어도 주인공의 규칙이 이기는 맛",
+          "next_block_ticket": "irreversible handoff"
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "knowledge_used": "개인 감시에 의존한 규칙은 무너진다는 전생의 기억",
+        "slip_up": "미래 사건 예언 없음"
+      },
+      "block_no": 68,
+      "foreshadow_targets": [
+        69,
+        70
+      ],
+      "callback_sources": [
+        62,
+        63,
+        66,
+        67
+      ]
+    },
+    {
+      "block_id": "Block 69",
+      "title": "되돌릴 수 없는 위임",
+      "content": {
+        "context": "2025년 4월 말. 평화 부하 시험이 통과하자, 한시우는 처음으로 일부 권한을 되돌릴 수 없는 방식으로 넘길 준비를 한다. 단, 넘기는 것은 ownership core가 아니다. 마이클에게는 국제 절차 운영권, audit desk에는 clawback 집행권, 가족 신탁에는 배당 자동 집행권을 준다. 모두 철회 가능한 임시권이 아니라 장기권이다. 대신 각 권한은 헌장, 감사 로그, silent veto matrix 밖으로 나갈 수 없다.",
+        "event_villain": "적대는 위임 그 자체의 유혹이다. 주변은 이제 검증이 끝났으니 사람을 믿어도 된다고 말한다. 마이클은 평생 파트너고, audit desk는 시험을 통과했고, 가족은 헌장에 서명했다. 그러나 사람을 믿는 순간 ownership core는 다시 관계가 된다. 한시우가 해야 할 일은 믿어서 넘기는 것이 아니라, 믿지 않아도 돌아가는 권한만 넘기는 것이다.",
+        "solution": "한시우는 irreversible handoff deed를 만든다. 국제 절차 운영권은 마이클에게, clawback 집행권은 audit desk에, 배당 자동 집행권은 신탁 시스템에 들어간다. 그러나 투자 의사결정권, 헌장 개정권, ownership core veto는 넘기지 않는다. 위임장은 한 번 발효되면 되돌리지 않지만, 위임 대상이 헌장 밖으로 나가는 순간 자동 정지된다. 한시우는 빈 서명란 하나를 남겨 둔다. 왕좌가 아니라 궤도다.",
+        "reward": "한시우는 `irreversible handoff deed`, `ownership core retained`, `automatic revocation rail`을 확보한다. 마이클은 진짜 장기권을 얻지만 왕이 되지 않고, audit desk는 집행권을 얻지만 헌장을 넘지 못한다. 가족 신탁은 배당을 자동으로 집행하지만 운용권은 묻지 못한다. 한시우는 처음으로 일부 권한을 내려놓고도 통제권을 잃지 않는 상태에 선다."
+      },
+      "stakes": "권한을 전혀 넘기지 않으면 구조는 한시우 개인에게 묶인다. 잘못 넘기면 135조의 ownership core가 관계와 충성으로 다시 분해된다.",
+      "power_shift": {
+        "protagonist": "사람 없는 절차를 증명한 설계자에서 ownership core를 보존한 채 장기권을 위임하는 궤도 설계자",
+        "antagonist": "위임을 곧 신뢰와 왕좌로 바꾸려는 주변 해석은 헌장 밖 자동 정지 조항에 묶인다."
+      },
+      "relationship_delta": [
+        {
+          "target": "마이클 천",
+          "before": "한시우 부재 중 절차가 작동한 결과를 확인한 독립 운영 파트너",
+          "after": "국제 절차 운영권을 장기 위임받지만 ownership core에는 접근하지 못하는 co-custodian"
+        },
+        {
+          "target": "패밀리오피스 audit desk",
+          "before": "창업자 부재 중에도 silent veto matrix를 적용한 절차 운영자",
+          "after": "clawback 집행권을 장기 보유하지만 헌장 밖으로 나가면 자동 정지되는 집행권자"
+        },
+        {
+          "target": "가족 신탁",
+          "before": "가족 배당과 보호권을 담는 구조",
+          "after": "배당 자동 집행권은 얻지만 운용 질문권은 계속 금지된 시스템"
+        }
+      ],
+      "foreshadow": [
+        "ownership core를 남겨 둔 위임 구조는 최종 새 궤도 선언의 핵심 문장이 된다.",
+        "자동 정지 조항은 한시우가 왕좌를 만들지 않았다는 증거가 된다.",
+        "마이클의 co-custodian 지위는 평생 파트너 관계를 감정이 아니라 구조로 남긴다."
+      ],
+      "callback": [
+        "delegation kill-switch가 장기권 위임의 자동 정지 레일로 발전한다.",
+        "peace stress test의 절차 작동 보고서가 irreversible handoff의 근거가 된다.",
+        "가족 헌장의 운용 질문권 금지가 배당 자동 집행권과 함께 유지된다."
+      ],
+      "emotional_beat": {
+        "type": "controlled_handoff",
+        "intensity": 7
+      },
+      "tension_level": 6,
+      "pov_character": "한시우",
+      "location": {
+        "place": "패밀리오피스 수탁자 서명실",
+        "type": "실내",
+        "macro_battlefield": "irreversible handoff"
+      },
+      "time_span": {
+        "duration": "2주",
+        "in_story_time": "2025년 4월 말"
+      },
+      "genre_ext": {
+        "type": "investment_family_office_control",
+        "capital_before": "135조 + peace stress test pass / non-intervention proof",
+        "capital_after": "135조 + irreversible handoff / ownership core retained",
+        "capital_delta": "0",
+        "profit_loss": "0",
+        "method": "국제 절차 운영권, clawback 집행권, 배당 자동 집행권을 장기 위임하되 ownership core veto와 헌장 개정권은 남긴다.",
+        "investment_type": "delegation / ownership-core retention",
+        "deal_type": "irreversible handoff deed",
+        "leverage_used": [
+          "peace stress test pass",
+          "delegation kill-switch",
+          "family constitution rewrite authority",
+          "silent veto matrix"
+        ],
+        "opponent": {
+          "name": "위임을 신뢰와 왕좌로 해석하려는 주변 압력",
+          "type": "handoff interpretation pressure",
+          "weakness_exploited": "그들은 장기권을 받으면 중심을 얻었다고 믿지만, 한시우는 중심이 아니라 궤도만 넘긴다."
+        },
+        "historical_event": {
+          "name": "post-victory controlled delegation",
+          "year": 2025,
+          "month": "4월",
+          "how_exploited": "절차 작동 증명을 장기 위임권과 ownership core 보존으로 환전한다."
+        },
+        "time_pressure": "평화 부하 시험의 신뢰가 식기 전에 장기권 구조를 문서화해야 한다.",
+        "knowledge_used": "전생에서 신뢰로 넘긴 권한이 왕좌와 파벌로 변했던 기억",
+        "risk_level": "중상. 위임하지 않으면 병목, 잘못 위임하면 중심을 잃는다.",
+        "business_sector": "family office delegation / trust governance",
+        "section_rotation": "next-generation control",
+        "success_pattern": "장기권을 넘기되 ownership core와 자동 정지 레일을 함께 남긴다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_receipt",
+          "receipt_line": "irreversible handoff deed와 ownership core retained 구조를 확보한다.",
+          "pain_only_exit": false
+        },
+        "episode_bundle_density": {
+          "episode_window": "3-5 episodes",
+          "primary_incident": "irreversible handoff deed 발효",
+          "secondary_incident": "마이클, audit desk, 가족 신탁에 서로 다른 장기권 위임과 자동 정지 레일 부착",
+          "reader_reward": "권한을 내려놓는데도 핵심 통제권은 더 선명해지는 맛",
+          "next_block_ticket": "new orbit closure"
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "knowledge_used": "신뢰로 넘긴 권한이 파벌화됐던 전생의 기억",
+        "slip_up": "미래 사건 예언 없음"
+      },
+      "block_no": 69,
+      "foreshadow_targets": [
+        70
+      ],
+      "callback_sources": [
+        62,
+        67,
+        68
+      ]
+    },
+    {
+      "block_id": "Block 70",
+      "title": "새 궤도",
+      "content": {
+        "context": "2025년 5월. 모든 위임장이 발효되고 첫 월간 보고가 올라온다. 국제 절차 운영권은 마이클 라인에서 돌아가고, clawback 집행은 audit desk가 처리하며, 가족 배당은 신탁 시스템이 자동 집행한다. 시장은 한시우의 다음 투자와 공개 복귀를 기다리지만, 그는 새 거래를 발표하지 않는다. 대신 패밀리오피스 내부와 가족, 파트너 앞에 마지막 문서를 올린다. 이것은 은퇴 선언도, 후계자 지명도 아니다. 한 사람이 번 돈을 한 사람의 왕좌로 만들지 않겠다는 새 궤도 선언이다.",
+        "event_villain": "마지막 적대는 왕좌의 유혹이다. 언론은 한시우를 전설적인 투자자로 소비하고 싶어 하고, 가족은 이제 평화로우니 이름만이라도 중심에 있어 달라고 말하고, 파트너들은 그의 한마디가 시장 신호가 된다는 사실을 안다. 다시 중심에 앉으면 모든 길이 쉬워진다. 하지만 쉬운 중심은 결국 다음 붕괴의 시작이다.",
+        "solution": "한시우는 new orbit charter를 발표한다. 패밀리오피스는 개인 숭배도, 가족 왕조도, 국가선 대리 권력도 되지 않는다. 모든 요청은 헌장, 공개 절차, 감사 로그, 위임 레일을 통과한다. 한시우는 ownership core veto를 보유하지만 일상 운영 중심에 앉지 않는다. 그는 마지막 문장을 직접 적는다. 나를 중심으로 돌지 말고, 내가 만든 규칙의 궤도를 돌아라.",
+        "reward": "한시우는 `new orbit charter`, `founder-without-throne status`, `closed-loop governance receipt`를 확보한다. 가족은 더 이상 운용권을 요구하지 않고, 마이클은 파트너로 남되 왕좌를 요구하지 않으며, 패밀리오피스는 한시우가 침묵해도 움직이는 질서가 된다. 돈을 번 사람의 엔딩이 아니라, 반복을 끝내고 다시 반복되지 않을 궤도를 만든 사람의 엔딩으로 append wave가 닫힌다."
+      },
+      "stakes": "마지막에 중심으로 돌아가면 모든 구조는 한시우 개인의 카리스마로 회귀한다. 중심을 비우되 ownership core를 잃지 못하면 새 궤도는 성립하지 않는다.",
+      "power_shift": {
+        "protagonist": "ownership core를 보존한 위임 설계자에서 왕좌 없이 궤도를 남기는 founder-without-throne",
+        "antagonist": "한시우를 다시 시장 신호, 가족 중심, 파트너 권위로 소비하려는 모든 시선은 헌장과 궤도 밖에서 멈춘다."
+      },
+      "relationship_delta": [
+        {
+          "target": "마이클 천",
+          "before": "국제 절차 운영권을 장기 위임받지만 ownership core에는 접근하지 못하는 co-custodian",
+          "after": "왕좌 없는 궤도 안에서 평생 파트너로 남는 co-custodian"
+        },
+        {
+          "target": "한정호와 가족",
+          "before": "혈연 거부권을 내려놓고 배당권과 보호권만 가진 가족",
+          "after": "운용권을 요구하지 않고 새 궤도를 인정하는 protected witnesses"
+        },
+        {
+          "target": "패밀리오피스",
+          "before": "각 장기권이 나뉘어 발효된 수탁 구조",
+          "after": "한시우 개인이 아니라 charter와 audit rail을 중심으로 도는 closed-loop governance system"
+        }
+      ],
+      "foreshadow": [
+        "new orbit sealed",
+        "founder-without-throne status retained",
+        "closed-loop governance continues without public return"
+      ],
+      "callback": [
+        "처음 사업 선언에서 그룹 돈을 받지 않겠다고 했던 선택이, 마지막에는 가족 왕좌도 받지 않는 구조로 완성된다.",
+        "평화가 거래 대상이 되지 않게 하겠다는 접근 격리 원칙이 새 궤도 헌장으로 회수된다.",
+        "위임 kill-switch, state-contact firewall, family constitution, peace stress test, irreversible handoff가 모두 하나의 궤도 안으로 닫힌다."
+      ],
+      "emotional_beat": {
+        "type": "new_orbit_closure",
+        "intensity": 8
+      },
+      "tension_level": 4,
+      "pov_character": "한시우",
+      "location": {
+        "place": "패밀리오피스 원형 회의실",
+        "type": "실내",
+        "macro_battlefield": "new orbit closure"
+      },
+      "time_span": {
+        "duration": "1일",
+        "in_story_time": "2025년 5월 첫 월간 보고일"
+      },
+      "genre_ext": {
+        "type": "investment_family_office_control",
+        "capital_before": "135조 + irreversible handoff / ownership core retained",
+        "capital_after": "135조 + new orbit charter",
+        "capital_delta": "0",
+        "profit_loss": "0",
+        "method": "ownership core veto는 보유하되 일상 운영 중심에서 물러나고, 모든 요청을 charter, audit rail, delegation rail로 돌린다.",
+        "investment_type": "new orbit governance closure",
+        "deal_type": "new orbit charter",
+        "leverage_used": [
+          "irreversible handoff deed",
+          "ownership core retained",
+          "governance codex custody",
+          "closed-loop audit rail"
+        ],
+        "opponent": {
+          "name": "왕좌와 중심으로 한시우를 다시 소비하려는 시선",
+          "type": "center-of-power temptation",
+          "weakness_exploited": "그들은 중심에 앉아야 질서가 유지된다고 믿지만, 한시우는 중심을 비워도 도는 궤도를 만든다."
+        },
+        "historical_event": {
+          "name": "post-victory new orbit declaration",
+          "year": 2025,
+          "month": "5월",
+          "how_exploited": "완성된 거버넌스 레일을 개인 숭배 없는 새 궤도 선언으로 닫는다."
+        },
+        "time_pressure": "첫 월간 보고가 공개 신호로 소비되기 전에 새 궤도 헌장을 먼저 고정해야 한다.",
+        "knowledge_used": "전생과 현생 전체에서 개인 중심 권력은 결국 가족과 자산을 다시 묶어 무너뜨린다는 결론",
+        "risk_level": "낮음이지만 상징 비용이 크다. 중심을 내려놓는 순간 시장과 가족의 해석을 잃는다.",
+        "business_sector": "family office new orbit governance",
+        "section_rotation": "new orbit closure",
+        "success_pattern": "돈, 가족, 파트너, 국가선을 모두 한시우 개인이 아니라 새 궤도 헌장 안에 넣고 닫는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_receipt",
+          "receipt_line": "new orbit charter와 founder-without-throne status를 확보한다.",
+          "pain_only_exit": false
+        },
+        "episode_bundle_density": {
+          "episode_window": "3-5 episodes",
+          "primary_incident": "new orbit charter 발표와 founder-without-throne 지위 확정",
+          "secondary_incident": "가족, 마이클, 패밀리오피스가 왕좌 없이 각자 권한을 인정하는 첫 월간 보고",
+          "reader_reward": "주인공이 돈과 권력을 다 가진 뒤에도 왕좌가 아니라 규칙의 궤도를 남기는 맛",
+          "next_block_ticket": "append wave sealed"
+        }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "knowledge_used": "개인 중심 권력이 반복 붕괴를 부른다는 전생과 현생의 결론",
+        "slip_up": "미래 사건 예언 없음"
+      },
+      "block_no": 70,
+      "foreshadow_targets": [],
+      "callback_sources": [
+        1,
+        60,
+        61,
+        62,
+        63,
+        65,
+        67,
+        68,
+        69
+      ]
+    }
+  ]
+}
