@@ -1,0 +1,142 @@
+{
+  "block_id": "Block 56",
+  "title": "컨트롤 프리미엄은 누가 받는가",
+  "content": {
+    "context": "LP proof room이 열리자 백승환은 말을 바꾼다. 실패비용까지 정리된 포트폴리오라면 가격은 더 올라가지만, control premium은 PEF가 가져가야 한다는 논리다. 도윤은 그 문장을 기다리고 있었다. 부도난 회사의 권리는 할인해서 사지만, 그 권리를 살아 있게 만든 통제권은 할인 대상이 아니다.",
+    "event_villain": "백승환은 LP observer가 들어오면 전문 운용자가 필요하다고 압박한다. 그는 도윤에게 포트폴리오 control을 PEF 산하에 넣고, 도윤은 성과급형 operating partner로 남으라는 수정안을 보낸다. 외부 LP 견제자는 도윤 개인 의존도가 줄어든다면 그 구조도 볼 수 있다고 말하고, 채권단 보수 라인은 PEF 산하가 더 안정적이라고 흔든다. 도윤이 반박만 하면 operator dependency 프레임이 다시 살아난다.",
+    "solution": "도윤은 control premium을 감정적으로 주장하지 않는다. 그는 권리별 cashflow를 세 칸으로 나눈다. 기존 채무를 떠안지 않은 debt boundary, 은행이 요구한 waterfall 통제, LP가 요구한 failure-cost reserve. 세 칸 모두 도윤 SPV가 만든 proof라서 PEF가 가져가려면 단순 매입가가 아니라 control premium을 별도로 내야 한다. 그는 PEF 산하 편입 대신 governance rights term sheet 초안을 낸다. PEF는 후순위 참여권과 downside sale option만 갖고, signatory와 reserve 우선순위, observer 응대권은 도윤에게 남긴다.",
+    "reward": "백승환은 control premium을 인정한다는 표현은 쓰지 않는다. 그러나 수정안에서 junior partner 전환 조항을 빼고, governance rights term sheet 초안을 검토 대상으로 회신한다. LP observer는 도윤 SPV가 failure-cost reserve 우선순위를 설명할 권한이 있다는 memo를 남긴다. 은행은 90일 bridge covenant가 도윤 signatory 기준으로 유지된다고 확인한다. 도윤은 PEF와 싸워 이긴 게 아니다. PEF가 원하던 control을 별도 가격표에 올리고, 통제권을 할인 매입 목록에서 빼냈다."
+  },
+  "incident_beats": [
+    "백승환이 LP observer와 operator dependency를 명분으로 도윤 SPV control을 PEF 산하로 넣으려 한다",
+    "도윤이 debt boundary, cashflow waterfall, failure-cost reserve를 control premium table로 묶고 PEF 권한을 후순위 참여권과 downside sale option으로 제한한다",
+    "governance rights term sheet 초안, junior partner 조항 삭제 회신, LP observer memo, 90일 bridge covenant 유지 확인 receipt가 확보된다"
+  ],
+  "stakes": "control premium을 PEF가 가져가면 도윤은 proof를 만든 뒤 운용권만 잃는다. 반대로 PEF를 완전히 밀어내면 LP와 은행은 전문 운용자 부재를 문제 삼는다. 도윤은 PEF를 남기되 통제권을 따로 가격 매겨야 한다.",
+  "power_shift": {
+    "protagonist": "failure-cost proof room을 연 downside-risk architect에서 control premium을 별도 자산으로 가격 매기는 governance-pricer로 이동한다.",
+    "antagonist": "백승환은 operator dependency를 이용해 control을 흡수하려 하지만, 도윤의 control premium table 때문에 junior partner 조항을 즉시 밀어붙이지 못한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "백승환",
+      "before": "LP observer를 명분으로 도윤을 PEF 산하 operating partner로 낮추려는 PEF 파트너",
+      "after": "junior partner 조항을 뺀 governance rights term sheet 검토로 물러난다",
+      "continuity_anchor_before": "도윤의 downside waterfall과 대안 비교표 때문에 통매각을 유일한 실패 방어책으로 말하지 못한다"
+    },
+    {
+      "target": "외부 LP 견제자",
+      "before": "도윤 개인 의존도가 크면 PEF 산하 구조도 보겠다는 LP",
+      "after": "도윤 SPV가 reserve 우선순위를 설명할 권한이 있다는 observer memo를 남긴다",
+      "continuity_anchor_before": "5영업일 proof room, observer seat 1회, failure-cost reserve schedule을 조건부 검토 대상으로 받아들인다"
+    },
+    {
+      "target": "서민재",
+      "before": "PEF 산하가 bank covenant에 더 안정적일 수 있다고 보는 은행 담당자",
+      "after": "90일 bridge covenant가 도윤 signatory 기준으로 유지된다고 확인한다",
+      "continuity_anchor_before": "failure-cost reserve가 cashflow leakage waiver와 충돌하지 않는다는 확인을 받고 bridge 조건을 유지한다"
+    },
+    {
+      "target": "채권단 보수 라인",
+      "before": "PEF 산하 편입이 회수 안정성을 높인다고 보는 보수 라인",
+      "after": "control premium이 별도 가격표가 되자 통매각 재산정 논리를 바로 확정하지 못한다",
+      "continuity_anchor_before": "limited assurance review engagement letter를 보고 리파이낸싱 논의 보류를 10일 유예한다"
+    }
+  ],
+  "foreshadow": [
+    "governance rights term sheet는 독립 운용자 조건표의 첫 장이 된다.",
+    "PEF 후순위 참여권 제한은 리파이낸싱 경쟁에서 백승환의 약점으로 돌아온다.",
+    "LP observer memo는 법무 검토에서 도윤 SPV가 단순 개인 operator가 아니라 통제 체계라는 증거가 된다.",
+    "control premium table은 최종 리파이낸싱 가격표에서 PEF 통매각안을 역으로 눌러 버리는 anchor가 된다."
+  ],
+  "callback": [
+    "직전 proof room의 failure-cost reserve와 downside waterfall을 control premium의 근거로 회수한다.",
+    "cashflow leakage waiver와 공동 서명권을 PEF가 공짜로 가져갈 수 없는 통제 자산으로 재분류한다.",
+    "PEF의 14억 원 valuation floor를 매각가가 아니라 control premium 논쟁의 anchor로 제한한다.",
+    "공개 receipt ledger와 limited assurance review를 operator dependency 반박 자료로 사용한다."
+  ],
+  "emotional_beat": {
+    "type": "control_premium_cider",
+    "intensity": 8
+  },
+  "tension_level": 9,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "PEF proof-room 회의실 / LP observer memo board / 은행 covenant 확인 콜",
+    "type": "control premium and governance rights negotiation"
+  },
+  "time_span": {
+    "duration": "하루",
+    "in_story_time": "LP proof room 첫날 종료 직후"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "LP proof room 5영업일 초대권 / failure-cost reserve 1억 2,000만 원 schedule / downside waterfall memo / LP observer seat 1회 / limited assurance 중간 확인 공유 동의 / portfolio governance control proof packet / PEF 통매각 대안 비교표 / 90일 bridge 조건 유지",
+    "capital_after": "control premium waterfall table / governance rights term sheet 초안 / PEF junior partner 조항 삭제 회신 / LP observer reserve-priority memo / 도윤 SPV signatory 기준 90일 bridge covenant 유지 확인 / PEF 후순위 참여권 범위 제한 / 통매각 재산정 보류",
+    "capital_delta": "PEF 산하 편입 방어 / control premium 별도 가격표 확보 / junior partner 조항 삭제 / bridge covenant 유지",
+    "profit_loss": "PEF의 전문 운용자 프레임은 남지만, 도윤 SPV control이 할인 매입 대상에서 빠지고 별도 가격표가 된다.",
+    "method": "PEF 산하 편입을 정면 거절하는 대신 debt boundary, cashflow waterfall, failure-cost reserve를 control premium table로 묶고 권한별 term sheet로 쪼갠다.",
+    "investment_type": "distressed portfolio control-premium defense",
+    "deal_type": "governance rights term sheet / control premium waterfall / junior-partner clause deletion",
+    "leverage_used": [
+      "LP proof room 초대권",
+      "failure-cost reserve schedule",
+      "downside waterfall memo",
+      "portfolio governance control proof packet",
+      "PEF 14억 원 valuation floor",
+      "90일 bridge covenant",
+      "도윤 SPV signatory",
+      "limited assurance 중간 확인"
+    ],
+    "opponent": {
+      "name": "백승환 / 외부 LP 견제자 / 채권단 보수 라인",
+      "type": "PEF control absorption pressure, LP operator-dependency scrutiny, and creditor stability pressure",
+      "weakness_exploited": "PEF가 control을 원할수록 그 control이 이미 cashflow, reserve, covenant를 만든 별도 가치라는 점을 인정할 수밖에 없다"
+    },
+    "historical_event": null,
+    "time_pressure": "LP observer가 도윤 개인 의존도를 공식 risk로 적기 전에 control premium table과 governance rights term sheet를 먼저 제시해야 한다.",
+    "knowledge_used": "회귀 전 PEF가 operator dependency를 명분으로 control premium을 공짜로 흡수했고, 그 뒤 현장 operator는 성과급만 받았다는 기억",
+    "risk_level": "극고위험",
+    "business_sector": "PEF governance / LP observer / control premium / bridge covenant / distressed portfolio",
+    "section_rotation": "PEF가 사려는 건 회사가 아니다",
+    "success_pattern": "PEF 산하 편입 압박을 control premium 별도 가격표와 governance rights term sheet로 전환",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "control_premium_term_sheet_receipt",
+      "receipt_line": "control premium waterfall table, governance rights term sheet 초안, PEF junior partner 조항 삭제 회신, LP observer reserve-priority memo, 도윤 SPV signatory 기준 90일 bridge covenant 유지 확인 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 PEF가 operator dependency를 명분으로 control premium을 공짜로 가져가고 현장 operator를 성과급 파트너로 낮췄다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 operator는 PEF 산하 구조를 받아들이며 control premium을 잃었다.",
+      "changed_event": "이번에는 도윤이 control premium을 waterfall table과 governance rights term sheet로 따로 가격 매긴다.",
+      "ripple_effect": "PEF는 도윤을 즉시 junior partner로 낮추지 못하고, 은행과 LP는 도윤 SPV의 통제 체계를 검토 대상으로 인정한다."
+    },
+    "death_flag": {
+      "avoided": "PEF 산하 편입으로 signatory와 reserve 우선순위, 다음 dealflow를 모두 잃는 미래",
+      "method": "control premium table, governance rights term sheet, observer memo, bridge covenant 유지 확인으로 방어한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 백승환의 수정안에서 가격보다 governance rights 조항부터 펼친다.",
+      "suspicion_from": "백승환과 외부 LP 견제자"
+    },
+    "future_prep": {
+      "action": "control premium table을 독립 운용자 조건과 리파이낸싱 가격표의 근거로 쌓아 둔다.",
+      "target_event": "리파이낸싱 역전"
+    }
+  },
+  "block_no": 56,
+  "foreshadow_targets": [
+    57,
+    59,
+    60
+  ]
+}

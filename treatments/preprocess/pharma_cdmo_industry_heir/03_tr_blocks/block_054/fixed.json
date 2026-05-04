@@ -1,0 +1,184 @@
+{
+  "block_id": "Block 54",
+  "title": "보험사가 모르는 위험",
+  "content": {
+    "context": "바이오 파일럿 공장 운영리스가 열리자 보험사가 다시 테이블에 앉는다. 그들은 임상 실패와 환자 보상만 보험료 산식에 넣고, 생산 batch 편차와 GMP 적격성 공백은 제조사의 내부 문제로 빼려 한다. 태오는 그 빈칸이야말로 실제 손실이 터지는 곳이라는 걸 안다.",
+    "event_villain": "보험사 언더라이터는 임상 리스크 보험료를 높게 부르고 생산 중단 특약은 제외하겠다고 한다. 벤처 대표는 보험료가 높아지면 투자 발표가 늦어진다며 생산 편차 데이터를 숨기려 하고, 증권사 IB는 보험료가 올라가면 밸류에이션이 깎인다고 태오를 압박한다.",
+    "solution": "태오는 보험료를 깎아 달라고 말하지 않는다. 위험을 다시 분류한다. 첫 사건 beat는 GMP 적격성 재확인 문서권과 QC 장비 사용권을 근거로 batch 편차, 재시험률, 냉장 보관 이탈, 생산 슬롯 공백을 보험사의 임상 리스크표 옆에 붙이는 장면이다. 둘째 beat는 보험사가 생산 데이터를 믿지 않겠다고 하자, 태오가 클레임 데이터 대시보드 운영 경험을 제시해 월별 생산 데이터 피드와 사고 발생 시 공동판정 위원회를 조건으로 보험료 band를 낮추는 구조를 만든다.",
+    "reward": "태오는 임상 리스크 보험료 band 조정권, 생산 데이터 월별 제출권, batch 편차 사고판정 공동위원회 의석, 생산 중단 손실 특약 1차 승인권, 보험료 인하분의 0.4% 구조화 수수료를 얻는다. 보험은 임상 성공을 기도하는 비용이 아니라 생산 데이터를 제출할수록 낮아지는 조건표가 된다."
+  },
+  "stakes": "보험사가 생산 변동 위험을 모른 채 임상 리스크만 가격화하면 보험료는 높고 보장은 비어 있는 껍데기가 된다.",
+  "power_shift": {
+    "protagonist": "공장 리스 금융가에서 생산 데이터를 보험료와 사고판정권으로 바꾸는 리스크 구조화 설계자로 격상된다.",
+    "antagonist": "보험사와 증권사 IB는 생산 편차를 내부 문제로 빼고 임상 스토리만 가격화하기 어려워진다."
+  },
+  "relationship_delta": [
+    {
+      "target": "보험사 언더라이터",
+      "before": "임상 실패와 환자 보상만 보고 높은 보험료를 부르는 보험자",
+      "after": "생산 데이터 피드와 공동판정 위원회를 조건으로 보험료 band를 조정하는 파트너",
+      "anchor_before": "생산 데이터와 마일스톤 escrow가 붙은 보험료 조정 특약을 검토하는 상대"
+    },
+    {
+      "target": "바이오 벤처 대표",
+      "before": "보험료를 낮추려 생산 편차 데이터를 숨기려는 차주",
+      "after": "월별 생산 데이터 제출이 보험료를 낮춘다는 구조를 받아들이는 운용자"
+    },
+    {
+      "target": "증권사 IB",
+      "before": "보험료 상승이 밸류에이션을 깎는다고 생산 데이터 공개를 막으려는 주관사",
+      "after": "보험료 band 인하가 밸류에이션 방어 근거가 된다는 걸 인정하는 금융 파트너",
+      "anchor_before": "생산권 선순위 담보표를 대출 구조에 넣어야 하는 공동주관 파트너"
+    }
+  ],
+  "foreshadow": [
+    "생산 데이터 월별 제출권은 데이터 보험료에서 병원 데이터와 결합해 보험료를 더 낮추는 기반이 된다.",
+    "batch 편차 사고판정 공동위원회 의석은 벤처의 폭주 때 허황된 발표를 제동하는 객관 근거가 된다.",
+    "보험료 인하분 0.4% 구조화 수수료는 바이오 은행에서 반복 금융 수익의 원형이 된다."
+  ],
+  "callback": [
+    "GMP 적격성 재확인 문서권과 QC 장비 공동사용권이 보험료 산식의 생산 데이터가 된다.",
+    "임상 리스크 보험료 조정 특약이 실제 band 조정권으로 강화된다.",
+    "소비자 클레임 데이터 공동대시보드 운영권은 보험사가 월별 데이터 피드를 믿게 만드는 운영 실적이 된다."
+  ],
+  "emotional_beat": {
+    "protagonist_feeling": "태오는 숫자를 숨기면 보험료가 내려가는 것이 아니라 사고 때 아무도 책임지지 않는다는 걸 알고 있다.",
+    "reader_catharsis": "보험사가 모르는 위험을 빼고 비싼 보험료만 부를 때, 주인공이 생산 데이터를 보험료 인하와 사고판정권으로 바꾸는 사이다."
+  },
+  "tension_level": 9,
+  "pov_character": "강태오",
+  "location": {
+    "place": "보험사 리스크 심사실과 바이오 파일럿 공장 QC실",
+    "type": "clinical_risk_insurance_production_data_room",
+    "macro_battlefield": "임상 리스크 보험과 생산 데이터 연동"
+  },
+  "time_span": {
+    "duration": "6일",
+    "in_story_time": "2008년 2월 중순"
+  },
+  "genre_ext": {
+    "capital_before": "9800억 + 소비재 안전표준 + 임상 2상 빈칸 가격표 작성권 + 특허 담보대출 400억 공동주관권 + 생산권 선순위 담보 조항 + know-how escrow 열람 트리거 + 실패 시 CMO step-in 권리 + 바이오 파일럿 공장 36개월 운영리스 우선권 + 월 6일 생산 슬롯 + GMP 적격성 재확인 문서권 + QC 장비 공동사용권 + 리스료 연체 시 운영 step-in 권리 + 냉장 보관실 12개월 접근권",
+    "capital_after": "1조 800억 + 소비재 안전표준 + 임상 2상 빈칸 가격표 작성권 + 특허 담보대출 400억 공동주관권 + 생산권 선순위 담보 조항 + 바이오 파일럿 공장 36개월 운영리스 우선권 + 월 6일 생산 슬롯 + GMP 적격성 재확인 문서권 + QC 장비 공동사용권 + 임상 리스크 보험료 band 조정권 + 생산 데이터 월별 제출권 + batch 편차 사고판정 공동위원회 의석 + 생산 중단 손실 특약 1차 승인권 + 보험료 인하분 0.4% 구조화 수수료",
+    "capital_delta": "+1000억 평가 상승, +보험료 band 조정권, +월별 생산 데이터 제출권, +공동판정 의석, +생산 중단 손실 특약, +0.4% 구조화 수수료",
+    "profit_loss": "생산 데이터 공개 부담을 감수하지만 보험료 band를 낮추고 생산 중단 손실 특약을 열어 리스크 보장 공백을 줄인다.",
+    "method": "GMP 적격성, batch 편차, 재시험률, 냉장 이탈, 생산 슬롯 공백을 보험료 산식과 공동판정 위원회에 연결한다.",
+    "investment_type": "보험료 산식 재구조화 + 생산 데이터 피드 구축",
+    "deal_type": "생산 데이터 연동 임상 리스크 보험 특약",
+    "leverage_used": "GMP/QC 문서권, 보험료 조정 특약, 클레임 데이터 대시보드",
+    "opponent": {
+      "name": "보험사 + 바이오 벤처 + 증권사 IB",
+      "type": "임상 리스크 보험 / 생산 데이터 금융 복합 압박 세력",
+      "weakness_exploited": "임상 리스크 보험 / 생산 데이터 금융의 병목을 문서·권리·책임선으로 잠그는 강태오의 방식을 과소평가한다."
+    },
+    "time_pressure": "임상 리스크 보험 증권 발급 전 6일",
+    "knowledge_used": "보험료 band, batch 편차, 생산 중단 손실 특약, 공동판정 위원회, 월별 데이터 피드",
+    "risk_level": "최상",
+    "business_sector": "임상 리스크 보험 / 생산 데이터 금융",
+    "section_rotation": "임상 리스크와 공급망 금융 중반",
+    "success_pattern": "보험사가 보지 못한 생산 위험을 데이터로 보이게 만들어 보험료와 판정권을 동시에 얻는다.",
+    "opening_progression": {
+      "public_signboard_event": "보험사가 임상 리스크 보험료를 높게 부르면서 생산 중단 특약은 제외하겠다고 통보한다.",
+      "representative_reevaluation": "보험사와 IB는 태오를 보험료를 깎는 협상자가 아니라 위험을 다시 분류해 보험상품을 설계하는 사람으로 다시 본다.",
+      "next_battlefield_ticket": "공동판정 위원회 의석과 생산 데이터 제출권이 벤처의 허황된 발표를 제동하는 전장으로 이어진다."
+    },
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "production_data_insurance_risk_receipt",
+      "receipt_line": "태오는 보험사가 빼려던 생산 위험을 보험료 band 조정권, 생산 중단 특약, 사고판정 의석으로 바꿔낸다.",
+      "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "보험사가 보지 못한 생산 위험을 데이터로 보이게 만들어 보험료와 판정권을 동시에 얻는다.",
+      "recognition_signal": "보험사 언더라이터의 시선 변화: 생산 데이터 피드와 공동판정 위원회를 조건으로 보험료 band를 조정하는 파트너",
+      "reward_signal": "태오는 보험사가 빼려던 생산 위험을 보험료 band 조정권, 생산 중단 특약, 사고판정 의석으로 바꿔낸다.",
+      "growth_signal": "공장 리스 금융가에서 생산 데이터를 보험료와 사고판정권으로 바꾸는 리스크 구조화 설계자로 격상된다.",
+      "expectation_signal": "공동판정 위원회 의석과 생산 데이터 제출권이 벤처의 허황된 발표를 제동하는 전장으로 이어진다.",
+      "reader_feel": "독자는 「보험사가 모르는 위험」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 태오는 보험사가 빼려던 생산 위험을 보험료 band 조정권, 생산 중단 특약, 사고판정 의석으로 바꿔낸다. 성장 장면: 공장 리스 금융가에서 생산 데이터를 보험료와 사고판정권으로 바꾸는 리스크 구조화 설계자로 격상된다. 다음 기대감: 공동판정 위원회 의석과 생산 데이터 제출권이 벤처의 허황된 발표를 제동하는 전장으로 이어진다.",
+      "mature_success_signal": "강태오는 보험사가 모르는 위험의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "보험사가 보지 못한 생산 위험을 데이터로 보이게 만들어 보험료와 판정권을 동시에 얻는다.",
+        "recognition": "보험사 언더라이터의 시선 변화: 생산 데이터 피드와 공동판정 위원회를 조건으로 보험료 band를 조정하는 파트너",
+        "reward": "태오는 보험사가 빼려던 생산 위험을 보험료 band 조정권, 생산 중단 특약, 사고판정 의석으로 바꿔낸다.",
+        "growth": "공장 리스 금융가에서 생산 데이터를 보험료와 사고판정권으로 바꾸는 리스크 구조화 설계자로 격상된다.",
+        "expectation": "공동판정 위원회 의석과 생산 데이터 제출권이 벤처의 허황된 발표를 제동하는 전장으로 이어진다.",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 보험사 언더라이터의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 공동판정 위원회 의석과 생산 데이터 제출권이 벤처의 허황된 발표를 제동하는 전장으로 이어진다."
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "바이오 파일럿 공장 운영리스가 열리자 보험사가 다시 테이블에 앉는다. 그들은 임상 실패와 환자 보상만 보험료 산식에 넣고, 생산 batch 편차와 GMP 적격성 공백은 제조사의 내부 문제로 빼려 한다. 태오는 그 빈칸이야말로 실제 손실이 터지는 곳이라는 걸 안다.",
+      "proof_action": "태오는 보험료를 깎아 달라고 말하지 않는다. 위험을 다시 분류한다. 첫 사건 beat는 GMP 적격성 재확인 문서권과 QC 장비 사용권을 근거로 batch 편차, 재시험률, 냉장 보관 이탈, 생산 슬롯 공백을 보험사의 임상 리스크표 옆에 붙이는 장면이다.",
+      "proof_axis": "보험료 band, batch 편차, 생산 중단 손실 특약, 공동판정 위원회, 월별 데이터 피드",
+      "recognition_or_resistance_signal": "보험사 언더라이터 -> 생산 데이터 피드와 공동판정 위원회를 조건으로 보험료 band를 조정하는 파트너",
+      "receipt_asset": "태오는 보험사가 빼려던 생산 위험을 보험료 band 조정권, 생산 중단 특약, 사고판정 의석으로 바꿔낸다.",
+      "reward_asset_classes": [
+        "batch_record",
+        "quality_responsibility"
+      ],
+      "next_regulated_gate": "공동판정 위원회 의석과 생산 데이터 제출권이 벤처의 허황된 발표를 제동하는 전장으로 이어진다.",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 보험사 언더라이터의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 공동판정 위원회 의석과 생산 데이터 제출권이 벤처의 허황된 발표를 제동하는 전장으로 이어진다.",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "business_memory",
+    "timeline_knowledge": "태오는 전생에서 임상 보험이 생산 중단과 batch 편차를 빼먹어 사고 뒤 아무 보장도 못 했던 사례를 기억한다.",
+    "butterfly_effect": "생산 데이터가 보험료 산식에 들어가면서 바이오 금융 조건표가 보험사와 공장 양쪽을 동시에 움직인다.",
+    "death_flag": false,
+    "regression_hint": "태오가 보험료 총액보다 제외 특약 목록을 먼저 읽는 행동으로만 암시한다.",
+    "future_prep": "생산 데이터 피드와 사고판정 의석은 벤처 폭주 제동과 데이터 보험료 인하의 핵심 기반이 된다."
+  },
+  "block_no": 54,
+  "foreshadow_targets": [
+    {
+      "target_block": 55,
+      "target_event": "벤처의 폭주"
+    },
+    {
+      "target_block": 58,
+      "target_event": "데이터 보험료"
+    },
+    {
+      "target_block": 60,
+      "target_event": "바이오 은행"
+    }
+  ],
+  "callback_sources": [
+    {
+      "source_block": 53,
+      "source_event": "공장 리스 금융"
+    },
+    {
+      "source_block": 51,
+      "source_event": "임상 2상의 빈칸"
+    },
+    {
+      "source_block": 50,
+      "source_event": "안전표준의 이름"
+    }
+  ]
+}

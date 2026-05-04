@@ -1,0 +1,55 @@
+{
+  "primary_profile": "business_growth_profile",
+  "secondary_profile": "tech_startup_profile",
+  "device": "빙의",
+  "resource_axis": [
+    "버려진 계약서, 옵션, 우선매수권, 지역 독점권, 송출권, 대리점망, 저작권 지분",
+    "채권단과 이사회가 인정한 감사 태스크포스 seat",
+    "해원그룹 안에서 떼어낸 도윤 개인 지분, 콜옵션, 수수료, 운용권",
+    "케이블, PCS, 게임, 음원, 결제, 물류를 연결하는 디지털 유통 관문"
+  ],
+  "power_axis": [
+    "남들이 잡동사니로 보는 권리 묶음의 미래 현금흐름을 현재 계약 조항으로 증명하는 능력",
+    "워크아웃 압박을 역이용해 위험한 자리를 싸게 받아내는 협상력",
+    "실사표와 현장 병목으로 내부 반대자를 침묵시키는 execution authority",
+    "권리 하나를 다음 섹터 관문으로 연결해 독점망을 키우는 platform sense"
+  ],
+  "control_axis": [
+    "정리 대상 계열사 매각 순서와 문서고 접근권",
+    "채권단 보고서에 들어가는 숫자와 리스크 프레임",
+    "해원그룹 명의가 아니라 도윤 개인 법인 또는 별도 SPC로 권리를 잠그는 구조",
+    "내부 임원, 현장 본부장, 외부 창업자, 채권단 실사역을 필요한 만큼만 동맹화하는 관계 통제"
+  ],
+  "payoff_axis": [
+    "same-block proof와 same-block receipt",
+    "감사 seat, 문서고 열람권, 매각 보류권, 콜옵션, 지분, 우선협상권 같은 눈에 보이는 보상",
+    "가족과 채권단의 tone shift를 숫자, 결재선, 회의석 배치로 보여주는 재평가",
+    "각 권리 회수가 다음 섹터의 입장권으로 바뀌는 누적 독식감"
+  ],
+  "failure_axis": [
+    "setup-only opening",
+    "돈 될 거라는 미래 설명만 있고 현재 증거가 없는 장면",
+    "proof는 있지만 seat, 지분, 접근권, 보호막이 없는 빈 사이다",
+    "주인공이 가문을 위해 희생하는 착한 구원자로 흐르는 오염",
+    "1997 배경을 무시한 2020년대식 플랫폼 용어 남발",
+    "모든 섹터 독식을 너무 빨리 선언해 긴장과 단계 보상이 사라지는 위험"
+  ],
+  "hud_interpretation": {
+    "capital": "현금, 담보 여력, 매각 보류로 생긴 시간, 회수 가능한 현금흐름",
+    "rights": "계약서 조항, 옵션, 우선권, 송출권, 판권, 대리점망, 단말 계약",
+    "authority": "감사 seat, 이사회 발언권, 채권단 보고 권한, 별도 법인 운용권",
+    "opposition": "장남 라인, 헐값 매각 임원, 채권단 보수파, 외부 브로커, 기존 사업자",
+    "block_density": "각 TR block은 주 사건 1개와 별도 사건 1개 이상, 즉 proof/receipt 축과 counterplay/side-acquisition 축을 함께 가진다.",
+    "protagonist_ethic": "착함이나 악함이 아니라 이득과 효율이다. 남을 돕는 행동도 도윤의 회수율, 방패, 증인, 다음 권리로 환전될 때만 선택된다."
+  },
+  "pacing_lock": {
+    "tr_block_unit": "2~6화",
+    "minimum_events_per_block": 2,
+    "required_block_movements": [
+      "primary_event: 권리 가치 증명 또는 회수",
+      "secondary_event: 반격, 별도 권리 발견, 관계 재배치, 다음 gate 단서 중 하나",
+      "same_block_receipt: seat, 지분, 접근권, 현금, 보호막, 공개 재평가 중 하나"
+    ],
+    "forbidden_block_shape": "조사만 하거나 설정만 설명하는 block"
+  }
+}

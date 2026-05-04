@@ -1,0 +1,141 @@
+{
+  "block_id": "Block 39",
+  "title": "투자자는 창고보다 표를 본다",
+  "content": {
+    "context": "7개 seller pilot PO와 900만 원 선입금이 생기자 리턴브릿지 대표는 외부 투자자를 부르자고 한다. 그는 창고 사진부터 보여 주려 한다. 검수 bay, 출하 dock, 박스 더미, 새로 붙인 SLA 화면. 투자자는 창고에 들어오자마자 얼굴을 굳힌다. 미개봉 박스 냄새, 보험 조건, 퀵리턴 LOI, 통매각 패배. 도윤은 고개를 끄덕인다. 창고는 할인 요인이다. 보여 줄 것은 창고가 아니라 표다.",
+    "event_villain": "외부 투자자는 리턴브릿지를 적자 창고와 플랫폼 패널티 회사로 본다. 통매각 경쟁에서 이미 퀵리턴이 우위라며, 도윤의 30일 option과 data license는 방어권일 뿐 소유권이 아니라고 깎아내린다. 리턴브릿지 대표는 창고를 싸게라도 넘기자고 말하고, 퀵리턴은 투자자에게 리턴브릿지의 법인 인수 협상이 진행 중이라며 도윤의 권리는 임시 license라고 흘린다. 도윤이 창고 가치로 맞서면 패배한다. 창고는 여전히 빚과 보험 조건, 소방 책임이 붙은 물건이다.",
+    "solution": "도윤은 창고 투어를 멈추고 data-room 화면을 연다. 7개 seller 4주 pilot PO, 18시간 검수 SLA, 선입금 900만 원, 패널티 hold ticket, 740만 원 release 이력, claim reserve 2,400만 원 예비 table, chargeback ticket 19건, 저품질 seller 18곳 rejection receipt, seller별 error rate 개선 그래프를 한 장의 valuation memo로 묶는다. 창고 option은 valuation의 핵심이 아니라 실행 보증으로 낮춰 적고, 과거 채무와 대표 보증, 플랫폼 패널티 비인수 side letter를 리스크 차단 칸에 넣는다. 투자자에게는 법인 지분 투자가 아니라 도윤 SPV가 가진 data/process license와 seller pilot cashflow에 대한 조건부 bridge option만 제안한다.",
+    "reward": "투자자는 리턴브릿지 법인 투자를 거절한다. 그러나 도윤 SPV의 seller data/process license와 7개 seller pilot cashflow에 대한 조건부 투자 검토 메일을 보낸다. valuation memo에는 창고 자산가치가 아니라 18시간 SLA 준수율, 7개 seller 반복 schedule, claim reserve 2,400만 원, chargeback ticket 19건, 패널티 hold와 release 이력, 900만 원 선입금이 핵심 proof로 적힌다. 5영업일 diligence slot과 1억 5,000만 원 bridge option term draft가 열리고, 조건은 다음 블록의 규제 품목 반품 보류권 확인이다. 도윤은 창고 회사를 투자받은 게 아니다. 창고보다 표를 보게 만들어 다음 data-room으로 넘어갈 투자자 입장권을 얻었다."
+  },
+  "incident_beats": [
+    "외부 투자자가 리턴브릿지를 적자 창고와 플랫폼 패널티 회사로 할인하고, 퀵리턴이 도윤의 권리를 임시 license라고 흔든다",
+    "도윤이 창고 자산가치를 포기하고 seller pilot PO, SLA, 패널티 hold/release, claim reserve, chargeback ticket, 비인수 side letter를 valuation memo로 묶는다",
+    "법인 투자는 거절되지만 조건부 투자 검토 메일, 5영업일 diligence slot, 1억 5,000만 원 bridge option term draft, 다음 regulated data-room gate가 열린다"
+  ],
+  "stakes": "투자자를 창고 가치로 설득하면 빚, 보험 조건, 소방 책임, 퀵리턴 LOI에 할인당한다. 반대로 투자자 관심을 못 얻으면 30일 option과 6개월 license는 내부 운영권으로만 남고 다음 규제 품목 전장으로 넘어갈 외부 신뢰가 없다. 도윤은 ownership이 아니라 process proof의 가격을 먼저 보여 줘야 한다.",
+  "power_shift": {
+    "protagonist": "seller pilot cashflow를 만든 operator에서 창고 liability를 낮추고 data/process 권리의 valuation을 여는 portfolio translator로 이동한다.",
+    "antagonist": "외부 투자자와 퀵리턴은 창고와 임시 license 프레임으로 도윤의 권리를 깎지만, 도윤의 SLA·claim·chargeback·cashflow 표 때문에 완전히 무가치 처리하지 못한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "외부 투자자",
+      "before": "리턴브릿지를 적자 창고와 플랫폼 패널티 회사로 보고 관심을 접으려는 투자자",
+      "after": "도윤 SPV의 data/process license와 seller pilot cashflow에 한해 조건부 투자 검토 메일과 diligence slot을 연다"
+    },
+    {
+      "target": "리턴브릿지 대표",
+      "before": "창고 사진과 법인 회생 가능성을 보여 주면 투자자가 움직일 거라고 기대하는 대표",
+      "after": "법인 투자가 거절되고 도윤 SPV 권리에만 bridge option이 열리자 자기 회사와 도윤의 권리가 분리됐음을 실감한다",
+      "continuity_anchor_before": "7개 seller만 남기는 결정에 불만을 보이지만, 선입금 900만 원과 패널티 유예 유지 때문에 반대하지 못한다"
+    },
+    {
+      "target": "퀵리턴",
+      "before": "도윤의 권리는 임시 license일 뿐이라며 투자자에게 할인 프레임을 넣는 경쟁자",
+      "after": "valuation memo가 data/process license와 seller pilot cashflow를 별도 자산으로 읽히게 만들자 즉시 무가치 프레임을 완성하지 못한다",
+      "continuity_anchor_before": "예비 claim 접수번호와 chargeback ticket이 나오자 보험 처리 우위 메시지를 즉시 완성하지 못한다"
+    },
+    {
+      "target": "플랫폼 정산팀",
+      "before": "패널티 hold와 release를 단기 정산 조치로만 보는 gatekeeper",
+      "after": "투자자 diligence checklist에 SLA와 정산 ticket이 들어가면서 리턴브릿지 pilot의 외부 검증 대상이 된다",
+      "continuity_anchor_before": "7개 seller 제한, 18시간 SLA, 패널티 sharing cap을 보고 pilot 기간 유예 유지를 확인한다"
+    }
+  ],
+  "foreshadow": [
+    "조건부 bridge option의 선행 조건인 규제 품목 반품 보류권은 후속 국면에서 의료기기 유통사 data-room gate로 열린다.",
+    "valuation memo의 data/process license 구조는 해당 아크에서 regulated distribution 권리와 결합된다.",
+    "법인 투자가 거절되고 도윤 SPV 권리만 평가된 사실은 리턴브릿지 대표의 통제권 불만을 키운다.",
+    "퀵리턴의 임시 license 할인 프레임은 이후 우선매수권과 seller 독점권 압박으로 재등장한다."
+  ],
+  "callback": [
+    "후속 국면의 7개 seller pilot PO, 18시간 SLA, 선입금 900만 원을 valuation memo 핵심 proof로 사용한다.",
+    "후속 국면의 claim reserve 2,400만 원과 chargeback ticket 19건을 현금화 가능 회수권으로 제시한다.",
+    "후속 국면의 seller data license, 검수표 사용권, 비인수 side letter가 창고 liability와 도윤 SPV 권리를 분리하는 근거가 된다.",
+    "후속 국면의 패널티 hold ticket과 740만 원 release 이력은 단기 정산 개선 proof로 회수된다."
+  ],
+  "emotional_beat": {
+    "type": "valuation_memo_cider",
+    "intensity": 8
+  },
+  "tension_level": 8,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "리턴브릿지 창고 투어 동선 / data-room 화면 / 외부 투자자 회의실",
+    "type": "valuation memo and conditional bridge-option negotiation"
+  },
+  "time_span": {
+    "duration": "하루",
+    "in_story_time": "후속 국면의 7개 seller pilot PO 서명 다음 날"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "7개 seller 4주 제한 pilot PO / 주 3회 pickup schedule / 18시간 검수 SLA / 선입금 deposit 900만 원 / 패널티 sharing cap / seller별 포장규격 개선표 / 저품질 seller 18곳 rejection receipt / pilot 기간 48시간 유예 유지 확인 / 반복 cashflow schedule",
+    "capital_after": "조건부 투자 검토 메일 / data-process valuation memo / 5영업일 diligence slot / 1억 5,000만 원 bridge option term draft / seller pilot cashflow proof packet / claim reserve 2,400만 원 valuation 반영 / chargeback ticket 19건 회수권 반영 / 창고 liability discount 제외표 / 다음 regulated distribution data-room gate 조건",
+    "capital_delta": "법인 투자 거절 / 도윤 SPV 권리 기준 1억 5,000만 원 bridge option term draft / 5영업일 diligence slot 확보",
+    "profit_loss": "리턴브릿지 법인 투자는 실패, 창고 자산가치는 할인됨. 대신 seller data/process license와 pilot cashflow에 대한 조건부 bridge option 확보",
+    "method": "창고와 법인 소유권을 설득하지 않고, SLA, seller pilot, claim reserve, chargeback, hold/release 이력을 묶은 valuation memo로 data/process 권리의 가격을 따로 만든다.",
+    "investment_type": "distressed reverse-logistics data-process valuation",
+    "deal_type": "conditional bridge option / valuation memo / diligence slot",
+    "leverage_used": [
+      "7개 seller 4주 제한 pilot PO",
+      "18시간 검수 SLA",
+      "선입금 deposit 900만 원",
+      "claim reserve 2,400만 원 예비 table",
+      "chargeback ticket 19건",
+      "패널티 hold ticket",
+      "740만 원 일일 정산 release 이력",
+      "seller data license 6개월",
+      "검수표 사용권 6개월",
+      "과거 채무·대표 보증·플랫폼 패널티 비인수 side letter"
+    ],
+    "opponent": {
+      "name": "외부 투자자 / 퀵리턴 / 리턴브릿지 대표 / 플랫폼 정산팀",
+      "type": "valuation discount gate, competitor license-discount framing, distressed founder ownership anxiety, and platform diligence gate",
+      "weakness_exploited": "투자자는 창고 책임을 싫어하지만, 반복 seller PO와 SLA, claim reserve, chargeback ticket이 붙은 data/process 권리는 별도 옵션으로 계산할 수 있다"
+    },
+    "historical_event": null,
+    "time_pressure": "30일 warehouse option과 6개월 license의 가치가 할인되기 전 외부 투자자에게 process proof를 보여 다음 regulated data-room gate를 열어야 한다.",
+    "knowledge_used": "회귀 전 리턴브릿지는 창고 자산가치로 투자자를 설득하다 실패했고, 실제 관심은 seller data와 SLA 표가 묶인 process license에서 시작됐다는 기억",
+    "risk_level": "중고위험",
+    "business_sector": "반품 물류 / process valuation / bridge option / seller data / investor diligence",
+    "section_rotation": "반품 창고의 데이터",
+    "success_pattern": "법인 투자 실패를 data-process 권리 valuation으로 전환",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "data_process_valuation_receipt",
+      "receipt_line": "조건부 투자 검토 메일, data-process valuation memo, 5영업일 diligence slot, 1억 5,000만 원 bridge option term draft, seller pilot cashflow proof packet, claim reserve 2,400만 원 반영, 다음 regulated distribution data-room gate 조건 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 리턴브릿지 투자자 관심은 창고 자산가치가 아니라 seller data, SLA, claim reserve가 묶인 process license에서 시작됐다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 운영진은 창고와 법인 회생 가능성을 팔려다 투자자에게 적자 창고로 할인당했고, 퀵리턴에게 seller를 빼앗겼다.",
+      "changed_event": "이번에는 도윤이 창고를 할인 요인으로 낮추고 data/process license와 seller pilot cashflow만 valuation memo로 따로 판다.",
+      "ripple_effect": "리턴브릿지 법인은 여전히 불안하지만, 도윤 SPV의 rights-only portfolio는 외부 투자자가 diligence할 수 있는 독립 자산으로 보이기 시작한다."
+    },
+    "death_flag": {
+      "avoided": "창고 자산가치로 투자자를 설득하다 빚과 보험 책임만 할인당하고 process 권리까지 무가치 처리되는 미래",
+      "method": "창고 liability를 제외표로 낮추고 seller data, SLA, claim reserve, chargeback, cashflow proof를 valuation memo로 분리한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 투자자가 창고에 들어오기 전부터 창고 사진 순서를 빼고 SLA 표를 첫 페이지로 올려 둔다.",
+      "suspicion_from": "외부 투자자와 리턴브릿지 대표"
+    },
+    "future_prep": {
+      "action": "조건부 bridge option의 선행 조건으로 규제 품목 반품 보류권과 의료기기 유통사 data-room gate를 확인한다.",
+      "target_event": "후속 국면 반품권의 다음 허가"
+    }
+  },
+  "block_no": 39,
+  "foreshadow_targets": [
+    40
+  ]
+}

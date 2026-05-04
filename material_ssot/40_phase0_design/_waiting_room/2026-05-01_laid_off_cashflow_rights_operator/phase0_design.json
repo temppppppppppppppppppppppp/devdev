@@ -1,0 +1,471 @@
+{
+  "project": {
+    "title_ko": "해고 직전, 돈줄이 보였다",
+    "core_premise": "해고 통보를 받은 정산 담당자 강도윤은 퇴사 전 마지막 ERP 파일에서 회사가 폐기 처리한 반품권, 위약금, 재납품 우선권 묶음을 발견한다. 그는 현금 합의로 끝내지 않고 데이터 접근권과 계약 검토권을 먼저 확보해, 버려진 권리를 사들이는 외부 권리 포트폴리오 운영자로 성장한다.",
+    "format": "현대판타지 / 회사원 돈벌이 / 계약정산 / 권리 사냥 / blockguide",
+    "logline": "해고 직전의 정산 담당자가 버려진 계약서와 창고 재고에서 돈줄을 보고, 현금보다 먼저 접근권과 계약권을 사들여 판을 바꾼다.",
+    "start_year": 2026,
+    "end_year": 2028,
+    "block_semantics": "1 TR block is a dense 2~6 episode planning bundle; each opening block must contain at least two incident turns or one incident plus one new actionable gate."
+  },
+  "setting": {
+    "group_background": "중견 유통 플랫폼 다온리테일은 구조조정, 반품 비용 폭증, 공급사 정산 지연, 해외 소싱 손실을 동시에 겪고 있다. 겉으로는 단순한 비용 절감 회사지만, 실제로는 폐기 재고, 반품권, 리퍼브 권리, 납품 우선권, 달러 정산 파일이 뒤엉킨 권리 광산이다.",
+    "execution_doctrine": "착한 해결사가 아니라 이득과 효율을 우선하는 권리 운영자. 문제를 해결해도 현금만 받지 않고 다음 파일, 다음 계약, 다음 협상석을 요구한다.",
+    "starter_company": {
+      "name": "다온리테일 정산관리팀",
+      "state": "구조조정 중. 정산팀 일부 해고, 반품창고 외주화, 공급사 소송 위험이 누적됨.",
+      "assets": [
+        "ERP 정산 로그",
+        "반품창고 SKU 이동표",
+        "공급사 계약서",
+        "해외 수출입 정산 파일",
+        "폐기 예정 PB 브랜드 라이선스"
+      ],
+      "liabilities": [
+        "미수채권 aging report 누락",
+        "반품권 소멸 시한",
+        "위약금 조항 미집행",
+        "달러 정산일 오류",
+        "구조조정으로 인한 권한 공백"
+      ]
+    }
+  },
+  "protagonist": {
+    "name": "강도윤",
+    "age_at_start": 33,
+    "status": "다온리테일 계약정산 담당 대리, 구조조정 해고 예정자",
+    "public_image": "꼼꼼하지만 큰 그림은 못 보는 정산 담당자",
+    "true_strength": "ERP, 계약서, 창고 흐름의 어긋남에서 버려진 권리를 읽고, 그것을 서명과 접근권으로 환전하는 능력",
+    "true_weakness": "사람을 믿기보다 조건을 먼저 보며, 유리한 계약이면 상대 감정을 거칠게 잘라낸다",
+    "initial_goal": "해고를 미루고 마지막 계정 접근권으로 자기 생존권을 산다",
+    "mid_goal": "다온 밖에 SPV를 세워 반품권, 리퍼브권, 달러 정산권을 사들인다",
+    "final_goal": "대기업과 제조사가 먼저 파일을 들고 오는 권리 포트폴리오 운영자가 된다",
+    "self_interest_rule": "선행이나 복수보다 이득과 효율을 우선한다. 남을 구할 때도 먼저 자기 권한, 수수료, 다음 gate를 계산한다."
+  },
+  "phase0_design": {
+    "arcs": [
+      {
+        "arc_id": "ARC-01",
+        "title": "해고 통보와 반품권 묶음",
+        "block_range": "1-10",
+        "time_window": "2026년 5월~6월",
+        "capital_target": "0원 생존권 -> 성과 보너스 3천만 원 + 데이터 접근권 + 계약 검토권",
+        "front_sectors": [
+          "정산",
+          "반품창고",
+          "공급사 계약",
+          "리퍼브"
+        ],
+        "support_sectors": [
+          "내부 감사",
+          "법무",
+          "물류"
+        ],
+        "main_opponents": [
+          "정산팀장 최문식",
+          "반품 외주업체 그린로지스",
+          "거래처 태성생활용품"
+        ],
+        "new_npcs": [
+          "윤서린: 내부 감사 신입, 계산상 도윤 편에 붙는 witness",
+          "박만철: 반품창고 반장, SKU 흐름을 아는 현장 operator",
+          "오지혁: 거래처 실무자, 현금 합의로 묻으려는 첫 협상 상대",
+          "한규리: 법무팀 주니어 변호사, 도윤의 접근을 절차로 묶는 동시에 외주계약 원본 열람 carrier가 되는 validator"
+        ],
+        "emotion_curve": "해고 굴욕 -> 파일 발견 -> 현장 확인 -> 현금 합의 거절 -> 접근권 receipt -> 다음 브랜드 라이선스 gate",
+        "quiet_blocks": [],
+        "defeat_blocks": [
+          4,
+          8
+        ],
+        "block_slots": [
+          {
+            "block": 1,
+            "title": "계정 만료 72시간",
+            "function": "해고 통보, 반품권 묶음 발견, 창고 확인, 현금 합의 거절, 달러 정산 오류 파일까지 여는 고속 오프닝 번들"
+          },
+          {
+            "block": 2,
+            "title": "창고 SKU가 거짓말하지 않는다",
+            "function": "반품창고 현장 증거와 내부 감사 witness를 묶어 위약금 회수 가능성을 공문으로 만든다"
+          },
+          {
+            "block": 3,
+            "title": "현금 말고 권한",
+            "function": "거래처의 현금 합의를 거절하고 데이터 접근권, 계약 검토권, 성과 보너스를 receipt로 받아낸다"
+          },
+          {
+            "block": 4,
+            "title": "외주업체의 역공",
+            "function": "그린로지스가 법무 통지서로 도윤을 끊으려 하지만 도윤은 법무 동석권, 외주계약 원본 열람권, C동 상표권 gate를 receipt로 만든다"
+          },
+          {
+            "block": 5,
+            "title": "폐기 브랜드는 폐기가 아니다",
+            "function": "서우패키징 상표권 갱신료 미납을 옵션 프리미엄으로 바꿔 라온홈 60일 우선사용권과 C동 폐기 7일 보류를 receipt로 만든다"
+          },
+          {
+            "block": 6,
+            "title": "정산팀의 빈자리",
+            "function": "최문식의 외부 자문 밀어내기를 정산 특별 검토석, 법무/감사 동시 동석권, C동 가격표 작성 권한으로 되받고 서우패키징 채권 옵션 gate를 연다"
+          },
+          {
+            "block": 7,
+            "title": "리퍼브 가격표",
+            "function": "C동 가격표를 현장 등급표와 수익표로 완성하고 박만철을 operator로 설치한 뒤 현금 고갈 압박을 성과수수료와 달러 RMA 접근권 요구로 되받는다"
+          },
+          {
+            "block": 8,
+            "title": "최문식의 꼬리 자르기",
+            "function": "최문식의 책임 확인서를 외주계약 재검토권, 그린로지스 penalty 산정권, 리퍼브 성과수수료 7% 문구로 되받고 샘플 판매/클레임 gate를 연다"
+          },
+          {
+            "block": 9,
+            "title": "첫 SPV의 이름",
+            "function": "윤서린의 리스크 비교를 이용해 도윤권리운영 개인사업자 임시 접수와 향후 SPV 승계 문구를 얻고 서우패키징 옵션금을 penalty 우선배분 계약으로 처리한다"
+          },
+          {
+            "block": 10,
+            "title": "다음 파일은 달러다",
+            "function": "그린로지스 penalty와 3자 상계 초안으로 반품권 arc를 닫고 달러 RMA mismatch, supplier debit note, C급 부품 회수 상태표로 AS 대행권 gate를 연다"
+          }
+        ],
+        "entry_function": "주인공의 생존 위기와 돈줄 감지를 동시에 보여준다",
+        "exit_function": "현금이 아니라 권한을 남기는 작품 법칙을 독자에게 학습시킨다"
+      },
+      {
+        "arc_id": "ARC-02",
+        "title": "리퍼브권과 AS 대행권",
+        "block_range": "11-20",
+        "time_window": "2026년 6월~8월",
+        "capital_target": "성과 보너스 -> SPV 설립 + 리퍼브 독점 판매권",
+        "front_sectors": [
+          "리퍼브",
+          "AS 대행",
+          "브랜드 라이선스"
+        ],
+        "support_sectors": [
+          "제조사 품질관리",
+          "온라인몰",
+          "창고 운영"
+        ],
+        "main_opponents": [
+          "그린로지스",
+          "다온 PB사업부",
+          "제조사 클레임팀"
+        ],
+        "new_npcs": [
+          "한규리: Block 004에서 법무 carrier로 조기 등장한 뒤, Arc 2에서 서명과 리스크를 보는 계약 validator로 확장",
+          "서태오: 제조사 품질관리자, 리퍼브 기준을 제공하는 expert"
+        ],
+        "emotion_curve": "작은 권리 매입 -> 품질 클레임 -> 계약 리스크 -> 리퍼브 독점권 receipt",
+        "quiet_blocks": [],
+        "defeat_blocks": [
+          14,
+          18
+        ],
+        "entry_function": "반품권을 현장 매출로 바꾼다",
+        "exit_function": "SPV가 실물 권리 매입 주체로 인정된다",
+        "block_slots": [
+          {
+            "block": 11,
+            "title": "폐기 라인의 가격",
+            "function": "C급 부품 회수 상태표로 폐기 SKU를 AS 대행권 가격표 v0로 재정의하고 제조사 품질관리자 서태오의 30대 파일럿 검수 gate를 연다"
+          },
+          {
+            "block": 12,
+            "title": "품질 기준표",
+            "function": "제조사 클레임팀의 비공식 리퍼브 중지 통보를 포장/이송 하자 분류로 되받아 조건부 AS 파일럿 승인권과 품질 기준표 항목명 공개를 receipt로 만든다"
+          },
+          {
+            "block": 13,
+            "title": "파일럿 약정서",
+            "function": "한규리의 법무 제동을 이용해 3자 AS 대행 파일럿 약정서에 처리 수수료, 실패품 폐기 결정권, 검수 데이터 열람권, 성공품 처리 단가 협상권을 박는다"
+          },
+          {
+            "block": 14,
+            "title": "첫 파일럿 클레임",
+            "function": "30대 파일럿 첫 클레임을 검수 데이터 열람권과 실패품 폐기권으로 방어하고 포장 규격 위반 부속합의와 성공품 처리 추가 단가표로 바꾼다"
+          },
+          {
+            "block": 15,
+            "title": "AS 대행권",
+            "function": "환불 종결을 거절하고 월 300대 반복 처리 물량, 60일 파일럿 연장, 성공품 처리 단가 부속합의, 검수 데이터 월말 제공권을 receipt로 만든다"
+          },
+          {
+            "block": 16,
+            "title": "브랜드 없는 브랜드",
+            "function": "PB사업부의 브랜드명 금지와 라온홈/제조사 로고 미사용 조건을 D-RN 내부 처리 라벨, 보증 제외 물량 라우팅 코드, 월 300대 자동 배정 조항으로 바꾼다"
+          },
+          {
+            "block": 17,
+            "title": "물량은 코드로 샌다",
+            "function": "그린로지스가 D-RN 코드 물량을 임시 보관장으로 빼돌리자 SKU 로그와 외주계약 원본으로 반복 처리 라인 우선 배정권, 외주 계정 라벨 수정 금지, 동시 승인 조항을 얻는다"
+          },
+          {
+            "block": 18,
+            "title": "고용의 탈을 쓴 포획",
+            "function": "다온이 도윤을 내부 프로젝트로 다시 묶어 D-RN 권리를 회사 업무 산출물로 흡수하려 하자, 도윤은 도윤권리운영 외부 운영자 사전 등록과 SPV 승계 조건, 데이터룸 접근권을 요구한다"
+          },
+          {
+            "block": 19,
+            "title": "첫 정산표의 빈칸",
+            "function": "첫 31대 처리 정산표의 입금 계좌와 비용코드 공백을 이용해 도윤권리운영 입금 계좌 등록 요청, D-RN 외부 운영 정산 코드, 현장 인센티브 풀을 확보한다"
+          },
+          {
+            "block": 20,
+            "title": "SPV 첫 계약",
+            "function": "첫 486만 원 입금 보류를 담보로 도윤권리운영 SPV 첫 계약 초안, 정산금 이전 조항, D-RN 리퍼브 60일 우선 판매권, 달러 RMA mismatch sample gate를 얻으며 ARC-02를 닫는다"
+          }
+        ]
+      },
+      {
+        "arc_id": "ARC-03",
+        "title": "달러 정산일 오류",
+        "block_range": "21-30",
+        "time_window": "2026년 8월~10월",
+        "capital_target": "리퍼브 현금흐름 -> 달러 계좌 + 해외 공급사 신뢰",
+        "front_sectors": [
+          "무역 정산",
+          "환율",
+          "해외 총판권"
+        ],
+        "support_sectors": [
+          "AI 계약 보조",
+          "은행",
+          "통관"
+        ],
+        "main_opponents": [
+          "해외소싱팀",
+          "은행 외환 담당자",
+          "경쟁 수입사"
+        ],
+        "new_npcs": [
+          "Mira: 도윤이 만든 계약 비교 AI, 판단자가 아니라 리스크 표시 보조자",
+          "김원재: 외환 담당자, 달러 계좌 gatekeeper"
+        ],
+        "emotion_curve": "AI 도구 도입 -> 환율 오류 발견 -> 인간 검증 -> 달러 계좌 receipt -> 해외 총판권 gate",
+        "quiet_blocks": [],
+        "defeat_blocks": [
+          24
+        ],
+        "entry_function": "AI는 돈 버는 주체가 아니라 파일 비교 도구임을 고정한다",
+        "exit_function": "도윤이 해외 정산 검증 주체에서 D-RN linked Korea priority channel 조건 검토자로 올라서고, 물류센터 출입로 4.2미터 권리 파일 gate를 열며 다음 arc로 넘어간다",
+        "block_slots": [
+          {
+            "block": 21,
+            "title": "AI가 찾은 건 주식이 아니었다",
+            "function": "달러 RMA mismatch sample을 Mira에 넣어 이상치를 표시하되 AI를 자동 돈벌이 장치가 아니라 계약 리스크 표시 도구로 고정하고, 도윤이 수동 대조표로 supplier debit note 원본 제한 열람권과 해외 계약 파일 read-only gate를 얻는다"
+          },
+          {
+            "block": 22,
+            "title": "외환 담당자의 절차 벽",
+            "function": "supplier debit note 원본과 다음 선적분 할인권이 열리지만 김원재가 SPV 명의 달러 계좌를 절차로 막자, 도윤은 18,740달러 차액 3분류표와 손실 회피 자료로 달러 계좌 사전 심사권과 해외 정산 파일 검증 루트를 얻는다"
+          },
+          {
+            "block": 23,
+            "title": "부분 인정은 공짜가 아니다",
+            "function": "SableWorks가 정산 오류를 부분 인정하지만 독점권과 직접 권리 인정을 거부하자, 도윤은 김원재 외환 사전 심사 메모와 손실 회피 자료로 다음 선적분 할인권의 SPV/D-RN 귀속 확인서 초안과 우선 공급 협상 gate를 얻는다"
+          },
+          {
+            "block": 24,
+            "title": "기존 수입사의 계약 무효 카드",
+            "function": "Aster Trading이 파일 접근과 할인권 귀속 확인서 초안을 기존 공급 계약 위반으로 공격하고 달러 계좌 정식 개설이 보류되자, 도윤은 read-only 접근 로그 무결성과 법무 대응 메모로 방어하며 기존 공급 계약 원본 제한 열람 gate를 얻는다"
+          },
+          {
+            "block": 25,
+            "title": "AI 초안이 먼저 틀렸다",
+            "function": "Mira가 Aster 대응 초안에서 price protection 조항을 오독해 위험 문구를 내자, 도윤은 현장 송장과 packing list, 선적 서류를 수동 대조해 Aster 최소 물량 미달 proof와 AI 초안 사용 금지 프로토콜, 달러 계좌 보류 해제용 검증표를 얻는다"
+          },
+          {
+            "block": 26,
+            "title": "환차익보다 파일 접근권",
+            "function": "Aster 최소 물량 미달 proof로 달러 계좌 보류 해제 심사가 열리자 회사가 18,740달러 차액을 현금/회계 처리로 닫으려 하지만, 도윤은 일회성 보상 대신 SableWorks 기존 계약 annex 확대 열람권과 Aster 물량 미달 공식 통지 초안 작성권, 해외 계약 파일 정식 접근권 초안을 얻는다"
+          },
+          {
+            "block": 27,
+            "title": "달러 계좌가 열리는 조건",
+            "function": "Aster 물량 미달 공식 통지와 SableWorks annex 확대 열람 뒤 김원재가 일반 수입자 계좌를 거부하고 제한용 달러 계좌만 허용하자, 도윤은 도윤권리운영 명의 해외 정산 검증 전용 계좌와 SableWorks settlement advice 1차 receipt, 다음 선적분 할인권 귀속 실행 조건을 얻는다"
+          },
+          {
+            "block": 28,
+            "title": "직원이 아니라 계정 주체",
+            "function": "SableWorks가 도윤권리운영을 다온 직원이 아닌 제한형 SPV 운영 주체로 supplier portal에 등록하려 하자 해외소싱팀과 Aster가 반발하지만, 도윤은 제한용 달러 계좌 receipt와 settlement advice를 근거로 supplier portal observer 계정, D-RN 리퍼브 운영자 라벨, 다음 선적분 할인권 실행 로그 접근권을 얻는다"
+          },
+          {
+            "block": 29,
+            "title": "정산 오류는 총판권 조건이 된다",
+            "function": "다음 선적분 할인권 실행 로그가 Aster importer field에 묶여 귀속 미완료 상태임을 확인하자, 도윤은 수출입 정산 오류 proof와 D-RN 리퍼브 실적을 discrepancy report로 묶어 SableWorks priority review agenda와 우선 총판 조건 검토석을 얻는다"
+          },
+          {
+            "block": 30,
+            "title": "총판권의 문턱",
+            "function": "SableWorks priority review에서 Aster가 cure volume으로 방어하고 다온이 내부 TF 흡수를 시도하자, 도윤은 완전 총판권 대신 D-RN linked Korea priority channel 조건표와 90일 조건부 우선 검토권, 자동 channel 재배정 review clause, 물류센터 출입로 4.2미터 권리 파일 gate를 얻으며 ARC-03을 닫는다"
+          }
+        ]
+      },
+      {
+        "arc_id": "ARC-04",
+        "title": "출입로와 물류 슬롯",
+        "block_range": "31-40",
+        "time_window": "2026년 10월~2027년 1월",
+        "capital_target": "달러 계좌 -> 물류 슬롯 + 개발 협상 좌석",
+        "front_sectors": [
+          "부동산 병목권",
+          "물류센터",
+          "지상권"
+        ],
+        "support_sectors": [
+          "등기",
+          "인허가",
+          "시행사"
+        ],
+        "main_opponents": [
+          "시행사 한강디벨롭",
+          "다온 물류본부",
+          "구청 인허가 담당"
+        ],
+        "new_npcs": [
+          "최은호: 감정평가사, 출입로 권리의 시장가를 검증한다",
+          "장미란: 시행사 실무 임원, 합의금으로 묻으려 한다"
+        ],
+        "emotion_curve": "작은 출입권 발견 -> 합의금 유혹 -> 물류 슬롯 요구 -> 개발판 좌석 획득",
+        "quiet_blocks": [],
+        "defeat_blocks": [
+          35
+        ],
+        "entry_function": "부동산을 땅값이 아니라 병목권으로 쓴다",
+        "exit_function": "도윤이 물류 슬롯과 개발 회의 좌석을 얻는다",
+        "block_slots": [
+          {
+            "block": 31,
+            "title": "출입로 4.2미터",
+            "function": "Block 030에서 열린 물류센터 출입로 4.2미터 권리 파일을 확인하고, 다온 물류본부가 이를 단순 운영 도면으로 축소하려 하자 도윤은 현장 실측과 11톤 윙바디 회전반경, 사유지 통행권 문제를 근거로 출입로 권리 파일 열람권, 실측 동행권, 감정평가사 최은호 gate를 얻는다"
+          },
+          {
+            "block": 32,
+            "title": "감정평가사의 숫자",
+            "function": "최은호가 도로 폭만으로는 가격을 낼 수 없다고 하자 도윤은 7일치 반입 로그, 대기확인서, 지연비용표, 사유지 통행권 원문 발췌를 묶어 땅값이 아니라 하역 회전수와 대기열 지연비용 중심의 출입로 병목 가치 산정서 v0와 한강디벨롭 대체 출입로 반박 메모 gate를 얻는다"
+          },
+          {
+            "block": 33,
+            "title": "합의금은 싸다",
+            "function": "최은호 병목 가치표가 나오자 한강디벨롭이 현금 합의와 no-further-claim으로 출입로 리스크를 닫으려 하고 다온 물류본부는 임시 하역 시간표로 축소하려 하지만, 도윤은 현금 합의를 거절하고 D-RN 물류 슬롯 협상석, B-3 gate 우선 반입 시간표 검토권, 개발 회의 배석 gate를 얻는다"
+          },
+          {
+            "block": 34,
+            "title": "인허가 시간표",
+            "function": "개발 회의 배석 gate와 B-3 우선 반입 시간표 검토권을 이용해 한강디벨롭이 숨기려는 구청 임시 사용 승인 일정, 개발 회의록, B-3 시간표 초안, 북측 대체 출입로 보완 체크리스트를 한 표로 묶고 인허가 일정 변경 통지권을 얻는다"
+          },
+          {
+            "block": 35,
+            "title": "대체로 반격",
+            "function": "한강디벨롭이 북측 대체 출입로 임시 사용 신청서를 긴급 접수하고 구청 현장검증을 앞당기자 다온 물류본부가 B-3 우선 반입 시간표를 보류하며 도윤의 병목권을 약화하고, 도윤은 패배를 인정한 뒤 하중 제한 재검증 요청권과 소방 동선/야간 민원 proof gate를 확보한다"
+          },
+          {
+            "block": 36,
+            "title": "하역 proof",
+            "function": "B-3 보류와 대체로 조건부 승인 심사 상황에서 도윤이 임시 철판 보강비, 소방 동선 우회비, 야간 민원 운행 제한, 기사 대기시간, 창고 내부 하역 동선 비용표를 묶어 대체로가 싼 대안이 아니라는 proof와 B-3 보류 해제 협상 gate를 얻는다"
+          },
+          {
+            "block": 40,
+            "title": "합의금 말고 슬롯",
+            "function": "합의금을 거절하고 물류 슬롯 receipt를 받는다"
+          }
+        ]
+      },
+      {
+        "arc_id": "ARC-05",
+        "title": "납품권과 생산 슬롯",
+        "block_range": "41-50",
+        "time_window": "2027년 1월~4월",
+        "capital_target": "물류 슬롯 -> 제조사 생산권 + 유지보수 계약",
+        "front_sectors": [
+          "제조",
+          "품질",
+          "납품권",
+          "유지보수"
+        ],
+        "support_sectors": [
+          "인증",
+          "보험",
+          "B2B 영업"
+        ],
+        "main_opponents": [
+          "경쟁 납품사",
+          "제조사 구매본부",
+          "보험사 손해사정팀"
+        ],
+        "new_npcs": [
+          "노태경: 밀려난 품질관리자, 결함 원인을 보는 expert",
+          "배수민: B2B 영업 베테랑, 반복 매출 라인을 여는 operator"
+        ],
+        "emotion_curve": "품질 클레임 -> 결함 원인 증명 -> 납품권 방어 -> 생산 슬롯 receipt -> 독립 운영자 확정",
+        "quiet_blocks": [],
+        "defeat_blocks": [
+          44,
+          48
+        ],
+        "entry_function": "권리 사냥을 제조와 반복 매출로 확장한다",
+        "exit_function": "도윤이 다온 밖 권리 포트폴리오 운영자로 확정된다",
+        "block_slots": [
+          {
+            "block": 41,
+            "title": "불량은 포장 규격에서 시작됐다",
+            "function": "품질 클레임을 납품권 회수 기회로 재해석한다"
+          },
+          {
+            "block": 50,
+            "title": "생산권 receipt",
+            "function": "유지보수 계약과 생산 슬롯을 획득해 1부를 닫는다"
+          }
+        ]
+      }
+    ],
+    "npc_timeline": [
+      {
+        "name": "윤서린",
+        "role": "내부 감사 신입 / witness",
+        "summary": "처음엔 도윤을 정보 유출 리스크로 보지만, 도윤의 계산이 회사 손실을 줄인다는 것을 보고 계산상 협조한다.",
+        "first_block": 1,
+        "final_status": "도윤 SPV의 감사/리스크 파트너 후보",
+        "key_turning_points": [
+          {
+            "block": 1,
+            "event": "도윤이 현금 대신 접근권을 요구하는 이유를 이해한다"
+          },
+          {
+            "block": 9,
+            "event": "첫 SPV 리스크 검토를 맡는다"
+          }
+        ]
+      },
+      {
+        "name": "박만철",
+        "role": "반품창고 반장 / field operator",
+        "summary": "창고 물건의 실제 흐름을 안다. 선의가 아니라 폐기 라인을 살릴 수 있다는 계산으로 붙는다.",
+        "first_block": 1,
+        "final_status": "리퍼브 운영 라인 현장 책임자",
+        "key_turning_points": [
+          {
+            "block": 2,
+            "event": "SKU 이동표로 도윤의 문서 증거를 현장 증거로 바꾼다"
+          }
+        ]
+      },
+      {
+        "name": "최문식",
+        "role": "정산팀장 / opening opponent",
+        "summary": "도윤을 해고 명단에 올리고 책임을 떠넘기려 하지만, 기존 관행을 믿고 합리적으로 오판한다.",
+        "first_block": 1,
+        "final_status": "도윤의 계약 검토권을 승인할 수밖에 없는 상사",
+        "key_turning_points": [
+          {
+            "block": 3,
+            "event": "현금보다 권한을 요구하는 도윤에게 첫 결재선을 내준다"
+          }
+        ]
+      }
+    ]
+  }
+}

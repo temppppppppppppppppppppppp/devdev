@@ -1,0 +1,24 @@
+# GREENPLUS_power_grid_heir
+
+- verdict: `GREENPLUS`
+- work_id: `power_grid_heir`
+- family: `blockguide`
+- benchmark_freshness: `current`
+- benchmark_artifact: `treatments/audit_reports/power_grid_heir_greenplus_qualityup_adversarial_3x_audit.md`
+- root_bi_artifact: `bible/0_bi_power_grid_heir.json`
+- root_bi_audit: `bible/audit_reports/power_grid_heir_root_bi_5pass.md`
+- material_deployment_status: `immediate_deployable_material`
+- range_attachment_status: `range_complete`
+- range_attachment_audit: `treatments/audit_reports/power_grid_heir_downstream_episode_pacing_hint_attachment_audit.md`
+- consistency_audit: `treatments/audit_reports/power_grid_heir_greenplus_immediate_use_candidate_consistency_3pass_audit.md`
+- immediate_deployment_audit: `treatments/audit_reports/power_grid_heir_immediate_deployment_adversarial_3x_closeout.md`
+- donor_structure_status: `adopted_and_recorded`
+- opening_pacing_triage: `GREEN`
+- whole_run_pacing_triage: `GREEN`
+- schema_status: `pass`
+- open_migration_debt: `no`
+- p0: `6/6`
+- p1: `20/20`
+- full_block_cider: `70/70`
+- downstream_episode_pacing_hint: `TR 70/70`, `BI 70/70`, mismatch `0`, missing block ids `0`, B071+ `0`
+- operational_note: Root BI is canonical and synchronized to the live TR70. BIAmplificationPower and GenreRules guardrails were added, root BI 5-pass is PASS, pair consumability is PASS, promotion-target normalization is PASS with serialized canonical evidence, opening and whole-run pacing are GREEN, and 3x adversarial quality-up closes the current GREENPLUS reading. Downstream episode pacing hint attachment closes the range surface, and the post-range consistency 3-pass audit confirms the immediate-use promotion candidate claim. The immediate-deployment adversarial 3x closeout records donor review as adopted in source_manifest, Phase0, and work_guard, visible contamination guardrails in Phase0 and BI, and admits the row as range-complete immediate material deployment for power-grid / AI infrastructure business power.

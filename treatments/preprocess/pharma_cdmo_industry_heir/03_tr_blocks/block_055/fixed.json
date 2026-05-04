@@ -1,0 +1,192 @@
+{
+  "block_id": "Block 55",
+  "title": "벤처의 폭주",
+  "content": {
+    "context": "특허 담보대출, 공장 리스 금융, 임상 리스크 보험이 한 줄로 연결되자 바이오 벤처 대표는 더 큰 발표를 꿈꾼다. 그는 임상 2상 중간분석을 '사실상 성공'으로 포장해 투자자 설명회와 언론 인터뷰를 잡는다. 하지만 태오가 가진 데이터룸, 생산 데이터, 보험 공동판정 의석은 그 발표가 아직 허황되다는 걸 보여 준다.",
+    "event_villain": "벤처 대표는 기술수출 임박 보도자료를 배포하려 하고, 증권사 IB는 밸류에이션 방어를 위해 표현을 조금만 순화하자고 한다. 보험사는 허위성 발표가 나오면 보험료 band 조정권을 철회하겠다고 경고하고, 공장 QA 책임자는 아직 batch 재현성 2회차가 끝나지 않았다고 말한다. 스토리, 금융, 보험, 생산 데이터가 한꺼번에 충돌한다.",
+    "solution": "태오는 발표를 무조건 막지 않는다. 발표 가능한 문장과 불가능한 문장을 나눈다. 첫 사건 beat는 batch 편차 공동판정 의석과 know-how escrow 트리거를 발동해, 임상 중간분석표와 생산 재현성표를 같은 화면에 올리고 '사실상 성공' 문구를 삭제시키는 장면이다. 둘째 beat는 벤처 대표가 강행하려 하자, 마일스톤 escrow 동결권과 운영 step-in 권리를 걸어 위탁생산 조건을 강화하고, 향후 발표 전 생산/보험/데이터 3자 사전검토권을 계약서에 넣는 장면이다.",
+    "reward": "태오는 바이오 벤처 공시 사전 veto권, 마일스톤 escrow release 공동서명권, 위탁생산 조건 강화권, 생산/보험/데이터 3자 사전검토권, 폭주 발표 위반 시 CMO slot 전환권을 얻는다. 벤처의 폭주는 주가 이벤트가 되지 못하고, 태오 조건표를 거치지 않으면 말도 돈도 움직이지 않는 구조가 된다."
+  },
+  "stakes": "허황된 신약 발표가 시장에 나가면 임상 리스크 보험, 특허 담보대출, 공장 리스 금융이 모두 스토리 과열에 끌려가고 태오는 실제 생산권을 잃는다.",
+  "power_shift": {
+    "protagonist": "리스크 구조화 설계자에서 바이오 벤처의 공시 문장과 위탁생산 조건을 동시에 제어하는 조건표 권력자로 올라선다.",
+    "antagonist": "바이오 벤처와 증권사 IB는 임상 스토리만으로 밸류에이션을 밀어붙이기 어려워진다."
+  },
+  "relationship_delta": [
+    {
+      "target": "바이오 벤처 대표",
+      "before": "임상 2상 중간분석을 성공 스토리로 포장하려는 창업자",
+      "after": "공시 사전 veto와 escrow 공동서명을 받아들여야 하는 차주",
+      "anchor_before": "월별 생산 데이터 제출이 보험료를 낮춘다는 구조를 받아들이는 운용자"
+    },
+    {
+      "target": "증권사 IB",
+      "before": "밸류에이션 방어를 위해 표현만 순화하고 발표를 밀려는 주관사",
+      "after": "생산/보험/데이터 3자 사전검토를 발표 전 조건으로 인정하는 금융 파트너",
+      "anchor_before": "보험료 band 인하가 밸류에이션 방어 근거가 된다는 걸 인정하는 금융 파트너"
+    },
+    {
+      "target": "공장 QA 책임자",
+      "before": "batch 재현성 2회차가 끝나지 않아 발표를 걱정하는 실무자",
+      "after": "위탁생산 조건 강화와 CMO slot 전환권을 통해 실제 제동력을 얻는 내부 동맹",
+      "anchor_before": "재확인 문서권과 유지보수 로그를 태오 리스 조건으로 복구하는 실무 파트너"
+    }
+  ],
+  "foreshadow": [
+    "공시 사전 veto권은 IB의 밸류에이션에서 증권사 평가표를 생산 가능성 기준으로 뒤집는 핵심 권리가 된다.",
+    "CMO slot 전환권은 실패한 파이프라인을 설비와 특허로 흡수하는 실무 도구가 된다.",
+    "생산/보험/데이터 3자 사전검토권은 바이오 은행의 표준 조건표로 확장된다."
+  ],
+  "callback": [
+    "batch 편차 사고판정 공동위원회 의석이 허황된 발표 문구를 제동하는 객관 근거가 된다.",
+    "know-how escrow 열람 트리거가 임상 중간분석과 생산 재현성표를 함께 검토하는 권리로 작동한다.",
+    "마일스톤 escrow 동결권이 발표 강행 시 실제 돈을 멈추는 장치가 된다.",
+    "운영 step-in 권리가 위탁생산 조건 강화와 CMO slot 전환권으로 회수된다."
+  ],
+  "emotional_beat": {
+    "protagonist_feeling": "태오는 박수 받을 발표를 막는 사람이 되는 부담을 안다. 그래도 거짓 기대가 공장을 망가뜨리는 걸 두 번 보지는 않겠다고 마음먹는다.",
+    "reader_catharsis": "벤처가 허황된 신약 발표로 돈을 끌어오려 할 때, 주인공이 공시 문장, escrow, 생산 슬롯을 동시에 잡아 폭주를 멈추는 사이다."
+  },
+  "tension_level": 10,
+  "pov_character": "강태오",
+  "location": {
+    "place": "바이오 벤처 투자자 설명회 리허설장과 태오바이오 조건표 워룸",
+    "type": "venture_overheat_disclosure_control_room",
+    "macro_battlefield": "바이오 벤처 공시 제동과 위탁생산 조건 강화"
+  },
+  "time_span": {
+    "duration": "4일",
+    "in_story_time": "2008년 2월 말"
+  },
+  "genre_ext": {
+    "capital_before": "1조 800억 + 소비재 안전표준 + 임상 2상 빈칸 가격표 작성권 + 특허 담보대출 400억 공동주관권 + 생산권 선순위 담보 조항 + 바이오 파일럿 공장 36개월 운영리스 우선권 + 월 6일 생산 슬롯 + GMP 적격성 재확인 문서권 + QC 장비 공동사용권 + 임상 리스크 보험료 band 조정권 + 생산 데이터 월별 제출권 + batch 편차 사고판정 공동위원회 의석 + 생산 중단 손실 특약 1차 승인권 + 보험료 인하분 0.4% 구조화 수수료",
+    "capital_after": "1조 2500억 + 소비재 안전표준 + 임상 2상 빈칸 가격표 작성권 + 특허 담보대출 400억 공동주관권 + 생산권 선순위 담보 조항 + 바이오 파일럿 공장 36개월 운영리스 우선권 + 월 6일 생산 슬롯 + 임상 리스크 보험료 band 조정권 + 생산 데이터 월별 제출권 + batch 편차 사고판정 공동위원회 의석 + 바이오 벤처 공시 사전 veto권 + 마일스톤 escrow release 공동서명권 + 위탁생산 조건 강화권 + 생산/보험/데이터 3자 사전검토권 + 폭주 발표 위반 시 CMO slot 전환권",
+    "capital_delta": "+1700억 평가 상승, +공시 사전 veto권, +escrow 공동서명권, +위탁생산 조건 강화권, +3자 사전검토권, +CMO slot 전환권",
+    "profit_loss": "단기 투자 흥행을 늦추지만 허위 발표로 인한 보험 철회와 생산권 붕괴를 막고 위탁생산 조건을 강화한다.",
+    "method": "임상 중간분석표, 생산 재현성표, 보험 band 조건을 한 화면에 올려 발표 문구와 escrow release, 생산 슬롯 전환을 동시에 통제한다.",
+    "investment_type": "공시/보험/생산 3자 검토 체계 구축",
+    "deal_type": "바이오 벤처 공시 veto 및 위탁생산 조건 강화 계약",
+    "leverage_used": "공동판정 의석, know-how escrow, 마일스톤 escrow 동결권, 운영 step-in 권리",
+    "opponent": {
+      "name": "바이오 벤처 + 증권사 IB + 보험사",
+      "type": "바이오 벤처 공시 / 위탁생산 금융 복합 압박 세력",
+      "weakness_exploited": "바이오 벤처 공시 / 위탁생산 금융의 병목을 문서·권리·책임선으로 잠그는 강태오의 방식을 과소평가한다."
+    },
+    "time_pressure": "투자자 설명회와 보도자료 배포 전 4일",
+    "knowledge_used": "임상 중간분석, batch 재현성, 공시 문구, escrow release, CMO slot 전환, 3자 사전검토",
+    "risk_level": "최상",
+    "business_sector": "바이오 벤처 공시 / 위탁생산 금융",
+    "section_rotation": "임상 리스크와 공급망 금융 중반 경계",
+    "success_pattern": "허황된 임상 스토리를 막고, 발표 가능한 문장을 생산/보험/데이터 조건으로 제한한다.",
+    "opening_progression": {
+      "public_signboard_event": "바이오 벤처 대표가 임상 2상 중간분석을 사실상 성공으로 포장한 보도자료를 준비한다.",
+      "representative_reevaluation": "벤처와 IB는 태오를 투자 조건을 다는 사람보다 말과 돈과 생산 슬롯을 동시에 멈출 수 있는 조건표 권력자로 다시 본다.",
+      "next_battlefield_ticket": "공시 사전 veto권과 CMO slot 전환권이 IB 밸류에이션과 실패한 파이프라인 흡수 전장으로 이어진다."
+    },
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "venture_overheat_cmo_condition_receipt",
+      "receipt_line": "태오는 허황된 성공 보도자료를 공시 사전 veto권, escrow 공동서명권, CMO slot 전환권이 붙은 위탁생산 조건표로 바꿔낸다.",
+      "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "허황된 임상 스토리를 막고, 발표 가능한 문장을 생산/보험/데이터 조건으로 제한한다.",
+      "recognition_signal": "바이오 벤처 대표의 시선 변화: 공시 사전 veto와 escrow 공동서명을 받아들여야 하는 차주",
+      "reward_signal": "태오는 허황된 성공 보도자료를 공시 사전 veto권, escrow 공동서명권, CMO slot 전환권이 붙은 위탁생산 조건표로 바꿔낸다.",
+      "growth_signal": "리스크 구조화 설계자에서 바이오 벤처의 공시 문장과 위탁생산 조건을 동시에 제어하는 조건표 권력자로 올라선다.",
+      "expectation_signal": "공시 사전 veto권과 CMO slot 전환권이 IB 밸류에이션과 실패한 파이프라인 흡수 전장으로 이어진다.",
+      "reader_feel": "독자는 「벤처의 폭주」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 태오는 허황된 성공 보도자료를 공시 사전 veto권, escrow 공동서명권, CMO slot 전환권이 붙은 위탁생산 조건표로 바꿔낸다. 성장 장면: 리스크 구조화 설계자에서 바이오 벤처의 공시 문장과 위탁생산 조건을 동시에 제어하는 조건표 권력자로 올라선다. 다음 기대감: 공시 사전 veto권과 CMO slot 전환권이 IB 밸류에이션과 실패한 파이프라인 흡수 전장으로 이어진다.",
+      "mature_success_signal": "강태오는 벤처의 폭주의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "허황된 임상 스토리를 막고, 발표 가능한 문장을 생산/보험/데이터 조건으로 제한한다.",
+        "recognition": "바이오 벤처 대표의 시선 변화: 공시 사전 veto와 escrow 공동서명을 받아들여야 하는 차주",
+        "reward": "태오는 허황된 성공 보도자료를 공시 사전 veto권, escrow 공동서명권, CMO slot 전환권이 붙은 위탁생산 조건표로 바꿔낸다.",
+        "growth": "리스크 구조화 설계자에서 바이오 벤처의 공시 문장과 위탁생산 조건을 동시에 제어하는 조건표 권력자로 올라선다.",
+        "expectation": "공시 사전 veto권과 CMO slot 전환권이 IB 밸류에이션과 실패한 파이프라인 흡수 전장으로 이어진다.",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 바이오 벤처 대표의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 공시 사전 veto권과 CMO slot 전환권이 IB 밸류에이션과 실패한 파이프라인 흡수 전장으로 이어진다."
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "특허 담보대출, 공장 리스 금융, 임상 리스크 보험이 한 줄로 연결되자 바이오 벤처 대표는 더 큰 발표를 꿈꾼다. 그는 임상 2상 중간분석을 '사실상 성공'으로 포장해 투자자 설명회와 언론 인터뷰를 잡는다. 하지만 태오가 가진 데이터룸, 생산 데이터, 보험 공동판정 의석은 그 발표가 아직 허황되다는 걸 보여 준다.",
+      "proof_action": "태오는 발표를 무조건 막지 않는다. 발표 가능한 문장과 불가능한 문장을 나눈다. 첫 사건 beat는 batch 편차 공동판정 의석과 know-how escrow 트리거를 발동해, 임상 중간분석표와 생산 재현성표를 같은 화면에 올리고 '사실상 성공' 문구를 삭제시키는 장면이다.",
+      "proof_axis": "임상 중간분석, batch 재현성, 공시 문구, escrow release, CMO slot 전환, 3자 사전검토",
+      "recognition_or_resistance_signal": "바이오 벤처 대표 -> 공시 사전 veto와 escrow 공동서명을 받아들여야 하는 차주",
+      "receipt_asset": "태오는 허황된 성공 보도자료를 공시 사전 veto권, escrow 공동서명권, CMO slot 전환권이 붙은 위탁생산 조건표로 바꿔낸다.",
+      "reward_asset_classes": [
+        "batch_record",
+        "national_standard",
+        "cdmo_slot",
+        "data_audit_right"
+      ],
+      "next_regulated_gate": "공시 사전 veto권과 CMO slot 전환권이 IB 밸류에이션과 실패한 파이프라인 흡수 전장으로 이어진다.",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 바이오 벤처 대표의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 공시 사전 veto권과 CMO slot 전환권이 IB 밸류에이션과 실패한 파이프라인 흡수 전장으로 이어진다.",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "business_memory",
+    "timeline_knowledge": "태오는 전생에서 허황된 임상 발표가 주가를 띄운 뒤 생산권, 보험, 데이터가 모두 무너지는 과정을 기억한다.",
+    "butterfly_effect": "벤처 발표가 태오 조건표를 거치게 되면서 바이오 금융은 스토리보다 생산 가능성과 보험 조건을 먼저 묻는 방향으로 바뀐다.",
+    "death_flag": false,
+    "regression_hint": "태오가 보도자료 첫 문장보다 batch 재현성 2회차 결과를 먼저 묻는 행동으로만 암시한다.",
+    "future_prep": "공시 veto권, escrow 공동서명권, CMO slot 전환권은 IB 밸류에이션과 실패 파이프라인 흡수의 핵심 무기가 된다."
+  },
+  "block_no": 55,
+  "foreshadow_targets": [
+    {
+      "target_block": 56,
+      "target_event": "IB의 밸류에이션"
+    },
+    {
+      "target_block": 57,
+      "target_event": "실패한 파이프라인"
+    },
+    {
+      "target_block": 60,
+      "target_event": "바이오 은행"
+    }
+  ],
+  "callback_sources": [
+    {
+      "source_block": 54,
+      "source_event": "보험사가 모르는 위험"
+    },
+    {
+      "source_block": 52,
+      "source_event": "특허 담보대출"
+    },
+    {
+      "source_block": 51,
+      "source_event": "임상 2상의 빈칸"
+    },
+    {
+      "source_block": 53,
+      "source_event": "공장 리스 금융"
+    }
+  ]
+}

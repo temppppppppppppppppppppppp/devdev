@@ -1,0 +1,174 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "23",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 023 draft only. Turns SableWorks partial acknowledgment into discount-right attribution and priority-supply negotiation gate, while preserving exclusivity refusal as the next conflict.",
+  "blocks": [
+    {
+      "block_id": "Block 23",
+      "block_no": 23,
+      "title": "부분 인정은 공짜가 아니다",
+      "episode_span_intent": "2~6화 분량. SableWorks의 supplier debit note 부분 인정, 다음 선적분 할인권의 다온 내부 귀속 시도, 해외 공급사 독점권 거부, 은행 외환 사전 심사 메모 활용, SPV/D-RN 귀속 확인서 초안과 우선 공급 협상 gate 확보를 압축한다.",
+      "content": {
+        "context": "김원재의 외환 사전 심사 메모가 나오자 해외소싱팀의 태도가 미묘하게 바뀐다. 이제 SableWorks와의 통화에 도윤을 빼기 어렵다. 다만 도윤은 통화 자리에 앉았다고 이긴 게 아니라는 걸 안다. SableWorks는 supplier debit note 누락 가능성과 credit note 발행 지연은 일부 인정한다. 하지만 표현은 조심스럽다. 'commercial adjustment'다. 오류가 아니라 거래 조정. 현금 반환도 아니다. 다음 선적분에서 일부 단가를 낮추겠다는 제안이다.",
+        "event_villain": "첫 번째 사건은 SableWorks의 부분 인정 덫이다. SableWorks 계약 담당자 엘레나 박은 18,740달러 중 일부는 다음 선적분 할인으로 반영하겠다고 말하면서도, 할인권은 다온리테일의 다음 PO에 적용된다고 못 박는다. 도윤권리운영 SPV나 D-RN 리퍼브 라인은 계약 상대가 아니므로 별도 권리를 인정할 수 없다는 것이다. 해외소싱팀장은 즉시 그 조건을 받아들이려 한다. 내부 매입가가 내려가면 회사 손실은 줄고, 도윤의 수익 라인은 증빙을 잃는다.",
+        "second_incident": "두 번째 사건은 독점권 거부다. 도윤이 D-RN 라인의 반복 물량을 근거로 리퍼브용 우선 물량 배정을 꺼내자, SableWorks는 더 단호해진다. 한국 지역에는 기존 수입사 Aster Trading의 비독점 공급 계약이 있고, 다온리테일도 정식 총판이 아니다. 독점권이나 총판권을 지금 논의하면 기존 계약 충돌이 난다. SableWorks는 할인은 주지만 권리는 주지 않겠다는 선을 긋는다. 도윤에게 필요한 건 현금 환급보다 이 선을 조금이라도 밀어내는 문구다.",
+        "solution": "도윤은 독점권 요구를 접는다. 대신 단어를 바꾼다. exclusive가 아니라 priority review. 총판권이 아니라 refurbished channel allocation. 그리고 김원재의 외환 사전 심사 메모를 꺼낸다. 은행이 검증한 건 송금이 아니라 할인권이 SPV 수익 라인에 영향을 줄 수 있다는 사실이다. 도윤은 SableWorks에 세 가지 문구만 요구한다. 첫째, 다음 선적분 할인분 중 D-RN 라인 투입 물량은 다온 내부 매입가 조정과 별도로 원가 절감 evidence로 표기한다. 둘째, 도윤권리운영은 수입자가 아니지만 D-RN 리퍼브 운영자로 할인권 귀속 검토 대상에 들어간다. 셋째, 독점권은 보류하되 우선 공급 협상은 다음 300대 처리 실적 후 다시 연다.",
+        "reward": "블록 끝에서 SableWorks는 독점권을 주지 않는다. 그 대신 더 유용한 작은 문구가 남는다. SableWorks 정산 오류 부분 인정 메일, 다음 선적분 할인권 SPV/D-RN 귀속 확인서 초안, 우선 공급 협상 gate, 달러 계좌 정식 개설 서류 목록, Aster Trading 계약 충돌 경고. 해외소싱팀장이 묻는다. '독점권 못 받았는데 만족합니까?' 도윤은 확인서 초안의 두 번째 줄을 저장한다. '독점권은 아직 비쌉니다. 지금은 할인권이 제 원가로 들어온다는 문장만 사면 됩니다.'"
+      },
+      "stakes": "SableWorks의 부분 인정이 다온 내부 매입가 조정으로 끝나면 도윤권리운영은 supplier debit note와 은행 gate를 확보하고도 반복 리퍼브 마진을 얻지 못한다. 반대로 할인권 귀속 문구를 SPV/D-RN 라인에 묶으면 독점권 없이도 해외 공급사 우선 협상의 첫 근거가 생긴다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "SableWorks가 정산일 불일치와 supplier debit note 누락 가능성을 부분 인정하지만, 다음 선적분 할인권은 다온리테일 PO에만 적용된다고 선을 그음",
+        "incident_2": "도윤이 리퍼브용 물량 우선 배정을 꺼내자 SableWorks가 기존 Aster Trading 계약을 이유로 독점권과 총판권 논의를 거부함",
+        "next_actionable_gate": "Aster Trading의 계약 무효 주장, SableWorks 기존 공급 계약 원본 gate, 달러 계좌 정식 개설 서류, Mira 초안 오류 가능성",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 SableWorks가 회사 손실을 일부 인정했다는 사실에 만족하지 않는다. 할인권이 D-RN 리퍼브 원가에 귀속되어야 SPV 마진이 생기므로, 독점권 대신 귀속 문구와 우선 공급 협상 gate를 산다.",
+        "morality_position": "정산 오류를 바로잡는 명분을 쓰지만, 핵심은 다온 내부 매입가로 묻힐 할인분을 도윤권리운영의 원가 절감 evidence로 분리하는 것이다.",
+        "efficiency_choice": "당장 받을 수 없는 독점권을 밀어붙이지 않고 priority review와 refurbished channel allocation 같은 낮은 저항 문구로 협상 범위를 낮춘다."
+      },
+      "power_shift": {
+        "protagonist": "은행 외환 사전 심사 메모와 SPV 달러 계좌 사전 검토권을 가진 해외 정산 gate 보유자 -> SableWorks 부분 인정과 할인권 귀속 확인서 초안을 가진 우선 공급 협상 후보",
+        "antagonist": "SableWorks: 정산 오류를 거래 조정으로 축소하고 독점권을 거부하는 해외 공급사 -> 할인권 귀속 검토와 우선 공급 협상 gate를 일부 열어주는 상대",
+        "system": "은행 외환 사전 심사 메모 -> supplier debit note 부분 인정, 할인권 귀속 확인서 초안, 기존 공급 계약 충돌 경고"
+      },
+      "relationship_delta": [
+        {
+          "target": "SableWorks",
+          "before": "다음 선적분 할인 제안과 supplier debit note로만 존재하는 해외 공급사",
+          "after": "정산 오류를 부분 인정하지만 독점권은 거부하고, 할인권 귀속 확인서 초안과 우선 공급 협상 gate를 남기는 직접 협상 상대"
+        },
+        {
+          "target": "김원재",
+          "before": "외환 사전 심사 메모와 달러 계좌 사전 검토권을 열어준 은행 gatekeeper",
+          "after": "SableWorks와의 협상에서 할인권 귀속이 은행 검증 대상이 될 수 있다는 압박 자료의 출처"
+        },
+        {
+          "target": "해외소싱팀",
+          "before": "다음 선적분 할인권을 다온 내부 매입가 조정으로 흡수하려는 부서",
+          "after": "SableWorks 부분 인정 메일과 SPV/D-RN 귀속 확인서 초안을 다온 내부 문서로 받아야 하는 carrier"
+        },
+        {
+          "target": "Aster Trading",
+          "before": "아직 이름만 없는 경쟁 수입사 리스크",
+          "after": "SableWorks의 기존 한국 공급 계약자로 드러나며 다음 블록의 계약 무효 주장 seed가 됨"
+        },
+        {
+          "target": "한규리",
+          "before": "SPV가 수입자가 아니라는 리스크를 계약 확인서와 검증 목적 제한 문구로 좁히는 validator",
+          "after": "exclusive 대신 priority review와 refurbished channel allocation 문구로 법적 충돌을 낮추는 validator"
+        }
+      ],
+      "foreshadow": [
+        "Aster Trading의 계약 무효 주장",
+        "SableWorks 기존 공급 계약 원본 gate",
+        "달러 계좌 정식 개설 서류",
+        "Mira 초안 오류 가능성",
+        "우선 공급 협상과 총판권의 거리"
+      ],
+      "callback": [
+        "Block 22의 김원재 외환 사전 심사 메모가 SableWorks 통화 압박 자료로 회수됨",
+        "Block 22의 SableWorks 다음 선적분 할인권 손실 회피 자료가 SPV/D-RN 귀속 확인서 초안으로 확장됨",
+        "Block 21의 supplier debit note 원본 제한 열람권이 부분 인정 메일의 근거로 회수됨",
+        "Block 20의 D-RN 리퍼브 60일 우선 판매권이 refurbished channel allocation 문구의 배경이 됨",
+        "Block 19의 D-RN 외부 운영 정산 코드가 할인권 귀속 라인의 수익 계정으로 회수됨"
+      ],
+      "emotional_beat": {
+        "type": "partial_acknowledgment_to_rights_attribution",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "다온리테일 해외소싱팀 화상회의실 / 도윤권리운영 임시 사무공간 / 법무팀 검토 테이블 / 은행 외환 사전 심사 자료 화면",
+        "type": "회사 / SPV / 법무 / 은행 자료"
+      },
+      "time_span": {
+        "duration": "2일",
+        "in_story_time": "2026년 6월 넷째 주 후반"
+      },
+      "genre_ext": {
+        "capital_before": "supplier debit note 원본 열람 조건 + SableWorks 다음 선적분 할인권 손실 회피 자료 + 김원재 외환 사전 심사 메모 + SPV 달러 계좌 개설 사전 검토권 + 해외 정산 파일 검증 루트",
+        "capital_after": "SableWorks 정산 오류 부분 인정 메일 + 다음 선적분 할인권 SPV/D-RN 귀속 확인서 초안 + 우선 공급 협상 gate + 달러 계좌 정식 개설 서류 목록 + Aster Trading 계약 충돌 경고",
+        "capital_delta": "은행 외환 gate와 손실 회피 자료를 해외 공급사의 부분 인정, 할인권 귀속 문구, 우선 공급 협상 gate로 확장",
+        "profit_loss": "현금 환급은 없다. 다만 다음 선적분 할인권이 SPV/D-RN 원가 절감 evidence로 분리되면 리퍼브 반복 물량의 단가표와 수수료 산정에 직접 반영된다.",
+        "method": "supplier debit note 부분 인정 메일 확보, 다음 선적분 할인권 귀속 문구 설계, exclusive 요구 철회, priority review와 refurbished channel allocation으로 용어 낮추기, 은행 사전 심사 메모를 외부 검증 자료로 사용",
+        "deal_type": "공급사 부분 인정 / 할인권 귀속 receipt / 우선 공급 협상 gate",
+        "leverage_used": [
+          "김원재 외환 사전 심사 메모",
+          "SableWorks 다음 선적분 할인권 손실 회피 자료",
+          "supplier debit note 원본 열람 조건",
+          "D-RN 외부 운영 정산 코드",
+          "도윤권리운영 SPV 첫 계약 초안",
+          "D-RN 리퍼브 60일 우선 판매권"
+        ],
+        "opponent": {
+          "name": "SableWorks",
+          "type": "해외 공급사 / 정산 오류 부분 인정자",
+          "weakness_exploited": "정산 오류를 완전히 부정하지 못하는 상태에서, 독점권이 아닌 할인권 귀속 문구와 우선 공급 검토는 낮은 비용으로 내줄 수 있다는 점"
+        },
+        "time_pressure": "다음 선적분 PO가 확정되면 할인권이 다온 내부 매입가 조정으로 굳어지고, SPV/D-RN 귀속 문구를 끼워 넣기 어려워진다.",
+        "risk_level": "고위험",
+        "business_sector": "해외 공급사 협상 / supplier debit note / 다음 선적분 할인권 / 리퍼브 원가 / 우선 공급 gate",
+        "section_rotation": "부분 인정 메일을 현금 환급이 아니라 권리 귀속 문구로 환전한다",
+        "success_pattern": "SableWorks가 독점권은 거부하지만, 정산 오류 부분 인정 메일과 SPV/D-RN 할인권 귀속 확인서 초안, 우선 공급 협상 gate가 남는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "partial_acknowledgment_to_attribution_receipt",
+          "receipt_line": "'독점권은 아직 비쌉니다. 지금은 할인권이 제 원가로 들어온다는 문장만 사면 됩니다.'",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "SableWorks 정산 오류 부분 인정 메일",
+          "다음 선적분 할인권 SPV/D-RN 귀속 확인서 초안",
+          "우선 공급 협상 gate",
+          "달러 계좌 정식 개설 서류 목록",
+          "Aster Trading 계약 충돌 경고"
+        ],
+        "document_evidence": [
+          "SableWorks commercial adjustment 메일",
+          "supplier debit note 부분 인정 문구",
+          "다음 선적분 할인 적용 예정 PO draft",
+          "김원재 외환 사전 심사 메모",
+          "D-RN 리퍼브 원가 손실 회피 자료",
+          "Aster Trading 기존 공급 계약 언급 로그"
+        ],
+        "field_validation": [
+          "SableWorks는 현금 반환이 아니라 다음 선적분 할인만 제안",
+          "할인권은 기본적으로 다온리테일 PO에 적용됨",
+          "도윤권리운영은 수입자가 아니므로 직접 권리 인정이 거부됨",
+          "exclusive와 총판권은 기존 공급 계약 충돌로 거부됨",
+          "priority review와 refurbished channel allocation은 협상 가능한 낮은 저항 문구"
+        ],
+        "witness_carrier": [
+          "SableWorks 계약 담당자 엘레나 박의 부분 인정 발언",
+          "해외소싱팀장의 내부 매입가 조정 수락 시도",
+          "김원재 외환 사전 심사 메모",
+          "한규리의 priority review 문구 검토",
+          "Aster Trading 기존 계약 충돌 경고"
+        ],
+        "receipt": [
+          "SableWorks 정산 오류 부분 인정 메일",
+          "다음 선적분 할인권 SPV/D-RN 귀속 확인서 초안",
+          "우선 공급 협상 gate",
+          "달러 계좌 정식 개설 서류 목록",
+          "Aster Trading 계약 충돌 경고"
+        ],
+        "next_gate": "Aster Trading의 계약 무효 주장, SableWorks 기존 공급 계약 원본 gate, 달러 계좌 정식 개설 서류, Mira 초안 오류 가능성"
+      },
+      "foreshadow_targets": [
+        24,
+        25,
+        26,
+        27
+      ]
+    }
+  ]
+}

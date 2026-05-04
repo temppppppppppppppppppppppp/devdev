@@ -1,0 +1,176 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "30",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 030 draft only. Closes ARC-03 by securing conditional priority-channel rights and opening the logistics access-road file.",
+  "blocks": [
+    {
+      "block_id": "Block 30",
+      "block_no": 30,
+      "title": "총판권의 문턱",
+      "episode_span_intent": "2~6화 분량. SableWorks priority review 본회의, Aster의 cure volume 방어, 다온의 내부 흡수 시도, 90일 조건부 우선 검토권, 물류센터 출입로 권리 파일 오픈을 압축한다.",
+      "content": {
+        "context": "SableWorks priority review가 열린다. 안건 이름은 작다. Korea D-RN refurbishment-linked priority distribution condition review. 하지만 회의 참석자 명단에 도윤권리운영이 D-RN linked settlement operator로 올라간 순간, 도윤은 안다. 총판권 문 앞까지는 왔다. 문은 아직 열리지 않았다. Aster는 cure volume 계획서를 들고 온다. 앞으로 90일 안에 미달 물량을 채우겠다는 방어다. 다온 해외소싱팀은 도윤권리운영을 다온 내부 프로젝트 산출물로 묶자는 대체안을 준비한다.",
+        "event_villain": "첫 번째 사건은 Aster의 마지막 방어다. Aster는 최소 물량 미달을 인정하는 대신 cure volume 90일을 요구하고, 기존 importer field를 유지해야 할인권과 price protection이 안정된다고 주장한다. SableWorks는 리스크를 싫어한다. 바로 총판권을 도윤에게 줄 이유가 없다. 도윤은 반박 방향을 바꾼다. Aster를 밀어내자고 하지 않는다. 대신 Aster의 cure volume 기간 동안 D-RN 리퍼브 라인만 별도 조건표로 떼어내자고 제안한다. importer field는 건드리지 않되, D-RN refurb cost adjustment와 settlement verification은 도윤권리운영이 90일간 우선 검토한다.",
+        "second_incident": "두 번째 사건은 다온의 내부 흡수 시도다. 해외소싱팀은 도윤의 제안이 먹히는 걸 보자, 조건표의 운영 주체를 다온리테일 해외소싱TF로 바꾸려 한다. 도윤권리운영은 external operator가 아니라 TF evidence vendor로 적힌다. 도윤은 회의장에서 바로 계산표를 연다. 다온 TF가 운영 주체가 되면 SableWorks는 다시 Aster와 다온 사이에서만 조정하고, 도윤권리운영의 계좌, portal role, discrepancy report는 모두 내부 산출물이 된다. 도윤은 TF 참여를 거절하지 않는다. 대신 운영 주체와 감사 mirror를 분리한다. 다온은 audit carrier, 도윤권리운영은 D-RN linked priority channel reviewer다.",
+        "solution": "도윤은 full distributorship이라는 단어를 끝까지 꺼내지 않는다. 그는 조건표 네 줄만 요구한다. 첫째, 90일 동안 D-RN linked Korea priority channel 조건을 도윤권리운영이 우선 검토한다. 둘째, Aster cure volume이 실패하거나 D-RN cost adjustment가 두 번 이상 누락되면 SableWorks는 Korea channel 재배정 회의를 자동 개시한다. 셋째, 도윤권리운영의 제한용 달러 계좌와 supplier portal role은 review 기간 동안 유지된다. 넷째, 다음 검토 자료로 다온 물류센터의 해외 리퍼브 반입 슬롯과 출입로 병목 파일을 연다. SableWorks는 마지막 줄을 이상하게 여긴다. 도윤은 웃지 않는다. 총판 조건은 물류 없이는 비싸지지 않는다.",
+        "reward": "블록 끝에서 도윤은 총판권을 얻지 않는다. 대신 D-RN linked Korea priority channel 조건표, 90일 조건부 우선 검토권, Aster cure volume 실패 시 Korea channel 재배정 자동 review clause, SableWorks portal role 90일 유지 확인, 물류센터 출입로 4.2미터 권리 파일 gate를 받는다. 해외소싱팀장이 묻는다. '총판권 앞에서 왜 도로 파일을 봅니까?' 도윤은 조건표 아래에 물류 슬롯 항목을 적는다. '물건이 못 들어오면 총판권은 장식입니다. 길부터 사야죠.'"
+      },
+      "stakes": "여기서 총판권을 무리하게 요구하면 SableWorks는 Aster의 cure volume 방어를 받아들이고 도윤을 evidence provider로 낮춘다. 반대로 90일 조건부 우선 검토권과 물류 gate를 확보하면, 도윤은 아직 작은 권리로 다음 arc의 병목권을 살 수 있다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "Aster가 cure volume 90일과 기존 importer field 유지로 총판권 재배정을 막으려 하자, 도윤이 D-RN 리퍼브 라인에 한정된 priority channel 조건표를 제안함",
+        "incident_2": "다온 해외소싱팀이 조건표 운영 주체를 내부 TF로 흡수하려 하자, 도윤이 다온은 audit carrier, 도윤권리운영은 D-RN linked priority channel reviewer로 분리함",
+        "next_actionable_gate": "ARC-03 21~30 자체 감리, 이후 물류센터 출입로 4.2미터 권리 파일, 감정평가사 최은호, 다온 물류본부, 한강디벨롭 gate",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 총판권이라는 큰 명패보다 조건표와 자동 review clause를 먼저 산다. 지금 감당 못 할 권리를 받으면 빼앗기기 쉽지만, 90일 조건부 우선 검토권과 물류 파일 접근권은 다음 권리를 사는 실탄이 된다.",
+        "morality_position": "Aster를 몰아내는 것이 목적이 아니다. Aster의 cure volume 방어를 이용해 도윤권리운영이 조건 검토자와 다음 병목 파일 접근자로 남는 것이 목적이다.",
+        "efficiency_choice": "full distributorship 요구를 포기하고 D-RN linked priority channel reviewer, 자동 재배정 review clause, 물류센터 출입로 파일 gate로 요구를 쪼개 통과시킨다."
+      },
+      "power_shift": {
+        "protagonist": "우선 총판 조건 검토석과 priority review agenda에 이름을 올린 조건 협상자 -> 90일 조건부 우선 검토권과 물류 병목 파일 gate를 가진 해외 채널 조건 운영자",
+        "antagonist": "Aster/해외소싱팀: cure volume과 내부 TF 흡수로 도윤을 밀어내려는 gatekeeper -> D-RN 한정 조건표와 자동 review clause를 받아야 하는 방어자",
+        "system": "priority supplier review agenda와 discrepancy report -> D-RN linked Korea priority channel 조건표, 90일 조건부 우선 검토권, 물류센터 출입로 권리 파일 gate"
+      },
+      "relationship_delta": [
+        {
+          "target": "SableWorks",
+          "before": "도윤권리운영을 D-RN linked settlement operator로 priority review agenda에 올리는 해외 공급사",
+          "after": "도윤권리운영에게 90일 조건부 우선 검토권과 D-RN linked Korea priority channel 조건표를 인정하는 해외 공급사"
+        },
+        {
+          "target": "Aster Trading",
+          "before": "importer field 잔존을 근거로 귀속을 주장하지만, 물량 미달과 귀속 미완료 discrepancy 때문에 priority review 압박을 받는 기존 수입사",
+          "after": "cure volume 90일을 얻지만 D-RN 라인과 자동 channel 재배정 review clause를 내주는 기존 수입사"
+        },
+        {
+          "target": "해외소싱팀",
+          "before": "할인 적용을 비용 절감으로 닫으려다 우선 총판 조건 검토석을 agenda에 반영해야 하는 내부 협상 carrier",
+          "after": "도윤권리운영을 내부 TF 산출물로 흡수하려다 audit carrier 지위만 받는 내부 부서"
+        },
+        {
+          "target": "한규리",
+          "before": "총판권이라는 넓은 단어를 우선 총판 조건 검토석으로 좁혀 통과 가능하게 만드는 법무 validator",
+          "after": "90일 조건부 우선 검토권과 자동 review clause를 문서화하는 법무 validator"
+        },
+        {
+          "target": "다온 물류본부",
+          "before": "해외 정산 arc 밖에 있던 다음 부서",
+          "after": "물류센터 출입로 4.2미터 권리 파일을 통해 다음 병목 gate로 올라오는 부서"
+        }
+      ],
+      "foreshadow": [
+        "물류센터 주 출입로 4.2미터 권리 파일",
+        "감정평가사 최은호의 출입로 가치 검증",
+        "한강디벨롭의 물류센터 개발 병목",
+        "Aster cure volume 90일 실패 가능성",
+        "총판권이 물류 슬롯과 결합되어 훗날 해외 확장에서 재사용되는 구조"
+      ],
+      "callback": [
+        "Block 29의 우선 총판 조건 검토석이 90일 조건부 우선 검토권으로 회수됨",
+        "Block 29의 discrepancy report가 자동 channel 재배정 review clause의 근거로 회수됨",
+        "Block 28의 supplier portal role이 90일 유지 확인으로 회수됨",
+        "Block 27의 제한용 달러 계좌 receipt가 review 기간 유지 조건으로 회수됨",
+        "Block 20의 D-RN 리퍼브 우선 판매권이 D-RN linked Korea priority channel 조건표로 확장됨"
+      ],
+      "emotional_beat": {
+        "type": "arc_close_with_next_bottleneck_gate",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "SableWorks 화상 priority review / 다온리테일 해외소싱팀 회의실 / 법무 검토실 / 다온 물류본부 공유 폴더",
+        "type": "해외 공급사 회의 / 해외소싱 / 법무 / 물류 파일 gate"
+      },
+      "time_span": {
+        "duration": "1주",
+        "in_story_time": "2026년 7월 넷째 주"
+      },
+      "genre_ext": {
+        "capital_before": "할인권 귀속 미완료 discrepancy report + D-RN 리퍼브 실적 packet + Aster 2차 이의 대응서 초안 + SableWorks priority supplier review agenda + 우선 총판 조건 검토석",
+        "capital_after": "D-RN linked Korea priority channel 조건표 + 90일 조건부 우선 검토권 + Aster cure volume 실패 시 Korea channel 재배정 자동 review clause + SableWorks portal role 90일 유지 확인 + 물류센터 출입로 4.2미터 권리 파일 gate",
+        "capital_delta": "priority review 좌석과 discrepancy report를 90일 조건부 우선 검토권, 자동 재배정 review clause, 다음 물류 병목 파일 접근권으로 전환",
+        "profit_loss": "현금 수익은 없다. 하지만 도윤권리운영은 총판권 직전 조건표를 손에 넣고, 다음 arc의 물류 병목권을 볼 파일 gate를 얻는다.",
+        "method": "Aster cure volume 방어 수용, D-RN 한정 조건표 분리, 내부 TF 흡수 시도 차단, audit carrier와 operator 분리, 자동 review clause 삽입, 물류센터 출입로 파일을 다음 검토 자료로 요구",
+        "deal_type": "ARC close / conditional priority channel / logistics gate",
+        "leverage_used": [
+          "할인권 귀속 미완료 discrepancy report",
+          "D-RN 리퍼브 실적 packet",
+          "Aster 2차 이의 대응서 초안",
+          "SableWorks priority supplier review agenda",
+          "우선 총판 조건 검토석",
+          "SableWorks supplier portal role",
+          "도윤권리운영 제한용 달러 계좌 receipt"
+        ],
+        "opponent": {
+          "name": "Aster Trading/해외소싱팀",
+          "type": "기존 수입사 / 내부 흡수자",
+          "weakness_exploited": "Aster는 cure volume을 얻는 대신 D-RN 라인 예외를 내줄 수밖에 없고, 다온은 감사 로그를 유지해야 해서 도윤권리운영의 operator 지위를 완전히 흡수하기 어렵다는 점"
+        },
+        "time_pressure": "Aster cure volume 계획이 SableWorks에 승인되기 전에 D-RN linked 조건표와 자동 review clause를 agenda에 박아야 한다.",
+        "risk_level": "고위험",
+        "business_sector": "해외 총판 조건 / priority channel / cure volume / D-RN 리퍼브 / 물류센터 출입로",
+        "section_rotation": "해외 정산 arc를 완전 총판권이 아니라 조건부 priority channel과 물류 병목 gate로 닫는다",
+        "success_pattern": "D-RN linked Korea priority channel 조건표, 90일 조건부 우선 검토권, 자동 channel 재배정 review clause, SableWorks portal role 90일 유지 확인, 물류센터 출입로 파일 gate가 남는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "conditional_priority_channel_and_logistics_gate",
+          "receipt_line": "'물건이 못 들어오면 총판권은 장식입니다. 길부터 사야죠.'",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "D-RN linked Korea priority channel 조건표",
+          "90일 조건부 우선 검토권",
+          "Aster cure volume 실패 시 Korea channel 재배정 자동 review clause",
+          "SableWorks portal role 90일 유지 확인",
+          "물류센터 출입로 4.2미터 권리 파일 gate"
+        ],
+        "document_evidence": [
+          "SableWorks priority review minutes",
+          "Aster cure volume 90일 계획서",
+          "D-RN linked Korea priority channel 조건표",
+          "자동 channel 재배정 review clause 초안",
+          "SableWorks portal role 유지 확인 메일",
+          "다온 해외소싱TF 흡수안",
+          "물류센터 출입로 4.2미터 권리 파일 목록"
+        ],
+        "field_validation": [
+          "총판권은 아직 수여되지 않음",
+          "도윤권리운영은 90일 동안 D-RN linked priority channel 조건을 우선 검토함",
+          "Aster cure volume 실패 또는 D-RN cost adjustment 반복 누락 시 Korea channel 재배정 회의가 자동 개시됨",
+          "다온은 audit carrier로 남고 도윤권리운영은 operator/reviewer로 분리됨",
+          "다음 권리 사냥 대상은 물류센터 출입로 4.2미터 병목 파일임"
+        ],
+        "witness_carrier": [
+          "SableWorks review minutes",
+          "한규리의 자동 review clause 검토 메모",
+          "해외소싱팀의 내부 TF 흡수안",
+          "Aster cure volume 계획서",
+          "다온 물류본부 공유 폴더 초대 기록"
+        ],
+        "receipt": [
+          "D-RN linked Korea priority channel 조건표",
+          "90일 조건부 우선 검토권",
+          "Aster cure volume 실패 시 Korea channel 재배정 자동 review clause",
+          "SableWorks portal role 90일 유지 확인",
+          "물류센터 출입로 4.2미터 권리 파일 gate"
+        ],
+        "next_gate": "ARC-03 21~30 자체 감리, 이후 물류센터 출입로 4.2미터 권리 파일, 감정평가사 최은호, 다온 물류본부, 한강디벨롭 gate"
+      },
+      "foreshadow_targets": [
+        31,
+        32,
+        35,
+        62
+      ]
+    }
+  ]
+}

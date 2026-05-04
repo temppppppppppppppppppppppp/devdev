@@ -1,8 +1,8 @@
 # taegeon_group_heir_90day BI Waiting Room
 
 Date: 2026-05-01
-Status: waiting-room candidate; adversarial audit YELLOW
-Verdict: `YELLOW_REPAIR_REQUIRED_BEFORE_ROOT_PROMOTION`
+Status: waiting-room candidate; root-promotion blocker repaired
+Verdict: `PASS_ROOT_PROMOTION_READY_WAITING_ROOM_ONLY`
 
 ## Files
 
@@ -11,7 +11,8 @@ Verdict: `YELLOW_REPAIR_REQUIRED_BEFORE_ROOT_PROMOTION`
 - source TR handoff gate: `treatments/audit_reports/taegeon_group_heir_90day_source_tr_handoff_gate.md`
 - BI 5-pass audit: `bible/audit_reports/taegeon_group_heir_90day_bi_5pass.md`
 - promotion readiness: `docs/2026-05-01/taegeon_group_heir_90day_promotion_readiness_3pass.md`
-- opening production packet: prior planning artifact only; prose generation remains blocked until BI/TR P1 repairs close
+- blocker repair audit: `bible/_waiting_room/2026-05-01_taegeon_group_heir_90day/taegeon_group_heir_90day_root_promotion_blocker_repair_audit.md`
+- opening production packet: prior planning artifact only; no prose generation was performed in this repair wave
 
 ## Root Shelf Rule
 
@@ -21,6 +22,7 @@ This BI remains in the waiting room until a separate root-shelf promotion wave c
 ## 2026-05-01 Adversarial Audit
 
 - Report: `docs/2026-05-01/taegeon_group_heir_90day_bi_tr_adversarial_3pass.md`
-- Verdict: `YELLOW_REPAIR_REQUIRED_BEFORE_ROOT_PROMOTION`
-- Root promotion: blocked until P1 repairs close.
-- Prose generation: blocked; manuscript drafts were deleted per user request.
+- Repair report: `bible/_waiting_room/2026-05-01_taegeon_group_heir_90day/taegeon_group_heir_90day_root_promotion_blocker_repair_audit.md`
+- Verdict: `PASS_ROOT_PROMOTION_READY_WAITING_ROOM_ONLY`
+- Root promotion: ready as waiting-room pair; not executed.
+- Prose generation: not performed in this wave.

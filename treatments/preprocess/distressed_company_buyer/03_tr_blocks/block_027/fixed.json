@@ -1,0 +1,141 @@
+{
+  "block_id": "Block 27",
+  "title": "식자재 계정 잠금",
+  "content": {
+    "context": "구매위원회가 요구한 3개 사업장 공동구매 발주 계획을 만들려면 동원푸드넷의 공급사 확인서가 필요하다. 그런데 월요일 발주 전날 밤, 공동구매 계정이 다시 잠긴다. 서림초, 은성재활병원, 성우전자 보조 라인을 한 계정에 묶는 순간, 동원푸드넷 채권관리팀이 과거 연체 리스크가 커졌다며 조건을 뒤집은 것이다. 도윤은 놀라지 않는다. 계정은 한 번 풀렸다고 살아나는 게 아니라, 주문량이 커질 때마다 다시 가격을 요구한다.",
+    "event_villain": "동원푸드넷은 3개 사업장 발주를 받으려면 87일 연체액 일부를 선상환하고, 해문푸드서비스 대표 개인 보증을 추가하라고 통보한다. 명성급식은 공급사에 3개월 독점 발주를 제안하며 해문푸드서비스 계정을 완전히 끊으라고 흔든다. 해문푸드서비스 대표는 다시 도윤에게 일부 채무를 대신 막자고 조른다. 월요일 오전 발주 마감까지 남은 시간은 11시간, 계정이 잠긴 채로는 구매위원회 제출용 공급사 확인서도 못 받는다.",
+    "solution": "도윤은 채무 대납을 거절한다. 대신 계정의 소유권이 아니라 신규 발주의 구매대행권을 산다. 조건은 네 가지다. 첫째, 3개 사업장 신규 발주는 SPV escrow 선결제로만 넣는다. 둘째, 과거채무 분리확인서를 기존 2주 코드에서 3개 사업장 발주 계획까지 확장한다. 셋째, 18개 필수 품목 중 가격 변동이 큰 6개 품목에는 margin cap을 건다. 넷째, 동원푸드넷은 해문푸드서비스 계정이 아니라 도윤의 SPV 구매대행 코드로 공급사 확인서를 발급한다. 도윤은 대표에게 말한다. '빚을 갚으면 당신 회사가 살아납니다. 구매대행권을 사면 내 계약이 살아납니다.'",
+    "reward": "동원푸드넷은 과거 연체를 포기하지 않는다. 하지만 3개 사업장 신규 발주에 한해 SPV 구매대행 코드를 열고, 서림초, 은성재활병원, 성우전자 보조 라인에 대한 1주차 발주 확인서를 발급한다. 6개 변동 품목에는 margin cap이 붙고, 과거채무 분리확인서는 3개 사업장 계획까지 확장된다. 명성급식의 독점 발주 제안은 보류된다. 도윤은 공동구매 계정을 되찾은 게 아니다. 그는 더 싼 방식으로 현재 발주의 목줄을 잡았다."
+  },
+  "incident_beats": [
+    "월요일 발주 전날 동원푸드넷이 3개 사업장 발주를 이유로 공동구매 계정을 재동결하고 과거 연체 일부 선상환과 대표 개인보증을 요구한다",
+    "도윤이 채무 대납을 거부하고 SPV escrow 선결제, 과거채무 분리확인서 확장, 6개 품목 margin cap, 3개 사업장 구매대행 코드와 공급사 확인서 receipt를 확보한다"
+  ],
+  "stakes": "도윤이 과거 연체를 대신 갚으면 해문푸드서비스의 부실채무를 떠안는다. 그러나 계정 재동결을 풀지 못하면 구매위원회 제출 조건인 3개 사업장 공동구매 발주 계획과 공급사 확인서가 사라지고, 제한입찰 참석권도 빈 종이가 된다.",
+  "power_shift": {
+    "protagonist": "구매위원회 테이블에 앉은 public-procurement operator에서 신규 발주권의 결제와 margin을 직접 통제하는 purchasing-control operator로 이동한다.",
+    "antagonist": "동원푸드넷과 명성급식은 과거 연체와 독점 발주로 계정을 봉쇄하려 하지만, 도윤이 계정 소유권 대신 신규 발주 구매대행권을 분리하면서 현재 주문 흐름을 완전히 빼앗지는 못한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "동원푸드넷 채권관리팀",
+      "before": "3개 사업장 발주를 빌미로 공동구매 계정을 재동결하고 과거 연체 선상환과 개인보증을 요구하는 공급사 gatekeeper",
+      "after": "SPV escrow 선결제와 margin cap을 받고 3개 사업장 구매대행 코드와 공급사 확인서를 발급한다",
+      "continuity_anchor_before": "SPV escrow 선입금과 과거채무 분리 확인서를 받고 2주 조건부 공동구매 코드를 연다"
+    },
+    {
+      "target": "해문푸드서비스 대표",
+      "before": "일부 채무 대납으로 계정을 살리자고 조르는 대표",
+      "after": "도윤이 채무 대납을 거절하고 구매대행권만 가져가자 회사 통제권이 더 줄어든 것을 체감한다",
+      "continuity_anchor_before": "정식 승인은 못 얻었지만 자격탈락을 피하고 다음 회의 제출 조건을 받아들인다"
+    },
+    {
+      "target": "명성급식",
+      "before": "동원푸드넷에 3개월 독점 발주를 제안하며 해문푸드서비스 계정 차단을 노리는 경쟁 급식업체",
+      "after": "도윤의 SPV 구매대행 코드 때문에 독점 발주 제안이 즉시 채택되지 못한다",
+      "continuity_anchor_before": "프레임은 남기지만 외부 접수번호와 공개 문서 날짜 때문에 즉시 탈락 사유로 만들지 못한다"
+    },
+    {
+      "target": "공동 구매위원회",
+      "before": "3개 사업장 공동구매 발주 계획과 공급사 확인서를 다음 회의 조건으로 요구한 심사 주체",
+      "after": "SPV 구매대행 코드, 1주차 발주 확인서, margin cap이 붙은 공급사 확인서를 받을 준비가 된다",
+      "continuity_anchor_before": "책임 순서표와 공개 receipt 패킷을 회의록에 첨부하고 4주 제한입찰 참석권을 부여한다"
+    }
+  ],
+  "foreshadow": [
+    "3개 사업장 구매대행 코드와 공급사 확인서는 후속 국면 위생점검 전날 실제 납품 품목과 폐기 품목을 가르는 기준이 된다.",
+    "6개 변동 품목 margin cap은 후속 국면 운전자금 한도 산정에서 원가 안정 proof로 쓰인다.",
+    "해문푸드서비스 대표의 통제권 축소 불만은 해당 아크 후반 운영진 책임전가로 다시 돌아온다.",
+    "명성급식의 독점 발주 제안 보류는 제한입찰 본게임에서 가격 압박으로 커진다."
+  ],
+  "callback": [
+    "후속 국면의 3개 사업장 공동구매 발주 계획 및 공급사 확인서 제출 조건을 직접 회수한다.",
+    "후속 국면의 과거채무 비인수 원칙과 SPV escrow waterfall을 3개 사업장 구매대행 코드로 확장한다.",
+    "후속 국면의 lockbox와 factoring 예비 term sheet를 공급사에 결제 안정 proof로 제시한다.",
+    "후속 국면의 서림초 PO, 후속 국면의 은성재활병원 시험식, 후속 국면의 성우전자 emergency PO를 3개 사업장 발주 계획의 기반으로 묶는다."
+  ],
+  "emotional_beat": {
+    "type": "purchase_control_cider",
+    "intensity": 8
+  },
+  "tension_level": 8,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "동원푸드넷 야간 채권관리 콜 / 해문푸드서비스 data-room / SPV escrow 결제 화면",
+    "type": "supplier account relock and purchase-agency negotiation"
+  },
+  "time_span": {
+    "duration": "11시간",
+    "in_story_time": "구매위원회 자격심사 다음 날 밤부터 월요일 발주 마감 전까지"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "4주 제한입찰 참석권 / 구매위원회 회의록 첨부 공개 receipt 패킷 / 책임 순서표 접수 / 내부정보 프레임 자격탈락 보류 / 3개 사업장 공동구매 발주 계획 제출 조건 / 공급사 확인서 제출 조건",
+    "capital_after": "3개 사업장 SPV 구매대행 코드 / 서림초·은성재활병원·성우전자 1주차 발주 확인서 / 6개 변동 품목 margin cap / 3개 사업장 과거채무 분리확인서 / 공급사 확인서 / 명성급식 독점 발주 제안 보류",
+    "capital_delta": "0억",
+    "profit_loss": "과거 연체 대납 없음, 신규 발주 선결제 부담과 구매대행권 및 margin control 확보",
+    "method": "잠긴 공동구매 계정 자체를 되찾지 않고 신규 발주의 결제권, 구매대행 코드, 품목별 margin cap을 분리해 산다.",
+    "investment_type": "distressed cafeteria purchase-agency control",
+    "deal_type": "supplier account relock defense / purchase-agency code / margin cap",
+    "leverage_used": [
+      "3개 사업장 공동구매 발주 계획 제출 조건",
+      "공급사 확인서 제출 조건",
+      "SPV escrow 선결제",
+      "과거채무 비인수 확인서",
+      "lockbox 입금 계좌",
+      "factoring 예비 term sheet",
+      "서림초 4주 제한 PO",
+      "은성재활병원 1주 시험식 approval",
+      "성우전자 emergency PO"
+    ],
+    "opponent": {
+      "name": "동원푸드넷 채권관리팀 / 명성급식 / 해문푸드서비스 대표",
+      "type": "supplier credit squeeze, competitor exclusive-order bid, and distressed debtor pressure",
+      "weakness_exploited": "공급사는 과거 연체를 회수하고 싶지만, SPV 선결제와 margin cap이 붙은 신규 발주는 독점 발주보다 즉시 현금화 가능성이 높다"
+    },
+    "historical_event": null,
+    "time_pressure": "월요일 발주 마감 11시간 안에 구매대행 코드와 공급사 확인서를 확보해야 구매위원회 제출 조건을 살릴 수 있다.",
+    "knowledge_used": "회귀 전 해문푸드서비스의 공동구매 계정은 소유권보다 구매대행 코드와 품목별 margin cap이 실제 운영권을 만들었다는 기억",
+    "risk_level": "고위험",
+    "business_sector": "식자재 공동구매 / 공급사 credit / 구매대행 / 급식 운영 / margin control",
+    "section_rotation": "급식 계약은 느리게 끊기지 않는다",
+    "success_pattern": "과거채무 대납을 거부하고 현재 발주의 구매대행권과 margin control만 확보",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "purchase_agency_control_receipt",
+      "receipt_line": "3개 사업장 SPV 구매대행 코드, 1주차 발주 확인서, 6개 변동 품목 margin cap, 3개 사업장 과거채무 분리확인서, 공급사 확인서, 명성급식 독점 발주 제안 보류 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 공급사 계정은 발주 규모가 커지는 순간 다시 잠겼고, 실제 돈이 된 것은 공동구매 계정 명의가 아니라 SPV 구매대행 코드였다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 인수자는 3개 사업장 발주를 살리려고 과거 연체 일부를 대납했고, 이후에도 공급사에게 계속 끌려다녔다.",
+      "changed_event": "이번에는 도윤이 채무 대납을 거절하고 신규 발주 선결제와 구매대행 코드로 현재 주문권만 통제한다.",
+      "ripple_effect": "해문푸드서비스의 과거 빚은 남지만, 도윤은 3개 사업장 운영에 필요한 식자재 구매권과 margin cap을 손에 넣는다."
+    },
+    "death_flag": {
+      "avoided": "공급사 계정을 살리려다 과거 연체와 개인보증까지 떠안아 구매위원회 proof가 부채 함정으로 바뀌는 미래",
+      "method": "SPV 구매대행 코드, 선결제, 과거채무 분리확인서, margin cap으로 신규 발주권만 분리한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 계정 재동결 통보가 오기 전부터 3개 사업장 구매대행 코드 문안을 준비해 둔다.",
+      "suspicion_from": "동원푸드넷 채권관리팀과 해문푸드서비스 대표"
+    },
+    "future_prep": {
+      "action": "3개 사업장 구매대행 코드와 공급사 확인서를 위생점검 전날 실제 폐기·대체 납품 기준으로 사용한다.",
+      "target_event": "후속 국면 위생점검 전날 밤"
+    }
+  },
+  "block_no": 27,
+  "foreshadow_targets": [
+    28,
+    29
+  ]
+}

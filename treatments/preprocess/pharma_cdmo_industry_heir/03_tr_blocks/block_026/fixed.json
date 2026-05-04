@@ -40,14 +40,14 @@
     }
   ],
   "foreshadow": [
-    "익명 벤치마크 재사용권은 Block 027 병원 연합 구매회의에서 다른 병원을 묶는 미끼가 된다.",
-    "월 사용료 계약은 Block 030 표준 청구서에서 데이터 검증료 항목으로 고정된다.",
-    "3개월 성과 검증 압박은 Block 029 데이터는 처방보다 빠르다에서 실제 품절 방지 성과로 검증된다."
+    "익명 벤치마크 재사용권은 병원 연합 구매회의에서 다른 병원을 묶는 미끼가 된다.",
+    "월 사용료 계약은 표준 청구서에서 데이터 검증료 항목으로 고정된다.",
+    "3개월 성과 검증 압박은 데이터는 처방보다 빠르다에서 실제 품절 방지 성과로 검증된다."
   ],
   "callback": [
-    "Block 025의 공식 질의번호와 구매위원회 안건 상정권이 계약 목적 조항으로 회수된다.",
-    "Block 024의 쿼리 로그 해시 제출권과 샌드박스 절차가 데이터 검증 계약의 감사 조항이 된다.",
-    "Block 023의 보험 문구 수정안이 병원 내부 사용권의 활용 범위로 묶인다."
+    "공식 질의번호와 구매위원회 안건 상정권이 계약 목적 조항으로 회수된다.",
+    "쿼리 로그 해시 제출권과 샌드박스 절차가 데이터 검증 계약의 감사 조항이 된다.",
+    "보험 문구 수정안이 병원 내부 사용권의 활용 범위로 묶인다."
   ],
   "emotional_beat": {
     "type": "first_recurring_revenue",
@@ -92,13 +92,67 @@
     "opening_progression": {
       "public_signboard_event": "사립병원 구매위원회가 보조품목 단가와 별개로 3개월 데이터 검증 계약을 체결한다",
       "representative_reevaluation": "병원은 태오바이오를 단순 납품사가 아니라 보험심사 자료와 구매 데이터를 관리하는 계약 사업자로 재분류한다",
-      "next_battlefield_ticket": "익명 벤치마크 재사용권이 Block 027 병원 연합 구매회의에서 다른 병원들을 끌어들이는 카드가 된다"
+      "next_battlefield_ticket": "익명 벤치마크 재사용권이 병원 연합 구매회의에서 다른 병원들을 끌어들이는 카드가 된다"
     },
     "block_cider": {
       "has_cider": true,
       "receipt_type": "recurring_data_contract_receipt",
       "receipt_line": "강태오는 첫 3개월 데이터 검증 계약, 월 사용료 800만 원, 태오바이오 양식 저작권, 익명 벤치마크 재사용권을 계약서에 박는다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "공짜 부속품이 될 뻔한 병원 데이터를 월 과금 계약과 양식 저작권으로 분리하는 계약 승리",
+      "recognition_signal": "사립병원 구매이사의 시선 변화: 보조품목 단가 동결을 얻는 대신 3개월 데이터 검증 계약과 월 사용료를 승인한다",
+      "reward_signal": "강태오는 첫 3개월 데이터 검증 계약, 월 사용료 800만 원, 태오바이오 양식 저작권, 익명 벤치마크 재사용권을 계약서에 박는다.",
+      "growth_signal": "강태오는 단가를 양보하는 대신 데이터 사용료와 양식 권리를 분리해 첫 월 과금 계약을 얻는다.",
+      "expectation_signal": "익명 벤치마크 재사용권이 병원 연합 구매회의에서 다른 병원들을 끌어들이는 카드가 된다",
+      "reader_feel": "독자는 「첫 데이터 계약」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 첫 3개월 데이터 검증 계약, 월 사용료 800만 원, 태오바이오 양식 저작권, 익명 벤치마크 재사용권을 계약서에 박는다. 성장 장면: 강태오는 단가를 양보하는 대신 데이터 사용료와 양식 권리를 분리해 첫 월 과금 계약을 얻는다. 다음 기대감: 익명 벤치마크 재사용권이 병원 연합 구매회의에서 다른 병원들을 끌어들이는 카드가 된다",
+      "mature_success_signal": "강태오는 첫 데이터 계약의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "공짜 부속품이 될 뻔한 병원 데이터를 월 과금 계약과 양식 저작권으로 분리하는 계약 승리",
+        "recognition": "사립병원 구매이사의 시선 변화: 보조품목 단가 동결을 얻는 대신 3개월 데이터 검증 계약과 월 사용료를 승인한다",
+        "reward": "강태오는 첫 3개월 데이터 검증 계약, 월 사용료 800만 원, 태오바이오 양식 저작권, 익명 벤치마크 재사용권을 계약서에 박는다.",
+        "growth": "강태오는 단가를 양보하는 대신 데이터 사용료와 양식 권리를 분리해 첫 월 과금 계약을 얻는다.",
+        "expectation": "익명 벤치마크 재사용권이 병원 연합 구매회의에서 다른 병원들을 끌어들이는 카드가 된다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 사립병원 구매이사의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 익명 벤치마크 재사용권이 병원 연합 구매회의에서 다른 병원들을 끌어들이는 카드가 된다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "공식 질의번호가 나오자 사립병원 구매위원회가 태오바이오를 부른다. 겉으로는 우선공급 예측표 검토 회의지만 실제 안건은 따로 있다. 병원은 품절 시간대, 폐기율 정산표, 쿼리 로그 해시를 계속 쓰고 싶어 한다. 다만 돈은 납품 단가 안에 포함시키려 한다. 강태오는 계약서 첫 줄을 본 순간 안다.",
+      "proof_action": "태오는 단가 인상을 요구하지 않는다. 오히려 보조품목 단가는 그대로 두겠다고 한다. 대신 계약서를 둘로 쪼갠다. 물품 공급 계약과 데이터 검증 계약이다. 데이터 검증 계약에는 월 사용료 800만 원, 병원 내부 사용권, 태오바이오 양식 저작권, 쿼리 로그 해시의 외부 제출권, 익명 벤치마크 재사용권을 넣는다.",
+      "proof_axis": "전생에서 데이터 산출물을 물품 단가에 묶는 순간 이후 모든 병원이 무료 부속품으로 요구했다는 기억",
+      "recognition_or_resistance_signal": "사립병원 구매이사 -> 보조품목 단가 동결을 얻는 대신 3개월 데이터 검증 계약과 월 사용료를 승인한다",
+      "receipt_asset": "강태오는 첫 3개월 데이터 검증 계약, 월 사용료 800만 원, 태오바이오 양식 저작권, 익명 벤치마크 재사용권을 계약서에 박는다.",
+      "reward_asset_classes": [
+        "rights_control_asset"
+      ],
+      "next_regulated_gate": "익명 벤치마크 재사용권이 병원 연합 구매회의에서 다른 병원들을 끌어들이는 카드가 된다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 사립병원 구매이사의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 익명 벤치마크 재사용권이 병원 연합 구매회의에서 다른 병원들을 끌어들이는 카드가 된다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {

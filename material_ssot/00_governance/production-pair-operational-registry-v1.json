@@ -1,25 +1,40 @@
 {
   "_schema_version": "production_pair_operational_registry.v1",
-  "updated_at": "2026-04-29",
+  "updated_at": "2026-05-02",
   "notes": [
+    "2026-05-02: immediate deployment work_guard metadata alignment added explicit registry work_guard paths for golden_canary_deepclone_probe_a_fullblock_v1, distressed_asset_heir, and distressed_company_buyer; all immediate rows now have existing work_guard files recorded.",
+    "2026-05-02 healthy_heir_group_succession promoted to range-complete immediate_deployable_material after donor-review adoption, contamination guardrails, BIAmplificationPower, 70/70 reader payoff/pacing surfaces, strict normalization PASS, and named immediate-deployment closeout.",
+    "2026-05-02: healthy_heir_group_succession promoted to range-complete immediate_deployable_material by donor/pacing closeout.",
+    "utf8-hygiene: allow-file - legacy registry rows contain pre-existing mojibake aliases retained verbatim; do not normalize them without a separate evidence-backed cleanup order.",
     "Operational states here are durable governance overrides for the normalization runner.",
     "Benchmark freshness tracks whether a benchmark or bounded benchmark-preservation audit has been recorded after the latest material touch or regeneration.",
     "The 2026-04-08 benchmark freshness wave closed the then-current tracked pairs to benchmark_freshness=current, but later false-pass withdrawals may move a pair back to pending_refresh without deleting the historical alias snapshot.",
     "RED is terminal in current operator governance: negative exemplar archive, no repair budget, and do not reopen unless the governing law itself changes.",
     "Opening pacing triage is a separate operator field from benchmark_alias; YELLOW triage suspends opening exemplar use pending manual re-audit but does not automatically rewrite alias filenames.",
     "Benchmark_alias=GREENPLUS alone is not enough for current sell-in use. Operational deployable GREENPLUS now means quality-first top shelf: benchmark_freshness=current, opening pacing triage GREEN, no whole-run YELLOW/UNTRIAGED hold, no active repair/re-audit/hold note, and no remaining legacy-heuristic-only ambiguity on the opening claim.",
-    "2026-04-29 material-side immediate deployment overlay: current immediately deployable material is golden_canary_deepclone_probe_a_fullblock_v1 only, because it is the current pair with donor structure applied and visible. Other GREENPLUS/GREEN rows remain benchmark/reference inventory until donor structure is applied and recorded.",
+    "2026-05-01 material-side immediate deployment overlay: current immediately deployable materials are golden_canary_deepclone_probe_a_fullblock_v1 and distressed_asset_heir. Golden remains the donorized full-block gold sample; distressed_asset_heir is admitted as a donor-adopted distressed-asset business-power sample after named adversarial closeout. Other GREENPLUS/GREEN rows remain benchmark/reference inventory until donor structure is applied, recorded, and closed by named overlay promotion.",
+    "2026-05-02 material-side immediate deployment overlay: distressed_company_buyer is admitted as a third immediate-deployment material after explicit GREENPLUS benchmark preservation, BIAmplificationPower quality-up to P1 20/20, webnovel growth/reward quality-up, recognition/reward top-3 quality-up, foreshadow/callback consistency quality-up, blockwise success/reward/expectation audit, and donor-structure adversarial closeout. Current immediately deployable materials are golden_canary_deepclone_probe_a_fullblock_v1, distressed_asset_heir, and distressed_company_buyer.",
+    "2026-05-02 material-side immediate deployment overlay: venture_bubble_king_2000 is admitted as a fourth immediate-deployment material after explicit GREENPLUS benchmark preservation, BI guardrail/amplification quality-up, and donor-structure adversarial closeout. Current immediately deployable materials are golden_canary_deepclone_probe_a_fullblock_v1, distressed_asset_heir, distressed_company_buyer, and venture_bubble_king_2000.",
+    "2026-05-02 material-side immediate deployment overlay: telecom_gate_monopoly_1997 is admitted as a fifth immediate-deployment material after explicit GREENPLUS pair benchmark, strict normalization repair, BI guardrail/amplification quality-up, and immediate-deployment adversarial 3x closeout. Current immediately deployable materials are golden_canary_deepclone_probe_a_fullblock_v1, distressed_asset_heir, distressed_company_buyer, venture_bubble_king_2000, and telecom_gate_monopoly_1997.",
+    "2026-05-02 material-side immediate deployment overlay: pharma_cdmo_industry_heir is admitted as a sixth immediate-deployment material after source TR handoff gate PASS, BI 5-pass PASS, GREENPLUS benchmark preservation, 70/70 reader-payoff ladder quality-up, promotion-target normalization PASS, and donor-structure adversarial closeout. Current immediately deployable materials are golden_canary_deepclone_probe_a_fullblock_v1, distressed_asset_heir, distressed_company_buyer, venture_bubble_king_2000, telecom_gate_monopoly_1997, and pharma_cdmo_industry_heir.",
+    "2026-05-02 downstream episode pacing range gate: admitted immediate-deployment rows keep their shelf identity, but rows without row-level range_complete remain pending downstream episode pacing hint attachment until a bounded audit records TR.blocks[*].genre_ext.downstream_episode_pacing_hint and MasterBible.plot_roadmap[*].genre_ext.downstream_episode_pacing_hint coverage.",
     "2026-04-12 explicit closeout wave promoted pair01, office_checkup_next_day, chaebol_ent_empire, pantech_cyworld_reborn, and wuxia_heavenly_physician to deployable GREENPLUS under the then-current quality shelf law; this does not by itself clear the 2026-04-29 immediate material-deployment overlay.",
-    "2026-04-20 initial benchmark plus explicit manual closeout admitted golden_canary_deepclone_probe_a_fullblock_v1 as deployable GREENPLUS. The benchmark quality shelf still records the historical closeouts, while immediate material deployment currently reads 1: golden_canary_deepclone_probe_a_fullblock_v1.",
+    "2026-04-20 initial benchmark plus explicit manual closeout admitted golden_canary_deepclone_probe_a_fullblock_v1 as deployable GREENPLUS. 2026-05-01 adversarial closeout admitted distressed_asset_heir as the second immediate material-deployment row. The benchmark quality shelf still records historical closeouts separately from the immediate deployment overlay.",
     "2026-04-10 chaebol_allowance_zero is now explicitly classified as RED for live operation; keep the withdrawn GREENPLUS file only as a historical tombstone / anti-benchmark.",
     "2026-04-10 opening pacing triage operator result currently reads RED 3 / YELLOW 2 / GREEN 9 / UNTRIAGED 1 across the discoverable live TR inventory; incomplete B01~B10 opening windows are held as UNTRIAGED instead of being provisionally kept, the kill-first spot audit promoted jangyeongshil_industrial_revolution to RED while clearing pantech_cyworld_reborn out of kill-first, the forensic spot audit promoted jaebeol3se_loss_line to RED, the same-day targeted repair on chaebol_ent_empire moved its signboard from B09 to B08 and exited opening YELLOW, and the same-day bounded repair on pantech_cyworld_reborn moved its representative reevaluation from B10 to B02 and exited opening YELLOW.",
+    "2026-05-02 downstream episode pacing attachment closeout: distressed_asset_heir is range_complete after TR 70/70 and BI 70/70 downstream_episode_pacing_hint coverage, mismatch 0, missing block ids 0, UTF-8 PASS, and B071+ 0.",
     "2026-04-10 YELLOW split is now cost-first: office_checkup_next_day/smart_new_hire remain repair-first, while both temporary escalation queues are now resolved (jangyeongshil_industrial_revolution -> RED, jaebeol3se_loss_line -> RED). chaebol_ent_empire and pantech_cyworld_reborn left the current YELLOW shelf after same-day bounded repairs.",
     "2026-04-10 whole-run pacing re-audit on the prior opening-GREEN queue returned YELLOW 1 / GREEN 5 / UNTRIAGED 1; wuxia_heavenly_physician was whole-run YELLOW and africa_farm_king was whole-run UNTRIAGED pending more blocks. A same-day block-level manual spot audit on the remaining GREEN 5 found no additional downgrade case.",
     "2026-04-10 current YELLOW salvageability split now reads repair-worth-it 3 / kill-candidate 0 after chaebol_ent_empire and pantech_cyworld_reborn exited opening YELLOW via same-day bounded repairs, so no additional RED promotion was admitted from the present repair shelf.",
     "2026-04-11 bounded late-run pressure reinjection repair on wuxia_heavenly_physician moved B61/B65/B66 out of blank-opponent state, cleared whole-run pacing back to GREEN, and pushed benchmark_freshness to pending_refresh because the live TR was materially touched after the latest benchmark artifact.",
     "2026-04-11 bounded authority-first repair on office_checkup_next_day declared opening progression across B01~B10, aligned the live opening read to signboard B03 / reevaluation B05 / ticket B03, cleared late blank-opponent and endgame-low-stakes drag, and pushed benchmark_freshness to pending_refresh because the live TR was materially touched after the latest benchmark artifact.",
     "2026-04-10 deployable GREENPLUS closeout across the current benchmark_alias=GREENPLUS live shelf now reads deployable GREENPLUS 1 / historical-only GREENPLUS snapshot 5. defense_defect_engineer is the first current row admitted by explicit same-day closeout; use explicit registry closeout, not filename prestige, before any sales-facing exemplar claim.",
-    "2026-04-09 jangyeongshil_industrial_revolution record updated after TR Block 70 completion + bi_refresh + independent 7-Pass mechanical audit + independent 3-Pass philosophy audit (all PASS)."
+    "2026-04-09 jangyeongshil_industrial_revolution record updated after TR Block 70 completion + bi_refresh + independent 7-Pass mechanical audit + independent 3-Pass philosophy audit (all PASS).",
+    "2026-05-02 range gate closeout: golden_canary_deepclone_probe_a_fullblock_v1 is range_complete after downstream episode pacing hint attachment at TR.blocks[*].genre_ext.downstream_episode_pacing_hint and MasterBible.plot_roadmap[*].genre_ext.downstream_episode_pacing_hint, with TR 60/60, BI 60/60, mismatch 0, missing block ids [], and no B061+/B071+ expansion.",
+    "2026-05-02 shipbuilding_ocean_heir registry candidate admission: GREENPLUS_CANDIDATE after root TR/BI 70/70, source TR handoff PASS, BI 5-pass PASS, P0 6/6, P1 19/20, 70/70 same-block cider, and downstream_episode_pacing_hint attachment TR/BI 70/70; this candidate-only reading is superseded the same day by the immediate deployment admission note after donor-structure closeout and strict normalization repair.",
+    "2026-05-02 shipbuilding_ocean_heir immediate deployment admission: GREENPLUS after consistency 3-pass closed donor_review, contamination_guard, BIAmplificationPower, TR authority_chain, capital_delta 70/70, success_pattern 70/70, reader_payoff_ladder 70/70, webnovel_pacing_contract 70/70, strict normalization schema pass, and downstream range_complete TR/BI 70/70.",
+    "2026-05-02 healthy_heir_group_succession GREENPLUS consistency 3-pass audit: P0 6/6, P1 19/20, block_cider 70/70, BI 5-pass/contract PASS, opening and whole-run pacing GREEN, downstream range attachment TR/BI 70/70. Registry alias is GREENPLUS, but full immediate material deployment remains pending named donor-structure closeout.",
+    "2026-05-02 laid_off_cashflow_rights_operator immediate deployment admission: GREENPLUS after root TR/BI promotion, source TR handoff PASS, BI 5-pass PASS, range attachment TR/BI 70/70, 70/70 reader_payoff_ladder, 70/70 webnovel_pacing_contract, declared-contract opening GREEN, whole-run GREEN, strict normalization PASS, and named donor-structure closeout using generalized rights-operator donor law."
   ],
   "pairs": [
     {
@@ -209,6 +224,7 @@
       "benchmark_freshness": "current",
       "benchmark_artifact": "docs/2026-04-20/golden_canary_deepclone_probe_a_fullblock_v1_deployable_greenplus_closeout.md",
       "material_deployment_status": "immediate_deployable_material",
+      "range_attachment_status": "range_complete",
       "donor_structure_status": "applied_donorized_full_block_structure",
       "opening_pacing_triage": {
         "grade": "GREEN",
@@ -221,7 +237,676 @@
           "MANUAL-CLOSEOUT-PASS"
         ]
       },
-      "operator_note": "Benchmark-fresh unslotted live pair. The 2026-04-20 initial benchmark closes unbenchmarked -> current with P0 6/6, P1 19/20, and 60/60 same-block cider. The same-day manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B02/B03/B04/B06 receipt chain with the work-guard timing thresholds. Because the donorized full-block structure is applied and visible, this is the current immediate material-deployment sample."
+      "operator_note": "Benchmark-fresh unslotted live pair. The 2026-04-20 initial benchmark closes unbenchmarked -> current with P0 6/6, P1 19/20, and 60/60 same-block cider. The same-day manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B02/B03/B04/B06 receipt chain with the work-guard timing thresholds. Because the donorized full-block structure is applied and visible, this is the current immediate material-deployment sample. The 2026-05-02 downstream episode pacing hint attachment audit closes the range gate as range_complete with TR 60/60, BI 60/60, mismatch 0, and no B061+ or B071+ expansion.",
+      "downstream_episode_pacing_hint_artifact": "treatments/audit_reports/golden_canary_deepclone_probe_a_fullblock_v1_downstream_episode_pacing_hint_attachment_audit.md",
+      "pacing_hint_surface": {
+        "tr": "TR.blocks[*].genre_ext.downstream_episode_pacing_hint",
+        "bi": "MasterBible.plot_roadmap[*].genre_ext.downstream_episode_pacing_hint",
+        "coverage": {
+          "tr_coverage_count": "60/60",
+          "bi_mirror_count": "60/60",
+          "tr_bi_mismatch_count": 0,
+          "missing_block_ids": [],
+          "sealed_boundary": "Block 1~60",
+          "b061_plus_count": 0,
+          "b071_plus_count": 0,
+          "acceptable_range_distribution": {
+            "2": 1,
+            "3": 19,
+            "2-3": 22,
+            "3-4": 18
+          }
+        },
+        "audit": "treatments/audit_reports/golden_canary_deepclone_probe_a_fullblock_v1_downstream_episode_pacing_hint_attachment_audit.md"
+      },
+      "work_guard": "work_guards/golden_canary_deepclone_probe_a_fullblock_v1.yaml"
+    },
+    {
+      "work_id": "distressed_asset_heir",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "unslotted_live_pair",
+      "operational_state": "newly_touched_live_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "treatments/audit_reports/distressed_asset_heir_greenplus_benchmark_preservation_audit.md",
+      "material_deployment_status": "immediate_deployable_material",
+      "range_attachment_status": "range_complete",
+      "donor_structure_status": "donor_structure_overlay_promoted",
+      "deployment_artifact": "treatments/audit_reports/distressed_asset_heir_immediate_deployment_adversarial_closeout.md",
+      "opening_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "adversarial_overlay_closeout",
+        "artifact": "treatments/audit_reports/distressed_asset_heir_immediate_deployment_adversarial_closeout.md",
+        "opening_exemplar_use": "immediate_deployment_donor_overlay_closeout",
+        "trigger_codes": [
+          "P0-6-OF-6",
+          "FULL-CIDER-70-OF-70",
+          "BENCHMARK-PRESERVATION-PASS",
+          "DONOR-OVERLAY-CLOSEOUT-PASS"
+        ]
+      },
+      "operator_note": "Quality benchmark GREENPLUS after 2026-05-01 BI/TR cleanup and benchmark-preservation audit: P0 6/6, P1 17/20, 70/70 same-block cider, schema/consumability/BI 5-pass all PASS, no open migration debt. Opening pacing triage is GREEN with signboard B02, reevaluation B02/B03, and next-gate ticket B06. The 2026-05-01 immediate-deployment adversarial closeout promotes this row as a donor-adopted distressed-asset business-power sample; it does not replace the golden_canary donorized full-block gold sample and does not open non-promoted GREENPLUS rows. Downstream episode pacing hint attachment PASS on 2026-05-02: TR/BI 70/70, mismatch 0, missing block ids 0, range_complete immediate-use candidate; family and inheritance recognition remain pressure or reevaluation only, with reward engine anchored in rights/control/cash/status receipts.",
+      "downstream_episode_pacing_hint_artifact": "treatments/audit_reports/distressed_asset_heir_downstream_episode_pacing_hint_attachment_audit.md",
+      "pacing_hint_surface": {
+        "tr": "treatments/distressed_asset_heir_tr_block_070_draft.json::blocks[*].genre_ext.downstream_episode_pacing_hint",
+        "bi": "bible/0_bi_distressed_asset_heir.json::MasterBible.plot_roadmap[*].genre_ext.downstream_episode_pacing_hint",
+        "coverage": {
+          "tr": "70/70",
+          "bi": "70/70",
+          "tr_bi_mismatch_count": 0,
+          "missing_block_ids": 0
+        },
+        "audit": "treatments/audit_reports/distressed_asset_heir_downstream_episode_pacing_hint_attachment_audit.md"
+      },
+      "work_guard": "work_guards/distressed_asset_heir.yaml"
+    },
+    {
+      "work_id": "distressed_company_buyer",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "unslotted_live_pair",
+      "operational_state": "regenerated_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "treatments/audit_reports/distressed_company_buyer_greenplus_benchmark_preservation_audit.md",
+      "webnovel_fast_pacing_artifact": "treatments/audit_reports/distressed_company_buyer_fast_webnovel_pacing_contract_audit.md",
+      "material_deployment_status": "immediate_deployable_material",
+      "range_attachment_status": "range_complete",
+      "downstream_episode_pacing_hint_artifact": "treatments/audit_reports/distressed_company_buyer_downstream_episode_pacing_hint_attachment_audit.md",
+      "pacing_hint_surface": {
+        "tr": "TR.blocks[*].genre_ext.downstream_episode_pacing_hint",
+        "bi": "MasterBible.plot_roadmap[*].genre_ext.downstream_episode_pacing_hint",
+        "coverage": "70/70 TR blocks mirrored to 70/70 BI plot_roadmap blocks",
+        "audit": "treatments/audit_reports/distressed_company_buyer_downstream_episode_pacing_hint_attachment_audit.md"
+      },
+      "donor_structure_status": "adopted_and_recorded",
+      "opening_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "declared_contract",
+        "artifact": "treatments/audit_reports/distressed_company_buyer_immediate_deployment_adversarial_closeout.md",
+        "opening_exemplar_use": "deployable_greenplus_certified_manual_closeout",
+        "trigger_codes": [
+          "DECLARED-PASS",
+          "BENCHMARK-PRESERVATION-PASS",
+          "IMMEDIATE-DEPLOYMENT-PASS"
+        ]
+      },
+      "whole_run_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "whole_run_window_heuristic",
+        "artifact": "treatments/audit_reports/distressed_company_buyer_immediate_deployment_adversarial_closeout.md",
+        "trigger_codes": [
+          "WHOLE-RUN-PROVISIONAL-PASS"
+        ]
+      },
+      "operator_note": "Benchmark-fresh donor-adopted distressed-company rights-bundle business-power sample. GREENPLUS closeout reads P0 6/6, P1 20/20 after BIAmplificationPower, webnovel growth/reward quality-up, recognition/reward top-3 quality-up, foreshadow/callback consistency quality-up, blockwise success/reward/expectation audit, and fast webnovel pacing contract attachment; recognition_signal_blocks improved 25 -> 28, max_recognition_gap_streak 8 -> 5, unresolved_foreshadow_count 11 -> 0, and success_pattern/reward/block_cider/future_prep each remain 70/70. Fast pacing coverage is webnovel_pacing_contract 70/70 plus reader_payoff_ladder 70/70 in synced TR/BI plot roadmap, with checked producer-surface residue removed. Full-block cider remains 70/70, opening pacing GREEN at B02 signboard/reevaluation/ticket, whole-run pacing GREEN, schema pass, and no migration debt. Admitted as immediate material deployment by named donor-structure adversarial closeout; does not replace the donorized gold sample. Downstream episode pacing hint attachment is range_complete with TR/BI 70/70 mirror, mismatch 0, missing block ids 0, B071+ absent, and range distribution 2-3 x44 / 3-4 x26.",
+      "work_guard": "work_guards/distressed_company_buyer.yaml"
+    },
+    {
+      "work_id": "venture_bubble_king_2000",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "unslotted_live_pair",
+      "operational_state": "regenerated_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "treatments/audit_reports/venture_bubble_king_2000_greenplus_benchmark_preservation_audit.md",
+      "material_deployment_status": "immediate_deployable_material",
+      "range_attachment_status": "range_complete",
+      "downstream_episode_pacing_hint_artifact": "treatments/audit_reports/venture_bubble_king_2000_downstream_episode_pacing_hint_attachment_audit.md",
+      "pacing_hint_surface": {
+        "tr": "TR.blocks[*].genre_ext.downstream_episode_pacing_hint",
+        "bi": "MasterBible.plot_roadmap[*].genre_ext.downstream_episode_pacing_hint",
+        "coverage": "70/70 TR blocks mirrored to 70/70 BI plot_roadmap blocks",
+        "audit": "treatments/audit_reports/venture_bubble_king_2000_downstream_episode_pacing_hint_attachment_audit.md"
+      },
+      "donor_structure_status": "adopted_and_recorded",
+      "deployment_artifact": "treatments/audit_reports/venture_bubble_king_2000_immediate_deployment_adversarial_closeout.md",
+      "phase0_manifest": "treatments/phase0/venture_bubble_king_2000_phase0_design.json",
+      "tr_manifest": "material_ssot/50_tr/work-index/venture_bubble_king_2000.md",
+      "bi_manifest": "material_ssot/60_bi/work-index/venture_bubble_king_2000.md",
+      "work_guard": "work_guards/venture_bubble_king_2000.yaml",
+      "source_tr": "treatments/venture_bubble_king_2000_tr_block_070_draft.json",
+      "bi": "bible/0_bi_venture_bubble_king_2000.json",
+      "opening_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "declared_contract",
+        "artifact": "treatments/audit_reports/venture_bubble_king_2000_immediate_deployment_adversarial_closeout.md",
+        "opening_exemplar_use": "immediate_deployment_donor_overlay_closeout",
+        "trigger_codes": [
+          "DECLARED-PASS",
+          "BENCHMARK-PRESERVATION-PASS",
+          "IMMEDIATE-DEPLOYMENT-PASS"
+        ]
+      },
+      "whole_run_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "whole_run_window_heuristic",
+        "artifact": "treatments/audit_reports/venture_bubble_king_2000_immediate_deployment_adversarial_closeout.md",
+        "trigger_codes": [
+          "WHOLE-RUN-PROVISIONAL-PASS"
+        ]
+      },
+      "audit_trail": [
+        "treatments/audit_reports/venture_bubble_king_2000_bi_5pass_audit.md",
+        "treatments/audit_reports/venture_bubble_king_2000_greenplus_benchmark_preservation_audit.md",
+        "treatments/audit_reports/venture_bubble_king_2000_immediate_deployment_adversarial_closeout.md",
+        "treatments/audit_reports/venture_bubble_king_2000_greenplus_immediate_deployment_adversarial_3x_qualityup_audit.md",
+        "treatments/audit_reports/venture_bubble_king_2000_blockwise_growth_reward_greenplus_qualityup_3pass_audit.md",
+        "treatments/audit_reports/venture_bubble_king_2000_webnovel_payoff_pattern_greenplus_qualityup_3pass_audit.md",
+        "treatments/audit_reports/venture_bubble_king_2000_consistency_adversarial_3x_audit.md",
+        "treatments/audit_reports/venture_bubble_king_2000_fast_pacing_contract_greenplus_audit.md",
+        "treatments/audit_reports/venture_bubble_king_2000_downstream_episode_pacing_hint_attachment_audit.md"
+      ],
+      "operator_note": "Benchmark-fresh donor-adopted tech-rights / venture-bubble business-power sample. GREENPLUS closeout reads P0 6/6, P1 20/20 after BI guardrail/amplification quality-up, 70/70 has_cider:true, strict opening proof anchored in B02-B06, whole-run pacing GREEN, schema pass, and no migration debt. A follow-up 3x adversarial quality-up audit added B66-B69 reader-affinity bridges and removed nonstructural producer-surface ARC wording from TR/BI roadmap prose. Admitted as immediate material deployment by named donor-structure adversarial closeout; does not replace the donorized gold sample. A blockwise growth/reward GreenPlus quality-up now marks all 70 TR/BI plot blocks with reader_payoff_ladder, mature_success_signal, and payoff_check coverage; nonstructural lowercase arc wording and English-heavy section_rotation tags were cleaned for manuscript handoff. A further webnovel payoff-pattern quality-up now gives all 70 TR/BI plot blocks a writer-facing webnovel_payoff_pattern and block_end_mandate for success, recognition, reward, growth, and expectation. A consistency adversarial 3x audit now closes Phase0/work_guard/TR/BI/registry authority alignment, including work_guard wording, README immediate-deployment list, and BI handoff-surface cleanup. A fast pacing contract quality-up now attaches genre_ext.webnovel_pacing_contract to TR/BI 70/70 with traffic/proof -> rights capture -> cash/status receipt -> next platform gate. Downstream episode pacing hint attachment now mirrors TR/BI 70/70 with mismatch 0, missing block ids 0, B071+ absent, and range_attachment_status=range_complete.",
+      "adversarial_qualityup_artifact": "treatments/audit_reports/venture_bubble_king_2000_greenplus_immediate_deployment_adversarial_3x_qualityup_audit.md",
+      "blockwise_growth_reward_qualityup_artifact": "treatments/audit_reports/venture_bubble_king_2000_blockwise_growth_reward_greenplus_qualityup_3pass_audit.md",
+      "webnovel_payoff_pattern_qualityup_artifact": "treatments/audit_reports/venture_bubble_king_2000_webnovel_payoff_pattern_greenplus_qualityup_3pass_audit.md",
+      "consistency_adversarial_3x_artifact": "treatments/audit_reports/venture_bubble_king_2000_consistency_adversarial_3x_audit.md",
+      "fast_pacing_contract_artifact": "treatments/audit_reports/venture_bubble_king_2000_fast_pacing_contract_greenplus_audit.md",
+      "downstream_episode_pacing_hint_attachment_artifact": "treatments/audit_reports/venture_bubble_king_2000_downstream_episode_pacing_hint_attachment_audit.md"
+    },
+    {
+      "work_id": "telecom_gate_monopoly_1997",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "unslotted_live_pair",
+      "operational_state": "regenerated_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "treatments/audit_reports/telecom_gate_monopoly_1997_pair_greenplus_benchmark_audit.md",
+      "material_deployment_status": "immediate_deployable_material",
+      "range_attachment_status": "range_complete",
+      "downstream_episode_pacing_hint_artifact": "treatments/audit_reports/telecom_gate_monopoly_1997_downstream_episode_pacing_hint_range_attachment_audit.md",
+      "pacing_hint_surface": {
+        "tr": "treatments/telecom_gate_monopoly_1997_tr_block_001_draft.json::blocks[*].genre_ext.downstream_episode_pacing_hint",
+        "bi": "bible/0_bi_telecom_gate_monopoly_1997.json::MasterBible.plot_roadmap[*].genre_ext.downstream_episode_pacing_hint",
+        "coverage": {
+          "tr": "70/70",
+          "bi": "70/70",
+          "mismatch_count": 0,
+          "missing_block_ids": [],
+          "range_counts": {
+            "3-4": 33,
+            "2-3": 37
+          }
+        },
+        "audit": "treatments/audit_reports/telecom_gate_monopoly_1997_downstream_episode_pacing_hint_range_attachment_audit.md"
+      },
+      "donor_structure_status": "adopted_and_recorded",
+      "deployment_artifact": "treatments/audit_reports/telecom_gate_monopoly_1997_immediate_deployment_adversarial_3x_closeout.md",
+      "phase0_manifest": "treatments/phase0/telecom_gate_monopoly_1997_phase0_design.json",
+      "source_manifest": "treatments/preprocess/telecom_gate_monopoly_1997/source_manifest.json",
+      "work_guard": "work_guards/telecom_gate_monopoly_1997.yaml",
+      "source_tr": "treatments/telecom_gate_monopoly_1997_tr_block_001_draft.json",
+      "bi": "bible/0_bi_telecom_gate_monopoly_1997.json",
+      "opening_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "legacy_heuristic_plus_manual_closeout",
+        "artifact": "treatments/audit_reports/telecom_gate_monopoly_1997_immediate_deployment_adversarial_3x_closeout.md",
+        "opening_exemplar_use": "immediate_deployment_donor_overlay_closeout",
+        "trigger_codes": [
+          "LEGACY-PROVISIONAL-PASS",
+          "GREENPLUS-PASS",
+          "IMMEDIATE-DEPLOYMENT-PASS"
+        ]
+      },
+      "whole_run_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "whole_run_window_heuristic",
+        "artifact": "treatments/audit_reports/telecom_gate_monopoly_1997_immediate_deployment_adversarial_3x_closeout.md",
+        "trigger_codes": [
+          "WHOLE-RUN-PROVISIONAL-PASS"
+        ]
+      },
+      "audit_trail": [
+        "bible/audit_reports/telecom_gate_monopoly_1997_bi_5pass.md",
+        "treatments/audit_reports/telecom_gate_monopoly_1997_pair_greenplus_benchmark_audit.md",
+        "treatments/audit_reports/telecom_gate_monopoly_1997_pair_greenplus_adversarial_3x_audit.md",
+        "treatments/audit_reports/telecom_gate_monopoly_1997_immediate_deployment_adversarial_3x_closeout.md",
+        "treatments/audit_reports/telecom_gate_monopoly_1997_fast_webnovel_pacing_contract_audit.md",
+        "treatments/audit_reports/telecom_gate_monopoly_1997_downstream_episode_pacing_hint_range_attachment_audit.md",
+        "treatments/audit_reports/telecom_gate_monopoly_1997_immediate_greenplus_consistency_3pass_audit.md",
+        "treatments/audit_reports/telecom_gate_monopoly_1997_adversarial_consistency_reaudit_3x.md"
+      ],
+      "greenplus_consistency_audit": "treatments/audit_reports/telecom_gate_monopoly_1997_immediate_greenplus_consistency_3pass_audit.md",
+      "adversarial_consistency_reaudit_3x": "treatments/audit_reports/telecom_gate_monopoly_1997_adversarial_consistency_reaudit_3x.md",
+      "operator_note": "Benchmark-fresh donor-adopted telecom gate / billing-rights business-power sample. GREENPLUS pair closeout reads BI 5-pass PASS, 70/70 has_cider:true, opening pacing GREEN, whole-run pacing GREEN, strict normalization schema pass / tierA pass / tierB normalized, serialized canonical evidence, and no migration debt. Strict normalization repair added source-derived power_shift and relationship_delta to B013-B070 and resynchronized BI plot_roadmap. Phase0 and BI contamination_guard plus source_manifest donor_review keep donor law generalized only. Immediate-use rewards stay anchored in telecom operating rights, billing rights, settlement rights, data rights, distribution rights, and enterprise messaging hooks; family recognition never replaces the reward engine. Admitted as immediate material deployment by named 3x adversarial closeout; does not replace the donorized gold sample. Fast webnovel pacing contract is now attached 70/70 in TR/BI, with BIAmplificationPower carrying the global pressure-proof-action-receipt-next-gate rhythm. Downstream episode pacing hint attachment now mirrors TR/BI 70/70 with mismatch 0, missing block ids 0, B071+ absent, range counts 3-4=33 and 2-3=37, and range_attachment_status=range_complete. Immediate GREENPLUS consistency 3-pass re-audit and adversarial consistency re-audit 3x confirm the already-promoted row remains internally consistent after overlay and audit wording corrections."
+    },
+    {
+      "work_id": "pharma_cdmo_industry_heir",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "unslotted_live_pair",
+      "operational_state": "regenerated_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "treatments/audit_reports/pharma_cdmo_industry_heir_greenplus_benchmark_preservation_audit.md",
+      "material_deployment_status": "immediate_deployable_material",
+      "range_attachment_status": "range_complete",
+      "donor_structure_status": "adopted_and_recorded",
+      "deployment_artifact": "treatments/audit_reports/pharma_cdmo_industry_heir_immediate_deployment_adversarial_closeout.md",
+      "phase0_manifest": "treatments/phase0/pharma_cdmo_industry_heir_phase0_design.json",
+      "source_manifest": "treatments/preprocess/pharma_cdmo_industry_heir/source_manifest.json",
+      "tr_manifest": "material_ssot/50_tr/work-index/pharma_cdmo_industry_heir.md",
+      "bi_manifest": "material_ssot/60_bi/work-index/pharma_cdmo_industry_heir.md",
+      "work_guard": "work_guards/pharma_cdmo_industry_heir.yaml",
+      "source_tr": "treatments/pharma_cdmo_industry_heir_tr_block_070_draft.json",
+      "bi": "bible/0_bi_pharma_cdmo_industry_heir.json",
+      "opening_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "declared_contract",
+        "artifact": "treatments/audit_reports/pharma_cdmo_industry_heir_immediate_deployment_adversarial_closeout.md",
+        "opening_exemplar_use": "immediate_deployment_donor_overlay_closeout",
+        "trigger_codes": [
+          "DECLARED-PASS",
+          "BI-5PASS-PASS",
+          "GREENPLUS-PASS",
+          "IMMEDIATE-DEPLOYMENT-PASS"
+        ]
+      },
+      "whole_run_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "whole_run_window_heuristic",
+        "artifact": "treatments/audit_reports/pharma_cdmo_industry_heir_immediate_deployment_adversarial_closeout.md",
+        "trigger_codes": [
+          "WHOLE-RUN-PROVISIONAL-PASS"
+        ]
+      },
+      "audit_trail": [
+        "treatments/audit_reports/pharma_cdmo_industry_heir_source_tr_handoff_gate.md",
+        "treatments/audit_reports/pharma_cdmo_industry_heir_bi_5pass.md",
+        "treatments/audit_reports/pharma_cdmo_industry_heir_greenplus_benchmark_preservation_audit.md",
+        "treatments/audit_reports/pharma_cdmo_industry_heir_immediate_deployment_adversarial_closeout.md",
+        "treatments/audit_reports/pharma_cdmo_industry_heir_consistency_adversarial_3pass_audit.md",
+        "treatments/audit_reports/pharma_cdmo_industry_heir_webnovel_fast_pacing_contract_audit.md"
+      ],
+      "operator_note": "Benchmark-fresh donor-adopted pharma CDMO / industrial production-standard business-power sample. Source TR handoff gate PASS, BI 5-pass PASS, promotion-target normalization PASS, P0 6/6, P1 20/20, 70/70 has_cider:true, 70/70 reader_payoff_ladder, opening pacing GREEN, whole-run pacing GREEN, schema pass, and no open migration debt. Donor review is adopted and recorded in source_manifest; BI/TR surfaces translate the donor law into proof -> private receipt -> authority/access asset -> next gate without donor proper-noun contamination. Admitted as immediate material deployment by named donor-structure adversarial closeout; does not replace the donorized gold sample. Fast pacing attachment now adds 70/70 webnovel_pacing_contract in TR and BI plot_roadmap plus BIAmplificationPower.writer_facing_fast_pacing_engine, preserving 70/70 cider, 70/70 reader_payoff_ladder, and P1 20/20. Downstream episode pacing hint attachment PASS: TR 70/70, BI mirror 70/70, mismatch 0, missing block ids 0; registry range_attachment_status is range_complete.",
+      "webnovel_pacing_contract_artifact": "treatments/audit_reports/pharma_cdmo_industry_heir_webnovel_fast_pacing_contract_audit.md",
+      "pacing_surface": {
+        "tr": "TR.blocks[*].genre_ext.webnovel_pacing_contract",
+        "bi": "MasterBible.plot_roadmap[*].genre_ext.webnovel_pacing_contract",
+        "coverage": "70/70",
+        "bi_engine": "MasterBible.BIAmplificationPower.writer_facing_fast_pacing_engine"
+      },
+      "downstream_episode_pacing_hint_artifact": "treatments/audit_reports/pharma_cdmo_industry_heir_downstream_episode_pacing_hint_attachment_audit.md",
+      "pacing_hint_surface": {
+        "tr": "TR.blocks[*].genre_ext.downstream_episode_pacing_hint",
+        "bi": "MasterBible.plot_roadmap[*].genre_ext.downstream_episode_pacing_hint",
+        "coverage": "70/70",
+        "audit": "treatments/audit_reports/pharma_cdmo_industry_heir_downstream_episode_pacing_hint_attachment_audit.md"
+      }
+    },
+    {
+      "work_id": "power_grid_heir",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "unslotted_live_pair",
+      "operational_state": "newly_touched_live_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "treatments/audit_reports/power_grid_heir_greenplus_qualityup_adversarial_3x_audit.md",
+      "material_deployment_status": "immediate_deployable_material",
+      "range_attachment_status": "range_complete",
+      "range_attachment_audit": "treatments/audit_reports/power_grid_heir_downstream_episode_pacing_hint_attachment_audit.md",
+      "greenplus_immediate_use_candidate_consistency_audit": "treatments/audit_reports/power_grid_heir_greenplus_immediate_use_candidate_consistency_3pass_audit.md",
+      "immediate_overlay_status": "admitted_range_complete_immediate_material",
+      "donor_structure_status": "adopted_and_recorded",
+      "phase0_manifest": "treatments/phase0/power_grid_heir_phase0_design.json",
+      "tr_manifest": "material_ssot/50_tr/work-index/power_grid_heir.md",
+      "bi_manifest": "material_ssot/60_bi/work-index/power_grid_heir.md",
+      "work_guard": "work_guards/power_grid_heir.yaml",
+      "source_tr": "treatments/power_grid_heir_tr_block_070_draft.json",
+      "bi": "bible/0_bi_power_grid_heir.json",
+      "downstream_episode_pacing_hint": {
+        "tr_surface": "treatments/power_grid_heir_tr_block_070_draft.json::blocks[*].genre_ext.downstream_episode_pacing_hint",
+        "bi_surface": "bible/0_bi_power_grid_heir.json::MasterBible.plot_roadmap[*].genre_ext.downstream_episode_pacing_hint",
+        "coverage": {
+          "tr": "70/70",
+          "bi": "70/70",
+          "tr_bi_mismatch_count": 0,
+          "missing_block_ids": 0,
+          "b071_plus_count": 0
+        },
+        "range_distribution": {
+          "3": 24,
+          "2-3": 24,
+          "3-4": 22
+        },
+        "audit": "treatments/audit_reports/power_grid_heir_downstream_episode_pacing_hint_attachment_audit.md"
+      },
+      "opening_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "declared_contract",
+        "artifact": "treatments/audit_reports/power_grid_heir_greenplus_qualityup_adversarial_3x_audit.md",
+        "opening_exemplar_use": "immediate_deployment_donor_overlay_closeout",
+        "trigger_codes": [
+          "DECLARED-PASS",
+          "BI-5PASS-PASS",
+          "GREENPLUS-QUALITYUP-PASS"
+        ]
+      },
+      "whole_run_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "immediate_deployment_material",
+        "evidence_mode": "whole_run_window_heuristic",
+        "artifact": "treatments/audit_reports/power_grid_heir_greenplus_qualityup_adversarial_3x_audit.md",
+        "trigger_codes": [
+          "WHOLE-RUN-PROVISIONAL-PASS"
+        ]
+      },
+      "audit_trail": [
+        "treatments/audit_reports/power_grid_heir_source_tr_handoff_gate.md",
+        "docs/2026-05-01/power_grid_heir_adversarial_reward_3pass_audit.md",
+        "bible/audit_reports/power_grid_heir_root_bi_5pass.md",
+        "treatments/audit_reports/power_grid_heir_greenplus_qualityup_adversarial_3x_audit.md",
+        "treatments/audit_reports/power_grid_heir_consistency_adversarial_3x_audit.md",
+        "treatments/audit_reports/power_grid_heir_downstream_episode_pacing_hint_attachment_audit.md",
+        "treatments/audit_reports/power_grid_heir_greenplus_immediate_use_candidate_consistency_3pass_audit.md",
+        "treatments/audit_reports/power_grid_heir_immediate_deployment_adversarial_3x_closeout.md",
+        "treatments/audit_reports/power_grid_heir_immediate_deployment_consistency_adversarial_1pass_audit.md"
+      ],
+      "operator_note": "Root BI canonicalization and GREENPLUS quality-up are complete. Root BI exists at bible/0_bi_power_grid_heir.json, BIAmplificationPower and GenreRules guardrails are present, BI 5-pass PASS, pair consumability PASS, promotion-target normalization PASS with serialized canonical evidence, P0 6/6, P1 20/20, full-block cider 70/70, opening pacing GREEN, whole-run pacing GREEN, schema pass, and no open migration debt. Downstream episode pacing hint attachment is PASS with TR 70/70, BI 70/70, mismatch 0, missing block ids 0, B071+ 0, and range_attachment_status range_complete. Donor review is now adopted and recorded in source_manifest, Phase0, and work_guard as generalized immediate-deployment law only, with contamination guardrails visible in Phase0 and BI. The immediate-deployment adversarial 3x closeout admits this row as range-complete immediate material deployment for power-grid / AI infrastructure business power. The immediate-deployment consistency adversarial 1-pass audit confirms the row remains internally consistent after promotion. This does not replace the donorized gold sample and does not open non-promoted GREENPLUS rows.",
+      "immediate_deployment_audit": "treatments/audit_reports/power_grid_heir_immediate_deployment_adversarial_3x_closeout.md",
+      "donor_review": {
+        "decision": "adopted",
+        "visibility": [
+          "treatments/preprocess/power_grid_heir/source_manifest.json::donor_review",
+          "treatments/phase0/power_grid_heir_phase0_design.json::phase0_design.donor_review",
+          "work_guards/power_grid_heir.yaml::material_side_donor_review",
+          "treatments/phase0/power_grid_heir_phase0_design.json::phase0_design.contamination_guard",
+          "bible/0_bi_power_grid_heir.json::MasterBible.GenreRules.contamination_guard"
+        ],
+        "scope": "generalized immediate-deployment donor-structure law only",
+        "audit": "treatments/audit_reports/power_grid_heir_immediate_deployment_adversarial_3x_closeout.md"
+      },
+      "immediate_deployment_consistency_1pass_audit": "treatments/audit_reports/power_grid_heir_immediate_deployment_consistency_adversarial_1pass_audit.md"
+    },
+    {
+      "work_id": "healthy_heir_group_succession",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "numbered_live_pair",
+      "operational_state": "newly_touched_live_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "treatments/audit_reports/healthy_heir_group_succession_immediate_deployment_adversarial_3x_closeout.md",
+      "material_deployment_status": "immediate_deployable_material",
+      "admission_status": "admitted_to_registry_and_overlay_as_range_complete_immediate_deployment_material",
+      "immediate_overlay_status": "current_immediate_deployment_shelf_range_complete",
+      "range_attachment_status": "range_complete",
+      "donor_structure_status": "adopted_and_recorded",
+      "admission_artifact": "treatments/audit_reports/healthy_heir_group_succession_immediate_use_candidate_admission_audit.md",
+      "range_attachment_audit": "treatments/audit_reports/healthy_heir_group_succession_downstream_episode_pacing_hint_attachment_audit.md",
+      "downstream_episode_pacing_hint_artifact": "treatments/audit_reports/healthy_heir_group_succession_downstream_episode_pacing_hint_attachment_audit.md",
+      "phase0_manifest": "treatments/phase0/healthy_heir_group_succession_phase0_design.json",
+      "tr_manifest": "material_ssot/50_tr/work-index/healthy_heir_group_succession.md",
+      "bi_manifest": "material_ssot/60_bi/work-index/healthy_heir_group_succession.md",
+      "pitch_canon": "material_ssot/20_pitch/canon/healthy_heir_group_succession.md",
+      "pitch_checklist_audit": "material_ssot/20_pitch/synthesis/healthy_heir_group_succession_checklist_audit.md",
+      "work_guard": "work_guards/healthy_heir_group_succession.yaml",
+      "source_tr": "treatments/healthy_heir_group_succession_tr_block_070_draft.json",
+      "bi": "bible/10_bi_healthy_heir_group_succession.json",
+      "numbered_bi_path_status": "canonical_numbered_live_bi; root 0_bi absent and not created; BI _source_tr points to root TR",
+      "pacing_hint_surface": {
+        "tr": "treatments/healthy_heir_group_succession_tr_block_070_draft.json::blocks[*].genre_ext.downstream_episode_pacing_hint",
+        "bi": "bible/10_bi_healthy_heir_group_succession.json::MasterBible.plot_roadmap[*].genre_ext.downstream_episode_pacing_hint",
+        "coverage": "TR 70/70; BI 70/70; mismatch 0; missing block ids 0; B071+ 0",
+        "range_distribution": {
+          "recommended_2": 38,
+          "recommended_3": 31,
+          "recommended_4": 1,
+          "acceptable_2_3": 41,
+          "acceptable_3_4": 29
+        },
+        "audit": "treatments/audit_reports/healthy_heir_group_succession_downstream_episode_pacing_hint_attachment_audit.md"
+      },
+      "opening_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory_as_immediate_deployable_material",
+        "evidence_mode": "work_index_and_bi_contract_pass",
+        "artifact": "material_ssot/60_bi/work-index/healthy_heir_group_succession.md",
+        "opening_exemplar_use": "range_complete_immediate_material_deployment",
+        "trigger_codes": [
+          "TR-70-PASS",
+          "BI-70-CONTRACT-PASS",
+          "OPENING-PACING-GREEN",
+          "GREENPLUS-CONSISTENCY-3PASS-PASS",
+          "IMMEDIATE-DEPLOYMENT-CLOSEOUT-PASS",
+          "DONOR-ADOPTED-AND-RECORDED",
+          "PAYOFF-PACING-70-70"
+        ]
+      },
+      "whole_run_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory_as_immediate_deployable_material",
+        "evidence_mode": "work_index_whole_run_pacing_green",
+        "artifact": "material_ssot/60_bi/work-index/healthy_heir_group_succession.md",
+        "trigger_codes": [
+          "WHOLE-RUN-PACING-GREEN",
+          "BI-5PASS-PASS",
+          "GREENPLUS-CONSISTENCY-3PASS-PASS",
+          "IMMEDIATE-DEPLOYMENT-CLOSEOUT-PASS",
+          "DONOR-ADOPTED-AND-RECORDED",
+          "PAYOFF-PACING-70-70"
+        ]
+      },
+      "audit_trail": [
+        "material_ssot/20_pitch/synthesis/healthy_heir_group_succession_checklist_audit.md",
+        "docs/2026-04-29/healthy_heir_group_succession_tr_b001_070_gate_report.md",
+        "docs/2026-04-29/healthy_heir_group_succession_bi_5pass_report.md",
+        "docs/2026-05-01/healthy_heir_group_succession_tr_b001_010_fastblock_gate_report.md",
+        "docs/2026-05-01/healthy_heir_group_succession_bi_5pass_fastblock_report.md",
+        "treatments/audit_reports/healthy_heir_group_succession_immediate_use_candidate_admission_audit.md",
+        "treatments/audit_reports/healthy_heir_group_succession_downstream_episode_pacing_hint_attachment_audit.md",
+        "treatments/audit_reports/healthy_heir_group_succession_greenplus_immediate_use_candidate_consistency_3pass_audit.md",
+        "treatments/audit_reports/healthy_heir_group_succession_immediate_deployment_adversarial_3x_closeout.md"
+      ],
+      "operator_note": "Immediate-deployment adversarial 3x closeout promotes healthy_heir_group_succession from GREENPLUS range-complete immediate-use candidate to current immediate material deployment. The prior P1 19/20 hold is closed by visible source_manifest and Phase0 donor_review adoption, source/Phase0/BI contamination guardrails, TR authority metadata, BIAmplificationPower, TR/BI reader_payoff_ladder 70/70, TR/BI webnovel_pacing_contract 70/70, and preserved downstream episode pacing hint TR/BI 70/70 with mismatch 0, missing block ids 0, and B071+ absent. Pair normalization now returns pair_consumability pass, strict Tier A pass, Tier B normalized, schema pass, serialized canonical evidence, open migration debt false, alias refresh eligible true, active baseline eligible true, required fix targets [], and findings []. Core plot hash after stripping advisory surfaces remains 9ec24ae55a40780f1dffa164d02937b559f29d0a2d73f5a42086c7d8d22ad159. Numbered live BI path remains bible/10_bi_healthy_heir_group_succession.json; no root 0_bi was created, renamed, or moved. Immediate-use identity is no-fantasy group-succession business power: cold-chain certification, bid qualification, PF auto-extension, bank waiver, IR/watch-list questions, credit-rating defense, capex schedule, production-right term sheet, board procedure, executive signatures, and official early succession. Does not replace the donorized gold sample and does not open non-promoted GREENPLUS/GREEN rows.",
+      "grade_alias_artifact": "material_ssot/00_governance/production_pair_grade_aliases/GREENPLUS_healthy_heir_group_succession.md",
+      "greenplus_consistency_audit": "treatments/audit_reports/healthy_heir_group_succession_greenplus_immediate_use_candidate_consistency_3pass_audit.md",
+      "p1_score": "20/20",
+      "p0_status": "6/6",
+      "open_migration_debt": "no",
+      "immediate_deployment_closeout_artifact": "treatments/audit_reports/healthy_heir_group_succession_immediate_deployment_adversarial_3x_closeout.md",
+      "deployment_artifact": "treatments/audit_reports/healthy_heir_group_succession_immediate_deployment_adversarial_3x_closeout.md",
+      "webnovel_pacing_contract_artifact": "treatments/audit_reports/healthy_heir_group_succession_immediate_deployment_adversarial_3x_closeout.md",
+      "reader_payoff_ladder_artifact": "treatments/audit_reports/healthy_heir_group_succession_immediate_deployment_adversarial_3x_closeout.md",
+      "donor_review_surface": {
+        "source_manifest": "treatments/preprocess/healthy_heir_group_succession/source_manifest.json::donor_review",
+        "phase0": "treatments/phase0/healthy_heir_group_succession_phase0_design.json::donor_review",
+        "status": "adopted_and_recorded",
+        "closeout": "treatments/audit_reports/healthy_heir_group_succession_immediate_deployment_adversarial_3x_closeout.md"
+      },
+      "contamination_guard_surface": {
+        "source_manifest": "treatments/preprocess/healthy_heir_group_succession/source_manifest.json::contamination_guard",
+        "phase0": "treatments/phase0/healthy_heir_group_succession_phase0_design.json::contamination_guard",
+        "bi": "bible/10_bi_healthy_heir_group_succession.json::MasterBible.GenreRules.contamination_guard",
+        "status": "present"
+      },
+      "payoff_pacing_surface": {
+        "reader_payoff_ladder": {
+          "tr": "treatments/healthy_heir_group_succession_tr_block_070_draft.json::blocks[*].genre_ext.reader_payoff_ladder",
+          "bi": "bible/10_bi_healthy_heir_group_succession.json::MasterBible.plot_roadmap[*].genre_ext.reader_payoff_ladder",
+          "coverage": "TR 70/70; BI 70/70; mismatch 0"
+        },
+        "webnovel_pacing_contract": {
+          "tr": "treatments/healthy_heir_group_succession_tr_block_070_draft.json::blocks[*].genre_ext.webnovel_pacing_contract",
+          "bi": "bible/10_bi_healthy_heir_group_succession.json::MasterBible.plot_roadmap[*].genre_ext.webnovel_pacing_contract",
+          "coverage": "TR 70/70; BI 70/70; mismatch 0"
+        },
+        "bi_amplification": "bible/10_bi_healthy_heir_group_succession.json::MasterBible.BIAmplificationPower"
+      },
+      "pair_normalization": {
+        "pair_consumability": "pass",
+        "strict_tier_a_status": "pass",
+        "tier_b_status": "normalized",
+        "schema_status": "pass",
+        "evidence_mode": "serialized_canonical",
+        "open_migration_debt": false,
+        "alias_refresh_eligible": true,
+        "active_baseline_eligible": true,
+        "required_fix_targets": [],
+        "findings": []
+      }
+    },
+    {
+      "work_id": "haewon_digital_rights_1997",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "unslotted_live_pair",
+      "operational_state": "newly_touched_live_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREEN",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "treatments/audit_reports/haewon_digital_rights_1997_protagonist_affinity_greenplus_3pass_audit.md",
+      "material_deployment_status": "pipeline_ready_reference_inventory_not_immediate_deployment",
+      "donor_structure_status": "not_applied_or_not_recorded",
+      "phase0_manifest": "material_ssot/40_phase0_design/work-index/haewon_digital_rights_1997.md",
+      "tr_manifest": "material_ssot/50_tr/work-index/haewon_digital_rights_1997.md",
+      "bi_manifest": "material_ssot/60_bi/work-index/haewon_digital_rights_1997.md",
+      "work_guard": "work_guards/haewon_digital_rights_1997.yaml",
+      "source_tr": "treatments/haewon_digital_rights_1997_tr_block_070_draft.json",
+      "bi": "bible/0_bi_haewon_digital_rights_1997.json",
+      "audit_trail": [
+        "bible/audit_reports/haewon_digital_rights_1997_bi_5pass.md",
+        "treatments/audit_reports/haewon_digital_rights_1997_source_tr_handoff_gate.md",
+        "treatments/audit_reports/haewon_digital_rights_1997_protagonist_affinity_greenplus_3pass_audit.md"
+      ],
+      "opening_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "manual_3pass_source_handoff_and_affinity_audit",
+        "artifact": "treatments/audit_reports/haewon_digital_rights_1997_source_tr_handoff_gate.md",
+        "opening_exemplar_use": "pipeline_ready_reference_inventory_not_greenplus_registry",
+        "trigger_codes": [
+          "SOURCE-TR-HANDOFF-PASS",
+          "BI-5PASS-PASS",
+          "GREENPLUS-ADJACENT-NOT-REGISTRY-GREENPLUS"
+        ]
+      },
+      "operator_note": "Root TR B001-B070 and root BI are present, source TR handoff gate PASS, BI 5-pass PASS, work_guard freeze PASS, and protagonist-affinity audit reads GreenPlus-adjacent readiness PASS. Register as GREEN reference inventory only: not registry GREENPLUS and not immediate material deployment without a later donor-structure overlay closeout."
+    },
+    {
+      "work_id": "shipbuilding_ocean_heir",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "unslotted_live_pair",
+      "operational_state": "regenerated_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "treatments/audit_reports/shipbuilding_ocean_heir_greenplus_immediate_deployment_consistency_3pass_audit.md",
+      "material_deployment_status": "immediate_deployable_material",
+      "range_attachment_status": "range_complete",
+      "downstream_episode_pacing_hint_artifact": "treatments/audit_reports/shipbuilding_ocean_heir_downstream_episode_pacing_hint_attachment_audit.md",
+      "pacing_hint_surface": {
+        "tr": "treatments/shipbuilding_ocean_heir_tr_block_070_draft.json::blocks[*].genre_ext.downstream_episode_pacing_hint",
+        "bi": "bible/0_bi_shipbuilding_ocean_heir.json::MasterBible.plot_roadmap[*].genre_ext.downstream_episode_pacing_hint",
+        "coverage": {
+          "tr": "70/70",
+          "bi": "70/70",
+          "mismatch_count": 0,
+          "missing_block_ids": [],
+          "range_counts": {
+            "3": 1,
+            "2-3": 48,
+            "3-4": 21
+          },
+          "recommended_counts": {
+            "2": 32,
+            "3": 37,
+            "4": 1
+          },
+          "b071_plus_count": 0
+        },
+        "audit": "treatments/audit_reports/shipbuilding_ocean_heir_downstream_episode_pacing_hint_attachment_audit.md"
+      },
+      "donor_structure_status": "adopted_and_recorded",
+      "phase0_manifest": "treatments/phase0/shipbuilding_ocean_heir_phase0_design.json",
+      "source_manifest": "treatments/preprocess/shipbuilding_ocean_heir/source_manifest.json",
+      "tr_manifest": "material_ssot/50_tr/work-index/shipbuilding_ocean_heir.md",
+      "bi_manifest": "material_ssot/60_bi/work-index/shipbuilding_ocean_heir.md",
+      "work_guard": "work_guards/shipbuilding_ocean_heir.yaml",
+      "source_tr": "treatments/shipbuilding_ocean_heir_tr_block_070_draft.json",
+      "bi": "bible/0_bi_shipbuilding_ocean_heir.json",
+      "audit_trail": [
+        "treatments/audit_reports/shipbuilding_ocean_heir_source_tr_handoff_gate.md",
+        "bible/audit_reports/shipbuilding_ocean_heir_bi_5pass.md",
+        "treatments/audit_reports/shipbuilding_ocean_heir_canonical_promotion_decision_audit.md",
+        "treatments/audit_reports/shipbuilding_ocean_heir_downstream_episode_pacing_hint_attachment_audit.md",
+        "treatments/audit_reports/shipbuilding_ocean_heir_greenplus_immediate_deployment_consistency_3pass_audit.md",
+        "treatments/audit_reports/shipbuilding_ocean_heir_immediate_deployment_reaudit_patch_loop_3pass_audit.md",
+        "treatments/audit_reports/shipbuilding_ocean_heir_adversarial_consistency_1pass_audit.md"
+      ],
+      "opening_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "declared_contract_plus_consistency_3pass",
+        "artifact": "treatments/audit_reports/shipbuilding_ocean_heir_greenplus_immediate_deployment_consistency_3pass_audit.md",
+        "opening_exemplar_use": "immediate_deployment_donor_overlay_closeout",
+        "trigger_codes": [
+          "P0-6-OF-6",
+          "SOURCE-TR-HANDOFF-PASS",
+          "BI-5PASS-PASS",
+          "GREENPLUS-PASS",
+          "IMMEDIATE-DEPLOYMENT-PASS"
+        ]
+      },
+      "whole_run_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "source_handoff_70_receipts_plus_blockwise_payoff_surface",
+        "artifact": "treatments/audit_reports/shipbuilding_ocean_heir_greenplus_immediate_deployment_consistency_3pass_audit.md",
+        "trigger_codes": [
+          "VISIBLE-RECEIPTS-70-OF-70",
+          "READER-PAYOFF-LADDER-70-OF-70",
+          "WEBNOVEL-PACING-CONTRACT-70-OF-70",
+          "RANGE-COMPLETE-70-OF-70"
+        ]
+      },
+      "operator_note": "Benchmark-fresh donor-adopted shipbuilding / ship-finance business-power sample. Source TR handoff PASS and BI 5-pass PASS are preserved; consistency 3-pass closed the prior candidate holds by adding visible donor_review, contamination_guard, BIAmplificationPower, TR _authority_chain, capital_delta 70/70, success_pattern 70/70, reader_payoff_ladder 70/70, and webnovel_pacing_contract 70/70 without core plot rewrite. Production pair normalization now returns pair_consumability pass, strict Tier A pass, Tier B normalized, schema pass, serialized canonical evidence, open migration debt false, alias_refresh_eligible true, active_baseline_eligible true. Downstream episode pacing hint remains range_complete with TR/BI 70/70 mirror, mismatch 0, missing block ids 0, B071+ absent, and range distribution 2-3 x48 / 3 x1 / 3-4 x21. Admitted as immediate material deployment as a shipbuilding/ship-finance sample; does not replace the donorized gold sample. Post-admission reaudit patch loop removed stale six-row, candidate, and range-wait governance wording and reconfirmed current immediate-deployment shelf status.",
+      "admission_status": "admitted_to_registry_and_overlay_as_range_complete_immediate_deployment_material",
+      "immediate_overlay_status": "current_immediate_deployment_shelf_range_complete",
+      "deployment_artifact": "treatments/audit_reports/shipbuilding_ocean_heir_immediate_deployment_reaudit_patch_loop_3pass_audit.md",
+      "greenplus_immediate_deployment_consistency_3pass_audit": "treatments/audit_reports/shipbuilding_ocean_heir_greenplus_immediate_deployment_consistency_3pass_audit.md",
+      "immediate_deployment_reaudit_patch_loop_3pass_audit": "treatments/audit_reports/shipbuilding_ocean_heir_immediate_deployment_reaudit_patch_loop_3pass_audit.md",
+      "adversarial_consistency_1pass_audit": "treatments/audit_reports/shipbuilding_ocean_heir_adversarial_consistency_1pass_audit.md",
+      "pacing_surface": {
+        "reader_payoff_ladder": "TR/BI genre_ext.reader_payoff_ladder 70/70",
+        "webnovel_pacing_contract": "TR/BI genre_ext.webnovel_pacing_contract 70/70",
+        "downstream_episode_pacing_hint": "TR/BI genre_ext.downstream_episode_pacing_hint 70/70",
+        "bi_engine": "MasterBible.BIAmplificationPower.webnovel_fast_pacing_engine"
+      },
+      "strict_normalization_status": {
+        "pair_consumability": "pass",
+        "strict_tier_a_status": "pass",
+        "tier_b_status": "normalized",
+        "schema_status": "pass",
+        "evidence_mode": "serialized_canonical",
+        "open_migration_debt": false,
+        "alias_refresh_eligible": true,
+        "active_baseline_eligible": true,
+        "required_fix_targets": []
+      }
     },
     {
       "work_id": "jangyeongshil_industrial_revolution",
@@ -279,6 +964,108 @@
         ]
       },
       "operator_note": "Benchmark-fresh unslotted live pair; positive alias granted, still outside the numbered-slot manifest. Opening pacing triage is GREEN under legacy heuristic, so keep in active inventory; this is not a fresh declared-contract opening exemplar certification."
+    },
+    {
+      "work_id": "laid_off_cashflow_rights_operator",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "unslotted_live_pair",
+      "operational_state": "regenerated_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "treatments/audit_reports/laid_off_cashflow_rights_operator_immediate_deployment_adversarial_closeout.md",
+      "material_deployment_status": "immediate_deployable_material",
+      "range_attachment_status": "range_complete",
+      "donor_structure_status": "adopted_and_recorded",
+      "deployment_artifact": "treatments/audit_reports/laid_off_cashflow_rights_operator_immediate_deployment_adversarial_closeout.md",
+      "phase0_manifest": "treatments/phase0/laid_off_cashflow_rights_operator_phase0_design.json",
+      "source_manifest": "treatments/preprocess/laid_off_cashflow_rights_operator/source_manifest.json",
+      "tr_manifest": "material_ssot/50_tr/work-index/laid_off_cashflow_rights_operator.md",
+      "bi_manifest": "material_ssot/60_bi/work-index/laid_off_cashflow_rights_operator.md",
+      "work_guard": "work_guards/laid_off_cashflow_rights_operator.yaml",
+      "source_tr": "treatments/laid_off_cashflow_rights_operator_tr_block_070_draft.json",
+      "bi": "bible/0_bi_laid_off_cashflow_rights_operator.json",
+      "grade_alias_artifact": "material_ssot/00_governance/production_pair_grade_aliases/GREENPLUS_laid_off_cashflow_rights_operator.md",
+      "admission_status": "admitted_to_registry_and_overlay_as_range_complete_immediate_deployment_material",
+      "immediate_overlay_status": "current_immediate_deployment_shelf_range_complete",
+      "opening_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "declared_contract",
+        "artifact": "treatments/audit_reports/laid_off_cashflow_rights_operator_downstream_episode_pacing_hint_attachment_audit.md",
+        "opening_exemplar_use": "immediate_deployment_donor_overlay_closeout",
+        "trigger_codes": [
+          "DECLARED-PASS",
+          "SOURCE-TR-HANDOFF-PASS",
+          "BI-5PASS-PASS",
+          "GREENPLUS-PASS",
+          "IMMEDIATE-DEPLOYMENT-PASS"
+        ]
+      },
+      "whole_run_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "whole_run_window_heuristic_plus_blockwise_payoff_surface",
+        "artifact": "treatments/audit_reports/laid_off_cashflow_rights_operator_immediate_deployment_adversarial_closeout.md",
+        "trigger_codes": [
+          "WHOLE-RUN-PROVISIONAL-PASS",
+          "VISIBLE-RECEIPTS-70-OF-70",
+          "READER-PAYOFF-LADDER-70-OF-70",
+          "WEBNOVEL-PACING-CONTRACT-70-OF-70",
+          "RANGE-COMPLETE-70-OF-70"
+        ]
+      },
+      "pacing_surface": {
+        "reader_payoff_ladder": "TR/BI genre_ext.reader_payoff_ladder 70/70",
+        "webnovel_pacing_contract": "TR/BI genre_ext.webnovel_pacing_contract 70/70",
+        "downstream_episode_pacing_hint": "TR/BI genre_ext.downstream_episode_pacing_hint 70/70",
+        "bi_engine": "MasterBible.BIAmplificationPower.writer_facing_fast_pacing_engine"
+      },
+      "downstream_episode_pacing_hint_artifact": "treatments/audit_reports/laid_off_cashflow_rights_operator_downstream_episode_pacing_hint_attachment_audit.md",
+      "pacing_hint_surface": {
+        "tr": "treatments/laid_off_cashflow_rights_operator_tr_block_070_draft.json::blocks[*].genre_ext.downstream_episode_pacing_hint",
+        "bi": "bible/0_bi_laid_off_cashflow_rights_operator.json::MasterBible.plot_roadmap[*].genre_ext.downstream_episode_pacing_hint",
+        "coverage": {
+          "tr": "70/70",
+          "bi": "70/70",
+          "mismatch_count": 0,
+          "missing_block_ids": [],
+          "range_counts": {
+            "2-3": 21,
+            "3-4": 49
+          },
+          "recommended_counts": {
+            "2": 21,
+            "3": 48,
+            "4": 1
+          },
+          "b071_plus_count": 0
+        },
+        "audit": "treatments/audit_reports/laid_off_cashflow_rights_operator_downstream_episode_pacing_hint_attachment_audit.md"
+      },
+      "strict_normalization_status": {
+        "pair_consumability": "pass",
+        "strict_tier_a_status": "pass",
+        "tier_b_status": "normalized",
+        "schema_status": "pass",
+        "evidence_mode": "serialized_canonical",
+        "open_migration_debt": false,
+        "alias_refresh_eligible": true,
+        "active_baseline_eligible": true,
+        "required_fix_targets": []
+      },
+      "audit_trail": [
+        "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_source_tr_handoff_gate.md",
+        "treatments/_waiting_room/2026-05-01_laid_off_cashflow_rights_operator/audits/laid_off_cashflow_rights_operator_bi_5pass_audit.md",
+        "treatments/audit_reports/laid_off_cashflow_rights_operator_greenplus_immediate_use_candidate_consistency_3pass_audit.md",
+        "treatments/audit_reports/laid_off_cashflow_rights_operator_downstream_episode_pacing_hint_attachment_audit.md",
+        "treatments/audit_reports/laid_off_cashflow_rights_operator_immediate_deployment_adversarial_closeout.md"
+      ],
+      "operator_note": "Benchmark-fresh donor-adopted cashflow-rights/operator business-power sample. Root TR/BI are present and synchronized; source TR handoff PASS, BI 5-pass PASS, pair consumability PASS, strict Tier A pass, Tier B normalized, schema pass, serialized canonical evidence, no open migration debt, alias_refresh_eligible true, and active_baseline_eligible true. P0 6/6 and P1 20/20 are supported by 70/70 has_cider:true, 70/70 reader_payoff_ladder, 70/70 webnovel_pacing_contract, BIAmplificationPower, declared-contract opening GREEN, and whole-run pacing GREEN. Donor review adopts only generalized rights-operator law from the current immediate shelf: pressure first, protagonist-only proof, same-block rights/control receipt, observer recalculation, and next operator gate; no donor proper nouns or scene order. Immediate-use rewards stay anchored in ERP, contracts, SKU, ledgers, legal minutes, logistics slots, production/quality proof, data feeds, escrow, standard-contract terms, and rights/operator receipts. Downstream episode pacing hint attachment is range_complete with TR/BI 70/70 mirror, mismatch 0, missing block ids 0, B071+ absent, recommended distribution 2 x21 / 3 x48 / 4 x1, and acceptable range distribution 2-3 x21 / 3-4 x49. Admitted as immediate material deployment; does not replace the donorized gold sample."
     }
+  ],
+  "registry_notes": [
+    "2026-05-02 material-side immediate deployment overlay: power_grid_heir is admitted as an eighth immediate-deployment material after GREENPLUS TR/BI PASS, downstream range_complete attachment, donor-review/contamination guardrail closeout in source_manifest, Phase0, and work_guard, BIAmplificationPower, and immediate-deployment adversarial 3x closeout. Current immediately deployable materials are golden_canary_deepclone_probe_a_fullblock_v1, distressed_asset_heir, distressed_company_buyer, venture_bubble_king_2000, telecom_gate_monopoly_1997, pharma_cdmo_industry_heir, shipbuilding_ocean_heir, and power_grid_heir."
   ]
 }

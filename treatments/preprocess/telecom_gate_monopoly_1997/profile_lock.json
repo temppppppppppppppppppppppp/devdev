@@ -1,0 +1,68 @@
+{
+  "primary_profile": "business_growth_profile",
+  "secondary_profile": "tech_startup_profile",
+  "resource_axis": [
+    "phone-number identity gate",
+    "monthly billing rail",
+    "PCS residual voting right",
+    "base-station maintenance capacity",
+    "low-end handset distribution channel",
+    "card billing relationship",
+    "regional store network",
+    "content settlement fee",
+    "PC communication and early portal users",
+    "enterprise messaging and advertising data"
+  ],
+  "power_axis": [
+    "restructuring committee observer seat",
+    "asset-sale freeze",
+    "limited data-room access",
+    "carrier procurement direct line",
+    "maintenance order",
+    "regional handset distribution test",
+    "phone-bill service billing pilot code",
+    "legal memo",
+    "PCS voting proxy",
+    "PC communication acquisition review right"
+  ],
+  "control_axis": [
+    "subscriber acquisition cost reduction",
+    "network uptime and SLA execution",
+    "handset purchase and distribution slot",
+    "monthly bill settlement table",
+    "service fee aggregation",
+    "retail-store signup funnel",
+    "content provider access to billing",
+    "phone-number-based login and identity",
+    "user data and enterprise messaging route"
+  ],
+  "payoff_axis": [
+    "same-block reevaluation",
+    "authority or access token",
+    "documented legal receipt",
+    "pilot code or carrier order",
+    "voting proxy or freeze right",
+    "first settlement fee",
+    "next-sector entry ticket",
+    "visible gate-fee control"
+  ],
+  "failure_axis": [
+    "telecom scraps sold separately",
+    "PCS option captured by foreign fund",
+    "maintenance unit closed before proof",
+    "carrier rejects the pilot",
+    "handset inventory becomes dead stock",
+    "billing pilot blocked by legal risk",
+    "main-family executive steals credit",
+    "regulatory or consumer complaint risk kills bundled billing",
+    "PC communication acquisition option disappears",
+    "강재현 becomes a report laborer without authority"
+  ],
+  "hud_interpretation": {
+    "capital": "cash plus deployable authority: sale freeze, voting proxy, carrier order, billing pilot, distribution test, settlement fee, and next-sector option.",
+    "deal_type": "telecom rights bundling, maintenance SLA conversion, handset distribution test, billing pilot, JV proposal, PC communication acquisition review, settlement-fee expansion.",
+    "resource_power_hud": "tracks authority/access/legal receipt/control over phone number, monthly bill, handset channel, and settlement rail rather than money only.",
+    "business_lines": "PCS/mobile service, network maintenance, handset distribution, card billing, mobile content, PC communication portal, commerce, advertising, enterprise messaging.",
+    "company_state": "current opening arena, sale deadline, assets frozen, receipts held by 강재현, carrier cooperation, legal risk status, and next-sector ticket."
+  }
+}

@@ -1,0 +1,28 @@
+# GREENPLUS_healthy_heir_group_succession
+
+- verdict: `GREENPLUS`
+- work_id: `healthy_heir_group_succession`
+- family: `blockguide`
+- benchmark_freshness: `current`
+- benchmark_artifact: `treatments/audit_reports/healthy_heir_group_succession_immediate_deployment_adversarial_3x_closeout.md`
+- source_tr_artifact: `treatments/healthy_heir_group_succession_tr_block_070_draft.json`
+- live_bi_artifact: `bible/10_bi_healthy_heir_group_succession.json`
+- bi_contract_artifact: `docs/2026-05-01/healthy_heir_group_succession_bi_5pass_fastblock_report.md`
+- material_deployment_status: `immediate_deployable_material`
+- range_attachment_status: `range_complete`
+- range_attachment_audit: `treatments/audit_reports/healthy_heir_group_succession_downstream_episode_pacing_hint_attachment_audit.md`
+- consistency_audit: `treatments/audit_reports/healthy_heir_group_succession_greenplus_immediate_use_candidate_consistency_3pass_audit.md`
+- immediate_deployment_closeout: `treatments/audit_reports/healthy_heir_group_succession_immediate_deployment_adversarial_3x_closeout.md`
+- donor_structure_status: `adopted_and_recorded`
+- opening_pacing_triage: `GREEN`
+- whole_run_pacing_triage: `GREEN`
+- schema_status: `pass`
+- open_migration_debt: `no`
+- p0: `6/6`
+- p1: `20/20`
+- full_block_cider: `70/70`
+- downstream_episode_pacing_hint: `TR 70/70`, `BI 70/70`, mismatch `0`, missing block ids `0`, B071+ `0`
+- reader_payoff_ladder: `TR 70/70`, `BI 70/70`, mismatch `0`
+- webnovel_pacing_contract: `TR 70/70`, `BI 70/70`, mismatch `0`
+- BIAmplificationPower: `present`
+- operational_note: Root TR70 and numbered live BI70 are synchronized. BI 5-pass, pair canonical contract, strict normalization, opening pacing, and whole-run pacing are PASS/GREEN. The prior P1 hold is closed by source/Phase0 donor review adoption, source/Phase0/BI contamination guardrails, TR authority metadata, BIAmplificationPower, `reader_payoff_ladder 70/70`, and `webnovel_pacing_contract 70/70`. This alias now supports GREENPLUS range-complete immediate material deployment. It does not replace the donorized gold sample and does not open non-promoted rows.

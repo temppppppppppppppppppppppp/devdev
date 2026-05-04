@@ -1,0 +1,77 @@
+{
+  "work_identity": {
+    "work_id": "distressed_company_buyer",
+    "title": "부도난 회사만 사들입니다",
+    "primary_profile": "business_growth_profile",
+    "secondary_profile": "investment_market_profile"
+  },
+  "canonical_sources": [
+    "material_ssot/20_pitch/canon/distressed_company_buyer.md",
+    "material_ssot/20_pitch/synthesis/distressed_company_buyer_checklist_audit.md",
+    "material_ssot/20_pitch/synthesis/distressed_company_buyer_working_synthesis.md",
+    "user directive 2026-05-01: fast webnovel pacing; one TR block is 2-6 episodes; every block needs at least one additional incident beat; protagonist acts by self-interest, profit, and efficiency"
+  ],
+  "reference_only_sources": [
+    "C:/Users/PC/Desktop/재료 생산 R&D 랩/docs/2026-05-01/modernfantasy-money-market-scan-and-harness-prep.md",
+    "C:/Users/PC/Desktop/재료 생산 R&D 랩/docs/2026-04-21/chaebol-investment-4donor-parallel-usage-report-v1.md",
+    "C:/Users/PC/Desktop/재료 생산 R&D 랩/docs/2026-04-29/no-fantasy-chaebol-money-donor-translation-spec-v0.md",
+    "material_ssot/20_pitch/pitch-philosophy.md",
+    "material_ssot/20_pitch/protagonist-first-constitution.md",
+    "material_ssot/20_pitch/material-benchmark-readiness-harness-v1.md",
+    "material_ssot/00_governance/donor-review-and-adoption-contract-v1.md"
+  ],
+  "core_materials": [
+    "Opening representative spike: all evaluators see broken refrigerated trucks, but Do-yoon proves the cold-chain certification and recall insurance trigger are still alive.",
+    "First reward retention: meeting seat, 24-hour data-room access, insurer preliminary recognition, bank direct line, ten-day exclusive diligence, priority negotiation, and next data-room invitation must remain visible across the opening bundle.",
+    "Authority gain route: disposable field examiner -> meeting-room participant -> bank/insurer contact -> exclusive diligence holder -> priority negotiator -> next distressed-deal invitee.",
+    "Opening macro battlefield: 삼진콜드 cold-chain distressed sale, spanning creditor committee, data room, warehouse logs, insurer clause dispute, buyer call, port cold-storage priority, and SPV bid table.",
+    "Core asset anatomy: cold-chain certification, dawn delivery route, recall insurance claim, port cold-storage priority use, delivery claim records, driver route memory, and refrigerated-truck scrap pressure.",
+    "Clean acquisition path: advisory conflict must be cleared by advisory exit, public bid, creditor approval, court schedule, or SPV separation before acquisition becomes story truth.",
+    "Repeatable loop: bankrupt notice -> market sees liquidation value -> Do-yoon finds living rights -> present proof -> same-block receipt -> clean rights acquisition -> cashflow/authority -> larger bankrupt deal.",
+    "Self-interest law: Do-yoon keeps people and operations only when they preserve certification, route memory, claim defense, execution speed, leverage, or next-gate position.",
+    "TR pacing law: each block is a 2-6 episode bundle and needs at least two incident beats plus a same-block receipt.",
+    "Rights-before-cash reward grammar: early blocks pay with access, authority, legal receipt, protection, exclusivity, and next-gate position before large money."
+  ],
+  "npc_pool": [
+    "한도윤 - 회귀한 구조조정 실사관; 부도 회사 안의 살아 있는 권리를 사는 self-interested operator.",
+    "회계법인 파트너 - 도윤의 현장 proof를 자기 성과로 가로채려는 상사; 빠른 보고서 납품과 책임 회피가 동기.",
+    "채권은행 구조조정팀장 - 빠른 청산과 감사 리스크 회피를 우선하는 문지기; proof가 회수율을 올리면 태도를 바꾼다.",
+    "보험사 손해사정 담당자 - 리콜 보험금 지급을 늦추거나 축소하려는 상대; 약관과 온도 로그가 맞물리면 방어가 약해진다.",
+    "대형마트 구매담당자 - 새벽 배송 공백을 두려워하는 외부 평가자; Do-yoon의 권리 묶음이 운영 리스크를 줄이면 협상선이 된다.",
+    "삼진콜드 창고장 또는 운송반장 - 감정적 구원 대상이 아니라 route memory와 certification 유지에 필요한 실행 자산.",
+    "고철업자 또는 scrap buyer - 빠른 폐차 일괄매입으로 살아 있는 권리를 묻으려는 초반 방해자.",
+    "대형 PEF 파트너 - 후반에 Do-yoon의 검증된 회생 포트폴리오를 싸게 흡수하려는 상위 포식자."
+  ],
+  "crisis_pool": [
+    "삼진콜드가 이번 주 안에 고철 매각으로 넘어가며 certification, route, insurance claim, port priority가 흩어질 위기.",
+    "채권단이 담보 회수와 감사 리스크 때문에 빠른 청산을 밀어붙이는 압박.",
+    "보험사가 온도 이탈 기록과 리콜 약관의 지급 트리거를 부정하는 지급 회피.",
+    "회계법인 파트너가 Do-yoon의 proof를 가로채거나 누락 책임을 전가하는 내부 압박.",
+    "고철업자가 냉동차 일괄매입으로 인증 승계와 route proof를 묻으려는 외부 방해.",
+    "대형마트 buyer가 배송 공백을 이유로 노선 자체를 경쟁사로 넘기려는 deadline.",
+    "SPV 인수 구조가 이해상충 또는 내부정보 거래로 오해받을 수 있는 legality risk.",
+    "핵심 기사 또는 창고장이 떠나 route memory와 certification maintenance가 무너지는 execution risk."
+  ],
+  "hard_constraints": [
+    "No TR before Stage 0, Phase 0, and work_guard freeze.",
+    "No BI before accepted TR draft.",
+    "Every TR block must be treated as roughly 2-6 downstream episodes, not one episode.",
+    "Every TR block must contain at least two distinct incident beats and a same-block receipt.",
+    "Do-yoon's actions must be legible as profit, efficiency, legal protection, speed, leverage, defense, retaliation, survival, or next-gate position.",
+    "Do-yoon does not secretly acquire assets while holding live advisory conflict; legal receipt is mandatory.",
+    "Opening 2-6 cannot use block 1 or block 7+ as delayed rescue.",
+    "Early rewards must be authority/access/legal receipt before large cash.",
+    "No charity-rescue engine; saving people or operations must preserve value or accelerate execution."
+  ],
+  "do_not_fake": [
+    "Do not fake cold-chain certification mechanics as vague business aura.",
+    "Do not fake insurance payout with a generic phone call; use clause, trigger, log, claim, or preliminary recognition language.",
+    "Do not fake creditor approval; show meeting seat, data-room access, exclusivity, priority negotiation, court schedule, or bid condition.",
+    "Do not fake logistics operation; use route memory, temperature logs, delivery claim timing, port allocation, driver availability, or cold-storage priority.",
+    "Do not handwave conflict-of-interest; advisory exit, public bid, creditor approval, court schedule, or SPV separation must appear.",
+    "Do not replace deal proof with future-knowledge monologue.",
+    "Do not turn staff retention into saintly rescue; it must defend certification, route memory, claim proof, or execution speed.",
+    "Do not pay a block with praise only; pay with authority, access, legal protection, cashflow, or next-gate position."
+  ],
+  "manual_audit_note": "1. Ready material: canon pitch, checklist audit, first-block ledger, legal acquisition guard, self-interest law, opening macro battlefield, and Stage0 profile route are all directly usable for Phase 0.\n2. Remaining gaps: exact company names beyond 삼진콜드, court/bank procedural details, insurance clause wording, port/cold-storage institutional names, and later-arc deal specifics should be enriched in Phase 0 or TR, not faked loosely.\n3. Do-not-fake risk: logistics, insurance, creditor approval, and conflict-of-interest surfaces must be shown as document/authority receipts rather than generic consulting scenes."
+}

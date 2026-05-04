@@ -1,0 +1,26 @@
+# GREENPLUS_venture_bubble_king_2000
+
+- verdict: `GREENPLUS`
+- work_id: `venture_bubble_king_2000`
+- family: `blockguide`
+- benchmark_freshness: `current`
+- benchmark_artifact: `treatments/audit_reports/venture_bubble_king_2000_greenplus_benchmark_preservation_audit.md`
+- immediate_deployment_artifact: `treatments/audit_reports/venture_bubble_king_2000_immediate_deployment_adversarial_closeout.md`
+- adversarial_qualityup_artifact: `treatments/audit_reports/venture_bubble_king_2000_greenplus_immediate_deployment_adversarial_3x_qualityup_audit.md`
+- blockwise_growth_reward_qualityup_artifact: `treatments/audit_reports/venture_bubble_king_2000_blockwise_growth_reward_greenplus_qualityup_3pass_audit.md`
+- webnovel_payoff_pattern_qualityup_artifact: `treatments/audit_reports/venture_bubble_king_2000_webnovel_payoff_pattern_greenplus_qualityup_3pass_audit.md`
+- consistency_adversarial_3x_artifact: `treatments/audit_reports/venture_bubble_king_2000_consistency_adversarial_3x_audit.md`
+- fast_pacing_contract_artifact: `treatments/audit_reports/venture_bubble_king_2000_fast_pacing_contract_greenplus_audit.md`
+- material_deployment_status: `immediate_deployable_material`
+- donor_structure_status: `adopted_and_recorded`
+- opening_pacing_triage: `GREEN`
+- whole_run_pacing_triage: `GREEN`
+- schema_status: `pass`
+- open_migration_debt: `no`
+- p0: `6/6`
+- p1: `20/20`
+- full_block_cider: `70/70`
+- blockwise_reader_payoff: `70/70`
+- webnovel_payoff_pattern: `70/70`
+- webnovel_pacing_contract: `70/70`
+- operational_note: benchmark-fresh donor-adopted tech-rights / venture-bubble business-power sample. It is admitted as an immediate material-deployment row after explicit GREENPLUS benchmark preservation, BI guardrail and amplification quality-up, donor-structure adversarial closeout, follow-up 3x adversarial quality-up audit, blockwise growth/reward GreenPlus quality-up, webnovel payoff-pattern quality-up, consistency adversarial 3x closeout, and fast pacing contract attachment. It does not replace the donorized gold sample and does not open non-promoted GREENPLUS rows.

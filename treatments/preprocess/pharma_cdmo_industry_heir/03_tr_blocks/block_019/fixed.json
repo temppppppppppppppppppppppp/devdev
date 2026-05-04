@@ -41,13 +41,13 @@
   ],
   "foreshadow": [
     "강원권 시험지역은 백신보다 기록 블록에서 전국 냉장배송망의 첫 외곽 proof가 된다.",
-    "지도 접근료 계약은 병원 데이터와 구매실 엑셀을 과금하는 ARC-03의 전조가 된다.",
+    "지도 접근료 계약은 병원 데이터와 구매실 엑셀을 과금하는 전조가 된다.",
     "휴게소 중간 냉장 보관소 책임면제 조건은 향후 식품/소비재 안전표준에도 재사용된다."
   ],
   "callback": [
-    "Block 018의 첫 기록료 선결제와 폐기율 데이터가 냉장지도 제작비와 근거가 된다.",
-    "Block 016의 차량별 온도기록이 조합 노선표의 기록 공백을 반박하는 실측 자료가 된다.",
-    "Block 012의 공항 냉장창고와 우선 도크가 전국 냉장지도의 출발점으로 들어간다."
+    "첫 기록료 선결제와 폐기율 데이터가 냉장지도 제작비와 근거가 된다.",
+    "차량별 온도기록이 조합 노선표의 기록 공백을 반박하는 실측 자료가 된다.",
+    "공항 냉장창고와 우선 도크가 전국 냉장지도의 출발점으로 들어간다."
   ],
   "emotional_beat": {
     "type": "map_control",
@@ -92,13 +92,67 @@
     "opening_progression": {
       "public_signboard_event": "조합 노선표의 기록 공백 세 구간이 병원 구매회의 자료에 들어가고 강원권 병원 두 곳이 냉장지도 시험지역이 된다",
       "representative_reevaluation": "박도현, 강원권 병원, 휴게소 운영자가 태오바이오를 배송업체가 아니라 냉장 병목을 지도화하는 표준 운영자로 본다",
-      "next_battlefield_ticket": "강원권 시험지역과 지도 접근료 계약이 백신보다 기록이라는 ARC-02 결론으로 이어진다"
+      "next_battlefield_ticket": "강원권 시험지역과 지도 접근료 계약이 백신보다 기록이라는 결론으로 이어진다"
     },
     "block_cider": {
       "has_cider": true,
       "receipt_type": "map_and_route_receipt",
       "receipt_line": "강태오는 기록 데이터를 전국 냉장지도 초안, 강원권 우선 노선권, 지도 접근료 계약, 중간 보관소 책임면제 조건으로 바꾼다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "기록 데이터를 전국 냉장지도와 지역 우선 노선권으로 바꾸는 데이터 기반 확장 승리",
+      "recognition_signal": "박도현의 시선 변화: 기준 양식 확인서에 지역 냉장지도 시험자료를 붙이는 것을 허용해 전국 확장의 제도적 발판을 준다",
+      "reward_signal": "강태오는 기록 데이터를 전국 냉장지도 초안, 강원권 우선 노선권, 지도 접근료 계약, 중간 보관소 책임면제 조건으로 바꾼다.",
+      "growth_signal": "강태오는 폐기율 데이터와 차량 온도기록을 전국 냉장지도라는 노선권 상품으로 바꾼다.",
+      "expectation_signal": "강원권 시험지역과 지도 접근료 계약이 백신보다 기록이라는 결론으로 이어진다",
+      "reader_feel": "독자는 「전국 냉장지도」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 기록 데이터를 전국 냉장지도 초안, 강원권 우선 노선권, 지도 접근료 계약, 중간 보관소 책임면제 조건으로 바꾼다. 성장 장면: 강태오는 폐기율 데이터와 차량 온도기록을 전국 냉장지도라는 노선권 상품으로 바꾼다. 다음 기대감: 강원권 시험지역과 지도 접근료 계약이 백신보다 기록이라는 결론으로 이어진다",
+      "mature_success_signal": "강태오는 전국 냉장지도의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "기록 데이터를 전국 냉장지도와 지역 우선 노선권으로 바꾸는 데이터 기반 확장 승리",
+        "recognition": "박도현의 시선 변화: 기준 양식 확인서에 지역 냉장지도 시험자료를 붙이는 것을 허용해 전국 확장의 제도적 발판을 준다",
+        "reward": "강태오는 기록 데이터를 전국 냉장지도 초안, 강원권 우선 노선권, 지도 접근료 계약, 중간 보관소 책임면제 조건으로 바꾼다.",
+        "growth": "강태오는 폐기율 데이터와 차량 온도기록을 전국 냉장지도라는 노선권 상품으로 바꾼다.",
+        "expectation": "강원권 시험지역과 지도 접근료 계약이 백신보다 기록이라는 결론으로 이어진다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 박도현의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 강원권 시험지역과 지도 접근료 계약이 백신보다 기록이라는 결론으로 이어진다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "첫 기록료 선결제가 들어오자마자 강태오는 돈을 쌓아 두지 않는다. 세 병원 폐기율 데이터, 공항 도크 시간표, 냉장차 네 대의 온도기록, 조합 파업 당시 우회 노선을 한 장의 냉장지도 초안으로 묶는다. 지도에는 병원만 찍히지 않는다.",
+      "proof_action": "태오는 전국 지도를 무료로 공개하지 않는다. 먼저 조합 노선표와 태오 차량 온도기록을 겹쳐, 조합이 표시한 안전 노선 중 실제로는 두 시간 이상 기록 공백이 생기는 구간을 세 곳 찍어 낸다.",
+      "proof_axis": "전생에서 전국 콜드체인 확장은 차량 대수보다 병목 지도와 중간 보관 책임선이 먼저였다는 기억",
+      "recognition_or_resistance_signal": "박도현 -> 기준 양식 확인서에 지역 냉장지도 시험자료를 붙이는 것을 허용해 전국 확장의 제도적 발판을 준다",
+      "receipt_asset": "강태오는 기록 데이터를 전국 냉장지도 초안, 강원권 우선 노선권, 지도 접근료 계약, 중간 보관소 책임면제 조건으로 바꾼다.",
+      "reward_asset_classes": [
+        "rights_control_asset"
+      ],
+      "next_regulated_gate": "강원권 시험지역과 지도 접근료 계약이 백신보다 기록이라는 결론으로 이어진다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 박도현의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 강원권 시험지역과 지도 접근료 계약이 백신보다 기록이라는 결론으로 이어진다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {
@@ -123,7 +177,7 @@
       "suspicion_from": "휴게소 운영자"
     },
     "future_prep": {
-      "action": "전국 냉장지도 초안과 강원권 시험지역 데이터를 ARC-02 최종 표준가 산정 자료로 묶는다",
+      "action": "전국 냉장지도 초안과 강원권 시험지역 데이터를 최종 표준가 산정 자료로 묶는다",
       "target_event": "백신보다 기록"
     }
   },

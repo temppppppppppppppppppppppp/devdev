@@ -6,6 +6,8 @@ Scope: canonical grading benchmark for existing live `TR + BI` pairs
 Update Note:
 - 2026-04-09 opening pacing reconciliation patch added
 - 2026-04-09 TR block episode-bundle clarification added
+- 2026-05-02 immediate material deployment pacing evidence gate added
+- 2026-05-02 downstream episode pacing hint gate added for immediate-use material classification
 
 ## 1. Role
 
@@ -331,12 +333,24 @@ For the current material-side order, a pair may be treated as immediately deploy
 - donor structure is applied or adopted in visible material-side authority
 - contamination guardrails are visible
 - pair-level closeout ties the current usability claim to the donorized structure
+- pacing evidence is visible enough for immediate writer use:
+  - opening pacing triage is `GREEN`
+  - whole-run pacing triage is `GREEN`
+  - `TR` and `BI` expose a blockwise pacing/payoff surface, such as `reader_payoff_ladder`, `webnovel_fast_pacing`, `webnovel_pacing_contract`, or an equivalent named blockwise payoff cadence
+  - `TR` exposes a downstream episode pacing hint or equivalent advisory range per block, and `BI` mirrors or summarizes it when BI exists
+  - the pacing hint gives downstream operators bounded guidance, such as `recommended_episode_count`, `acceptable_episode_range`, `stretch_cap`, `do_not_expand_to`, and the proof/receipt/next-gate beat that must land inside the range
+  - the promotion closeout names the pacing surface and does not rely on vague claims like `fast enough`, `webnovel feel`, or `good rhythm`
+- canonical newly touched pair path is `TR.blocks[*].genre_ext.downstream_episode_pacing_hint` mirrored to `MasterBible.plot_roadmap[*].genre_ext.downstream_episode_pacing_hint`
+- range attachment audits must report `TR coverage count`, `BI mirror count`, `TR/BI mismatch count`, and `missing block ids`
+- this requirement is material-side only; it does not modify S2 contracts, runtime schema requiredness, or the existing `TR block ~= 2~6 downstream episodes` planning-bundle rule
+- rows admitted before the range gate are transitionally read as `immediate_deployable_material_pending_downstream_episode_pacing_hint_attachment` until a bounded range attachment audit closes the new surface
+- if the advisory range surface is missing or too vague, the pair remains benchmark/reference inventory even when the general pacing triage verdicts are `GREEN`
 
-Current overlay ruling as of 2026-04-29:
+Current overlay ruling is maintained outside this spec:
 
-- `golden_canary_deepclone_probe_a_fullblock_v1` is the only immediately deployable material
-- other `GREENPLUS` / `GREEN` rows stay benchmark/reference inventory until donor structure is applied and recorded
 - see `docs/2026-04-29/material-side-immediate-deployment-overlay.md`
+- see `production-pair-operational-registry-v1.json`
+- do not infer the current immediate-deployment count from this spec; this spec defines the gate
 
 ### 8.2 `GREEN`
 
@@ -415,8 +429,9 @@ Every pair benchmark audit should produce:
 10. `P1` score table and total
 11. provisional grade
 12. open migration debt: `yes/no`
-13. alias update note if grade is `GREENPLUS` or `GREEN`
-14. top `3` repair units if grade is `YELLOW` or `RED`
+13. pacing evidence note if the audit supports immediate material deployment, including the exact downstream episode pacing hint surface or equivalent advisory range used
+14. alias update note if grade is `GREENPLUS` or `GREEN`
+15. top `3` repair units if grade is `YELLOW` or `RED`
 
 Audit discipline:
 
@@ -438,6 +453,12 @@ Audit discipline:
   - total `TR` block count
   - no-cider block count
   - exact no-cider block numbers, or `none`
+- if the report claims immediate material deployment, it must name:
+  - opening pacing triage verdict
+  - whole-run pacing triage verdict
+  - the exact `TR` and `BI` pacing/payoff surfaces used for writer handoff
+  - the audit or closeout artifact that verified those surfaces
+- a pair with strong benchmark quality but no visible pacing surface stays benchmark/reference inventory until pacing is attached and audited
 
 ## 11. Operating Rule
 

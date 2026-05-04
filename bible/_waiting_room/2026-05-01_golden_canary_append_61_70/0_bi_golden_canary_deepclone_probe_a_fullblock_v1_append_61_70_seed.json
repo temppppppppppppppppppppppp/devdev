@@ -2,7 +2,7 @@
   "_schema_version": "blockguide.append_bi_seed.v1",
   "_work_id": "golden_canary_deepclone_probe_a_fullblock_v1_append_61_70",
   "_family": "blockguide",
-  "_status": "waiting_room_bi_seed_after_block_061",
+  "_status": "superseded_by_final_append_bi_after_handoff_pass",
   "_canonical_scope": "append-only seed. This file does not replace the sealed baseline BI.",
   "_source_phase0": "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
   "_source_tr": "treatments/golden_canary_deepclone_probe_a_fullblock_v1_append_61_70_tr_block_061_draft.json",
@@ -57,9 +57,94 @@
         "primary_incident": "135조 이후 외부 접근 요청 전면 격리",
         "secondary_incident": "가족 선지급 청탁 차단과 국부펀드 비공식 AI 미팅 격하",
         "receipt": "post-golden quarantine protocol + solicitation ledger + right-to-ignore authority",
-        "next_gate": "Block 62 successor screening"
+        "next_gate": "successor screening"
+      },
+      {
+        "block_id": "Block 62",
+        "title": "후계 검증표",
+        "purpose": "successor screening",
+        "primary_incident": "후계 검증표와 위임 kill-switch 설계",
+        "secondary_incident": "마이클 독립 판단권 요구 제한과 가족 후보 관찰권 sandbox 처리",
+        "receipt": "successor screening veto sheet + delegation kill-switch + revocable mandate sandbox",
+        "next_gate": "sovereign line formalization"
+      },
+      {
+        "block_id": "Block 63",
+        "title": "국가선의 가격표",
+        "purpose": "sovereign line",
+        "primary_incident": "국부펀드 비공식 라인을 공개 RFP로 전환",
+        "secondary_incident": "국내 감독기관 사적 설명회 요구를 공식 문서 창구로 격하",
+        "receipt": "sovereign line formalization + public RFP gate + state-contact firewall",
+        "next_gate": "hostile courtship refusal"
+      },
+      {
+        "block_id": "Block 64",
+        "title": "구애 거절서",
+        "purpose": "hostile courtship refusal",
+        "primary_incident": "우호적 흡수 제안 거절과 역제안서 발송",
+        "secondary_incident": "가족 후보 중개권 봉쇄와 외부 컨소시엄 정보권 박탈",
+        "receipt": "hostile courtship refusal memo + no-dilution ownership rule + reverse term sheet",
+        "next_gate": "governance codex custody"
+      },
+      {
+        "block_id": "Block 65",
+        "title": "운용 헌장 보관권",
+        "purpose": "governance codex",
+        "primary_incident": "governance codex 작성과 금고 보관",
+        "secondary_incident": "한정호 가족 예외 요구의 감사 로그 편입과 어머니 선의 예외 차단",
+        "receipt": "governance codex custody + non-intervention charter + audit-only family exception wall",
+        "next_gate": "rescue on my terms"
+      },
+      {
+        "block_id": "Block 66",
+        "title": "조건부 구조선",
+        "purpose": "rescue on my terms",
+        "primary_incident": "AI 인프라 SPC 구조 요청을 조건부 bridge facility로 전환",
+        "secondary_incident": "가족 후보의 구조 중개권 상승 시도 봉쇄와 audit desk 집행권 강화",
+        "receipt": "rescue-on-my-terms precedent + clawback escrow + audit acceptance receipt",
+        "next_gate": "family constitution rewrite"
+      },
+      {
+        "block_id": "Block 67",
+        "title": "가족 헌장 개정일",
+        "purpose": "family constitution rewrite",
+        "primary_incident": "가족 헌장 개정과 혈연 거부권 폐지",
+        "secondary_incident": "가족 후보 관찰권 정지와 한정호 witness 서명",
+        "receipt": "family constitution rewrite + bloodline veto removal + audit inheritance clause",
+        "next_gate": "peace stress test"
+      },
+      {
+        "block_id": "Block 68",
+        "title": "평화 부하 시험",
+        "purpose": "peace stress test",
+        "primary_incident": "한시우 부재 72시간 peace stress test",
+        "secondary_incident": "국가선 조건 수정, 가족 후보 탄원, clawback 완화 요청의 자동 반려",
+        "receipt": "peace stress test pass + silent veto proof + procedure-without-prophet receipt",
+        "next_gate": "irreversible handoff"
+      },
+      {
+        "block_id": "Block 69",
+        "title": "되돌릴 수 없는 위임",
+        "purpose": "irreversible handoff",
+        "primary_incident": "irreversible handoff deed 발효",
+        "secondary_incident": "마이클, audit desk, 가족 신탁에 서로 다른 장기권 위임과 자동 정지 레일 부착",
+        "receipt": "irreversible handoff deed + ownership core retained + automatic revocation rail",
+        "next_gate": "new orbit closure"
+      },
+      {
+        "block_id": "Block 70",
+        "title": "새 궤도",
+        "purpose": "new orbit",
+        "primary_incident": "new orbit charter 발표와 founder-without-throne 지위 확정",
+        "secondary_incident": "가족, 마이클, 패밀리오피스가 왕좌 없이 각자 권한을 인정하는 첫 월간 보고",
+        "receipt": "new orbit charter + founder-without-throne status + closed-loop governance receipt",
+        "next_gate": "append wave sealed"
       }
     ],
     "promotion_rule": "Final append BI generation is blocked until the 61-70 TR wave is complete and a source TR handoff gate passes. Until then this is a waiting-room BI seed only."
-  }
+  },
+  "_latest_boundary_audit": "docs/2026-05-03/golden_canary_deepclone_probe_a_append_066_070_boundary_3pass.md",
+  "_source_tr_handoff_gate": "docs/2026-05-03/golden_canary_deepclone_probe_a_append_061_070_source_tr_handoff_gate.md",
+  "_final_append_bi": "bible/0_bi_golden_canary_deepclone_probe_a_fullblock_v1_append_61_70.json",
+  "_final_bi_audit": "docs/2026-05-03/golden_canary_deepclone_probe_a_append_061_070_final_bi_5pass.md"
 }

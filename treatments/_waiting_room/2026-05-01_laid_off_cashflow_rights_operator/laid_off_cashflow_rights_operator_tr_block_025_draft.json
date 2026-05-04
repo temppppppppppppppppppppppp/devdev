@@ -1,0 +1,179 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "25",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 025 draft only. Locks Mira as a risk-marker by making its legal draft dangerous, then converts manual invoice/shipping verification into Aster volume-clause proof.",
+  "blocks": [
+    {
+      "block_id": "Block 25",
+      "block_no": 25,
+      "title": "AI 초안이 먼저 틀렸다",
+      "episode_span_intent": "2~6화 분량. Mira의 계약 반박 초안 오류, price protection 조항 오독, 현장 송장/packing list/선적 서류 수동 대조, Aster Trading 최소 물량 미달 proof, AI 초안 사용 금지 프로토콜, 달러 계좌 보류 해제용 검증표 확보를 압축한다.",
+      "content": {
+        "context": "Aster Trading의 계약 무효 통지 이후, 모두가 빨리 반박문을 원한다. 해외소싱팀은 Mira에 Aster 통지문과 SableWorks 기존 공급 계약 원본 일부를 넣고 대응 초안을 뽑는다. 화면에는 그럴듯한 문장이 나온다. 'SableWorks의 commercial adjustment는 다온리테일과 도윤권리운영이 공동으로 수령할 가격 조정이다.' 회의실이 잠깐 조용해진다. 문장만 보면 시원하다. 하지만 도윤은 바로 멈춘다. 그 한 줄은 Aster가 주장한 제3자 접근과 가격 조정 수령을 도윤 스스로 인정하는 문장이다.",
+        "event_villain": "첫 번째 사건은 Mira 초안의 치명적 오류다. Mira는 price protection 조항을 '가격 조정 권리'로 넓게 해석해 도윤권리운영을 수령 주체처럼 적었다. 한규리는 초안을 보고 얼굴이 굳는다. 이대로 보내면 Aster는 'SPV가 계약 당사자 행세를 했다'고 주장할 수 있다. 김원재도 은행 쪽에서 같은 위험을 본다. 달러 계좌 보류 해제는 더 멀어진다. 도윤은 Mira 결과를 삭제하지 않는다. 오류 로그로 남긴다. AI가 어디서 틀렸는지 남겨야 다음 문서에서 금지어를 만들 수 있다.",
+        "second_incident": "두 번째 사건은 현장 서류 대조다. 도윤은 계약 문구만 보지 않는다. Aster의 기존 공급 계약 원본 제한 열람본에서 minimum quarterly purchase 조항과 price protection 적용 조건을 찾는다. 그리고 다온 창고에 남은 SableWorks 입고 송장, packing list, bill of lading 사본, 통관 신고번호, Aster가 직접 수령한 물량 로그를 맞춰 본다. 숫자가 어긋난다. Aster는 최근 두 분기 동안 최소 물량 1,200대 조건을 채우지 못했다. 더구나 price protection은 정규 retail channel에만 붙어 있고, D-RN 리퍼브 라인과 downstream refurbishment operator는 별도 검토 대상이다.",
+        "solution": "도윤은 새 반박문을 길게 쓰지 않는다. 그는 검증표를 만든다. 첫 장은 Mira 오류 로그다. price protection, commercial adjustment, 공동 수령, third-party beneficiary 같은 위험 문구를 금지어로 묶는다. 둘째 장은 송장/packing list/선적 서류 대조표다. PO 번호, 선적일, 입고일, 수량, Aster 수령분, 다온 D-RN 라우팅분을 나란히 놓는다. 셋째 장은 Aster 최소 물량 미달 proof다. 도윤은 한규리에게 말한다. '반박하지 말고 조건을 물읍시다. 최소 물량을 못 채운 계약자가 price protection을 어디까지 주장할 수 있는지.'",
+        "reward": "블록 끝에서 Mira는 체면을 잃고, 도윤은 더 강한 문서를 얻는다. Mira 오류 로그, AI 초안 사용 금지 프로토콜, 현장 송장/packing list/선적 서류 수동 대조표, Aster 최소 물량 미달 proof, 달러 계좌 보류 해제용 검증표, SableWorks 기존 공급 계약 원본 추가 열람 요청권. 김원재는 계좌를 아직 열어주지 않지만 보류 해제 조건을 바꾼다. 정보 접근 문제가 아니라 분쟁 권리 범위 검증 문제로. 도윤은 그 문구를 저장한다. 'AI가 틀린 덕분에, 사람이 볼 서류가 늘었습니다.'"
+      },
+      "stakes": "Mira 초안을 그대로 쓰면 도윤권리운영은 제3자 접근과 가격 조정 수령을 스스로 인정해 Aster 공격을 키운다. 반대로 AI 오류를 로그로 남기고 현장 서류로 Aster의 최소 물량 미달을 잡으면 달러 계좌 보류 사유를 정보 유출에서 권리 범위 검증으로 바꿀 수 있다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "Mira가 Aster 대응 초안에서 price protection 조항을 오독해 도윤권리운영을 가격 조정 공동 수령 주체처럼 적는 위험 문구를 생성함",
+        "incident_2": "도윤이 현장 송장, packing list, bill of lading, 입고 로그를 수동 대조해 Aster Trading의 최소 물량 미달과 D-RN 리퍼브 라인 별도성을 찾아냄",
+        "next_actionable_gate": "환차익보다 해외 계약 파일 접근권 요구, SableWorks 기존 계약 원본 확대 열람, Aster 물량 미달 통지, 달러 계좌 보류 해제 심사",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 AI가 틀린 것을 바로잡아 회사 법무를 도우려는 게 아니다. Aster의 공격을 무너뜨리고 달러 계좌 gate를 되살리려면 자신이 검증 주체로 남아야 하므로 Mira 오류를 자기 검증 프로토콜의 근거로 바꾼다.",
+        "morality_position": "AI를 겸손하게 쓰자는 교훈처럼 보이지만 핵심은 도윤권리운영만 통과할 수 있는 수동 검증 루트를 만드는 것이다.",
+        "efficiency_choice": "긴 반박문 대신 금지어 목록, 서류 대조표, 최소 물량 미달 proof로 은행과 법무가 바로 판단할 수 있는 자료를 만든다."
+      },
+      "power_shift": {
+        "protagonist": "달러 계좌가 보류되지만 기존 공급 계약 원본 gate와 접근 로그 방어 receipt를 가진 계약 공격 대응자 -> AI 초안 한계를 고정하고 Aster 물량 조항 약점을 잡은 수동 검증 주체",
+        "antagonist": "Aster Trading: 정보 접근 위반과 price protection을 내세운 기존 수입사 -> 최소 물량 미달과 채널 범위 제한을 해명해야 하는 계약자",
+        "system": "Mira 재검증 과제 -> AI 초안 오류 로그, 현장 송장/선적 서류 대조표, 달러 계좌 보류 해제용 검증표"
+      },
+      "relationship_delta": [
+        {
+          "target": "Mira",
+          "before": "이상치 표시 보조 도구이자 Aster 대응 초안 재검증 과제",
+          "after": "법적 문장 생성에는 위험한 보조 도구로 한계가 고정되고, 오류 로그와 금지어 프로토콜을 남김"
+        },
+        {
+          "target": "Aster Trading",
+          "before": "계약 무효와 정보 접근 위반을 주장해 달러 계좌와 할인권 귀속을 막는 경쟁 수입사",
+          "after": "최소 물량 미달과 정규 retail channel 범위 제한을 공격받을 약점이 생김"
+        },
+        {
+          "target": "김원재",
+          "before": "분쟁 중인 해외 계약을 이유로 달러 계좌 정식 개설을 보류하는 외환 gatekeeper",
+          "after": "정보 유출 리스크가 아니라 권리 범위 검증으로 보류 사유를 재분류하는 gatekeeper"
+        },
+        {
+          "target": "한규리",
+          "before": "SPV가 downstream operator였다는 대응 메모를 작성하는 법무 validator",
+          "after": "AI 초안 금지어 목록과 수동 검증표를 법무 대응 문서로 바꾸는 validator"
+        },
+        {
+          "target": "윤서린",
+          "before": "read-only 접근 로그 무결성 확인서로 도윤을 방어하는 witness",
+          "after": "현장 송장/packing list/선적 서류 대조표의 증거 carrier를 감사 로그에 붙이는 witness"
+        }
+      ],
+      "foreshadow": [
+        "환차익보다 해외 계약 파일 접근권 요구",
+        "SableWorks 기존 계약 원본 확대 열람",
+        "Aster 물량 미달 통지",
+        "달러 계좌 보류 해제 심사",
+        "해외 계약 파일 접근권의 정식화"
+      ],
+      "callback": [
+        "Block 24의 Mira 초안 재검증 과제가 이번 블록의 AI 오류 로그로 회수됨",
+        "Block 24의 SableWorks 기존 공급 계약 원본 제한 열람 gate가 minimum quarterly purchase 조항 확인으로 회수됨",
+        "Block 24의 달러 계좌 정식 개설 보류 조건이 보류 해제용 검증표로 전환됨",
+        "Block 23의 Aster Trading 계약 충돌 경고가 최소 물량 미달 proof로 반격됨",
+        "Block 21의 AI는 판단자가 아니라 표시 도구라는 원칙이 법무 초안 금지 프로토콜로 고정됨"
+      ],
+      "emotional_beat": {
+        "type": "ai_failure_to_manual_verification_proof",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "다온리테일 법무팀 회의실 / 도윤권리운영 임시 사무공간 / 창고 입고 서류 보관실 / 은행 외환 보류 심사 화면",
+        "type": "법무 / SPV / 창고 서류 / 은행"
+      },
+      "time_span": {
+        "duration": "3일",
+        "in_story_time": "2026년 7월 첫째 주 중반"
+      },
+      "genre_ext": {
+        "capital_before": "read-only 접근 로그 무결성 확인서 + Aster Trading 계약 무효 주장 대응 메모 + SableWorks 기존 공급 계약 원본 제한 열람 gate + 달러 계좌 정식 개설 보류 조건 + Mira 초안 재검증 과제",
+        "capital_after": "Mira 오류 로그 + AI 초안 사용 금지 프로토콜 + 현장 송장/packing list/선적 서류 수동 대조표 + Aster 최소 물량 미달 proof + 달러 계좌 보류 해제용 검증표 + SableWorks 기존 공급 계약 원본 추가 열람 요청권",
+        "capital_delta": "AI 초안 재검증 과제를 AI 한계 고정 프로토콜과 Aster 물량 조항 약점 proof로 전환",
+        "profit_loss": "즉시 수익은 아직 없다. 다만 Aster의 최소 물량 미달이 확인되면 price protection 주장의 범위를 좁히고, 할인권 귀속과 달러 계좌 보류 해제를 재개할 수 있다.",
+        "method": "Mira 초안 오류 로그화, 위험 문구 금지어 설정, 현장 송장/packing list/bill of lading 수동 대조, 기존 공급 계약의 minimum quarterly purchase와 채널 범위 확인, 보류 해제 검증표 작성",
+        "deal_type": "AI 한계 고정 / 수동 검증 강화 / Aster 물량 조항 proof",
+        "leverage_used": [
+          "read-only 접근 로그 무결성 확인서",
+          "SableWorks 기존 공급 계약 원본 제한 열람 gate",
+          "Mira 초안 재검증 과제",
+          "현장 송장",
+          "packing list",
+          "bill of lading",
+          "달러 계좌 정식 개설 보류 조건"
+        ],
+        "opponent": {
+          "name": "Aster Trading",
+          "type": "기존 수입사 / price protection 주장자",
+          "weakness_exploited": "최소 물량 조건을 최근 두 분기 연속 채우지 못했고, price protection 적용 범위가 정규 retail channel에 묶여 있다는 점"
+        },
+        "time_pressure": "달러 계좌 보류가 계속되면 SableWorks 다음 선적분 할인권이 다온 내부 매입가로 확정되고, Aster가 협상 무효 프레임을 굳힌다.",
+        "risk_level": "고위험",
+        "business_sector": "AI 계약 보조 / 현장 송장 검증 / 해외 공급 계약 / 은행 외환 / 수입사 물량 조항",
+        "section_rotation": "AI가 틀린 초안을 내고, 사람이 송장과 선적 서류로 반격 proof를 만든다",
+        "success_pattern": "Mira 오류 로그, AI 초안 사용 금지 프로토콜, 현장 서류 대조표, Aster 최소 물량 미달 proof, 달러 계좌 보류 해제용 검증표가 남는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "ai_failure_to_manual_proof_receipt",
+          "receipt_line": "'AI가 틀린 덕분에, 사람이 볼 서류가 늘었습니다.'",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "Mira 오류 로그",
+          "AI 초안 사용 금지 프로토콜",
+          "현장 송장/packing list/선적 서류 수동 대조표",
+          "Aster 최소 물량 미달 proof",
+          "달러 계좌 보류 해제용 검증표",
+          "SableWorks 기존 공급 계약 원본 추가 열람 요청권"
+        ],
+        "document_evidence": [
+          "Mira Aster 대응 초안",
+          "price protection 오독 문장",
+          "SableWorks 기존 공급 계약 원본 일부",
+          "minimum quarterly purchase 조항",
+          "현장 송장",
+          "packing list",
+          "bill of lading 사본",
+          "Aster 수령 물량 로그",
+          "달러 계좌 보류 조건 메모"
+        ],
+        "field_validation": [
+          "Mira 초안은 도윤권리운영을 가격 조정 공동 수령 주체처럼 적음",
+          "Aster는 최근 두 분기 최소 물량 1,200대 조건을 채우지 못함",
+          "price protection은 정규 retail channel에 붙어 있음",
+          "D-RN 리퍼브 라인과 downstream refurbishment operator는 별도 검토 대상",
+          "달러 계좌 보류 사유는 정보 유출에서 권리 범위 검증으로 재분류 가능"
+        ],
+        "witness_carrier": [
+          "Mira 오류 로그",
+          "한규리의 위험 문구 금지어 프로토콜",
+          "윤서린의 현장 서류 감사 로그 연결",
+          "김원재의 보류 사유 재분류 메모",
+          "SableWorks 기존 공급 계약 원본 제한 열람본"
+        ],
+        "receipt": [
+          "Mira 오류 로그",
+          "AI 초안 사용 금지 프로토콜",
+          "현장 송장/packing list/선적 서류 수동 대조표",
+          "Aster 최소 물량 미달 proof",
+          "달러 계좌 보류 해제용 검증표"
+        ],
+        "next_gate": "환차익보다 해외 계약 파일 접근권 요구, SableWorks 기존 계약 원본 확대 열람, Aster 물량 미달 통지, 달러 계좌 보류 해제 심사"
+      },
+      "foreshadow_targets": [
+        26,
+        27,
+        28,
+        29
+      ]
+    }
+  ]
+}

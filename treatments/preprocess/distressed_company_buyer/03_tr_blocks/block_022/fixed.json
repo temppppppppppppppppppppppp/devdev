@@ -1,0 +1,142 @@
+{
+  "block_id": "Block 22",
+  "title": "공동구매 계정은 빚보다 싸다",
+  "content": {
+    "context": "48시간 시정조치 grace와 재점검 접수번호를 들고 나왔지만, 해문푸드서비스의 주방은 아직 굴러가지 않는다. 냉장고를 정리해도 식자재가 없으면 월요일 배식은 다시 빈 tray가 된다. data-room의 다음 탭에는 식자재 공동구매 계정이 있다. 도윤이 보는 건 미납 채무가 아니라 학교와 병원 납품가를 낮출 수 있는 단가표와 발주 코드다.",
+    "event_villain": "식자재 공급사 동원푸드넷은 해문푸드서비스의 87일 연체를 이유로 공동구매 계정을 동결한다. 채권관리팀은 신규 발주를 받으려면 과거 미수 전액에 대한 연대보증이나 채무인수 확약서를 먼저 내라고 요구한다. 해문푸드서비스 대표는 도윤에게 '이번 한 번만 대신 막아 달라'고 매달리고, 명성급식은 공급사에 태경푸드까지 부도 공장이라며 단가표를 회수하라고 압박한다.",
+    "solution": "도윤은 과거 미수에 손대지 않는다. 그는 공동구매 계정을 두 장부로 갈라 달라고 요구한다. 과거 미수는 해문푸드서비스 기존 채무로 남기고, 신규 발주는 SPV escrow에서 선입금으로 결제한다. waterfall은 단순하다. 첫째, 월요일 배식용 필수 식자재 대금은 공급사에 선지급한다. 둘째, 위생 시정조치 비용 holdback은 별도 계좌에 묶는다. 셋째, 해문푸드서비스에는 신규 발주 매출에서 과거 미수 상환분을 자동 공제하지 않는 비인수 확인서를 받는다. 도윤은 말한다. '빚을 사는 게 아닙니다. 오늘 주문할 권리만 삽니다.'",
+    "reward": "동원푸드넷은 과거 미수를 탕감하지 않는다. 대신 2주짜리 조건부 공동구매 코드를 열고, 학교 급식용 18개 필수 품목 단가표를 2주간 lock한다. SPV escrow 선입금 확인서가 붙자 첫 발주서가 즉시 발행되고, 명성급식이 흔들던 부도 프레임은 신규 발주 비인수 확인서 때문에 막힌다. 도윤은 식자재 창고를 산 게 아니다. 그는 과거 빚보다 싼 현재 주문권을 사서 월요일 학교 급식 gate를 열었다."
+  },
+  "incident_beats": [
+    "식자재 공급사가 87일 연체를 이유로 공동구매 단가표와 발주 계정을 동결하고 연대보증 또는 채무인수를 요구한다",
+    "도윤이 과거 미수와 신규 발주를 분리한 SPV escrow waterfall을 제시해 2주 조건부 공동구매 코드, 18개 필수 품목 단가표 lock, 신규 발주 비인수 확인서 receipt를 확보한다"
+  ],
+  "stakes": "공동구매 계정을 통째로 떠안으면 도윤은 해문푸드서비스의 과거 연체까지 산다. 하지만 계정을 살리지 못하면 월요일 학교 급식 대체공급은 원가가 맞지 않고, 021에서 확보한 재점검 grace도 실제 운영 proof 없이 끝난다.",
+  "power_shift": {
+    "protagonist": "위생점검 타이머를 멈춘 operator에서 과거 채무와 현재 주문권을 분리해 급식 원가 구조를 여는 dealmaker로 이동한다.",
+    "antagonist": "동원푸드넷과 명성급식은 해문푸드서비스의 미납 채무로 신규 발주를 봉쇄하려 하지만, 도윤의 비인수 확인서와 선입금 escrow 때문에 현재 주문권을 계속 묶어 둘 명분을 잃는다."
+  },
+  "relationship_delta": [
+    {
+      "target": "해문푸드서비스 대표",
+      "before": "과거 미수를 도윤이 대신 막아 주길 바라는 폐업 위기 급식업체 대표",
+      "after": "과거채무 비인수 확인서와 신규 발주 분리 장부에 서명하며 도윤에게 주문권 통제를 넘긴다",
+      "continuity_anchor_before": "위생 대응 대리권, 폐기 확인서 서명권, 시정조치 비용 holdback을 도윤에게 넘긴다"
+    },
+    {
+      "target": "동원푸드넷 채권관리팀",
+      "before": "87일 연체를 이유로 공동구매 계정을 동결하고 연대보증을 요구하는 공급사 gatekeeper",
+      "after": "SPV escrow 선입금과 과거채무 분리 확인서를 받고 2주 조건부 공동구매 코드를 연다"
+    },
+    {
+      "target": "명성급식",
+      "before": "부도 공장과 연체 급식업체 조합을 공급사에 찔러 단가표 회수를 노리는 경쟁 급식업체",
+      "after": "신규 발주가 과거 채무와 분리되면서 부도 프레임만으로 계정 재가동을 막지 못한다",
+      "continuity_anchor_before": "점수표 공격은 유지하지만, 재점검 절차가 열리면서 즉시 해지 프레임을 완성하지 못한다"
+    },
+    {
+      "target": "성우전자 총무팀",
+      "before": "3일 임시 배식만 허용한 발주처",
+      "after": "18개 필수 품목 단가표 lock과 첫 발주서를 보고 월요일 배식 준비를 조건부로 인정한다",
+      "continuity_anchor_before": "재점검 접수번호와 시정조치 grace를 보고 즉시 해지를 3일 유예한다"
+    }
+  ],
+  "foreshadow": [
+    "2주 조건부 공동구매 코드는 후속 국면의 학교 급식 4주 제한 대체공급 PO 원가 근거가 된다.",
+    "과거채무 비인수 확인서는 후속 국면의 구매위원회 자격 심사와 내부정보 프레임 방어에 쓰인다.",
+    "공동구매 계정 분리 구조는 후속 국면에서 공급사가 계정을 다시 잠글 때 구매대행권 확보 논리로 확장된다.",
+    "SPV escrow waterfall은 해당 아크의 반복 현금흐름과 은행 lockbox 설계의 초안이 된다."
+  ],
+  "callback": [
+    "후속 국면의 48시간 시정조치 grace와 재점검 접수번호를 공급사에 보여 현재 주문권의 운영 가능성을 증명한다.",
+    "후속 국면의 선입금 50% 구조를 식자재 신규 발주 escrow 선입금으로 확장한다.",
+    "후속 국면의 제조+운송 invoice receipt를 SPV가 실제 결제 흐름을 만든 전례로 제시한다.",
+    "후속 국면의 통째로 사지 않는 원칙이 과거채무 비인수 확인서로 반복된다."
+  ],
+  "emotional_beat": {
+    "type": "debt_split_purchase_code_cider",
+    "intensity": 8
+  },
+  "tension_level": 8,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "동원푸드넷 채권관리팀 회의실 / 해문푸드서비스 data-room / SPV escrow 계좌 확인 화면",
+    "type": "joint-purchase account reactivation negotiation"
+  },
+  "time_span": {
+    "duration": "하루",
+    "in_story_time": "재점검 접수번호 발급 당일 오후"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "위생 대응 대리권 / 폐기 확인서 서명권 / 시정조치 비용 holdback / 48시간 시정조치 grace / 재점검 접수번호 / 성우전자 3일 임시 배식 유지 확인서",
+    "capital_after": "2주 조건부 공동구매 코드 / 18개 필수 품목 단가표 lock / SPV escrow 신규 발주 waterfall / 과거채무 비인수 확인서 / 첫 식자재 발주서 / 월요일 배식 원가 proof",
+    "capital_delta": "0억",
+    "profit_loss": "과거 미수 비인수, 신규 발주 선입금 부담과 단가표 lock 확보",
+    "method": "연체 계정을 통째로 떠안지 않고 과거 미수와 신규 발주를 분리한 뒤 SPV escrow 선입금으로 현재 주문권만 산다.",
+    "investment_type": "distressed cafeteria purchasing-right reactivation",
+    "deal_type": "joint-purchase code reactivation / escrow waterfall / debt non-assumption",
+    "leverage_used": [
+      "재점검 접수번호",
+      "48시간 시정조치 grace",
+      "성우전자 3일 임시 배식 유지 확인서",
+      "SPV escrow",
+      "선입금 확인서",
+      "과거채무 비인수 확인서",
+      "18개 필수 품목 단가표",
+      "첫 식자재 발주서"
+    ],
+    "opponent": {
+      "name": "동원푸드넷 채권관리팀 / 명성급식 / 해문푸드서비스 대표",
+      "type": "supplier credit gate, competitor account-freeze attack, and distressed debtor pressure",
+      "weakness_exploited": "공급사는 과거 미수 때문에 신규 발주를 막고 싶지만, 현재 주문이 선입금 escrow로 결제되고 과거채무 비인수 문서가 붙으면 단가표를 묶어 둘 실익이 줄어든다"
+    },
+    "historical_event": null,
+    "time_pressure": "월요일 학교 급식 발주 마감 전 2주 조건부 공동구매 코드와 단가표 lock을 받아야 한다.",
+    "knowledge_used": "회귀 전 해문푸드서비스 인수자가 과거 미수는 떠안지 않고 공동구매 계정만 신규 장부로 재가동해 원가를 낮췄다는 기억",
+    "risk_level": "고위험",
+    "business_sector": "급식 운영 / 식자재 공동구매 / 공급사 credit / escrow payment control",
+    "section_rotation": "급식 계약은 느리게 끊기지 않는다",
+    "success_pattern": "나쁜 빚을 떠안지 않고 현재 주문권과 단가표만 조건부로 환전",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "joint_purchase_reactivation_receipt",
+      "receipt_line": "2주 조건부 공동구매 코드, 18개 필수 품목 단가표 lock, SPV escrow 신규 발주 waterfall, 과거채무 비인수 확인서, 첫 식자재 발주서 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 해문푸드서비스의 공동구매 계정은 과거 미수보다 신규 발주 단가표 가치가 더 컸다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생에는 인수자가 공동구매 계정을 살리려다 과거 미수 일부를 떠안아 초기 cashflow가 막혔다.",
+      "changed_event": "이번에는 도윤이 과거채무 비인수와 신규 발주 escrow를 분리해 주문권만 살린다.",
+      "ripple_effect": "해문푸드서비스는 과거 빚을 줄이지 못했지만, 월요일 학교 급식 대체공급에 필요한 원가 proof와 발주 코드를 확보한다."
+    },
+    "death_flag": {
+      "avoided": "공동구매 계정을 살리려다 과거 미수와 연대보증까지 떠안아 급식 계약 bundle이 부채 함정이 되는 미래",
+      "method": "과거 미수 장부와 신규 발주 장부를 분리하고, SPV escrow와 비인수 확인서로 현재 주문권만 통제한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 공급사 채권관리팀의 연대보증 요구가 나올 것을 예상한 듯 비인수 확인서와 waterfall 문안을 미리 꺼낸다.",
+      "suspicion_from": "동원푸드넷 채권관리팀과 해문푸드서비스 대표"
+    },
+    "future_prep": {
+      "action": "2주 조건부 공동구매 코드와 18개 필수 품목 단가표 lock을 학교 구매담당자에게 제시한다.",
+      "target_event": "후속 국면 학교 급식은 월요일에 끊긴다"
+    }
+  },
+  "block_no": 22,
+  "foreshadow_targets": [
+    23,
+    27
+  ],
+  "callback_sources": [
+    20
+  ]
+}

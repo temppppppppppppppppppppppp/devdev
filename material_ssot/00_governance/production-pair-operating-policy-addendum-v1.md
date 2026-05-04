@@ -261,6 +261,12 @@ Every live-pair audit, repair note, or promotion note should state:
 6. open migration debt: `yes/no`
 7. benchmark grade if a benchmark was run
 8. donor decision: `adopted | considered_but_rejected | not_applicable`
+9. pacing evidence when claiming immediate material deployment:
+   - opening pacing triage verdict
+   - whole-run pacing triage verdict
+   - exact `TR` and `BI` pacing/payoff surfaces used for writer handoff
+   - exact downstream episode pacing hint or equivalent advisory range surface used to bound S2-facing expansion
+   - audit or closeout artifact that verified those surfaces
 
 ## 9A. Donor Decision Gate
 
@@ -282,3 +288,36 @@ If the donor decision is `considered_but_rejected` or `not_applicable`:
 - the rejection or non-applicability reason should remain visible to later pair operators
 
 This keeps benchmark quality, schema cleanliness, and promotion readiness from being collapsed into one vague label.
+
+## 9B. Immediate Deployment Pacing Gate
+
+For immediate material-deployment claims:
+
+- visible pacing evidence is required, not optional polish
+- strong `GREENPLUS` quality, donor adoption, and contamination guardrails do not rescue a missing pacing surface
+- acceptable evidence must name both:
+  - pacing verdicts: opening pacing `GREEN` and whole-run pacing `GREEN`
+  - writer-facing pacing/payoff surfaces in `TR` and `BI`, such as `reader_payoff_ladder`, `webnovel_fast_pacing`, `webnovel_pacing_contract`, or an equivalent named blockwise payoff cadence
+- immediate-use material also requires a downstream episode pacing hint or equivalent advisory range surface:
+  - preferred surface name: `downstream_episode_pacing_hint`
+  - acceptable transitional equivalents: `episode_pacing_hint`, `s2_pacing_hint`, or a clearly named blockwise advisory episode range
+  - minimum useful shape: `recommended_episode_count`, `acceptable_episode_range`, `stretch_cap`, and the proof/receipt/next-gate beat that must land inside that range
+  - this is a material-side writer handoff surface, not an S2 contract or runtime schema change
+- canonical attachment path for newly touched pairs:
+  - `TR.blocks[*].genre_ext.downstream_episode_pacing_hint`
+  - `MasterBible.plot_roadmap[*].genre_ext.downstream_episode_pacing_hint`
+  - optional BI summary: `MasterBible.BIAmplificationPower.downstream_episode_pacing_hint_policy`
+- required attachment audit counters:
+  - `TR coverage count`
+  - `BI mirror count`
+  - `TR/BI mismatch count`
+  - `missing block ids`
+- vague claims such as `fast enough`, `webnovel feel`, or `good rhythm` do not satisfy the gate
+- if the pacing surface or advisory range is missing, the pair remains benchmark/reference inventory until a bounded pacing attachment and audit close the gap
+
+Attachment procedure:
+
+- use `downstream-episode-pacing-hint-attachment-harness-v1.md`
+- attach only the range hint surface
+- preserve existing `webnovel_pacing_contract`, `reader_payoff_ladder`, and `BIAmplificationPower.*fast_pacing*` surfaces
+- after PASS, registry closeout may set `range_attachment_status: range_complete`

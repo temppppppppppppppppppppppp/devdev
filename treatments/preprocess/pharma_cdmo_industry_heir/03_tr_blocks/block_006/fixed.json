@@ -40,8 +40,8 @@
     "성과급 조건표는 이후 공장 내부 보상 체계를 임금이 아니라 책임선과 납품 성과 중심으로 바꾸는 원형이 된다."
   ],
   "callback": [
-    "Block 001의 핵심 인력 임시 근로동의서가 정식 책임자 서명 계약으로 갱신된다.",
-    "Block 005의 글로벌 예비 방문 ticket이 핵심 인력 잔류 협상 카드로 쓰인다.",
+    "핵심 인력 임시 근로동의서가 정식 책임자 서명 계약으로 갱신된다.",
+    "글로벌 예비 방문 ticket이 핵심 인력 잔류 협상 카드로 쓰인다.",
     "첫 온도기록 원장이 현장 책임자 이름이 붙은 공장 자산으로 바뀐다."
   ],
   "emotional_beat": {
@@ -94,6 +94,61 @@
       "receipt_type": "authority_receipt",
       "receipt_line": "강태오는 핵심 인력 16명의 조건부 잔류 계약, 글로벌 예비 방문 책임선 표, 성과급 조건표를 확보한다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "전 직원 구제가 아니라 핵심 책임자만 묶어 공장 운영권을 강화한 내부 통제 승리",
+      "recognition_signal": "윤세린의 시선 변화: 예비 방문 문서 책임자로 확정되며 태오바이오 품질 체계의 내부 기준점이 된다",
+      "reward_signal": "강태오는 핵심 인력 16명의 조건부 잔류 계약, 글로벌 예비 방문 책임선 표, 성과급 조건표를 확보한다.",
+      "growth_signal": "강태오는 모두를 살리는 오너가 아니라, 예비 방문에 필요한 사람만 골라 책임자 이력과 성과급으로 묶는 운영자가 된다.",
+      "expectation_signal": "책임선 표가 글로벌 예비 방문과 한재국 불량 배치 책임 추궁의 자료가 된다",
+      "reader_feel": "독자는 「월급보다 책임선」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 핵심 인력 16명의 조건부 잔류 계약, 글로벌 예비 방문 책임선 표, 성과급 조건표를 확보한다. 성장 장면: 강태오는 모두를 살리는 오너가 아니라, 예비 방문에 필요한 사람만 골라 책임자 이력과 성과급으로 묶는 운영자가 된다. 다음 기대감: 책임선 표가 글로벌 예비 방문과 한재국 불량 배치 책임 추궁의 자료가 된다",
+      "mature_success_signal": "강태오는 월급보다 책임선의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "전 직원 구제가 아니라 핵심 책임자만 묶어 공장 운영권을 강화한 내부 통제 승리",
+        "recognition": "윤세린의 시선 변화: 예비 방문 문서 책임자로 확정되며 태오바이오 품질 체계의 내부 기준점이 된다",
+        "reward": "강태오는 핵심 인력 16명의 조건부 잔류 계약, 글로벌 예비 방문 책임선 표, 성과급 조건표를 확보한다.",
+        "growth": "강태오는 모두를 살리는 오너가 아니라, 예비 방문에 필요한 사람만 골라 책임자 이력과 성과급으로 묶는 운영자가 된다.",
+        "expectation": "책임선 표가 글로벌 예비 방문과 한재국 불량 배치 책임 추궁의 자료가 된다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 윤세린의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 책임선 표가 글로벌 예비 방문과 한재국 불량 배치 책임 추궁의 자료가 된다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "리처드 케인의 설비 예비 방문 일정이 잡히자 부평 2공장 내부가 다시 흔들린다. 직원들은 글로벌 제약사가 온다는 말보다 밀린 월급을 먼저 본다. 강태오는 그 반응을 탓하지 않는다. 다만 전 직원에게 돈을 뿌리면 예비 방문 전에 현금이 먼저 말라 죽는다는 것도 안다.",
+      "proof_action": "태오는 전액 지급 각서를 거절한다. 대신 예비 방문에 필요한 QA, 멸균, 포장, 냉장출하 담당자를 16명으로 좁히고, 밀린 월급 일부 선지급과 향후 병원/글로벌 납품 매출 연동 성과급을 붙인 책임자 서명 계약을 제시한다. 태림제약 복귀 제안을 받은 인력에게는 선택지를 준다.",
+      "proof_axis": "전생에서 글로벌 audit이 설비보다 사람 이름이 붙은 책임선과 문서 추적성을 먼저 본다는 기억",
+      "recognition_or_resistance_signal": "윤세린 -> 예비 방문 문서 책임자로 확정되며 태오바이오 품질 체계의 내부 기준점이 된다",
+      "receipt_asset": "강태오는 핵심 인력 16명의 조건부 잔류 계약, 글로벌 예비 방문 책임선 표, 성과급 조건표를 확보한다.",
+      "reward_asset_classes": [
+        "quality_responsibility",
+        "cdmo_slot"
+      ],
+      "next_regulated_gate": "책임선 표가 글로벌 예비 방문과 한재국 불량 배치 책임 추궁의 자료가 된다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 윤세린의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 책임선 표가 글로벌 예비 방문과 한재국 불량 배치 책임 추궁의 자료가 된다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {

@@ -11,6 +11,7 @@ Core docs:
 - `authority-map.md`
 - `stage-read-order.md`
 - `donor-review-and-adoption-contract-v1.md`
+- `downstream-episode-pacing-hint-attachment-harness-v1.md`
 - `legacy-map.md`
 - `work-coverage-matrix.md`
 - `bootstrap-status.md`
@@ -66,9 +67,10 @@ Suggested read order:
 6. `work-coverage-matrix.md`
 7. `production-pair-schema-standard-v1.md` when normalizing or auditing existing `BI/TR` pairs
 8. `production-pair-operating-policy-addendum-v1.md` when deciding live migration debt, donor decision visibility, grade refresh, or provenance fallback
-9. `production-pair-operational-registry-v1.md` when reading current live inventory, durable pair state, or benchmark freshness
-10. `production-pair-benchmark-spec-v1.md` after schema normalization is clear
-11. `pre-new-pitch-operational-readiness-v1.md` before starting a fresh pitch wave
+9. `downstream-episode-pacing-hint-attachment-harness-v1.md` when attaching or auditing range-complete immediate-use pacing hints
+10. `production-pair-operational-registry-v1.md` when reading current live inventory, durable pair state, or benchmark freshness
+11. `production-pair-benchmark-spec-v1.md` after schema normalization is clear
+12. `pre-new-pitch-operational-readiness-v1.md` before starting a fresh pitch wave
 
 Role:
 

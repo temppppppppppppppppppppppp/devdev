@@ -1,0 +1,588 @@
+{
+  "_schema": "tr.v1",
+  "_work_id": "haewon_digital_rights_1997",
+  "_total_blocks": 5,
+  "_planned_total_blocks": 70,
+  "_phase0_ref": "treatments/phase0/haewon_digital_rights_1997_phase0_design.json",
+  "_work_guard_ref": "work_guards/haewon_digital_rights_1997.yaml",
+  "_production_status": {
+    "run_class": "sequential_production",
+    "last_sequential_block_pass": 5,
+    "next_unit_type": "b잠금",
+    "next_block_id": 6,
+    "stop_reason": "draft created; boundary requires 감사 before continuation.",
+    "pacing_contract": "1 TR b잠금 is an episode 묶음 of roughly 2~6 episodes; each b잠금 must contain at least two distinct incident beats와 a same-b잠금 leverage 증빙."
+  },
+  "blocks": [
+    {
+      "block_id": "Block 1",
+      "block_no": 1,
+      "title": "버릴 거면 제가 봅니다",
+      "content": {
+        "context": "강도윤은 2036년 사무실이 아니라 1997년 해원그룹 본가 별채에서 눈을 뜬다. IMF 뉴스가 흘러나오고, 가족 회의에는 정리 대상 계열사 목록이 올라와 있다. 그는 차남 몸에 들어왔다는 공포를 오래 붙들지 않는다. 지금 팔리는 것이 무엇인지가 먼저다.",
+        "event_villain": "강민석과 임원들은 비핵심 계열사를 빨리 팔아 채권단 앞 체면을 세우려 한다. 케이블 SO, 전자부품 재고, 게임 유통 계약, 음원 마스터권은 잡동사니로 분류된다. 모두가 회사를 보고, 도윤만 권리를 본다.",
+        "solution": "도윤은 가족 설득을 하지 않는다. 그는 매각 목록 원본과 계약서 보관함을 하루만 열람하게 해 달라고 요구한다. 미래를 말하지 않고, 정리 대상 표의 지역 송출권과 PCS 우선권 표기 오류를 현재 문서의 빈칸으로 지적한다.",
+        "reward": "강태준은 못마땅해하면서도 하루 열람권을 준다. 매각 회의 결론은 미뤄지고, 서인하는 채권단 메모에 도윤의 이름을 처음 적는다. 도윤은 아직 돈을 벌지 않았지만 권리에 접근할 첫 문을 얻는다. 강태준 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+      },
+      "stakes": "여기서 감정적으로 굴면 도윤은 워크아웃 와중에 돌아온 문제아로 끝난다. 문서고 접근권을 얻어야 미래 지식이 현재 증빙으로 바뀐다.",
+      "power_shift": {
+        "protagonist": "무시받는 차남에서 정리 대상 원본을 열람할 수 있는 변수",
+        "antagonist": "빠른 매각으로 끝내려던 장남 라인이 하루 지연을 허용한 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "강태준",
+          "before": "도윤을 승계 라인 밖의 골칫거리로 본다.",
+          "after": "불쾌하지만 정리 대상 원본을 보게 한 상태다."
+        },
+        {
+          "target": "서인하",
+          "before": "도윤을 워크아웃 리스크로 기록한다.",
+          "after": "그가 계약서 빈칸을 먼저 봤다는 사실을 메모한다."
+        }
+      ],
+      "foreshadow": [
+        "정리 대상 표의 작은 별표는 케이블 지역권 매각 보류의 근거가 된다.",
+        "PCS 우선권 표기 오류는 임시 감사 좌석로 이어진다."
+      ],
+      "callback": [],
+      "emotional_beat": {
+        "type": "빙의충격과 선독",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "해원그룹 본가 회의실",
+        "type": "실내",
+        "macro_battlefield": "정리 대상 권리 매각 회의"
+      },
+      "time_span": {
+        "duration": "저녁 회의 한 시간",
+        "in_story_time": "1997년 10월"
+      },
+      "genre_ext": {
+        "type": "비즈니스_성장",
+        "capital_before": "0",
+        "capital_after": "1",
+        "capital_delta": "1",
+        "profit_loss": "1 증가",
+        "method": "가족 설득이 아니라 정리 대상 원본 열람권을 요구해 첫 접근권을 확보한다.",
+        "investment_type": "문서 접근권",
+        "deal_type": "매각 원본 열람",
+        "leverage_used": [
+          "2036년 권리 투자 감각",
+          "1997년 매각 목록 빈칸",
+          "차남 신분의 최소 회의 접근성"
+        ],
+        "opponent": {
+          "name": "빠른 매각 관성",
+          "type": "가족/워크아웃 의사결정",
+          "weakness_exploited": "계열사 이름만 보고 계약권과 우선권을 분리하지 않은 상태"
+        },
+        "historical_event": "1997년 IMF 직전 워크아웃 압박",
+        "time_pressure": "다음날 채권단에 매각 일정표가 넘어가면 권리 분리가 늦어진다.",
+        "knowledge_used": "미래 플랫폼 관문이 될 권리 범주를 안다.",
+        "risk_level": "고위험",
+        "business_sector": "재벌 구조조정/디지털 권리",
+        "section_rotation": "문서 접근권 확보",
+        "success_pattern": "미래를 말하지 않고 현재 문서의 빈칸으로 회의를 멈춘다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "접근권",
+          "receipt_line": "매각 회의 결론이 미뤄지고 도윤은 정리 대상 원본 하루 열람권을 얻는다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "없음",
+          "representative_reevaluation": "서인하가 도윤을 단순 리스크가 아니라 계약서 빈칸을 본 사람으로 메모한다.",
+          "next_battlefield_ticket": "문서고 열람으로 케이블 지역권 증빙이 열린다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "도윤이 매각 회의를 멈추고 정리 대상 원본 열람권을 얻는다.",
+          "secondary_incident": "빙의 충격을 누르고 케이블/PCS 권리 표기 오류를 먼저 지적한다.",
+          "bundle_expandability": "빙의 각성, 가족 회의, 권리 목록 선독, 열람권 협상으로 2~4화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "강태준",
+          "recognition_reason": "강태준 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "강태준 쪽은 성과 항목(접근권)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다.",
+          "selected_reward_sentence": "강태준 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "origin_year": 2036,
+        "arrival_year": 1997,
+        "identity_pressure": "해원그룹 차남의 기억과 2036년 실무 감각이 겹친다.",
+        "secret_policy": "빙의와 미래 지식은 공개하지 않고 현재 문서 증빙으로만 움직인다."
+      },
+      "foreshadow_targets": [
+        2,
+        3
+      ]
+    },
+    {
+      "block_id": "Block 2",
+      "block_no": 2,
+      "title": "케이블은 땅이 아닙니다",
+      "content": {
+        "context": "문서고에서 도윤은 해원케이블 매각철을 펼친다. 장부에는 낡은 지역 설비와 부채만 보이지만, 부속 계약서에는 특정 권역 송출권과 향후 데이터 회선 증설 우선 조항이 붙어 있다.",
+        "event_villain": "강민석 라인은 채권단 보고 전에 해원케이블을 헐값 매각하려 한다. 설비가 낡았고 가입자는 줄었으니 지금 팔아야 한다는 논리다. 그러나 그들은 송출권을 부동산 부속물처럼 보고 있다.",
+        "solution": "도윤은 매각 가격표 옆에 송출권 조항과 지역 독점 기간을 붙인다. 그는 회사를 살리자고 하지 않는다. 매각하려면 권리와 설비를 분리해 가격을 다시 매기라고 요구한다.",
+        "reward": "매각 서류에는 보류 도장이 찍힌다. 서인하는 채권단 보고서에 권리 분리 재평가 항목을 추가한다. 도윤은 하루 열람권을 매각 보류권으로 바꾼다. 서인하 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+      },
+      "stakes": "케이블이 그대로 팔리면 첫 관문이 사라진다. 권리와 설비를 분리하지 못하면 도윤의 주장은 배경지식 없는 억지로 취급된다.",
+      "power_shift": {
+        "protagonist": "문서고 열람자에서 매각 가격표를 다시 쓰게 만든 사람",
+        "antagonist": "장남 라인이 빠른 매각 결론을 채권단 앞에서 보류해야 하는 입장"
+      },
+      "relationship_delta": [
+        {
+          "target": "서인하",
+          "before": "그가 계약서 빈칸을 먼저 봤다는 사실을 메모한다.",
+          "after": "그의 지적을 채권단 보고서 항목으로 올린다."
+        },
+        {
+          "target": "강민석",
+          "before": "도윤의 하루 열람을 사소한 지연으로 본다.",
+          "after": "매각 일정 자체를 흔든 경쟁자로 본다."
+        }
+      ],
+      "foreshadow": [
+        "데이터 회선 증설 우선 조항은 초고속 인터넷 전장의 씨앗가 된다.",
+        "권리와 설비 분리는 이후 결제 단말과 물류 터미널에도 반복된다."
+      ],
+      "callback": [
+        "정리 대상 표의 작은 별표가 실제 송출권 조항으로 회수된다."
+      ],
+      "emotional_beat": {
+        "type": "첫 권리 회수",
+        "intensity": 9
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "해원그룹 문서고와 채권단 임시 회의실",
+        "type": "실내",
+        "macro_battlefield": "케이블 지역권 매각 보류"
+      },
+      "time_span": {
+        "duration": "하루",
+        "in_story_time": "1997년 10월 다음날"
+      },
+      "genre_ext": {
+        "type": "비즈니스_성장",
+        "capital_before": "1",
+        "capital_after": "4",
+        "capital_delta": "3",
+        "profit_loss": "3 증가",
+        "method": "설비 매각철에서 지역 송출권과 회선 증설 우선 조항을 분리해 매각 보류를 만든다.",
+        "investment_type": "권리 분리",
+        "deal_type": "매각 보류",
+        "leverage_used": [
+          "지역 송출권 조항",
+          "데이터 회선 증설 우선권",
+          "채권단 보고서 재평가 항목"
+        ],
+        "opponent": {
+          "name": "강민석 장남 라인",
+          "type": "내부 매각 추진자",
+          "weakness_exploited": "낡은 설비와 살아 있는 송출권을 같은 가격으로 묶은 점"
+        },
+        "historical_event": "IMF 전후 비핵심 계열사 헐값 매각 압박",
+        "time_pressure": "채권단 보고 전까지 보류 도장을 받아야 한다.",
+        "knowledge_used": "케이블망이 향후 초고속 인터넷과 지역 콘텐츠 관문이 된다는 미래 감각",
+        "risk_level": "고위험",
+        "business_sector": "케이블 SO/통신 인프라",
+        "section_rotation": "권리 분리 증빙",
+        "success_pattern": "죽은 설비가 아니라 살아 있는 지역권을 가격표 위로 끌어올린다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "매각 보류권",
+          "receipt_line": "해원케이블 매각 서류에 보류 도장이 찍히고 채권단 보고서에 권리 분리 재평가 항목이 추가된다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "케이블 권리 분리 재평가가 공식 보고 항목이 된다.",
+          "representative_reevaluation": "서인하가 도윤의 지적을 채권단 언어로 번역한다.",
+          "next_battlefield_ticket": "PCS 대리점망 우선권 검토가 열린다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "케이블 지역권 조항 증빙와 매각 보류",
+          "secondary_incident": "장남 라인의 매각 앞당기기 방어와 채권단 보고 항목 확보",
+          "bundle_expandability": "문서고 조사, 조항 발견, 매각 회의 충돌, 보류 도장 획득으로 3~5화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "서인하",
+          "recognition_reason": "서인하 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "서인하 쪽은 성과 항목(매각 보류권)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다.",
+          "selected_reward_sentence": "서인하 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "현재 계약서와 채권단 보고서"
+      },
+      "foreshadow_targets": [
+        6,
+        12
+      ],
+      "callback_sources": [
+        1
+      ]
+    },
+    {
+      "block_id": "Block 3",
+      "block_no": 3,
+      "title": "대리점망 한 줄",
+      "content": {
+        "context": "전자부품 계열사 매각철에는 PCS 단말 재고와 대리점 계약이 한꺼번에 묶여 있다. 박기문 상무는 재고 손실을 줄이려면 통째 매각이 낫다고 주장한다.",
+        "event_villain": "류한규가 강민석에게 붙어 대리점망을 싼값에 넘기면 재고 리스크까지 처리해 주겠다고 제안한다. 겉보기에는 구제책이지만, 실제로는 우선권을 빼먹는 가격 왜곡이다.",
+        "solution": "도윤은 단말 재고와 대리점망 우선권을 분리한다. 그는 통신사 보조금과 대리점 계약 갱신표를 대조해, 재고보다 판매망이 더 비싸다는 것을 채권단 앞에서 증명한다. 그 증빙은 즉시 분쟁을 닫는다. 동시에 다음 권리 진입권으로 남는다.",
+        "reward": "서인하는 임시 감사 좌석을 제안한다. 도윤은 문서고 상시 접근권과 전자부품 매각 검토권을 얻는다. 류한규는 처음으로 도윤이 무엇을 모으는지 눈치챈다. 서인하 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+      },
+      "stakes": "PCS 우선권을 빼앗기면 통신 관문이 외부 브로커 손에 넘어간다. 동시에 도윤의 의도가 노출되면 앞으로 모든 권리의 가격이 오른다.",
+      "power_shift": {
+        "protagonist": "매각 보류를 만든 차남에서 임시 감사 좌석을 가진 실행자",
+        "antagonist": "류한규가 도윤의 권리 사냥을 알아보고 외부 경쟁자로 부상"
+      },
+      "relationship_delta": [
+        {
+          "target": "서인하",
+          "before": "도윤의 지적을 보고서 항목으로 번역한다.",
+          "after": "도윤에게 임시 감사 좌석을 열어야 한다고 판단한다."
+        },
+        {
+          "target": "류한규",
+          "before": "해원그룹의 헐값 매각을 먹을 수 있다고 본다.",
+          "after": "도윤이 우선권을 먼저 보는 경쟁자라는 걸 알아챈다."
+        }
+      ],
+      "foreshadow": [
+        "류한규의 시선은 일부 권리 선점으로 이어진다.",
+        "문서고 상시 접근권은 게임과 음원 부속 권리 인수을 가능하게 한다."
+      ],
+      "callback": [
+        "첫 회의에서 보였던 PCS 우선권 표기 오류가 실제 임시 감사 좌석로 환전된다."
+      ],
+      "emotional_beat": {
+        "type": "공식 좌석 획득",
+        "intensity": 9
+      },
+      "tension_level": 9,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "채권단 임시 회의실",
+        "type": "회의실",
+        "macro_battlefield": "PCS 대리점망 우선권"
+      },
+      "time_span": {
+        "duration": "이틀",
+        "in_story_time": "1997년 10월"
+      },
+      "genre_ext": {
+        "type": "비즈니스_성장",
+        "capital_before": "4",
+        "capital_after": "8",
+        "capital_delta": "4",
+        "profit_loss": "4 증가",
+        "method": "단말 재고와 대리점망 우선권을 분리해 재고보다 판매망이 더 비싼 구조를 증명한다.",
+        "investment_type": "우선권 방어",
+        "deal_type": "임시 감사 좌석",
+        "leverage_used": [
+          "대리점 계약 갱신표",
+          "통신사 보조금 조건",
+          "채권단 회수율 비교표"
+        ],
+        "opponent": {
+          "name": "류한규",
+          "type": "외부 M&A 브로커",
+          "weakness_exploited": "재고 처리 명분으로 판매망 우선권을 헐값에 가져가려 한 점"
+        },
+        "historical_event": "PCS 사업 확장기",
+        "time_pressure": "브로커 제안서가 장남 라인 결재로 넘어가기 전 막아야 한다.",
+        "knowledge_used": "PCS 판매망이 단말 재고보다 오래 남는 접점 자산이라는 미래 감각",
+        "risk_level": "고위험",
+        "business_sector": "통신 대리점망/전자부품",
+        "section_rotation": "임시 감사 좌석 단계",
+        "success_pattern": "재고 처리안을 판매망 권리 탈취로 재분류해 임시 감사 좌석을 얻는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "임시 감사 좌석",
+          "receipt_line": "도윤은 문서고 상시 접근권과 전자부품 매각 검토권을 얻는다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "PCS 대리점망 우선권이 채권단 검토 대상이 된다.",
+          "representative_reevaluation": "서인하가 도윤에게 공식 좌석을 열어야 한다고 판단한다.",
+          "next_battlefield_ticket": "문서고 상시 접근으로 콘텐츠 권리 검토가 열린다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "PCS 대리점망 우선권 증빙와 임시 감사 좌석 획득",
+          "secondary_incident": "류한규의 가격 왜곡 방어와 외부 경쟁자 등장",
+          "bundle_expandability": "재고 매각안, 브로커 접촉, 대리점망 가치 증빙, 임시 좌석 획득으로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "서인하",
+          "recognition_reason": "서인하 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "서인하 쪽은 성과 항목(임시 감사 좌석)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다.",
+          "selected_reward_sentence": "서인하 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "대리점 계약표와 채권단 회수율 표"
+      },
+      "foreshadow_targets": [
+        4,
+        8
+      ],
+      "callback_sources": [
+        1
+      ]
+    },
+    {
+      "block_id": "Block 4",
+      "block_no": 4,
+      "title": "팔리지 않는 노래와 게임",
+      "content": {
+        "context": "문서고 상시 접근권을 얻은 도윤은 잡계약 박스를 뒤진다. 게임 유통 계약, 음원 마스터권, 케이블 지역 광고 패키지가 서로 다른 파일에 흩어져 있다.",
+        "event_villain": "박기문은 그런 계약들이 당장 돈이 안 되며 관리비만 먹는다고 비웃는다. 강민석은 도윤이 쓸모없는 권리까지 모아 워크아웃 회수율을 떨어뜨린다고 공격한다.",
+        "solution": "도윤은 PC방 납품 채널, 케이블 지역 광고, 게임 유통권, 음원 마스터권을 한 장의 현금흐름 표로 묶는다. 오세관은 현장 광고 슬롯과 지역망 데이터를 확인해 도윤의 표에 증인이 된다. 그 증빙은 즉시 분쟁을 닫는다. 동시에 다음 권리 진입권으로 남는다.",
+        "reward": "별도 SPC 설립 승인 초안이 작성된다. 콘텐츠 권리는 잡계약이 아니라 접속권을 돈으로 바꾸는 첫 상품으로 재분류된다. 오세관은 도윤의 현장 증인이 된다. 오세관 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+      },
+      "stakes": "콘텐츠 권리를 설득하지 못하면 도윤의 권리 사냥은 케이블과 PCS에서 멈춘다. 현장 증인을 잡지 못하면 표는 미래 지식 냄새만 풍긴다.",
+      "power_shift": {
+        "protagonist": "문서 접근권자에서 권리를 상품 묶음으로 재분류하는 데스크 운영자",
+        "antagonist": "강민석 라인이 쓸모없는 계약 프레임으로 공격했지만 현장 증인 앞에서 약해짐"
+      },
+      "relationship_delta": [
+        {
+          "target": "오세관",
+          "before": "도윤을 현장 모르는 차남으로 본다.",
+          "after": "지역 광고 슬롯과 망 데이터를 이해하는 사람으로 본다."
+        },
+        {
+          "target": "강민석",
+          "before": "매각 일정 자체를 흔든 경쟁자로 본다.",
+          "after": "도윤이 자기 승계권 밖의 사업 구조를 만들고 있음을 경계한다."
+        }
+      ],
+      "foreshadow": [
+        "SPC 초안은 후반 독립 권리 지주회사의 법적 씨앗이 된다.",
+        "지역 광고 슬롯은 포털 광고권으로 확장된다."
+      ],
+      "callback": [
+        "문서고 상시 접근권이 잡계약 박스를 여는 실제 보상로 쓰인다."
+      ],
+      "emotional_beat": {
+        "type": "부속 권리 인수",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "해원케이블 현장 사무실과 문서고",
+        "type": "현장/실내",
+        "macro_battlefield": "콘텐츠 권리 재분류"
+      },
+      "time_span": {
+        "duration": "사흘",
+        "in_story_time": "1997년 10월 말"
+      },
+      "genre_ext": {
+        "type": "비즈니스_성장",
+        "capital_before": "8",
+        "capital_after": "12",
+        "capital_delta": "4",
+        "profit_loss": "4 증가",
+        "method": "게임 유통권, 음원 마스터권, 케이블 광고 슬롯을 하나의 상품 현금흐름으로 묶는다.",
+        "investment_type": "콘텐츠 권리 묶음",
+        "deal_type": "SPC 승인 초안",
+        "leverage_used": [
+          "문서고 상시 접근권",
+          "PC방 납품 채널",
+          "케이블 지역 광고 슬롯",
+          "현장 본부장 증언"
+        ],
+        "opponent": {
+          "name": "쓸모없는 잡계약 프레임",
+          "type": "내부 평가 절하",
+          "weakness_exploited": "각 계약을 따로 보면 작지만 접속권과 묶으면 판매 상품이 되는 점"
+        },
+        "historical_event": "PC방과 온라인 콘텐츠 유통 초기 확장",
+        "time_pressure": "잡계약 박스가 일괄 폐기되기 전에 권리 목록을 잠가야 한다.",
+        "knowledge_used": "콘텐츠가 접속권의 체류시간과 결제 이유를 만든다는 미래 감각",
+        "risk_level": "중고위험",
+        "business_sector": "게임/음원/케이블 광고",
+        "section_rotation": "SPC 승인 초안 단계",
+        "success_pattern": "작은 권리를 묶어 접속권이 돈을 버는 이유로 만든다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "SPC 승인 초안",
+          "receipt_line": "게임 유통권과 음원 마스터권이 별도 SPC 초안에 올라가고 오세관이 현장 증인이 된다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "콘텐츠 권리 묶음이 권리 데스크 상품으로 재분류된다.",
+          "representative_reevaluation": "오세관이 도윤을 현장 데이터를 읽는 사람으로 본다.",
+          "next_battlefield_ticket": "결제 단말과 물류 터미널 검토로 이어진다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "게임/음원/광고 권리 묶음 증빙와 SPC 초안",
+          "secondary_incident": "오세관을 현장 증인로 전환해 내부 공격을 방어",
+          "bundle_expandability": "잡계약 조사, 현장 실사, 내부 비웃음, 현금흐름 표, 증인 전환으로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "오세관",
+          "recognition_reason": "오세관 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "오세관 쪽은 성과 항목(SPC 승인 초안)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다.",
+          "selected_reward_sentence": "오세관 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "현장 광고 슬롯, 납품 채널, 권리 계약서"
+      },
+      "foreshadow_targets": [
+        5,
+        41
+      ],
+      "callback_sources": [
+        3
+      ]
+    },
+    {
+      "block_id": "Block 5",
+      "block_no": 5,
+      "title": "단말기는 돈이 지나가는 자리",
+      "content": {
+        "context": "도윤은 전자부품 계열사의 단말 재고표와 물류 터미널 임대차 파일을 함께 본다. 단말기는 낡아 보이지만 VAN 계약과 지역 물류 거점이 붙어 있어 결제와 배송이 만나는 자리다.",
+        "event_villain": "채권단 보수파는 도윤이 좋은 권리만 개인 구조로 빼돌린다고 의심한다. 강민석은 그 의혹을 키워 감사 좌석을 회수하려 한다. 도윤이 권리를 많이 모을수록 개인 편취 프레임도 커진다.",
+        "solution": "도윤은 그룹 손실 방어분과 개인 우선협상권을 분리한 구조를 제시한다. VAN/PG 단말 계약은 그룹 매각가를 올리고, 이후 운영 옵션은 도윤의 별도 SPC가 가져가는 방식이다. 그 증빙은 즉시 분쟁을 닫는다. 동시에 다음 권리 진입권으로 남는다.",
+        "reward": "서인하는 감사 보고서 공식 배포권을 도윤에게 준다. 도윤 명의 우선협상권 초안도 살아남는다. 공격은 사라지지 않았지만, 의혹이 오히려 권리 구조를 법적으로 분리하는 계기가 된다. 서인하 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+      },
+      "stakes": "개인 편취 프레임을 막지 못하면 도윤은 모든 권리 회수의 명분을 잃는다. 반대로 구조를 분리하면 공격 자체가 보호막이 된다.",
+      "power_shift": {
+        "protagonist": "권리 데스크 운영자에서 감사 보고서 배포권과 우선협상권을 가진 협상자",
+        "antagonist": "강민석과 보수파가 의혹을 키웠지만 법적 분리 구조를 강제한 상태"
+      },
+      "relationship_delta": [
+        {
+          "target": "서인하",
+          "before": "도윤에게 임시 좌석을 열어 준 감시자",
+          "after": "공식 보고서 배포권을 줄 만큼 구조를 인정한 감시자"
+        },
+        {
+          "target": "강민석",
+          "before": "도윤의 사업 구조를 경계한다.",
+          "after": "개인 편취 프레임으로 좌석 회수를 노리지만 역으로 법적 구조를 선명하게 만든다."
+        }
+      ],
+      "foreshadow": [
+        "우선협상권 초안은 독립 권리 지주회사 소유권의 법적 근거가 된다.",
+        "결제 단말과 물류 터미널 연결은 이커머스 정산 레일로 확장된다."
+      ],
+      "callback": [
+        "SPC 초안이 개인 편취 의혹을 방어하는 구조로 확장된다."
+      ],
+      "emotional_beat": {
+        "type": "공격의 보호막화",
+        "intensity": 9
+      },
+      "tension_level": 9,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "채권단 회의실과 전자부품 계열사 자료실",
+        "type": "회의실/자료실",
+        "macro_battlefield": "VAN/PG 단말과 물류 터미널 권리"
+      },
+      "time_span": {
+        "duration": "사흘",
+        "in_story_time": "1997년 11월 초"
+      },
+      "genre_ext": {
+        "type": "비즈니스_성장",
+        "capital_before": "12",
+        "capital_after": "16",
+        "capital_delta": "4",
+        "profit_loss": "4 증가",
+        "method": "VAN/PG 단말 계약과 물류 터미널 임대차를 연결하고 그룹 손실 방어분과 개인 우선협상권을 법적으로 분리한다.",
+        "investment_type": "결제/물류 권리 구조화",
+        "deal_type": "우선협상권과 보고서 배포권",
+        "leverage_used": [
+          "VAN 계약서",
+          "PG 단말 설치 조건",
+          "물류 터미널 임대차 옵션",
+          "채권단 회수율 방어표"
+        ],
+        "opponent": {
+          "name": "개인 편취 프레임",
+          "type": "채권단/가족 정치 압박",
+          "weakness_exploited": "의혹을 해소하려면 권리 구조를 문서로 분리해야 하는 점"
+        },
+        "historical_event": "오프라인 결제망과 물류 거점의 전환기",
+        "time_pressure": "감사 좌석 회수 안건이 올라가기 전에 법적 분리안을 먼저 배포해야 한다.",
+        "knowledge_used": "결제 단말과 물류 거점이 향후 온라인 거래의 정산 레일이 된다는 미래 감각",
+        "risk_level": "고위험",
+        "business_sector": "VAN/PG/물류 터미널",
+        "section_rotation": "권리 구조 방어",
+        "success_pattern": "의혹을 제거하지 않고 의혹 때문에 필요한 법적 분리 구조를 얻는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "우선협상권/보고서 배포권",
+          "receipt_line": "도윤은 감사 보고서 공식 배포권과 도윤 명의 우선협상권 초안을 지킨다.",
+          "pain_only_exit": false
+        },
+        "opening_progression": {
+          "public_signboard_event": "결제와 물류 권리가 같은 데스크 위에 오른다.",
+          "representative_reevaluation": "서인하가 도윤의 구조를 감시 가능한 딜로 인정한다.",
+          "next_battlefield_ticket": "디지털 유통 관문 지도를 제시할 준비가 끝난다."
+        },
+        "episode_bundle_density": {
+          "primary_incident": "VAN/PG 단말 계약과 물류 터미널 권리 연결",
+          "secondary_incident": "개인 편취 의혹을 법적 분리 구조와 보고서 배포권으로 방어",
+          "bundle_expandability": "단말 계약 조사, 의혹 제기, 구조 분리 협상, 보고서 배포권 획득으로 3~6화 확장 가능"
+        },
+        "reader_affinity": {
+          "recognition_witness": "서인하",
+          "recognition_reason": "서인하 쪽은 도윤의 요구가 표와 계약으로 검증된 뒤에야 그를 다시 본다.",
+          "supporter_gain": "서인하 쪽은 성과 항목(우선협상권/보고서 배포권)이 계산 가능한 이익으로 남는다는 점을 본다.",
+          "success_visibility": "성공이 말이 아니라 권한, 계약, 정산 중 하나로 보인다.",
+          "cheer_reason": "독자는 도윤이 인정을 구걸하지 않고 결과로 인정받는 장면을 따라간다.",
+          "supportability_reason": "도윤이 손해를 떠넘기지 않고 상대가 움직일 이유를 남겨 응원 가능하다.",
+          "selected_reward_sentence": "서인하 쪽은 이 장면을 도윤의 개인 과시가 아니라 계산 가능한 이익으로 받아들인다."
+        }
+      },
+      "incarnation_ext": {
+        "is_incarnated": true,
+        "knowledge_used_publicly": false,
+        "proof_surface": "VAN/PG 계약서, 물류 임대차, 채권단 회수율 표"
+      },
+      "foreshadow_targets": [
+        6,
+        31,
+        60
+      ],
+      "callback_sources": [
+        4
+      ]
+    }
+  ]
+}

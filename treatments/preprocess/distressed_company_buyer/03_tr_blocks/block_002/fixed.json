@@ -1,0 +1,134 @@
+{
+  "block_id": "Block 2",
+  "title": "트럭은 고물입니다",
+  "content": {
+    "context": "한도윤은 채권단 회의실 문밖에서 27분을 기다린다. 윤태식은 그의 현장 사진 묶음만 회의 자료로 올리고, 고철업자는 냉동차와 선반을 한꺼번에 넘기면 오늘 바로 잔금을 치르겠다고 압박한다. 도윤은 그들이 회사의 가치가 아니라 처리 속도만 보고 있다는 걸 확인한다.",
+    "event_villain": "윤태식은 도윤이 발언하려는 순간 '계약직 실사관 의견은 나중에 받겠다'며 끊는다. 서민재 채권은행 팀장은 오늘 안에 결론을 내야 충당금 보고가 편하다고 말하고, 고철업자는 냉동차 키를 먼저 넘기면 가격을 조금 더 얹겠다고 유혹한다. 회의의 기본값은 삼진콜드를 고철로 닫는 것이다.",
+    "solution": "도윤은 회사를 살리자는 말을 하지 않는다. 대신 회의록에 남길 질문 하나만 달라고 요구한다. 그는 온도 로그의 이탈 구간, 납품 클레임 날짜, 콜드체인 인증 유지 조건을 한 줄로 묶어 보여 준다. 냉동차는 고물이지만 인증과 보험 trigger는 아직 죽지 않았고, 오늘 매각하면 채권단이 고철값 때문에 보험금과 납품권 회수 가능성을 스스로 포기했다는 문장이 남는다고 계산한다. 서민재가 멈칫하는 순간, 도윤은 24시간 read-only 데이터룸 접근권과 보험 약관 원본 확인권을 요구한다.",
+    "reward": "도윤의 질문은 채권단 회의록에 공식 안건 보류 사유로 남는다. 서민재는 삼진콜드 데이터룸 24시간 제한 계정을 열어 주고, 윤태식은 도윤을 회의실에서 내보내지 못한다. 돈은 아직 0원이지만, 도윤은 문밖 인력에서 회의석을 가진 검증자로 올라선다."
+  },
+  "incident_beats": [
+    "회의실 문밖 대기 모욕과 고철업자의 당일 잔금 압박",
+    "인증 유지 proof 공개와 회의록/데이터룸 접근권 receipt"
+  ],
+  "stakes": "도윤의 proof가 틀리면 계약은 끊기고 업계에 '미래가 보이는 척하는 실사관'으로 찍힌다. 반대로 너무 많은 정보를 사적으로 움직이면 내부정보 거래 의심을 받는다. 그는 회의록, 제한 계정, 약관 원본이라는 합법 영수증 안에서만 움직여야 한다.",
+  "power_shift": {
+    "protagonist": "private proof token 보유자에서 회의록에 질문을 남기고 데이터룸 계정을 받은 공식 검증자로 이동한다.",
+    "antagonist": "윤태식은 여전히 상급자지만, 도윤의 질문이 회의록에 남으면서 마음대로 묵살할 수 없게 된다."
+  },
+  "relationship_delta": [
+    {
+      "target": "윤태식",
+      "before": "도윤의 자료를 현장 사진 부속물로 처리하려 한다",
+      "after": "회의록 때문에 도윤의 검증을 공식으로 막을 수 없어 불쾌해한다",
+      "continuity_anchor_before": "겉으로는 무시를 유지하지만, 도윤이 현장 파일을 더 요구하자 불편함을 느끼기 시작한다"
+    },
+    {
+      "target": "서민재",
+      "before": "충당금 보고를 위해 빠른 청산 결론을 원한다",
+      "after": "고철 매각이 오히려 은행의 회수 포기 책임으로 남을 수 있음을 보고 도윤에게 24시간 제한 접근권을 준다"
+    },
+    {
+      "target": "고철업자",
+      "before": "당일 잔금과 빠른 처리로 채권단을 흔든다",
+      "after": "도윤의 인증 질문 때문에 매각 결정이 보류되어 다음 방해 수를 준비한다"
+    }
+  ],
+  "foreshadow": [
+    "데이터룸 24시간 제한 계정은 후속 국면에서 보험 약관 trigger 원문 확인으로 회수된다.",
+    "서민재가 회수 포기 책임을 두려워한 장면은 후속 국면의 은행 직통선과 다음 data-room 초대로 이어진다.",
+    "고철업자의 당일 잔금 압박은 후속 국면와 후속 국면의 폐차 일괄매입 방해와 역입찰로 확장된다.",
+    "윤태식이 회의록을 불편해한 장면은 후속 국면의 공 가로채기 차단과 후속 국면의 내부정보 거래 프레임으로 돌아온다."
+  ],
+  "callback": [
+    "후속 국면에서 확보한 온도 로그 사본, 납품 클레임 날짜, 인증 만료일을 회의록 질문으로 전환한다."
+  ],
+  "emotional_beat": {
+    "type": "formal_cider",
+    "intensity": 8
+  },
+  "tension_level": 8,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "삼진콜드 채권단 회의실 / 회의실 문밖",
+    "type": "creditor workout meeting",
+    "macro_battlefield": "creditor workout meeting"
+  },
+  "time_span": {
+    "duration": "반나절",
+    "in_story_time": "같은 날 오후"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "0억 / 온도 로그 사본, 항만 배정표 사진, 인증 만료일 private proof 확보",
+    "capital_after": "0억 / 채권단 회의석, 회의록 질문, 삼진콜드 데이터룸 24시간 read-only 계정",
+    "capital_delta": "0억",
+    "profit_loss": "0억",
+    "method": "고철 매각이 은행의 권리 회수 포기 책임으로 남는다는 리스크를 제시해 청산 결정을 24시간 보류시킨다.",
+    "investment_type": "distressed rights diligence",
+    "deal_type": "채권단 회의록 receipt / data-room limited access",
+    "leverage_used": [
+      "온도 로그 이탈 구간",
+      "납품 클레임 날짜",
+      "콜드체인 인증 유지 조건",
+      "채권은행 회수 포기 책임",
+      "회의록 공식 질문"
+    ],
+    "opponent": {
+      "name": "윤태식 / 채권단 청산파 / 고철업자",
+      "type": "internal suppression and fast liquidation pressure",
+      "weakness_exploited": "처리 속도와 담보 회수만 보다가 보험금, 인증, 납품권 포기 책임을 회의록에 남기는 것을 두려워한다"
+    },
+    "historical_event": null,
+    "time_pressure": "오늘 회의가 끝나기 전 청산 결정을 보류시키지 못하면 데이터룸 접근권도 보험 약관 원본도 사라진다.",
+    "knowledge_used": "회귀 전 삼진콜드가 고철 매각 뒤 권리 묶음으로 재가격된 미래 기억과 후속 국면 private proof",
+    "risk_level": "중위험",
+    "business_sector": "냉장 물류 / 채권단 workout / 구조조정 실사",
+    "section_rotation": "삼진콜드의 살아 있는 권리",
+    "success_pattern": "private proof를 official receipt로 승격",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "official_access_receipt",
+      "receipt_line": "채권단 회의록에 도윤의 검증 질문이 남고, 삼진콜드 데이터룸 24시간 read-only 계정이 발급된다.",
+      "pain_only_exit": false
+    },
+    "opening_progression": {
+      "public_signboard_event": "채권단 회의록에 도윤의 검증 질문이 남고, 삼진콜드 데이터룸 24시간 read-only 계정이 발급된다.",
+      "representative_reevaluation": "회의록 때문에 도윤의 검증을 공식으로 막을 수 없어 불쾌해한다",
+      "next_battlefield_ticket": "도윤의 질문은 채권단 회의록에 공식 안건 보류 사유로 남는다. 서민재는 삼진콜드 데이터룸 24시간 제한 계정을 열어 주고, 윤태식은 도윤을 회의실에서 내보내지 못한다. 돈은 아직 0원이지만, 도윤은 문밖 인력에서 회의석을 가진 검증자로 올라선다."
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "삼진콜드가 고철 매각 뒤 권리 묶음으로 재가격되어 40배에 팔렸다는 전생 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 도윤은 회의실 밖에서 현장 사진 묶음만 넘기고 청산 결정을 지켜봤다.",
+      "changed_event": "이번에는 온도 로그와 인증 유지 조건을 회의록 질문으로 남겨 청산 결정을 24시간 보류시킨다.",
+      "ripple_effect": "도윤은 데이터룸 접근권을 얻고, 보험금 trigger와 납품권을 다음 블록에서 직접 검증할 수 있게 된다."
+    },
+    "death_flag": {
+      "avoided": "문밖 실사관으로 남아 삼진콜드 권리 묶음을 남에게 빼앗기는 미래",
+      "method": "회의록에 남는 공식 질문과 제한 계정을 받아 비공식 행동 리스크를 줄인다."
+    },
+    "regression_hint": {
+      "slip_up": "약관 원본을 보기 전부터 보험 trigger와 인증 유지 조건의 연결을 정확히 짚는다.",
+      "suspicion_from": "윤태식"
+    },
+    "future_prep": {
+      "action": "데이터룸에서 보험 약관 원문, 리콜 클레임, route 기록을 대조할 준비",
+      "target_event": "후속 국면 보험사 예비 인정과 은행 직통선 receipt"
+    }
+  },
+  "block_no": 2,
+  "foreshadow_targets": [
+    3,
+    4,
+    5,
+    8
+  ]
+}

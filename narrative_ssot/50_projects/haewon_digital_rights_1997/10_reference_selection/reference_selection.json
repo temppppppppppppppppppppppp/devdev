@@ -1,0 +1,69 @@
+{
+  "work_id": "haewon_digital_rights_1997",
+  "selection_date": "2026-05-01",
+  "work_identity_override": {
+    "title": "1997, 망할 그룹의 권리를 내가 다 샀다",
+    "subtitle": "IMF에 버려진 계약서가 미래 플랫폼 관문이었다",
+    "commercial_label": "1997 디지털 권리 독식 재벌물",
+    "slug_aliases": [
+      "해원그룹 디지털 권리물",
+      "IMF 권리 투자 빙의물",
+      "망할 그룹 권리 독식"
+    ],
+    "reason": "신규 차기작의 상업 신호를 제목 단계에서 재벌, IMF, 권리 회수, 독식으로 즉시 고정해 Phase0와 TR이 같은 selling point를 보게 한다."
+  },
+  "profile_override": {
+    "primary_profile": "business_growth_profile",
+    "secondary_profile": "tech_startup_profile",
+    "reason": "핵심 전장은 재벌그룹 경영권과 권리 회수지만, 보상 확장은 케이블, PCS, 콘텐츠, 결제, 물류, 포털/ISP 관문으로 이어지는 기술 사업 성장축이다."
+  },
+  "opening_bundle_contract_override": {
+    "bundle_window": "TR 2~6",
+    "macro_battlefield": "해원그룹 정리 대상 권리 매각 회의와 디지털 유통권 첫 회수전",
+    "macro_battlefield_map": [
+      "정리 대상 목록에서 케이블 지역권을 찾아 매각 보류권을 만든다.",
+      "PCS 대리점망 우선권을 숫자로 증명해 채권단 관찰자를 tone shift시킨다.",
+      "게임 유통권과 음원 마스터권을 side acquisition으로 묶어 현금흐름 단서를 만든다.",
+      "VAN/PG 단말 계약과 물류 터미널을 연결해 다음 portal/ISP 권리 desk 티켓을 확보한다."
+    ],
+    "bundle_goal": "TR 2~6 안에 도윤이 버려진 권리를 찾아 증명하고, 감사 seat와 매각 보류권을 얻고, 디지털 유통 관문 독식의 첫 입장권을 획득했음을 독자가 체감하게 만든다.",
+    "first_signboard_block": 3,
+    "representative_reevaluation_block": 2,
+    "next_battlefield_ticket_block": 6,
+    "timing_reconciliation_note": "Opening은 느리게 세계관을 설명하지 않는다. B02부터 권리 회수와 별도 사건을 병렬로 움직이고, B06 이전에 공식 seat와 다음 권리 desk가 모두 visible해야 한다."
+  },
+  "selected_cards": [
+    {
+      "card_slug": "bulhaengeul_boneun_jaebeoljip_sonja",
+      "track": "A",
+      "handoff_label": "불행재벌 구조 리듬",
+      "selection_reason": "위기 예고를 권리 매각 압박으로 번역하고, 공개 proof 뒤 사적 receipt와 다음 gate를 여는 cadence만 차용한다.",
+      "must_not_copy_applied": true,
+      "contamination_risk_reviewed": true
+    },
+    {
+      "card_slug": "jusigui_sin",
+      "track": "B",
+      "handoff_label": "정보 우위와 기관 seat",
+      "selection_reason": "개인 촉이 아니라 문서, 숫자, 관찰자 반응으로 정보 우위가 제도권 접근권이 되는 구조를 참고한다.",
+      "must_not_copy_applied": true,
+      "contamination_risk_reviewed": true
+    },
+    {
+      "card_slug": "sinheung_jaebeol",
+      "track": "A",
+      "handoff_label": "사업 성장과 권위 재평가",
+      "selection_reason": "초반 사업 proof가 주변 권위자의 tone shift와 실무 seat로 환전되는 방식을 business-growth baseline으로 쓴다.",
+      "must_not_copy_applied": true,
+      "contamination_risk_reviewed": true
+    },
+    {
+      "card_slug": "dokshik_jaebeol3se",
+      "track": "A",
+      "handoff_label": "독식형 재벌 확장",
+      "selection_reason": "모든 섹터 독식 욕망을 한 번에 선언하지 않고, 관문 권리를 단계별로 잠가 누적 지배감을 만드는 expansion sanity-check로 쓴다.",
+      "must_not_copy_applied": true,
+      "contamination_risk_reviewed": true
+    }
+  ]
+}

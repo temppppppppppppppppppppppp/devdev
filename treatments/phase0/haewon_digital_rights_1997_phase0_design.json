@@ -1,0 +1,680 @@
+{
+  "_schema_version": "blockguide.phase0.v1",
+  "_work_id": "haewon_digital_rights_1997",
+  "_family": "blockguide",
+  "_primary_profile": "business_growth_profile",
+  "_secondary_profile": "tech_startup_profile",
+  "_pitch_authority": "material_ssot/20_pitch/canon/haewon_digital_rights_1997.md",
+  "_preprocess_sources": [
+    "treatments/preprocess/haewon_digital_rights_1997/source_manifest.json",
+    "treatments/preprocess/haewon_digital_rights_1997/profile_lock.json",
+    "treatments/preprocess/haewon_digital_rights_1997/material_bundle_summary.json",
+    "treatments/preprocess/haewon_digital_rights_1997/phase0_ready_snapshot.json",
+    "narrative_ssot/50_projects/haewon_digital_rights_1997/10_reference_selection/reference_selection.json"
+  ],
+  "_work_guard_draft": "work_guards/haewon_digital_rights_1997.yaml",
+  "project": {
+    "title_ko": "1997, 망할 그룹의 권리를 내가 다 샀다",
+    "tagline": "IMF에 버려진 계약서가 미래 플랫폼 관문이었다",
+    "core_premise": "2036년 권리 투자와 구조조정 실무자 강도윤은 1997년 IMF 직전 해원그룹의 무시받는 차남 몸에 빙의한다. 그룹은 워크아웃 직전이라 계열사를 헐값에 팔려 하지만, 도윤은 버려진 케이블 지역권, PCS 대리점망, 게임 유통권, 음원 마스터권, VAN/PG 단말 계약, 물류 터미널 부지가 미래 디지털 유통 관문이라는 것을 안다. 그는 가문을 살리는 척하면서 실제로는 권리와 의결권을 자기 구조로 빼내 모든 섹터의 관문을 하나씩 독식한다.",
+    "format": "1997 IMF + 재벌 빙의 + 디지털 권리 독식 business-power 현대판타지",
+    "logline": "망할 그룹의 차남이 된 구조조정 실무자 도윤은 모두가 폐기하는 계약서에서 미래 플랫폼의 관문을 본다. 그는 회사를 사지 않는다. 돈과 사람이 지나갈 권리만 산다.",
+    "start_year": 1997,
+    "end_year": 2005
+  },
+  "setting": {
+    "group_background": "해원그룹은 종합상사, 건설, 전자부품, 케이블 SO, 유통 물류를 가진 중견 재벌이다. IMF 직전 과잉 차입과 무리한 부동산 개발로 워크아웃 대상이 되었고, 채권단은 비핵심 계열사와 계약권을 빠르게 매각하라고 압박한다.",
+    "execution_doctrine": "도윤은 회사를 살리지 않는다. 권리, 책임, 현금흐름, 의결권을 분리한 뒤 살아 있는 관문만 개인 법인 또는 별도 SPC에 잠근다. 모든 행동은 이득, 효율, 회수율, 독점 가능성으로 판단한다.",
+    "generalized_loop_law": {
+      "one_line": "각 block은 압박을 권리 proof로 바꾸고, proof를 seat, 지분, 접근권, 보호막, 다음 gate 중 하나로 환전해야 한다.",
+      "primary_reward_model": "reward as right-to-act",
+      "loop_chain": [
+        "sale_pressure",
+        "document_or_field_proof",
+        "public_observer_shift",
+        "private_right_receipt",
+        "secondary_incident_resolution",
+        "next_gate"
+      ],
+      "success_conditions": [
+        "현재 block 안에서 도윤의 권리 확보나 통제권 진전이 visible해야 한다.",
+        "주 사건 외에 별도 사건 1개 이상이 같은 block 안에서 움직여야 한다.",
+        "가족, 채권단, 현장 실무자, 외부 브로커 중 최소 1개 관찰자 계층의 태도 또는 행동이 변해야 한다.",
+        "ending은 빈 cliffhanger가 아니라 다음 권리 desk로 들어가는 합법적 ticket이어야 한다."
+      ],
+      "failure_modes": [
+        "setup-only delay",
+        "돈 될 거라는 미래 설명만 있고 현재 증거가 없는 장면",
+        "가족 인정이 권리 receipt를 대신하는 전개",
+        "도윤이 착해서 손해를 떠안는 선행물화",
+        "한 block이 사건 하나만 처리하고 보상을 다음 block으로 미루는 느린 페이싱"
+      ]
+    },
+    "starter_group_assets": {
+      "name": "해원그룹 정리 대상 권리 목록",
+      "state": "채권단 압박 아래 헐값 매각 직전이다. 장남 라인은 빠른 매각으로 체면과 자기 지분만 방어하려 한다.",
+      "alive_rights": [
+        "케이블 SO 지역 송출권",
+        "PCS 대리점망 우선권",
+        "전자부품 단말 공급 옵션",
+        "게임 유통 계약",
+        "음원 마스터권",
+        "VAN/PG 단말 계약",
+        "물류 터미널 부지와 임대차 옵션",
+        "초기 포털/ISP 제휴 의향서"
+      ],
+      "liabilities": [
+        "과잉 차입과 워크아웃 감시",
+        "장남 라인의 헐값 매각 일정",
+        "채권단의 개인 편취 의심",
+        "현장 본부장의 정보 은폐",
+        "외부 브로커와 기존 사업자의 가격 왜곡",
+        "1997년 기술 시장의 불확실성과 현금흐름 공백"
+      ]
+    }
+  },
+  "protagonist": {
+    "name": "강도윤",
+    "age_at_start": 29,
+    "status": "해원그룹 차남. 공식 승계 라인 밖에 있고 가족에게는 해외에서 허송세월한 문제아로 취급된다.",
+    "world_origin": "2036년 권리 투자와 구조조정 실무자",
+    "incarnation_type": "빙의",
+    "public_image": "그룹 사정도 모르는 차남, 워크아웃 와중에 뒤늦게 나타난 가족 리스크",
+    "true_strength": "계약서 조항, 권리 순서, 현금흐름 병목, 미래 플랫폼 관문을 한 묶음으로 읽는 구조조정 감각",
+    "supernatural_edge": "미래 지식은 있지만 장면에서는 초능력처럼 설명하지 않는다. 도윤의 우위는 2036년 실무자의 권리 감각과 1997년 현재 문서 proof로만 드러난다.",
+    "true_weakness": "사람을 먼저 비용, 증인, 방패, gate로 분류한다. 너무 빠르게 권리를 빼내면 가족과 채권단이 개인 편취로 몰 수 있다.",
+    "initial_goal": "감사 태스크포스 seat와 문서고 접근권을 얻어 정리 대상 권리 묶음을 자기 구조로 빼낸다.",
+    "mid_goal": "케이블, PCS, 콘텐츠, 결제, 물류 관문을 묶어 해원그룹이 아니라 도윤 개인의 디지털 권리 desk를 만든다.",
+    "final_goal": "2005년까지 한국 디지털 유통의 핵심 관문을 장악하고, 해원그룹 승계가 아니라 독립 권리 지주회사 owner로 선다.",
+    "choice_law": [
+      "선의보다 이득, 효율, 회수율, 독점 가능성을 우선한다.",
+      "사람을 돕는 행동도 증인, 방패, 권리 가격 인하, 다음 gate로 환전될 때만 선택한다.",
+      "가문 구원은 표면 명분일 뿐, 실제 보상은 도윤의 지분과 통제권이어야 한다.",
+      "단기 손실은 장기 독점권, 법적 보호막, 협상 우위로 계산될 때만 감수한다."
+    ]
+  },
+  "phase0_design": {
+    "opening_bundle_contract": {
+      "bundle_window": "TR 2~6",
+      "macro_battlefield": "해원그룹 정리 대상 권리 매각 회의와 디지털 유통권 첫 회수전",
+      "macro_battlefield_map": [
+        "정리 대상 목록에서 케이블 지역권을 찾아 매각 보류권을 만든다.",
+        "PCS 대리점망 우선권을 숫자로 증명해 채권단 관찰자를 tone shift시킨다.",
+        "게임 유통권과 음원 마스터권을 side acquisition으로 묶어 현금흐름 단서를 만든다.",
+        "VAN/PG 단말 계약과 물류 터미널을 연결해 다음 portal/ISP 권리 desk 티켓을 확보한다."
+      ],
+      "bundle_goal": "TR 2~6 안에 도윤이 버려진 권리를 찾아 증명하고, 감사 seat와 매각 보류권을 얻고, 디지털 유통 관문 독식의 첫 입장권을 획득했음을 독자가 체감하게 만든다.",
+      "first_signboard_block": 3,
+      "representative_reevaluation_block": 2,
+      "next_battlefield_ticket_block": 6,
+      "timing_reconciliation_note": "Opening은 느리게 세계관을 설명하지 않는다. B02부터 권리 회수와 별도 사건을 병렬로 움직이고, B06 이전에 공식 seat와 다음 권리 desk가 모두 visible해야 한다."
+    },
+    "block_density_law": {
+      "unit": "1 TR block = 2~6 serialized episodes",
+      "minimum_distinct_incidents": 2,
+      "required_incident_pair": [
+        "primary_event: 권리 가치 증명 또는 회수",
+        "secondary_event: 반격, 별도 권리 발견, 관계 재배치, 다음 gate 단서 중 하나"
+      ],
+      "required_receipt": "same block 안에 seat, 지분, 접근권, 현금흐름, 보호막, 공개 재평가, 다음 ticket 중 하나를 남긴다.",
+      "anti_slow_rule": "설정 설명이나 조사만으로 끝나는 block은 실패다."
+    },
+    "internal_ladder_lock": [
+      "Stage 1 ARC-01~02: 버리는 권리를 먼저 산다. 도윤은 가족이 헐값에 넘기려는 권리에서 자기 seat와 첫 관문을 만든다.",
+      "Stage 2 ARC-03~04: 흩어진 권리를 묶어 관문으로 만든다. 콘텐츠, 결제, 물류가 하나의 유통망으로 연결된다.",
+      "Stage 3 ARC-05: 관문을 플랫폼으로 만든다. 포털, ISP, 광고, 커뮤니티가 권리 desk 위에 올라온다.",
+      "Stage 4 ARC-06: 가문이 아니라 권리 지주회사를 세운다. 해원그룹 승계보다 큰 도윤 개인의 독점 구조가 완성된다."
+    ],
+    "arcs": [
+      {
+        "arc_id": "ARC-01",
+        "title": "망할 그룹의 버려진 계약서",
+        "block_range": "1-10",
+        "time_window": "1997년 10월 ~ 1998년 1월",
+        "internal_stage": "버리는 권리를 먼저 산다",
+        "capital_target": "문서고 접근권 -> 매각 보류권 -> 임시 감사 seat -> 디지털 권리 정리 desk",
+        "front_sectors": [
+          "케이블 SO",
+          "PCS 대리점망",
+          "게임 유통",
+          "음원권",
+          "VAN/PG",
+          "물류 터미널"
+        ],
+        "support_sectors": [
+          "해원그룹 구조조정실",
+          "채권단",
+          "전자부품 계열사",
+          "케이블 현장 조직"
+        ],
+        "main_opponents": [
+          "강민석 장남 라인",
+          "박기문 전자부품 상무",
+          "류한규 외부 브로커",
+          "채권단 보수파"
+        ],
+        "new_npcs": [
+          "강도윤",
+          "강태준",
+          "강민석",
+          "서인하",
+          "오세관",
+          "윤세라",
+          "박기문",
+          "류한규"
+        ],
+        "emotion_curve": "무시 -> 문서 proof -> 매각 보류 -> 임시 seat -> side acquisition -> 개인 편취 의혹 -> 디지털 권리 desk",
+        "quiet_blocks": [],
+        "defeat_blocks": [
+          8
+        ],
+        "entry_function": "워크아웃 매각 회의에서 도윤은 버려진 계열사 목록을 보고 회사가 아니라 권리 관문을 산다고 선언한다.",
+        "exit_function": "도윤은 디지털 권리 정리 desk를 얻고 portal/ISP 권리 매각 정보로 다음 전장을 연다.",
+        "block_slots": [
+          {
+            "block": 1,
+            "title": "버릴 거면 제가 봅니다",
+            "function": "도윤이 1997년 해원그룹 차남으로 깨어나고, 가족/임원 앞에서 정리 대상 목록을 처음 본다. 그는 회사를 살리겠다고 하지 않고 권리 목록부터 달라고 요구한다.",
+            "incident_beats": [
+              "워크아웃 매각 회의에서 공개 무시",
+              "도윤이 케이블 지역권과 PCS 우선권 항목을 발견"
+            ],
+            "receipt": "문서고 하루 열람권"
+          },
+          {
+            "block": 2,
+            "title": "케이블은 땅이 아닙니다",
+            "function": "도윤은 케이블 SO를 낡은 설비가 아니라 지역 송출권과 향후 초고속망 관문으로 재분류한다. 장남은 하루 안에 매각하려 하지만 도윤은 누락 조항으로 매각 보류를 만든다.",
+            "incident_beats": [
+              "케이블 지역권 누락 조항 proof",
+              "장남 라인의 매각 일정 앞당기기 반격"
+            ],
+            "receipt": "매각 보류 도장과 서인하의 첫 재평가"
+          },
+          {
+            "block": 3,
+            "title": "대리점망 한 줄",
+            "function": "PCS 대리점망 우선권이 단말 재고 정리 항목에 묻혀 있음을 밝힌다. 류한규가 장남과 붙어 입찰가를 흔들지만, 도윤은 채권단 앞에서 우선권 가치와 손실 회피 구조를 숫자로 증명한다.",
+            "incident_beats": [
+              "PCS 우선권 가치 증명",
+              "외부 브로커와 장남 라인의 가격 왜곡 방어"
+            ],
+            "receipt": "임시 감사 seat와 문서고 상시 접근권"
+          },
+          {
+            "block": 4,
+            "title": "팔리지 않는 노래와 게임",
+            "function": "도윤은 돈 안 되는 잡계약으로 버려진 게임 유통권과 음원 마스터권을 묶어 PC방, 케이블, 향후 온라인 유통으로 이어지는 side acquisition을 만든다.",
+            "incident_beats": [
+              "게임 유통권과 음원 마스터권 회수",
+              "오세관을 현장 증인으로 돌려 내부 반대자 무력화"
+            ],
+            "receipt": "별도 SPC 설립 승인 초안과 첫 현금흐름 표"
+          },
+          {
+            "block": 5,
+            "title": "단말기는 돈이 지나가는 자리",
+            "function": "VAN/PG 단말 계약과 물류 터미널 임대차가 연결된다는 것을 밝힌다. 채권단 보수파는 개인 편취를 의심하지만, 도윤은 그룹 손실 방어와 개인 옵션을 분리한다.",
+            "incident_beats": [
+              "VAN/PG 단말 계약 가치 연결",
+              "개인 편취 의혹과 채권단 보수파 반격"
+            ],
+            "receipt": "감사 보고서 공식 배포권과 도윤 명의 우선협상권"
+          },
+          {
+            "block": 6,
+            "title": "이건 매각 목록이 아니라 지도입니다",
+            "function": "도윤은 케이블, PCS, 결제, 물류를 하나의 디지털 유통 관문으로 묶어 첫 signboard를 만든다. 가족은 여전히 불편해하지만 채권단은 디지털 권리 정리 desk를 도윤에게 맡긴다.",
+            "incident_beats": [
+              "디지털 유통 관문 proof",
+              "portal/ISP 권리 desk 매각 정보 unlock"
+            ],
+            "receipt": "디지털 권리 정리 desk 지휘권"
+          },
+          {
+            "block": 7,
+            "title": "증인은 호의로 움직이지 않는다",
+            "function": "도윤은 오세관을 보호해 주는 척하지만 실제로는 현장 병목 증인을 확보한다. 장남 라인은 오세관을 배신자로 몰고, 도윤은 증언과 계약 조항을 맞물려 방패를 만든다.",
+            "incident_beats": [
+              "현장 본부장 증언 확보",
+              "장남 라인의 내부 징계 시도 방어"
+            ],
+            "receipt": "현장 실사 동행권과 설비 자료 원본"
+          },
+          {
+            "block": 8,
+            "title": "싼 권리는 싸게 보이지 않는다",
+            "function": "defeat block. 류한규가 권리 묶음의 일부를 먼저 사들여 가격을 올린다. 도윤은 완승하지 못하지만, 상대가 탐낸 권리의 순서를 역으로 이용해 다음 핵심 권리의 위치를 알아낸다.",
+            "incident_beats": [
+              "브로커 선점으로 일부 권리 가격 상승",
+              "상대 매입 순서 분석으로 숨은 portal/ISP 제휴서 위치 파악"
+            ],
+            "receipt": "완전 회수 대신 다음 권리 위치와 반격 명분"
+          },
+          {
+            "block": 9,
+            "title": "가족 회의의 좌석 하나",
+            "function": "도윤은 가족 회의에서 칭찬을 요구하지 않는다. 그는 디지털 권리 desk의 결재선과 수수료 구조를 안건으로 올리고, 강태준은 불편한 표정으로도 좌석을 내준다.",
+            "incident_beats": [
+              "가족 회의 공식 안건 상정",
+              "강민석의 승계 라인 방어와 결재선 싸움"
+            ],
+            "receipt": "가족 회의 고정 좌석과 desk 수수료 조항"
+          },
+          {
+            "block": 10,
+            "title": "다음은 접속권입니다",
+            "function": "서인하가 portal/ISP 제휴 의향서와 초기 인터넷 회선 계약 묶음을 도윤에게 시험처럼 던진다. 도윤은 ARC-01의 권리 desk를 담보로 다음 전장 검토권을 얻는다.",
+            "incident_beats": [
+              "portal/ISP 제휴 의향서 제시",
+              "디지털 권리 desk 성과를 담보로 다음 검토권 획득"
+            ],
+            "receipt": "portal/ISP 권리 검토권"
+          }
+        ]
+      },
+      {
+        "arc_id": "ARC-02",
+        "title": "PCS와 케이블의 좁은 문",
+        "block_range": "11-20",
+        "time_window": "1998년 봄 ~ 1999년",
+        "internal_stage": "버리는 권리를 먼저 산다",
+        "capital_target": "지역 송출권 -> PCS 대리점망 -> 초고속망 설치권 -> 통신 관문 수익",
+        "front_sectors": [
+          "통신 대리점망",
+          "초고속 인터넷",
+          "케이블망"
+        ],
+        "support_sectors": [
+          "전자부품",
+          "설비 금융",
+          "지역 정치"
+        ],
+        "main_opponents": [
+          "통신 대기업 제휴팀",
+          "지역 케이블 경쟁자",
+          "채권단 보수파"
+        ],
+        "entry_function": "도윤은 ARC-01에서 얻은 desk를 이용해 케이블과 PCS를 하나의 접속권으로 묶는다.",
+        "exit_function": "지역 접속권이 현금흐름을 만들며 콘텐츠와 결제 권리를 실어 나를 길이 열린다.",
+        "block_slots": []
+      },
+      {
+        "arc_id": "ARC-03",
+        "title": "PC방과 콘텐츠 권리의 첫 현금흐름",
+        "block_range": "21-30",
+        "time_window": "1999년 ~ 2001년",
+        "internal_stage": "흩어진 권리를 묶어 관문으로 만든다",
+        "capital_target": "게임 유통권 -> PC방 패키지 -> 음원 마스터권 -> 온라인 콘텐츠 settlement",
+        "front_sectors": [
+          "게임 유통",
+          "PC방",
+          "음원권",
+          "콘텐츠 패키징"
+        ],
+        "support_sectors": [
+          "케이블 지역망",
+          "결제 단말",
+          "광고 영업"
+        ],
+        "main_opponents": [
+          "기존 유통 총판",
+          "음반사 보수파",
+          "불법복제 브로커"
+        ],
+        "entry_function": "접속권이 생기자 도윤은 PC방과 콘텐츠 권리를 묶어 돈이 흐르는 이유를 만든다.",
+        "exit_function": "콘텐츠 현금흐름이 결제와 물류 관문을 정당화한다.",
+        "block_slots": []
+      },
+      {
+        "arc_id": "ARC-04",
+        "title": "결제와 물류, 돈이 지나가는 레일",
+        "block_range": "31-40",
+        "time_window": "2001년 ~ 2002년",
+        "internal_stage": "흩어진 권리를 묶어 관문으로 만든다",
+        "capital_target": "VAN/PG 단말 계약 -> 물류 터미널 -> 초기 이커머스 settlement rail",
+        "front_sectors": [
+          "VAN",
+          "PG",
+          "물류 터미널",
+          "이커머스"
+        ],
+        "support_sectors": [
+          "콘텐츠 판매",
+          "지역 케이블",
+          "전자부품 단말"
+        ],
+        "main_opponents": [
+          "은행권 결제 라인",
+          "물류 터미널 채권자",
+          "기존 VAN 사업자"
+        ],
+        "entry_function": "콘텐츠와 통신 권리가 생긴 뒤 도윤은 돈과 물건이 지나가는 레일을 잠근다.",
+        "exit_function": "도윤의 권리 desk는 단순 투자부서가 아니라 플랫폼 운영 엔진으로 보인다.",
+        "block_slots": []
+      },
+      {
+        "arc_id": "ARC-05",
+        "title": "포털은 화면이 아니라 입구다",
+        "block_range": "41-50",
+        "time_window": "2002년 ~ 2004년",
+        "internal_stage": "관문을 플랫폼으로 만든다",
+        "capital_target": "portal/ISP 제휴 -> 광고권 -> 커뮤니티 traffic -> 콘텐츠/결제 통합",
+        "front_sectors": [
+          "포털",
+          "ISP",
+          "온라인 광고",
+          "커뮤니티"
+        ],
+        "support_sectors": [
+          "게임",
+          "음원",
+          "결제",
+          "케이블"
+        ],
+        "main_opponents": [
+          "포털 창업자 라인",
+          "대기업 인터넷 사업팀",
+          "규제 담당자"
+        ],
+        "entry_function": "도윤은 보유한 권리 묶음을 traffic과 광고권으로 환전한다.",
+        "exit_function": "해원그룹 내부에서도 도윤의 desk가 독립 지주회사로 분리되어야 한다는 압력이 커진다.",
+        "block_slots": []
+      },
+      {
+        "arc_id": "ARC-06",
+        "title": "해원보다 큰 권리 지주회사",
+        "block_range": "51-60",
+        "time_window": "2004년 ~ 2005년",
+        "internal_stage": "가문이 아니라 권리 지주회사를 세운다",
+        "capital_target": "디지털 권리 desk -> 독립 지주회사 -> 전 섹터 관문 포트폴리오",
+        "front_sectors": [
+          "권리 지주회사",
+          "모바일 콘텐츠",
+          "온라인 결제",
+          "디지털 광고",
+          "물류 settlement"
+        ],
+        "support_sectors": [
+          "해원그룹 잔존 계열사",
+          "채권단",
+          "외부 전략 투자자"
+        ],
+        "main_opponents": [
+          "강민석 승계 라인",
+          "채권단 회수팀",
+          "대기업 플랫폼 진입자",
+          "규제 리스크"
+        ],
+        "entry_function": "도윤이 모은 권리가 해원그룹을 넘어서는 가치를 갖자 모두가 소유권을 흔든다.",
+        "exit_function": "도윤은 가문 승계가 아니라 독립 권리 지주회사 owner로 끝난다.",
+        "block_slots": []
+      }
+    ],
+    "npc_timeline": [
+      {
+        "name": "강도윤",
+        "role": "주인공",
+        "first_block": 1,
+        "final_status": "디지털 권리 지주회사 owner",
+        "key_turning_points": [
+          {
+            "block": 2,
+            "event": "케이블 매각 보류권"
+          },
+          {
+            "block": 3,
+            "event": "임시 감사 seat"
+          },
+          {
+            "block": 6,
+            "event": "디지털 권리 정리 desk 지휘권"
+          },
+          {
+            "block": 10,
+            "event": "portal/ISP 권리 검토권"
+          }
+        ]
+      },
+      {
+        "name": "서인하",
+        "role": "채권단 실사역과 첫 제도권 witness",
+        "first_block": 2,
+        "final_status": "도윤의 권리 desk를 공식 보고서에 올리는 감시자 겸 협상 상대",
+        "key_turning_points": [
+          {
+            "block": 2,
+            "event": "도윤의 케이블 proof를 처음 재평가"
+          },
+          {
+            "block": 6,
+            "event": "디지털 권리 desk 보고 라인 승인"
+          }
+        ]
+      },
+      {
+        "name": "강민석",
+        "role": "장남 라인과 초반 내부 opponent",
+        "first_block": 1,
+        "final_status": "승계 라인을 지키려다 권리 지주회사 가치 앞에서 협상자로 밀려난다",
+        "key_turning_points": [
+          {
+            "block": 2,
+            "event": "헐값 매각 실패"
+          },
+          {
+            "block": 9,
+            "event": "가족 회의 좌석 싸움"
+          }
+        ]
+      },
+      {
+        "name": "오세관",
+        "role": "케이블 현장 gatekeeper",
+        "first_block": 4,
+        "final_status": "도윤의 현장 proof를 떠받치는 실무 witness",
+        "key_turning_points": [
+          {
+            "block": 4,
+            "event": "게임/음원 side acquisition 증언"
+          },
+          {
+            "block": 7,
+            "event": "현장 자료 원본 제공"
+          }
+        ]
+      },
+      {
+        "name": "류한규",
+        "role": "외부 브로커와 가격 왜곡자",
+        "first_block": 3,
+        "final_status": "도윤의 권리 독식이 시장에 노출되는 계기를 만든 반복 opponent",
+        "key_turning_points": [
+          {
+            "block": 3,
+            "event": "PCS 우선권 가격 왜곡"
+          },
+          {
+            "block": 8,
+            "event": "일부 권리 선점으로 첫 defeat 유도"
+          }
+        ]
+      }
+    ],
+    "foreshadow_map": [
+      {
+        "id": "FS-01",
+        "name": "정리 대상 목록의 작은 별표",
+        "seed_block": 1,
+        "hint_blocks": [
+          2,
+          6,
+          10
+        ],
+        "payoff_block": 50,
+        "payoff_meaning": "버려진 계약서의 별표가 후반 portal/ISP 광고권의 소유권 근거가 된다."
+      },
+      {
+        "id": "FS-02",
+        "name": "PCS 대리점망 우선권",
+        "seed_block": 3,
+        "hint_blocks": [
+          12,
+          21,
+          36
+        ],
+        "payoff_block": 55,
+        "payoff_meaning": "초반 단말 대리점망이 모바일 콘텐츠와 결제 관문으로 확장된다."
+      },
+      {
+        "id": "FS-03",
+        "name": "도윤 명의 우선협상권",
+        "seed_block": 5,
+        "hint_blocks": [
+          9,
+          31,
+          48
+        ],
+        "payoff_block": 60,
+        "payoff_meaning": "가문 승계가 아니라 독립 권리 지주회사 소유권의 법적 씨앗이 된다."
+      }
+    ],
+    "opponent_transition_plan": [
+      {
+        "faction": "장남 라인",
+        "phase": "국면 1: 빠른 매각과 승계 방어",
+        "block_range": "1-10",
+        "entry_block": 1,
+        "main_actors": [
+          "강민석",
+          "박기문"
+        ],
+        "goal": "정리 대상 권리를 빨리 팔아 워크아웃 체면을 세우고 도윤의 seat를 막는다.",
+        "methods": [
+          "매각 일정 앞당기기",
+          "개인 편취 프레임",
+          "현장 자료 차단"
+        ],
+        "weakness": "권리 가치를 회사 장부 기준으로만 보고 계약 조항과 미래 관문 가치를 놓친다.",
+        "receipt_when_beaten": "매각 보류권, 임시 감사 seat, 가족 회의 좌석"
+      },
+      {
+        "faction": "채권단 보수파",
+        "phase": "국면 2: 회수 우선과 개인 편취 의심",
+        "block_range": "11-30",
+        "entry_block": 5,
+        "main_actors": [
+          "서인하",
+          "채권단 회수팀"
+        ],
+        "goal": "불확실한 디지털 권리보다 당장 회수 가능한 매각가를 우선한다.",
+        "methods": [
+          "보고서 반려",
+          "담보 가치 절하",
+          "개인 법인 구조 의심"
+        ],
+        "weakness": "same-block 현금흐름과 매각가 상승 proof가 나오면 공식 보고서에 반영할 수밖에 없다.",
+        "receipt_when_beaten": "보고서 공식 배포권, desk 지휘권, 다음 권리 검토권"
+      },
+      {
+        "faction": "외부 브로커와 기존 사업자",
+        "phase": "국면 3: 가격 왜곡과 선점",
+        "block_range": "3-40",
+        "entry_block": 3,
+        "main_actors": [
+          "류한규",
+          "기존 통신/결제/유통 사업자"
+        ],
+        "goal": "도윤이 싼값에 모으는 권리를 먼저 알아보고 가격을 올리거나 일부를 선점한다.",
+        "methods": [
+          "입찰가 왜곡",
+          "현장 본부장 매수",
+          "계약권 분리 매입"
+        ],
+        "weakness": "도윤은 상대가 먼저 사는 순서를 보고 더 큰 관문의 위치를 역산한다.",
+        "receipt_when_beaten": "상대 선점을 이용한 다음 권리 위치, 반격 명분, 더 큰 관문 회수"
+      },
+      {
+        "faction": "대기업 플랫폼 진입자와 규제 라인",
+        "phase": "국면 4: 독점 구조 흔들기",
+        "block_range": "41-60",
+        "entry_block": 41,
+        "main_actors": [
+          "포털/통신 대기업 제휴팀",
+          "규제 담당자",
+          "전략 투자자"
+        ],
+        "goal": "도윤의 권리 desk를 해원그룹 내부 자산으로 묶거나 규제로 분해한다.",
+        "methods": [
+          "제휴 압박",
+          "독점 프레임",
+          "가문 승계권과 소유권 혼선"
+        ],
+        "weakness": "도윤의 권리는 그룹 구제가 아니라 개별 계약과 SPC 권리 체인으로 분리되어 있다.",
+        "receipt_when_beaten": "독립 권리 지주회사 승인과 도윤 개인 owner 지위"
+      }
+    ],
+    "first_block_cider_ledger": [
+      {
+        "block_no": 2,
+        "primary_event": "케이블 지역권 proof",
+        "secondary_event": "장남 라인의 매각 앞당기기 방어",
+        "same_block_receipt": "매각 보류 도장",
+        "has_cider": true
+      },
+      {
+        "block_no": 3,
+        "primary_event": "PCS 우선권 가치 증명",
+        "secondary_event": "브로커 가격 왜곡 방어",
+        "same_block_receipt": "임시 감사 seat",
+        "has_cider": true
+      },
+      {
+        "block_no": 4,
+        "primary_event": "게임/음원 side acquisition",
+        "secondary_event": "현장 증인 확보",
+        "same_block_receipt": "SPC 승인 초안",
+        "has_cider": true
+      },
+      {
+        "block_no": 5,
+        "primary_event": "VAN/PG와 물류 병목 연결",
+        "secondary_event": "개인 편취 의혹 방어",
+        "same_block_receipt": "우선협상권",
+        "has_cider": true
+      },
+      {
+        "block_no": 6,
+        "primary_event": "디지털 유통 관문 첫 signboard",
+        "secondary_event": "portal/ISP 권리 desk unlock",
+        "same_block_receipt": "디지털 권리 정리 desk 지휘권",
+        "has_cider": true
+      }
+    ],
+    "donor_translation_law": {
+      "core": "재벌가 장남은 가치를 본다",
+      "specialist": "주식의 신",
+      "sanity_check": "불행을 보는 재벌주의자",
+      "allowed_transfer": [
+        "hidden value recognition",
+        "public proof before private receipt",
+        "risky seat acquisition",
+        "gatekeeper tone shift",
+        "next gate cadence"
+      ],
+      "forbidden_transfer": [
+        "도너 고유 인물명",
+        "도너의 예지/초능력 skin",
+        "동일 사건 순서",
+        "가족 구원형 감정 동기",
+        "시장 조작 디테일 직접 복제"
+      ]
+    },
+    "phase0_manual_audit": {
+      "pass1_pipeline": "Stage0 handoff validator passed before Phase0 creation. TR remains forbidden until work_guard draft/freeze is handled.",
+      "pass2_pacing": "Opening B2~B6 all contain primary event, secondary event, and same-block receipt. Setup-only opening is blocked.",
+      "pass3_character": "도윤의 자기중심성 is locked as choice law and reward structure. 가족 구원보다 개인 권리와 control receipt가 우선한다.",
+      "confidence_percent": 96
+    }
+  }
+}

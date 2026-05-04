@@ -1,0 +1,175 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "24",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 024 draft only. Defeat block: Aster Trading attacks file access and discount attribution, forcing a legal defense receipt and delaying formal dollar account opening.",
+  "blocks": [
+    {
+      "block_id": "Block 24",
+      "block_no": 24,
+      "title": "기존 수입사의 계약 무효 카드",
+      "episode_span_intent": "2~6화 분량. Aster Trading의 협상 무효 통지, 해외 계약 파일 접근 legality 공격, 은행 달러 계좌 정식 개설 보류, read-only 감사 로그 방어, 기존 공급 계약 원본 제한 열람 gate 확보, Mira 초안 재검증 과제를 압축한다.",
+      "content": {
+        "context": "SableWorks의 부분 인정 메일과 SPV/D-RN 귀속 확인서 초안은 아직 돈이 아니다. 도윤은 그걸 안다. 문구가 계약으로 굳기 전에 반드시 누군가 찢으러 온다. 다음 날 아침, 그 역할을 Aster Trading이 맡는다. Aster는 SableWorks의 기존 한국 공급 파트너다. 그들은 다온리테일과 도윤권리운영이 해외 계약 파일에 접근한 과정이 기존 공급 계약의 confidentiality 조항을 침해했고, SPV/D-RN 할인권 귀속 확인서 초안은 무효라고 통지한다.",
+        "event_villain": "첫 번째 사건은 계약 무효 통지다. Aster Trading의 법무 대리인은 다온리테일, SableWorks, 은행 기업외환팀까지 동시에 메일을 보낸다. 제목은 'Unauthorized Third-Party Access and Invalid Commercial Adjustment'다. 핵심은 세 가지다. 도윤권리운영은 계약 당사자가 아니고, SableWorks 파일 접근은 제3자 열람이며, 다음 선적분 할인권을 SPV/D-RN 라인에 귀속시키는 문구는 기존 공급 계약상 price protection 조항을 우회한다는 주장이다. 김원재는 바로 달러 계좌 정식 개설 검토를 보류한다. 은행은 분쟁 중인 해외 계약을 계좌 개설 근거로 삼을 수 없다.",
+        "second_incident": "두 번째 사건은 내부 책임 전가다. 해외소싱팀장은 도윤에게 통화 참여와 read-only 접근을 요청한 적이 없다는 식으로 물러난다. PB사업부는 이참에 할인권 귀속 확인서 초안을 폐기하고 다음 선적분 할인 자체만 받자고 한다. 그렇게 되면 도윤은 23블록에서 얻은 문구를 잃고, 22블록에서 연 달러 계좌 gate도 닫힌다. 한규리는 침착하게 묻는다. '접근 로그가 다운로드 금지였다는 걸 증명할 수 있습니까?' 도윤은 그 질문을 기다렸다. 그는 돈보다 먼저 로그를 받아둔 사람이다.",
+        "solution": "도윤은 Aster의 주장을 반박하는 대신 범위를 자른다. 그는 계약 당사자 행세를 한 적이 없다. 원본 다운로드도 하지 않았다. 은행 사전 심사 메모는 송금 실행이 아니라 할인권 귀속 리스크 검증이었다. 윤서린의 감사 로그에는 접근자, 시간, 마스킹 항목, 다운로드 금지, 캡처 제한, read-only data room ID가 남아 있다. 도윤은 이것을 무결성 확인서로 묶고, 한규리에게 대응 메모를 쓰게 한다. 핵심 문장은 하나다. 'SPV는 수입자가 아니라 downstream refurbishment operator이며, 접근 목적은 가격 조정 수령이 아니라 손실 회피 검증이다.'",
+        "reward": "블록 끝에서 도윤은 밀린다. 김원재는 달러 계좌 정식 개설을 보류한다. SableWorks도 Aster의 계약 원본을 확인하기 전까지 확인서 초안 서명을 멈춘다. 하지만 도윤은 빈손이 아니다. read-only 접근 로그 무결성 확인서, Aster Trading 계약 무효 주장 대응 메모, SableWorks 기존 공급 계약 원본 제한 열람 gate, 달러 계좌 정식 개설 보류 조건, Mira 초안 재검증 과제가 남는다. 도윤은 계좌가 막힌 화면을 닫고 말한다. '좋습니다. 이제 진짜 원본을 볼 명분이 생겼네요.'"
+      },
+      "stakes": "Aster Trading의 공격이 통하면 SPV/D-RN 할인권 귀속 확인서 초안은 무효가 되고 달러 계좌 gate도 닫힌다. 반대로 read-only 접근의 합법성과 검증 목적을 방어하면 기존 공급 계약 원본을 볼 명분과 다음 반격 지점을 얻는다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "Aster Trading이 도윤의 파일 접근과 할인권 귀속 확인서 초안을 기존 공급 계약 위반으로 공격하고, 김원재가 달러 계좌 정식 개설 검토를 보류함",
+        "incident_2": "해외소싱팀과 PB사업부가 책임을 피하며 할인권 귀속 확인서 초안을 폐기하려 하자, 도윤이 read-only 감사 로그와 은행 사전 심사 메모로 접근 목적을 방어함",
+        "next_actionable_gate": "Mira 초안 오류 검증, 현장 송장/선적 서류 대조, Aster Trading 물량 조항 약점, 달러 계좌 보류 해제 조건",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 회사의 정보 유출 리스크를 대신 떠안으려고 움직이지 않는다. 할인권 귀속 문구와 달러 계좌 gate를 살리려면 자신의 접근이 합법적 검증 행위였다는 기록이 필요하기 때문에 감사 로그를 무기로 쓴다.",
+        "morality_position": "정당한 절차 방어처럼 보이지만 핵심은 Aster 공격을 이용해 기존 공급 계약 원본 열람 명분을 얻는 것이다.",
+        "efficiency_choice": "Aster의 모든 주장에 감정적으로 반박하지 않고, 제3자 접근과 원본 다운로드 여부, 송금 실행 여부만 잘라 최소 방어선을 만든다."
+      },
+      "power_shift": {
+        "protagonist": "SableWorks 부분 인정과 할인권 귀속 확인서 초안을 가진 우선 공급 협상 후보 -> 달러 계좌가 보류되지만 기존 공급 계약 원본 gate와 접근 로그 방어 receipt를 가진 계약 공격 대응자",
+        "antagonist": "Aster Trading: 이름만 언급된 기존 공급 계약자 -> 협상 무효와 정보 접근 위반을 주장해 달러 계좌와 할인권 귀속을 동시에 막는 경쟁 수입사",
+        "system": "할인권 귀속 확인서 초안 -> 계약 무효 통지, read-only 감사 로그, 기존 공급 계약 원본 제한 열람 gate, Mira 재검증 과제"
+      },
+      "relationship_delta": [
+        {
+          "target": "Aster Trading",
+          "before": "SableWorks의 기존 한국 공급 계약자로 드러난 리스크",
+          "after": "도윤의 파일 접근과 할인권 귀속 확인서 초안을 계약 무효 카드로 공격하는 ARC-03의 본격 경쟁자"
+        },
+        {
+          "target": "김원재",
+          "before": "SableWorks 협상에서 은행 검증 압박 자료를 제공한 외환 gatekeeper",
+          "after": "분쟁 중인 해외 계약을 이유로 달러 계좌 정식 개설을 보류하지만, 보류 해제 조건을 문서화해주는 절차형 gatekeeper"
+        },
+        {
+          "target": "SableWorks",
+          "before": "정산 오류 부분 인정과 할인권 귀속 확인서 초안을 남긴 해외 공급사",
+          "after": "Aster 계약 원본 확인 전까지 서명을 멈추지만 기존 공급 계약 원본 제한 열람 gate를 열어주는 상대"
+        },
+        {
+          "target": "윤서린",
+          "before": "은행 read-only 데이터룸 접근 기록과 할인권 귀속 예정 표를 감사 증거로 묶는 witness",
+          "after": "다운로드 금지, 마스킹, 접근자 기록을 무결성 확인서로 고정해 도윤을 방어하는 witness"
+        },
+        {
+          "target": "한규리",
+          "before": "priority review와 refurbished channel allocation 문구로 법적 충돌을 낮추는 validator",
+          "after": "SPV가 수입자가 아니라 downstream operator였다는 대응 메모를 작성하는 법무 validator"
+        }
+      ],
+      "foreshadow": [
+        "Mira 초안 오류 검증",
+        "현장 송장/선적 서류 대조",
+        "Aster Trading 물량 조항 약점",
+        "달러 계좌 보류 해제 조건",
+        "SableWorks 기존 공급 계약 원본"
+      ],
+      "callback": [
+        "Block 23의 Aster Trading 계약 충돌 경고가 계약 무효 통지로 폭발함",
+        "Block 23의 SPV/D-RN 귀속 확인서 초안이 Aster의 무효 공격 대상이 됨",
+        "Block 22의 김원재 외환 사전 심사 메모가 달러 계좌 보류 조건 문서로 회수됨",
+        "Block 22의 read-only 데이터룸 접근 조건이 윤서린의 무결성 확인서로 회수됨",
+        "Block 21의 Mira 이상치 표시 로그가 다음 블록의 초안 오류 검증 과제로 되돌아옴"
+      ],
+      "emotional_beat": {
+        "type": "setback_to_legal_defense_gate",
+        "intensity": 8
+      },
+      "tension_level": 9,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "도윤권리운영 임시 사무공간 / 다온리테일 법무팀 회의실 / 은행 기업외환 상담실 / read-only 데이터룸 감사 로그 화면",
+        "type": "SPV / 법무 / 은행 / 감사 로그"
+      },
+      "time_span": {
+        "duration": "2일",
+        "in_story_time": "2026년 7월 첫째 주 초"
+      },
+      "genre_ext": {
+        "capital_before": "SableWorks 정산 오류 부분 인정 메일 + 다음 선적분 할인권 SPV/D-RN 귀속 확인서 초안 + 우선 공급 협상 gate + 달러 계좌 정식 개설 서류 목록 + Aster Trading 계약 충돌 경고",
+        "capital_after": "read-only 접근 로그 무결성 확인서 + Aster Trading 계약 무효 주장 대응 메모 + SableWorks 기존 공급 계약 원본 제한 열람 gate + 달러 계좌 정식 개설 보류 조건 + Mira 초안 재검증 과제",
+        "capital_delta": "할인권 귀속 확인서 초안이 공격받아 달러 계좌는 보류되지만, 접근 합법성 방어 receipt와 기존 공급 계약 원본 gate로 전환",
+        "profit_loss": "즉시 수익은 후퇴한다. 달러 계좌 정식 개설과 할인권 귀속 서명이 멈추지만, 기존 공급 계약 원본의 물량 조항을 볼 수 있으면 Aster의 약점을 찾을 수 있다.",
+        "method": "Aster 계약 무효 통지 분석, read-only 감사 로그 무결성 확인, 은행 사전 심사 메모 목적 제한, SPV downstream operator 논리, SableWorks 기존 공급 계약 원본 gate 요구",
+        "deal_type": "계약 공격 방어 / read-only legality receipt / 기존 공급 계약 원본 gate",
+        "leverage_used": [
+          "SableWorks 정산 오류 부분 인정 메일",
+          "SPV/D-RN 할인권 귀속 확인서 초안",
+          "김원재 외환 사전 심사 메모",
+          "read-only 데이터룸 감사 로그",
+          "윤서린의 접근 로그 witness",
+          "한규리의 downstream operator 대응 문구"
+        ],
+        "opponent": {
+          "name": "Aster Trading",
+          "type": "기존 수입사 / 계약 무효 공격자",
+          "weakness_exploited": "정보 유출 공격은 강하지만, read-only 접근과 원본 다운로드 부재가 확인되면 기존 공급 계약 원본을 공개해야 공격을 유지할 수 있다는 점"
+        },
+        "time_pressure": "달러 계좌 정식 개설 보류가 길어지면 SableWorks의 다음 선적분 PO가 다온 내부 매입가로 굳어질 수 있다.",
+        "risk_level": "고위험",
+        "business_sector": "경쟁 수입사 계약 공격 / 해외 계약 파일 접근 / 은행 외환 / supplier debit note / AI 재검증",
+        "section_rotation": "공급사 협상 승리를 경쟁 수입사의 계약 공격으로 꺾고, 방어 receipt를 원본 계약 gate로 바꾼다",
+        "success_pattern": "계좌는 보류되지만 read-only 접근 로그 무결성 확인서, 법무 대응 메모, 기존 공급 계약 원본 제한 열람 gate가 남는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "setback_to_legal_gate_receipt",
+          "receipt_line": "'좋습니다. 이제 진짜 원본을 볼 명분이 생겼네요.'",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "read-only 접근 로그 무결성 확인서",
+          "Aster Trading 계약 무효 주장 대응 메모",
+          "SableWorks 기존 공급 계약 원본 제한 열람 gate",
+          "달러 계좌 정식 개설 보류 조건",
+          "Mira 초안 재검증 과제"
+        ],
+        "document_evidence": [
+          "Aster Trading 계약 무효 통지 메일",
+          "Unauthorized Third-Party Access 주장",
+          "read-only data room ID",
+          "다운로드 금지/마스킹/접근자 기록 감사 로그",
+          "김원재 외환 사전 심사 메모",
+          "SableWorks 부분 인정 메일",
+          "SPV/D-RN 할인권 귀속 확인서 초안"
+        ],
+        "field_validation": [
+          "도윤권리운영은 계약 당사자가 아님",
+          "원본 다운로드 기록 없음",
+          "송금 실행 없음",
+          "은행 사전 심사는 할인권 귀속 리스크 검증 목적",
+          "Aster 주장을 유지하려면 기존 공급 계약 원본 조항 확인이 필요"
+        ],
+        "witness_carrier": [
+          "Aster Trading 법무 대리인의 계약 무효 통지",
+          "김원재의 달러 계좌 정식 개설 보류 메모",
+          "윤서린의 read-only 접근 로그 무결성 확인서",
+          "한규리의 downstream operator 대응 메모",
+          "SableWorks의 기존 공급 계약 원본 제한 열람 조건"
+        ],
+        "receipt": [
+          "read-only 접근 로그 무결성 확인서",
+          "Aster Trading 계약 무효 주장 대응 메모",
+          "SableWorks 기존 공급 계약 원본 제한 열람 gate",
+          "달러 계좌 정식 개설 보류 조건",
+          "Mira 초안 재검증 과제"
+        ],
+        "next_gate": "Mira 초안 오류 검증, 현장 송장/선적 서류 대조, Aster Trading 물량 조항 약점, 달러 계좌 보류 해제 조건"
+      },
+      "foreshadow_targets": [
+        25,
+        26,
+        27,
+        28
+      ]
+    }
+  ]
+}

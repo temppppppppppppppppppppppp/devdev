@@ -35,14 +35,14 @@
     }
   ],
   "foreshadow": [
-    "오민석의 재실사 우선 검토 메모는 Block 010에서 공장을 팔지 않고 CDMO 관문으로 고정하는 방패가 된다.",
+    "오민석의 재실사 우선 검토 메모는 공장을 팔지 않고 CDMO 관문으로 고정하는 방패가 된다.",
     "병원/식약처 통합 기록 양식은 이후 콜드체인과 병원 데이터 표준의 원형이 된다.",
     "서명 누락을 정정 기록으로 처리한 방식은 글로벌 예비 방문에서 편차보고 문화의 proof로 회수된다."
   ],
   "callback": [
-    "Block 003의 조건부 보류 판정이 재실사 우선 검토 메모로 진화한다.",
-    "Block 008의 매주 품질/온도/지연 기록 제출 조건이 식약처 개선계획 이행자료로 환전된다.",
-    "Block 005의 글로벌 예비 방문 ticket이 오민석의 메모로 유지된다."
+    "조건부 보류 판정이 재실사 우선 검토 메모로 진화한다.",
+    "매주 품질/온도/지연 기록 제출 조건이 식약처 개선계획 이행자료로 환전된다.",
+    "글로벌 예비 방문 ticket이 오민석의 메모로 유지된다."
   ],
   "emotional_beat": {
     "type": "institutional_shift",
@@ -94,6 +94,61 @@
       "receipt_type": "institutional_receipt",
       "receipt_line": "강태오는 병원 납품 기록을 식약처 재실사 우선 검토 메모와 글로벌 예비 방문 유지권으로 환전한다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "현금 보상 없이 제도권 내부 메모와 글로벌 예비 방문 유지권을 얻는 권한 환전 승리",
+      "recognition_signal": "오민석의 시선 변화: 병원 납품 기록과 개선계획 이행표를 연결해 태오바이오를 재실사 우선 검토 대상으로 메모한다",
+      "reward_signal": "강태오는 병원 납품 기록을 식약처 재실사 우선 검토 메모와 글로벌 예비 방문 유지권으로 환전한다.",
+      "growth_signal": "강태오는 병원 납품 데이터를 단순 매출 보고가 아니라 식약처 개선계획 이행자료로 격상시킨다.",
+      "expectation_signal": "재실사 우선 검토 메모가 공장 재매입 거절과 글로벌 예비 방문 방어의 근거가 된다",
+      "reader_feel": "독자는 「감사관의 메모」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 병원 납품 기록을 식약처 재실사 우선 검토 메모와 글로벌 예비 방문 유지권으로 환전한다. 성장 장면: 강태오는 병원 납품 데이터를 단순 매출 보고가 아니라 식약처 개선계획 이행자료로 격상시킨다. 다음 기대감: 재실사 우선 검토 메모가 공장 재매입 거절과 글로벌 예비 방문 방어의 근거가 된다",
+      "mature_success_signal": "강태오는 감사관의 메모의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "현금 보상 없이 제도권 내부 메모와 글로벌 예비 방문 유지권을 얻는 권한 환전 승리",
+        "recognition": "오민석의 시선 변화: 병원 납품 기록과 개선계획 이행표를 연결해 태오바이오를 재실사 우선 검토 대상으로 메모한다",
+        "reward": "강태오는 병원 납품 기록을 식약처 재실사 우선 검토 메모와 글로벌 예비 방문 유지권으로 환전한다.",
+        "growth": "강태오는 병원 납품 데이터를 단순 매출 보고가 아니라 식약처 개선계획 이행자료로 격상시킨다.",
+        "expectation": "재실사 우선 검토 메모가 공장 재매입 거절과 글로벌 예비 방문 방어의 근거가 된다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 오민석의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 재실사 우선 검토 메모가 공장 재매입 거절과 글로벌 예비 방문 방어의 근거가 된다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "2개월 최소발주 계약이 시작되자 태오바이오는 병원에 매주 품질/온도/지연 기록을 보내기 시작한다. 윤세린은 그 기록을 식약처 개선계획 이행표와 같은 양식으로 맞춘다. 강태오는 병원 감시용 서류를 따로 만들지 않는다. 병원이 보는 기록과 오민석이 볼 개선기록을 같은 표로 만든다.",
+      "proof_action": "태오는 서명 누락을 숨기지 않고 병원에 정정 기록과 원인서를 보낸다. 동시에 오민석에게 병원 납품량, 온도기록, 지연 사유, 문제 배치 격리 원장을 한 묶음으로 제출하며 '조건부 보류 공장의 개선계획 이행 자료'로 접수해 달라고 요구한다. 그는 식약처에 선처를 구하지 않는다.",
+      "proof_axis": "전생에서 실사관의 내부 메모 한 줄이 외부 감사와 병원 계약의 리스크 판단에 쓰였다는 기억",
+      "recognition_or_resistance_signal": "오민석 -> 병원 납품 기록과 개선계획 이행표를 연결해 태오바이오를 재실사 우선 검토 대상으로 메모한다",
+      "receipt_asset": "강태오는 병원 납품 기록을 식약처 재실사 우선 검토 메모와 글로벌 예비 방문 유지권으로 환전한다.",
+      "reward_asset_classes": [
+        "quality_responsibility",
+        "cdmo_slot"
+      ],
+      "next_regulated_gate": "재실사 우선 검토 메모가 공장 재매입 거절과 글로벌 예비 방문 방어의 근거가 된다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 오민석의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 재실사 우선 검토 메모가 공장 재매입 거절과 글로벌 예비 방문 방어의 근거가 된다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {

@@ -63,5 +63,24 @@
     "주인공을 선한 구원자로 만들지 않는다"
   ],
   "manual_audit_note": "Stage0 source manifest created from R&D selected concept and material-side harness. Historical sources are motif only; canon uses fictional Taesung Ocean Group and fictional characters.",
-  "manual_audit_pass": true
+  "manual_audit_pass": true,
+  "donor_review": {
+    "decision": "adopted",
+    "scope": "Generalized donor-structure law only; no donor proper nouns, scene order, or asset skin is imported.",
+    "adopted_law": [
+      "current-document proof before future-knowledge payoff",
+      "pressure -> proof -> authority/control/cash/status receipt -> next company gate",
+      "same-block receipt for every TR block",
+      "family or heir recognition is pressure/evaluation only, never the reward engine",
+      "one TR block remains a dense 2-to-6 downstream episode bundle, narrowed by block-specific pacing hints"
+    ],
+    "contamination_guard": [
+      "no donor proper nouns, donor organization names, or donor scene order",
+      "no generic chaebol succession reward replacing shipbuilding, ship-finance, dock, insurance, supplier, market, or approval rights",
+      "no future prophecy or status UI replacing present contracts, tables, logs, term sheets, or receipts",
+      "no charity rescue or family praise as a block reward",
+      "shipbuilding and ship-finance rights remain the work canon"
+    ],
+    "visibility_note": "Donor adoption means translated material-side operating law only; shipbuilding canon remains native."
+  }
 }

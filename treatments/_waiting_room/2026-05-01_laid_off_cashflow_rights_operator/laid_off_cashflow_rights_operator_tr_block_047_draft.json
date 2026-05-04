@@ -1,0 +1,159 @@
+{
+  "_schema": "tr.v1",
+  "_total_blocks_planned": 70,
+  "_generated_blocks": 1,
+  "_block_range": "47",
+  "_block_semantics": "1 TR block is a dense 2~6 episode planning bundle, not one literal episode.",
+  "_production_note": "Bounded Block 047 draft only. Waiting-room production continuation; not root canonical, not BI, not immediate-use.",
+  "blocks": [
+    {
+      "block_id": "Block 47",
+      "block_no": 47,
+      "title": "납품권보다 유지보수",
+      "episode_span_intent": "2~6화 분량. 신규 물량 정지 해제 심사, 제이앤픽스의 단가 인하, 도윤의 유지보수 계약 우선 선택과 반복 매출 MSA 확보를 압축한다.",
+      "content": {
+        "context": "고객 대응 packet이 들어가자 신규 물량 정지 해제 심사가 열린다. 구매본부는 제한형 보증, 노태경 protocol, 배수민 operator, 고객 의향서까지 확인한다. 제이앤픽스는 바로 단가를 낮춘다. 납품 단가를 6퍼센트 낮추겠다는 제안이다. 회의장은 흔들린다. 납품권만 보면 제이앤픽스가 싸다. 도윤은 그걸 인정한다. 하지만 D-RN 물량에서 반복적으로 돈이 새는 곳은 납품 단가가 아니라 유지보수 응답과 원인 분류다.",
+        "event_villain": "첫 번째 사건은 단가 인하 반격이다. 제이앤픽스는 낮은 납품가와 기존 납품사 이력을 들이밀고, 구매본부는 도윤권리운영의 신규 물량 배정을 소량으로 제한하려 한다. 도윤은 단가를 맞추지 않는다. 대신 납품권 전체가 아니라 유지보수 MSA를 먼저 요구한다. 포장 압착, 커넥터 점검, 운송 충격 세 항목의 처리 시간과 책임상한을 묶는 계약이다.",
+        "second_incident": "두 번째 사건은 고객의 선택이다. 세림오피스는 단가보다 응답시간을 계약서에 넣는 쪽을 원한다고 답한다. 배수민은 다른 두 고객에게도 같은 조건을 확인한다. 노태경은 검수 protocol을 붙이고, 보험사는 제한형 보증 조건을 MSA에 연결한다. 구매본부는 납품권은 아직 어렵다고 하지만 유지보수 계약은 별도 검토 가능하다고 물러선다. 도윤은 그 말을 잡는다. 납품권은 나중에 와도 된다. 반복 매출이 먼저다.",
+        "solution": "도윤은 신규 물량 전체를 따내려 하지 않는다. 유지보수 MSA, 월 최소 처리 수량, 응답시간 SLA, 항목별 책임상한, 고객 세 곳 우선 적용, 신규 물량 정지 부분 해제. 제이앤픽스는 납품 단가를 낮췄지만 유지보수 응답시간 proof는 없다. 도윤권리운영은 납품사가 아니라 비용을 관리하는 operator로 들어간다.",
+        "reward": "블록 끝에서 도윤은 납품권 전체를 얻지 않는다. 대신 D-RN 유지보수 MSA 초안, 월 최소 처리 수량 120대, 응답시간 SLA, 항목별 책임상한 부속표, 고객 세 곳 우선 적용 메모, 신규 물량 정지 부분 해제 통지를 얻는다. 도윤은 말한다. 싸게 넣는 권리는 남에게 주셔도 됩니다. 고장 난 뒤의 시간은 제가 가져가겠습니다."
+      },
+      "stakes": "단가 경쟁으로 들어가면 도윤은 자본이 큰 제이앤픽스와 같은 판에서 진다. 유지보수 MSA를 먼저 확보하면 반복 매출과 고객 대응권이 생겨 이후 납품권과 생산 슬롯을 사는 근거가 된다.",
+      "pacing_contract": {
+        "block_is_2_to_6_episodes": true,
+        "incident_count": 2,
+        "incident_1": "제이앤픽스가 납품 단가 6퍼센트 인하로 신규 물량을 빼앗으려 하자, 도윤이 단가 경쟁 대신 유지보수 MSA를 요구함",
+        "incident_2": "세림오피스와 고객 두 곳이 응답시간 계약을 선호하자, 도윤이 SLA와 책임상한표를 붙여 신규 물량 정지 부분 해제를 얻음",
+        "next_actionable_gate": "대형 클레임 전조, 유지보수 MSA 서명, 생산 슬롯 일부 배정 전 조건, 제이앤픽스의 리콜 책임 공격",
+        "no_single_episode_drift": true
+      },
+      "protagonist_drive": {
+        "self_centered_axis": "도윤은 싸게 납품하는 판에 들어가지 않는다. 유지보수 시간과 책임상한이 반복 매출과 생산 슬롯 협상에 더 비싸다는 걸 고른다.",
+        "morality_position": "고객 응답을 개선한다는 명분을 쓰지만, 핵심은 고장 난 뒤의 시간을 계약권으로 가져가는 것이다.",
+        "efficiency_choice": "단가 인하를 맞추지 않고 유지보수 MSA와 SLA로 전장을 바꾼다."
+      },
+      "power_shift": {
+        "protagonist": "B2B 고객 대응 operator와 반복 매출 proof를 쥔 영업 구조 운영자 -> 유지보수 MSA와 부분 해제 통지를 가진 반복 매출 운영자",
+        "antagonist": "제이앤픽스/제조사 구매본부: 단가 인하 경쟁자 / 물량 제한 gatekeeper -> 유지보수 MSA와 응답시간 proof를 반박해야 하는 경쟁 상대",
+        "system": "고객 대응 packet과 제한형 보증 구조 -> D-RN 유지보수 MSA 초안 + 월 최소 처리 수량 120대 + 응답시간 SLA + 항목별 책임상한 부속표 + 고객 세 곳 우선 적용 메모 + 신규 물량 정지 부분 해제 통지"
+      },
+      "relationship_delta": [
+        {
+          "target": "배수민",
+          "before": "B2B 고객 응답시간과 교체 보류 의향서를 들고 들어오는 영업 operator",
+          "after": "고객 세 곳의 SLA 선호를 확인해 MSA 근거를 만드는 영업 operator"
+        },
+        {
+          "target": "제이앤픽스",
+          "before": "고객 교체 제안서를 뿌렸지만 응답시간 proof에 막히는 경쟁 납품사",
+          "after": "단가 인하로 반격하지만 유지보수 응답시간에서 밀리는 경쟁 납품사"
+        },
+        {
+          "target": "세림오피스",
+          "before": "교체 보류 의향서와 유지보수 응답시간 proof를 남기는 고객 witness",
+          "after": "응답시간 SLA를 선호해 유지보수 MSA의 첫 고객이 되는 witness"
+        },
+        {
+          "target": "제조사 구매본부",
+          "before": "신규 물량 정지를 걸고 자격 미달표를 내주는 구매 gatekeeper",
+          "after": "신규 물량 정지를 부분 해제하고 유지보수 MSA 별도 검토를 여는 gatekeeper"
+        }
+      ],
+      "foreshadow": [
+        "대형 클레임 리콜 방어",
+        "유지보수 계약 서명",
+        "생산 슬롯 일부 배정",
+        "제이앤픽스의 리콜 책임 공격"
+      ],
+      "callback": [
+        "배수민 고객 대응 packet이 SLA 선호로 회수됨",
+        "제한형 보증 책임상한표가 MSA 부속표로 회수됨",
+        "신규 물량 정지 해제 checklist가 부분 해제 통지로 회수됨"
+      ],
+      "emotional_beat": {
+        "type": "recurring_revenue_choice",
+        "intensity": 8
+      },
+      "tension_level": 8,
+      "pov_character": "강도윤",
+      "location": {
+        "place": "제조사 구매본부 심사실 / 세림오피스 화상회의 / 도윤권리운영 계약 테이블",
+        "type": "심사 / B2B 고객 / 유지보수 계약"
+      },
+      "time_span": {
+        "duration": "4일",
+        "in_story_time": "2026년 11월 첫째 주"
+      },
+      "genre_ext": {
+        "capital_before": "배수민 B2B 고객 대응 operator 계약 초안 + 세림오피스 교체 보류 의향서 + 고객 세 곳 클레임 응답시간표 + 성과수수료/인센티브 풀 문구 + 신규 물량 정지 해제 심사용 고객 대응 packet",
+        "capital_after": "D-RN 유지보수 MSA 초안 + 월 최소 처리 수량 120대 + 응답시간 SLA + 항목별 책임상한 부속표 + 고객 세 곳 우선 적용 메모 + 신규 물량 정지 부분 해제 통지",
+        "capital_delta": "고객 대응 packet과 보증 구조를 유지보수 MSA, SLA, 책임상한 부속표, 신규 물량 부분 해제로 전환",
+        "profit_loss": "단가 경쟁 포기. 유지보수 반복 매출 gate 확보",
+        "method": "납품권 전체보다 유지보수 MSA와 응답시간 SLA를 먼저 잡아 반복 매출선을 만듦",
+        "deal_type": "maintenance MSA / SLA / partial supply freeze release",
+        "leverage_used": [
+          "고객 응답시간표",
+          "제한형 보증 사전승인서",
+          "배수민 operator 계약",
+          "노태경 검수 protocol",
+          "제이앤픽스 단가 인하 제안"
+        ],
+        "opponent": {
+          "name": "제이앤픽스/제조사 구매본부",
+          "type": "단가 인하 경쟁자 / 물량 제한 gatekeeper",
+          "weakness_exploited": "낮은 납품 단가는 유지보수 응답시간과 원인별 책임 처리의 빈칸을 해결하지 못한다는 점"
+        },
+        "time_pressure": "부분 해제된 신규 물량에서 대형 클레임이 나면 MSA와 슬롯이 다시 취소될 수 있음",
+        "risk_level": "고위험",
+        "business_sector": "유지보수 계약 / B2B 고객 / 반복 매출",
+        "section_rotation": "ARC-05 recurring revenue turn",
+        "success_pattern": "납품권 욕심을 늦추고 유지보수 MSA로 반복 매출과 부분 물량 해제를 얻는 선택형 승리",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "maintenance_msa_and_partial_release",
+          "receipt_line": "고장 난 뒤의 시간은 제가 가져가겠습니다.",
+          "pain_only_exit": false
+        }
+      },
+      "rights_operator_ext": {
+        "right_discovered": [
+          "유지보수 MSA",
+          "응답시간 SLA",
+          "신규 물량 정지 부분 해제"
+        ],
+        "document_evidence": [
+          "MSA 초안",
+          "SLA 표",
+          "책임상한 부속표",
+          "부분 해제 통지",
+          "고객 우선 적용 메모"
+        ],
+        "field_validation": [
+          "월 최소 처리 120대",
+          "고객 세 곳 SLA 선호",
+          "신규 물량 일부 해제"
+        ],
+        "witness_carrier": [
+          "배수민의 고객 확인",
+          "세림오피스 SLA 선호 회신",
+          "구매본부 부분 해제 통지",
+          "제이앤픽스 단가 인하 제안"
+        ],
+        "receipt": [
+          "D-RN 유지보수 MSA 초안",
+          "월 최소 처리 수량 120대",
+          "응답시간 SLA",
+          "항목별 책임상한 부속표",
+          "고객 세 곳 우선 적용 메모",
+          "신규 물량 정지 부분 해제 통지"
+        ],
+        "next_gate": "대형 클레임 전조, 유지보수 MSA 서명, 생산 슬롯 일부 배정 전 조건, 제이앤픽스의 리콜 책임 공격"
+      },
+      "foreshadow_targets": [
+        48,
+        49,
+        50
+      ]
+    }
+  ]
+}

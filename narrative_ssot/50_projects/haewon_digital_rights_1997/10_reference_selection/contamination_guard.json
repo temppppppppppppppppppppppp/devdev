@@ -1,0 +1,12 @@
+{
+  "must_not_copy_reviewed": true,
+  "contamination_risk_reviewed": true,
+  "notes": "선택 카드는 구조 참조 전용이다. 도너 고유 인물명, 사건 순서, 예지/초능력 skin, 재벌가 정치 구도를 복제하지 않고 hidden value -> proof -> receipt -> next gate cadence만 1997 디지털 권리 전장으로 번역한다.",
+  "project_specific_banlist": [
+    "도너 고유 가문명과 인물명",
+    "도너의 예지 장치 또는 불행 감지 skin",
+    "동일한 장면 순서와 산업 사건",
+    "주인공을 가문 구원형 선인으로 바꾸는 감정 동기",
+    "모든 섹터 독식을 초반 선언으로 처리하는 과속 요약"
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "block_id": "Block 17",
+  "title": "품질 클레임의 순서",
+  "content": {
+    "context": "2회차 검증 생산 원재료가 들어오자마자 미도급식 내부에서 과거 클레임 기록이 다시 올라온다. 태경푸드 제품은 예전에 두 번이나 변질 클레임을 냈고, 같은 제품군을 다시 넣는 건 위험하다는 의견이다. 정라희는 조건부 납품 승인 검토 테이블을 멈추진 않지만, 과거 클레임이 제품 자체 문제였는지 공정 관리 문제였는지 오늘 안에 재분류하라고 요구한다. 한도윤은 이 순간을 기다렸다. 제품 문제가 아니라 lot 분리와 배송 온도의 순서 문제라는 걸 증명하면, 부도 공장 낙인은 관리 가능한 리스크로 내려간다.",
+    "event_villain": "미도급식 품질위원회는 과거 클레임 두 건과 첫 시험 생산의 온도 이탈 기록을 묶어 태경푸드를 '반복 위험 업체'로 분류하려 한다. 박소연의 보수파는 기록이 더 나오면 책임만 커진다며 과거 lot 일지를 숨기려 하고, 공장 채권자 대표는 클레임 이력 때문에 OEM 승인권 가치가 없다고 주장한다. 정라희는 오후 5시까지 재분류표가 없으면 조건부 승인 검토 테이블을 닫겠다고 통보한다.",
+    "solution": "도윤은 클레임을 방어하지 않고 순서를 다시 세운다. 과거 클레임 1번은 생산 lot A와 B가 같은 냉각대에 섞인 날이고, 클레임 2번은 출고 전 중심온도는 정상인데 배송차 예열이 빠진 날이다. 제품 레시피 자체가 아니라 lot 분리 실패와 배송 온도 전환 실패다. 그는 후속 국면의 온도 이탈 격리 log, 후속 국면의 lot별 온도 로그, 삼진콜드 냉장차 예열 기록을 붙여 새 재분류표를 만든다. 박소연에게는 과거 기록 공개 책임을 묻지 않는 대신, 앞으로 클레임 원인을 제품, lot, 배송, 포장, QC 입회 단계로 분리하는 품질 클레임 순서표를 승인하게 한다.",
+    "reward": "정라희는 태경푸드를 반복 제품 결함 업체로 분류하지 않고, 'lot 분리 및 배송 온도 관리 조건부' 검토 상태로 유지한다. 미도급식 품질위원회는 조건부 승인 테이블을 닫지 않고, 2회차 검증 생산에 lot 분리 검사 항목을 추가한다. 공장 채권자 대표는 OEM 승인권 무가치 주장을 거둔다. 도윤은 과거 클레임을 지운 게 아니다. 제품 결함이라는 치명상을 관리 가능한 순서 리스크로 바꿨다."
+  },
+  "incident_beats": [
+    "미도급식 품질위원회의 반복 위험 업체 분류 시도와 과거 lot 일지 은폐 압박",
+    "과거 클레임을 lot 분리 실패/배송 온도 전환 실패로 재분류하고 조건부 승인 테이블 유지 receipt 확보"
+  ],
+  "stakes": "과거 클레임이 제품 자체 결함으로 남으면 OEM 승인권은 사실상 죽는다. 기록을 숨기면 향후 법적 방어와 buyer 신뢰가 무너진다. 재분류가 늦으면 2회차 검증 생산 전에 조건부 승인 테이블이 닫힌다.",
+  "power_shift": {
+    "protagonist": "원재료와 route reliability를 묶은 수직결합 조정자에서 과거 클레임 원인을 재분류해 OEM 승인권의 죽음 판정을 막는 품질 리스크 설계자로 이동한다.",
+    "antagonist": "미도급식 품질위원회와 공장 채권자는 제품 결함 프레임으로 밀어붙이지만, lot/배송/QC 단계 분리표 때문에 반복 위험 판정을 유보해야 한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "정라희",
+      "before": "조건부 승인 검토 테이블을 열었지만 과거 클레임 때문에 불안정한 buyer",
+      "after": "도윤의 클레임 순서표를 보고 제품 결함이 아니라 관리 조건 문제로 검토 상태를 유지한다"
+    },
+    {
+      "target": "박소연",
+      "before": "과거 lot 일지를 공개하면 책임이 커질까 봐 숨기려 한다",
+      "after": "기록 공개가 책임 확대가 아니라 재분류와 방어의 근거가 된다는 걸 보고 품질 클레임 순서표를 승인한다",
+      "continuity_anchor_before": "lot별 quick test 우선순위가 정해지자 2회차 검증 생산 준비로 돌아선다"
+    },
+    {
+      "target": "공장 채권자 대표",
+      "before": "클레임 이력 때문에 OEM 승인권 가치가 없다고 주장한다",
+      "after": "조건부 승인 테이블이 유지되자 OEM 승인권을 완전히 버릴 수 없게 된다",
+      "continuity_anchor_before": "조건부 납품 승인 검토 테이블 승격과 공동배송 비용 절감을 보고 원재료 투입을 보류하지 못한다"
+    },
+    {
+      "target": "최기철",
+      "before": "자기 작업 순서가 시험 생산에만 필요한 줄 안다",
+      "after": "lot 분리와 냉각대 사용 순서가 과거 클레임 방어의 핵심으로 인정되자 process memory 가치가 올라간다"
+    }
+  ],
+  "foreshadow": [
+    "품질 클레임 순서표는 후속 국면의 조건부 납품 승인 조건문에 들어간다.",
+    "lot 분리 검사 항목은 후속 국면의 제조 cashflow에서 반복 생산 관리 지표로 회수된다.",
+    "과거 기록을 숨기지 않은 선택은 이후 법적 방어와 buyer 신뢰의 축이 된다.",
+    "배송 온도 전환 실패 재분류는 삼진콜드 route control의 수직결합 가치를 더 키운다."
+  ],
+  "callback": [
+    "후속 국면의 온도 이탈 격리 log를 과거 클레임 재분류 기준으로 회수한다.",
+    "후속 국면의 lot별 온도 로그와 공동배송 proof를 배송 온도 전환 실패 방어 근거로 사용한다.",
+    "후속 국면의 임시 SOP 부속서를 lot 분리와 냉각대 사용 순서의 문서 근거로 확장한다."
+  ],
+  "emotional_beat": {
+    "type": "risk_reclassification_cider",
+    "intensity": 8
+  },
+  "tension_level": 8,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "미도급식 품질위원회 화상회의 / 태경푸드 품질기록실 / 삼진콜드 배차 로그 화면",
+    "type": "quality-claim reclassification hearing"
+  },
+  "time_span": {
+    "duration": "하루",
+    "in_story_time": "2회차 검증 생산 원재료 입고일"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "2~3회차 검증 생산 원재료 조건부 배정 / lot별 온도 로그 공유 조건 / 원재료 선입금 30퍼센트 / 조건부 납품 승인 검토 테이블 승격 / 삼진콜드 공동배송 proof",
+    "capital_after": "품질 클레임 순서표 / 과거 클레임 lot-배송 재분류표 / 조건부 승인 테이블 유지 / 2회차 lot 분리 검사 항목 추가 / OEM 승인권 가치 방어",
+    "capital_delta": "0억",
+    "profit_loss": "제품 결함 판정 회피로 OEM 승인권 옵션 보존",
+    "method": "과거 클레임을 제품 레시피 문제가 아니라 lot 분리 실패와 배송 온도 전환 실패로 재분류하고, 새 검증 생산의 관리 항목으로 편입한다.",
+    "investment_type": "distressed quality-claim defense",
+    "deal_type": "claim reclassification / approval-table preservation / lot-separation control",
+    "leverage_used": [
+      "과거 클레임 발생일",
+      "과거 lot 일지",
+      "후속 국면 온도 이탈 격리 log",
+      "후속 국면 lot별 온도 로그",
+      "삼진콜드 냉장차 예열 기록",
+      "임시 SOP 부속서",
+      "품질 클레임 순서표"
+    ],
+    "opponent": {
+      "name": "미도급식 품질위원회 / 박소연 보수파 / 공장 채권자 대표",
+      "type": "repeat-defect classification pressure, records concealment fear, and approval-right devaluation pressure",
+      "weakness_exploited": "상대는 클레임을 제품 결함으로 묶지만, 실제 원인은 lot 분리와 배송 온도 전환 순서에 있다"
+    },
+    "historical_event": null,
+    "time_pressure": "오후 5시 전까지 재분류표를 제출하지 못하면 조건부 승인 검토 테이블이 닫힌다.",
+    "knowledge_used": "회귀 전 태경푸드 과거 클레임이 제품 레시피가 아니라 lot 분리와 배송 온도 전환 실패로 재분류됐다는 기억",
+    "risk_level": "고위험",
+    "business_sector": "식품 제조 / OEM 품질위원회 / lot trace / 냉장 물류",
+    "section_rotation": "멈춘 식품공장의 납품 승인",
+    "success_pattern": "치명적인 제품 결함 프레임을 관리 가능한 순서 리스크로 낮춘다",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "quality_claim_reclassification_receipt",
+      "receipt_line": "품질 클레임 순서표, 과거 클레임 lot-배송 재분류표, 조건부 승인 테이블 유지, 2회차 lot 분리 검사 항목 추가 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 태경푸드의 과거 클레임이 제품 결함이 아니라 lot 분리와 배송 온도 전환 실패로 재분류됐다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생에는 과거 클레임 때문에 OEM 승인권 가치가 크게 깎인 뒤 뒤늦게 재분류됐다.",
+      "changed_event": "이번에는 도윤이 2회차 검증 생산 전에 클레임 순서표를 만들어 승인 테이블을 유지시킨다.",
+      "ripple_effect": "태경푸드의 OEM 승인권은 제품 결함 리스크가 아니라 관리 조건부 권리로 재가격된다."
+    },
+    "death_flag": {
+      "avoided": "과거 클레임이 반복 제품 결함으로 묶여 OEM 승인권이 죽는 미래",
+      "method": "lot, 배송, 포장, QC 입회 단계별 클레임 순서표로 원인을 재분류한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 과거 클레임 파일을 보자마자 제품명보다 lot 혼재 시간과 냉장차 예열 기록을 먼저 묻는다.",
+      "suspicion_from": "정라희와 박소연"
+    },
+    "future_prep": {
+      "action": "품질 클레임 순서표와 lot 분리 검사 항목을 조건부 납품 승인 조건문으로 묶을 준비",
+      "target_event": "후속 국면 납품 승인 갱신"
+    }
+  },
+  "block_no": 17,
+  "foreshadow_targets": [
+    18,
+    19
+  ]
+}

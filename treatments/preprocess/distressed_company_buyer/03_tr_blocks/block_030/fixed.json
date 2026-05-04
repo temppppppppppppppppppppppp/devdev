@@ -1,0 +1,140 @@
+{
+  "block_id": "Block 30",
+  "title": "빈 차의 반품 박스",
+  "content": {
+    "context": "소액 운전자금 한도가 열리자 급식 route는 겨우 안정된다. 서림초와 은성재활병원, 성우전자 보조 라인을 돌고 난 삼진콜드 차량은 오후마다 빈 차로 돌아온다. 배차 담당자는 그 시간을 손실로 본다. 도윤은 다르게 본다. 일정이 고정된 빈 차는 싸게 살 수 있는 운송권이다. 그리고 해문푸드서비스 창고 맞은편에는 커머스 seller들의 반품 박스가 매일 쌓인다.",
+    "event_villain": "인근 반품 물류 스타트업 리턴브릿지는 폐업 직전이다. seller 반품 박스는 쌓이지만, 창고 임대료와 검수 인건비를 못 내고 커머스 플랫폼 정산팀은 검수 지연 패널티를 예고한다. 리턴브릿지 대표는 도윤에게 단순 운송 하청만 맡기려 하고, 창고 임대인은 이번 주 안에 밀린 임대료를 못 내면 warehouse option을 경쟁 반품대행사에 넘기겠다고 압박한다. 삼진콜드 배차 담당자도 반품 박스가 식품 차량 이미지를 망친다며 반대한다.",
+    "solution": "도윤은 리턴브릿지를 통째로 살리지 않는다. 그는 급식 route의 복귀 빈 차 시간만 판다. 조건은 세 가지다. 첫째, 서림초와 병원 납품 뒤 2시간 안의 빈차 회수 시간에 한해 1주 pilot reverse-pickup PO를 발급한다. 둘째, 리턴브릿지는 seller별 반품량, 검수 소요 시간, 플랫폼 패널티 내역을 data-room에 올린다. 셋째, 창고 임대인은 임대료 전액 상환이 아니라 pilot 기간 warehouse option을 도윤의 SPV에 묶는다. 삼진콜드에는 식품 운송과 반품 박스를 route와 적재 구역으로 분리한 사진 log를 남기게 한다.",
+    "reward": "반품 물류 계약은 열리지 않는다. 그러나 리턴브릿지는 1주 pilot reverse-pickup PO를 발급하고, seller data와 검수 프로세스 data-room 접근권을 내준다. 창고 임대인은 pilot 기간 warehouse option을 도윤의 SPV에 걸고, 삼진콜드는 복귀 빈 차 2시간 구간에 한해 반품 박스 회수를 허용한다. 첫날 회수량은 고작 43박스다. 그래도 도윤에게 필요한 건 대량 물량이 아니다. 급식 안정매출이 다음 부도 스타트업의 seller data와 창고 option으로 이어진 첫 receipt다."
+  },
+  "incident_beats": [
+    "급식 route 복귀 빈 차와 커머스 seller 반품 박스가 겹치지만, 리턴브릿지는 단순 운송 하청만 원하고 창고 임대인과 플랫폼 정산팀이 폐업 압박을 건다",
+    "도윤이 급식 route 안정매출과 빈차 회수 시간을 proof로 삼아 1주 pilot reverse-pickup PO, 리턴브릿지 seller data-room 접근권, warehouse option, 첫날 43박스 회수 receipt를 확보한다"
+  ],
+  "stakes": "복귀 빈 차 시간을 그냥 버리면 급식 route는 안정됐지만 확장성이 없다. 반대로 반품 물류 스타트업을 통째로 떠안으면 검수 인건비, 플랫폼 패널티, 창고 임대료를 한꺼번에 산다. 1주 pilot과 data-room 없이 반품 박스만 운송하면 다음 전장 proof가 아니라 단순 하청 매출로 끝난다.",
+  "power_shift": {
+    "protagonist": "급식 반복매출을 담보로 만든 working-capital operator에서 빈 운송 시간을 다음 부도 스타트업 data-room gate로 바꾸는 route-asset hunter로 이동한다.",
+    "antagonist": "리턴브릿지 대표와 창고 임대인, 플랫폼 정산팀은 도윤을 하청 운송이나 임대료 대납자로 묶으려 하지만, 도윤의 pilot PO와 data-room 조건 때문에 살아 있는 권리만 분리당한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "리턴브릿지 대표",
+      "before": "폐업 직전 검수 지연과 플랫폼 패널티를 떠안고 도윤을 단순 운송 하청으로 쓰려는 대표",
+      "after": "1주 pilot PO 대신 seller data와 검수 프로세스 data-room 접근권을 도윤에게 내준다"
+    },
+    {
+      "target": "삼진콜드 배차 담당",
+      "before": "급식 route 복귀 빈 차를 손실 시간으로 보고 반품 박스 적재를 꺼리는 운송 파트너",
+      "after": "적재 구역 분리와 사진 log 조건으로 2시간 reverse-pickup pilot을 허용한다",
+      "continuity_anchor_before": "6시간 emergency route를 수행하며 급식 계약 bundle에도 필요한 냉장 운송권으로 자리 잡는다"
+    },
+    {
+      "target": "창고 임대인",
+      "before": "밀린 임대료를 이유로 warehouse option을 경쟁 반품대행사에 넘기려는 임대인",
+      "after": "전액 상환 대신 1주 pilot 기간 warehouse option을 도윤의 SPV에 묶는다"
+    },
+    {
+      "target": "해문푸드서비스 대표",
+      "before": "급식 route 안정화가 곧 자기 회사 회생이라고 생각하는 대표",
+      "after": "도윤이 급식 route의 빈 시간을 다른 스타트업 data-room gate로 쓰는 것을 보고 자신이 종착지가 아니라 발판임을 안다",
+      "continuity_anchor_before": "대표 개인 인출 금지와 사용처 제한 조건 때문에 불만을 보이지만 급여 지급 안정 receipt를 받아들인다"
+    }
+  ],
+  "foreshadow": [
+    "리턴브릿지 seller data-room은 해당 아크의 핵심 실사 재료가 된다.",
+    "warehouse option은 후속 국면 이후 창고 임대인과 경쟁 반품대행사의 압박으로 확장된다.",
+    "플랫폼 패널티 내역은 해당 아크에서 커머스 정산팀과 검수 프로세스 책임 순서를 가르는 proof가 된다.",
+    "급식 route 안정매출을 다음 전장 gate로 쓰는 방식은 도윤의 rights-only portfolio 확장 패턴으로 고정된다."
+  ],
+  "callback": [
+    "후속 국면의 소액 운전자금 한도와 급여 지급 안정 receipt를 급식 route 안정 proof로 사용한다.",
+    "후속 국면의 SPV 구매대행 코드와 공급사 확인서가 급식 route의 반복 운행 시간을 뒷받침한다.",
+    "후속 국면의 삼진콜드 route control은 이번에는 식품 납품이 아니라 복귀 빈 차 회수 시간으로 재활용된다.",
+    "후속 국면의 다음 data-room gate 구조가 해당 아크 exit에서 리턴브릿지 data-room 접근권으로 반복된다."
+  ],
+  "emotional_beat": {
+    "type": "arc_exit_reverse_pickup_cider",
+    "intensity": 9
+  },
+  "tension_level": 8,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "해문푸드서비스 창고 앞 / 삼진콜드 복귀 route / 리턴브릿지 반품 창고",
+    "type": "arc-exit reverse-pickup pilot and next data-room gate"
+  },
+  "time_span": {
+    "duration": "하루",
+    "in_story_time": "소액 운전자금 한도 승인 다음 날 오후"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "소액 운전자금 한도 / lockbox 자동상환 조건 / 급여 지급 안정 receipt / 대체 납품 비용 한도 사용 승인 / 6개 margin cap 품목 선결제 승인 / 대표 개인 인출 금지 / 병원 trial SKU advance 제외 메모",
+    "capital_after": "1주 pilot reverse-pickup PO / 리턴브릿지 seller data-room 접근권 / 검수 프로세스 자료 열람권 / 플랫폼 패널티 내역 / pilot 기간 warehouse option / 삼진콜드 2시간 복귀 빈 차 회수 허용 / 첫날 43박스 회수 log",
+    "capital_delta": "0억",
+    "profit_loss": "대량 반품 계약 실패, 1주 pilot과 data-room 및 warehouse option 확보",
+    "method": "급식 route의 안정매출과 복귀 빈 차 시간을 이용해 반품 물류 스타트업을 통째로 사지 않고 pilot PO, data-room, warehouse option만 분리한다.",
+    "investment_type": "distressed reverse-logistics data-room gate",
+    "deal_type": "reverse-pickup pilot / seller data access / warehouse option",
+    "leverage_used": [
+      "급식 route 안정매출 proof",
+      "소액 운전자금 한도",
+      "lockbox 자동상환 조건",
+      "삼진콜드 route control",
+      "2시간 복귀 빈 차",
+      "적재 구역 분리 사진 log",
+      "리턴브릿지 seller 반품량",
+      "플랫폼 패널티 예고",
+      "창고 임대료 연체"
+    ],
+    "opponent": {
+      "name": "리턴브릿지 대표 / 창고 임대인 / 커머스 플랫폼 정산팀 / 경쟁 반품대행사",
+      "type": "distressed startup operator, warehouse option gate, platform penalty gate, and competitor option grab",
+      "weakness_exploited": "상대는 도윤을 운송 하청이나 임대료 대납자로 쓰고 싶지만, 당장 검수 지연 패널티와 창고 option 만료를 막을 수 있는 빈차 route proof를 가진 쪽이 도윤뿐이다"
+    },
+    "historical_event": null,
+    "time_pressure": "창고 임대인이 warehouse option을 경쟁 반품대행사에 넘기기 전 1주 pilot PO와 data-room 접근권을 받아야 한다.",
+    "knowledge_used": "회귀 전 반품 물류 스타트업은 적자였지만 seller별 반품량 data와 검수 프로세스가 창고 option보다 먼저 가격을 만들었다는 기억",
+    "risk_level": "고위험",
+    "business_sector": "반품 물류 / 커머스 seller data / 창고 임대차 / 냉장 route 활용 / reverse logistics",
+    "section_rotation": "급식 계약은 느리게 끊기지 않는다 -> 반품 창고의 데이터",
+    "success_pattern": "안정화된 한 전장의 빈 시간을 다음 부도 회사의 data-room gate로 환전",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "arc_exit_reverse_logistics_gate_receipt",
+      "receipt_line": "1주 pilot reverse-pickup PO, 리턴브릿지 seller data-room 접근권, 검수 프로세스 자료 열람권, 플랫폼 패널티 내역, pilot 기간 warehouse option, 삼진콜드 2시간 복귀 빈 차 회수 허용, 첫날 43박스 회수 log receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 리턴브릿지는 적자 회사였지만 seller별 반품량 data와 검수 프로세스만 따로 팔렸고, 창고 option은 그 뒤에 가격이 붙었다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 인수자는 리턴브릿지 운송 계약을 통째로 떠안았다가 플랫폼 패널티와 창고 임대료에 눌려 data 가치를 늦게 봤다.",
+      "changed_event": "이번에는 도윤이 1주 pilot, seller data-room, warehouse option만 분리해 반품 물류 gate를 작게 연다.",
+      "ripple_effect": "급식 계약 bundle은 해당 아크에서 안정매출 proof로 닫히고, 그 빈 route 시간은 해당 아크의 반품 검수 프로세스와 seller data 실사로 이어진다."
+    },
+    "death_flag": {
+      "avoided": "반품 물류 스타트업을 통째로 떠안아 검수 인건비, 플랫폼 패널티, 창고 임대료를 한꺼번에 사는 미래",
+      "method": "1주 pilot PO, data-room 접근권, warehouse option, 빈차 회수 시간만 분리해 산다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 리턴브릿지 대표를 만나기 전부터 seller별 반품량과 플랫폼 패널티 항목을 먼저 요구한다.",
+      "suspicion_from": "리턴브릿지 대표와 삼진콜드 배차 담당"
+    },
+    "future_prep": {
+      "action": "리턴브릿지 data-room에서 seller별 반품량, 검수시간, 플랫폼 패널티, 창고 option 조건을 실사한다.",
+      "target_event": "해당 아크 반품 창고의 데이터"
+    }
+  },
+  "block_no": 30,
+  "foreshadow_targets": [
+    31,
+    32,
+    40
+  ]
+}

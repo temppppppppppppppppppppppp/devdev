@@ -1,0 +1,85 @@
+{
+  "events": [
+    "강재현 possesses the body of an ignored 태림그룹 branch grandson in 1997 during IMF restructuring.",
+    "He is assigned to mark telecom-related assets for separate fire sale.",
+    "He identifies the failed PCS option, maintenance unit, handset inventory, card billing relationship, and store network as one phone-number and monthly-bill gate.",
+    "He uses PCS voting documents and maintenance SLA clauses to win restructuring committee observer seat, 72-hour sale freeze, and limited data-room access.",
+    "A base-station failure lets him prove 태림전선 field crews can still produce carrier value, winning procurement direct line and first maintenance order.",
+    "He inspects 태림전자 handset warehouse and 태림유통 regional stores, turning dead stock into a regional PCS signup package.",
+    "A foreign fund attempts to separate-buy the PCS option while a main-family executive tries to claim the proof.",
+    "He uses 태림카드 billing contract to design a phone-bill bundled service-fee pilot and secures billing code, fee-table draft, and legal memo.",
+    "He combines maintenance order, handset test, and billing pilot into a 태림모바일서비스 JV proposal.",
+    "He receives PCS voting proxy, first settlement fee, and PC communication acquisition review right as the next battlefield ticket."
+  ],
+  "npc_candidates": [
+    "강재현 - protagonist; possessed platform-payment strategist and self-interested telecom gate builder.",
+    "태림그룹 구조조정위원장 - committee gatekeeper who can freeze or split the assets.",
+    "채권은행 담당자 - creditor pressure line and recovery-rate evaluator.",
+    "태림전선 현장반장 - maintenance capacity and SLA proof holder.",
+    "통신사 조달팀 과장 - external evaluator for carrier procurement and maintenance order.",
+    "태림전자 단말 창고장 - handset inventory proof and distribution execution contact.",
+    "태림유통 지역본부장 - store signup funnel and regional test operator.",
+    "태림카드 청구대행 담당자 - billing contract and settlement-table contact.",
+    "태림 법무팀 변호사 - legal receipt and pilot-risk gatekeeper.",
+    "외국계 펀드 담당자 - opening market opponent trying to extract the PCS option cheaply.",
+    "본가 기획조정실 임원 - internal credit thief and family-politics pressure."
+  ],
+  "crisis_candidates": [
+    "72-hour fire-sale deadline threatens to scatter the gate assets.",
+    "Foreign fund tries to buy the PCS residual option before the bundle is recognized.",
+    "Carrier procurement rejects 태림전선 maintenance unit as obsolete.",
+    "Base-station outage can either prove maintenance value or humiliate 태림 again.",
+    "Handset inventory loses value every week during IMF consumer contraction.",
+    "Regional store test can fail if carrier marketing slot is not won.",
+    "Billing pilot can be killed by legal risk, consumer complaints, or settlement ambiguity.",
+    "Main-family executive may take credit and leave 강재현 with liability.",
+    "PC communication acquisition review depends on proving phone-bill settlement first.",
+    "Charity-rescue drift can bloat the asset bundle and weaken the gate engine."
+  ],
+  "terms": [
+    "PCS",
+    "residual voting right",
+    "voting proxy",
+    "base-station maintenance SLA",
+    "subscriber acquisition cost",
+    "low-end handset inventory",
+    "regional distribution test",
+    "carrier procurement line",
+    "phone-bill bundled service fee",
+    "billing pilot code",
+    "settlement fee table",
+    "legal memo",
+    "태림모바일서비스 JV",
+    "PC communication acquisition review",
+    "phone-number login",
+    "enterprise messaging",
+    "mobile content settlement"
+  ],
+  "scene_details": [
+    "Committee threshold scene: 강재현 is treated as the branch grandson marking scrap rows before he halts the sale sheet.",
+    "Document proof scene: PCS option, maintenance SLA, handset stock, store map, and billing contract are placed on one table as a gate bundle.",
+    "Base-station field scene: a closing maintenance team fixes an outage faster than the carrier expects, turning liability into procurement value.",
+    "Handset warehouse scene: dead stock becomes a cheap IMF household PCS package when paired with store signup and carrier slot.",
+    "Billing contract scene: legal team blocks bundled billing until 강재현 narrows it into pilot code, fee table, and complaint-handling memo.",
+    "Foreign fund obstruction scene: separated asset price pressure proves why the sale freeze must hold.",
+    "JV table scene: maintenance order, handset test, billing pilot, and PCS voting proxy become 태림모바일서비스.",
+    "Next-gate scene: first settlement fee and PC communication acquisition review right open the portal/content battlefield."
+  ],
+  "notes": "Stage 0 material is sufficient for Phase 0. The opening macro battlefield is 태림그룹 IMF telecom scrap sale. The strongest risks are generic platform handwave, charity-rescue drift, too-thin TR blocks, and legality/billing vagueness; these are explicitly locked as constraints.",
+  "opening_bundle_contract": {
+    "bundle_window": "TR 2~6",
+    "macro_battlefield": "태림그룹 IMF telecom scrap sale and 태림모바일서비스 gate formation",
+    "macro_battlefield_map": [
+      "restructuring committee and 72-hour sale freeze",
+      "PCS voting documents and base-station maintenance SLA proof",
+      "carrier procurement line and maintenance pilot order",
+      "handset warehouse, regional store channel, and distribution test",
+      "card billing contract, legal memo, billing pilot, JV proposal, and PC communication acquisition review"
+    ],
+    "bundle_goal": "Turn 강재현 from scrap-list branch grandson into the operator who controls PCS voting proxy, maintenance order, handset distribution test, billing pilot, and the next PC communication acquisition gate.",
+    "first_signboard_block": 2,
+    "representative_reevaluation_block": 2,
+    "next_battlefield_ticket_block": 5,
+    "timing_reconciliation_note": "TR 2~6 is the reader-earning opening bundle, not five single episodes. Each block must carry at least two incident beats and same-block receipt. The first next-sector ticket begins at Block 5 through billing pilot code and expands at Block 6 into PC communication acquisition review."
+  }
+}

@@ -31,7 +31,8 @@
     {
       "target": "한재국",
       "before": "온도기록 공백 소문으로 태오바이오의 병원 납품 신뢰를 흔들려 한다",
-      "after": "태림제약 수입 시약 슬롯이 기존 수기 원장 공백 때문에 후순위로 밀리며 공항 병목에서도 주도권을 잃는다"
+      "after": "태림제약 수입 시약 슬롯이 기존 수기 원장 공백 때문에 후순위로 밀리며 공항 병목에서도 주도권을 잃는다",
+      "anchor_before": "20억 재매입안까지 거절당하고 부평 2공장이 태림제약 밖의 CDMO 관문으로 고정되는 것을 본다"
     }
   ],
   "foreshadow": [
@@ -40,9 +41,9 @@
     "통관 실무자 직통번호는 혈액제제 새벽 배송과 긴급 수입 원료 통관에서 다시 쓰인다."
   ],
   "callback": [
-    "Block 011의 30분 단위 온도기록지가 공항 냉장창고 임차 조건으로 확장된다.",
-    "Block 010의 글로벌 예비 방문 확정이 공항 chain-of-custody 제출 압박으로 돌아온다.",
-    "Block 008의 병원 우선협상권이 긴급 시약 통관과 병원 검수 양식 후보로 이어진다."
+    "30분 단위 온도기록지가 공항 냉장창고 임차 조건으로 확장된다.",
+    "글로벌 예비 방문 확정이 공항 chain-of-custody 제출 압박으로 돌아온다.",
+    "병원 우선협상권이 긴급 시약 통관과 병원 검수 양식 후보로 이어진다."
   ],
   "emotional_beat": {
     "type": "predatory_expansion",
@@ -94,6 +95,60 @@
       "receipt_type": "lease_and_access_receipt",
       "receipt_line": "강태오는 5천만 원을 태워 공항 냉장창고 6개월 임차권, 우선 도크 슬롯, 온도원장 열람권, 통관 실무자 직통번호를 확보한다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "현금 고갈을 감수하고 부도 직전 냉장창고를 반복 통관 gate와 온도기록 표준으로 바꾸는 통제 승리",
+      "recognition_signal": "민경철의 시선 변화: 태오바이오 보증금으로 부도를 넘기는 대신 우선 도크와 온도원장 열람권을 내준 협력사가 된다",
+      "reward_signal": "강태오는 5천만 원을 태워 공항 냉장창고 6개월 임차권, 우선 도크 슬롯, 온도원장 열람권, 통관 실무자 직통번호를 확보한다.",
+      "growth_signal": "강태오는 공항 냉장창고의 부도 위기를 이용해 단기 보관료를 피하고 장기 임차권, 기록 표준, 우선 도크를 한꺼번에 잡는다.",
+      "expectation_signal": "우선 도크 슬롯과 통관 실무자 직통번호가 혈액제제 새벽차와 백신 물류 전장으로 이어진다",
+      "reader_feel": "독자는 「공항 냉장창고」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 5천만 원을 태워 공항 냉장창고 6개월 임차권, 우선 도크 슬롯, 온도원장 열람권, 통관 실무자 직통번호를 확보한다. 성장 장면: 강태오는 공항 냉장창고의 부도 위기를 이용해 단기 보관료를 피하고 장기 임차권, 기록 표준, 우선 도크를 한꺼번에 잡는다. 다음 기대감: 우선 도크 슬롯과 통관 실무자 직통번호가 혈액제제 새벽차와 백신 물류 전장으로 이어진다",
+      "mature_success_signal": "강태오는 공항 냉장창고의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "현금 고갈을 감수하고 부도 직전 냉장창고를 반복 통관 gate와 온도기록 표준으로 바꾸는 통제 승리",
+        "recognition": "민경철의 시선 변화: 태오바이오 보증금으로 부도를 넘기는 대신 우선 도크와 온도원장 열람권을 내준 협력사가 된다",
+        "reward": "강태오는 5천만 원을 태워 공항 냉장창고 6개월 임차권, 우선 도크 슬롯, 온도원장 열람권, 통관 실무자 직통번호를 확보한다.",
+        "growth": "강태오는 공항 냉장창고의 부도 위기를 이용해 단기 보관료를 피하고 장기 임차권, 기록 표준, 우선 도크를 한꺼번에 잡는다.",
+        "expectation": "우선 도크 슬롯과 통관 실무자 직통번호가 혈액제제 새벽차와 백신 물류 전장으로 이어진다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 민경철의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 우선 도크 슬롯과 통관 실무자 직통번호가 혈액제제 새벽차와 백신 물류 전장으로 이어진다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "태오 양식의 30분 단위 온도기록지를 도입한 지 사흘 뒤, 인천공항 화물터미널에서 진단시약과 백신 원액 샘플이 묶였다는 연락이 온다. 문제는 통관 서류가 아니라 냉장창고다. IMF 이후 물량이 줄어 창고 운영사는 부도 직전이고, 수기로 적은 온도표는 두 시간 단위로 비어 있다.",
+      "proof_action": "태오는 비싼 단기 보관료를 내지 않는다. 대신 민경철의 연체 임대료와 전기료 체납 내역을 확인하고, 6개월 장기 임차 보증금으로 냉장실 한 구획을 묶는 조건을 제시한다. 조건은 세 가지다. 첫째, 태오바이오 물량의 우선 도크 2시간. 둘째, 모든 입출고 물량에 태오 양식 30분 온도기록지 적용.",
+      "proof_axis": "전생에서 백신, 진단시약, 바이오 샘플 물류는 공장보다 공항 냉장창고와 통관 기록에서 병목이 생겼다는 기억",
+      "recognition_or_resistance_signal": "민경철 -> 태오바이오 보증금으로 부도를 넘기는 대신 우선 도크와 온도원장 열람권을 내준 협력사가 된다",
+      "receipt_asset": "강태오는 5천만 원을 태워 공항 냉장창고 6개월 임차권, 우선 도크 슬롯, 온도원장 열람권, 통관 실무자 직통번호를 확보한다.",
+      "reward_asset_classes": [
+        "rights_control_asset"
+      ],
+      "next_regulated_gate": "우선 도크 슬롯과 통관 실무자 직통번호가 혈액제제 새벽차와 백신 물류 전장으로 이어진다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 민경철의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 우선 도크 슬롯과 통관 실무자 직통번호가 혈액제제 새벽차와 백신 물류 전장으로 이어진다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {

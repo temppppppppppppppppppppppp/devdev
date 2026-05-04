@@ -1,0 +1,142 @@
+{
+  "block_id": "Block 57",
+  "title": "운용보수는 회계법인 이름으로 받지 않는다",
+  "content": {
+    "context": "control premium table이 돌자 윤태식이 다시 나타난다. 그는 도윤의 포트폴리오가 대형 회계법인 네임밸류 없이 LP에게 통할 수 없다고 말한다. 백승환도 은근히 동조한다. 독립성을 얻으려면 기관 이름이 필요하고, 기관 이름을 쓰면 다시 누군가의 하청이 된다.",
+    "event_villain": "윤태식은 회계법인 restructuring desk 명의로 interim management mandate를 받아 오자고 제안한다. 명목은 신뢰도지만 실제로는 도윤의 receipt chain과 운용보수를 회사 이름 아래 넣는 구조다. 회계법인 컴플라이언스팀은 도윤이 과거 advisory exit를 했어도 현장 자료를 가져왔으니 conflict review가 필요하다고 압박하고, LP는 제3자 이름이 없으면 operator risk가 남는다고 본다. 도윤이 회계법인 이름을 빌리면 clean receipt가 다시 오염된다.",
+    "solution": "도윤은 회계법인 brand를 빌리지 않는다. 대신 기존 portfolio company와 은행이 직접 서명하는 interim portfolio servicing agreement를 만든다. 운용보수는 성공보수가 아니라 cashflow waterfall 안의 servicing fee escrow로 둔다. 회계법인에는 conflict clean letter와 자료 반출 없음 확인서만 요구하고, limited assurance 회계법인에는 운용자가 아니라 검토자로만 남는 범위를 재확인시킨다. LP에게는 외부 이름 대신 bank-signed servicing mandate와 fee escrow를 보여 준다.",
+    "reward": "윤태식은 운용 명의를 가져오지 못한다. 그러나 회계법인 컴플라이언스팀은 advisory exit 이후 자료 반출 없음과 신규 SPV servicing의 이해상충 분리 확인서를 발급한다. 은행과 포트폴리오 회사들은 90일 동안의 interim portfolio servicing agreement에 서명하고, 월 cashflow의 2.4%를 servicing fee escrow로 잡는다. LP는 기관 브랜드 대신 bank-signed mandate를 proof room에 넣는 데 동의한다. 도윤은 이름을 빌린 게 아니다. 자기 이름으로 운용보수의 첫 계좌를 만들었다."
+  },
+  "incident_beats": [
+    "윤태식이 대형 회계법인 명의 interim mandate를 제안하며 도윤의 receipt chain과 운용보수를 다시 기관 아래 넣으려 한다",
+    "도윤이 회계법인 brand 대신 bank-signed servicing mandate, conflict clean letter, servicing fee escrow 구조를 제시한다",
+    "interim portfolio servicing agreement, 월 cashflow 2.4% servicing fee escrow, advisory conflict clean letter, bank-signed mandate receipt가 확보된다"
+  ],
+  "stakes": "회계법인 이름을 빌리면 LP 신뢰는 쉬워지지만 도윤의 독립 control과 clean advisory exit가 흔들린다. 이름을 전부 거절하면 operator risk가 남는다. 도윤은 기관 브랜드 없이도 은행과 portfolio company가 직접 읽는 운용보수 계좌를 만들어야 한다.",
+  "power_shift": {
+    "protagonist": "control premium을 가격 매긴 governance-pricer에서 독립 운용보수 계좌를 여는 servicing-mandate operator로 이동한다.",
+    "antagonist": "윤태식과 PEF는 기관 브랜드를 신뢰도 명분으로 들이밀지만, 도윤의 bank-signed mandate와 conflict clean letter 때문에 운용 명의를 가져가지 못한다."
+  },
+  "relationship_delta": [
+    {
+      "target": "윤태식",
+      "before": "회계법인 이름으로 도윤 포트폴리오 운용보수와 실적을 다시 흡수하려는 파트너",
+      "after": "conflict clean letter만 내주고 interim management 명의는 가져오지 못한다",
+      "continuity_anchor_before": "read-only log, advisory exit 시각, 공개입찰 조건표 때문에 지연 명분을 잃는다"
+    },
+    {
+      "target": "서민재",
+      "before": "기관 명의가 있어야 은행도 설명이 쉽다고 보는 은행 담당자",
+      "after": "bank-signed servicing mandate와 fee escrow를 bridge covenant 보조 proof로 받아들인다",
+      "continuity_anchor_before": "90일 bridge covenant가 도윤 signatory 기준으로 유지된다고 확인한다"
+    },
+    {
+      "target": "외부 LP 견제자",
+      "before": "도윤 개인 이름만으로는 operator risk가 크다고 보는 LP",
+      "after": "기관 브랜드 대신 은행 서명 mandate와 servicing fee escrow를 proof room 항목으로 인정한다",
+      "continuity_anchor_before": "도윤 SPV가 reserve 우선순위를 설명할 권한이 있다는 observer memo를 남긴다"
+    },
+    {
+      "target": "백승환",
+      "before": "회계법인 명의가 들어오면 도윤 control을 더 쉽게 희석할 수 있다고 보는 PEF 파트너",
+      "after": "운용보수 계좌가 도윤 SPV에 생기자 control premium 논쟁이 더 불리해진다",
+      "continuity_anchor_before": "junior partner 조항을 뺀 governance rights term sheet 검토로 물러난다"
+    }
+  ],
+  "foreshadow": [
+    "servicing fee escrow는 독립 운용자 조건표의 cashflow 항목으로 들어간다.",
+    "conflict clean letter는 법무 검토에서 내부정보 프레임을 다시 막는 방패가 된다.",
+    "bank-signed servicing mandate는 리파이낸싱 조건에서 도윤 SPV가 운용 주체라는 증거가 된다.",
+    "윤태식이 놓친 운용 명의는 이후 평판 역전의 작은 굴욕으로 남는다."
+  ],
+  "callback": [
+    "advisory exit와 내부정보 비사용 proof를 회계법인 conflict clean letter로 재확인한다.",
+    "control premium table을 운용보수 계좌의 정당성으로 연결한다.",
+    "cashflow waterfall 계좌 조건 안에 servicing fee escrow를 넣어 bank-readable reward로 만든다.",
+    "LP proof room의 operator dependency 질문을 기관 브랜드가 아니라 계약과 계좌로 답한다."
+  ],
+  "emotional_beat": {
+    "type": "independent_fee_cider",
+    "intensity": 8
+  },
+  "tension_level": 8,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "대형 회계법인 컴플라이언스 회의실 / 은행 servicing mandate 콜 / LP proof room",
+    "type": "conflict clean and interim portfolio servicing mandate negotiation"
+  },
+  "time_span": {
+    "duration": "이틀",
+    "in_story_time": "governance rights term sheet 초안이 회람된 직후"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "control premium waterfall table / governance rights term sheet 초안 / PEF junior partner 조항 삭제 회신 / LP observer reserve-priority memo / 도윤 SPV signatory 기준 90일 bridge covenant 유지 확인 / PEF 후순위 참여권 범위 제한 / 통매각 재산정 보류",
+    "capital_after": "interim portfolio servicing agreement 90일 / 월 cashflow 2.4% servicing fee escrow / advisory conflict clean letter / 자료 반출 없음 확인서 / bank-signed servicing mandate / limited assurance 역할 분리 확인 / LP proof room operator-risk 항목 보류",
+    "capital_delta": "회계법인 명의 의존 거부 / 독립 servicing fee escrow 확보 / conflict clean letter 확보 / bank-signed mandate 확보",
+    "profit_loss": "대형 회계법인 브랜드를 쓰는 쉬운 신뢰도는 포기하지만, 운용보수와 실적 귀속을 도윤 SPV에 남긴다.",
+    "method": "기관 명의 차용 대신 은행과 portfolio company가 직접 서명하는 servicing mandate를 만들고, 운용보수를 cashflow waterfall 안의 escrow로 둔다.",
+    "investment_type": "independent distressed portfolio servicing mandate",
+    "deal_type": "interim servicing agreement / servicing fee escrow / conflict clean letter",
+    "leverage_used": [
+      "control premium waterfall table",
+      "governance rights term sheet",
+      "cashflow waterfall 계좌",
+      "advisory exit proof",
+      "limited assurance engagement",
+      "LP operator-risk scrutiny",
+      "은행 bridge covenant",
+      "portfolio company signatures"
+    ],
+    "opponent": {
+      "name": "윤태식 / 회계법인 컴플라이언스팀 / 백승환 / 외부 LP 견제자",
+      "type": "institutional-brand capture pressure, conflict review gate, PEF dilution pressure, and LP operator-risk gate",
+      "weakness_exploited": "기관 이름은 신뢰를 주지만 이해상충을 만들고, 은행 서명 mandate와 fee escrow는 같은 신뢰를 더 깨끗한 receipt로 만든다"
+    },
+    "historical_event": null,
+    "time_pressure": "윤태식이 회계법인 명의 제안서를 LP에게 먼저 돌리기 전 bank-signed servicing mandate와 conflict clean letter를 확보해야 한다.",
+    "knowledge_used": "회귀 전 operator가 기관 이름을 빌렸다가 실적과 운용보수를 모두 빼앗겼고, conflict review가 뒤늦게 내부정보 의혹을 키웠다는 기억",
+    "risk_level": "고위험",
+    "business_sector": "portfolio servicing / advisory conflict / bank mandate / LP operator risk / independent manager formation",
+    "section_rotation": "PEF가 사려는 건 회사가 아니다",
+    "success_pattern": "기관 브랜드 압박을 bank-signed mandate와 독립 servicing fee escrow로 전환",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "independent_servicing_fee_receipt",
+      "receipt_line": "interim portfolio servicing agreement 90일, 월 cashflow 2.4% servicing fee escrow, advisory conflict clean letter, 자료 반출 없음 확인서, bank-signed servicing mandate receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 기관 이름을 빌린 operator가 실적과 운용보수를 모두 회계법인과 PEF에 빼앗겼다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생의 operator는 대형 회계법인 이름으로 mandate를 받고 독립 실적을 잃었다.",
+      "changed_event": "이번에는 도윤이 회계법인에는 conflict clean letter만 받고, bank-signed servicing mandate를 자기 SPV로 받는다.",
+      "ripple_effect": "LP proof room은 기관 브랜드 대신 계약과 escrow를 보게 되고, 도윤 SPV에는 독립 운용보수 cashflow가 생긴다."
+    },
+    "death_flag": {
+      "avoided": "운용보수와 실적이 회계법인 명의로 흡수되어 독립 운용자 조건이 사라지는 미래",
+      "method": "conflict clean letter, bank-signed servicing mandate, servicing fee escrow, role-separation confirmation으로 방어한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 윤태식의 제안서 제목을 보기도 전에 '명의가 아니라 escrow부터 보자'고 말한다.",
+      "suspicion_from": "윤태식과 백승환"
+    },
+    "future_prep": {
+      "action": "servicing fee escrow와 bank-signed mandate를 리파이낸싱 조건표의 operator cashflow 증거로 넣는다.",
+      "target_event": "리파이낸싱 역전"
+    }
+  },
+  "block_no": 57,
+  "foreshadow_targets": [
+    58,
+    59,
+    60
+  ]
+}

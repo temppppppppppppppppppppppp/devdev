@@ -33,6 +33,7 @@ This harness governs readiness judgment, not downstream pair grading.
 - all rows in `first_block_cider_ledger` for blocks `2~6` must be `has_cider: true`
 - block `1` cannot rescue the ledger
 - block `7+` cannot rescue the ledger
+- material should expose an upstream advisory episode pacing range for the first reader-earning bundle, or explicitly mark that range as a fix-queue item
 - any false row means `not selection-ready`
 
 ### 2.3 Phase0-Ready
@@ -43,6 +44,7 @@ This harness governs readiness judgment, not downstream pair grading.
   - reevaluation
   - visible token
   - next gate opening
+- plus the candidate must include an advisory episode pacing range handoff for downstream TR/BI construction
 - if the promotion path depends on `bridge_or_payback_note` instead of same-block payback, it is not `Phase0-ready`
 
 ## 3. Hard Laws
@@ -57,6 +59,8 @@ This harness governs readiness judgment, not downstream pair grading.
 - `pain_only_exit: true` at block `6` is immediate `HOLD`
 - if any row is false, upstream material may stay as draft, but it must not be promoted
 - `work_guard` translation may compress a ledger result, but it may not override a false row
+- `Phase0-ready` is not range-complete unless the material names an advisory downstream episode pacing range for the first reader-earning bundle
+- for business-power or investment-family candidates, use `investment-opening-pacing-spec-v1.md` as the default episode-side ruler unless a stronger family-specific pacing spec is named
 
 ## 4. Required Material Output Shape
 
@@ -67,8 +71,9 @@ When running a material benchmark, use this section order:
 3. `First-Block Cider Ledger Review`
 4. `Planning Candidate 7 Questions`
 5. `Work-Guard Freeze Check`
-6. `Promotion Verdict`
-7. `Fix Queue`
+6. `Downstream Episode Pacing Range Check`
+7. `Promotion Verdict`
+8. `Fix Queue`
 
 ## 4A. Machine-Readable Ledger Contract
 
@@ -124,6 +129,8 @@ New docs should write readiness in this exact key shape:
 - all 2~6 ledger rows have has_cider true: yes/no
 - block 1 used as opening rescue: yes/no
 - block 7+ used as opening rescue: yes/no
+- downstream episode pacing range present: yes/no
+- range-complete immediate-use candidate: yes/no
 ```
 
 Operator gate:
@@ -151,8 +158,34 @@ The audit must answer all of the following with `yes` or `no`:
 - `bridge_or_payback_note is not used to rescue a false row`
 - `block 6 is not pain_only_exit`
 - `promotion verdict matches the ledger`
+- `downstream episode pacing range is present or explicitly listed in Fix Queue`
 
 If any answer is `no`, downgrade before finalizing.
+
+## 5A. Downstream Episode Pacing Range Check
+
+This check exists to reduce downstream S2 expansion drift before TR/BI generation.
+
+Required minimum shape for Phase0-ready material:
+
+```md
+- downstream_episode_pacing_hint:
+  - recommended_episode_count: ...
+  - acceptable_episode_range: ...
+  - stretch_cap: ...
+  - must_land_inside_range:
+    - proof: ...
+    - receipt: ...
+    - next_gate: ...
+  - expansion_warning: ...
+```
+
+Rules:
+
+- this is advisory material-side guidance, not an S2 contract or runtime schema change
+- for business-power and investment-family works, default to `3 episodes` as the healthy opening target, `4 episodes` as soft ceiling, and `5+ episodes` as slow-by-design suspicion unless the work records a stronger reason
+- if the range is missing, the work may remain `selection-ready` only with an explicit fix-queue item, but should not be called `Phase0-ready` or immediate-use range-complete
+- later TR/BI attachment should use `TR.blocks[*].genre_ext.downstream_episode_pacing_hint` and `MasterBible.plot_roadmap[*].genre_ext.downstream_episode_pacing_hint`
 
 ## 6. Promotion Verdict Rule
 
@@ -160,11 +193,13 @@ If any answer is `no`, downgrade before finalizing.
   - all self-check items are `yes`
   - all `2~6` rows pay in-block
   - first-block proof, reevaluation, token, and next gate are all visible
+  - downstream episode pacing range is present, or the verdict explicitly excludes range-complete immediate-use classification
 - `HOLD`
   - one or more rows are false
   - one or more rows are blank
   - opening relies on block `1` or block `7+`
   - `bridge_or_payback_note` is carrying the opening instead of receipt
+  - `Phase0-ready` is claimed while downstream episode pacing range is missing
 - `REJECT`
   - protagonist engine itself breaks the house law
   - opening is pain-only by design
@@ -180,6 +215,8 @@ Reject the material benchmark immediately if you see:
 - `false row is okay because the next block will pay`
 - `bridge_or_payback_note` used as main proof of readiness
 - `selection-ready` claimed while any `has_cider: false` row remains
+- `Phase0-ready` claimed with no downstream episode pacing range or fix queue
+- `즉시전력` claimed with only generic `2~6 episodes` and no recommended range or stretch cap
 
 ## 8. One-Line Rule
 

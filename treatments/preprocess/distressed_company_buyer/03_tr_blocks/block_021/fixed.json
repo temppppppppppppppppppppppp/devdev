@@ -1,0 +1,138 @@
+{
+  "block_id": "Block 21",
+  "title": "위생점검은 점수가 아니다",
+  "content": {
+    "context": "해문푸드서비스 data-room이 열리자 제일 먼저 보이는 건 낮은 위생점수다. 조리일지 누락, 냉장고 온도 이탈, 보관 선반 녹, 유통기한 임박 재고. 해문푸드서비스 대표는 이 점수가 새 계약을 다 죽일 거라며 숨기자고 한다. 도윤은 숨길수록 값이 떨어진다는 걸 안다. 그가 보는 건 점수가 아니라 시정조치가 아직 접수 가능한 항목과 즉시 폐기해야 하는 항목의 경계다.",
+    "event_villain": "성우전자 총무팀은 빈 식판 사고까지 묶어 해문푸드서비스 계약 해지 사유를 만들려 한다. 위생점검 담당자는 지난 점검의 미이행 항목 9개를 근거로 재점검 전에 영업정지 권고가 가능하다고 압박한다. 경쟁 급식업체 명성급식은 낮은 점수표를 구매위원회에 돌리며 해문푸드서비스와 태경푸드 조합은 급식 라인에 넣을 수 없다고 찌른다. 대표는 조리일지를 뒤늦게 맞춰 쓰자고 하지만, 도윤은 그 순간 손을 뗀다.",
+    "solution": "도윤은 위반 항목을 세 묶음으로 나눈다. 첫째, 유통기한 임박 재고와 녹슨 선반은 즉시 폐기·철거 항목으로 분리한다. 둘째, 냉장고 온도 이탈은 삼진콜드 온도 SLA와 대체 냉장고 임대 계약으로 보완 가능한 항목으로 묶는다. 셋째, 조리일지 누락은 소급 작성이 아니라 누락 인정서와 향후 작성권 위임으로 처리한다. 그는 해문푸드서비스 대표에게 위생 대응 대리권, 폐기 확인서 서명권, 시정조치 비용 holdback을 요구하고, 위생점검 담당자에게 48시간 시정조치 grace와 재점검 접수번호를 먼저 달라고 밀어붙인다.",
+    "reward": "위생점검 담당자는 점수를 뒤집어 주지 않는다. 대신 영업정지 권고를 48시간 보류하고, 폐기 확인서, 대체 냉장고 계약서, 누락 인정서, 온도 SLA 첨부를 조건으로 재점검 접수번호를 발급한다. 성우전자 총무팀도 즉시 해지를 보류하고 3일짜리 임시 배식 유지 확인서를 낸다. 도윤은 낮은 점수를 지운 게 아니다. 그는 낮은 점수 안에서 아직 살아 있는 시정조치권, 재점검권, 임시 계약 유지권을 꺼냈다."
+  },
+  "incident_beats": [
+    "성우전자 빈 식판 사고와 과거 위생점검 미이행 9개 항목이 묶여 계약 해지·영업정지 권고 압박으로 커진다",
+    "도윤이 위반 항목을 즉시 폐기/보완 가능/소급 금지 항목으로 분리해 48시간 시정조치 grace, 재점검 접수번호, 3일 임시 배식 유지 receipt를 확보한다"
+  ],
+  "stakes": "낮은 위생점수를 숨기거나 조리일지를 소급 작성하면 해문푸드서비스 data-room은 법적 폭탄이 되고, 도윤의 급식 계약 bundle 우선협상권도 무효가 된다. 반대로 48시간 grace 안에 시정조치와 재점검 접수를 만들지 못하면 성우전자 계약은 즉시 해지되고 학교/병원 급식 전장으로 넘어갈 proof가 사라진다.",
+  "power_shift": {
+    "protagonist": "급식 계약 bundle data-room을 연 hunter에서 위생점검 책임 순서를 쪼개 계약 해지 타이머를 멈추는 operator로 이동한다.",
+    "antagonist": "위생점검 라인과 성우전자 총무팀은 낮은 점수를 해지 사유로 쓰려 하지만, 도윤의 치명/보완/소급금지 분류 때문에 즉시 종료 대신 재점검 절차로 묶인다."
+  },
+  "relationship_delta": [
+    {
+      "target": "해문푸드서비스 대표",
+      "before": "낮은 위생점수를 숨기고 조리일지를 소급 작성하려는 폐업 위기 급식업체 대표",
+      "after": "위생 대응 대리권, 폐기 확인서 서명권, 시정조치 비용 holdback을 도윤에게 넘긴다",
+      "continuity_anchor_before": "빈 식판을 막기 위해 위생점검 기록, 계약서, 미수 채권 aging, 우선협상권을 도윤에게 넘긴다"
+    },
+    {
+      "target": "성우전자 총무팀",
+      "before": "빈 식판 사고와 위생점수를 묶어 계약 해지를 준비하는 발주처",
+      "after": "재점검 접수번호와 시정조치 grace를 보고 즉시 해지를 3일 유예한다",
+      "continuity_anchor_before": "도윤의 420인분 긴급 대체 납품을 인정하고 emergency substitute PO와 온도 SLA pass 확인서를 발급한다"
+    },
+    {
+      "target": "위생점검 담당자",
+      "before": "미이행 항목 9개를 근거로 영업정지 권고를 검토하는 gatekeeper",
+      "after": "치명 항목 폐기와 보완 항목 계획이 분리되자 48시간 시정조치 grace와 재점검 접수번호를 발급한다"
+    },
+    {
+      "target": "명성급식",
+      "before": "낮은 점수표를 돌려 해문푸드서비스와 태경푸드 조합을 밀어내려는 경쟁 급식업체",
+      "after": "점수표 공격은 유지하지만, 재점검 절차가 열리면서 즉시 해지 프레임을 완성하지 못한다"
+    }
+  ],
+  "foreshadow": [
+    "재점검 접수번호와 48시간 grace는 후속 국면의 식자재 공동구매 계정 재가동 조건이 된다.",
+    "위생 대응 대리권은 도윤이 회사 전체가 아니라 운영 책임 순서를 통제하는 해당 아크 방식의 첫 control right다.",
+    "소급 작성 금지 원칙은 이후 구매위원회와 은행 신용도 심사에서 legal cleanliness proof로 회수된다.",
+    "명성급식의 낮은 점수표 공격은 제한입찰 자격 심사에서 내부정보 프레임과 결합해 다시 돌아온다."
+  ],
+  "callback": [
+    "후속 국면의 해문푸드서비스 data-room 접근권을 위생점검 대응 기록 실사로 회수한다.",
+    "후속 국면의 성우전자 emergency substitute PO를 즉시 해지 보류와 임시 배식 유지 확인서의 근거로 쓴다.",
+    "후속 국면의 온도 SLA pass log를 냉장고 온도 이탈 보완 가능 항목으로 돌려 쓴다.",
+    "후속 국면의 QC 입회와 lot 분리 검사 조건이 위생 대응 문서화 방식으로 확장된다."
+  ],
+  "emotional_beat": {
+    "type": "dirty_score_to_live_right_cider",
+    "intensity": 8
+  },
+  "tension_level": 8,
+  "pov_character": "한도윤",
+  "location": {
+    "place": "해문푸드서비스 data-room / 성우전자 총무팀 회의실 / 관할 위생점검 창구",
+    "type": "hygiene inspection response and reinspection gate"
+  },
+  "time_span": {
+    "duration": "반나절",
+    "in_story_time": "성우전자 긴급 대체 납품 다음 날 오전"
+  },
+  "genre_ext": {
+    "type": "business_growth_profile",
+    "capital_before": "성우전자 emergency substitute PO / 420인분 긴급 대체 납품 / 선입금 50% / 온도 SLA pass 확인서 / 해문푸드서비스 data-room 접근권 / 급식 계약 bundle 우선협상권",
+    "capital_after": "위생 대응 대리권 / 폐기 확인서 서명권 / 시정조치 비용 holdback / 48시간 시정조치 grace / 재점검 접수번호 / 성우전자 3일 임시 배식 유지 확인서",
+    "capital_delta": "0억",
+    "profit_loss": "점수 개선 없음, 계약 해지 타이머 48시간 보류와 재점검권 확보",
+    "method": "낮은 위생점수를 숨기지 않고 치명 결격, 보완 가능, 소급 금지 항목으로 분해해 즉시 해지를 재점검 절차로 전환한다.",
+    "investment_type": "distressed cafeteria hygiene-response control",
+    "deal_type": "corrective-action grace / reinspection filing / operating-control delegation",
+    "leverage_used": [
+      "해문푸드서비스 data-room",
+      "성우전자 emergency substitute PO",
+      "온도 SLA pass 확인서",
+      "폐기 확인서",
+      "대체 냉장고 임대 계약",
+      "누락 인정서",
+      "위생 대응 대리권",
+      "시정조치 비용 holdback"
+    ],
+    "opponent": {
+      "name": "위생점검 담당자 / 성우전자 총무팀 / 명성급식",
+      "type": "inspection gatekeeper, client termination pressure, and competitor score attack",
+      "weakness_exploited": "상대는 낮은 점수를 해지 명분으로 쓰고 싶지만, 치명 항목을 즉시 폐기하고 보완 항목을 48시간 계획으로 묶으면 절차상 재점검 접수를 거부하기 어렵다"
+    },
+    "historical_event": null,
+    "time_pressure": "영업정지 권고와 성우전자 즉시 해지 통보가 나가기 전 48시간 시정조치 grace와 재점검 접수번호를 받아야 한다.",
+    "knowledge_used": "회귀 전 해문푸드서비스의 위생점수 자체는 낮았지만, 일부 항목은 시정조치 접수만으로 계약 해지를 늦출 수 있었다는 기억",
+    "risk_level": "고위험",
+    "business_sector": "급식 운영 / 위생점검 / 계약 해지 방어 / 식품 물류",
+    "section_rotation": "급식 계약은 느리게 끊기지 않는다",
+    "success_pattern": "나쁜 점수를 감추지 않고 절차상 살아 있는 재점검권으로 환전",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "hygiene_reinspection_gate_receipt",
+      "receipt_line": "위생 대응 대리권, 폐기 확인서 서명권, 시정조치 비용 holdback, 48시간 시정조치 grace, 재점검 접수번호, 성우전자 3일 임시 배식 유지 확인서 receipt가 확보된다.",
+      "pain_only_exit": false
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "회귀",
+    "timeline_knowledge": {
+      "info_used": "전생에서 해문푸드서비스의 위생점검 미이행 항목 중 일부가 영업정지 사유가 아니라 48시간 보완 가능 항목이었다는 기억",
+      "accuracy": "중상",
+      "source": "전생의 실패 기억"
+    },
+    "butterfly_effect": {
+      "original_event": "전생에는 낮은 위생점수표가 그대로 계약 해지 명분이 되었고, 재점검 접수 전에 경쟁 급식업체가 성우전자 계약을 가져갔다.",
+      "changed_event": "이번에는 도윤이 낮은 점수를 치명/보완/소급금지 항목으로 분리해 재점검 접수번호와 3일 임시 배식 유지 확인서를 먼저 확보한다.",
+      "ripple_effect": "해문푸드서비스 계약 bundle은 즉시 죽지 않고, 식자재 공동구매권과 학교/병원 급식 PO로 확장될 시간을 얻는다."
+    },
+    "death_flag": {
+      "avoided": "소급 작성과 점수 은폐로 data-room 전체가 법적 리스크가 되고 급식 계약 bundle이 무효화되는 미래",
+      "method": "소급 작성 금지, 폐기 확인서, 시정조치 grace, 재점검 접수로 절차를 현재 문서로 정리한다."
+    },
+    "regression_hint": {
+      "slip_up": "도윤이 위생점검 담당자가 보완 가능 항목으로 보는 경계를 처음부터 알고 있는 듯 분류표를 먼저 꺼낸다.",
+      "suspicion_from": "해문푸드서비스 대표와 성우전자 총무팀"
+    },
+    "future_prep": {
+      "action": "재점검 접수번호와 시정조치 grace를 식자재 공급사에 제시해 공동구매 계정 동결 해제를 압박한다.",
+      "target_event": "후속 국면 공동구매 계정은 빚보다 싸다"
+    }
+  },
+  "block_no": 21,
+  "foreshadow_targets": [
+    22,
+    26
+  ]
+}

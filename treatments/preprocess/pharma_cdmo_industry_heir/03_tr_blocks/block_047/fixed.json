@@ -1,0 +1,183 @@
+{
+  "block_id": "Block 47",
+  "title": "먹는 것과 맞는 것",
+  "content": {
+    "context": "마트 리콜이 한정 회수로 끝나자 태오바이오의 소비재 안전표준은 유통사 안에서 힘을 얻는다. 하지만 내부 품질회의에서는 더 큰 문제가 드러난다. 건기식 캡슐 원료, PB 식품 원료, 의약품 보조원료가 같은 공급망에서 오는데도 각 부서가 서로 다른 양식으로 lot를 추적하고 있다.",
+    "event_villain": "식품 대기업은 식품 원료와 의약품 원료를 같은 표에 올리면 책임 범위가 커진다며 반대한다. 홈쇼핑 MD는 소비자에게 '약처럼 관리한다'는 표현은 부담스럽다고 하고, 내부 영업팀은 카테고리별 원가가 섞이면 마진이 흐려진다고 버틴다.",
+    "solution": "태오는 같은 원료를 먹는 것, 바르는 것, 맞는 것의 이름으로 나눠 숨기지 않는다. 첫 사건 beat는 POS 회수 데이터와 chain-of-custody를 겹쳐, 같은 비타민 원료 lot가 건기식 캡슐과 의약품 보조원료 시험표에 동시에 등장한다는 걸 보여주는 장면이다. 둘째 beat는 식품 대기업이 책임 확대를 거부하자, 태오가 카테고리별 광고 문구는 분리하되 원료 lot 원장은 하나로 묶고 교차 클레임 발생 시 24시간 상호 통보와 출고 hold가 걸리는 통합 추적 규칙을 제안하는 장면이다.",
+    "reward": "태오는 건기식/의약품/식품 통합 원료 lot 원장 작성권, 카테고리 교차 클레임 24시간 통보권, 원료 출고 hold 공동권, 공통 원료 시험성적서 사본권, 통합 추적 시스템 구축비 30억 분담 약정을 얻는다. 소비자는 다른 카테고리 이름을 보지만, 태오는 뒤에서 같은 원료의 이동을 하나의 표로 본다."
+  },
+  "stakes": "카테고리별 추적이 따로 놀면 식품 클레임과 의약품 보조원료 문제가 서로를 모른 채 커지고, 안전표준은 한 채널의 문서로 축소된다.",
+  "power_shift": {
+    "protagonist": "리콜 지휘자에서 건기식, 식품, 의약품 원료를 같은 원장에 묶는 교차 카테고리 표준 설계자로 올라선다.",
+    "antagonist": "식품 대기업과 내부 영업팀은 카테고리 구분을 핑계로 원료 추적 책임을 피하기 어려워진다."
+  },
+  "relationship_delta": [
+    {
+      "target": "식품 대기업 품질본부",
+      "before": "식품 원료 책임을 의약품/건기식 추적과 분리하려는 조직",
+      "after": "통합 원료 lot 원장과 24시간 상호 통보권을 받아들이는 공동 책임자"
+    },
+    {
+      "target": "홈쇼핑 MD",
+      "before": "약처럼 관리한다는 표현을 부담스러워하는 채널 담당자",
+      "after": "표현은 소비재용으로 낮추되 원료 추적은 통합하는 구조를 받아들이는 파트너",
+      "anchor_before": "원료 인증망이 무너지면 편성 자체가 위험해진다는 걸 받아들이고 편성 유지 확약을 주는 파트너"
+    },
+    {
+      "target": "태오바이오 내부 영업팀",
+      "before": "카테고리별 마진과 원가표를 따로 지키려는 조직",
+      "after": "통합 원료 원장이 클레임 비용을 줄인다는 걸 인정하는 실행팀"
+    }
+  ],
+  "foreshadow": [
+    "통합 원료 lot 원장은 인증마크가 브랜드보다 강해지는 핵심 데이터가 된다.",
+    "원료 출고 hold 공동권은 PB 계약서의 원료/품질/물류 조건표에 들어간다.",
+    "통합 추적 시스템 구축비 30억 분담 약정은 안전표준의 이름을 시장 표준으로 만드는 투자 근거가 된다."
+  ],
+  "callback": [
+    "POS 회수 데이터와 PB 안전표준 24개 SKU 확대 LOI가 통합 원료 lot 원장의 수량 근거가 된다.",
+    "원료 인증 chain-of-custody가 카테고리 공통 원료 추적의 출발표가 된다.",
+    "원료 우선공급권은 원료 출고 hold 공동권의 선순위 규칙으로 재사용된다."
+  ],
+  "emotional_beat": {
+    "protagonist_feeling": "태오는 상품명이 달라도 같은 원료가 사람 몸에 들어간다는 사실 앞에서, 안전표준이 카테고리보다 먼저 와야 한다고 느낀다.",
+    "reader_catharsis": "상대가 책임 범위가 커진다고 피할 때, 주인공이 광고 문구는 나누되 원료 원장은 하나로 묶어 책임 회피를 막는 사이다."
+  },
+  "tension_level": 8,
+  "pov_character": "강태오",
+  "location": {
+    "place": "태오바이오 통합 원료 추적 회의실",
+    "type": "cross_category_material_trace_room",
+    "macro_battlefield": "건기식/의약품/식품 원료 추적 통합"
+  },
+  "time_span": {
+    "duration": "7일",
+    "in_story_time": "2004년 9월 초"
+  },
+  "genre_ext": {
+    "capital_before": "3100억 + API/소재 공급권 + 은행 운전자금 120억 한도 + 건기식 캡슐 원가표 작성권 + 원료 인증 chain-of-custody 사본권 + 마트 PB 6개월 안전표준 계약 + 홈쇼핑 17분 테스트 편성권 + 원료 인증 화면 고지권 + 20만 세트 조건부 PO + 방송 클레임 데이터 사본권 + 원료 인증망 독점 사용권 + 2차 ODM 생산 전환권 + formula escrow 등록권 + 마트 PB 리콜 의사결정권 + POS 회수 데이터 사본권 + 문제 lot 한정 리콜 실행권 + 대체 SKU 2주 진열권 + PB 안전표준 24개 SKU 확대 LOI",
+    "capital_after": "3900억 + API/소재 공급권 + 은행 운전자금 120억 한도 + 원료 인증망 독점 사용권 + 마트 PB 리콜 의사결정권 + POS 회수 데이터 사본권 + PB 안전표준 24개 SKU 확대 LOI + 건기식/의약품/식품 통합 원료 lot 원장 작성권 + 카테고리 교차 클레임 24시간 통보권 + 원료 출고 hold 공동권 + 공통 원료 시험성적서 사본권 + 통합 추적 시스템 구축비 30억 분담 약정",
+    "capital_delta": "+800억 평가 상승, +통합 원료 lot 원장 작성권, +교차 클레임 24시간 통보권, +원료 출고 hold 공동권, +공통 시험성적서 사본권, +30억 구축비 분담",
+    "profit_loss": "카테고리별 원가 관리가 복잡해지지만 교차 클레임과 리콜 확산을 줄이는 통합 추적 시스템 투자금을 확보한다.",
+    "method": "POS 회수 데이터, chain-of-custody, 공통 시험성적서를 묶어 건기식/의약품/식품 원료 lot를 하나의 원장으로 연결한다.",
+    "investment_type": "통합 추적 시스템 구축비 분담",
+    "deal_type": "교차 카테고리 원료 추적 및 출고 hold 계약",
+    "leverage_used": "POS 회수 데이터와 24개 SKU LOI, chain-of-custody, 원료 우선권",
+    "opponent": {
+      "name": "식품 대기업 + 홈쇼핑 MD + 내부 영업팀",
+      "type": "건기식/의약품/식품 원료 추적 복합 압박 세력",
+      "weakness_exploited": "건기식/의약품/식품 원료 추적의 병목을 문서·권리·책임선으로 잠그는 강태오의 방식을 과소평가한다."
+    },
+    "time_pressure": "24개 SKU 확대 계약 세부 조건 확정 전 7일",
+    "knowledge_used": "원료 lot 원장, 교차 클레임 통보, 출고 hold, 공통 시험성적서, 통합 추적 시스템",
+    "risk_level": "상",
+    "business_sector": "건기식/의약품/식품 원료 추적",
+    "section_rotation": "소비재 안전표준 후반",
+    "success_pattern": "소비자 문구는 나누되 원료 책임은 하나의 원장으로 통합한다.",
+    "opening_progression": {
+      "public_signboard_event": "같은 비타민 원료 lot가 건기식 캡슐과 의약품 보조원료 시험표에 동시에 등장한다.",
+      "representative_reevaluation": "식품 대기업과 홈쇼핑 MD는 태오를 카테고리 판매자가 아니라 원료 이동의 공통 관리자으로 다시 본다.",
+      "next_battlefield_ticket": "통합 원료 lot 원장과 POS 회수 데이터가 인증마크 장악 전장으로 이어진다."
+    },
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "cross_category_material_trace_receipt",
+      "receipt_line": "태오는 먹는 것과 맞는 것을 하나의 원료 lot 원장에 묶고 24시간 상호 통보권과 출고 hold 공동권을 받아낸다.",
+      "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "소비자 문구는 나누되 원료 책임은 하나의 원장으로 통합한다.",
+      "recognition_signal": "식품 대기업 품질본부의 시선 변화: 통합 원료 lot 원장과 24시간 상호 통보권을 받아들이는 공동 책임자",
+      "reward_signal": "태오는 먹는 것과 맞는 것을 하나의 원료 lot 원장에 묶고 24시간 상호 통보권과 출고 hold 공동권을 받아낸다.",
+      "growth_signal": "리콜 지휘자에서 건기식, 식품, 의약품 원료를 같은 원장에 묶는 교차 카테고리 표준 설계자로 올라선다.",
+      "expectation_signal": "통합 원료 lot 원장과 POS 회수 데이터가 인증마크 장악 전장으로 이어진다.",
+      "reader_feel": "독자는 「먹는 것과 맞는 것」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 태오는 먹는 것과 맞는 것을 하나의 원료 lot 원장에 묶고 24시간 상호 통보권과 출고 hold 공동권을 받아낸다. 성장 장면: 리콜 지휘자에서 건기식, 식품, 의약품 원료를 같은 원장에 묶는 교차 카테고리 표준 설계자로 올라선다. 다음 기대감: 통합 원료 lot 원장과 POS 회수 데이터가 인증마크 장악 전장으로 이어진다.",
+      "mature_success_signal": "강태오는 먹는 것과 맞는 것의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "소비자 문구는 나누되 원료 책임은 하나의 원장으로 통합한다.",
+        "recognition": "식품 대기업 품질본부의 시선 변화: 통합 원료 lot 원장과 24시간 상호 통보권을 받아들이는 공동 책임자",
+        "reward": "태오는 먹는 것과 맞는 것을 하나의 원료 lot 원장에 묶고 24시간 상호 통보권과 출고 hold 공동권을 받아낸다.",
+        "growth": "리콜 지휘자에서 건기식, 식품, 의약품 원료를 같은 원장에 묶는 교차 카테고리 표준 설계자로 올라선다.",
+        "expectation": "통합 원료 lot 원장과 POS 회수 데이터가 인증마크 장악 전장으로 이어진다.",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 식품 대기업 품질본부의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 통합 원료 lot 원장과 POS 회수 데이터가 인증마크 장악 전장으로 이어진다."
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "마트 리콜이 한정 회수로 끝나자 태오바이오의 소비재 안전표준은 유통사 안에서 힘을 얻는다. 하지만 내부 품질회의에서는 더 큰 문제가 드러난다. 건기식 캡슐 원료, PB 식품 원료, 의약품 보조원료가 같은 공급망에서 오는데도 각 부서가 서로 다른 양식으로 lot를 추적하고 있다.",
+      "proof_action": "태오는 같은 원료를 먹는 것, 바르는 것, 맞는 것의 이름으로 나눠 숨기지 않는다. 첫 사건 beat는 POS 회수 데이터와 chain-of-custody를 겹쳐, 같은 비타민 원료 lot가 건기식 캡슐과 의약품 보조원료 시험표에 동시에 등장한다는 걸 보여주는 장면이다.",
+      "proof_axis": "원료 lot 원장, 교차 클레임 통보, 출고 hold, 공통 시험성적서, 통합 추적 시스템",
+      "recognition_or_resistance_signal": "식품 대기업 품질본부 -> 통합 원료 lot 원장과 24시간 상호 통보권을 받아들이는 공동 책임자",
+      "receipt_asset": "태오는 먹는 것과 맞는 것을 하나의 원료 lot 원장에 묶고 24시간 상호 통보권과 출고 hold 공동권을 받아낸다.",
+      "reward_asset_classes": [
+        "raw_materials",
+        "contract_right"
+      ],
+      "next_regulated_gate": "통합 원료 lot 원장과 POS 회수 데이터가 인증마크 장악 전장으로 이어진다.",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 식품 대기업 품질본부의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 통합 원료 lot 원장과 POS 회수 데이터가 인증마크 장악 전장으로 이어진다.",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "business_memory",
+    "timeline_knowledge": "태오는 전생에서 같은 원료가 다른 카테고리에서 다른 이름으로 팔리다 클레임 추적이 늦어진 사건들을 기억한다.",
+    "butterfly_effect": "카테고리 통합 원장을 만들면서 소비재 안전표준이 홈쇼핑이나 PB를 넘어 원료망 전체의 규칙으로 확장된다.",
+    "death_flag": false,
+    "regression_hint": "태오가 제품명보다 원료 lot 번호를 먼저 동그라미 치는 행동으로만 암시한다.",
+    "future_prep": "통합 원료 원장과 출고 hold 공동권은 인증마크, PB 계약서, 안전표준 명명권의 기반이 된다."
+  },
+  "block_no": 47,
+  "foreshadow_targets": [
+    {
+      "target_block": 48,
+      "target_event": "브랜드보다 인증"
+    },
+    {
+      "target_block": 49,
+      "target_event": "PB 계약서"
+    },
+    {
+      "target_block": 50,
+      "target_event": "안전표준의 이름"
+    }
+  ],
+  "callback_sources": [
+    {
+      "source_block": 46,
+      "source_event": "마트의 리콜"
+    },
+    {
+      "source_block": 41,
+      "source_event": "캡슐 하나의 원가"
+    },
+    {
+      "source_block": 39,
+      "source_event": "원료 우선권"
+    }
+  ]
+}

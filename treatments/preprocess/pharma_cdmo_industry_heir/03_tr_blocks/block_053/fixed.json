@@ -1,0 +1,183 @@
+{
+  "block_id": "Block 53",
+  "title": "공장 리스 금융",
+  "content": {
+    "context": "특허 담보대출에 생산권 선순위 조항이 들어가자, 벤처의 실제 설비가 눈앞에 드러난다. 수도권 외곽의 바이오 파일럿 공장은 고가 배양기와 동결건조기를 갖췄지만, 유지보수비가 밀려 있고 GMP 적격성 재확인 기록이 끊겨 있다. 설비를 사면 비싸고, 그냥 빌리면 생산권이 남지 않는다.",
+    "event_villain": "벤처 대표는 설비를 팔 생각은 없고 단기 사용료만 받겠다고 한다. 장비 리스사는 연체가 계속되면 배양기를 회수하겠다고 통보하고, 증권사 IB는 설비가 담보로 보이면 대출 한도가 커진다며 태오에게 단순 sale-leaseback 구조를 밀어붙인다. 하지만 설비만 담보로 잡으면 라인을 돌릴 문서와 슬롯이 빠진다.",
+    "solution": "태오는 공장을 사지 않고, 공장이 멈추지 않을 권리를 산다. 첫 사건 beat는 CMO step-in 권리와 생산권 선순위 담보 조항을 리스 계약서에 연결해, 장비 리스료가 연체되면 태오가 대신 납부하고 월 6일 생산 슬롯을 우선 확보하는 구조를 제안하는 장면이다. 둘째 beat는 GMP 적격성 기록 공백을 발견하자, 유지보수 로그, 밸리데이션 재확인, QC 장비 사용권, 냉장 보관실 접근권을 리스료 지급 조건으로 묶는 장면이다.",
+    "reward": "태오는 바이오 파일럿 공장 36개월 운영리스 우선권, 월 6일 생산 슬롯, GMP 적격성 재확인 문서권, QC 장비 공동사용권, 리스료 연체 시 운영 step-in 권리, 냉장 보관실 12개월 접근권을 얻는다. 설비는 담보물이 아니라 생산권을 낳는 리스 금융 구조가 된다."
+  },
+  "stakes": "공장 설비를 담보로만 잡으면 실패한 벤처의 장비는 회수되어 흩어지고, 태오는 생산권과 GMP 문서 없이 돈만 빌려준 꼴이 된다.",
+  "power_shift": {
+    "protagonist": "생산권 담보 설계자에서 설비 리스와 GMP 문서, 생산 슬롯을 함께 통제하는 운영리스 금융가로 확장된다.",
+    "antagonist": "벤처 대표와 리스사는 설비 소유권만으로 협상하기 어려워지고, 증권사 IB는 단순 담보 구조를 고집하기 어렵다."
+  },
+  "relationship_delta": [
+    {
+      "target": "바이오 벤처 대표",
+      "before": "설비 소유권은 지키고 단기 사용료만 받으려는 창업자",
+      "after": "리스료 연체 시 운영 step-in과 월 6일 생산 슬롯을 내주는 차주",
+      "anchor_before": "know-how escrow와 생산 step-in 조항을 받아들여야 하는 차주"
+    },
+    {
+      "target": "장비 리스사",
+      "before": "연체 시 배양기 회수로 손실을 줄이려는 금융사",
+      "after": "태오의 대납과 운영 step-in으로 리스채권을 유지하는 파트너"
+    },
+    {
+      "target": "공장 QA 책임자",
+      "before": "끊긴 GMP 적격성 기록 때문에 설비 사용을 부담스러워하는 관리자",
+      "after": "재확인 문서권과 유지보수 로그를 태오 리스 조건으로 복구하는 실무 파트너"
+    }
+  ],
+  "foreshadow": [
+    "GMP 적격성 재확인 문서권과 QC 장비 공동사용권은 임상 리스크 보험을 생산 데이터와 연결하는 근거가 된다.",
+    "리스료 연체 시 운영 step-in 권리는 벤처의 폭주 때 허황된 발표를 제동하는 실질 권리로 쓰인다.",
+    "월 6일 생산 슬롯은 실패한 파이프라인의 설비와 특허를 싼값에 흡수하는 생산능력 증거가 된다."
+  ],
+  "callback": [
+    "CMO step-in 권리와 생산권 선순위 담보가 운영리스 계약의 핵심 조항으로 확장된다.",
+    "실패 시 위탁생산 슬롯 옵션이 실제 공장 월 6일 슬롯으로 구체화된다.",
+    "냉장차 운행권 선점 경험은 소유보다 운영권을 먼저 잡는 리스 구조로 재사용된다."
+  ],
+  "emotional_beat": {
+    "protagonist_feeling": "태오는 설비를 보는 순간에도 탐내지 않는다. 진짜 탐낼 것은 설비가 멈추지 않게 만드는 권리라는 걸 안다.",
+    "reader_catharsis": "상대가 설비 소유권과 담보가치를 흔들 때, 주인공이 리스료·GMP 문서·생산 슬롯을 묶어 실제 운영권을 잡는 사이다."
+  },
+  "tension_level": 8,
+  "pov_character": "강태오",
+  "location": {
+    "place": "수도권 외곽 바이오 파일럿 공장과 장비 리스사 회의실",
+    "type": "factory_lease_finance_room",
+    "macro_battlefield": "바이오 벤처 설비 리스와 생산권 확보"
+  },
+  "time_span": {
+    "duration": "8일",
+    "in_story_time": "2008년 2월 초"
+  },
+  "genre_ext": {
+    "capital_before": "8700억 + 소비재 안전표준 + 임상 2상 빈칸 가격표 작성권 + 임상 데이터룸 열람권 + 실패 시 위탁생산 슬롯 옵션 + 임상 리스크 보험료 조정 특약 + 마일스톤 지급 escrow 동결권 + 특허 담보대출 400억 공동주관권 + 생산권 선순위 담보 조항 + 공정 know-how escrow 열람 트리거 + 실패 시 CMO step-in 권리 + 원료 사양표 사본권",
+    "capital_after": "9800억 + 소비재 안전표준 + 임상 2상 빈칸 가격표 작성권 + 특허 담보대출 400억 공동주관권 + 생산권 선순위 담보 조항 + know-how escrow 열람 트리거 + 실패 시 CMO step-in 권리 + 바이오 파일럿 공장 36개월 운영리스 우선권 + 월 6일 생산 슬롯 + GMP 적격성 재확인 문서권 + QC 장비 공동사용권 + 리스료 연체 시 운영 step-in 권리 + 냉장 보관실 12개월 접근권",
+    "capital_delta": "+1100억 평가 상승, +36개월 운영리스 우선권, +월 6일 생산 슬롯, +GMP 재확인 문서권, +QC 장비 공동사용권, +운영 step-in, +냉장 보관실 접근권",
+    "profit_loss": "리스료 대납 리스크를 떠안지만 설비 회수와 문서 공백을 막고 생산 슬롯을 금융 조건으로 고정한다.",
+    "method": "설비 소유권 대신 리스료 대납, GMP 적격성 재확인, QC 장비, 냉장 보관실, 월별 생산 슬롯을 하나의 운영리스 조건표로 묶는다.",
+    "investment_type": "운영리스 대납 한도 + GMP 재확인 비용",
+    "deal_type": "바이오 파일럿 공장 운영리스 및 생산 슬롯 계약",
+    "leverage_used": "CMO step-in 권리, 실패 시 위탁생산 슬롯 옵션, 운행권 선점 구조",
+    "opponent": {
+      "name": "바이오 벤처 + 장비 리스사 + 증권사 IB",
+      "type": "공장 리스 금융 / 바이오 생산권 복합 압박 세력",
+      "weakness_exploited": "공장 리스 금융 / 바이오 생산권의 병목을 문서·권리·책임선으로 잠그는 강태오의 방식을 과소평가한다."
+    },
+    "time_pressure": "장비 리스사 회수 통보 전 8일",
+    "knowledge_used": "운영리스, sale-leaseback, GMP 적격성 재확인, QC 장비 사용권, 생산 슬롯, 리스료 대납",
+    "risk_level": "상",
+    "business_sector": "공장 리스 금융 / 바이오 생산권",
+    "section_rotation": "임상 리스크와 공급망 금융 초반",
+    "success_pattern": "설비 소유보다 설비가 계속 생산권을 내는 조건을 먼저 산다.",
+    "opening_progression": {
+      "public_signboard_event": "장비 리스사가 연체된 바이오 파일럿 공장의 배양기 회수 통보를 보낸다.",
+      "representative_reevaluation": "리스사와 벤처는 태오를 투자자가 아니라 멈춘 설비를 금융 조건표로 다시 돌리는 운영리스 설계자로 다시 본다.",
+      "next_battlefield_ticket": "GMP 재확인 문서권과 QC 장비 사용권이 보험사가 모르는 생산 위험 전장으로 이어진다."
+    },
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "factory_lease_production_right_receipt",
+      "receipt_line": "태오는 회수될 뻔한 설비를 36개월 운영리스 우선권, 월 6일 생산 슬롯, 운영 step-in 권리로 묶어낸다.",
+      "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "설비 소유보다 설비가 계속 생산권을 내는 조건을 먼저 산다.",
+      "recognition_signal": "바이오 벤처 대표의 시선 변화: 리스료 연체 시 운영 step-in과 월 6일 생산 슬롯을 내주는 차주",
+      "reward_signal": "태오는 회수될 뻔한 설비를 36개월 운영리스 우선권, 월 6일 생산 슬롯, 운영 step-in 권리로 묶어낸다.",
+      "growth_signal": "생산권 담보 설계자에서 설비 리스와 GMP 문서, 생산 슬롯을 함께 통제하는 운영리스 금융가로 확장된다.",
+      "expectation_signal": "GMP 재확인 문서권과 QC 장비 사용권이 보험사가 모르는 생산 위험 전장으로 이어진다.",
+      "reader_feel": "독자는 「공장 리스 금융」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 태오는 회수될 뻔한 설비를 36개월 운영리스 우선권, 월 6일 생산 슬롯, 운영 step-in 권리로 묶어낸다. 성장 장면: 생산권 담보 설계자에서 설비 리스와 GMP 문서, 생산 슬롯을 함께 통제하는 운영리스 금융가로 확장된다. 다음 기대감: GMP 재확인 문서권과 QC 장비 사용권이 보험사가 모르는 생산 위험 전장으로 이어진다.",
+      "mature_success_signal": "강태오는 공장 리스 금융의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "설비 소유보다 설비가 계속 생산권을 내는 조건을 먼저 산다.",
+        "recognition": "바이오 벤처 대표의 시선 변화: 리스료 연체 시 운영 step-in과 월 6일 생산 슬롯을 내주는 차주",
+        "reward": "태오는 회수될 뻔한 설비를 36개월 운영리스 우선권, 월 6일 생산 슬롯, 운영 step-in 권리로 묶어낸다.",
+        "growth": "생산권 담보 설계자에서 설비 리스와 GMP 문서, 생산 슬롯을 함께 통제하는 운영리스 금융가로 확장된다.",
+        "expectation": "GMP 재확인 문서권과 QC 장비 사용권이 보험사가 모르는 생산 위험 전장으로 이어진다.",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 바이오 벤처 대표의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: GMP 재확인 문서권과 QC 장비 사용권이 보험사가 모르는 생산 위험 전장으로 이어진다."
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "특허 담보대출에 생산권 선순위 조항이 들어가자, 벤처의 실제 설비가 눈앞에 드러난다. 수도권 외곽의 바이오 파일럿 공장은 고가 배양기와 동결건조기를 갖췄지만, 유지보수비가 밀려 있고 GMP 적격성 재확인 기록이 끊겨 있다. 설비를 사면 비싸고, 그냥 빌리면 생산권이 남지 않는다.",
+      "proof_action": "태오는 공장을 사지 않고, 공장이 멈추지 않을 권리를 산다. 첫 사건 beat는 CMO step-in 권리와 생산권 선순위 담보 조항을 리스 계약서에 연결해, 장비 리스료가 연체되면 태오가 대신 납부하고 월 6일 생산 슬롯을 우선 확보하는 구조를 제안하는 장면이다.",
+      "proof_axis": "운영리스, sale-leaseback, GMP 적격성 재확인, QC 장비 사용권, 생산 슬롯, 리스료 대납",
+      "recognition_or_resistance_signal": "바이오 벤처 대표 -> 리스료 연체 시 운영 step-in과 월 6일 생산 슬롯을 내주는 차주",
+      "receipt_asset": "태오는 회수될 뻔한 설비를 36개월 운영리스 우선권, 월 6일 생산 슬롯, 운영 step-in 권리로 묶어낸다.",
+      "reward_asset_classes": [
+        "quality_responsibility",
+        "data_audit_right"
+      ],
+      "next_regulated_gate": "GMP 재확인 문서권과 QC 장비 사용권이 보험사가 모르는 생산 위험 전장으로 이어진다.",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 바이오 벤처 대표의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: GMP 재확인 문서권과 QC 장비 사용권이 보험사가 모르는 생산 위험 전장으로 이어진다.",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "business_memory",
+    "timeline_knowledge": "태오는 전생에서 바이오 벤처 설비가 리스사에 회수되어 파이프라인과 생산 데이터가 함께 흩어진 사례를 기억한다.",
+    "butterfly_effect": "설비 리스와 생산권을 묶으면서 실패한 벤처의 자산이 흩어지기 전에 태오바이오의 금융 조건표 안으로 들어온다.",
+    "death_flag": false,
+    "regression_hint": "태오가 설비 감정가보다 유지보수 로그와 적격성 재확인 날짜를 먼저 보는 행동으로만 암시한다.",
+    "future_prep": "운영리스, 생산 슬롯, GMP 재확인 문서권은 보험 리스크와 벤처 폭주 제동의 실물 기반이 된다."
+  },
+  "block_no": 53,
+  "foreshadow_targets": [
+    {
+      "target_block": 54,
+      "target_event": "보험사가 모르는 위험"
+    },
+    {
+      "target_block": 55,
+      "target_event": "벤처의 폭주"
+    },
+    {
+      "target_block": 57,
+      "target_event": "실패한 파이프라인"
+    }
+  ],
+  "callback_sources": [
+    {
+      "source_block": 52,
+      "source_event": "특허 담보대출"
+    },
+    {
+      "source_block": 51,
+      "source_event": "임상 2상의 빈칸"
+    },
+    {
+      "source_block": 12,
+      "source_event": "차량은 사는 게 아니라 움직이는 권리다"
+    }
+  ]
+}

@@ -638,6 +638,39 @@
         "project finance covenant/offtake 구조",
         "이사회 risk committee/minutes 절차"
       ]
-    }
+    },
+    "donor_review": {
+      "decision": "adopted",
+      "scope": "Generalized immediate-deployment donor-structure law only; no donor proper nouns, scene order, or asset skin is imported.",
+      "adopted_law": [
+        "current-document proof before future-memory payoff",
+        "pressure -> proof -> right/control/cash/status receipt -> next power-grid gate",
+        "same-block receipt for every TR block",
+        "family, succession, or heir recognition is pressure/evaluation only, never the reward engine",
+        "one TR block remains a dense downstream episode bundle narrowed by block-specific pacing hints"
+      ],
+      "contamination_guard": [
+        "no donor proper nouns, donor organization names, or donor scene order",
+        "no generic chaebol succession reward replacing power-grid, AI infrastructure, PPA, SLA, transformer, HVDC, site permit, project-finance, board, budget, or TF rights",
+        "no future prophecy or status UI replacing present contracts, side letters, schedules, engineer reports, site permits, outage logs, or board minutes",
+        "no charity rescue, family praise, or succession recognition as a block reward",
+        "power-grid and AI infrastructure rights remain the work canon"
+      ],
+      "visibility_note": "Donor adoption means translated material-side operating law only; power_grid_heir canon remains native."
+    },
+    "contamination_guard": [
+      "no donor proper nouns, donor organization names, or donor scene order",
+      "no generic chaebol succession reward replacing power-grid, AI infrastructure, PPA, SLA, transformer, HVDC, site permit, project-finance, board, budget, or TF rights",
+      "no future prophecy or status UI replacing present contracts, side letters, schedules, engineer reports, site permits, outage logs, or board minutes",
+      "no charity rescue, family praise, or succession recognition as a block reward",
+      "power-grid and AI infrastructure rights remain the work canon"
+    ],
+    "do_not_fake": [
+      "Do not import donor proper nouns, donor organization names, or donor scene order.",
+      "Do not let generic succession recognition replace review rights, audit rights, renegotiation seats, board observer access, pilot budget control, Strategic Power TF authority, or infrastructure gatekeeper status.",
+      "Do not let future-memory explanation replace present proof from contracts, schedules, engineer reports, site permits, outage logs, term sheets, or board minutes.",
+      "Do not close a block on praise, family approval, or heir optics only; close on a right/control/cash/status receipt and the next power-grid gate.",
+      "Keep AI infrastructure as a power-grid business-power engine, not a generic AI-stock or platform-growth fantasy."
+    ]
   }
 }

@@ -1,0 +1,177 @@
+{
+  "block_id": "Block 33",
+  "title": "중간체의 계절",
+  "content": {
+    "context": "특허 회피 지도가 생기자 태오는 어떤 API를 만들 수 있는지만이 아니라 어떤 중간체를 먼저 붙잡아야 하는지도 보게 된다. 중국 장쑤성 중간체 공장들이 환경 점검과 우기 정비로 한 달씩 멈춘다는 소식이 들어오고, 부평 2공장의 90일 창고 슬롯은 물건을 넣을 권리일 뿐 물건 자체를 보장하지 못한다.",
+    "event_villain": "중국 중간체 업체는 다음 달부터 톤당 가격을 22% 올리고 최소 주문량을 두 배로 묶겠다고 통보한다. 국내 화학 대기업은 그 틈에 끼어 '우리가 사오면 안정적'이라며 독점 대행권을 요구하고, 은행은 중간체 재고가 가격 변동이 크다며 담보로 보지 않겠다고 말한다.",
+    "solution": "태오는 회피 공정표를 꺼내 중간체를 A급 핵심 병목, B급 대체 가능, C급 늦춰도 되는 품목으로 나눈다. 첫 사건 beat는 중국 업체가 가격 인상 팩스를 보낸 날, 태오가 A급 중간체만 6개월 가격밴드와 우선공급권으로 묶고 B급은 옵션으로 남기는 장면이다. 둘째 beat는 은행 회의에서 90일 창고 슬롯, lot별 품질성적서 사본권, 불순물 프로파일 선제 제출권을 묶어 '팔 수 없는 재고'가 아니라 '출고권이 붙은 원료'로 바꾸는 장면이다.",
+    "reward": "태오는 A급 중간체 6개월 우선공급권, 톤당 상하한 가격밴드, 불순물 프로파일 선제 제출권, 2회 분할입고권, 원료재고 담보 term sheet를 얻는다. 국내 화학 대기업의 독점 대행권 요구는 빠지고, 부평 2공장은 원료 공백 없이 파일럿 배치 일정을 유지한다."
+  },
+  "stakes": "중간체 가격과 입고 시기를 놓치면 특허 회피 지도와 파일럿 배치 슬롯은 실제 원료 없이 빈 일정표가 된다.",
+  "power_shift": {
+    "protagonist": "생산권 검토자에서 계절성 가격 변동을 선제 계약으로 묶는 원료 공급망 설계자로 확장된다.",
+    "antagonist": "중국 중간체 업체는 단순 가격 인상으로 전량을 흔들 수 없고, 국내 화학 대기업은 독점 대행권을 잃는다."
+  },
+  "relationship_delta": [
+    {
+      "target": "중국 중간체 업체 영업총괄",
+      "before": "우기 정비와 환경 점검을 핑계로 가격과 최소 주문량을 일방 통보하는 공급자",
+      "after": "A급 중간체 가격밴드와 분할입고 조건을 받아들이는 우선공급 파트너"
+    },
+    {
+      "target": "부평 2공장 구매팀",
+      "before": "중간체를 싸게 사는 부서",
+      "after": "특허 회피 루트별 병목 중간체를 먼저 묶는 생산계획 파트너"
+    },
+    {
+      "target": "거래은행 심사역",
+      "before": "가격 변동이 큰 중간체 재고를 담보로 보지 않는 관찰자",
+      "after": "창고 슬롯과 출고권이 붙은 원료재고를 별도 담보로 검토하는 금융 파트너"
+    }
+  ],
+  "foreshadow": [
+    "A급 중간체 우선공급권과 불순물 프로파일은 일본 상사의 전화에서 대체 합성 라인 검증의 비교 데이터가 된다.",
+    "원료재고 담보 term sheet는 후반 원료 소재 공급망 금융의 출발점이 된다.",
+    "B급 대체 가능 중간체 옵션은 이후 국내 화학 대기업과의 소재 생산권 협상에서 방어 카드가 된다."
+  ],
+  "callback": [
+    "특허 회피 지도는 어떤 중간체를 먼저 묶어야 하는지의 우선순위표로 전환된다.",
+    "90일 지역 물류창고 전용 슬롯은 분할입고권과 재고담보 검토의 물리적 근거가 된다.",
+    "실제 손실 단가 표는 가격밴드 상한을 생산 중단 손실보다 낮게 잡는 논리로 재사용된다."
+  ],
+  "emotional_beat": {
+    "protagonist_feeling": "태오는 가격이 오르는 것 자체를 막지는 못하지만, 오르는 계절을 자기 일정표 안으로 끌어넣었다는 실감을 얻는다.",
+    "reader_catharsis": "상대가 '다음 달부터 비싸진다'고 압박할 때, 주인공이 전량이 아니라 병목만 골라 가격밴드와 우선공급권을 받아내는 사이다."
+  },
+  "tension_level": 8,
+  "pov_character": "강태오",
+  "location": {
+    "place": "부평 2공장 구매팀 회의실과 장쑤성 중간체 업체 화상회의",
+    "type": "procurement_supply_contract_room",
+    "macro_battlefield": "중간체 계절성 가격 변동과 원료재고 금융"
+  },
+  "time_span": {
+    "duration": "8일",
+    "in_story_time": "2001년 4월 중순"
+  },
+  "genre_ext": {
+    "capital_before": "8천 2백만 + 원료 한 드럼 우선 배정권 + 90일 지역 물류창고 전용 슬롯 + lot별 품질성적서 사본권 + 첫 출고 지시권 + 재고담보 사전검토권 + 부평 2공장 생산 슬롯 보호 메모 + 비침해 생산계획 검토권 + 파일럿 배치 2회 우선 슬롯 + 공정변경 QA 문서 사본권 + 법무 사전검토 메모 접근권",
+    "capital_after": "7천 1백만 + 원료 한 드럼 우선 배정권 + 90일 지역 물류창고 전용 슬롯 + lot별 품질성적서 사본권 + 첫 출고 지시권 + 재고담보 사전검토권 + 부평 2공장 생산 슬롯 보호 메모 + 비침해 생산계획 검토권 + 파일럿 배치 2회 우선 슬롯 + 공정변경 QA 문서 사본권 + 법무 사전검토 메모 접근권 + A급 중간체 6개월 우선공급권 + 톤당 가격밴드 계약 + 불순물 프로파일 선제 제출권 + 2회 분할입고권 + 원료재고 담보 term sheet",
+    "capital_delta": "-1천 1백만 현금, +A급 중간체 우선공급권, +가격밴드, +불순물 프로파일, +분할입고권, +재고담보 term sheet",
+    "profit_loss": "계약금과 선적 보증금으로 현금은 줄지만, 22% 가격 인상 전 병목 중간체를 6개월 가격밴드 안에 묶는다.",
+    "method": "회피 공정표를 중간체 A/B/C 병목표로 바꾸고, 창고 슬롯과 품질자료를 붙여 공급계약과 재고금융을 동시에 만든다.",
+    "investment_type": "중간체 선계약금 + 선적 보증금",
+    "deal_type": "중간체 우선공급 및 가격밴드 계약",
+    "leverage_used": "비침해 생산계획 검토권, 90일 창고 슬롯, lot별 품질성적서 사본권, 재고담보 사전검토권",
+    "opponent": {
+      "name": "중국 중간체 업체 + 국내 화학 대기업",
+      "type": "원료의약품 중간체 공급망 복합 압박 세력",
+      "weakness_exploited": "원료의약품 중간체 공급망의 병목을 문서·권리·책임선으로 잠그는 강태오의 방식을 과소평가한다."
+    },
+    "time_pressure": "중국 공장 우기 정비와 환경 점검 전 8일",
+    "knowledge_used": "중간체 계절성, 불순물 프로파일, API 합성경로, 분할입고, 원료재고 담보 구조",
+    "risk_level": "상",
+    "business_sector": "원료의약품 중간체 공급망",
+    "section_rotation": "원료의약품과 정밀화학",
+    "success_pattern": "가격 상승 전체를 싸우지 않고 병목 중간체만 골라 권리와 금융으로 묶는다.",
+    "opening_progression": {
+      "public_signboard_event": "중국 중간체 업체가 우기 정비와 환경 점검을 이유로 가격 22% 인상과 최소 주문량 두 배를 통보한다.",
+      "representative_reevaluation": "구매팀과 은행 심사역은 태오를 싸게 사는 사람이 아니라 입고권과 담보성을 설계하는 사람으로 다시 본다.",
+      "next_battlefield_ticket": "A급 중간체 우선공급권과 불순물 프로파일이 일본 상사의 가격 인상 전화를 대체 합성 라인 검증으로 뒤집는 근거가 된다."
+    },
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "intermediate_priority_supply_price_band_receipt",
+      "receipt_line": "태오는 가격 인상 팩스를 6개월 우선공급권, 가격밴드, 불순물 프로파일 제출권이 찍힌 계약서로 바꿔 가져온다.",
+      "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "가격 상승 전체를 싸우지 않고 병목 중간체만 골라 권리와 금융으로 묶는다.",
+      "recognition_signal": "중국 중간체 업체 영업총괄의 시선 변화: A급 중간체 가격밴드와 분할입고 조건을 받아들이는 우선공급 파트너",
+      "reward_signal": "태오는 가격 인상 팩스를 6개월 우선공급권, 가격밴드, 불순물 프로파일 제출권이 찍힌 계약서로 바꿔 가져온다.",
+      "growth_signal": "생산권 검토자에서 계절성 가격 변동을 선제 계약으로 묶는 원료 공급망 설계자로 확장된다.",
+      "expectation_signal": "A급 중간체 우선공급권과 불순물 프로파일이 일본 상사의 가격 인상 전화를 대체 합성 라인 검증으로 뒤집는 근거가 된다.",
+      "reader_feel": "독자는 「중간체의 계절」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 태오는 가격 인상 팩스를 6개월 우선공급권, 가격밴드, 불순물 프로파일 제출권이 찍힌 계약서로 바꿔 가져온다. 성장 장면: 생산권 검토자에서 계절성 가격 변동을 선제 계약으로 묶는 원료 공급망 설계자로 확장된다. 다음 기대감: A급 중간체 우선공급권과 불순물 프로파일이 일본 상사의 가격 인상 전화를 대체 합성 라인 검증으로 뒤집는 근거가 된다.",
+      "mature_success_signal": "강태오는 중간체의 계절의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "가격 상승 전체를 싸우지 않고 병목 중간체만 골라 권리와 금융으로 묶는다.",
+        "recognition": "중국 중간체 업체 영업총괄의 시선 변화: A급 중간체 가격밴드와 분할입고 조건을 받아들이는 우선공급 파트너",
+        "reward": "태오는 가격 인상 팩스를 6개월 우선공급권, 가격밴드, 불순물 프로파일 제출권이 찍힌 계약서로 바꿔 가져온다.",
+        "growth": "생산권 검토자에서 계절성 가격 변동을 선제 계약으로 묶는 원료 공급망 설계자로 확장된다.",
+        "expectation": "A급 중간체 우선공급권과 불순물 프로파일이 일본 상사의 가격 인상 전화를 대체 합성 라인 검증으로 뒤집는 근거가 된다.",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 중국 중간체 업체 영업총괄의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: A급 중간체 우선공급권과 불순물 프로파일이 일본 상사의 가격 인상 전화를 대체 합성 라인 검증으로 뒤집는 근거가 된다."
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "특허 회피 지도가 생기자 태오는 어떤 API를 만들 수 있는지만이 아니라 어떤 중간체를 먼저 붙잡아야 하는지도 보게 된다. 중국 장쑤성 중간체 공장들이 환경 점검과 우기 정비로 한 달씩 멈춘다는 소식이 들어오고, 부평 2공장의 90일 창고 슬롯은 물건을 넣을 권리일 뿐 물건 자체를 보장하지 못한다.",
+      "proof_action": "태오는 회피 공정표를 꺼내 중간체를 A급 핵심 병목, B급 대체 가능, C급 늦춰도 되는 품목으로 나눈다. 첫 사건 beat는 중국 업체가 가격 인상 팩스를 보낸 날, 태오가 A급 중간체만 6개월 가격밴드와 우선공급권으로 묶고 B급은 옵션으로 남기는 장면이다.",
+      "proof_axis": "중간체 계절성, 불순물 프로파일, API 합성경로, 분할입고, 원료재고 담보 구조",
+      "recognition_or_resistance_signal": "중국 중간체 업체 영업총괄 -> A급 중간체 가격밴드와 분할입고 조건을 받아들이는 우선공급 파트너",
+      "receipt_asset": "태오는 가격 인상 팩스를 6개월 우선공급권, 가격밴드, 불순물 프로파일 제출권이 찍힌 계약서로 바꿔 가져온다.",
+      "reward_asset_classes": [
+        "quality_responsibility"
+      ],
+      "next_regulated_gate": "A급 중간체 우선공급권과 불순물 프로파일이 일본 상사의 가격 인상 전화를 대체 합성 라인 검증으로 뒤집는 근거가 된다.",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 중국 중간체 업체 영업총괄의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: A급 중간체 우선공급권과 불순물 프로파일이 일본 상사의 가격 인상 전화를 대체 합성 라인 검증으로 뒤집는 근거가 된다.",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
+    }
+  },
+  "regression_ext": {
+    "is_regressor": true,
+    "regression_type": "business_memory",
+    "timeline_knowledge": "태오는 전생에서 중국 중간체의 계절성 정비와 환경 점검이 제네릭 출시 일정을 한 분기씩 밀었다는 걸 기억한다.",
+    "butterfly_effect": "전량 선매입 대신 A급 병목만 묶으면서 현금 소모를 줄이고, 은행이 원료재고를 별도 담보로 보게 만든다.",
+    "death_flag": false,
+    "regression_hint": "태오가 '비싸지는 달은 늘 같은 얼굴로 온다'고 중얼거리는 정도로만 드러난다.",
+    "future_prep": "중간체 불순물 데이터와 가격밴드 계약은 일본 원료상과 국내 화학 대기업을 동시에 압박할 증거가 된다."
+  },
+  "block_no": 33,
+  "foreshadow_targets": [
+    {
+      "target_block": 34,
+      "target_event": "일본 상사의 전화"
+    },
+    {
+      "target_block": 39,
+      "target_event": "원료 우선순위"
+    }
+  ],
+  "callback_sources": [
+    {
+      "source_block": 32,
+      "source_event": "특허 회피 지도"
+    },
+    {
+      "source_block": 31,
+      "source_event": "원료 한 드럼"
+    },
+    {
+      "source_block": 27,
+      "source_event": "실제 손실 단가"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+# GREENPLUS_distressed_company_buyer
+
+- verdict: `GREENPLUS`
+- work_id: `distressed_company_buyer`
+- family: `blockguide`
+- benchmark_freshness: `current`
+- benchmark_artifact: `treatments/audit_reports/distressed_company_buyer_greenplus_benchmark_preservation_audit.md`
+- blockwise_success_reward_expectation_artifact: `treatments/audit_reports/distressed_company_buyer_blockwise_success_reward_expectation_3pass_audit.md`
+- webnovel_fast_pacing_artifact: `treatments/audit_reports/distressed_company_buyer_fast_webnovel_pacing_contract_audit.md`
+- immediate_deployment_artifact: `treatments/audit_reports/distressed_company_buyer_immediate_deployment_adversarial_closeout.md`
+- material_deployment_status: `immediate_deployable_material`
+- donor_structure_status: `adopted_and_recorded`
+- opening_pacing_triage: `GREEN`
+- whole_run_pacing_triage: `GREEN`
+- schema_status: `pass`
+- open_migration_debt: `no`
+- p0: `6/6`
+- p1: `20/20`
+- full_block_cider: `70/70`
+- webnovel_pacing_contract: `70/70`
+- reader_payoff_ladder: `70/70`
+- operational_note: benchmark-fresh donor-adopted distressed-company rights-bundle business-power sample. It is admitted as an immediate material-deployment row after explicit GREENPLUS benchmark preservation, BI amplification quality-up, webnovel growth/reward quality-up, recognition/reward top-3 quality-up, foreshadow/callback consistency quality-up, blockwise success/reward/expectation audit, fast webnovel pacing contract attachment, and donor-structure adversarial closeout. It does not replace the donorized gold sample and does not open non-promoted GREENPLUS rows.

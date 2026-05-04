@@ -36,18 +36,18 @@
     {
       "target": "사립병원 구매이사",
       "before": "기존 고객 보호 조건으로 우선공급 슬롯과 벤치마크 첫 열람권을 받아 연합 확장을 묵인한다",
-      "after": "우선배정 약국 리스트를 받아 품절 방지 실행 병원을 자처하며 Block 029 성과 검증을 재촉한다"
+      "after": "우선배정 약국 리스트를 받아 품절 방지 실행 병원을 자처하며 성과 검증을 재촉한다"
     }
   ],
   "foreshadow": [
-    "상권별 품절 회복 속도는 Block 029 데이터는 처방보다 빠르다에서 처방 발생 전 품절을 막는 신호가 된다.",
-    "태오 인증 POS 포맷은 Block 030 표준 청구서의 데이터 검증료 부속양식이 된다.",
-    "우선배정 약국 리스트는 Block 029의 품절 방지 성과와 사립병원 우선공급 슬롯을 연결한다."
+    "상권별 품절 회복 속도는 데이터는 처방보다 빠르다에서 처방 발생 전 품절을 막는 신호가 된다.",
+    "태오 인증 POS 포맷은 표준 청구서의 데이터 검증료 부속양식이 된다.",
+    "우선배정 약국 리스트는 품절 방지 성과와 사립병원 우선공급 슬롯을 연결한다."
   ],
   "callback": [
-    "Block 027의 병원 두 곳 가입 의향서와 실제 손실 단가 산식이 약국 연합을 압박하는 외부 수요 근거로 쓰인다.",
-    "Block 022의 POS 포맷 변환권과 품절 시간대 접근권이 태오 인증 POS 포맷으로 확장된다.",
-    "Block 026의 월 과금 계약과 익명 벤치마크 재사용권이 POS 인증료 재원과 상권별 판매권으로 회수된다."
+    "병원 두 곳 가입 의향서와 실제 손실 단가 산식이 약국 연합을 압박하는 외부 수요 근거로 쓰인다.",
+    "POS 포맷 변환권과 품절 시간대 접근권이 태오 인증 POS 포맷으로 확장된다.",
+    "월 과금 계약과 익명 벤치마크 재사용권이 POS 인증료 재원과 상권별 판매권으로 회수된다."
   ],
   "emotional_beat": {
     "type": "gatekeeper_conversion",
@@ -92,13 +92,67 @@
     "opening_progression": {
       "public_signboard_event": "약국 연합이 6주 POS 연합 포맷 시험에 서명하고 중소병원 예산안이 살아난다",
       "representative_reevaluation": "약국장들은 태오바이오를 병원 하청 데이터 수집자가 아니라 자기 데이터를 병원에 비싸게 팔아 주는 포맷 운영자로 본다",
-      "next_battlefield_ticket": "상권별 품절 회복 속도와 우선배정 약국 리스트가 Block 029 데이터는 처방보다 빠르다의 실행 신호가 된다"
+      "next_battlefield_ticket": "상권별 품절 회복 속도와 우선배정 약국 리스트가 데이터는 처방보다 빠르다의 실행 신호가 된다"
     },
     "block_cider": {
       "has_cider": true,
       "receipt_type": "pos_format_gate_receipt",
       "receipt_line": "강태오는 약국 POS 중단 통보를 6주 약국 연합 포맷 시험권, 태오 인증 POS 포맷 사용권, 상권별 품절 회복 속도 판매권으로 바꾼다.",
       "pain_only_exit": false
+    },
+    "reader_payoff_ladder": {
+      "success_pattern": "약국 POS 중단 위기를 상권별 품절 회복 속도 판매권과 인증 POS 포맷으로 바꾸는 데이터 관문 승리",
+      "recognition_signal": "약국 연합 대표의 시선 변화: 6주 POS 연합 포맷 시험에 서명하고 상권별 품절 회복 속도의 데이터 판매자로 재분류된다",
+      "reward_signal": "강태오는 약국 POS 중단 통보를 6주 약국 연합 포맷 시험권, 태오 인증 POS 포맷 사용권, 상권별 품절 회복 속도 판매권으로 바꾼다.",
+      "growth_signal": "강태오는 약국을 병원 데이터의 원천으로만 쓰지 않고, 병원 벤치마크에 접근하는 별도 유료 관문으로 세운다.",
+      "expectation_signal": "상권별 품절 회복 속도와 우선배정 약국 리스트가 데이터는 처방보다 빠르다의 실행 신호가 된다",
+      "reader_feel": "독자는 「약국 연합」 끝에서 강태오가 보상 장면을 문서·계약·데이터·운영권 중 하나로 잠그는 것을 확인한다. 보상 장면: 강태오는 약국 POS 중단 통보를 6주 약국 연합 포맷 시험권, 태오 인증 POS 포맷 사용권, 상권별 품절 회복 속도 판매권으로 바꾼다. 성장 장면: 강태오는 약국을 병원 데이터의 원천으로만 쓰지 않고, 병원 벤치마크에 접근하는 별도 유료 관문으로 세운다. 다음 기대감: 상권별 품절 회복 속도와 우선배정 약국 리스트가 데이터는 처방보다 빠르다의 실행 신호가 된다",
+      "mature_success_signal": "강태오는 약국 연합의 승리를 감정 과시가 아니라 책임선, 원본권, 인증권, 수수료, 운영권의 변화로 처리한다. 그래서 주변의 인정은 호감이 아니라 맡겨도 되는 산업 운영자라는 계산으로 바뀐다.",
+      "payoff_check": {
+        "success": true,
+        "recognition": true,
+        "reward": true,
+        "growth": true,
+        "expectation": true
+      },
+      "webnovel_payoff_pattern": {
+        "success": "약국 POS 중단 위기를 상권별 품절 회복 속도 판매권과 인증 POS 포맷으로 바꾸는 데이터 관문 승리",
+        "recognition": "약국 연합 대표의 시선 변화: 6주 POS 연합 포맷 시험에 서명하고 상권별 품절 회복 속도의 데이터 판매자로 재분류된다",
+        "reward": "강태오는 약국 POS 중단 통보를 6주 약국 연합 포맷 시험권, 태오 인증 POS 포맷 사용권, 상권별 품절 회복 속도 판매권으로 바꾼다.",
+        "growth": "강태오는 약국을 병원 데이터의 원천으로만 쓰지 않고, 병원 벤치마크에 접근하는 별도 유료 관문으로 세운다.",
+        "expectation": "상권별 품절 회복 속도와 우선배정 약국 리스트가 데이터는 처방보다 빠르다의 실행 신호가 된다",
+        "block_end_mandate": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 약국 연합 대표의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 상권별 품절 회복 속도와 우선배정 약국 리스트가 데이터는 처방보다 빠르다의 실행 신호가 된다"
+      }
+    },
+    "webnovel_pacing_contract": {
+      "contract_version": "pharma_cdmo_fast_pacing_v1",
+      "bundle_read": "one TR block = 2 to 6 downstream episode bundle",
+      "fast_pacing_sequence": "GMP/CDMO pressure -> quality/data/supply-chain proof -> audit/contract/standard/production-right receipt -> next regulated gate",
+      "pressure_hook": "병원 두 곳의 가입 의향서가 나오자 병원 앞 약국장들이 먼저 움직인다. 약국장들은 품절 시간대 집계표가 병원 벤치마크에 들어가면 자기 약국이 병원 구매회의의 하청 데이터 창구가 될까 봐 불안해한다. POS 업체는 이 틈을 타 포맷 변환비를 올리려 한다. 강태오는 약국들이 병원보다 약하다는 걸 안다.",
+      "proof_action": "태오는 약국장들에게 병원에 협조하라고 말하지 않는다. 대신 약국 연합을 병원 벤치마크의 하청이 아니라 별도 판매자로 세운다. 약국은 판매기록을 내지 않고 품목 코드, 품절 시작/종료 시간, 대체 판매 여부만 연합 포맷으로 제출한다. 태오바이오는 병원에 약국별 원자료가 아니라 상권별 품절 회복 속도만 판다.",
+      "proof_axis": "전생에서 약국 데이터는 매출액을 요구하는 순간 끊기고, 품절 회복 속도처럼 간접 지표로 팔 때 오래 갔다는 기억",
+      "recognition_or_resistance_signal": "약국 연합 대표 -> 6주 POS 연합 포맷 시험에 서명하고 상권별 품절 회복 속도의 데이터 판매자로 재분류된다",
+      "receipt_asset": "강태오는 약국 POS 중단 통보를 6주 약국 연합 포맷 시험권, 태오 인증 POS 포맷 사용권, 상권별 품절 회복 속도 판매권으로 바꾼다.",
+      "reward_asset_classes": [
+        "rights_control_asset"
+      ],
+      "next_regulated_gate": "상권별 품절 회복 속도와 우선배정 약국 리스트가 데이터는 처방보다 빠르다의 실행 신호가 된다",
+      "block_close_rule": "Close the block on a documented right or control asset, not on sympathy. The receipt must be visible as a record, signature, data right, slot, gate, fee, veto, or contract term.",
+      "no_shortcut_guard": [
+        "No good-factory charity reward",
+        "No miracle-drug shortcut",
+        "No decorative GMP/CDMO jargon without money, rights, or control change"
+      ],
+      "writer_scene_checklist": [
+        "Open with operational or regulatory pressure",
+        "Make Taeo pay a cost to create quality, data, or supply-chain proof",
+        "Show a witness or opponent recalculating the rights structure",
+        "Lock the same-block receipt as audit right, contract right, data right, production right, finance term, or standard gate",
+        "End on the next regulated gate marker"
+      ],
+      "writer_scene_exit": "마감은 보상이 말이 아니라 문서·계약·데이터·인증·운영권 중 하나로 찍히는 순간을 먼저 보여준다. 이어 약국 연합 대표의 인정 또는 견제 반응을 붙여 강태오의 승리를 계산 가능한 신뢰로 바꾸고, 마지막 문단의 기대 표지는 다음으로 둔다: 상권별 품절 회복 속도와 우선배정 약국 리스트가 데이터는 처방보다 빠르다의 실행 신호가 된다",
+      "preserve_existing_cider": true,
+      "preserve_reader_payoff_ladder": true
     }
   },
   "regression_ext": {
