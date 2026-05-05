@@ -124,6 +124,20 @@ canary/
 projects/canary_*/
 projects/스트레스*/
 
+# === 개인/사비 소설 기획 소재: golden_canary만 git 추적 ===
+/bible/**
+!/bible/
+!/bible/**/
+!/bible/**/*golden_canary*
+/treatments/**
+!/treatments/
+!/treatments/**/
+!/treatments/**/*golden_canary*
+/work_guards/**
+!/work_guards/
+!/work_guards/**/
+!/work_guards/**/*golden_canary*
+
 # === 임시 DB 파일 ===
 tmp_*.db
 

@@ -1,8 +1,0 @@
-{
-  "work_id": "laid_off_cashflow_rights_operator",
-  "last_audit_block": "Block 070",
-  "audit_pass": true,
-  "audit_date": "2026-05-02",
-  "issues": [],
-  "notes": "Latest manual audit boundary: Stage0 retroactive authority lock after root Phase0 materialization and promotion-target normalization. Prior B001-B070 window audits and source TR handoff gate remain authoritative."
-}
