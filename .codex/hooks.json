@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node 'C:\\Users\\User\\Desktop\\글도비\\.codex\\hooks\\gsd-prompt-guard.js'",
+            "command": "node \"C:/Users/wjjo/Desktop/글도비/.codex/hooks/gsd-prompt-guard.js\"",
             "timeout": 5
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node 'C:\\Users\\User\\Desktop\\글도비\\.codex\\hooks\\gsd-context-monitor.js'",
+            "command": "node \"C:/Users/wjjo/Desktop/글도비/.codex/hooks/gsd-context-monitor.js\"",
             "timeout": 10
           }
         ]
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node 'C:\\Users\\User\\Desktop\\글도비\\.codex\\hooks\\gsd-check-update.js'"
+            "command": "node \"C:/Users/wjjo/Desktop/글도비/.codex/hooks/gsd-check-update.js\""
           }
         ]
       }
