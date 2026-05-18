@@ -1,0 +1,288 @@
+﻿# chaebol3_sector_rotation_successor Phase0 Work Index
+
+Date: 2026-05-17
+Status: full Planning / Phase0 draft v1 exists, not TR-ready
+
+## 1. Phase0 Authority
+
+- partial opening-bundle draft:
+  - `treatments/phase0/chaebol3_sector_rotation_successor_phase0_opening_bundle_draft_v1.json`
+- full Planning / Phase0 draft:
+  - `treatments/phase0/chaebol3_sector_rotation_successor_phase0_design_draft_v1.json`
+- EP001-EP003 S4 canary packet:
+  - `material_ssot/20_pitch/synthesis/chaebol3_sector_rotation_successor_ep001_003_s4_canary_packet_v1.md`
+  - local working copy: `treatments/episode_packets/chaebol3_sector_rotation_successor/ep001_003_s4_canary_packet_v1.md`
+- EP001-EP003 packet audit:
+  - `material_ssot/20_pitch/synthesis/chaebol3_sector_rotation_successor_ep001_003_s4_canary_packet_3pass_audit.md`
+  - local working copy: `treatments/audit_reports/chaebol3_sector_rotation_successor_ep001_003_s4_canary_packet_3pass_audit.md`
+- pitch canon:
+  - `material_ssot/20_pitch/canon/chaebol3_sector_rotation_successor.md`
+- BI/TR/GUARD bridge:
+  - `material_ssot/20_pitch/synthesis/chaebol3_sector_rotation_successor_bi_tr_guard_bridge_v1.md`
+- work_guard draft:
+  - `material_ssot/20_pitch/synthesis/chaebol3_sector_rotation_successor_work_guard_draft_v1.yaml`
+- International Group work_guard draft v2:
+  - `material_ssot/20_pitch/synthesis/chaebol3_sector_rotation_successor_work_guard_draft_v2.yaml`
+- post-canary International Group opportunity atlas:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/70_international_group_historical_opportunity_atlas_v1.md`
+- post-canary International Group sector gate matrix:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/71_international_group_sector_gate_matrix_v1.md`
+- post-canary Arc 01-02 research checklist:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/72_international_group_phase0_research_checklist_arcs01_02_v1.md`
+- post-canary opening Phase0 seed:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/73_international_group_opening_phase0_seed_v1.md`
+- post-canary 3-pass adversarial audit:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/74_international_group_opening_phase0_seed_3pass_adversarial_audit_v1.md`
+- post-canary EP001 micro-canary packet:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/75_international_group_ep001_micro_canary_packet_v1.md`
+- final sanity check:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/76_final_sanity_check_20260517.md`
+- vicarious satisfaction pacing audit:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/77_vicarious_satisfaction_pacing_audit_v1.md`
+- International Group EP001 micro-canary sample:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/78_international_group_ep001_micro_canary_sample_v1.md`
+- International Group EP001 micro-canary director audit:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/79_international_group_ep001_micro_canary_director_audit_v1.md`
+- International Group work_guard v2 adversarial audit:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/80_international_group_work_guard_v2_adversarial_audit_v1.md`
+- International Group Phase0 restart v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/81_international_group_phase0_restart_v1.md`
+- International Group Phase0 restart adversarial audit:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/82_international_group_phase0_restart_adversarial_audit_v1.md`
+- International Group Arc 01 scene-ready packet:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/83_international_group_arc01_scene_ready_packet_v1.md`
+- International Group Arc 01 scene-ready packet adversarial audit:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/84_international_group_arc01_scene_ready_packet_adversarial_audit_v1.md`
+- International Group TR 1-10 planning draft:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/85_international_group_tr01_10_planning_draft_v1.md`
+- International Group TR 1-10 planning draft adversarial audit:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/86_international_group_tr01_10_planning_adversarial_audit_v1.md`
+- International Group EP001-EP003 S4 compact writer seed:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/87_international_group_ep001_003_s4_compact_writer_seed_v1.md`
+- International Group EP001-EP003 S4 compact writer seed audit:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/88_international_group_ep001_003_s4_compact_writer_seed_audit_v1.md`
+- International Group EP001 S4 canary sample v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/89_international_group_ep001_s4_canary_sample_v1.md`
+- International Group EP001 S4 canary sample v1 audit:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/91_international_group_ep001_s4_canary_audit_v1.md`
+- International Group EP001 S4 canary sample v2:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/92_international_group_ep001_s4_canary_sample_v2.md`
+- International Group EP001 S4 canary sample v2 audit:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/93_international_group_ep001_s4_canary_sample_v2_audit.md`
+- International Group EP002 S4 canary sample v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/94_international_group_ep002_s4_canary_sample_v1.md`
+- International Group EP002 S4 canary sample v1 audit:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/95_international_group_ep002_s4_canary_audit_v1.md`
+- International Group EP003 S4 canary sample v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/96_international_group_ep003_s4_canary_sample_v1.md`
+- International Group EP003 S4 canary sample v1 audit:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/97_international_group_ep003_s4_canary_audit_v1.md`
+- International Group EP001-EP003 opening ladder synthesis:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/98_international_group_ep001_003_opening_ladder_synthesis_v1.md`
+- International Group EP001-EP003 opening ladder adversarial audit:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/99_international_group_ep001_003_opening_ladder_adversarial_audit_v1.md`
+- International Group TR01-10 first-tranche handoff:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/100_international_group_tr01_10_first_tranche_handoff_v1.md`
+- International Group TR01-10 first-tranche handoff audit:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/101_international_group_tr01_10_first_tranche_handoff_audit_v1.md`
+- International Group EP004/B5 S4 canary sample v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/102_international_group_ep004_b5_s4_canary_sample_v1.md`
+- International Group EP004/B5 S4 canary audit v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/103_international_group_ep004_b5_s4_canary_audit_v1.md`
+- International Group EP005/B6 S4 canary sample v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/104_international_group_ep005_b6_s4_canary_sample_v1.md`
+- International Group EP005/B6 S4 canary audit v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/105_international_group_ep005_b6_s4_canary_audit_v1.md`
+- International Group EP006/B7 S4 canary sample v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/106_international_group_ep006_b7_s4_canary_sample_v1.md`
+- International Group EP006/B7 S4 canary audit v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/107_international_group_ep006_b7_s4_canary_audit_v1.md`
+- International Group EP007/B8 S4 canary sample v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/108_international_group_ep007_b8_s4_canary_sample_v1.md`
+- International Group EP007/B8 S4 canary audit v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/109_international_group_ep007_b8_s4_canary_audit_v1.md`
+- International Group EP008-009/B9 S4 canary sample v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/110_international_group_ep008_009_b9_s4_canary_sample_v1.md`
+- International Group EP008-009/B9 S4 canary audit v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/111_international_group_ep008_009_b9_s4_canary_audit_v1.md`
+- International Group EP009-010/B10 S4 canary sample v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/112_international_group_ep009_010_b10_s4_canary_sample_v1.md`
+- International Group EP009-010/B10 S4 canary audit v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/113_international_group_ep009_010_b10_s4_canary_audit_v1.md`
+- International Group first-tranche synthesis 102-113 v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/114_international_group_first_tranche_synthesis_102_113_v1.md`
+- International Group first-tranche synthesis audit v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/115_international_group_first_tranche_synthesis_audit_v1.md`
+- International Group EP004-010 S4 compact handoff v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/116_international_group_ep004_010_s4_compact_handoff_v1.md`
+- International Group EP004-010 S4 compact handoff audit v1:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/117_international_group_ep004_010_s4_compact_handoff_audit_v1.md`
+- International Group S4 smoke final audits:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/121_international_group_ep009_010_s4_context_smoke_final_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/124_international_group_ep006_product_hand_s4_context_smoke_reaudit_v1.md`
+- Firefly-side dryrun and S4 context integration:
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/125_firefly_side_research_dryrun_plan_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/126_firefly_side_research_dryrun_plan_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/129_ep007_buyer_desk_file_only_dryrun_final_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/130_firefly_s4_writer_context_integration_contract_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/131_firefly_s4_writer_context_integration_contract_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/132_ep007_buyer_desk_s4_writer_context_fill_sample_v1.json`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/133_ep007_buyer_desk_s4_writer_context_fill_sample_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/134_material_to_s4_context_reusable_template_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/135_material_to_s4_context_reusable_template_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/136_ep007_buyer_desk_file_only_prose_dryrun_from_s4_context_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/137_ep007_buyer_desk_file_only_prose_dryrun_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/138_ep006_product_hand_template_driven_file_only_prose_dryrun_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/139_ep006_product_hand_template_driven_file_only_prose_dryrun_audit_v1.md`
+  - `material_ssot/00_governance/firefly-material-to-s4-context-bridge-harness-v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/140_material_to_s4_context_bridge_harness_capture_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/141_international_group_b1_b2_pressure_first_s4_material_unit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/142_international_group_b1_b2_pressure_first_s4_material_unit_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/143_international_group_m01_m02_file_only_s4_dryrun_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/144_international_group_m01_m02_file_only_s4_dryrun_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/145_international_group_m01_m02_ep002_tiny_polish_patch_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/146_international_group_m01_m02_ep002_tiny_polish_patch_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/147_firefly_research_handoff_m01_m02_s4_context_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/148_firefly_research_handoff_m01_m02_s4_context_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/149_international_group_b1_b2_scene_native_card_application_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/150_international_group_b1_b2_scene_native_short_s4_canary_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/151_international_group_b1_b2_scene_native_short_s4_canary_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/152_international_group_m03_busan_buyer_scene_native_card_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/153_international_group_m03_busan_buyer_short_s4_canary_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/154_international_group_m03_busan_buyer_short_s4_canary_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/155_international_group_m04_first_task_scene_native_card_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/156_international_group_m04_first_task_short_s4_canary_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/157_international_group_m04_first_task_short_s4_canary_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/158_international_group_m05_busan_factory_pay_window_scene_native_card_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/159_international_group_m05_busan_factory_pay_window_short_s4_canary_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/160_international_group_m05_busan_factory_pay_window_short_s4_canary_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/161_international_group_m06_product_hand_spec_scene_native_card_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/162_international_group_m06_product_hand_spec_short_s4_canary_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/163_international_group_m06_product_hand_spec_short_s4_canary_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/164_international_group_m07_outside_buyer_desk_scene_native_card_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/165_international_group_m07_outside_buyer_desk_short_s4_canary_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/166_international_group_m07_outside_buyer_desk_short_s4_canary_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/167_international_group_m08_public_use_trial_scene_native_card_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/168_international_group_m08_public_use_trial_short_s4_canary_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/169_international_group_m08_public_use_trial_short_s4_canary_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/170_international_group_m09_internal_budget_file_access_scene_native_card_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/171_international_group_m09_internal_budget_file_access_short_s4_canary_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/172_international_group_m09_internal_budget_file_access_short_s4_canary_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/173_international_group_m10_m15_scene_native_material_pack_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/174_international_group_m10_m15_short_s4_canary_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/175_international_group_m10_m15_short_s4_canary_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/176_international_group_ep001_ep015_firefly_ready_material_packet_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/177_international_group_ep001_ep015_firefly_ready_material_packet_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/178_international_group_ep001_ep015_firefly_s4_context_fill_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/179_international_group_ep001_ep015_firefly_s4_context_fill_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/180_international_group_doksik_taste_reset_plan_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/181_international_group_doksik_taste_reset_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/182_international_group_doksik_taste_ep001_ep005_packet_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/183_international_group_doksik_taste_15ep_production_route_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/184_international_group_doksik_taste_full_planning_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/185_international_group_doksik_taste_full_planning_audit_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/186_international_group_doksik_taste_full_planning_v2.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/187_international_group_doksik_taste_full_planning_v2_audit.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/188_international_group_long_serial_scope_correction_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/189_international_group_doksik_taste_long_serial_planning_v3.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/190_international_group_doksik_taste_long_serial_planning_v3_audit.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/191_international_group_history_event_tycoon_atlas_v1.md`
+  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/192_international_group_history_event_tycoon_atlas_audit_v1.md`
+- B1-B2 micro-canary before 70 harness:
+  - `material_ssot/00_governance/firefly-b1-b2-micro-canary-before-70-harness-v1.md`
+
+## 2. Status
+
+- selection-ready: yes
+- work_guard_v1: PASS
+- work_guard_v2_manual: PASS_FOR_DRAFT
+- international_group_work_guard_draft_v2: WG-V1 PASS
+- international_group_work_guard_v2_audit: PASS_AFTER_EXPOSURE_FILTER_PATCH
+- international_group_phase0_restart_v1: drafted
+- international_group_phase0_restart_audit: PASS_WITH_WATCH_AFTER_HYGIENE_PATCH
+- international_group_arc01_scene_ready_packet_v1: drafted
+- international_group_arc01_scene_ready_packet_audit: PASS_WITH_WATCH
+- international_group_tr01_10_planning_draft_v1: drafted
+- international_group_tr01_10_planning_audit: PASS_WITH_WATCH
+- international_group_ep001_003_s4_compact_writer_seed_v1: drafted
+- international_group_ep001_003_s4_compact_writer_seed_audit: PASS_WITH_WATCH
+- international_group_ep001_s4_canary_sample_v1: drafted
+- international_group_ep001_s4_canary_sample_v1_audit: PASS_WITH_PATCH_RECOMMENDED
+- international_group_ep001_s4_canary_sample_v2: drafted
+- international_group_ep001_s4_canary_sample_v2_audit: PASS_WITH_WATCH
+- international_group_ep002_s4_canary_sample_v1: drafted
+- international_group_ep002_s4_canary_sample_v1_audit: PASS_WITH_WATCH
+- international_group_ep003_s4_canary_sample_v1: drafted
+- international_group_ep003_s4_canary_sample_v1_audit: PASS_WITH_WATCH
+- international_group_ep001_003_opening_ladder_synthesis_v1: drafted
+- international_group_ep001_003_opening_ladder_audit: PASS_WITH_PATCH_REQUIRED_BEFORE_WIDER_RANGE
+- international_group_tr01_10_first_tranche_handoff_v1: packaged
+- international_group_tr01_10_first_tranche_handoff_audit: PASS_WITH_WATCH_FOR_EP004_CANARY
+- international_group_ep004_b5_s4_canary_sample_v1: drafted
+- international_group_ep004_b5_s4_canary_audit: PASS_WITH_WATCH
+- international_group_ep005_b6_s4_canary_sample_v1: drafted
+- international_group_ep005_b6_s4_canary_audit: PASS_WITH_WATCH
+- international_group_ep006_b7_s4_canary_sample_v1: drafted
+- international_group_ep006_b7_s4_canary_audit: PASS_WITH_WATCH
+- international_group_ep007_b8_s4_canary_sample_v1: drafted
+- international_group_ep007_b8_s4_canary_audit: PASS_WITH_WATCH
+- international_group_ep008_009_b9_s4_canary_sample_v1: drafted
+- international_group_ep008_009_b9_s4_canary_audit: PASS_WITH_WATCH
+- international_group_ep009_010_b10_s4_canary_sample_v1: drafted
+- international_group_ep009_010_b10_s4_canary_audit: PASS_WITH_WATCH
+- full_phase0_final: no
+- phase0_draft_ready_for_canary: yes
+- ep001_003_s4_canary_packet: PASS_WITH_WATCH
+- international_group_ep001_micro_canary: PASS_WITH_WATCH_AFTER_PATCH
+- international_group_b1_b2_scene_native_card_application: PASS_WITH_WATCH_FOR_NEXT_SURFACE_ROTATION_APPLICATION
+- international_group_m03_busan_buyer_scene_native_card_application: PASS_WITH_WATCH_FOR_M04_FIRST_TASK_SURFACE
+- international_group_m04_first_task_scene_native_card_application: PASS_WITH_WATCH_FOR_M05_BUSAN_FACTORY_PAY_WINDOW
+- international_group_m05_busan_factory_pay_window_scene_native_card_application: PASS_WITH_WATCH_FOR_M06_PRODUCT_HAND_SPEC_SURFACE
+- international_group_m06_product_hand_spec_scene_native_card_application: PASS_WITH_WATCH_FOR_M07_OUTSIDE_BUYER_DESK
+- international_group_m07_outside_buyer_desk_scene_native_card_application: PASS_WITH_WATCH_FOR_M08_PUBLIC_USE_SURFACE
+- international_group_m08_public_use_trial_scene_native_card_application: PASS_WITH_WATCH_FOR_M09_INTERNAL_BUDGET_FILE_ACCESS
+- international_group_m09_internal_budget_file_access_scene_native_card_application: PASS_WITH_WATCH_FOR_M10_IMPORT_SUPPLIER_FILE_SURFACE
+- international_group_m10_m15_research_scale_material: PASS_WITH_WATCH_FOR_M16_SPORTSWEAR_LICENSING_PUBLIC_PROCUREMENT_SURFACE
+- international_group_ep001_ep015_firefly_ready_material_packet: PASS_WITH_WATCH_FOR_FIREFLY_SIDE_CONTEXT_FILL_OR_M16
+- international_group_ep001_ep015_firefly_s4_context_fill: PASS_WITH_WATCH_FOR_RESEARCH_ONLY_FIREFLY_S4_CONTEXT_SMOKE_OR_M16
+- international_group_doksik_taste_reset: PASS_WITH_WATCH_FOR_DOKSIK_TASTE_EP001_EP005_PACKET
+- international_group_doksik_taste_ep001_ep005_packet: PASS_WITH_WATCH
+- international_group_doksik_taste_15ep_production_route: PASS_AS_METHOD_RESET
+- international_group_doksik_taste_full_planning: PASS_WITH_PROSE_PROOF_REQUIRED
+- international_group_doksik_taste_full_planning_v2: PASS_FOR_EP001_PROSE_TASTE_SAMPLE
+- international_group_long_serial_scope_correction: BINDING_200_250_PLUS_SERIAL
+- international_group_doksik_taste_long_serial_planning_v3: PASS_FOR_EP001_PROSE_SAMPLE_AFTER_V3
+- international_group_history_event_tycoon_atlas: PASS_FOR_EP001_SAMPLE_WITH_HISTORY_ATLAS
+- TR-ready: no
+- BI-ready: no
+- range-complete: no
+
+This index intentionally points to drafts. The full Planning / Phase0 draft is ready for canary use, not for production TR70.
+
+Post-canary correction:
+
+- The old Phase0 draft is a 2008 Taerim opening-engine draft, not the final direction.
+- The EP001-EP003 canary packet is historical proof, not the current live unit.
+- The active International Group line now runs from the atlas / sector gate matrix / Arc 01-02 checklist through the first-tranche `102-113` canaries, `114/115` synthesis/audit, `116/117` compact S4 handoff/audit, controlled S4 context smokes `118/121` + `122/124`, Firefly dryrun plan `125/126`, buyer-desk file-only dryrun `127/129`, S4 Writer Context integration sample `130/133`, reusable template `134/135`, buyer-desk template prose `136/137`, product-hand template prose `138/139`, bridge governance capture `140`, pressure-first B1-B2 material recut `141/142`, M01-M02 file-only prose dryrun/audit `143/144`, tiny EP002 anti-polish patch/audit `145/146`, compact Firefly research handoff/audit `147/148`, B1-B2 scene-native card application plus short canary/audit `149/150/151`, M03 Busan/buyer scene-native card plus short canary/audit `152/153/154`, M04 first-task scene-native card plus short canary/audit `155/156/157`, M05 Busan factory/pay-window scene-native card plus short canary/audit `158/159/160`, M06 product-hand/spec scene-native card plus short canary/audit `161/162/163`, M07 outside buyer/distributor desk scene-native card plus short canary/audit `164/165/166`, M08 public-use trial scene-native card plus short canary/audit `167/168/169`, M09 internal budget/file-access scene-native card plus short canary/audit `170/171/172`, M10-M15 research-scale real material `173/174/175`, integrated EP001-EP015 Firefly-ready material packet/audit `176/177`, compact Firefly S4 context fill/audit `178/179`, and Doksik-taste reset/audit `180/181`. The current story plan is `180/181`; `176-179` are technical evidence only.
+
+## 3. Current Use
+
+Checkpoint is reopened by the Doksik-taste reset. `182` is the active EP001-EP005 replacement packet. `183` locks the method. `189/190` now supersede `186/187` as the current full writer-facing planning document with the title recommendation `회귀한 재벌 3세는 해문을 독식한다`. `188` binds the scale: 200-250+ episode long serial by default; EP001-EP015 is only the opening ignition tranche, not completion. `189` strengthens the 16-40 paid runway, antagonist ladder, status/name progression, and 200-250+ long-serial spine. `191/192` add the historical/economic/political/tycoon event atlas for 1980s-2020s pressure. Current next unit: write `193_international_group_doksik_taste_ep001_prose_sample_v1.md`; no BI/TR or detailed TR70 before the prose sample passes.
+
+For the International Group direction, the B1-B2 micro-canary has passed with watch after patch, `work_guard_draft_v2` exists, and `81` is the active Phase0 restart draft. Do not move from Phase0 restart directly into production TR70.
+
+Do not use it to claim:
+
+- final Phase0;
+- 70-block TR authorization;
+- production BI readiness;
+- immediate deployment.
+
+## 4. Required Before Full Phase0
+
+- final title/name/group lock;
+- source-backed deepening for ARC-04+ sector surfaces;
+- market-calendar grounding before TR;
+- source-safety recheck;
+- Firefly S4 dry run and prose audit.
+- run one file-only Firefly-side research dryrun or issue handoff using `147/148`, or stop and consolidate; do not generate B3-B10 rewrites from this file alone, B11-B20, production TR70, production BI, save production manuscript, mutate Firefly DB/project state, or change the production S4 prompt.
