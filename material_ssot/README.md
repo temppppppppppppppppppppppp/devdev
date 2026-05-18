@@ -1,4 +1,4 @@
-﻿# material_ssot
+# material_ssot
 
 Date: 2026-04-03
 Status: active bounded SSOT
@@ -29,8 +29,8 @@ Normalized fresh-creation route:
   - `20_pitch/pitch-selection-checklist.md` audit
   - `20_pitch/canon/` pitch freeze
   - `20_pitch/work-guard-translation-map.md` -> work-specific `work_guard`
-  - when the material is expected to feed Firefly/S4 or writer-facing output, apply `00_governance/firefly-s4-scene-native-material-bridge-v1.md` before Phase0/TR expansion
-  - before any full 70-block production TR for Firefly/S4-bound material, apply `00_governance/firefly-b1-b2-micro-canary-before-70-harness-v1.md` and prove B1-B2 or EP001 as scene-native prose first
+  - when the material is expected to feed Firefly/S4 or writer-facing output, apply `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\00_governance\firefly-s4-scene-native-material-bridge-v1.md` before Phase0/TR expansion
+  - before any full 70-block production TR for Firefly/S4-bound material, apply `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\00_governance\firefly-b1-b2-micro-canary-before-70-harness-v1.md` and prove B1-B2 or EP001 as scene-native prose first
 - this route clarifies the operator handoff between research and pitch without adding a new stage root
 
 Operational companion note:
@@ -72,8 +72,8 @@ Current governance anchors:
 - `00_governance/authority-map.md`
 - `00_governance/stage-read-order.md`
 - `00_governance/donor-review-and-adoption-contract-v1.md`
-- `00_governance/firefly-s4-scene-native-material-bridge-v1.md`
-- `00_governance/firefly-b1-b2-micro-canary-before-70-harness-v1.md`
+- `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\00_governance\firefly-s4-scene-native-material-bridge-v1.md`
+- `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\00_governance\firefly-b1-b2-micro-canary-before-70-harness-v1.md`
 - `docs/2026-04-29/material-side-immediate-deployment-overlay.md`
 - `00_governance/legacy-map.md`
 - `00_governance/delegation-envelope-spec-v1.md`

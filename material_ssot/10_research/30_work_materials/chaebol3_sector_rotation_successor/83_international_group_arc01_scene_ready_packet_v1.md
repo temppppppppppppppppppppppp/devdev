@@ -1,4 +1,4 @@
-﻿# International Group Arc 01 Scene-Ready Packet v1
+# International Group Arc 01 Scene-Ready Packet v1
 
 Date: 2026-05-17
 Status: scene-ready packet draft, S4-compact handoff candidate, TR-not-ready, BI-not-ready
@@ -34,8 +34,8 @@ Read first:
 - `81_international_group_phase0_restart_v1.md`
 - `82_international_group_phase0_restart_adversarial_audit_v1.md`
 - `material_ssot/20_pitch/synthesis/chaebol3_sector_rotation_successor_work_guard_draft_v2.yaml`
-- `material_ssot/00_governance/firefly-s4-scene-native-material-bridge-v1.md`
-- `material_ssot/00_governance/firefly-b1-b2-micro-canary-before-70-harness-v1.md`
+- `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\00_governance\firefly-s4-scene-native-material-bridge-v1.md`
+- `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\00_governance\firefly-b1-b2-micro-canary-before-70-harness-v1.md`
 
 This file inherits the post-canary International Group baseline.
 

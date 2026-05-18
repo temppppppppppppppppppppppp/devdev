@@ -1,4 +1,4 @@
-﻿# Stage Read Order
+# Stage Read Order
 
 Date: 2026-04-03
 Status: active bounded read order
@@ -42,8 +42,8 @@ Scope: material-side stage progression only
 - run `20_pitch/pitch-selection-checklist.md` before calling a synthesis selection-ready
 - use `20_pitch/canon/` for work-level pitch anchors
 - use `20_pitch/work-guard-translation-map.md` only after pitch truth is frozen enough to translate into a work-specific guard
-- if the material must feed Firefly/S4 or writer-facing output, read `00_governance/firefly-s4-scene-native-material-bridge-v1.md` before Phase0/TR expansion and verify that scene-native handoff semantics exist
-- before any full 70-block production TR for Firefly/S4-bound material, read `00_governance/firefly-b1-b2-micro-canary-before-70-harness-v1.md` and require B1-B2 or EP001 micro-canary proof
+- if the material must feed Firefly/S4 or writer-facing output, read `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\00_governance\firefly-s4-scene-native-material-bridge-v1.md` before Phase0/TR expansion and verify that scene-native handoff semantics exist
+- before any full 70-block production TR for Firefly/S4-bound material, read `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\00_governance\firefly-b1-b2-micro-canary-before-70-harness-v1.md` and require B1-B2 or EP001 micro-canary proof
 - use `20_pitch/intake/legacy_import/` for migrated legacy pitch payloads
 - use `20_pitch/quarantine/` only for non-canonical pitch-adjacent docs
 - treat `전처리_ssot/docs/10_pitches` as legacy transition docs

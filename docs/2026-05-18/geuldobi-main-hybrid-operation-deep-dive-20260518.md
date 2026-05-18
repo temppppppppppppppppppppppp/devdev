@@ -1,4 +1,4 @@
-﻿# 글도비 본체 하이브리드 운영 결론 딥다이브
+# 글도비 본체 하이브리드 운영 결론 딥다이브
 
 - 날짜: 2026-05-18
 - 질문: 파이어플라이에서 얻은 결론, 즉 "프리파이프라인은 맛 증명, 본선 파이프라인은 장기 기억/저장/감리/운영"이라는 결론이 글도비 본체에도 적용되는가?
@@ -60,8 +60,8 @@
 - `C:\Users\User\Desktop\글도비\material_ssot\README.md`
 - `C:\Users\User\Desktop\글도비\material_ssot\00_governance\stage-read-order.md`
 - `C:\Users\User\Desktop\글도비\material_ssot\00_governance\donor-review-and-adoption-contract-v1.md`
-- `C:\Users\User\Desktop\글도비\material_ssot\00_governance\firefly-s4-scene-native-material-bridge-v1.md`
-- `C:\Users\User\Desktop\글도비\material_ssot\00_governance\firefly-b1-b2-micro-canary-before-70-harness-v1.md`
+- `C:\Users\User\Desktop\글도비\C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\00_governance\firefly-s4-scene-native-material-bridge-v1.md`
+- `C:\Users\User\Desktop\글도비\material_ssot\C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\00_governance\firefly-b1-b2-micro-canary-before-70-harness-v1.md`
 - `C:\Users\User\Desktop\재료 생산 R&D 랩\AGENTS.md`
 - `C:\Users\User\Desktop\재료 생산 R&D 랩\docs\2026-05-16\full-packet-vs-existing-pipeline-correction-v0.md`
 - `C:\Users\User\Desktop\재료 생산 R&D 랩\docs\2026-05-16\geuldobi-issue-151-full-packet-pipeline-correction-comment.md`

@@ -1,4 +1,4 @@
-﻿# BI/TR/GUARD Bridge: chaebol3_sector_rotation_successor
+# BI/TR/GUARD Bridge: chaebol3_sector_rotation_successor
 
 Date: 2026-05-17
 Status: candidate bridge ready, work_guard WG-V1 PASS, WG-V2 manual PASS_FOR_DRAFT, Phase0-not-ready, TR/BI-not-generated
@@ -22,7 +22,7 @@ This is the missing middle layer: the material must become scene-native before f
 - working synthesis:
   - `material_ssot/20_pitch/synthesis/chaebol3_sector_rotation_successor_working_synthesis.md`
 - Firefly handoff seed:
-  - `material_ssot/20_pitch/synthesis/chaebol3_sector_rotation_successor_firefly_integration_handoff.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\20_pitch_synthesis\chaebol3_sector_rotation_successor_firefly_integration_handoff.md`
 - guard draft:
   - `material_ssot/20_pitch/synthesis/chaebol3_sector_rotation_successor_work_guard_draft_v1.yaml`
 - International Group guard draft v2:
@@ -32,10 +32,10 @@ This is the missing middle layer: the material must become scene-native before f
 - full Planning / Phase0 draft:
   - `treatments/phase0/chaebol3_sector_rotation_successor_phase0_design_draft_v1.json`
 - EP001-EP003 S4 canary packet:
-  - `material_ssot/20_pitch/synthesis/chaebol3_sector_rotation_successor_ep001_003_s4_canary_packet_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\20_pitch_synthesis\chaebol3_sector_rotation_successor_ep001_003_s4_canary_packet_v1.md`
   - local working copy: `treatments/episode_packets/chaebol3_sector_rotation_successor/ep001_003_s4_canary_packet_v1.md`
 - EP001-EP003 packet audit:
-  - `material_ssot/20_pitch/synthesis/chaebol3_sector_rotation_successor_ep001_003_s4_canary_packet_3pass_audit.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\20_pitch_synthesis\chaebol3_sector_rotation_successor_ep001_003_s4_canary_packet_3pass_audit.md`
   - local working copy: `treatments/audit_reports/chaebol3_sector_rotation_successor_ep001_003_s4_canary_packet_3pass_audit.md`
 - pre-70 planning decision:
   - `material_ssot/20_pitch/synthesis/chaebol3_sector_rotation_successor_pre70_planning_decision_v1.md`
@@ -74,25 +74,25 @@ This is the missing middle layer: the material must become scene-native before f
 - International Group TR 1-10 planning draft adversarial audit:
   - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/86_international_group_tr01_10_planning_adversarial_audit_v1.md`
 - International Group EP001-EP003 S4 compact writer seed:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/87_international_group_ep001_003_s4_compact_writer_seed_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\87_international_group_ep001_003_s4_compact_writer_seed_v1.md`
 - International Group EP001-EP003 S4 compact writer seed audit:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/88_international_group_ep001_003_s4_compact_writer_seed_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\88_international_group_ep001_003_s4_compact_writer_seed_audit_v1.md`
 - International Group EP001 S4 canary sample v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/89_international_group_ep001_s4_canary_sample_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\89_international_group_ep001_s4_canary_sample_v1.md`
 - International Group EP001 S4 canary sample v1 audit:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/91_international_group_ep001_s4_canary_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\91_international_group_ep001_s4_canary_audit_v1.md`
 - International Group EP001 S4 canary sample v2:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/92_international_group_ep001_s4_canary_sample_v2.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\92_international_group_ep001_s4_canary_sample_v2.md`
 - International Group EP001 S4 canary sample v2 audit:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/93_international_group_ep001_s4_canary_sample_v2_audit.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\93_international_group_ep001_s4_canary_sample_v2_audit.md`
 - International Group EP002 S4 canary sample v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/94_international_group_ep002_s4_canary_sample_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\94_international_group_ep002_s4_canary_sample_v1.md`
 - International Group EP002 S4 canary sample v1 audit:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/95_international_group_ep002_s4_canary_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\95_international_group_ep002_s4_canary_audit_v1.md`
 - International Group EP003 S4 canary sample v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/96_international_group_ep003_s4_canary_sample_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\96_international_group_ep003_s4_canary_sample_v1.md`
 - International Group EP003 S4 canary sample v1 audit:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/97_international_group_ep003_s4_canary_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\97_international_group_ep003_s4_canary_audit_v1.md`
 - International Group EP001-EP003 opening ladder synthesis:
   - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/98_international_group_ep001_003_opening_ladder_synthesis_v1.md`
 - International Group EP001-EP003 opening ladder adversarial audit:
@@ -102,68 +102,68 @@ This is the missing middle layer: the material must become scene-native before f
 - International Group TR01-10 first-tranche handoff audit:
   - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/101_international_group_tr01_10_first_tranche_handoff_audit_v1.md`
 - International Group EP004/B5 S4 canary sample v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/102_international_group_ep004_b5_s4_canary_sample_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\102_international_group_ep004_b5_s4_canary_sample_v1.md`
 - International Group EP004/B5 S4 canary audit v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/103_international_group_ep004_b5_s4_canary_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\103_international_group_ep004_b5_s4_canary_audit_v1.md`
 - International Group EP005/B6 S4 canary sample v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/104_international_group_ep005_b6_s4_canary_sample_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\104_international_group_ep005_b6_s4_canary_sample_v1.md`
 - International Group EP005/B6 S4 canary audit v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/105_international_group_ep005_b6_s4_canary_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\105_international_group_ep005_b6_s4_canary_audit_v1.md`
 - International Group EP006/B7 S4 canary sample v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/106_international_group_ep006_b7_s4_canary_sample_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\106_international_group_ep006_b7_s4_canary_sample_v1.md`
 - International Group EP006/B7 S4 canary audit v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/107_international_group_ep006_b7_s4_canary_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\107_international_group_ep006_b7_s4_canary_audit_v1.md`
 - International Group EP007/B8 S4 canary sample v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/108_international_group_ep007_b8_s4_canary_sample_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\108_international_group_ep007_b8_s4_canary_sample_v1.md`
 - International Group EP007/B8 S4 canary audit v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/109_international_group_ep007_b8_s4_canary_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\109_international_group_ep007_b8_s4_canary_audit_v1.md`
 - International Group EP008-009/B9 S4 canary sample v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/110_international_group_ep008_009_b9_s4_canary_sample_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\110_international_group_ep008_009_b9_s4_canary_sample_v1.md`
 - International Group EP008-009/B9 S4 canary audit v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/111_international_group_ep008_009_b9_s4_canary_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\111_international_group_ep008_009_b9_s4_canary_audit_v1.md`
 - International Group EP009-010/B10 S4 canary sample v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/112_international_group_ep009_010_b10_s4_canary_sample_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\112_international_group_ep009_010_b10_s4_canary_sample_v1.md`
 - International Group EP009-010/B10 S4 canary audit v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/113_international_group_ep009_010_b10_s4_canary_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\113_international_group_ep009_010_b10_s4_canary_audit_v1.md`
 - International Group first-tranche synthesis 102-113 v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/114_international_group_first_tranche_synthesis_102_113_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\114_international_group_first_tranche_synthesis_102_113_v1.md`
 - International Group first-tranche synthesis audit v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/115_international_group_first_tranche_synthesis_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\115_international_group_first_tranche_synthesis_audit_v1.md`
 - International Group EP004-010 S4 compact handoff v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/116_international_group_ep004_010_s4_compact_handoff_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\116_international_group_ep004_010_s4_compact_handoff_v1.md`
 - International Group EP004-010 S4 compact handoff audit v1:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/117_international_group_ep004_010_s4_compact_handoff_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\117_international_group_ep004_010_s4_compact_handoff_audit_v1.md`
 - International Group EP009-010 finance/file-room S4 smoke final audit:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/121_international_group_ep009_010_s4_context_smoke_final_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\121_international_group_ep009_010_s4_context_smoke_final_audit_v1.md`
 - International Group EP006 product-hand S4 smoke reaudit:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/124_international_group_ep006_product_hand_s4_context_smoke_reaudit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\124_international_group_ep006_product_hand_s4_context_smoke_reaudit_v1.md`
 - Firefly-side research dryrun plan/audit:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/125_firefly_side_research_dryrun_plan_v1.md`
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/126_firefly_side_research_dryrun_plan_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\125_firefly_side_research_dryrun_plan_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\126_firefly_side_research_dryrun_plan_audit_v1.md`
 - EP007 buyer-desk file-only dryrun final audit:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/129_ep007_buyer_desk_file_only_dryrun_final_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\129_ep007_buyer_desk_file_only_dryrun_final_audit_v1.md`
 - Firefly S4 Writer Context integration contract/audit:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/130_firefly_s4_writer_context_integration_contract_v1.md`
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/131_firefly_s4_writer_context_integration_contract_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\130_firefly_s4_writer_context_integration_contract_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\131_firefly_s4_writer_context_integration_contract_audit_v1.md`
 - EP007 buyer-desk S4 Writer Context fill sample/audit:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/132_ep007_buyer_desk_s4_writer_context_fill_sample_v1.json`
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/133_ep007_buyer_desk_s4_writer_context_fill_sample_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\132_ep007_buyer_desk_s4_writer_context_fill_sample_v1.json`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\133_ep007_buyer_desk_s4_writer_context_fill_sample_audit_v1.md`
 - material-to-S4 reusable template/audit:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/134_material_to_s4_context_reusable_template_v1.md`
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/135_material_to_s4_context_reusable_template_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\134_material_to_s4_context_reusable_template_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\135_material_to_s4_context_reusable_template_audit_v1.md`
 - EP007 buyer-desk file-only prose dryrun from S4 context/audit:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/136_ep007_buyer_desk_file_only_prose_dryrun_from_s4_context_v1.md`
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/137_ep007_buyer_desk_file_only_prose_dryrun_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\136_ep007_buyer_desk_file_only_prose_dryrun_from_s4_context_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\137_ep007_buyer_desk_file_only_prose_dryrun_audit_v1.md`
 - EP006 product-hand template-driven file-only prose dryrun/audit:
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/138_ep006_product_hand_template_driven_file_only_prose_dryrun_v1.md`
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/139_ep006_product_hand_template_driven_file_only_prose_dryrun_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\138_ep006_product_hand_template_driven_file_only_prose_dryrun_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\139_ep006_product_hand_template_driven_file_only_prose_dryrun_audit_v1.md`
 - Firefly material-to-S4 context bridge governance/audit:
-  - `material_ssot/00_governance/firefly-material-to-s4-context-bridge-harness-v1.md`
-  - `material_ssot/10_research/30_work_materials/chaebol3_sector_rotation_successor/140_material_to_s4_context_bridge_harness_capture_audit_v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\00_governance\firefly-material-to-s4-context-bridge-harness-v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\chaebol3_sector_rotation_successor\140_material_to_s4_context_bridge_harness_capture_audit_v1.md`
 - bridge harness:
-  - `material_ssot/00_governance/firefly-s4-scene-native-material-bridge-v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\00_governance\firefly-s4-scene-native-material-bridge-v1.md`
 - B1-B2 micro-canary before 70 harness:
-  - `material_ssot/00_governance/firefly-b1-b2-micro-canary-before-70-harness-v1.md`
+  - `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\00_governance\firefly-b1-b2-micro-canary-before-70-harness-v1.md`
 
 ## 2. Material Truth To Preserve
 

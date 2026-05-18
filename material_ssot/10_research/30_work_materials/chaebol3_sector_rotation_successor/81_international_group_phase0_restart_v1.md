@@ -1,4 +1,4 @@
-﻿# International-Group Phase0 Restart v1
+# International-Group Phase0 Restart v1
 
 Date: 2026-05-17
 Status: Phase0 restart draft, TR-not-ready, BI-not-ready, not range-complete
@@ -20,7 +20,7 @@ Read first:
 - `79_international_group_ep001_micro_canary_director_audit_v1.md`
 - `80_international_group_work_guard_v2_adversarial_audit_v1.md`
 - `material_ssot/20_pitch/synthesis/chaebol3_sector_rotation_successor_work_guard_draft_v2.yaml`
-- `material_ssot/00_governance/firefly-b1-b2-micro-canary-before-70-harness-v1.md`
+- `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\00_governance\firefly-b1-b2-micro-canary-before-70-harness-v1.md`
 
 Do not restart from the old 2008 Taerim/NDF Phase0. That material remains generic opening-engine canary only.
 

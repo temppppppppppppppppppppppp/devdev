@@ -1,11 +1,11 @@
-﻿# International-Group EP001 Micro-Canary Director Audit v1
+# International-Group EP001 Micro-Canary Director Audit v1
 
 Date: 2026-05-17
 Status: micro-canary audit complete
 Work ID: `chaebol3_sector_rotation_successor`
 Sample: `78_international_group_ep001_micro_canary_sample_v1.md`
 Packet: `75_international_group_ep001_micro_canary_packet_v1.md`
-Harness: `material_ssot/00_governance/firefly-b1-b2-micro-canary-before-70-harness-v1.md`
+Harness: `C:\Users\User\Desktop\글도비_파이어플라이\docs\material_ssot\geuldobi_handoff\00_governance\firefly-b1-b2-micro-canary-before-70-harness-v1.md`
 
 ## 0. Verdict
 
